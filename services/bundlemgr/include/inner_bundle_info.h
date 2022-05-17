@@ -328,7 +328,7 @@ public:
      */
     std::string GetApplicationName() const
     {
-        return baseApplicationInfo_.name;
+        return baseApplicationInfo_->name;
     }
     /**
      * @brief Set bundle status.
@@ -396,7 +396,7 @@ public:
      */
     const std::string GetBundleName() const
     {
-        return baseApplicationInfo_.bundleName;
+        return baseApplicationInfo_->bundleName;
     }
     /**
      * @brief Get baseBundleInfo.
@@ -404,7 +404,7 @@ public:
      */
     BundleInfo GetBaseBundleInfo() const
     {
-        return baseBundleInfo_;
+        return *baseBundleInfo_;
     }
     /**
      * @brief Set baseBundleInfo.
@@ -412,7 +412,7 @@ public:
      */
     void SetBaseBundleInfo(const BundleInfo &bundleInfo)
     {
-        baseBundleInfo_ = bundleInfo;
+        *baseBundleInfo_ = bundleInfo;
     }
     /**
      * @brief Update baseBundleInfo.
@@ -426,7 +426,7 @@ public:
      */
     ApplicationInfo GetBaseApplicationInfo() const
     {
-        return baseApplicationInfo_;
+        return *baseApplicationInfo_;
     }
     /**
      * @brief Set baseApplicationInfo.
@@ -434,7 +434,7 @@ public:
      */
     void SetBaseApplicationInfo(const ApplicationInfo &applicationInfo)
     {
-        baseApplicationInfo_ = applicationInfo;
+        *baseApplicationInfo_ = applicationInfo;
     }
     /**
      * @brief Update baseApplicationInfo.
@@ -468,7 +468,7 @@ public:
      */
     const std::string GetAppCodePath() const
     {
-        return baseApplicationInfo_.codePath;
+        return baseApplicationInfo_->codePath;
     }
     /**
      * @brief Set application code path.
@@ -476,7 +476,7 @@ public:
      */
     void SetAppCodePath(const std::string codePath)
     {
-        baseApplicationInfo_.codePath = codePath;
+        baseApplicationInfo_->codePath = codePath;
     }
     /**
      * @brief Insert innerModuleInfos.
@@ -605,7 +605,7 @@ public:
      */
     uint32_t GetVersionCode() const
     {
-        return baseBundleInfo_.versionCode;
+        return baseBundleInfo_->versionCode;
     }
     /**
      * @brief Get version name in application.
@@ -613,7 +613,7 @@ public:
      */
     std::string GetVersionName() const
     {
-        return baseBundleInfo_.versionName;
+        return baseBundleInfo_->versionName;
     }
     /**
      * @brief Get vendor in application.
@@ -621,7 +621,7 @@ public:
      */
     std::string GetVendor() const
     {
-        return baseBundleInfo_.vendor;
+        return baseBundleInfo_->vendor;
     }
     /**
      * @brief Get comparible version in application.
@@ -629,7 +629,7 @@ public:
      */
     uint32_t GetCompatibleVersion() const
     {
-        return baseBundleInfo_.compatibleVersion;
+        return baseBundleInfo_->compatibleVersion;
     }
     /**
      * @brief Get target version in application.
@@ -637,7 +637,7 @@ public:
      */
     uint32_t GetTargetVersion() const
     {
-        return baseBundleInfo_.targetVersion;
+        return baseBundleInfo_->targetVersion;
     }
     /**
      * @brief Get release type in application.
@@ -645,7 +645,7 @@ public:
      */
     std::string GetReleaseType() const
     {
-        return baseBundleInfo_.releaseType;
+        return baseBundleInfo_->releaseType;
     }
     /**
      * @brief Get minCompatibleVersionCode in base bundleInfo.
@@ -653,7 +653,7 @@ public:
      */
     uint32_t GetMinCompatibleVersionCode() const
     {
-        return baseBundleInfo_.minCompatibleVersionCode;
+        return baseBundleInfo_->minCompatibleVersionCode;
     }
     /**
      * @brief Get install mark in application.
@@ -696,7 +696,7 @@ public:
      */
     std::string GetAppDataDir() const
     {
-        return baseApplicationInfo_.dataDir;
+        return baseApplicationInfo_->dataDir;
     }
     /**
      * @brief Set application data dir.
@@ -704,7 +704,7 @@ public:
      */
     void SetAppDataDir(std::string dataDir)
     {
-        baseApplicationInfo_.dataDir = dataDir;
+        baseApplicationInfo_->dataDir = dataDir;
     }
     /**
      * @brief Set application data base dir.
@@ -712,7 +712,7 @@ public:
      */
     void SetAppDataBaseDir(std::string dataBaseDir)
     {
-        baseApplicationInfo_.dataBaseDir = dataBaseDir;
+        baseApplicationInfo_->dataBaseDir = dataBaseDir;
     }
     /**
      * @brief Set application cache dir.
@@ -720,7 +720,7 @@ public:
      */
     void SetAppCacheDir(std::string cacheDir)
     {
-        baseApplicationInfo_.cacheDir = cacheDir;
+        baseApplicationInfo_->cacheDir = cacheDir;
     }
     /**
      * @brief Set application uid.
@@ -780,9 +780,9 @@ public:
     {
         appType_ = appType;
         if (appType_ == Constants::AppType::SYSTEM_APP) {
-            baseApplicationInfo_.isSystemApp = true;
+            baseApplicationInfo_->isSystemApp = true;
         } else {
-            baseApplicationInfo_.isSystemApp = false;
+            baseApplicationInfo_->isSystemApp = false;
         }
     }
     /**
@@ -911,17 +911,17 @@ public:
 
     bool GetIsKeepAlive() const
     {
-        return baseBundleInfo_.isKeepAlive;
+        return baseBundleInfo_->isKeepAlive;
     }
 
     void SetIsFreeInstallApp(bool isFreeInstall)
     {
-        baseApplicationInfo_.isFreeInstallApp = isFreeInstall;
+        baseApplicationInfo_->isFreeInstallApp = isFreeInstall;
     }
 
     bool GetIsFreeInstallApp() const
     {
-        return baseApplicationInfo_.isFreeInstallApp;
+        return baseApplicationInfo_->isFreeInstallApp;
     }
 
     std::string GetMainAbility() const;
@@ -964,20 +964,20 @@ public:
 
     void SetProvisionId(const std::string &provisionId)
     {
-        baseBundleInfo_.appId = baseBundleInfo_.name + Constants::FILE_UNDERLINE + provisionId;
+        baseBundleInfo_->appId = baseBundleInfo_->name + Constants::FILE_UNDERLINE + provisionId;
     }
 
     std::string GetProvisionId() const
     {
-        if (!baseBundleInfo_.appId.empty()) {
-            return baseBundleInfo_.appId.substr(baseBundleInfo_.name.size() + 1);
+        if (!baseBundleInfo_->appId.empty()) {
+            return baseBundleInfo_->appId.substr(baseBundleInfo_->name.size() + 1);
         }
         return "";
     }
 
     std::string GetAppId() const
     {
-        return baseBundleInfo_.appId;
+        return baseBundleInfo_->appId;
     }
 
     void SetAppFeature(const std::string &appFeature)
@@ -995,12 +995,12 @@ public:
         if (appPrivilegeLevel.empty()) {
             return;
         }
-        baseApplicationInfo_.appPrivilegeLevel = appPrivilegeLevel;
+        baseApplicationInfo_->appPrivilegeLevel = appPrivilegeLevel;
     }
 
     std::string GetAppPrivilegeLevel() const
     {
-        return baseApplicationInfo_.appPrivilegeLevel;
+        return baseApplicationInfo_->appPrivilegeLevel;
     }
 
     bool HasEntry() const;
@@ -1176,15 +1176,15 @@ public:
      */
     bool IsRemovable() const
     {
-        return baseApplicationInfo_.removable;
+        return baseApplicationInfo_->removable;
     }
     void SetIsPreInstallApp(bool isPreInstallApp)
     {
-        baseBundleInfo_.isPreInstallApp = isPreInstallApp;
+        baseBundleInfo_->isPreInstallApp = isPreInstallApp;
     }
     bool IsPreInstallApp() const
     {
-        return baseBundleInfo_.isPreInstallApp;
+        return baseBundleInfo_->isPreInstallApp;
     }
     /**
      * @brief Get whether the bundle is a system app.
@@ -1192,7 +1192,7 @@ public:
      */
     bool IsSystemApp() const
     {
-        return baseApplicationInfo_.isSystemApp;
+        return baseApplicationInfo_->isSystemApp;
     }
     /**
      * @brief Get all InnerBundleUserInfo.
@@ -1252,7 +1252,7 @@ public:
      */
     bool IsSingleton() const
     {
-        return baseApplicationInfo_.singleton;
+        return baseApplicationInfo_->singleton;
     }
     /**
      * @brief Get response userId.
@@ -1313,7 +1313,7 @@ public:
 
     bool IsAccessible() const
     {
-        return baseApplicationInfo_.accessible;
+        return baseApplicationInfo_->accessible;
     }
 
     bool GetDependentModuleNames(const std::string &moduleName, std::vector<std::string> &dependentModuleNames) const;
@@ -1377,12 +1377,12 @@ public:
 
     void SetEntryInstallationFree(bool installationFree)
     {
-        baseBundleInfo_.entryInstallationFree = installationFree;
+        baseBundleInfo_->entryInstallationFree = installationFree;
     }
 
     bool GetEntryInstallationFree() const
     {
-        return baseBundleInfo_.entryInstallationFree;
+        return baseBundleInfo_->entryInstallationFree;
     }
 
     void SetBundlePackInfo(const BundlePackInfo &bundlePackInfo)
@@ -1458,12 +1458,12 @@ public:
 
     std::string GetCertificateFingerprint() const
     {
-        return baseApplicationInfo_.fingerprint;
+        return baseApplicationInfo_->fingerprint;
     }
 
     void SetCertificateFingerprint(const std::string &fingerprint)
     {
-        baseApplicationInfo_.fingerprint = fingerprint;
+        baseApplicationInfo_->fingerprint = fingerprint;
     }
 
     void SetDisposedStatus(int32_t status);
@@ -1497,8 +1497,8 @@ private:
     int userId_ = Constants::DEFAULT_USERID;
     std::string baseDataDir_;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
-    ApplicationInfo baseApplicationInfo_;
-    BundleInfo baseBundleInfo_;  // applicationInfo and abilityInfo empty
+    std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
+    std::shared_ptr<BundleInfo> baseBundleInfo_;  // applicationInfo and abilityInfo empty
     std::string appFeature_;
     std::vector<std::string> allowedAcls_;
     InstallMark mark_;
