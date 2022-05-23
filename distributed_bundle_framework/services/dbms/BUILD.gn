@@ -61,6 +61,12 @@ ohos_shared_library("libdbms") {
     "utils_base:utils",
   ]
 
+  if (hisysevent_enable) {
+    sources += [ "src/event_report.cpp" ]
+    external_deps += [ "hisysevent_native:libhisysevent" ]
+    defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
   part_name = "distributed_bundle_framework"
   subsystem_name = "appexecfwk"
 }

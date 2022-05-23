@@ -115,3 +115,19 @@ BUNDLE_CLEAN_CACHE:
   USERID: {type: INT32, desc: userId}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
+
+GET_REMOTE_ABILITY_INFO:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: get remote abilityInfo}
+  DEVICE_ID: {type: STRING, desc: deviceId}
+  BUNDLE_NAME: {type: STRING, desc: bundleName}
+  LOCALE_INFO: {type: STRING, desc: localeInfo}
+  ABILITY_NAME: {type: STRING, desc: abilityName}
+  RESULT_CODE: {type: INT32, desc: error code}
+
+GET_REMOTE_ABILITY_INFOS:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: get remote abilityInfos}
+  DEVICE_ID: {type: STRING, desc: deviceId}
+  BUNDLE_NAME: {type: STRING, desc: bundleName}
+  LOCALE_INFO: {type: STRING, desc: localeInfo}
+  ABILITY_NAME: {type: STRING, desc: abilityName}
+  RESULT_CODE: {type: INT32, desc: error code}

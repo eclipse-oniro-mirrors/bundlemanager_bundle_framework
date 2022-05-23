@@ -23,6 +23,7 @@
                 "ability_base",
                 "bundle_framework",
                 "distributeddatamgr",
+                "hisysevent_native",
                 "hiviewdfx_hilog_native",
                 "ipc",
                 "napi",

@@ -22,6 +22,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "event_report.h"
 #include "iservice_registry.h"
 #include "if_system_ability_manager.h"
 #include "locale_config.h"
@@ -49,6 +50,46 @@ namespace {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
     };
     const std::string POSTFIX = "_Compress.";
+
+    DBMSEventInfo GetEventInfo(
+        const std::vector<ElementName> &elements, const std::string &localeInfo, int32_t resultCode)
+    {
+        DBMSEventInfo eventInfo;
+        if (elements.empty()) {
+            return eventInfo;
+        }
+
+        eventInfo.deviceID = elements[0].GetDeviceID();
+        eventInfo.localeInfo = localeInfo;
+        for (auto element : elements) {
+            if (eventInfo.bundleName.empty()) {
+                eventInfo.bundleName.append(element.GetBundleName());
+            } else {
+                eventInfo.bundleName.append(";").append(element.GetBundleName());
+            }
+
+            if (eventInfo.abilityName.empty()) {
+                eventInfo.abilityName.append(element.GetAbilityName());
+            } else {
+                eventInfo.abilityName.append(";").append(element.GetAbilityName());
+            }
+        }
+
+        eventInfo.resultCode = resultCode;
+        return eventInfo;
+    }
+
+    DBMSEventInfo GetEventInfo(
+        const ElementName &element, const std::string &localeInfo, int32_t resultCode)
+    {
+        DBMSEventInfo eventInfo;
+        eventInfo.bundleName = element.GetBundleName();
+        eventInfo.abilityName = element.GetAbilityName();
+        eventInfo.deviceID = element.GetDeviceID();
+        eventInfo.localeInfo = localeInfo;
+        eventInfo.resultCode = resultCode;
+        return eventInfo;
+    }
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(DistributedBms, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID, true);
 
@@ -129,13 +170,18 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
     auto iDistBundleMgr = GetDistributedBundleMgr(elementName.GetDeviceID());
+    int32_t resultCode = OHOS::NO_ERROR;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
-        return ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
+        resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
-        return iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
+        resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
     }
+
+    EventReport::SendSystemEvent(
+        DBMSEventType::GET_REMOTE_ABILITY_INFO, GetEventInfo(elementName, localeInfo, resultCode));
+    return resultCode;
 }
 
 int32_t DistributedBms::GetRemoteAbilityInfos(
@@ -148,13 +194,18 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
     auto iDistBundleMgr = GetDistributedBundleMgr(elementNames[0].GetDeviceID());
+    int32_t resultCode = OHOS::NO_ERROR;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
-        return ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
+        resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
-        return iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
+        resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
     }
+
+    EventReport::SendSystemEvent(
+        DBMSEventType::GET_REMOTE_ABILITY_INFOS, GetEventInfo(elementNames, localeInfo, resultCode));
+    return resultCode;
 }
 
 int32_t DistributedBms::GetAbilityInfo(
