@@ -719,6 +719,10 @@ public:
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
     void DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
 
+    bool SetDisposedStatus(const std::string &bundleName, int32_t status);
+
+    int32_t GetDisposedStatus(const std::string &bundleName);
+
 private:
     /**
      * @brief Init transferStates.

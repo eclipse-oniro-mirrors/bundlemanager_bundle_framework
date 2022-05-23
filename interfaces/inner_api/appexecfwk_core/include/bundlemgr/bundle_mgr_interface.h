@@ -863,6 +863,16 @@ public:
         return false;
     }
 
+    virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status)
+    {
+        return false;
+    }
+
+    virtual int32_t GetDisposedStatus(const std::string &bundleName)
+    {
+        return 0;
+    }
+
     virtual std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId)
     {
         std::vector<std::string> vec;
@@ -1042,6 +1052,8 @@ public:
         IMPLICIT_QUERY_INFO_BY_PRIORITY,
         GET_ALL_DEPENDENT_MODULE_NAMES,
         GET_SANDBOX_APP_BUNDLE_INFO,
+        SET_DISPOSED_STATUS,
+        GET_DISPOSED_STATUS,
     };
 };
 }  // namespace AppExecFwk
