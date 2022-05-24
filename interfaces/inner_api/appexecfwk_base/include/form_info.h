@@ -50,6 +50,7 @@ struct FormInfo : public Parcelable {
     bool defaultFlag = false;
     bool formVisibleNotify = false;
     bool updateEnabled = false;
+    bool isStatic = true;
     FormType type = FormType::JS;
     std::vector<int32_t> supportDimensions;
     FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
