@@ -175,6 +175,6 @@ bm get -u
 
 包管理子系统
 
-**appexecfwk_standard**
+** bundlemanager_bundle_framework**
 
 developtools_packing_tool
