@@ -175,6 +175,6 @@ bm get -u
 
 包管理子系统
 
-** bundlemanager_bundle_framework**
+**bundlemanager_bundle_framework**
 
 developtools_packing_tool
