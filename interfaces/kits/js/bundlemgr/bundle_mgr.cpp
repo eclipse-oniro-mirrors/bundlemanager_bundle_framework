@@ -5567,6 +5567,24 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
     return ret;
 }
 
+bool ParseModuleName(napi_env env, napi_value param, std::string &moduleName)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, param, "moduleName", &hasKey);
+    if (hasKey) {
+        napi_valuetype valueType;
+        napi_value prop = nullptr;
+        napi_get_named_property(env, param, "moduleName", &prop);
+        napi_typeof(env, prop, &valueType);
+        if (valueType == napi_undefined) {
+            APP_LOGE("begin to parse moduleName failed");
+            return false;
+        }
+        moduleName = GetStringFromNAPI(env, prop);
+    }
+    return true;
+}
+
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo)
 {
     napi_valuetype valueType;
@@ -5587,16 +5605,11 @@ bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::Ability
     abilityInfo.bundleName = bundleName;
 
     // parse moduleName
-    napi_get_named_property(env, param, "moduleName", &prop);
-    napi_typeof(env, prop, &valueType);
-    if (valueType == napi_string) {
-        std::string moduleName = GetStringFromNAPI(env, prop);
-        if (moduleName.empty()) {
-            APP_LOGE("error moduleName is empty!");
-            return false;
-        }
-        abilityInfo.moduleName = moduleName;
+    std::string moduleName;
+    if (!ParseModuleName(env, param, moduleName)) {
+        return false;
     }
+    abilityInfo.moduleName = moduleName;
 
     // parse abilityName
     napi_get_named_property(env, param, "name", &prop);
