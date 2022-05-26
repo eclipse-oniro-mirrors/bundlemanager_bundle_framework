@@ -47,6 +47,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::REMOVE_DIR, &InstalldHost::HandleRemoveDir);
     funcMap_.emplace(IInstalld::Message::GET_BUNDLE_STATS, &InstalldHost::HandleGetBundleStats);
     funcMap_.emplace(IInstalld::Message::GET_BUNDLE_CACHE_PATH, &InstalldHost::HandleGetBundleCachePath);
+    funcMap_.emplace(IInstalld::Message::SCAN_DIR, &InstalldHost::HandleScanDir);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -182,6 +183,22 @@ bool InstalldHost::HandleGetBundleCachePath(MessageParcel &data, MessageParcel &
         APP_LOGE("fail to GetBundleCachePath from reply");
         return false;
     }
+    return true;
+}
+
+bool InstalldHost::HandleScanDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string dir = Str16ToStr8(data.ReadString16());
+    ScanMode scanMode = static_cast<ScanMode>(data.ReadInt32());
+    ResultMode resultMode = static_cast<ResultMode>(data.ReadInt32());
+    std::vector<std::string> paths;
+    ErrCode result = ScanDir(dir, scanMode, resultMode, paths);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteStringVector(paths)) {
+        APP_LOGE("fail to Scan from reply");
+        return false;
+    }
+
     return true;
 }
 }  // namespace AppExecFwk

@@ -2186,6 +2186,15 @@ void InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     infoItem->second.bundleUserInfo.enabled = enabled;
 }
 
+const std::string &InnerBundleInfo::GetCurModuleName() const
+{
+    if (innerModuleInfos_.find(currentPackage_) != innerModuleInfos_.end()) {
+        return innerModuleInfos_.at(currentPackage_).moduleName;
+    }
+
+    return Constants::EMPTY_STRING;
+}
+
 bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
 {
     APP_LOGD("userId is %{public}d", userId);

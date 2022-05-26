@@ -37,19 +37,51 @@ public:
     virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
 
     enum {
-        BUNDLE_SCAN_START = 1,
-        BUNDLE_SCAN_FINISHED,
-        BMS_START_FINISHED,
-        BUNDLE_REBOOT_SCAN_START,
+        BMS_START = 0,
     };
 
 private:
+    /**
+     * @brief Bms start event.
+     * @return
+     */
+    void BmsStartEvent();
+    /**
+     * @brief Before Bms start.
+     * @return
+     */
+    void BeforeBmsStart();
+    /**
+     * @brief On Bms starting.
+     * @return
+     */
+    void OnBmsStarting();
+    /**
+     * @brief After Bms start.
+     * @return
+     */
+    void AfterBmsStart();
+    /**
+     * @brief Load install infos from db.
+     * @return Returns true if load successfully; returns false otherwise.
+     */
+    bool LoadInstallInfosFromDb();
+    /**
+     * @brief Bundle boot start event.
+     * @return
+     */
+    void BundleBootStartEvent();
+    /**
+     * @brief Bundle reboot start event.
+     * @return
+     */
+    void BundleRebootStartEvent();
     /**
      * @brief start boot scan.
      * @param userId Indicates the userId.
      * @return
      */
-    void OnBootStartScanning(int32_t userId = Constants::UNSPECIFIED_USERID);
+    void OnBundleBootStart(int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Process boot bundle install from scan.
      * @param userId Indicates the userId.
@@ -97,16 +129,14 @@ private:
         int32_t userId);
     /**
      * @brief start reboot scan.
-     * @param userId Indicates the userId.
      * @return
      */
-    void OnRebootStartScanning(int32_t userId = Constants::UNSPECIFIED_USERID);
+    void OnBundleRebootStart();
     /**
      * @brief Process reboot bundle.
-     * @param userId Indicates the userId.
      * @return
      */
-    void ProcessRebootBundle(int32_t userId);
+    void ProcessRebootBundle();
     /**
      * @brief Obtains the PreInstallBundleInfo objects.
      * @return Returns true if this function is successfully called; returns false otherwise.
@@ -195,11 +225,12 @@ private:
     /**
      * @brief Get bundleinfo of HAP by path.
      * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param isPreInstallApp Indicates the hap is preInstallApp or not.
      * @param infos Indicates the obtained BundleInfo object.
      * @return Returns true if the BundleInfo is successfully obtained; returns false otherwise.
      */
     bool ParseHapFiles(const std::string &hapFilePath,
-        std::unordered_map<std::string, InnerBundleInfo> &infos);
+        bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To check the version code and bundleName in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
@@ -239,7 +270,7 @@ private:
 
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
-    // used to save application information that already exists in the Db.
+    // Used to save application information that already exists in the Db.
     std::map<std::string, PreInstallBundleInfo> loadExistData_;
 };
 }  // namespace AppExecFwk

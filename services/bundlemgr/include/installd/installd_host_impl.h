@@ -112,6 +112,9 @@ public:
      */
     virtual ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath) override;
 
+    virtual ErrCode ScanDir(
+        const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
 };

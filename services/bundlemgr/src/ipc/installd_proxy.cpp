@@ -189,6 +189,29 @@ ErrCode InstalldProxy::GetBundleCachePath(const std::string &dir, std::vector<st
     return ret;
 }
 
+ErrCode InstalldProxy::ScanDir(
+    const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scanMode));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(resultMode));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(IInstalld::Message::SCAN_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    if (!reply.ReadStringVector(&paths)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

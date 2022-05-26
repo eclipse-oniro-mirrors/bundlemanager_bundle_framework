@@ -64,6 +64,7 @@ BundleDataMgr::~BundleDataMgr()
 bool BundleDataMgr::LoadDataFromPersistentStorage()
 {
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    LoadAllPreInstallBundleInfos(preInstallBundleInfos_);
     // Judge whether bundleState json db exists.
     // If it does not exist, create it and return the judgment result.
     bool bundleStateDbExist = bundleStateStorage_->HasBundleUserInfoJsonDb();
@@ -82,7 +83,6 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
         installStates_.emplace(item.first, InstallState::INSTALL_SUCCESS);
     }
 
-    LoadAllPreInstallBundleInfos(preInstallBundleInfos_);
     RestoreUidAndGid();
     if (!bundleStateDbExist) {
         // Compatible old bundle status in kV db
@@ -234,8 +234,8 @@ bool BundleDataMgr::SaveNewInfoToDB(const std::string &bundleName, InnerBundleIn
         APP_LOGE("clone newinfo bundle info already exist");
         return false;
     }
-    int64_t time =
-        std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    int64_t time = BundleUtil::GetCurrentTime();
     APP_LOGI("the clone newinfo bundle install time is %{public}" PRId64, time);
     info.SetBundleInstallTime(time);
     if (dataStorage_->SaveStorageBundleInfo(info)) {

@@ -35,6 +35,15 @@ struct InnerBundleUserInfo {
     // The time(unix time) will be recalculated
     // if the application is uninstalled after being installed.
     int64_t updateTime = 0;
+
+    bool operator() (const InnerBundleUserInfo& info) const
+    {
+        if (bundleName == info.bundleName) {
+            return bundleUserInfo.userId == info.bundleUserInfo.userId;
+        }
+
+        return false;
+    }
 };
 
 void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& bundleUserInfo);

@@ -31,6 +31,17 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+static std::string HandleScanResult(
+    const std::string &dir, const std::string &subName, ResultMode resultMode)
+{
+    if (resultMode == ResultMode::RELATIVE_PATH) {
+        return subName;
+    }
+
+    return dir + Constants::PATH_SEPARATOR + subName;
+}
+}
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
     if (path.empty()) {
@@ -390,6 +401,56 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
         fileSize += GetDiskUsage(st);
     }
     return fileSize;
+}
+
+bool InstalldOperator::ScanDir(
+    const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
+{
+    if (dirPath.empty() || (dirPath.size() > Constants::PATH_MAX_SIZE)) {
+        APP_LOGE("Scan dir path invaild");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(dirPath, realPath)) {
+        APP_LOGE("file(%{public}s) is not real path", dirPath.c_str());
+        return false;
+    }
+
+    DIR* dir = opendir(realPath.c_str());
+    if (dir == nullptr) {
+        APP_LOGE("Scan open dir(%{public}s) fail", realPath.c_str());
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+
+        std::string subName(ptr->d_name);
+        if (scanMode == ScanMode::SUB_FILE_DIR) {
+            if (ptr->d_type == DT_DIR) {
+                paths.emplace_back(HandleScanResult(dirPath, subName, resultMode));
+            }
+
+            continue;
+        }
+
+        if (scanMode == ScanMode::SUB_FILE_FILE) {
+            if (ptr->d_type == DT_REG) {
+                paths.emplace_back(HandleScanResult(dirPath, subName, resultMode));
+            }
+
+            continue;
+        }
+
+        paths.emplace_back(HandleScanResult(dirPath, subName, resultMode));
+    }
+
+    closedir(dir);
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -163,5 +163,16 @@ bool InstalldClient::GetInstalldProxy()
     }
     return true;
 }
+
+ErrCode InstalldClient::ScanDir(
+    const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
+{
+    if (dir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::ScanDir, dir, scanMode, resultMode, paths);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
