@@ -1588,6 +1588,11 @@ ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
 bool BundleMgrHostImpl::SetDisposedStatus(const std::string &bundleName, int32_t status)
 {
     APP_LOGD("SetDisposedStatus: bundleName: %{public}s, status: %{public}d", bundleName.c_str(), status);
+    // check permission
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERNISSION_MANAGE_DISPOSED_APP_STATUS)) {
+        APP_LOGE("SetDisposedStatus bundleName: %{public}s failed due to lack of permission", bundleName.c_str());
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1599,6 +1604,11 @@ bool BundleMgrHostImpl::SetDisposedStatus(const std::string &bundleName, int32_t
 int32_t BundleMgrHostImpl::GetDisposedStatus(const std::string &bundleName)
 {
     APP_LOGD("GetDisposedStatus: bundleName: %{public}s", bundleName.c_str());
+    // check permission
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERNISSION_MANAGE_DISPOSED_APP_STATUS)) {
+        APP_LOGE("GetDisposedStatus bundleName: %{public}s failed due to lack of permission", bundleName.c_str());
+        return Constants::DEFAULT_DISPOSED_STATUS;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
