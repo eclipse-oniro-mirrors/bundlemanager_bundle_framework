@@ -1532,6 +1532,10 @@ public:
         baseApplicationInfo_.fingerprint = fingerprint;
     }
 
+    void SetDisposedStatus(int32_t status);
+
+    int32_t GetDisposedStatus() const;
+
 private:
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
@@ -1553,6 +1557,7 @@ private:
     std::vector<std::string> allowedAcls_;
     InstallMark mark_;
     int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
+    int32_t disposedStatus_ = Constants::DEFAULT_DISPOSED_STATUS;
     bool isSandboxApp_ = false;
 
     // only using for install or update progress, doesn't need to save to database

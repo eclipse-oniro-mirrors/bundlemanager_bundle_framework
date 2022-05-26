@@ -100,6 +100,7 @@ const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 const std::string APP_INDEX = "appIndex";
 const std::string BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
+const std::string DISPOSED_STATUS = "disposedStatus";
 
 const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t userId)
 {
@@ -445,6 +446,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[APP_INDEX] = appIndex_;
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
+    jsonObject[DISPOSED_STATUS] = disposedStatus_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1285,6 +1287,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        DISPOSED_STATUS,
+        disposedStatus_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -2465,6 +2475,16 @@ bool InnerBundleInfo::HasEntry() const
         }
     }
     return false;
+}
+
+void InnerBundleInfo::SetDisposedStatus(int32_t status)
+{
+    disposedStatus_ = status;
+}
+
+int32_t InnerBundleInfo::GetDisposedStatus() const
+{
+    return disposedStatus_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

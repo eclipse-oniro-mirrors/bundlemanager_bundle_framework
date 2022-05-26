@@ -26,6 +26,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_death_recipient.h"
 #include "bundle_mgr_client.h"
+#include "bundle_mgr_proxy.h"
 #include "clean_cache_callback_host.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"

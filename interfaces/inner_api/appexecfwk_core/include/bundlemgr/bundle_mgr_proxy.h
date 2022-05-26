@@ -678,6 +678,10 @@ public:
     virtual bool SetModuleUpgradeFlag(
         const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag) override;
 
+    virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;
+
+    virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

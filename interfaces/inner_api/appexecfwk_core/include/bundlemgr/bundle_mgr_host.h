@@ -550,6 +550,10 @@ private:
 
     ErrCode HandleGetSandboxBundleInfo(Parcel &data, Parcel &reply);
 
+    ErrCode HandleSetDisposedStatus(Parcel &data, Parcel &reply);
+
+    ErrCode HandleGetDisposedStatus(Parcel &data, Parcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

@@ -675,6 +675,10 @@ public:
     virtual ErrCode GetSandboxBundleInfo(
         const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info) override;
 
+    virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;
+
+    virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
+
 private:
     const std::shared_ptr<BundleCloneMgr> GetCloneMgrFromService();
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

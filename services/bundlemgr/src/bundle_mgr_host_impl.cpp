@@ -1584,5 +1584,27 @@ ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
     }
     return sandboxDataMgr->GetSandboxAppBundleInfo(bundleName, appIndex, userId, info);
 }
+
+bool BundleMgrHostImpl::SetDisposedStatus(const std::string &bundleName, int32_t status)
+{
+    APP_LOGD("SetDisposedStatus: bundleName: %{public}s, status: %{public}d", bundleName.c_str(), status);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->SetDisposedStatus(bundleName, status);
+}
+
+int32_t BundleMgrHostImpl::GetDisposedStatus(const std::string &bundleName)
+{
+    APP_LOGD("GetDisposedStatus: bundleName: %{public}s", bundleName.c_str());
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::DEFAULT_DISPOSED_STATUS;
+    }
+    return dataMgr->GetDisposedStatus(bundleName);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
