@@ -23,6 +23,11 @@
 #include "ability_manager_interface.h"
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+#include "app_mgr_interface.h"
+#include "running_process_info.h"
+#endif
+
 namespace OHOS {
 namespace AppExecFwk {
 bool AbilityManagerHelper::UninstallApplicationProcesses(const std::string &bundleName, const int uid)
@@ -43,6 +48,43 @@ bool AbilityManagerHelper::UninstallApplicationProcesses(const std::string &bund
 #else
     APP_LOGI("ABILITY_RUNTIME_ENABLE is false");
     return true;
+#endif
+}
+
+int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bundleUid)
+{
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    APP_LOGI("check app is running, app name is %{public}s", bundleName.c_str());
+    sptr<IAppMgr> appMgrProxy = iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        APP_LOGE("fail to find the app mgr service to check app is running");
+        return FILEED;
+    }
+    if (bundleUid < 0) {
+        APP_LOGE("bundleUid is error.");
+        return FILEED;
+    }
+    std::vector<RunningProcessInfo> runningList;
+    int result = appMgrProxy->GetAllRunningProcesses(runningList);
+    if (result != ERR_OK) {
+        APP_LOGE("GetAllRunningProcesses failed.");
+        return FILEED;
+    }
+    for (RunningProcessInfo info : runningList) {
+        if (info.uid_ == bundleUid) {
+            for (std::string bundleNameInRunningProcessInfo : info.bundleNames) {
+                if (bundleNameInRunningProcessInfo == bundleName) {
+                    APP_LOGI("bundleName: %{public}s is running.", bundleName.c_str());
+                    return RUNNING;
+                }
+            }
+        }
+    }
+    APP_LOGI("nothing app running.");
+    return NOT_RUNNING;
+#else
+    APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
+    return FILEED;
 #endif
 }
 }  // namespace AppExecFwk

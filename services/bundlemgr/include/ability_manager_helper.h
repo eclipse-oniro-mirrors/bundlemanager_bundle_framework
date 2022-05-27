@@ -22,7 +22,13 @@ namespace OHOS {
 namespace AppExecFwk {
 class AbilityManagerHelper {
 public:
+    enum IsRunningResult {
+        FILEED = -1,
+        NOT_RUNNING = 0,
+        RUNNING = 1,
+    };
     static bool UninstallApplicationProcesses(const std::string &bundleName, const int uid);
+    static int IsRunning(const std::string bundleName, const int bundleUid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

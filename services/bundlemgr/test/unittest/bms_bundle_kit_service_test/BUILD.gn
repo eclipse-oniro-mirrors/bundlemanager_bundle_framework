@@ -107,9 +107,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
   if (bundle_framework_free_install) {
     sources += aging
     sources += free_install
-    include_dirs +=
-        [ "${aafwk_path}/frameworks/kits/appkit/native/app/include" ]
-    deps += [ "${aafwk_path}/frameworks/kits/appkit:appkit_native" ]
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",

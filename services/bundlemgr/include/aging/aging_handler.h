@@ -41,7 +41,6 @@ public:
     virtual bool Process(AgingRequest &request) const override;
     virtual bool CheckBundle(const AgingBundleInfo &bundle) const = 0;
     virtual bool NeedContinue(const AgingRequest &request) const;
-    virtual bool IsRunning(const std::string bundleName, const int bundleUid) const;
 
 private:
     bool UnInstallBundle(const std::string &bundleName) const;
