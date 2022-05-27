@@ -71,9 +71,16 @@ bool ImageCompress::MallocPngPointer(png_bytepp& rowPointers, uint32_t height, u
         APP_LOGE("ImageCompress: MallocPngPointer malloc buffer failed");
         return false;
     }
-    for (uint32_t h = 0; h < height; ++h) {
+    uint32_t h = 0;
+    for (; h < height; ++h) {
         rowPointers[h] = (png_byte*)malloc(strides);
         if (rowPointers[h] == nullptr) {
+            for (uint32_t i = 0; i < h; ++i) {
+                free(rowPointers[i]);
+                rowPointers[i] = nullptr;
+            }
+            free(rowPointers);
+            rowPointers = nullptr;
             return false;
         }
     }
@@ -331,7 +338,6 @@ int32_t ImageCompress::EncodePngFile(std::shared_ptr<ImageBuffer>& imageBuffer)
         free(memo.buffer);
         png_destroy_read_struct(&png, &info, NULL);
         APP_LOGE("ImageCompress: malloc failed");
-        free(memo.buffer);
         return -1;
     }
     for (uint32_t h = 0; h < imageBuffer->GetHeight(); ++h) {
