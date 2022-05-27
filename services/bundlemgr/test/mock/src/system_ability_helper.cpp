@@ -19,6 +19,7 @@
 
 #include "system_ability_definition.h"
 #include "app_log_wrapper.h"
+#include "mock_ability_mgr_host.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -32,6 +33,9 @@ sptr<IRemoteObject> SystemAbilityHelper::GetSystemAbility(const int32_t systemAb
     auto iter = g_abilities.find(systemAbilityId);
     if (iter != g_abilities.end()) {
         return iter->second;
+    }
+    if (systemAbilityId == ABILITY_MGR_SERVICE_ID) {
+        return new (std::nothrow) MockAbilityMgrStub();
     }
     return nullptr;
 }
