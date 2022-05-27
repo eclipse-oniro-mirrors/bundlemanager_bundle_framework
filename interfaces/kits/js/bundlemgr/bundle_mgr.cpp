@@ -4482,6 +4482,211 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
+static bool InnerSetDisposedStatus(const std::string &bundleName, int32_t status)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    auto result = iBundleMgr->SetDisposedStatus(bundleName, status);
+    if (!result) {
+        APP_LOGE("InnerSetDisposedStatus::SetDisposedStatus bundleName:%{public}s failed", bundleName.c_str());
+    }
+    return result;
+}
+
+void SetDisposedStatusExecute(napi_env env, void *data)
+{
+    APP_LOGD("NAPI_SetDisposedStatus, worker pool thread execute.");
+    DisposedStatusInfo* asyncCallbackInfo = static_cast<DisposedStatusInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("NAPI_SetDisposedStatus, asyncCallbackInfo == nullptr");
+        return;
+    }
+    if (!asyncCallbackInfo->errCode) {
+        asyncCallbackInfo->result = InnerSetDisposedStatus(asyncCallbackInfo->bundleName, asyncCallbackInfo->status);
+        if (!asyncCallbackInfo->result) {
+            asyncCallbackInfo->errCode = OPERATION_FAILED;
+            asyncCallbackInfo->errMssage = "invalid parameters";
+        }
+    }
+}
+
+void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI_SetDisposedStatus, main event thread complete.");
+    DisposedStatusInfo* asyncCallbackInfo = static_cast<DisposedStatusInfo*>(data);
+    std::unique_ptr<DisposedStatusInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[PARAM2] = { 0 };
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[PARAM0]));
+    if (asyncCallbackInfo->errCode) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->errMssage.c_str(),
+                              NAPI_AUTO_LENGTH, &result[PARAM1]));
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[PARAM1]));
+    }
+    if (asyncCallbackInfo->callback) {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    } else {
+        if (asyncCallbackInfo->errCode) {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
+        }
+    }
+    APP_LOGD("NAPI_SetDisposedStatus, main event thread complete end.");
+}
+
+napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
+{
+    size_t requireArgc = ARGS_SIZE_TWO;
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = { 0 };
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
+    DisposedStatusInfo *asyncCallbackInfo = new (std::nothrow) DisposedStatusInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<DisposedStatusInfo> callbackPtr {asyncCallbackInfo};
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
+        if ((i == PARAM0) && (valueType == napi_string)) {
+            ParseString(env, asyncCallbackInfo->bundleName, argv[i]);
+        } else if ((i == PARAM1) && (valueType == napi_number)) {
+            ParseInt(env, asyncCallbackInfo->status, argv[i]);
+        } else if ((i == PARAM2) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            asyncCallbackInfo->errCode = INVALID_PARAM;
+            asyncCallbackInfo->errMssage = "type misMatch";
+        }
+    }
+    if ((argc < requireArgc) || (argc > ARGS_SIZE_THREE)) {
+        asyncCallbackInfo->errCode = INVALID_PARAM;
+        asyncCallbackInfo->errMssage = "type misMatch";
+        APP_LOGE("SetDisposedStatus, Wrong argument count");
+    }
+    napi_value promise = nullptr;
+    if (asyncCallbackInfo->callback == nullptr) {
+        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
+    } else {
+        NAPI_CALL(env, napi_get_undefined(env, &promise));
+    }
+    napi_value resource = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, "JSSetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, SetDisposedStatusExecute,
+        SetDisposedStatusComplete, (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    callbackPtr.release();
+    return promise;
+}
+
+static int32_t InnerGetDisposedStatus(const std::string &bundleName)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    return iBundleMgr->GetDisposedStatus(bundleName);
+}
+
+void GetDisposedStatusExecute(napi_env env, void *data)
+{
+    APP_LOGD("NAPI_GetDisposedStatus, worker pool thread execute.");
+    DisposedStatusInfo* asyncCallbackInfo = static_cast<DisposedStatusInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("NAPI_GetDisposedStatus, asyncCallbackInfo == nullptr");
+        return;
+    }
+    if (!asyncCallbackInfo->errCode) {
+        asyncCallbackInfo->status = InnerGetDisposedStatus(asyncCallbackInfo->bundleName);
+    }
+}
+
+void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI_GetDisposedStatus, main event thread complete.");
+    DisposedStatusInfo* asyncCallbackInfo = static_cast<DisposedStatusInfo*>(data);
+    std::unique_ptr<DisposedStatusInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[PARAM2] = { 0 };
+    if (asyncCallbackInfo->errCode) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[PARAM0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->errMssage.c_str(),
+                              NAPI_AUTO_LENGTH, &result[PARAM1]));
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->status, &result[PARAM0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[PARAM1]));
+    }
+    if (asyncCallbackInfo->callback) {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    } else {
+        if (asyncCallbackInfo->errCode) {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
+        }
+    }
+    APP_LOGD("NAPI_GetDisposedStatus, main event thread complete end.");
+}
+
+napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
+{
+    size_t requireArgc = ARGS_SIZE_ONE;
+    size_t argc = ARGS_SIZE_TWO;
+    napi_value argv[ARGS_SIZE_TWO] = { 0 };
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
+    DisposedStatusInfo *asyncCallbackInfo = new (std::nothrow) DisposedStatusInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<DisposedStatusInfo> callbackPtr {asyncCallbackInfo};
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
+        if ((i == PARAM0) && (valueType == napi_string)) {
+            ParseString(env, asyncCallbackInfo->bundleName, argv[i]);
+        } else if ((i == PARAM1) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            asyncCallbackInfo->errCode = INVALID_PARAM;
+            asyncCallbackInfo->errMssage = "type misMatch";
+        }
+    }
+    napi_value promise = nullptr;
+    if ((argc < requireArgc) || (argc > ARGS_SIZE_TWO)) {
+        asyncCallbackInfo->errCode = INVALID_PARAM;
+        asyncCallbackInfo->errMssage = "type misMatch";
+        APP_LOGE("GetDisposedStatus, Wrong argument count");
+    }
+    if (asyncCallbackInfo->callback == nullptr) {
+        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
+    } else {
+        NAPI_CALL(env, napi_get_undefined(env, &promise));
+    }
+    napi_value resource = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, "JSGetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, GetDisposedStatusExecute,
+        GetDisposedStatusComplete, (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    callbackPtr.release();
+    return promise;
+}
+
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
 {
     size_t requireArgc = ARGS_SIZE_TWO;

@@ -289,6 +289,15 @@ struct AsyncAbilityInfo : public AsyncWorkData {
     std::string errMssage;
 };
 
+struct DisposedStatusInfo : public AsyncWorkData {
+    explicit DisposedStatusInfo(napi_env env) : AsyncWorkData(env) {}
+    std::string bundleName;
+    int32_t status = Constants::DEFAULT_DISPOSED_STATUS;
+    bool result = false;
+    int32_t errCode = 0;
+    std::string errMssage;
+};
+
 extern thread_local napi_ref g_classBundleInstaller;
 
 napi_value WrapVoidToJS(napi_env env);
@@ -328,6 +337,8 @@ napi_value SetModuleUpgradeFlag(napi_env env, napi_callback_info info);
 napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo);
 napi_value GetDispatcherVersionWrap(
     napi_env env, napi_value promise, AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo);
+napi_value SetDisposedStatus(napi_env env, napi_callback_info info);
+napi_value GetDisposedStatus(napi_env env, napi_callback_info info);
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo);
 void CreateAbilityTypeObject(napi_env env, napi_value value);
 void CreateAbilitySubTypeObject(napi_env env, napi_value value);
