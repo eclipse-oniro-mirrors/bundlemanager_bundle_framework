@@ -771,7 +771,7 @@ ErrCode BundleMgrHost::HandleQueryAllAbilityInfos(Parcel &data, Parcel &reply)
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVector(abilityInfos, reply)) {
+        if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
