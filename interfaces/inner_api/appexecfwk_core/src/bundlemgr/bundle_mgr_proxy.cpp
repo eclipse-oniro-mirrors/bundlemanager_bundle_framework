@@ -837,7 +837,7 @@ bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std:
         return false;
     }
 
-    if (!GetParcelableInfos<AbilityInfo>(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, data, abilityInfos)) {
+    if (!GetParcelableInfosFromAshmem<AbilityInfo>(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos from server");
         return false;
     }
