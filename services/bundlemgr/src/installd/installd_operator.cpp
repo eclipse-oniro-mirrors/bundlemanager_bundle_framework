@@ -99,8 +99,9 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         targetDir = targetPath + Constants::PATH_SEPARATOR;
     }
     for (const auto &entryName : entryNames) {
-        if (entryName.find("..") != std::string::npos) {
-            return false;
+        if (strcmp(entryName.c_str(), ".") == 0 ||
+            strcmp(entryName.c_str(), "..") == 0) {
+            continue;
         }
         if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
             continue;
