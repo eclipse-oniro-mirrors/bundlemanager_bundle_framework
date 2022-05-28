@@ -887,7 +887,7 @@ HWTEST_F(BmsDataMgrTest, QueryAbilityInfo_0300, Function | SmallTest | Level0)
 {
     Want want;
     ElementName element1;
-    EXPECT_EQ("//", element1.GetURI());
+    EXPECT_EQ("///", element1.GetURI());
 
     element1.SetDeviceID(DEVICE_ID);
     EXPECT_EQ(DEVICE_ID, element1.GetDeviceID());
@@ -897,10 +897,10 @@ HWTEST_F(BmsDataMgrTest, QueryAbilityInfo_0300, Function | SmallTest | Level0)
 
     element1.SetAbilityName(ABILITY_NAME);
     EXPECT_EQ(ABILITY_NAME, element1.GetAbilityName());
-    EXPECT_EQ(DEVICE_ID + "/" + BUNDLE_NAME + "/" + ABILITY_NAME, element1.GetURI());
+    EXPECT_EQ(DEVICE_ID + "/" + BUNDLE_NAME + "//" + ABILITY_NAME, element1.GetURI());
 
     ElementName element2(DEVICE_ID, BUNDLE_NAME, ABILITY_NAME);
-    EXPECT_EQ(DEVICE_ID + "/" + BUNDLE_NAME + "/" + ABILITY_NAME, element2.GetURI());
+    EXPECT_EQ(DEVICE_ID + "/" + BUNDLE_NAME + "//" + ABILITY_NAME, element2.GetURI());
 
     bool equal = (element2 == element1);
     EXPECT_TRUE(equal);
