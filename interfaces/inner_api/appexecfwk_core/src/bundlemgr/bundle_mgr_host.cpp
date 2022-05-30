@@ -1772,7 +1772,7 @@ ErrCode BundleMgrHost::HandleGetDisposedStatus(Parcel &data, Parcel &reply)
 
 ErrCode BundleMgrHost::HandleIsDefaultApplication(Parcel &data, Parcel &reply)
 {
-    APP_LOGE("begin to HandleIsDefaultApplication.");
+    APP_LOGD("begin to HandleIsDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     std::string type = data.ReadString();
@@ -1788,7 +1788,7 @@ ErrCode BundleMgrHost::HandleIsDefaultApplication(Parcel &data, Parcel &reply)
 
 ErrCode BundleMgrHost::HandleGetDefaultApplication(Parcel &data, Parcel &reply)
 {
-    APP_LOGE("begin to HandleGetDefaultApplication.");
+    APP_LOGD("begin to HandleGetDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     int32_t userId = data.ReadInt32();
@@ -1802,7 +1802,7 @@ ErrCode BundleMgrHost::HandleGetDefaultApplication(Parcel &data, Parcel &reply)
     }
     if (ret) {
         if (!reply.WriteParcelable(&bundleInfo)) {
-            APP_LOGE("WriteParcelable failed");
+            APP_LOGE("write bundleInfo failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -1812,7 +1812,7 @@ ErrCode BundleMgrHost::HandleGetDefaultApplication(Parcel &data, Parcel &reply)
 
 ErrCode BundleMgrHost::HandleSetDefaultApplication(Parcel &data, Parcel &reply)
 {
-    APP_LOGE("begin to HandleSetDefaultApplication.");
+    APP_LOGD("begin to HandleSetDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     int32_t userId = data.ReadInt32();
@@ -1822,8 +1822,8 @@ ErrCode BundleMgrHost::HandleSetDefaultApplication(Parcel &data, Parcel &reply)
         APP_LOGE("ReadParcelable<want> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     bool ret = SetDefaultApplication(userId, type, *want);
+
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1834,13 +1834,13 @@ ErrCode BundleMgrHost::HandleSetDefaultApplication(Parcel &data, Parcel &reply)
 
 ErrCode BundleMgrHost::HandleResetDefaultApplication(Parcel &data, Parcel &reply)
 {
-    APP_LOGE("begin to HandleResetDefaultApplication.");
+    APP_LOGD("begin to HandleResetDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
-
     bool ret = ResetDefaultApplication(userId, type);
+
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
