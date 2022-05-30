@@ -1613,19 +1613,19 @@ bool BundleMgrHostImpl::IsDefaultApplication(const std::string& type)
     return false;
 }
 
-bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+bool BundleMgrHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
     APP_LOGD("begin to GetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
     return false;
 }
 
-bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
+bool BundleMgrHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
     APP_LOGD("begin to SetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
     return false;
 }
 
-bool ResetDefaultApplication(int32_t userId, const std::string& type)
+bool BundleMgrHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
     APP_LOGD("begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
     return false;

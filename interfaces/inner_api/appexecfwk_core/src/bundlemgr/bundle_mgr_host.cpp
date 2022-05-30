@@ -177,9 +177,9 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::SET_DISPOSED_STATUS, &BundleMgrHost::HandleSetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::GET_DISPOSED_STATUS, &BundleMgrHost::HandleGetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::IS_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
-    funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
-    funcMap_.emplace(IBundleMgr::Message::SET_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
-    funcMap_.emplace(IBundleMgr::Message::RESET_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
+    funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APPLICATION, &BundleMgrHost::HandleGetDefaultApplication);
+    funcMap_.emplace(IBundleMgr::Message::SET_DEFAULT_APPLICATION, &BundleMgrHost::HandleSetDefaultApplication);
+    funcMap_.emplace(IBundleMgr::Message::RESET_DEFAULT_APPLICATION, &BundleMgrHost::HandleResetDefaultApplication);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1777,10 +1777,12 @@ ErrCode BundleMgrHost::HandleIsDefaultApplication(Parcel &data, Parcel &reply)
 
     std::string type = data.ReadString();
     bool ret = IsDefaultApplication(type);
+
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+
     return ERR_OK;
 }
 
@@ -1793,6 +1795,7 @@ ErrCode BundleMgrHost::HandleGetDefaultApplication(Parcel &data, Parcel &reply)
     std::string type = data.ReadString();
     BundleInfo bundleInfo;
     bool ret = GetDefaultApplication(userId, type, bundleInfo);
+
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
