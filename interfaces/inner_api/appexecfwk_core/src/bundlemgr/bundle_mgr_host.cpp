@@ -176,6 +176,10 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_BUNDLE_INFO, &BundleMgrHost::HandleGetSandboxBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::SET_DISPOSED_STATUS, &BundleMgrHost::HandleSetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::GET_DISPOSED_STATUS, &BundleMgrHost::HandleGetDisposedStatus);
+    funcMap_.emplace(IBundleMgr::Message::IS_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
+    funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
+    funcMap_.emplace(IBundleMgr::Message::SET_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
+    funcMap_.emplace(IBundleMgr::Message::RESET_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1763,6 +1767,82 @@ ErrCode BundleMgrHost::HandleGetDisposedStatus(Parcel &data, Parcel &reply)
         APP_LOGE("HandleGetDisposedStatus write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsDefaultApplication(Parcel &data, Parcel &reply)
+{
+    APP_LOGE("begin to HandleIsDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    std::string type = data.ReadString();
+    bool ret = IsDefaultApplication(type);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetDefaultApplication(Parcel &data, Parcel &reply)
+{
+    APP_LOGE("begin to HandleGetDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    int32_t userId = data.ReadInt32();
+    std::string type = data.ReadString();
+    BundleInfo bundleInfo;
+    bool ret = GetDefaultApplication(userId, type, bundleInfo);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret) {
+        if (!reply.WriteParcelable(&bundleInfo)) {
+            APP_LOGE("WriteParcelable failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetDefaultApplication(Parcel &data, Parcel &reply)
+{
+    APP_LOGE("begin to HandleSetDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    int32_t userId = data.ReadInt32();
+    std::string type = data.ReadString();
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    bool ret = SetDefaultApplication(userId, type, *want);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleResetDefaultApplication(Parcel &data, Parcel &reply)
+{
+    APP_LOGE("begin to HandleResetDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    int32_t userId = data.ReadInt32();
+    std::string type = data.ReadString();
+
+    bool ret = ResetDefaultApplication(userId, type);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
     return ERR_OK;
 }
 

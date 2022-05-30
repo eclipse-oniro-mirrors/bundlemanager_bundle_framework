@@ -554,6 +554,13 @@ private:
 
     ErrCode HandleGetDisposedStatus(Parcel &data, Parcel &reply);
 
+    ErrCode HandleIsDefaultApplication(Parcel &data, Parcel &reply);
+
+    ErrCode HandleGetDefaultApplication(Parcel &data, Parcel &reply);
+
+    ErrCode HandleSetDefaultApplication(Parcel &data, Parcel &reply);
+
+    ErrCode HandleResetDefaultApplication(Parcel &data, Parcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

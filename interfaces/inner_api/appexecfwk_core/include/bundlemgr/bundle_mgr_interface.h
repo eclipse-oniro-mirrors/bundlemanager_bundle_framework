@@ -968,6 +968,26 @@ public:
         return false;
     }
 
+    virtual bool IsDefaultApplication(const std::string& type)
+    {
+        return false;
+    }
+
+    virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+    {
+        return false;
+    }
+
+    virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
+    {
+        return false;
+    }
+
+    virtual bool ResetDefaultApplication(int32_t userId, const std::string& type)
+    {
+        return false;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1054,6 +1074,10 @@ public:
         GET_SANDBOX_APP_BUNDLE_INFO,
         SET_DISPOSED_STATUS,
         GET_DISPOSED_STATUS,
+        IS_DEFAULT_APPLICATION,
+        GET_DEFAULT_APPLICATION,
+        SET_DEFAULT_APPLICATION,
+        RESET_DEFAULT_APPLICATION,
     };
 };
 }  // namespace AppExecFwk

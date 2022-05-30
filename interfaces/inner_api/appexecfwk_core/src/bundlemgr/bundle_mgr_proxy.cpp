@@ -2555,6 +2555,133 @@ int32_t BundleMgrProxy::GetDisposedStatus(const std::string &bundleName)
     return reply.ReadInt32();
 }
 
+bool BundleMgrProxy::IsDefaultApplication(const std::string& type)
+{
+    APP_LOGD("begin to call IsDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (type.empty()) {
+        APP_LOGE("type is empty.");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return false;
+    }
+    if (!data.WriteString(type)) {
+        APP_LOGE("write type failed.");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::IS_DEFAULT_APPLICATION, data, reply)) {
+        APP_LOGE("SendTransactCmd failed.");
+        return false;
+    }
+
+    return reply.ReadBool();
+}
+
+bool BundleMgrProxy::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+{
+    APP_LOGD("begin to GetDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (type.empty()) {
+        APP_LOGE("type is empty.");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return false;
+    }
+    if (!data.WriteString(type)) {
+        APP_LOGE("write type failed.");
+        return false;
+    }
+
+    if (!GetParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_DEFAULT_APPLICATION, data, bundleInfo)) {
+        APP_LOGE("failed to GetDefaultApplication from server.");
+        return false;
+    }
+
+    APP_LOGD("GetDefaultApplication success.");
+    return true;
+}
+
+bool BundleMgrProxy::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
+{
+    APP_LOGD("begin to SetDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return false;
+    }
+    if (!data.WriteString(type)) {
+        APP_LOGE("write type failed.");
+        return false;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("write want failed.");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::SET_DEFAULT_APPLICATION, data, reply)) {
+        APP_LOGE("SendTransactCmd failed.");
+        return false;
+    }
+
+    return reply.ReadBool();
+}
+
+bool BundleMgrProxy::ResetDefaultApplication(int32_t userId, const std::string& type)
+{
+    APP_LOGD("begin to ResetDefaultApplication.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (type.empty()) {
+        APP_LOGE("type is empty.");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return false;
+    }
+    if (!data.WriteString(type)) {
+        APP_LOGE("write type failed.");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::RESET_DEFAULT_APPLICATION, data, reply)) {
+        APP_LOGE("SendTransactCmd failed.");
+        return false;
+    }
+
+    return reply.ReadBool();
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {
