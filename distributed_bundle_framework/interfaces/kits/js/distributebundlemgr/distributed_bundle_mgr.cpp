@@ -208,7 +208,7 @@ static bool ParseElementName(napi_env env, OHOS::AppExecFwk::ElementName &elemen
     APP_LOGD("begin to parse ElementName");
     napi_status status;
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("args not object type");
         return false;
@@ -253,19 +253,19 @@ static bool ParseElementNames(napi_env env, std::vector<ElementName> &elementNam
 {
     APP_LOGD("begin to parse ElementNames");
     bool isArray = false;
-    NAPI_CALL(env, napi_is_array(env, args, &isArray));
+    NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
     if (!isArray) {
         APP_LOGE("parseElementNames args not array");
         return false;
     }
     uint32_t arrayLength = 0;
-    NAPI_CALL(env, napi_get_array_length(env, args, &arrayLength));
+    NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
     APP_LOGD("arrayLength:%{public}d", arrayLength);
     for (uint32_t i = 0; i < arrayLength; i++) {
         napi_value value = nullptr;
-        NAPI_CALL(env, napi_get_element(env, args, i, &value));
+        NAPI_CALL_BASE(env, napi_get_element(env, args, i, &value), false);
         napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, value, &valueType));
+        NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), false);
         if (valueType != napi_object) {
             APP_LOGE("array inside not object type");
             elementNames.clear();
