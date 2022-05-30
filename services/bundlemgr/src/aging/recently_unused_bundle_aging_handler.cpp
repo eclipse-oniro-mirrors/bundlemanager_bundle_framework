@@ -15,14 +15,13 @@
 
 #include <cinttypes>
 
-#include "ability_manager.h"
+#include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "aging/aging_handler.h"
 #include "app_log_wrapper.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "install_param.h"
-#include "running_process_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -39,9 +38,9 @@ bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
         if (!CheckBundle(*iter)) {
             break;
         }
-        APP_LOGD("found matching bundle: %{public}s.", iter->GetBundleName().c_str());
-        bool isBundlerunning = IsRunning(iter->GetBundleName(), iter->GetBundleUid());
-        if (!isBundlerunning) {
+        APP_LOGI("found matching bundle: %{public}s.", iter->GetBundleName().c_str());
+        bool isBundlerunning = AbilityManagerHelper::IsRunning(iter->GetBundleName(), iter->GetBundleUid());
+        if (isBundlerunning == AbilityManagerHelper::NOT_RUNNING) {
             bool isBundleUnistalled = UnInstallBundle(iter->GetBundleName());
             if (isBundleUnistalled) {
                 request.UpdateTotalDataBytesAfterUninstalled(iter->GetDataBytes());
@@ -93,27 +92,6 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
     installParam.installFlag = InstallFlag::FREE_INSTALL;
     bundleInstaller->Uninstall(bundleName, installParam, userReceiverImpl);
     return true;
-}
-
-bool RecentlyUnuseBundleAgingHandler::IsRunning(const std::string bundleName, const int bundleUid) const
-{
-    if (bundleUid < 0) {
-        APP_LOGE("bundleUid is error.");
-        return false;
-    }
-    std::vector<RunningProcessInfo> runningList = AbilityManager::GetInstance().GetAllRunningProcesses();
-    if (runningList.size() == 0) {
-        APP_LOGD("app runningList size = 0.");
-        return false;
-    }
-    for (RunningProcessInfo info : runningList) {
-        if (info.uid_ == bundleUid) {
-            APP_LOGD("bundleName: %{public}s is running.", bundleName.c_str());
-            return true;
-        }
-    }
-    APP_LOGD("nothing app running.");
-    return false;
 }
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

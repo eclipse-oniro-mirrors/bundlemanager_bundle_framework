@@ -205,7 +205,6 @@ ohos_shared_library("libbms") {
     sources += aging
     sources += free_install
     sources += [ "src/installd/installd_operator.cpp" ]
-    deps += [ "${aafwk_path}/frameworks/kits/appkit:appkit_native" ]
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
