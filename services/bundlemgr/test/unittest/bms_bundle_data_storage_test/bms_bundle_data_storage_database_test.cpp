@@ -113,7 +113,8 @@ protected:
                         "vendor": "",
                         "versionCode": 0,
                         "versionName": "",
-                        "appDistributionType": 0
+                        "appDistributionType": "none",
+                        "provisionType": "release"
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -372,7 +373,8 @@ protected:
                 "vendor": "ohos",
                 "versionCode": 1000000,
                 "versionName": "1.0.0",
-                "appDistributionType": 0
+                "appDistributionType": "none",
+                "provisionType": "release"
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -438,7 +440,8 @@ protected:
                     "vendor": "",
                     "versionCode": 0,
                     "versionName": "",
-                    "appDistributionType": 0
+                    "appDistributionType": "none",
+                    "provisionType": "release"
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",
