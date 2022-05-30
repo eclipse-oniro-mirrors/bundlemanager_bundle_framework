@@ -20,10 +20,10 @@ config("tools_bm_config_mock") {
   include_dirs = [
     "${inner_api_path}/appexecfwk_base/include",
     "${inner_api_path}/appexecfwk_core/include/bundlemgr",
-    "${innerkits_path}/libeventhandler/include",
     "${appexecfwk_path}/services/bundlemgr/include",
     "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
     "${bundletool_test_path}/mock",
+    "//base/notification/eventhandler/interfaces/inner_api",
     "//base/security/permission/interfaces/innerkits/permission_standard/permissionsdk/main/cpp/include",
     "//base/security/appverify/interfaces/innerkits/appverify/include",
     "//third_party/googletest/googlemock/include",

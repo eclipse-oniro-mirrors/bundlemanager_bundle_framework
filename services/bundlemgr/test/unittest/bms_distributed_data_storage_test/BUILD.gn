@@ -38,8 +38,8 @@ ohos_unittest("BmsDistributedDataStorageTest") {
   sources += [ "bms_distributed_data_storage_test.cpp" ]
 
   configs = [
-    "${libs_path}/libeventhandler:libeventhandler_config",
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
