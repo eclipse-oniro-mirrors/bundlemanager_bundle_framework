@@ -1572,6 +1572,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
         baseApplicationInfo_.nativeLibraryPath = applicationInfo.nativeLibraryPath;
         baseApplicationInfo_.cpuAbi = applicationInfo.cpuAbi;
     }
+    baseApplicationInfo_.appDistributionType = applicationInfo.appDistributionType;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
@@ -2485,6 +2486,16 @@ void InnerBundleInfo::SetDisposedStatus(int32_t status)
 int32_t InnerBundleInfo::GetDisposedStatus() const
 {
     return disposedStatus_;
+}
+
+void InnerBundleInfo::SetAppDistributionType(int32_t appDistributionType)
+{
+    baseApplicationInfo_.appDistributionType = appDistributionType;
+}
+
+int32_t InnerBundleInfo::GetAppDistributionType() const
+{
+    return baseApplicationInfo_.appDistributionType;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -85,6 +85,7 @@ const std::string APPLICATION_CPU_ABI = "cpuAbi";
 const std::string APPLICATION_IS_COMPRESS_NATIVE_LIBS = "isCompressNativeLibs";
 const std::string APPLICATION_SIGNATURE_KEY = "signatureKey";
 const std::string APPLICATION_TARGETBUNDLELIST = "targetBundleList";
+const std::string APPLICATION_APP_DISTRIBUTION_TYPE = "appDistributionType";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -311,6 +312,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_IS_COMPRESS_NATIVE_LIBS, applicationInfo.isCompressNativeLibs},
         {APPLICATION_SIGNATURE_KEY, applicationInfo.signatureKey},
         {APPLICATION_TARGETBUNDLELIST, applicationInfo.targetBundleList},
+        {APPLICATION_APP_DISTRIBUTION_TYPE, applicationInfo.appDistributionType},
     };
 }
 
@@ -742,6 +744,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_DISTRIBUTION_TYPE,
+        applicationInfo.appDistributionType,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }

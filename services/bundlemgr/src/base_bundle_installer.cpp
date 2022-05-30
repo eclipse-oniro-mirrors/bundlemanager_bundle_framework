@@ -1626,6 +1626,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(const std::vector<std::string> &bundl
         newInfo.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
         newInfo.SetAllowedAcls(provisionInfo.acls.allowedAcls);
         newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
+        newInfo.SetAppDistributionType(static_cast<int32_t>(provisionInfo.distributionType));
         if ((result = CheckSystemSize(bundlePaths[i], appType)) != ERR_OK) {
             APP_LOGE("install failed due to insufficient disk memory");
             return result;
