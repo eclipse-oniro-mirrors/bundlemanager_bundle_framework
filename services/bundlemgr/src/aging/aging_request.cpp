@@ -30,28 +30,42 @@ AgingRequest::AgingRequest()
     InitAgingPolicySystemParameters();
 }
 
-void AgingRequest::InitAgingPolicySystemParameters()
+void AgingRequest::InitAgingDatasizeThreshold()
 {
     char szDatasizeThreshold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_DATA_SIZE_THRESHOLD.c_str(), "", szDatasizeThreshold,
         AgingConstants::THRESHOLD_VAL_LEN);
+    APP_LOGD("ret is %{public}d, szDatasizeThreshold is %{public}d", ret, atoi(szDatasizeThreshold));
     if (ret <= 0) {
         APP_LOGE("GetParameter failed");
         return;
     }
     if (strcmp(szDatasizeThreshold, "") != 0) {
         totalDataBytesThreshold = atoi(szDatasizeThreshold);
+        APP_LOGD("AgingRequest init aging data size threshold success");
     }
+}
 
+void AgingRequest::InitAgingOneDayTimeMs()
+{
     char szOneDayTimeMs[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    ret = GetParameter(AgingConstants::SYSTEM_PARAM_RECENILY_USED_THRESHOLD.c_str(), "", szOneDayTimeMs,
+    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_RECENILY_USED_THRESHOLD.c_str(), "", szOneDayTimeMs,
         AgingConstants::THRESHOLD_VAL_LEN);
+    APP_LOGD("ret is %{public}d, szOneDayTimeMs is %{public}d", ret, atoi(szOneDayTimeMs));
     if (ret <= 0) {
         APP_LOGE("GetParameter failed");
         return;
     }
-    if (strcmp(szOneDayTimeMs, "") != 0)
+    if (strcmp(szOneDayTimeMs, "") != 0) {
         oneDayTimeMs = atoi(szOneDayTimeMs);
+        APP_LOGD("AgingRequest init aging one day time ms success");
+    }
+}
+
+void AgingRequest::InitAgingPolicySystemParameters()
+{
+    InitAgingDatasizeThreshold();
+    InitAgingOneDayTimeMs();
 }
 
 bool AgingRequest::IsReachStartAgingThreshold() const
