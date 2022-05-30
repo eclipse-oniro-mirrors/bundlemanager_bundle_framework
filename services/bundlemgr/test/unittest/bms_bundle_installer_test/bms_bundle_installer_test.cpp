@@ -53,7 +53,6 @@ const std::string RIGHT_BUNDLE = "right.hap";
 const std::string INVALID_BUNDLE = "nonfile.hap";
 const std::string FORMAT_ERROR_BUNDLE = "format_error_profile.hap";
 const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
-const std::string ERROR_BUNDLE_PROFILE_FILE = "error_bundle_profile.hap";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const std::string ROOT_DIR = "/data/app";
