@@ -1378,7 +1378,7 @@ static bool ParseBundleOptions(napi_env env, BundleOptions &bundleOptions, napi_
 {
     APP_LOGD("begin to parse bundleOptions");
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("args not object type");
         return false;
@@ -1397,7 +1397,7 @@ static bool ParseWant(napi_env env, Want &want, napi_value args)
 {
     APP_LOGD("begin to parse want");
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("args not object type");
         return false;
@@ -1726,7 +1726,7 @@ static bool HasModuleName(napi_env env, size_t argc, napi_value *argv)
     bool hasModuleName = false;
     if (argc > 0) {
         napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[argc - 1], &valueType));
+        NAPI_CALL_BASE(env, napi_typeof(env, argv[argc - 1], &valueType), false);
         if (valueType == napi_function) {
             hasModuleName = (argc == ARGS_SIZE_FOUR) ? true : false;
         } else {
@@ -3022,7 +3022,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 static bool ParseHashParam(napi_env env, std::string &key, std::string &value, napi_value args)
 {
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("args type incorrect!");
         return false;
@@ -3073,17 +3073,17 @@ static bool ParseHashParams(napi_env env, std::map<std::string, std::string> &ha
     uint32_t arrayLength = 0;
     napi_value valueAry = 0;
     napi_valuetype valueAryType = napi_undefined;
-    NAPI_CALL(env, napi_is_array(env, args, &isArray));
+    NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
     if (!isArray) {
         APP_LOGE("hashParams is not array!");
         return false;
     }
 
-    NAPI_CALL(env, napi_get_array_length(env, args, &arrayLength));
+    NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
     APP_LOGD("ParseHashParams property is array, length=%{public}ud", arrayLength);
     for (uint32_t j = 0; j < arrayLength; j++) {
-        NAPI_CALL(env, napi_get_element(env, args, j, &valueAry));
-        NAPI_CALL(env, napi_typeof(env, valueAry, &valueAryType));
+        NAPI_CALL_BASE(env, napi_get_element(env, args, j, &valueAry), false);
+        NAPI_CALL_BASE(env, napi_typeof(env, valueAry, &valueAryType), false);
         std::string key;
         std::string value;
         if (!ParseHashParam(env, key, value, valueAry)) {
@@ -3105,7 +3105,7 @@ static bool ParseHashParams(napi_env env, std::map<std::string, std::string> &ha
 static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_value args)
 {
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("args type incorrect!");
         return false;
@@ -3129,7 +3129,7 @@ static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_val
         }
 
         int userId = Constants::UNSPECIFIED_USERID;
-        NAPI_CALL(env, napi_get_value_int32(env, property, &userId));
+        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &userId), false);
         if (userId < Constants::DEFAULT_USERID) {
             APP_LOGE("param userId(%{public}d) is invalid.", userId);
             return false;
@@ -3155,7 +3155,7 @@ static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_val
         }
 
         int installFlag = 0;
-        NAPI_CALL(env, napi_get_value_int32(env, property, &installFlag));
+        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &installFlag), false);
         installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(installFlag);
     }
     APP_LOGI("ParseInstallParam installFlag=%{public}d.", installParam.installFlag);
@@ -3177,7 +3177,7 @@ static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_val
         }
 
         bool isKeepData = false;
-        NAPI_CALL(env, napi_get_value_bool(env, property, &isKeepData));
+        NAPI_CALL_BASE(env, napi_get_value_bool(env, property, &isKeepData), false);
         installParam.isKeepData = isKeepData;
     }
     APP_LOGI("ParseInstallParam isKeepData=%{public}d.", installParam.isKeepData);

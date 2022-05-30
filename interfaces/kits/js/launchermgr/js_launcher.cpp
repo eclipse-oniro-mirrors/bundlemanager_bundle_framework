@@ -84,7 +84,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     APP_LOGD("parse bundleStatusCallback begin");
     napi_status status;
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, args, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("param type mismatch!");
         return false;
