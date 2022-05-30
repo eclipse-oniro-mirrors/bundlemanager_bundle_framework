@@ -87,7 +87,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             Constants::EMPTY_STRING,
             mainAbility_,
             result,
-            isAppExist_ ? NotifyType::UPDATE : NotifyType::INSTALL,
+            (isAppExist_ && hasInstalledInUser_) ? NotifyType::UPDATE : NotifyType::INSTALL,
             uid);
     }
 
@@ -97,7 +97,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
 
     SendBundleSystemEvent(
         bundleName_,
-        (isAppExist_ ? BundleEventType::UPDATE : BundleEventType::INSTALL),
+        ((isAppExist_ && hasInstalledInUser_) ? BundleEventType::UPDATE : BundleEventType::INSTALL),
         installParam,
         sysEventInfo_.preBundleScene,
         result);
