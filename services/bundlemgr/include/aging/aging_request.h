@@ -64,6 +64,8 @@ public:
 
 private:
     void InitAgingPolicySystemParameters();
+    void InitAgingDatasizeThreshold();
+    void InitAgingOneDayTimeMs();
     std::vector<AgingBundleInfo> agingBundles;
     int64_t tatalDataBytes = 0;
 

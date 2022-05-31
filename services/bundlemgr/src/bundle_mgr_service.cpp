@@ -206,8 +206,7 @@ bool BundleMgrService::Init()
         agingMgr_ = DelayedSingleton<BundleAgingMgr>::GetInstance();
         if (agingMgr_ == nullptr) {
             APP_LOGE("Create aging manager faild.");
-        }
-        if (agingMgr_) {
+        } else {
             APP_LOGI("Create aging manager success.");
             agingMgr_->InitAgingRunner();
             agingMgr_->InitAgingtTimer();
