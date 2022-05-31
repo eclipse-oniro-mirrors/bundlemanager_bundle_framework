@@ -30,6 +30,7 @@ const std::string STRING_BUNDLE_NAME = "com.ohos.tools.pageAbilityBundleForUnins
 const std::string STRING_BUNDLE_NAME_INVALID = STRING_BUNDLE_NAME + ".invalid";
 const std::string STRING_MODULE_NAME = "com.ohos.tools.pageAbilityForUninstall";
 const std::string STRING_MODULE_NAME_INVALID = STRING_MODULE_NAME + ".invalid";
+const std::string UNINSTALL_FALSE = "error: uninstall missing installed bundle.";
 }  // namespace
 
 class BmCommandUninstallSystemTest : public ::testing::Test {
@@ -83,7 +84,7 @@ HWTEST_F(BmCommandUninstallSystemTest, Bm_Command_Uninstall_SystemTest_0200, Fun
     std::string command = "bm uninstall -n " + STRING_BUNDLE_NAME_INVALID;
     std::string commandResult = ToolSystemTest::ExecuteCommand(command);
 
-    EXPECT_EQ(commandResult, STRING_UNINSTALL_BUNDLE_NG + "\n");
+    EXPECT_EQ(commandResult, STRING_UNINSTALL_BUNDLE_NG + "\n" + UNINSTALL_FALSE + "\n");
 }
 
 /**
@@ -120,5 +121,5 @@ HWTEST_F(BmCommandUninstallSystemTest, Bm_Command_Uninstall_SystemTest_0400, Fun
     std::string command = "bm uninstall -n " + STRING_BUNDLE_NAME + " -m " + STRING_MODULE_NAME_INVALID;
     std::string commandResult = ToolSystemTest::ExecuteCommand(command);
 
-    EXPECT_EQ(commandResult, STRING_UNINSTALL_BUNDLE_NG + "\n");
+    EXPECT_EQ(commandResult, STRING_UNINSTALL_BUNDLE_NG + "\n" + UNINSTALL_FALSE + "\n");
 }

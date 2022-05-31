@@ -28,7 +28,7 @@
 using namespace testing::ext;
 namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
-const std::string PRESET_BUNDLE_PATH = "/system/vendor/";
+const std::string PRESET_BUNDLE_PATH = "/system/vendor/bmsVendorBundle1.hap";
 const std::string SYSTEM_BUNDLE_PATH = "/system/app/";
 const std::string BASE_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string BASE_SYSTEM_BUNDLE_NAME = "com.system.hiworld.example";
@@ -43,6 +43,7 @@ const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const int32_t REPEAT_COUNT = 10;
 const int32_t MAX_BUNDLE_NAME = 6;
+const int32_t userId = 100;
 }  // namespace
 
 namespace OHOS {
@@ -189,7 +190,7 @@ void BmsUninstallSystemTest::CheckBundleInfo(const std::string &version, const s
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool getInfoRresult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool getInfoRresult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
 
     EXPECT_TRUE(getInfoRresult);
     EXPECT_EQ(bundleInfo.name, bundleName);
@@ -279,7 +280,7 @@ void BmsUninstallSystemTest::Install(
     }
     InstallParam installParam;
     installParam.installFlag = installFlag;
-    installParam.userId = Constants::DEFAULT_USERID;
+    installParam.userId = userId;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     installerProxy->Install(bundleFilePath, installParam, statusReceiver);
@@ -300,7 +301,7 @@ void BmsUninstallSystemTest::Uninstall(const std::string &bundleName, std::vecto
         resvec.push_back(ERROR_UNINSTALL_FAILED);
     } else {
         InstallParam installParam;
-        installParam.userId = Constants::DEFAULT_USERID;
+        installParam.userId = userId;
         sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
         EXPECT_NE(statusReceiver, nullptr);
         installerProxy->Uninstall(bundleName, installParam, statusReceiver);
@@ -323,7 +324,7 @@ void BmsUninstallSystemTest::HapUninstall(
         resvec.push_back(ERROR_UNINSTALL_FAILED);
     } else {
         InstallParam installParam;
-        installParam.userId = Constants::DEFAULT_USERID;
+        installParam.userId = userId;
         sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
         EXPECT_NE(statusReceiver, nullptr);
         installerProxy->Uninstall(bundleName, modulePackage, installParam, statusReceiver);
@@ -533,6 +534,8 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0500, Function | MediumTest | Lev
     uninstallAction.wait();
     nextUninstallAction.wait();
 
+    resvec.clear();
+    Uninstall(bundleName, resvec);
     bool isUninstallSucceed = CheckUninstallIsSuccess(bundleName);
     EXPECT_TRUE(isUninstallSucceed);
     std::cout << "BMS_Uninstall_0500 end" << std::endl;
@@ -632,9 +635,11 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0800, Function | MediumTest | Lev
     std::cout << "BMS_Uninstall_0800 start" << std::endl;
     CommonTool commonTool;
     std::vector<std::string> resvec;
-    std::string bundleName = BASE_VENDOR_BUNDLE_NAME + "v1";
-    std::string bundleFilePath = PRESET_BUNDLE_PATH + "bmsVendorBundle1.hap";
+    std::string bundleName = "com.vendor.hiworld.examplev1";
+    std::string bundleFilePath = PRESET_BUNDLE_PATH;
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
     bool isInstallSucceed = CheckInstallIsSuccess(bundleName);
     EXPECT_TRUE(isInstallSucceed);
 
@@ -668,9 +673,9 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_0900, Function | MediumTest | Lev
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
 
-    std::string bundleName = BASE_BUNDLE_NAME + "1";
+    std::string bundleName = "com.third.hiworld.example1";
     std::string modulePackage = BASE_MODULE_PACKAGE + ".h1";
-    bool checkResult = CheckAppDirExist(bundleName, modulePackage);
+    bool checkResult = CheckAppDirExist(bundleName);
     EXPECT_TRUE(checkResult);
 
     resvec.clear();
@@ -699,7 +704,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1000, Function | MediumTest | Lev
 
     CommonTool commonTool;
     std::vector<std::string> resvec;
-    std::string bundleName = BASE_BUNDLE_NAME + "1";
+    std::string bundleName = "com.third.hiworld.example1";
     std::string modulePackage1 = BASE_MODULE_PACKAGE + ".h1";
     std::string modulePackage2 = BASE_MODULE_PACKAGE + ".h2";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
@@ -720,9 +725,9 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1000, Function | MediumTest | Lev
     installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
 
-    bool checkResult = CheckAppDirExist(bundleName, modulePackage1);
+    bool checkResult = CheckAppDirExist(bundleName);
     EXPECT_TRUE(checkResult);
-    checkResult = CheckAppDirExist(bundleName, modulePackage2);
+    checkResult = CheckAppDirExist(bundleName);
     EXPECT_TRUE(checkResult);
 
     resvec.clear();
@@ -731,11 +736,11 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1000, Function | MediumTest | Lev
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
     checkResult = CheckAppDirExist(bundleName, modulePackage1);
-    EXPECT_TRUE(checkResult);
+    EXPECT_FALSE(checkResult);
     checkResult = CheckAppDirExist(bundleName, modulePackage2);
     EXPECT_FALSE(checkResult);
 
-    bool result = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool result = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
     EXPECT_TRUE(result);
 
     bool isHapExist = false;
@@ -833,7 +838,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1300, Function | MediumTest | Lev
 
     CommonTool commonTool;
     std::vector<std::string> resvec;
-    std::string bundleName = BASE_BUNDLE_NAME + "1";
+    std::string bundleName = "com.third.hiworld.example1";
     std::string modulePackage1 = BASE_MODULE_PACKAGE + ".h1";
     std::string modulePackage2 = BASE_MODULE_PACKAGE + ".h2";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
@@ -854,9 +859,9 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1300, Function | MediumTest | Lev
     installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
 
-    bool checkResult = CheckAppDirExist(bundleName, modulePackage1);
+    bool checkResult = CheckAppDirExist(bundleName);
     EXPECT_TRUE(checkResult);
-    checkResult = CheckAppDirExist(bundleName, modulePackage2);
+    checkResult = CheckAppDirExist(bundleName);
     EXPECT_TRUE(checkResult);
 
     resvec.clear();
@@ -865,11 +870,11 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1300, Function | MediumTest | Lev
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
     checkResult = CheckAppDirExist(bundleName, modulePackage2);
-    EXPECT_TRUE(checkResult);
-    checkResult = CheckAppDirExist(bundleName, modulePackage1);
+    EXPECT_FALSE(checkResult);
+    checkResult = CheckAppDirExist(bundleName, modulePackage2);
     EXPECT_FALSE(checkResult);
 
-    bool result = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool result = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
     EXPECT_TRUE(result);
 
     bool hapExit = false;
@@ -993,7 +998,6 @@ HWTEST_F(BmsUninstallSystemTest, BMS_BundleInfoDeletion_0300, Function | MediumT
     bool isUninstallSucceed = CheckUninstallIsSuccess(bundleName);
     EXPECT_TRUE(isUninstallSucceed);
 
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -1032,10 +1036,9 @@ HWTEST_F(BmsUninstallSystemTest, BMS_BundleInfoDeletion_0400, Function | MediumT
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool infoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool infoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
     EXPECT_TRUE(infoResult);
 
-    int userId = Constants::DEFAULT_USERID;
     int uidResult = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
     EXPECT_NE(uidResult, 0);
 
@@ -1047,7 +1050,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_BundleInfoDeletion_0400, Function | MediumT
     bool isUninstallSucceed = CheckUninstallIsSuccess(bundleName);
     EXPECT_TRUE(isUninstallSucceed);
 
-    infoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    infoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
     EXPECT_FALSE(infoResult);
 
     uidResult = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
@@ -1202,7 +1205,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0100, Function | MediumTest | Level
         bool isInstallSucceed = CheckInstallIsSuccess(bundleName);
         EXPECT_TRUE(isInstallSucceed);
 
-        int userId = Constants::DEFAULT_USERID;
+
         sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
         if (!bundleMgrProxy) {
             APP_LOGE("bundle mgr proxy is nullptr.");
@@ -1239,45 +1242,6 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0100, Function | MediumTest | Level
 }
 
 /**
- * @tc.number: BMS_UidTest_0200
- * @tc.name: test whether the uid assignment is correct
- * @tc.desc: 1.under '/system/vendor',there are two bundles
- *           2.install the app
- *           3.get uid through the interface of 'GetUidByBundleName'
- *           4.uninstall the app
- */
-HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0200, Function | MediumTest | Level1)
-{
-    std::cout << "BMS_UidTest_0200 start" << std::endl;
-    std::vector<std::string> resvec;
-    for (int32_t i = 2; i <= 3; i++) {
-        std::string bundleFilePath = PRESET_BUNDLE_PATH + "bmsVendorBundle" + std::to_string(i) + ".hap";
-        std::string bundleName = BASE_VENDOR_BUNDLE_NAME + "v" + std::to_string(i);
-
-        std::vector<std::string> resvec;
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Success") << "install fail!";
-
-        int userId = Constants::DEFAULT_USERID;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
-        EXPECT_GE(uid, Constants::BASE_APP_UID);
-        EXPECT_LE(uid, Constants::MAX_APP_UID);
-        resvec.clear();
-        Uninstall(bundleName, resvec);
-        std::string uninstallResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    }
-    std::cout << "BMS_UidTest_0200 end" << std::endl;
-}
-
-/**
  * @tc.number: BMS_UidTest_0300
  * @tc.name: test whether the uid assignment is correct
  * @tc.desc: 1.under '/system/app',there is a bundle
@@ -1293,7 +1257,6 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     std::string bundleName = "com.ohos.settings";
     bool isInstallSucceed = CheckInstallIsSuccess(bundleName);
     EXPECT_TRUE(isInstallSucceed);
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -1301,7 +1264,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     }
     int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
     EXPECT_GE(uid, Constants::BASE_SYS_UID);
-    EXPECT_LE(uid, Constants::MAX_SYS_UID);
+    EXPECT_LE(uid, 2899);
     resvec.clear();
     Uninstall(bundleName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
