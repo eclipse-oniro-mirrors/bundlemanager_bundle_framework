@@ -94,7 +94,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref addCallback = nullptr;
     napi_value addValue = nullptr;
     status = napi_get_named_property(env, args, "add", &addValue);
-    NAPI_ASSERT(env, status == napi_ok, "property name incorrect!");
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
     napi_typeof(env, addValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("add param type mismatch!");
@@ -106,7 +106,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref updateCallback = nullptr;
     napi_value updateValue = nullptr;
     status = napi_get_named_property(env, args, "update", &updateValue);
-    NAPI_ASSERT(env, status == napi_ok, "property name incorrect!");
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
     napi_typeof(env, updateValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("update param type mismatch!");
@@ -118,7 +118,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref removeCallback = nullptr;
     napi_value removeValue = nullptr;
     status = napi_get_named_property(env, args, "remove", &removeValue);
-    NAPI_ASSERT(env, status == napi_ok, "property name incorrect!");
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
     napi_typeof(env, removeValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("remove param type mismatch!");

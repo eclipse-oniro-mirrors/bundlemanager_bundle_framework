@@ -313,7 +313,7 @@ namespace AppExecFwk {
     {
         napi_valuetype dataType;
         napi_typeof(env, argv, &dataType);
-        NAPI_ASSERT(env, dataType == napi_object, "type mismatch for parameter 2");
+        NAPI_ASSERT_BASE(env, dataType == napi_object, "type mismatch for parameter 2", false);
 
         bool hasData = false;
         napi_has_named_property(env, argv, "data", &hasData);
