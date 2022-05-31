@@ -1264,7 +1264,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     }
     int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
     EXPECT_GE(uid, Constants::BASE_SYS_UID);
-    EXPECT_LE(uid, 2899);
+    EXPECT_LE(uid, Constants::MAX_SYS_UID);
     resvec.clear();
     Uninstall(bundleName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);

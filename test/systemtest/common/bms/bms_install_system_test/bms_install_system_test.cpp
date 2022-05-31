@@ -1662,10 +1662,10 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0300, Function | MediumTest 
     EXPECT_EQ(bundleInfo.name, normalSystemBundleName);
 
     EXPECT_EQ(bundleInfo.versionName, "1.0");
-    EXPECT_GE(bundleInfo.uid, 2899);
-    EXPECT_LE(bundleInfo.uid, 2899);
-    EXPECT_GE(bundleInfo.gid, 2899);
-    EXPECT_LE(bundleInfo.gid, 2899);
+    EXPECT_GE(bundleInfo.uid, Constants::BASE_SYS_UID);
+    EXPECT_LE(bundleInfo.uid, Constants::MAX_SYS_UID);
+    EXPECT_GE(bundleInfo.gid, Constants::BASE_SYS_UID);
+    EXPECT_LE(bundleInfo.gid, Constants::MAX_SYS_UID);
 
     UninstallBundle(normalSystemBundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
