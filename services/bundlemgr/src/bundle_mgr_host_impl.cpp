@@ -1606,5 +1606,29 @@ int32_t BundleMgrHostImpl::GetDisposedStatus(const std::string &bundleName)
     }
     return dataMgr->GetDisposedStatus(bundleName);
 }
+
+bool BundleMgrHostImpl::IsDefaultApplication(const std::string& type)
+{
+    APP_LOGD("begin to call IsDefaultApplication, type : %{public}s.", type.c_str());
+    return false;
+}
+
+bool BundleMgrHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+{
+    APP_LOGD("begin to GetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
+    return false;
+}
+
+bool BundleMgrHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
+{
+    APP_LOGD("begin to SetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
+    return false;
+}
+
+bool BundleMgrHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
+{
+    APP_LOGD("begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -682,6 +682,13 @@ public:
 
     virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
 
+    virtual bool IsDefaultApplication(const std::string& type) override;
+
+    virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) override;
+
+    virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
+
+    virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) override;
 private:
     /**
      * @brief Send a command message from the proxy object.
