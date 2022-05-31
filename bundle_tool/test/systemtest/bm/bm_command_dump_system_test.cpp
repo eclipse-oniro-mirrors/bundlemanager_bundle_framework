@@ -29,7 +29,6 @@ const std::string STRING_BUNDLE_PATH = "/data/test/resource/bm/pageAbilityBundle
 const std::string STRING_BUNDLE_NAME = "com.ohos.tools.pageAbilityBundleForInstall";
 const std::string STRING_BUNDLE_NAME_INVALID = STRING_BUNDLE_NAME + ".invalid";
 const std::string GET_FALSE = "error: failed to get information and the parameters may be wrong.";
-
 }  // namespace
 
 class BmCommandDumpSystemTest : public ::testing::Test {
@@ -113,4 +112,5 @@ HWTEST_F(BmCommandDumpSystemTest, Bm_Command_Dump_SystemTest_0300, Function | Me
     std::string commandResult = ToolSystemTest::ExecuteCommand(command);
 
     EXPECT_EQ(commandResult, GET_FALSE + "\n");
+
 } 

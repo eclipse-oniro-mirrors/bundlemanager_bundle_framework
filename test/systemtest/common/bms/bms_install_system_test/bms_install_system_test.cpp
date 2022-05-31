@@ -37,14 +37,12 @@ const std::string CODE_ROOT_PATH = "/data/app/el1/bundle/public/";
 const std::string DATA_ROOT_PATH = "/data/app/el2/100/base/";
 const std::string THIRD_BASE_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string SYSTEM_BASE_BUNDLE_NAME = "com.system.hiworld.example";
-
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILURE = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const int TIMEOUT = 10;
 const int32_t USERID = 100;
 const int32_t USERID_ERROR = 10000;
-
 }  // namespace
 
 namespace OHOS {
@@ -281,7 +279,8 @@ void BmsInstallSystemTest::CheckBundleInfo(const std::string &version, const std
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    bool isGetInfoSuccess =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(isGetInfoSuccess);
     EXPECT_EQ(bundleInfo.name, bundleName);
     EXPECT_EQ(bundleInfo.versionName, version);
@@ -1097,8 +1096,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2500, Function | MediumTest | Level2)
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
 
-
-
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     std::cout << "END BMS_Install_2500" << std::endl;
@@ -1158,7 +1155,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2700, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     for (const auto &abilityInfo : bundleInfo.abilityInfos) {
         switch (abilityInfo.type) {
@@ -1908,7 +1906,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0100, Function | MediumTest
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     BundleInfo bundleInfo;
-    bool isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    bool isGetInfoSuccess =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(isGetInfoSuccess);
 
     EXPECT_EQ(bundleInfo.name, "com.third.hiworld.example1");
