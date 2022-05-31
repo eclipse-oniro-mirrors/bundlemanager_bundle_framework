@@ -112,7 +112,9 @@ protected:
                         "userDataClearable": true,
                         "vendor": "",
                         "versionCode": 0,
-                        "versionName": ""
+                        "versionName": "",
+                        "appDistributionType": "none",
+                        "provisionType": "release"
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -370,7 +372,9 @@ protected:
                 "userDataClearable": true,
                 "vendor": "ohos",
                 "versionCode": 1000000,
-                "versionName": "1.0.0"
+                "versionName": "1.0.0",
+                "appDistributionType": "none",
+                "provisionType": "release"
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -435,7 +439,9 @@ protected:
                     "userDataClearable": true,
                     "vendor": "",
                     "versionCode": 0,
-                    "versionName": ""
+                    "versionName": "",
+                    "appDistributionType": "none",
+                    "provisionType": "release"
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",

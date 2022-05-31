@@ -246,6 +246,16 @@ constexpr int32_t MAX_APP_INDEX = 100;
 
 // disposed status
 constexpr int32_t DEFAULT_DISPOSED_STATUS = 0;
+
+// app-distribution-type
+const std::string APP_DISTRIBUTION_TYPE_NONE = "none";
+const std::string APP_DISTRIBUTION_TYPE_APP_GALLERY = "app_gallery";
+const std::string APP_DISTRIBUTION_TYPE_ENTERPRISE = "enterprise";
+const std::string APP_DISTRIBUTION_TYPE_OS_INTEGRATION = "os_integration";
+const std::string APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
+// provision type
+const std::string PROVISION_TYPE_DEBUG = "debug";
+const std::string PROVISION_TYPE_RELEASE = "release";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

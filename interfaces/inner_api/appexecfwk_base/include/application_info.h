@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "bundle_constants.h"
 #include "module_info.h"
 #include "parcel.h"
 
@@ -140,6 +141,9 @@ struct ApplicationInfo : public Parcelable {
 
     // apl
     std::string appPrivilegeLevel = AVAILABLELEVEL_NORMAL;
+    // provision
+    std::string appDistributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    std::string provisionType = Constants::PROVISION_TYPE_RELEASE;
 
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;

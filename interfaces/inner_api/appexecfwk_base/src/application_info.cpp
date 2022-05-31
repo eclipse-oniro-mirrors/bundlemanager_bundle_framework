@@ -26,7 +26,6 @@
 #include "string_ex.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -85,6 +84,8 @@ const std::string APPLICATION_CPU_ABI = "cpuAbi";
 const std::string APPLICATION_IS_COMPRESS_NATIVE_LIBS = "isCompressNativeLibs";
 const std::string APPLICATION_SIGNATURE_KEY = "signatureKey";
 const std::string APPLICATION_TARGETBUNDLELIST = "targetBundleList";
+const std::string APPLICATION_APP_DISTRIBUTION_TYPE = "appDistributionType";
+const std::string APPLICATION_PROVISION_TYPE = "provisionType";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -311,6 +312,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_IS_COMPRESS_NATIVE_LIBS, applicationInfo.isCompressNativeLibs},
         {APPLICATION_SIGNATURE_KEY, applicationInfo.signatureKey},
         {APPLICATION_TARGETBUNDLELIST, applicationInfo.targetBundleList},
+        {APPLICATION_APP_DISTRIBUTION_TYPE, applicationInfo.appDistributionType},
+        {APPLICATION_PROVISION_TYPE, applicationInfo.provisionType},
     };
 }
 
@@ -742,6 +745,22 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_DISTRIBUTION_TYPE,
+        applicationInfo.appDistributionType,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_PROVISION_TYPE,
+        applicationInfo.provisionType,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }

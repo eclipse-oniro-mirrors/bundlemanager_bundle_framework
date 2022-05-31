@@ -1536,6 +1536,14 @@ public:
 
     int32_t GetDisposedStatus() const;
 
+    void SetAppDistributionType(const std::string &appDistributionType);
+
+    std::string GetAppDistributionType() const;
+
+    void SetProvisionType(const std::string &provisionType);
+
+    std::string GetProvisionType() const;
+
 private:
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;

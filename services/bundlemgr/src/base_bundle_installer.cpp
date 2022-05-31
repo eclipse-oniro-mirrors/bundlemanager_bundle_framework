@@ -53,6 +53,34 @@ std::string GetHapPath(const InnerBundleInfo &info)
 {
     return GetHapPath(info, info.GetModuleName(info.GetCurrentModulePackage()));
 }
+
+std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
+{
+    switch (type) {
+        case Security::Verify::AppDistType::NONE_TYPE:
+            return Constants::APP_DISTRIBUTION_TYPE_NONE;
+        case Security::Verify::AppDistType::APP_GALLERY:
+            return Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY;
+        case Security::Verify::AppDistType::ENTERPRISE:
+            return Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE;
+        case Security::Verify::AppDistType::OS_INTEGRATION:
+            return Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION;
+        case Security::Verify::AppDistType::CROWDTESTING:
+            return Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING;
+        default:
+            APP_LOGE("wrong AppDistType");
+            return Constants::APP_DISTRIBUTION_TYPE_NONE;
+    }
+}
+
+std::string GetProvisionType(const Security::Verify::ProvisionType &type)
+{
+    if (type == Security::Verify::ProvisionType::DEBUG) {
+        return Constants::PROVISION_TYPE_DEBUG;
+    } else {
+        return Constants::PROVISION_TYPE_RELEASE;
+    }
+}
 }
 
 BaseBundleInstaller::BaseBundleInstaller()
@@ -1626,6 +1654,8 @@ ErrCode BaseBundleInstaller::ParseHapFiles(const std::vector<std::string> &bundl
         newInfo.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
         newInfo.SetAllowedAcls(provisionInfo.acls.allowedAcls);
         newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
+        newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
+        newInfo.SetProvisionType(GetProvisionType(provisionInfo.type));
         if ((result = CheckSystemSize(bundlePaths[i], appType)) != ERR_OK) {
             APP_LOGE("install failed due to insufficient disk memory");
             return result;
