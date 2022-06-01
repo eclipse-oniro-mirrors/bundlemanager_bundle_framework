@@ -23,6 +23,7 @@
 #include "nocopyable.h"
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
+#include "installd/installd_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -154,6 +155,9 @@ public:
      * @return Returns disk size.
      */
     static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path);
+
+    static bool ScanDir(
+        const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

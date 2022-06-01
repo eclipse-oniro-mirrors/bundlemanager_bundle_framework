@@ -321,7 +321,7 @@ HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0300, Function | SmallTest |
     std::shared_ptr<BMSEventHandler> handler_;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     const std::string PATH = SYSTEM_APP_SCAN_PATH + "/" + PHOTOS_HAP;
-    auto result = handler_->ParseHapFiles(PATH, infos);
+    auto result = handler_->ParseHapFiles(PATH, true, infos);
     EXPECT_TRUE(result);
 }
 
@@ -338,6 +338,6 @@ HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0400, Function | SmallTest |
     handler_ = std::make_shared<BMSEventHandler>(runner_);
     std::unordered_map<std::string, InnerBundleInfo> infos;
     const std::string PATH = TEST_ERROR_DIR + "/" + PHOTOS_HAP;
-    auto result = handler_->ParseHapFiles(PATH, infos);
+    auto result = handler_->ParseHapFiles(PATH, true, infos);
     EXPECT_FALSE(result);
 }

@@ -75,10 +75,6 @@ void BundleMgrService::OnStart()
         return;
     }
 
-    PerfProfile::GetInstance().SetBmsLoadEndTime(GetTickCount());
-    if (!needToScan_) {
-        PerfProfile::GetInstance().Dump();
-    }
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 #ifdef DEVICE_MANAGER_ENABLE
     AddSystemAbilityListener(DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
@@ -161,6 +157,8 @@ bool BundleMgrService::Init()
             APP_LOGE("create data manager fail");
             return false;
         }
+
+        dataMgr_->AddUserId(Constants::DEFAULT_USERID);
     }
     APP_LOGD("create dataManager success");
 
@@ -172,15 +170,7 @@ bool BundleMgrService::Init()
         }
     }
     APP_LOGD("create userMgrHost success");
-    if (!(dataMgr_->LoadDataFromPersistentStorage())) {
-        APP_LOGW("load data from persistent storage fail");
-        dataMgr_->AddUserId(Constants::DEFAULT_USERID);
-        handler_->SendEvent(BMSEventHandler::BUNDLE_SCAN_START);
-        needToScan_ = true;
-    } else {
-        APP_LOGD("Reboot start scan");
-        handler_->SendEvent(BMSEventHandler::BUNDLE_REBOOT_SCAN_START);
-    }
+    BmsStart();
 
     if (cloneMgr_ == nullptr) {
         APP_LOGI("Create BundleCloneMgr");
@@ -225,6 +215,11 @@ bool BundleMgrService::Init()
     return true;
 }
 
+void BundleMgrService::BmsStart()
+{
+    handler_->SendEvent(BMSEventHandler::BMS_START);
+}
+
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
@@ -258,9 +253,6 @@ void BundleMgrService::SelfClean()
         ready_ = false;
         if (registerToService_) {
             registerToService_ = false;
-        }
-        if (needToScan_) {
-            needToScan_ = false;
         }
     }
 }
@@ -302,6 +294,9 @@ void BundleMgrService::RegisterService()
         APP_LOGI("register to sam success");
         registerToService_ = true;
     }
+
+    PerfProfile::GetInstance().SetBmsLoadEndTime(GetTickCount());
+    PerfProfile::GetInstance().Dump();
     AfterRegisterToService();
 }
 

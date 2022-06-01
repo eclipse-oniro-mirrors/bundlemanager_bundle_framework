@@ -643,6 +643,16 @@ public:
      * @return Returns PreInstallBundleInfos.
      */
     const std::vector<PreInstallBundleInfo>& GetAllPreInstallBundleInfos();
+    /**
+     * @brief Restore uid and gid .
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    bool RestoreUidAndGid();
+    /**
+     * @brief Load all bundle state data from jsonDb .
+     * @return
+     */
+    void LoadAllBundleStateDataFromJsonDb();
 
     bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
@@ -756,11 +766,6 @@ private:
      */
     bool IsAppOrAbilityInstalled(const std::string &bundleName) const;
     /**
-     * @brief Restore uid and gid .
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool RestoreUidAndGid();
-    /**
      * @brief Implicit query abilityInfos by the given Want.
      * @param want Indicates the information of the ability.
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.
@@ -801,7 +806,6 @@ private:
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
     void CompatibleOldBundleStateInKvDb();
     void ResetBundleStateData();
-    void LoadAllBundleStateDataFromJsonDb();
 
 private:
     mutable std::mutex bundleInfoMutex_;

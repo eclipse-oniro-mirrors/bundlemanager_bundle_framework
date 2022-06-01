@@ -128,10 +128,11 @@ private:
      */
     void AfterRegisterToService();
 
+    void BmsStart();
+
 private:
     bool ready_ = false;
     bool registerToService_ = false;
-    bool needToScan_ = false;
     bool notifyBundleScanStatus = false;
     std::shared_ptr<EventRunner> runner_;
     std::shared_ptr<BMSEventHandler> handler_;

@@ -316,5 +316,18 @@ ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector
     InstalldOperator::TraverseCacheDirectory(dir, cachePath);
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ScanDir(
+    const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
+{
+    APP_LOGD("InstalldHostImpl::Scan start %{public}s", dir.c_str());
+    if (dir.empty()) {
+        APP_LOGE("Calling the function Scan with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    InstalldOperator::ScanDir(dir, scanMode, resultMode, paths);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
