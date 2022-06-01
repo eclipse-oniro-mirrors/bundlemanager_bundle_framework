@@ -76,6 +76,7 @@ struct HapModuleInfo : public Parcelable {
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::vector<Metadata> metadata;
     int32_t upgradeFlag = 0;
+    CompileMode compileMode = CompileMode::JS_BUNDLE;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

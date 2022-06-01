@@ -367,6 +367,7 @@ const std::string MODULE_EXTENSION_ABILITIES = "extensionAbilities";
 const std::string MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 const std::string MODULE_DEFINE_PERMISSIONS = "definePermissions";
 const std::string MODULE_DEPENDENCIES = "dependencies";
+const std::string MODULE_COMPILE_MODE = "compileMode";
 // module type
 const std::string MODULE_TYPE_ENTRY = "entry";
 const std::string MODULE_TYPE_FEATURE = "feature";
@@ -423,6 +424,9 @@ const std::string DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE = "normal";
 const std::string AVAILABLELEVEL_NORMAL = "normal";
 const std::string AVAILABLELEVEL_SYSTEM_BASIC = "system_basic";
 const std::string AVAILABLELEVEL_SYSTEM_CORE = "system_core";
+// compile mode
+const std::string COMPILE_MODE_JS_BUNDLE = "jsbundle";
+const std::string COMPILE_MODE_ES_MODULE = "esmodule";
 
 extern thread_local int32_t parseResult;
 }  // namespace Profile

@@ -98,6 +98,7 @@ struct InnerModuleInfo {
     std::vector<Metadata> metadata;
     int32_t upgradeFlag = 0;
     std::vector<std::string> dependencies;
+    std::string compileMode;
 };
 
 struct SkillUri {

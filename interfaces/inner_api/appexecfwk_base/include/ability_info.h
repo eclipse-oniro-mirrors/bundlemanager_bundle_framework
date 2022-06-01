@@ -74,6 +74,11 @@ enum class LaunchMode {
     SPECIFIED,
 };
 
+enum class CompileMode {
+    JS_BUNDLE = 0,
+    ES_MODULE,
+};
+
 struct AbilityInfo;
 
 /*
@@ -226,6 +231,7 @@ struct AbilityInfo : public Parcelable {
     AbilitySubType subType = AbilitySubType::UNSPECIFIED;
     std::string libPath;
     std::string deviceId;
+    CompileMode compileMode = CompileMode::JS_BUNDLE;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
