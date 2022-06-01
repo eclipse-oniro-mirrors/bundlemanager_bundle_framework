@@ -528,7 +528,7 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
         freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
         auto ret = freeInstallParamsMap_.emplace(targetInfo->transactId, *freeInstallParams);
         if (!ret.second) {
-            APP_LOGE("BundleConnectAbilityMgr::QueryAbilityInfo map emplace error");
+            APP_LOGE("BundleConnectAbilityMgr::CheckIsModuleNeedUpdate map emplace error");
             CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, callBack);
         }
         this->UpgradeInstall(*targetAbilityInfo, want, nullptr, userId);
@@ -554,6 +554,10 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName,
         flags, innerBundleInfo, userId);
     bool abilityInfoResult = bundleDataMgr_->QueryAbilityInfo(want, flags, userId, abilityInfo);
+    if (!abilityInfoResult) {
+        std::vector<ExtensionAbilityInfo> extensionInfos;
+        abilityInfoResult = bundleDataMgr_->QueryExtensionAbilityInfos(want, flags, userId, extensionInfos);
+    }
     if (innerBundleInfoResult && abilityInfoResult) {
         bool isModuleNeedUpdate = CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
         if (!isModuleNeedUpdate) {
@@ -642,7 +646,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_CHECK;
     auto ret = freeInstallParamsMap_.emplace(targetInfo->transactId, *freeInstallParams);
     if (!ret.second) {
-        APP_LOGE("BundleConnectAbilityMgr::QueryAbilityInfo map emplace error");
+        APP_LOGE("BundleConnectAbilityMgr::UpgradeAtomicService map emplace error");
         return;
     }
     this->UpgradeCheck(*targetAbilityInfo, want, nullptr, userId);
