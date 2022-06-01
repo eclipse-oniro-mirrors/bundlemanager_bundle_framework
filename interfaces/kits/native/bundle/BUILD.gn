@@ -28,33 +28,32 @@ ohos_ndk_library("libbundle_ndk") {
 ohos_shared_library("bundle_ndk") {
   include_dirs = [
     "include",
-    "${inner_api_path}/appexecfwk_core/include/bundlemgr",
+    "${common_path}/log/include",
+    "${inner_api_path}/appexecfwk_base/include",
+    "//third_party/json/include",
   ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [
+    "${inner_api_path}/appexecfwk_base/src/ability_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/compatible_application_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/extension_ability_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/module_info.cpp",
     "src/bundle_mgr_proxy_native.cpp",
     "src/native_interface_bundle.cpp",
   ]
 
-  deps = [
-    ":libbundle_ndk",
-    "${common_path}:libappexecfwk_common",
-  ]
+  deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
-    "ability_base:want",
-    "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr_standard:samgr_proxy",
     "utils_base:utils",
   ]
-  version_script =
-      get_label_info(":libbundle_ndk", "target_gen_dir") + "/" +
-      get_label_info(":libbundle_ndk", "name") + version_script_suffix
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }

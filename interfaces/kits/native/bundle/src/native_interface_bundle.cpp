@@ -17,95 +17,69 @@
 
 #include <mutex>
 #include <string>
+
+#include "application_info.h"
 #include "app_log_wrapper.h"
-#include "bundle_constants.h"
-#include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy_native.h"
-#include "if_system_ability_manager.h"
-#include "iservice_registry.h"
+#include "ipc_skeleton.h"
 #include "securec.h"
-#include "system_ability_definition.h"
-
-namespace OHOS {
-namespace AppExecFwk {
 namespace {
-    static constexpr size_t APPID_MAX_LENGTH = 10240;
+    const size_t CHAR_MAX_LENGTH = 10240;
+    const int32_t DEFAULT_USERID = -2;
 }
-class BundleNative {
-public:
-    static sptr<IBundleMgr> GetBundleMgr();
 
-private:
-    static sptr<IBundleMgr> bundleMgr_;
-    static std::mutex bundleMgrMutex_;
-};
-sptr<IBundleMgr> BundleNative::bundleMgr_ = nullptr;
-std::mutex BundleNative::bundleMgrMutex_;
-
-sptr<IBundleMgr> BundleNative::GetBundleMgr()
+OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
 {
-    if (bundleMgr_ == nullptr) {
-        std::lock_guard<std::mutex> lock(bundleMgrMutex_);
-        if (bundleMgr_ == nullptr) {
-            auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            if (systemAbilityManager == nullptr) {
-                APP_LOGE("GetBundleMgr GetSystemAbilityManager is null");
-                return nullptr;
-            }
-            auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-            if (bundleMgrSa == nullptr) {
-                APP_LOGE("GetBundleMgr GetSystemAbility is null");
-                return nullptr;
-            }
-            auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-            if (bundleMgr == nullptr) {
-                APP_LOGE("GetBundleMgr iface_cast get null");
-            }
-            bundleMgr_ = bundleMgr;
-        }
+    OH_NativeBundle_ApplicationInfo nativeApplicationInfo;
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
+    std::string bundleName;
+    if (!bundleMgrProxyNative.GetBundleNameForUid(uid, bundleName)) {
+        APP_LOGE("can not get bundleName for uid:%{public}d", uid);
+        return nativeApplicationInfo;
+    };
+    OHOS::AppExecFwk::ApplicationInfo applicationInfo;
+    auto appInfoflag = OHOS::AppExecFwk::ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT;
+    if (!bundleMgrProxyNative.GetApplicationInfo(bundleName, appInfoflag, DEFAULT_USERID, applicationInfo)) {
+        APP_LOGE("can not get applicationInfo for bundleName:%{public}s", bundleName.c_str());
+        return nativeApplicationInfo;
     }
-    return bundleMgr_;
-}
-} // AppExecFwk
-} // OHOS
 
-char* OH_NativeBundle_GetAppIdByBundleName(const char* bundleName)
-{
-    if (bundleName == nullptr) {
-        APP_LOGE("bundleName is nullptr");
-        return nullptr;
+    size_t bundleNameLen = applicationInfo.bundleName.size();
+    if ((bundleNameLen == 0) || (bundleNameLen + 1) > CHAR_MAX_LENGTH) {
+        APP_LOGE("failed due to the length of bundleName is 0 or to long");
+        return nativeApplicationInfo;
     }
-    std::string name(bundleName);
-    if (name.empty()) {
-        APP_LOGE("bundleName is empty");
-        return nullptr;
-    }
-    auto iBundleMgr = OHOS::AppExecFwk::BundleNative::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return nullptr;
-    }
-    std::string appId = iBundleMgr->GetAppIdByBundleName(name, OHOS::AppExecFwk::Constants::ANY_USERID);
-    if (appId.empty()) {
-        APP_LOGE("failed due to appId is empty");
-        return nullptr;
-    }
-    size_t len = appId.size();
-    if ((len == 0) || (len + 1) > OHOS::AppExecFwk::APPID_MAX_LENGTH) {
-        APP_LOGE("failed due to the length of appId is 0 or to long");
-        return nullptr;
-    }
-    char* result = static_cast<char*>(malloc(len + 1));
-    if (result == nullptr) {
+    nativeApplicationInfo.bundleName = static_cast<char*>(malloc(bundleNameLen + 1));
+    if (nativeApplicationInfo.bundleName == nullptr) {
         APP_LOGE("failed due to malloc error");
-        return nullptr;
+        return nativeApplicationInfo;
     }
 
-    if (strcpy_s(result, len + 1, appId.c_str()) != EOK) {
+    if (strcpy_s(nativeApplicationInfo.bundleName, bundleNameLen + 1, applicationInfo.bundleName.c_str()) != EOK) {
         APP_LOGE("failed due to strcpy_s error");
-        free(result);
-        result = nullptr;
-        return nullptr;
+        free(nativeApplicationInfo.bundleName);
+        nativeApplicationInfo.bundleName = nullptr;
+        return nativeApplicationInfo;
     }
-    return result;
+
+    size_t fingerprintLen = applicationInfo.fingerprint.size();
+    if ((fingerprintLen == 0) || (fingerprintLen + 1) > CHAR_MAX_LENGTH) {
+        APP_LOGE("failed due to the length of fingerprint is 0 or to long");
+        return nativeApplicationInfo;
+    }
+    nativeApplicationInfo.fingerprint = static_cast<char*>(malloc(fingerprintLen + 1));
+    if (nativeApplicationInfo.fingerprint == nullptr) {
+        APP_LOGE("failed due to malloc error");
+        return nativeApplicationInfo;
+    }
+
+    if (strcpy_s(nativeApplicationInfo.fingerprint, fingerprintLen + 1, applicationInfo.fingerprint.c_str()) != EOK) {
+        APP_LOGE("failed due to strcpy_s error");
+        free(nativeApplicationInfo.fingerprint);
+        nativeApplicationInfo.fingerprint = nullptr;
+        return nativeApplicationInfo;
+    }
+    APP_LOGI("OH_NativeBundle_GetCurrentApplicationInfo success");
+    return nativeApplicationInfo;
 }
