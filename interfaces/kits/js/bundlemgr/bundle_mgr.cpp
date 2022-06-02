@@ -5793,7 +5793,7 @@ bool ParseModuleName(napi_env env, napi_value param, std::string &moduleName)
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo)
 {
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, param, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("param type mismatch!");
         return false;
