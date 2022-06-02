@@ -23,6 +23,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
+    constexpr uint32_t FREE_INSTALL_DONE = 0;
+};
+
 enum UpgradeFlag {
     NOT_UPGRADE = 0,
     SINGLE_UPGRADE = 1,

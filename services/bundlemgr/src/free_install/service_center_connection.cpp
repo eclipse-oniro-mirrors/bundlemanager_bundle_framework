@@ -22,8 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
-
 ServiceCenterConnection::~ServiceCenterConnection()
 {
 }
