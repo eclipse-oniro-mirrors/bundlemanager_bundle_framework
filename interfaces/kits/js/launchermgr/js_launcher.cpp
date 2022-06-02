@@ -757,7 +757,8 @@ static bool InnerJSGetLauncherAbilityInfos(napi_env env, std::string& bundleName
 
     auto result = launcher->GetAbilityList(bundleName, userId, launcherAbilityInfos);
     if (!result) {
-        APP_LOGE("GetAbilityList call error");
+        APP_LOGE("GetAbilityList call error, bundlename is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
         return false;
     }
     return true;
