@@ -101,6 +101,16 @@ const std::string APP_INDEX = "appIndex";
 const std::string BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
+const std::string MODULE_COMPILE_MODE = "compileMode";
+
+inline CompileMode ConvertCompileMode(const std::string& compileMode)
+{
+    if (compileMode == Profile::COMPILE_MODE_ES_MODULE) {
+        return CompileMode::ES_MODULE;
+    } else {
+        return CompileMode::JS_BUNDLE;
+    }
+}
 
 const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t userId)
 {
@@ -375,7 +385,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_IS_MODULE_JSON, info.isModuleJson},
         {MODULE_IS_STAGE_BASED_MODEL, info.isStageBasedModel},
         {MODULE_DEPENDENCIES, info.dependencies},
-        {MODULE_HAP_PATH, info.hapPath}
+        {MODULE_HAP_PATH, info.hapPath},
+        {MODULE_COMPILE_MODE, info.compileMode}
     };
 }
 
@@ -766,6 +777,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         ProfileReader::parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPILE_MODE,
+        info.compileMode,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1384,6 +1403,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         }
     }
     hapInfo.dependencies = it->second.dependencies;
+    hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
     return hapInfo;
 }
 

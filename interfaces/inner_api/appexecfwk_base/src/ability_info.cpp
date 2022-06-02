@@ -82,6 +82,7 @@ const std::string JSON_KEY_START_WINDOW_ICON = "startWindowIcon";
 const std::string JSON_KEY_START_WINDOW_ICON_ID = "startWindowIconId";
 const std::string JSON_KEY_START_WINDOW_BACKGROUND = "startWindowBackground";
 const std::string JSON_KEY_START_WINDOW_BACKGROUND_ID = "startWindowBackgroundId";
+const std::string JSON_KEY_COMPILE_MODE = "compileMode";
 const std::string META_DATA = "metadata";
 const std::string META_DATA_NAME = "name";
 const std::string META_DATA_VALUE = "value";
@@ -260,7 +261,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_START_WINDOW_ICON_ID, abilityInfo.startWindowIconId},
         {JSON_KEY_START_WINDOW_BACKGROUND, abilityInfo.startWindowBackground},
         {JSON_KEY_START_WINDOW_BACKGROUND_ID, abilityInfo.startWindowBackgroundId},
-        {JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE, abilityInfo.removeMissionAfterTerminate}
+        {JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE, abilityInfo.removeMissionAfterTerminate},
+        {JSON_KEY_COMPILE_MODE, abilityInfo.compileMode}
     };
 }
 
@@ -783,6 +785,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE,
         abilityInfo.removeMissionAfterTerminate,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<CompileMode>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_COMPILE_MODE,
+        abilityInfo.compileMode,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

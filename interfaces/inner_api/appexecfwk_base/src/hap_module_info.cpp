@@ -59,6 +59,7 @@ const std::string HAP_MODULE_INFO_META_DATA = "metadata";
 const std::string HAP_MODULE_INFO_DEPENDENCIES = "dependencies";
 const std::string HAP_MODULE_INFO_UPGRADE_FLAG = "upgradeFlag";
 const std::string HAP_MODULE_INFO_HAP_PATH = "hapPath";
+const std::string HAP_MODULE_INFO_COMPILE_MODE = "compileMode";
 }
 
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
@@ -155,7 +156,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_MODULE_TYPE, hapModuleInfo.moduleType},
         {HAP_MODULE_INFO_EXTENSION_INFOS, hapModuleInfo.extensionInfos},
         {HAP_MODULE_INFO_META_DATA, hapModuleInfo.metadata},
-        {HAP_MODULE_INFO_DEPENDENCIES, hapModuleInfo.dependencies}
+        {HAP_MODULE_INFO_DEPENDENCIES, hapModuleInfo.dependencies},
+        {HAP_MODULE_INFO_COMPILE_MODE, hapModuleInfo.compileMode}
     };
 }
 
@@ -443,6 +445,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<CompileMode>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_COMPILE_MODE,
+        hapModuleInfo.compileMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
