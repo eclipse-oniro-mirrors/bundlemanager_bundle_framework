@@ -686,6 +686,9 @@ public:
     virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
 
     virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) override;
+
+    virtual bool ObtainCallingBundleName(std::string &bundleName) override;
+
 private:
     const std::shared_ptr<BundleCloneMgr> GetCloneMgrFromService();
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

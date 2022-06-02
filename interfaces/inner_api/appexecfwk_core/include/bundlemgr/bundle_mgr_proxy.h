@@ -689,6 +689,9 @@ public:
     virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
 
     virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) override;
+
+    virtual bool ObtainCallingBundleName(std::string &bundleName) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

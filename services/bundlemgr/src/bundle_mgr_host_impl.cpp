@@ -1630,5 +1630,16 @@ bool BundleMgrHostImpl::ResetDefaultApplication(int32_t userId, const std::strin
     APP_LOGD("begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
     return false;
 }
+
+bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
+{
+    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
+    if (!ret) {
+        APP_LOGE("query calling bundle name failed");
+        return false;
+    }
+    APP_LOGD("calling bundleName is : %{public}s", bundleName.c_str());
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
