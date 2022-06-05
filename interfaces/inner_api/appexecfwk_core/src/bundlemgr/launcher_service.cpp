@@ -149,6 +149,7 @@ bool LauncherService::GetAbilityList(
         info.iconId = ability.iconId;
         ElementName elementName;
         elementName.SetBundleName(ability.bundleName);
+        elementName.SetModuleName(ability.moduleName);
         elementName.SetAbilityName(ability.name);
         elementName.SetDeviceID(ability.deviceId);
         info.elementName = elementName;

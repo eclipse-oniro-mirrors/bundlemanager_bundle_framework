@@ -19,6 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_util.h"
 #include "common_profile.h"
 #include "parameter.h"
 #include "string_ex.h"
@@ -1169,10 +1170,11 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
     return true;
 }
 
-bool ToApplicationInfo(const Profile::App &app, ApplicationInfo &applicationInfo,
+bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &applicationInfo,
     bool isPreInstallApp, const BundleExtractor &bundleExtractor)
 {
     APP_LOGD("transform ModuleJson to ApplicationInfo");
+    auto app = moduleJson.app;
     applicationInfo.name = app.bundleName;
     applicationInfo.bundleName = app.bundleName;
 
@@ -1193,6 +1195,12 @@ bool ToApplicationInfo(const Profile::App &app, ApplicationInfo &applicationInfo
     applicationInfo.labelId = app.labelId;
     applicationInfo.description = app.description;
     applicationInfo.descriptionId = app.descriptionId;
+    applicationInfo.iconResource =
+        BundleUtil::GetResource(app.bundleName, moduleJson.module.name, app.iconId);
+    applicationInfo.labelResource =
+        BundleUtil::GetResource(app.bundleName, moduleJson.module.name, app.labelId);
+    applicationInfo.descriptionResource =
+        BundleUtil::GetResource(app.bundleName, moduleJson.module.name, app.descriptionId);
     applicationInfo.targetBundleList = app.targetBundleList;
 
     if (applicationInfo.isSystemApp && isPreInstallApp) {
@@ -1526,7 +1534,7 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
     bool isPreInstallApp = innerBundleInfo.IsPreInstallApp();
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
-    ToApplicationInfo(moduleJson.app, applicationInfo, isPreInstallApp, bundleExtractor);
+    ToApplicationInfo(moduleJson, applicationInfo, isPreInstallApp, bundleExtractor);
 
     InnerModuleInfo innerModuleInfo;
     ToInnerModuleInfo(moduleJson, innerModuleInfo, applicationInfo.isSystemApp, isPreInstallApp);
