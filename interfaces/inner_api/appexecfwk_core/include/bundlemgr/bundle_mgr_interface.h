@@ -1071,6 +1071,7 @@ public:
         SET_DISPOSED_STATUS,
         GET_DISPOSED_STATUS,
         QUERY_CALLING_BUNDLE_NAME,
+        GET_DEFAULT_APP_PROXY,
     };
 };
 }  // namespace AppExecFwk
