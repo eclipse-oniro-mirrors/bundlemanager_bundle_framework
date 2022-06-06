@@ -472,6 +472,11 @@ public:
      * @return Returns a pointer to IBundleUserMgr class if exist; returns nullptr otherwise.
      */
     virtual sptr<IBundleUserMgr> GetBundleUserMgr() override;
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
+#endif
+
     /**
      * @brief  Obtains the FormInfo objects provided by all applications on the device.
      * @param  formInfos List of FormInfo objects if obtained; returns an empty List if no FormInfo is available on the
@@ -681,14 +686,6 @@ public:
     virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;
 
     virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
-
-    virtual bool IsDefaultApplication(const std::string& type) override;
-
-    virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) override;
-
-    virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
-
-    virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) override;
 
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 

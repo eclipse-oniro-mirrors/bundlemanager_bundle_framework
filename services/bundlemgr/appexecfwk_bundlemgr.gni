@@ -69,6 +69,12 @@ free_install = [
   "${services_path}/bundlemgr/src/free_install/service_center_status_callback_stub.cpp",
 ]
 
+default_app = [
+  "${services_path}/bundlemgr/src/default_app/default_app_db.cpp",
+  "${services_path}/bundlemgr/src/default_app/default_app_host_impl.cpp",
+  "${services_path}/bundlemgr/src/default_app/default_app_mgr.cpp",
+]
+
 bundle_install_deps = [
   "${services_path}/bundlemgr:bundle_parser",
   "${services_path}/bundlemgr:parser_common",

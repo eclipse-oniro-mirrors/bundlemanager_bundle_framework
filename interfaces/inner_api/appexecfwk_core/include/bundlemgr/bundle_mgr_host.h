@@ -381,6 +381,11 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetBundleUserMgr(Parcel &data, Parcel &reply);
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    ErrCode HandleGetDefaultAppProxy(Parcel &data, Parcel &reply);
+#endif
+
     /**
      * @brief Handles the IsApplicationEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -553,14 +558,6 @@ private:
     ErrCode HandleSetDisposedStatus(Parcel &data, Parcel &reply);
 
     ErrCode HandleGetDisposedStatus(Parcel &data, Parcel &reply);
-
-    ErrCode HandleIsDefaultApplication(Parcel &data, Parcel &reply);
-
-    ErrCode HandleGetDefaultApplication(Parcel &data, Parcel &reply);
-
-    ErrCode HandleSetDefaultApplication(Parcel &data, Parcel &reply);
-
-    ErrCode HandleResetDefaultApplication(Parcel &data, Parcel &reply);
 
     ErrCode HandleObtainCallingBundleName(Parcel &data, Parcel &reply);
 

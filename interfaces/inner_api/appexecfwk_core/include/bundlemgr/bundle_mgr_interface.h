@@ -35,6 +35,9 @@
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 #include "pixel_map.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_interface.h"
+#endif
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -787,6 +790,14 @@ public:
     {
         return nullptr;
     }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    virtual sptr<IDefaultApp> GetDefaultAppProxy()
+    {
+        return nullptr;
+    }
+#endif
+
     /**
      * @brief Obtains the DistributedBundleInfo based on a given bundle name and networkId.
      * @param networkId Indicates the networkId of remote device.
@@ -968,26 +979,6 @@ public:
         return false;
     }
 
-    virtual bool IsDefaultApplication(const std::string& type)
-    {
-        return false;
-    }
-
-    virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
-    {
-        return false;
-    }
-
-    virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
-    {
-        return false;
-    }
-
-    virtual bool ResetDefaultApplication(int32_t userId, const std::string& type)
-    {
-        return false;
-    }
-
     virtual bool ObtainCallingBundleName(std::string &bundleName)
     {
         return false;
@@ -1079,10 +1070,6 @@ public:
         GET_SANDBOX_APP_BUNDLE_INFO,
         SET_DISPOSED_STATUS,
         GET_DISPOSED_STATUS,
-        IS_DEFAULT_APPLICATION,
-        GET_DEFAULT_APPLICATION,
-        SET_DEFAULT_APPLICATION,
-        RESET_DEFAULT_APPLICATION,
         QUERY_CALLING_BUNDLE_NAME,
     };
 };

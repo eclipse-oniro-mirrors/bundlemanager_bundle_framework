@@ -2999,5 +2999,111 @@ std::shared_ptr<Media::PixelMap> BundleDataMgr::LoadImageFile(const std::string 
     return std::shared_ptr<Media::PixelMap>(std::move(pixelMapPtr));
 }
 #endif
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
+    AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const
+{
+    APP_LOGI("begin to QueryInfoAndSkillsByElement.");
+    const std::string& bundleName = element.bundleName;
+    const std::string& moduleName = element.moduleName;
+    const std::string& abilityName = element.abilityName;
+    const std::string& extensionName = element.extensionName;
+    bool isAbility = !element.abilityName.empty();
+    bool ret = false;
+    if (isAbility) {
+        // get ability info
+        ret = ExplicitQueryAbilityInfo(bundleName, moduleName, abilityName,
+            GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
+        if (!ret) {
+            APP_LOGE("ExplicitQueryAbilityInfo failed.");
+            return false;
+        }
+    } else {
+        // get extension info
+        ret = ExplicitQueryExtensionInfo(bundleName, moduleName, extensionName,
+            GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
+        if (!ret) {
+            APP_LOGE("ExplicitQueryExtensionInfo failed.");
+            return false;
+        }
+    }
+
+    // get skills info
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ is empty.");
+        return false;
+    }
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("can't find bundleName : %{public}s.", bundleName.c_str());
+        return false;
+    }
+    const InnerBundleInfo& innerBundleInfo = item->second;
+    if (isAbility) {
+        std::string key;
+        key.append(bundleName).append(".").append(moduleName).append(".").append(abilityName);
+        APP_LOGI("begin to find ability skills, key : %{public}s.", key.c_str());
+        for (const auto& item : innerBundleInfo.GetInnerSkillInfos()) {
+            if (item.first == key) {
+                skills = item.second;
+                APP_LOGI("find ability skills success.");
+                break;
+            }
+        }
+    } else {
+        std::string key;
+        key.append(bundleName).append(".").append(moduleName).append(".").append(extensionName);
+        APP_LOGI("begin to find extension skills, key : %{public}s.", key.c_str());
+        for (const auto& item : innerBundleInfo.GetExtensionSkillInfos()) {
+            if (item.first == key) {
+                skills = item.second;
+                APP_LOGI("find extension skills success.");
+                break;
+            }
+        }
+    }
+    APP_LOGI("QueryInfoAndSkillsByElement success.");
+    return true;
+}
+
+bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, Element& element) const
+{
+    APP_LOGI("begin to GetElement.");
+    const std::string& bundleName = elementName.GetBundleName();
+    const std::string& moduleName = elementName.GetModuleName();
+    const std::string& abilityName = elementName.GetAbilityName();
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        APP_LOGE("bundleName or moduleName or abilityName is empty.");
+        return false;
+    }
+
+    AbilityInfo abilityInfo;
+    bool ret = ExplicitQueryAbilityInfo(bundleName, moduleName, abilityName,
+        GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
+    if (ret) {
+        APP_LOGI("ElementName is ability.");
+        element.bundleName = bundleName;
+        element.moduleName = moduleName;
+        element.abilityName = abilityName;
+        return true;
+    }
+
+    ExtensionAbilityInfo extensionInfo;
+    ret = ExplicitQueryExtensionInfo(bundleName, moduleName, abilityName,
+        GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
+    if (ret) {
+        APP_LOGI("ElementName is extension.");
+        element.bundleName = bundleName;
+        element.moduleName = moduleName;
+        element.extensionName = abilityName;
+        return true;
+    }
+
+    APP_LOGE("ElementName doesn't exist.");
+    return false;
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS
