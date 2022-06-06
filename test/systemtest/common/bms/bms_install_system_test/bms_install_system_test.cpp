@@ -1591,33 +1591,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0100, Function | MediumTest 
     std::cout << "END BMS_SystemAppInstall_0100" << std::endl;
 }
 
-
-/**
- * @tc.number: BMS_SystemAppInstall_0200
- * @tc.name: test install two bundles at the same time
- * @tc.desc: 1.under '/system/app',there are two system bundles
- *           2.TriggerScan and check install result
- */
-HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_SystemAppInstall_0200" << std::endl;
-    int bundleNum = 2;
-
-    for (int i = 1; i <= bundleNum; i++) {
-        std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle" + std::to_string(i) + ".hap";
-        std::string message;
-        InstallBundle(bundleFilePath, InstallFlag::NORMAL, message);
-        EXPECT_EQ(message, "Success") << "install fail!";
-
-        std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "s" + std::to_string(i);
-        std::string modulePackage = SYSTEM_BASE_BUNDLE_NAME + ".h1";
-
-        UninstallBundle(bundleName, message);
-        EXPECT_EQ(message, "Success") << "uninstall fail!";
-    }
-    std::cout << "END BMS_SystemAppInstall_0200" << std::endl;
-}
-
 /**
  * @tc.number: BMS_SystemAppInstall_0300
  * @tc.name: test install abnormal system bundle,and check bundle info
@@ -1660,10 +1633,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0300, Function | MediumTest 
     EXPECT_EQ(bundleInfo.name, normalSystemBundleName);
 
     EXPECT_EQ(bundleInfo.versionName, "1.0");
-    EXPECT_GE(bundleInfo.uid, Constants::BASE_SYS_UID);
-    EXPECT_LE(bundleInfo.uid, Constants::MAX_SYS_UID);
-    EXPECT_GE(bundleInfo.gid, Constants::BASE_SYS_UID);
-    EXPECT_LE(bundleInfo.gid, Constants::MAX_SYS_UID);
+    EXPECT_GE(bundleInfo.uid, Constants::BASE_USER_RANGE);
+    EXPECT_GE(bundleInfo.gid, Constants::BASE_USER_RANGE);
 
     UninstallBundle(normalSystemBundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
