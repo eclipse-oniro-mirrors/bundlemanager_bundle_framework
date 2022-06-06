@@ -1920,7 +1920,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0200, Function | MediumTest
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
 
-    bool isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    bool isGetInfoSuccess =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(isGetInfoSuccess);
 
     EXPECT_EQ(bundleInfo.name, "com.third.hiworld.example1");

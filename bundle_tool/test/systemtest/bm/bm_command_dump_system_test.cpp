@@ -112,5 +112,4 @@ HWTEST_F(BmCommandDumpSystemTest, Bm_Command_Dump_SystemTest_0300, Function | Me
     std::string commandResult = ToolSystemTest::ExecuteCommand(command);
 
     EXPECT_EQ(commandResult, GET_FALSE + "\n");
-
 } 
