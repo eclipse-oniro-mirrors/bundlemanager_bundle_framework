@@ -22,7 +22,7 @@ innerkits_path = "${appexecfwk_path}/interfaces/innerkits"
 inner_api_path = "${appexecfwk_path}/interfaces/inner_api"
 tools_path = "${appexecfwk_path}/tools"
 aafwk_innerkits_path =
-    "//foundation/ability/ability_runtime/interfaces/innerkits"
+    "//foundation/ability/ability_runtime/interfaces/inner_api"
 use_pre_bundle_profile = false
 declare_args() {
   bundle_framework_graphics = true
