@@ -1098,13 +1098,6 @@ sptr<IBundleUserMgr> BundleMgrHostImpl::GetBundleUserMgr()
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleUserMgr();
 }
 
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
-{
-    return DelayedSingleton<BundleMgrService>::GetInstance()->GetDefaultAppProxy();
-}
-#endif
-
 bool BundleMgrHostImpl::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
 {
     APP_LOGD("start GetAllFormsInfo");
@@ -1624,5 +1617,12 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     APP_LOGD("calling bundleName is : %{public}s", bundleName.c_str());
     return ret;
 }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
+{
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetDefaultAppProxy();
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS

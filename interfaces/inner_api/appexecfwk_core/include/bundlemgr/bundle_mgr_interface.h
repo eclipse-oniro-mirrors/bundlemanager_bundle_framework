@@ -790,14 +790,6 @@ public:
     {
         return nullptr;
     }
-
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    virtual sptr<IDefaultApp> GetDefaultAppProxy()
-    {
-        return nullptr;
-    }
-#endif
-
     /**
      * @brief Obtains the DistributedBundleInfo based on a given bundle name and networkId.
      * @param networkId Indicates the networkId of remote device.
@@ -983,6 +975,13 @@ public:
     {
         return false;
     }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    virtual sptr<IDefaultApp> GetDefaultAppProxy()
+    {
+        return nullptr;
+    }
+#endif
 
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,

@@ -177,6 +177,9 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::SET_DISPOSED_STATUS, &BundleMgrHost::HandleSetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::GET_DISPOSED_STATUS, &BundleMgrHost::HandleGetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, &BundleMgrHost::HandleObtainCallingBundleName);
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, &BundleMgrHost::HandleGetDefaultAppProxy);
+#endif
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1289,24 +1292,6 @@ ErrCode BundleMgrHost::HandleGetBundleUserMgr(Parcel &data, Parcel &reply)
     return ERR_OK;
 }
 
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-ErrCode BundleMgrHost::HandleGetDefaultAppProxy(Parcel &data, Parcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    sptr<IDefaultApp> defaultAppProxy = GetDefaultAppProxy();
-    if (defaultAppProxy == nullptr) {
-        APP_LOGE("defaultAppProxy is nullptr.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    if (!reply.WriteObject<IRemoteObject>(defaultAppProxy->AsObject())) {
-        APP_LOGE("WriteObject failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-#endif
-
 ErrCode BundleMgrHost::HandleGetAllFormsInfo(Parcel &data, Parcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1800,6 +1785,24 @@ ErrCode BundleMgrHost::HandleObtainCallingBundleName(Parcel &data, Parcel &reply
     }
     return ERR_OK;
 }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+ErrCode BundleMgrHost::HandleGetDefaultAppProxy(Parcel &data, Parcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IDefaultApp> defaultAppProxy = GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("defaultAppProxy is nullptr.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(defaultAppProxy->AsObject())) {
+        APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+#endif
 
 template<typename T>
 bool BundleMgrHost::WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &reply)

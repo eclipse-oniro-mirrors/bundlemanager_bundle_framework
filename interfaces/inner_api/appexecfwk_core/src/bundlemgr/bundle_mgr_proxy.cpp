@@ -1936,34 +1936,6 @@ sptr<IBundleUserMgr> BundleMgrProxy::GetBundleUserMgr()
     return bundleUserMgr;
 }
 
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    MessageParcel data;
-    MessageParcel reply;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get default app proxy due to write InterfaceToken failed.");
-        return nullptr;
-    }
-    if (!SendTransactCmd(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, data, reply)) {
-        return nullptr;
-    }
-
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
-    if (object == nullptr) {
-        APP_LOGE("reply failed.");
-        return nullptr;
-    }
-    sptr<IDefaultApp> defaultAppProxy = iface_cast<IDefaultApp>(object);
-    if (defaultAppProxy == nullptr) {
-        APP_LOGE("defaultAppProxy is nullptr.");
-    }
-
-    return defaultAppProxy;
-}
-#endif
-
 bool BundleMgrProxy::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2610,6 +2582,34 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
     }
     return true;
 }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get default app proxy due to write InterfaceToken failed.");
+        return nullptr;
+    }
+    if (!SendTransactCmd(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IDefaultApp> defaultAppProxy = iface_cast<IDefaultApp>(object);
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("defaultAppProxy is nullptr.");
+    }
+
+    return defaultAppProxy;
+}
+#endif
 
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
