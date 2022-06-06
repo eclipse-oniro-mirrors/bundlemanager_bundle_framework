@@ -22,9 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
-constexpr uint32_t FREE_INSTALL_DONE = 0;
-
 void ServiceCenterDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &wptrDeath)
 {
     APP_LOGI("service center died");
