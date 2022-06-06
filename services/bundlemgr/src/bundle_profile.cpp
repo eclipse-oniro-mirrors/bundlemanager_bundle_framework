@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_util.h"
 #include "common_profile.h"
 #include "parameter.h"
 #include "string_ex.h"
@@ -2050,6 +2051,10 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
     // for SystemResource
     applicationInfo.iconId = configJson.app.iconId;
     applicationInfo.labelId = configJson.app.labelId;
+    applicationInfo.iconResource = BundleUtil::GetResource(
+        configJson.app.bundleName, configJson.module.distro.moduleName, configJson.app.iconId);
+    applicationInfo.labelResource = BundleUtil::GetResource(
+        configJson.app.bundleName, configJson.module.distro.moduleName, configJson.app.labelId);
 
     applicationInfo.enabled = true;
     for (const auto &targetBundle : configJson.app.targetBundleList) {
@@ -2342,6 +2347,12 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
                     applicationInfo.iconId = ability.iconId;
                     applicationInfo.description = ability.description;
                     applicationInfo.descriptionId = ability.descriptionId;
+                    applicationInfo.iconResource = BundleUtil::GetResource(
+                        configJson.app.bundleName, configJson.module.distro.moduleName, ability.iconId);
+                    applicationInfo.labelResource = BundleUtil::GetResource(
+                        configJson.app.bundleName, configJson.module.distro.moduleName, ability.labelId);
+                    applicationInfo.descriptionResource = BundleUtil::GetResource(
+                        configJson.app.bundleName, configJson.module.distro.moduleName, ability.descriptionId);
                     if (innerModuleInfo.label.empty()) {
                         innerModuleInfo.label = ability.label;
                         innerModuleInfo.labelId = ability.labelId;

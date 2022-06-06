@@ -205,6 +205,23 @@ static void ConvertInnerMetadata(napi_env env, napi_value value, const Metadata 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "resource", nResource));
 }
 
+static void ConvertResource(napi_env env, napi_value objResource, const Resource &resource)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, resource.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "bundleName", nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, resource.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "moduleName", nModuleName));
+
+    napi_value nId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, resource.id, &nId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "id", nId));
+}
+
 static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo)
 {
     napi_value nName;
@@ -356,6 +373,21 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.fingerprint.c_str(), NAPI_AUTO_LENGTH,
         &nFingerprint));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "fingerprint", nFingerprint));
+
+    napi_value nIconResource;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nIconResource));
+    ConvertResource(env, nIconResource, appInfo.iconResource);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "iconResource", nIconResource));
+
+    napi_value nLabelResource;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nLabelResource));
+    ConvertResource(env, nLabelResource, appInfo.labelResource);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "labelResource", nLabelResource));
+
+    napi_value nDescriptionResource;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nDescriptionResource));
+    ConvertResource(env, nDescriptionResource, appInfo.descriptionResource);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "descriptionResource", nDescriptionResource));
 
     APP_LOGI("ConvertApplicationInfo entryDir=%{public}s.", appInfo.entryDir.c_str());
 }

@@ -431,5 +431,14 @@ bool BundleUtil::CopyFile(
     out.close();
     return true;
 }
+
+Resource BundleUtil::GetResource(const std::string &bundleName, const std::string &moduleName, int32_t resId)
+{
+    Resource resource;
+    resource.bundleName = bundleName;
+    resource.moduleName = moduleName;
+    resource.id = resId;
+    return resource;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -21,6 +21,7 @@ ohos_moduletest("BmsBundleParserModuleTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
     "${services_path}/bundlemgr/src/pre_install_bundle_info.cpp",
@@ -43,6 +44,7 @@ ohos_moduletest("BmsBundleParserModuleTest") {
     "ability_runtime:app_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
