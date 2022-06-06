@@ -26,6 +26,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/ability_manager_helper.cpp",
   "${services_path}/bundlemgr/src/base_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/bundle_exception_handler.cpp",
+  "${services_path}/bundlemgr/src/bundle_install_checker.cpp",
   "${services_path}/bundlemgr/src/bundle_installer.cpp",
   "${services_path}/bundlemgr/src/bundle_installer_host.cpp",
   "${services_path}/bundlemgr/src/bundle_installer_manager.cpp",
