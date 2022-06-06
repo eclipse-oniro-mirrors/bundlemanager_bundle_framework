@@ -2682,6 +2682,34 @@ bool BundleMgrProxy::ResetDefaultApplication(int32_t userId, const std::string& 
     return reply.ReadBool();
 }
 
+bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
+{
+    APP_LOGD("begin to ObtainCallingBundleName");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to ObtainCallingBundleName due to write MessageParcel fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, data, reply)) {
+        APP_LOGE("fail to ObtainCallingBundleName from server");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+    bundleName = reply.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    return true;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

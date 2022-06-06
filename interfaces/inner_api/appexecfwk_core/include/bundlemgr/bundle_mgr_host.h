@@ -561,6 +561,9 @@ private:
     ErrCode HandleSetDefaultApplication(Parcel &data, Parcel &reply);
 
     ErrCode HandleResetDefaultApplication(Parcel &data, Parcel &reply);
+
+    ErrCode HandleObtainCallingBundleName(Parcel &data, Parcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

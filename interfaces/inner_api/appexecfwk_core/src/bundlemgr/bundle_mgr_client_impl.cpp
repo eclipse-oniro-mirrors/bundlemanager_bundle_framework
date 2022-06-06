@@ -32,6 +32,10 @@ using namespace OHOS::Global::Resource;
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
+} // namespace
+
 BundleMgrClientImpl::BundleMgrClientImpl()
 {
     APP_LOGI("create bundleMgrClientImpl");
@@ -144,6 +148,43 @@ bool BundleMgrClientImpl::GetResConfigFile(const AbilityInfo &abilityInfo, const
     return true;
 }
 
+bool BundleMgrClientImpl::GetProfileFromSandDir(ExtensionAbilityInfo &extensionInfo,
+    const std::string &metadataName, std::vector<std::string> &profileInfos) const
+{
+    APP_LOGD("get extension config file from sand dir begin");
+    if (!ConvertResourcePath(extensionInfo.resourcePath, extensionInfo.bundleName)) {
+        APP_LOGE("ConvertResourcePath failed %{public}s", extensionInfo.resourcePath.c_str());
+        return false;
+    }
+    return GetResConfigFile(extensionInfo, metadataName, profileInfos);
+}
+
+bool BundleMgrClientImpl::GetProfileFromSandDir(AbilityInfo &abilityInfo, const std::string &metadataName,
+    std::vector<std::string> &profileInfos) const
+{
+    APP_LOGD("get ability config file from sand dir begin");
+    if (!ConvertResourcePath(abilityInfo.resourcePath, abilityInfo.bundleName)) {
+        APP_LOGE("ConvertResourcePath failed %{public}s", abilityInfo.resourcePath.c_str());
+        return false;
+    }
+    return GetResConfigFile(abilityInfo, metadataName, profileInfos);
+}
+
+bool BundleMgrClientImpl::ConvertResourcePath(std::string &resPath, const std::string &bundleName) const
+{
+    if (resPath.empty()) {
+        APP_LOGE("res path is empty");
+        return false;
+    }
+    std::string innerStr = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
+    if (resPath.find(innerStr) == std::string::npos) {
+        APP_LOGE("res path is incorrect");
+        return false;
+    }
+    resPath.replace(0, innerStr.length(), BUNDLE_MAP_CODE_PATH);
+    return true;
+}
+
 std::vector<std::string> BundleMgrClientImpl::GetAccessibleAppCodePaths(int32_t userId)
 {
     APP_LOGI("GetAccessibleAppCodePaths begin");
@@ -235,12 +276,12 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
         return false;
     }
 
-    size_t pos = resName.rfind(Constants::PROFILE_FILE_COLON);
-    if ((pos == std::string::npos) || (pos == resName.length() - 1)) {
+    size_t pos = resName.rfind(Constants::PROFILE_FILE_PREFIX);
+    if ((pos == std::string::npos) || (pos == resName.length() - Constants::PROFILE_FILE_PREFIX.length())) {
         APP_LOGE("GetResFromResMgr res name is invalid");
         return false;
     }
-    std::string profileName = resName.substr(pos + 1);
+    std::string profileName = resName.substr(pos + Constants::PROFILE_FILE_PREFIX.length());
     std::string resPath;
     if (resMgr->GetProfileByName(profileName.c_str(), resPath) != SUCCESS) {
         APP_LOGE("GetResFromResMgr profileName cannot be found");
@@ -311,7 +352,7 @@ bool BundleMgrClientImpl::TransformFileToJsonString(const std::string &resPath, 
         in.close();
         return false;
     }
-    profile = profileJson.dump(Constants::DUMP_INDENT);
+    profile = profileJson.dump();
     in.close();
     return true;
 }

@@ -988,6 +988,11 @@ public:
         return false;
     }
 
+    virtual bool ObtainCallingBundleName(std::string &bundleName)
+    {
+        return false;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1078,6 +1083,7 @@ public:
         GET_DEFAULT_APPLICATION,
         SET_DEFAULT_APPLICATION,
         RESET_DEFAULT_APPLICATION,
+        QUERY_CALLING_BUNDLE_NAME,
     };
 };
 }  // namespace AppExecFwk
