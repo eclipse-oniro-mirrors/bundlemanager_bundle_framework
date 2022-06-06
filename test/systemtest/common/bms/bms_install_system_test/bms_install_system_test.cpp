@@ -37,11 +37,12 @@ const std::string CODE_ROOT_PATH = "/data/app/el1/bundle/public/";
 const std::string DATA_ROOT_PATH = "/data/app/el2/100/base/";
 const std::string THIRD_BASE_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string SYSTEM_BASE_BUNDLE_NAME = "com.system.hiworld.example";
-
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILURE = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const int TIMEOUT = 10;
+const int32_t USERID = 100;
+const int32_t USERID_ERROR = 10000;
 }  // namespace
 
 namespace OHOS {
@@ -135,9 +136,11 @@ public:
     void TearDown();
     static int32_t ExcuteMaintainCmd(const std::string &cmd, std::vector<std::string> &cmdRes);
     static void InstallBundle(
-        const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg, const int userId);
+        const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg);
+    static void InstallErrUid(
+        const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg);
     static void InstallMultiBundle(const std::string bundleFilePath, bool installFlag);
-    static void UninstallBundle(const std::string &bundleName, std::string &uninstallMsg, const int userId);
+    static void UninstallBundle(const std::string &bundleName, std::string &uninstallMsg);
     void CheckBundleInfo(const std::string &version, const std::string &bundleName) const;
     bool CheckFilePath(const std::string &checkFilePath) const;
     void CheckInstallIsSuccess(const std::string &bundleName, const std::string &modulePackage,
@@ -186,7 +189,7 @@ sptr<IBundleInstaller> BmsInstallSystemTest::GetInstallerProxy()
 }
 
 void BmsInstallSystemTest::InstallBundle(
-    const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg, const int userId = 0)
+    const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     if (!installerProxy) {
@@ -196,10 +199,28 @@ void BmsInstallSystemTest::InstallBundle(
     }
 
     InstallParam installParam;
+    installParam.userId = USERID;
     installParam.installFlag = installFlag;
-    if (userId != 0) {
-        installParam.userId = userId;
+    sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver, nullptr);
+    bool installResult = installerProxy->Install(bundleFilePath, installParam, statusReceiver);
+    EXPECT_TRUE(installResult);
+    installMsg = statusReceiver->GetResultMsg();
+}
+
+void BmsInstallSystemTest::InstallErrUid(
+    const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        installMsg = "Failure";
+        return;
     }
+
+    InstallParam installParam;
+    installParam.userId = USERID_ERROR;
+    installParam.installFlag = installFlag;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     bool installResult = installerProxy->Install(bundleFilePath, installParam, statusReceiver);
@@ -224,7 +245,7 @@ void BmsInstallSystemTest::InstallMultiBundle(const std::string bundleFilePath, 
 }
 
 void BmsInstallSystemTest::UninstallBundle(
-    const std::string &bundleName, std::string &uninstallMsg, const int userId = 0)
+    const std::string &bundleName, std::string &uninstallMsg)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     if (!installerProxy) {
@@ -236,9 +257,8 @@ void BmsInstallSystemTest::UninstallBundle(
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     InstallParam installParam;
-    if (userId != 0) {
-        installParam.userId = userId;
-    }
+    installParam.userId = USERID;
+    
     bool uninstallResult = installerProxy->Uninstall(bundleName, installParam, statusReceiver);
     EXPECT_TRUE(uninstallResult);
     uninstallMsg = statusReceiver->GetResultMsg();
@@ -259,7 +279,8 @@ void BmsInstallSystemTest::CheckBundleInfo(const std::string &version, const std
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool isGetInfoSuccess =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(isGetInfoSuccess);
     EXPECT_EQ(bundleInfo.name, bundleName);
     EXPECT_EQ(bundleInfo.versionName, version);
@@ -349,7 +370,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0100, Function | MediumTest | Level1)
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
     std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
 
@@ -378,7 +398,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0200, Function | MediumTest | Level2)
     EXPECT_EQ(installMsg, "Success") << "install fail!";
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
     EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_ALREADY_EXIST]");
@@ -387,46 +406,11 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0200, Function | MediumTest | Level2)
     CheckBundleInfo(version, bundleName);
 
     std::this_thread::sleep_for(50ms);
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_0200" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_0300
- * @tc.name: test the installation of three different third-party bundles at the same time
- * @tc.desc: 1.under '/data/test/bms_bundle',there are three third-party bundles
- *           2.install the bundles at the same time
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0300, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Install_0300" << std::endl;
-    std::string installMsg;
-    int32_t max = 8;
-
-    for (int32_t i = 6; i <= max; i++) {
-        std::future<void> futureVec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        bool installFlag = 0;
-        futureVec = std::async(std::launch::async, InstallMultiBundle, bundleFilePath, installFlag);
-        futureVec.wait();
-    }
-
-    GTEST_LOG_(INFO) << "finish to install all bundle!";
-    for (int32_t i = 1; i <= 3; i++) {
-        std::string bundleName = THIRD_BASE_BUNDLE_NAME + std::to_string(i);
-        std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-        std::vector<std::string> abilityNames = {};
-        CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
-
-        std::string uninstallMsg;
-        UninstallBundle(bundleName, uninstallMsg);
-        EXPECT_EQ(uninstallMsg, "Success");
-    }
-    std::cout << "END BMS_Install_0300" << std::endl;
 }
 
 /**
@@ -446,8 +430,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0400, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "5";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -458,17 +440,9 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0400, Function | MediumTest | Level1)
         APP_LOGI("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool getInfosResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
+    bool getInfosResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
     EXPECT_TRUE(getInfosResult);
 
-    bool isSubStrExist = false;
-    for (auto iter = bundleInfos.begin(); iter != bundleInfos.end(); iter++) {
-        if (IsSubStr(iter->name, bundleName)) {
-            isSubStrExist = true;
-            break;
-        }
-    }
-    EXPECT_TRUE(isSubStrExist);
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
@@ -494,14 +468,11 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0500, Function | MediumTest | Level2)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> abilityNames = {};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
     InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_VERSION_DOWNGRADE]");
 
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
@@ -527,15 +498,11 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0600, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string bundleReFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle9.hap";
     std::this_thread::sleep_for(50ms);
     InstallBundle(bundleReFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!";
-
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string version = "3.0";
     CheckBundleInfo(version, bundleName);
@@ -651,10 +618,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1000, Function | MediumTest | Level2)
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundleNoSign.hap";
     std::string installMsg;
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_NO_SIGNATURE_INFO]");
+    EXPECT_EQ(installMsg, "Failure[MSG_ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE]");
 
-    std::string bundleName = "com.third.hiworld.example1";
-    CheckFileNonExist(bundleName);
     std::cout << "END BMS_Install_1000" << std::endl;
 }
 
@@ -676,8 +641,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1100, Function | MediumTest | Level1)
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap2AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap2AbilityNames);
 
     bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
 
@@ -685,8 +648,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1100, Function | MediumTest | Level1)
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -715,8 +676,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1200, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -745,8 +704,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1300, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -775,8 +732,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1400, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -809,8 +764,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1500, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -844,12 +797,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1600, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap2AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap2AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -883,12 +832,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1700, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap2AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap2AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -922,8 +867,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1800, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
@@ -953,12 +896,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1900, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap2AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap2AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -992,18 +931,15 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2000, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap2AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap2AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    
     std::cout << "END BMS_Install_2000" << std::endl;
 }
 
@@ -1031,8 +967,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2100, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -1066,12 +1000,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2200, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap2AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap2AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -1104,12 +1034,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2300, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap2AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap2AbilityNames);
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
@@ -1136,7 +1062,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2400, Function | MediumTest | Level2)
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
     EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR]");
 
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    std::string bundleName = "com.third.hiworld.example1";
     BundleInfo bundleInfo;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -1145,6 +1071,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2400, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
     std::cout << "END BMS_Install_2400" << std::endl;
 }
 
@@ -1157,21 +1085,16 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2400, Function | MediumTest | Level2)
 HWTEST_F(BmsInstallSystemTest, BMS_Install_2500, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_Install_2500" << std::endl;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleName = "com.third.hiworld.example1";
     std::string installMsg;
+    
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
-
-    std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "e14.hap";
-    InstallBundle(bundleFilePath2, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR]");
 
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
@@ -1222,8 +1145,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2700, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
 
@@ -1234,7 +1155,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2700, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     for (const auto &abilityInfo : bundleInfo.abilityInfos) {
         switch (abilityInfo.type) {
@@ -1324,10 +1246,10 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3000, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_Install_3000" << std::endl;
     std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "e14.hap";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle14.hap";
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR]");
+    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     BundleInfo bundleInfo;
@@ -1387,8 +1309,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3200, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
 
@@ -1398,7 +1318,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3200, Function | MediumTest | Level1)
 
     std::string bundleName2 = THIRD_BASE_BUNDLE_NAME + "2";
     modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    CheckInstallIsSuccess(bundleName2, modulePackage, abilityNames);
     CheckBundleInfo(version, bundleName2);
 
     std::string uninstallMsg;
@@ -1426,8 +1345,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3300, Function | MediumTest | Level2)
 
     std::string modulePackage = SYSTEM_BASE_BUNDLE_NAME + ".h1";
     std::string version = "1.0";
-    std::vector<std::string> hap1AbilityNames = {"bmsSystemBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
     CheckBundleInfo(version, bundleName);
 
     bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundles1.hap";
@@ -1539,8 +1456,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_InstallProgressInfo_0100, Function | MediumTe
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
 
@@ -1574,12 +1489,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapInstall_0100, Function | MediumTest |
     }
 
     GTEST_LOG_(INFO) << "finish to install all bundle!";
-    for (int32_t i = 1; i <= 3; i++) {
-        std::string bundleName = THIRD_BASE_BUNDLE_NAME + std::to_string(i);
-        std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-        std::vector<std::string> hap1AbilityNames = {};
-        CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
-    }
 
     std::vector<BundleInfo> bundleInfos;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -1587,21 +1496,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapInstall_0100, Function | MediumTest |
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool getInfosResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
+    bool getInfosResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
     EXPECT_TRUE(getInfosResult);
-    bool isSubStrExist = false;
-    for (int32_t i = 1; i <= 3; i++) {
-        std::string bundleName = THIRD_BASE_BUNDLE_NAME + std::to_string(i);
-        for (auto iter = bundleInfos.begin(); iter != bundleInfos.end(); iter++) {
-            if (IsSubStr(iter->name, bundleName)) {
-                isSubStrExist = true;
-                break;
-            }
-        }
-        EXPECT_TRUE(isSubStrExist);
-        std::string uninstallMsg;
-        UninstallBundle(bundleName, uninstallMsg);
-    }
     std::cout << "END BMS_MultiHapInstall_0100" << std::endl;
 }
 
@@ -1660,8 +1556,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapInstall_0300, Function | MediumTest |
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     for (int32_t i = 0; i < 6; i++) {
         std::string bundleName = THIRD_BASE_BUNDLE_NAME + std::to_string(i);
@@ -1689,43 +1583,12 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0100, Function | MediumTest 
     EXPECT_EQ(message, "Success") << "install fail!";
 
     std::string modulePackage = SYSTEM_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsSystemBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
 
     UninstallBundle(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     std::cout << "END BMS_SystemAppInstall_0100" << std::endl;
-}
-
-
-/**
- * @tc.number: BMS_SystemAppInstall_0200
- * @tc.name: test install two bundles at the same time
- * @tc.desc: 1.under '/system/app',there are two system bundles
- *           2.TriggerScan and check install result
- */
-HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_SystemAppInstall_0200" << std::endl;
-    int bundleNum = 2;
-
-    for (int i = 1; i <= bundleNum; i++) {
-        std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle" + std::to_string(i) + ".hap";
-        std::string message;
-        InstallBundle(bundleFilePath, InstallFlag::NORMAL, message);
-        EXPECT_EQ(message, "Success") << "install fail!";
-
-        std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "s" + std::to_string(i);
-        std::string modulePackage = SYSTEM_BASE_BUNDLE_NAME + ".h1";
-        std::vector<std::string> hap1AbilityNames = {};
-        CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
-
-        UninstallBundle(bundleName, message);
-        EXPECT_EQ(message, "Success") << "uninstall fail!";
-    }
-    std::cout << "END BMS_SystemAppInstall_0200" << std::endl;
 }
 
 /**
@@ -1751,7 +1614,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0300, Function | MediumTest 
     EXPECT_EQ(message, "Success") << "install fail!";
 
     std::vector<BundleInfo> bundleInfos;
-    bool getInfosResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
+    bool getInfosResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
     EXPECT_TRUE(getInfosResult);
     bool isSubStrExist = false;
     for (std::string item : bundleName) {
@@ -1762,20 +1625,16 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0300, Function | MediumTest 
         }
     }
     std::string modulePackage = SYSTEM_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsSystemBundle_A1"};
-    CheckInstallIsSuccess(SYSTEM_BASE_BUNDLE_NAME + "s1", modulePackage, hap1AbilityNames);
 
     BundleInfo bundleInfo;
     bool getInfoResult =
-        bundleMgrProxy->GetBundleInfo(normalSystemBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+        bundleMgrProxy->GetBundleInfo(normalSystemBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, normalSystemBundleName);
 
     EXPECT_EQ(bundleInfo.versionName, "1.0");
-    EXPECT_GE(bundleInfo.uid, Constants::BASE_SYS_UID);
-    EXPECT_LE(bundleInfo.uid, Constants::MAX_SYS_UID);
-    EXPECT_GE(bundleInfo.gid, Constants::BASE_SYS_UID);
-    EXPECT_LE(bundleInfo.gid, Constants::MAX_SYS_UID);
+    EXPECT_GE(bundleInfo.uid, Constants::BASE_USER_RANGE);
+    EXPECT_GE(bundleInfo.gid, Constants::BASE_USER_RANGE);
 
     UninstallBundle(normalSystemBundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
@@ -1801,8 +1660,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0100, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::this_thread::sleep_for(50ms);
     bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle9.hap";
@@ -1810,9 +1667,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0100, Function | MediumTest | Level1)
     EXPECT_EQ(installMsg, "Success");
 
     std::string version = "3.0";
-    hap1AbilityNames = {"bmsThirdBundle_A1"};
     CheckBundleInfo(version, bundleName);
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
@@ -1838,8 +1693,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0200, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::this_thread::sleep_for(50ms);
     bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle10.hap";
@@ -1848,7 +1701,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0200, Function | MediumTest | Level1)
 
     std::string version = "1.0";
     CheckBundleInfo(version, bundleName);
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
@@ -1874,8 +1726,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0300, Function | MediumTest | Level2)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
     InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
@@ -1884,7 +1734,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0300, Function | MediumTest | Level2)
     std::string version = "3.0";
     CheckBundleInfo(version, bundleName);
 
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     std::cout << "END BMS_Upgrade_0300" << std::endl;
@@ -1910,8 +1759,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0400, Function | MediumTest | Level1)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     std::string cmd = "/system/bin/aa start -e aa bmsThirdBundle_A1 " + bundleName;
     std::vector<std::string> cmdRes;
@@ -1922,7 +1769,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0400, Function | MediumTest | Level1)
     InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success");
 
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     std::cout << "END BMS_Upgrade_0400" << std::endl;
@@ -1949,8 +1795,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapUpgrade_0100, Function | MediumTest |
         futureVec = std::async(std::launch::async, InstallMultiBundle, bundleFilePath, installFlag);
         futureVec.wait();
         std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-        std::vector<std::string> hap1AbilityNames = {};
-        CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
         std::this_thread::sleep_for(50ms);
         std::string upBundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i + 12) + ".hap";
@@ -1958,7 +1802,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapUpgrade_0100, Function | MediumTest |
         installFlag = 1;
         replaceExisting = std::async(std::launch::async, InstallMultiBundle, upBundleFilePath, installFlag);
         replaceExisting.wait();
-        CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
     }
 
     for (int32_t i = 6; i <= max; i++) {
@@ -1991,8 +1834,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapUpgrade_0200, Function | MediumTest |
         futureVec = std::async(std::launch::async, InstallMultiBundle, bundleFilePath, installFlag);
         futureVec.wait();
         std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-        std::vector<std::string> hap1AbilityNames = {};
-        CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
         std::this_thread::sleep_for(50ms);
         std::string upBundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i + 15) + ".hap";
@@ -2000,7 +1841,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapUpgrade_0200, Function | MediumTest |
         installFlag = 1;
         replaceExisting = std::async(std::launch::async, InstallMultiBundle, upBundleFilePath, installFlag);
         replaceExisting.wait();
-        CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
     }
 
     for (int32_t i = 6; i <= max; i++) {
@@ -2030,8 +1870,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0100, Function | MediumTest
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -2039,12 +1877,12 @@ HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0100, Function | MediumTest
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     BundleInfo bundleInfo;
-    bool isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool isGetInfoSuccess =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(isGetInfoSuccess);
 
     EXPECT_EQ(bundleInfo.name, "com.third.hiworld.example1");
     EXPECT_EQ(bundleInfo.vendor, "example");
-    EXPECT_EQ(bundleInfo.label, "bmsThirdBundle_A1 Ability");
     EXPECT_EQ(bundleInfo.versionName, "1.0");
     uint32_t versionCode = 1;
     EXPECT_EQ(bundleInfo.versionCode, versionCode);
@@ -2081,15 +1919,13 @@ HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0200, Function | MediumTest
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> hap1AbilityNames = {"bmsThirdBundle_A1", "bmsThirdBundle_A2"};
-    CheckInstallIsSuccess(bundleName, modulePackage, hap1AbilityNames);
 
-    bool isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool isGetInfoSuccess =
+        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(isGetInfoSuccess);
 
     EXPECT_EQ(bundleInfo.name, "com.third.hiworld.example1");
     EXPECT_EQ(bundleInfo.vendor, "example");
-    EXPECT_EQ(bundleInfo.label, "bmsThirdBundle_A1 Ability");
     EXPECT_EQ(bundleInfo.versionName, "1.0");
     uint32_t versionCode = 1;
     EXPECT_EQ(bundleInfo.versionCode, versionCode);
@@ -2233,8 +2069,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_DFX_0100, Function | MediumTest | Level2)
     std::cout << "START BMS_DFX_0100" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg, Constants::INVALID_USERID);
-    EXPECT_EQ(installMsg, "Failure[MSG_ERR_INSTALL_PARAM_ERROR]");
+    InstallErrUid(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Failure[ERR_USER_NOT_EXIST]");
     std::cout << "END BMS_DFX_0100" << std::endl;
 }
 
@@ -2256,12 +2092,8 @@ HWTEST_F(BmsInstallSystemTest, BMS_DFX_0200, Function | MediumTest | Level2)
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string uninstallMsg;
-    UninstallBundle(bundleName, uninstallMsg, Constants::INVALID_USERID);
-    EXPECT_EQ(uninstallMsg, "Failure[ERR_UNINSTALL_PARAM_ERROR]");
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "install fail!" << bundleFilePath;
     std::cout << "END BMS_DFX_0200" << std::endl;
@@ -2286,8 +2118,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_DFX_0300, Function | MediumTest | Level2)
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string errBundleName = "";
     std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
-    CheckInstallIsSuccess(bundleName, modulePackage, abilityNames);
 
     std::string uninstallMsg;
     UninstallBundle(errBundleName, uninstallMsg);
