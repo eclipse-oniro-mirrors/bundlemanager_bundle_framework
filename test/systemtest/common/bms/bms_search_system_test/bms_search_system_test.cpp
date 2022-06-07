@@ -49,6 +49,7 @@ static constexpr int INDEX_THREE = 3;
 static constexpr int INDEX_SEVEN = 7;
 static constexpr int INDEX_EIGHT = 8;
 static constexpr int INDEX_NINE = 9;
+const int32_t USERID = 100;
 }  // namespace
 
 namespace OHOS {
@@ -277,7 +278,7 @@ void BmsSearchSystemTest::Install(
     }
     InstallParam installParam;
     installParam.installFlag = installFlag;
-    installParam.userId = Constants::DEFAULT_USERID;
+    installParam.userId = USERID;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     installerProxy->Install(bundleFilePath, installParam, statusReceiver);
@@ -298,7 +299,7 @@ void BmsSearchSystemTest::Uninstall(const std::string &bundleName, std::vector<s
         resvec.push_back(ERROR_UNINSTALL_FAILED);
     } else {
         InstallParam installParam;
-        installParam.userId = Constants::DEFAULT_USERID;
+        installParam.userId = USERID;
         sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
         EXPECT_NE(statusReceiver, nullptr);
         installerProxy->Uninstall(bundleName, installParam, statusReceiver);
@@ -325,7 +326,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0100, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, appName);
     std::cout << bundleInfo.name << std::endl;
@@ -359,7 +360,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0200, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo);
+    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, appName);
     bool isSubStrExist = false;
@@ -393,7 +394,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0300, Function | MediumTest | Level2)
 
     appName = BASE_BUNDLE_NAME + "e";
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_FALSE(getInfoResult);
     std::cout << "END BMS_SEARCH_0300" << std::endl;
 }
@@ -417,9 +418,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0400, Function | MediumTest | Level1)
     }
 
     ApplicationInfo appInfo;
-    int userId = Constants::DEFAULT_USERID;
     bool getInfoResult =
-        bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(appInfo.name, appName);
     std::cout << "END BMS_SEARCH_0400" << std::endl;
@@ -445,10 +445,9 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0500, Function | MediumTest | Level1)
     }
 
     ApplicationInfo appInfo;
-    int userId = Constants::DEFAULT_USERID;
     bool getInfoResult =
         bundleMgrProxy->GetApplicationInfo(
-            appName, ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, appInfo);
+            appName, ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, appInfo);
     std::string permission = commonTool.VectorToStr(appInfo.permissions);
     EXPECT_TRUE(getInfoResult);
     std::cout << permission << std::endl;
@@ -475,10 +474,9 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0600, Function | MediumTest | Level2)
     }
 
     ApplicationInfo appInfo;
-    int userId = Constants::DEFAULT_USERID;
     appName = BASE_BUNDLE_NAME + "e";
     bool getInfoResult =
-        bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_FALSE(getInfoResult);
     std::cout << "END BMS_SEARCH_0600" << std::endl;
 }
@@ -587,8 +585,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1000, Function | MediumTest | Level1)
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
 
-    int userId = Constants::DEFAULT_USERID;
-    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
+    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID);
     EXPECT_GE(uid, Constants::BASE_APP_UID);
     EXPECT_LE(uid, Constants::MAX_APP_UID);
     std::cout << "END BMS_SEARCH_1000" << std::endl;
@@ -611,10 +608,9 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1100, Function | MediumTest | Level2)
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    int userId = Constants::DEFAULT_USERID;
 
     bundleName = BASE_BUNDLE_NAME + "e";
-    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
+    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID);
     EXPECT_EQ(uid, Constants::INVALID_UID);
     std::cout << "END BMS_SEARCH_1100" << std::endl;
 }
@@ -639,7 +635,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1200, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     int uid = bundleInfo.uid;
 
     std::string bundleName;
@@ -716,7 +712,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1500, Function | MediumTest | Level1)
     }
 
     std::vector<BundleInfo> bundleInfos;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
+    bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
     EXPECT_TRUE(getInfoResult);
     for (int i = INDEX_TWO; i <= INDEX_THREE; i++) {
         std::string appName = BASE_BUNDLE_NAME + std::to_string(i);
@@ -758,7 +754,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1600, Function | MediumTest | Level1)
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     std::vector<BundleInfo> bundleInfos;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
+    bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
     EXPECT_TRUE(getInfoResult);
     std::cout << "END BMS_SEARCH_1600" << std::endl;
 }
@@ -831,7 +827,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1700, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_1800, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_1800" << std::endl;
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -839,7 +834,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1800, Function | MediumTest | Level1)
     }
     std::vector<ApplicationInfo> appInfos;
     bool getInfoResult =
-        bundleMgrProxy->GetApplicationInfos(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, appInfos);
+        bundleMgrProxy->GetApplicationInfos(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, appInfos);
     EXPECT_TRUE(getInfoResult);
     std::cout << "END BMS_SEARCH_1800" << std::endl;
 }
@@ -1234,9 +1229,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3400, Function | MediumTest | Level1)
     }
 
     ApplicationInfo appInfo;
-    int userId = 0;
     bool getInfoResult =
-        bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(appInfo.name, appName);
     EXPECT_EQ(appInfo.description, "himusic main ability");
@@ -1361,79 +1355,5 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3700, Function | MediumTest | Level1)
     std::cout << "END BMS_SEARCH_3700" << std::endl;
 }
 
-/**
- * @tc.number: BMS_Search_3800
- * @tc.name: test CleanBundleCacheFiles interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
- *           2.install the app
- *           3.call CleanBundleCacheFiles
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_3800, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_SEARCH_3800" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    std::string appName = BASE_BUNDLE_NAME + "1";
-
-    const std::string testCacheFileNamE1 = BUNDLE_DATA_ROOT_PATH + appName + "/cache/name1.txt";
-    const std::string testCacheFileNamE2 = BUNDLE_DATA_ROOT_PATH + appName + "/cache/name2.txt";
-    std::ofstream file1(testCacheFileNamE1);
-    std::ofstream file2(testCacheFileNamE2);
-    file1.close();
-    file2.close();
-    int name1Exist = access(testCacheFileNamE1.c_str(), F_OK);
-    EXPECT_EQ(name1Exist, 0);
-    int name2Exist = access(testCacheFileNamE2.c_str(), F_OK);
-    EXPECT_EQ(name2Exist, 0);
-    sptr<CleanCacheCallBackImpl> bundleCleanCacheCallback = (new (std::nothrow) CleanCacheCallBackImpl());
-    EXPECT_NE(bundleCleanCacheCallback, nullptr);
-    bundleMgrProxy->CleanBundleCacheFiles(appName, bundleCleanCacheCallback);
-    EXPECT_TRUE(bundleCleanCacheCallback->GetSucceededResult());
-    name1Exist = access(testCacheFileNamE1.c_str(), F_OK);
-    EXPECT_NE(name1Exist, 0) << "the cache test file1 exists.";
-    name2Exist = access(testCacheFileNamE2.c_str(), F_OK);
-    EXPECT_NE(name2Exist, 0) << "the cache test file2 exists.";
-    std::cout << "END BMS_SEARCH_3800" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Search_3900
- * @tc.name: test CleanBundleDataFiles interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
- *           2.install the app
- *           3.call CleanBundleDataFiles
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_3900, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_SEARCH_3900" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    std::string appName = BASE_BUNDLE_NAME + "1";
-
-    const std::string testCacheFileNamE1 = BUNDLE_DATA_ROOT_PATH + appName + "/files/name1.txt";
-    const std::string testCacheFileNamE2 = BUNDLE_DATA_ROOT_PATH + appName + "/files/name2.txt";
-    std::ofstream file1(testCacheFileNamE1);
-    std::ofstream file2(testCacheFileNamE2);
-    file1.close();
-    file2.close();
-    int name1Exist = access(testCacheFileNamE1.c_str(), F_OK);
-    EXPECT_EQ(name1Exist, 0) << "the test file1 exists.";
-    int name2Exist = access(testCacheFileNamE2.c_str(), F_OK);
-    EXPECT_EQ(name2Exist, 0) << "the test file2 exists.";
-    bundleMgrProxy->CleanBundleDataFiles(appName, 0);
-    name1Exist = access(testCacheFileNamE1.c_str(), F_OK);
-    EXPECT_NE(name1Exist, 0) << "the test file1 exists.";
-    name2Exist = access(testCacheFileNamE2.c_str(), F_OK);
-    EXPECT_NE(name2Exist, 0) << "the test file2 exists.";
-    std::cout << "END BMS_SEARCH_3900" << std::endl;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS
