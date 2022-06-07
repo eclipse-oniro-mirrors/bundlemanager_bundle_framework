@@ -18,7 +18,6 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <semaphore.h>
 #include <string>
 
 #include "ability_connect_callback_interface.h"

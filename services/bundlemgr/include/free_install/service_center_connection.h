@@ -17,8 +17,6 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_FREE_INSTALL_SERVICE_CENTER_CONNECTION_H
 
 #include <condition_variable>
-#include <map>
-#include <semaphore.h>
 
 #include "ability_connect_callback_stub.h"
 #include "bundle_connect_ability_mgr.h"
