@@ -17,12 +17,12 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
-#include "parcel.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 ServiceCenterConnection::~ServiceCenterConnection()
 {
+    APP_LOGI("ServiceCenterConnection destory");
 }
 
 void ServiceCenterConnection::OnAbilityConnectDone(
@@ -43,13 +43,13 @@ void ServiceCenterConnection::OnAbilityConnectDone(
     serviceCenterRemoteObject_ = remoteObject;
     connectState_ = ServiceCenterConnectState::CONNECTED;
 
-    deathRecipient_ = (new (std::nothrow) ServiceCenterDeathRecipient(connectAbilityMgr_));
+    deathRecipient_ = new (std::nothrow) ServiceCenterDeathRecipient(connectAbilityMgr_);
     if (deathRecipient_ == nullptr) {
         APP_LOGE("Failed to create ServiceCenterDeathRecipient");
         cv_.notify_all();
         return;
     }
-    APP_LOGI("Add death recipient for service center");
+
     if (!serviceCenterRemoteObject_->AddDeathRecipient(deathRecipient_)) {
         APP_LOGE("Failed to add AbilityManagerDeathRecipient");
     }

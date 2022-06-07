@@ -15,7 +15,6 @@
 
 #include "service_center_status_callback_proxy.h"
 
-#include "ipc_types.h"
 #include "message_parcel.h"
 
 namespace OHOS {
