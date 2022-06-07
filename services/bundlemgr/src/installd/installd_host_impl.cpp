@@ -329,5 +329,27 @@ ErrCode InstalldHostImpl::ScanDir(
     InstalldOperator::ScanDir(dir, scanMode, resultMode, paths);
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string &newPath)
+{
+    if (!InstalldOperator::RenameFile(oldPath, newPath)) {
+        APP_LOGE("Move file %{public}s to %{public}s failed",
+            oldPath.c_str(), newPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
+{
+    if (!InstalldOperator::CopyFile(oldPath, newPath)) {
+        APP_LOGE("Copy file %{public}s to %{public}s failed",
+            oldPath.c_str(), newPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

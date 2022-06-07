@@ -212,6 +212,30 @@ ErrCode InstalldProxy::ScanDir(
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::MoveFile(const std::string &oldPath, const std::string &newPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(IInstalld::Message::MOVE_FILE, data, reply, option);
+}
+
+ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(IInstalld::Message::COPY_FILE, data, reply, option);
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

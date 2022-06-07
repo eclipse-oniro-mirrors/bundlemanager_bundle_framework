@@ -119,6 +119,10 @@ private:
 
     bool HandleScanDir(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleMoveFile(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
+
     using InstalldFunc = bool (InstalldHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, InstalldFunc> funcMap_;
 };

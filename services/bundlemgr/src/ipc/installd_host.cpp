@@ -48,6 +48,8 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::GET_BUNDLE_STATS, &InstalldHost::HandleGetBundleStats);
     funcMap_.emplace(IInstalld::Message::GET_BUNDLE_CACHE_PATH, &InstalldHost::HandleGetBundleCachePath);
     funcMap_.emplace(IInstalld::Message::SCAN_DIR, &InstalldHost::HandleScanDir);
+    funcMap_.emplace(IInstalld::Message::MOVE_FILE, &InstalldHost::HandleMoveFile);
+    funcMap_.emplace(IInstalld::Message::COPY_FILE, &InstalldHost::HandleCopyFile);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -199,6 +201,24 @@ bool InstalldHost::HandleScanDir(MessageParcel &data, MessageParcel &reply)
         return false;
     }
 
+    return true;
+}
+
+bool InstalldHost::HandleMoveFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string oldPath = Str16ToStr8(data.ReadString16());
+    std::string newPath = Str16ToStr8(data.ReadString16());
+    ErrCode result = MoveFile(oldPath, newPath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string oldPath = Str16ToStr8(data.ReadString16());
+    std::string newPath = Str16ToStr8(data.ReadString16());
+    ErrCode result = CopyFile(oldPath, newPath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 }  // namespace AppExecFwk

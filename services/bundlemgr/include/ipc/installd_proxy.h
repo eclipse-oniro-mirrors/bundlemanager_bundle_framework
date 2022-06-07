@@ -116,6 +116,10 @@ public:
     virtual ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) override;
 
+    virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) override;
+
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) override;
+
 private:
     ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
