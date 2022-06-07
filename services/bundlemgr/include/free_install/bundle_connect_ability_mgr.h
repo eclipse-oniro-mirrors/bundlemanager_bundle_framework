@@ -65,9 +65,9 @@ public:
     void OnServiceCenterCall(std::string installResult);
 
     /**
-     * @brief Disconnect service center
+     * @brief SendCallback to ability manager service for death recipient
      */
-    void DisconnectAbility();
+    void DeathRecipientSendCallback();
 
 private:
     void Init();
@@ -145,13 +145,25 @@ private:
     bool ConnectAbility(const Want &want, const sptr<IRemoteObject> &callerToken);
 
     /**
+     * @brief Disconnect service center
+     */
+    void DisconnectAbility();
+
+    /**
      * @brief Send atomic service status callback to ability manager service
      * @param resultCode The result code to ability manager service call back
      * @param want Indicates the information of the need start ability.
      * @param userId Designation User ID.
      * @param transactId The key of ability manager service Call Back Map
      */
-    void SendCallBack(int32_t resultCode, const Want &want, int32_t userId, std::string transactId);
+    void SendCallBack(int32_t resultCode, const Want &want, int32_t userId, const std::string &transactId);
+
+    /**
+     * @brief Send atomic service status callback to ability manager service
+     * @param transactId The key of ability manager service Call Back Map
+     * @param freeInstallParams The value of ability manager service Call Back Map
+     */
+    void SendCallBack(const std::string &transactId, const FreeInstallParams &freeInstallParams);
 
     /**
      * @brief Determine whether there are reusable connection
