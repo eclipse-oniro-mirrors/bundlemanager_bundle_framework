@@ -16,11 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_FREE_INSTALL_I_SERVICE_CENTER_STATUS_CALLBACK_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_FREE_INSTALL_I_SERVICE_CENTER_STATUS_CALLBACK_H
 
-#include "ability_info.h"
-#include "element_name.h"
-#include "install_result.h"
 #include "iremote_broker.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {

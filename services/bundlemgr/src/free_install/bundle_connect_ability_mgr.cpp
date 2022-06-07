@@ -179,7 +179,7 @@ void BundleConnectAbilityMgr::WaitFromConnecting(std::unique_lock<std::mutex> &l
 {
     APP_LOGI("ConnectAbility await start CONNECTING");
     while (connectState_ == ServiceCenterConnectState::CONNECTING) {
-            cv_.wait(lock);
+        cv_.wait(lock);
     }
     APP_LOGI("ConnectAbility await end CONNECTING");
 }
