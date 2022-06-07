@@ -41,13 +41,13 @@ std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
     return typeIter->second;
 }
 
-std::string GetProvisionType(const Security::Verify::ProvisionType &type)
+std::string GetAppProvisionType(const Security::Verify::ProvisionType &type)
 {
     if (type == Security::Verify::ProvisionType::DEBUG) {
-        return Constants::PROVISION_TYPE_DEBUG;
+        return Constants::APP_PROVISION_TYPE_DEBUG;
     }
 
-    return Constants::PROVISION_TYPE_RELEASE;
+    return Constants::APP_PROVISION_TYPE_RELEASE;
 }
 }
 
@@ -181,7 +181,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         newInfo.SetAllowedAcls(provisionInfo.acls.allowedAcls);
         newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
         newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
-        newInfo.SetProvisionType(GetProvisionType(provisionInfo.type));
+        newInfo.SetAppProvisionType(GetAppProvisionType(provisionInfo.type));
         if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
         } else {

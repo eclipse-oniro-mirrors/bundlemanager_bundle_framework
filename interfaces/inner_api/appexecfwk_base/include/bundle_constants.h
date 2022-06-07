@@ -254,9 +254,9 @@ const std::string APP_DISTRIBUTION_TYPE_APP_GALLERY = "app_gallery";
 const std::string APP_DISTRIBUTION_TYPE_ENTERPRISE = "enterprise";
 const std::string APP_DISTRIBUTION_TYPE_OS_INTEGRATION = "os_integration";
 const std::string APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
-// provision type
-const std::string PROVISION_TYPE_DEBUG = "debug";
-const std::string PROVISION_TYPE_RELEASE = "release";
+// app provision type
+const std::string APP_PROVISION_TYPE_DEBUG = "debug";
+const std::string APP_PROVISION_TYPE_RELEASE = "release";
 
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;

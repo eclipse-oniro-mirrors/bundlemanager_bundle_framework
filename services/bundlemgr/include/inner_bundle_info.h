@@ -1474,9 +1474,9 @@ public:
 
     std::string GetAppDistributionType() const;
 
-    void SetProvisionType(const std::string &provisionType);
+    void SetAppProvisionType(const std::string &appProvisionType);
 
-    std::string GetProvisionType() const;
+    std::string GetAppProvisionType() const;
 
     void SetAppCrowdtestDeadline(int64_t crowdtestDeadline);
 

@@ -1565,7 +1565,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
         baseApplicationInfo_.cpuAbi = applicationInfo.cpuAbi;
     }
     baseApplicationInfo_.appDistributionType = applicationInfo.appDistributionType;
-    baseApplicationInfo_.provisionType = applicationInfo.provisionType;
+    baseApplicationInfo_.appProvisionType = applicationInfo.appProvisionType;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
@@ -2500,14 +2500,14 @@ std::string InnerBundleInfo::GetAppDistributionType() const
     return baseApplicationInfo_.appDistributionType;
 }
 
-void InnerBundleInfo::SetProvisionType(const std::string &provisionType)
+void InnerBundleInfo::SetAppProvisionType(const std::string &appProvisionType)
 {
-    baseApplicationInfo_.provisionType = provisionType;
+    baseApplicationInfo_.appProvisionType = appProvisionType;
 }
 
-std::string InnerBundleInfo::GetProvisionType() const
+std::string InnerBundleInfo::GetAppProvisionType() const
 {
-    return baseApplicationInfo_.provisionType;
+    return baseApplicationInfo_.appProvisionType;
 }
 
 void InnerBundleInfo::SetAppCrowdtestDeadline(int64_t crowdtestDeadline)
