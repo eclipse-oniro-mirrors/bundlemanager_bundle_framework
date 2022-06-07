@@ -3044,7 +3044,7 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
     if (isAbility) {
         std::string key;
         key.append(bundleName).append(".").append(moduleName).append(".").append(abilityName);
-        APP_LOGI("begin to find ability skills, key : %{public}s.", key.c_str());
+        APP_LOGD("begin to find ability skills, key : %{public}s.", key.c_str());
         for (const auto& item : innerBundleInfo.GetInnerSkillInfos()) {
             if (item.first == key) {
                 skills = item.second;
@@ -3055,7 +3055,7 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
     } else {
         std::string key;
         key.append(bundleName).append(".").append(moduleName).append(".").append(extensionName);
-        APP_LOGI("begin to find extension skills, key : %{public}s.", key.c_str());
+        APP_LOGD("begin to find extension skills, key : %{public}s.", key.c_str());
         for (const auto& item : innerBundleInfo.GetExtensionSkillInfos()) {
             if (item.first == key) {
                 skills = item.second;
