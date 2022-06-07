@@ -44,10 +44,6 @@
   <preparer>
       <option name="push" value="parse_bundle/break_zip.hap -> /data/test/resource/bms/parse_bundle/" src="res" />
       <option name="push" value="parse_bundle/empty_config.hap -> /data/test/resource/bms/parse_bundle/" src="res" />
-      <option name="push" value="parse_bundle/format_error_profile.hap -> /data/test/resource/bms/parse_bundle/"
-              src="res" />
-      <option name="push" value="parse_bundle/format_missing_profile.hap -> /data/test/resource/bms/parse_bundle/"
-              src="res" />
       <option name="push" value="parse_bundle/new.hap -> /data/test/resource/bms/parse_bundle/" src="res" />
       <option name="push" value="parse_bundle/no_profile.hap -> /data/test/resource/bms/parse_bundle/" src="res" />
       <option name="push" value="parse_bundle/nothing_config.hap -> /data/test/resource/bms/parse_bundle/" src="res" />
