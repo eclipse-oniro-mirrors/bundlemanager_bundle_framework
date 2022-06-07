@@ -64,12 +64,10 @@ ErrCode DefaultAppHost::HandleIsDefaultApplication(Parcel& data, Parcel& reply)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string type = data.ReadString();
     bool ret = IsDefaultApplication(type);
-
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     return ERR_OK;
 }
 
@@ -81,7 +79,6 @@ ErrCode DefaultAppHost::HandleGetDefaultApplication(Parcel& data, Parcel& reply)
     std::string type = data.ReadString();
     BundleInfo bundleInfo;
     bool ret = GetDefaultApplication(userId, type, bundleInfo);
-
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -92,7 +89,6 @@ ErrCode DefaultAppHost::HandleGetDefaultApplication(Parcel& data, Parcel& reply)
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-
     return ERR_OK;
 }
 
@@ -108,12 +104,10 @@ ErrCode DefaultAppHost::HandleSetDefaultApplication(Parcel& data, Parcel& reply)
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     bool ret = SetDefaultApplication(userId, type, *want);
-
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     return ERR_OK;
 }
 
@@ -124,12 +118,10 @@ ErrCode DefaultAppHost::HandleResetDefaultApplication(Parcel& data, Parcel& repl
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     bool ret = ResetDefaultApplication(userId, type);
-
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     return ERR_OK;
 }
 }
