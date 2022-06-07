@@ -51,7 +51,6 @@ constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr size_t ARGS_SIZE_FOUR = 4;
 constexpr size_t ARGS_SIZE_FIVE = 5;
-constexpr int32_t DEFAULT_INT32 = 0;
 constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM2 = 2;
@@ -957,7 +956,7 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
         env, napi_set_named_property(env, objBundleInfo, "reqPermissionDetails", nReqPermissionDetails));
 
     napi_value nMinCompatibleVersionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, DEFAULT_INT32, &nMinCompatibleVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInfo.minCompatibleVersionCode, &nMinCompatibleVersionCode));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, objBundleInfo, "minCompatibleVersionCode", nMinCompatibleVersionCode));
 
