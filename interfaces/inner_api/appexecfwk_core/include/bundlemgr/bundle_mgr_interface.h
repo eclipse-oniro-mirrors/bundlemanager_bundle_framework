@@ -27,6 +27,7 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "../default_app/default_app_interface.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
@@ -34,9 +35,6 @@
 #include "permission_define.h"
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 #include "pixel_map.h"
-#endif
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-#include "default_app_interface.h"
 #endif
 #include "shortcut_info.h"
 #include "want.h"
@@ -976,12 +974,10 @@ public:
         return false;
     }
 
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy()
     {
         return nullptr;
     }
-#endif
 
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,

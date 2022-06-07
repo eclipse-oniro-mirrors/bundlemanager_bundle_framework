@@ -15,10 +15,10 @@ import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
 config("bundlemgr_sdk_config") {
-  include_dirs = [ "include/bundlemgr" ]
-  if (bundle_framework_default_app) {
-    include_dirs += [ "include/default_app" ]
-  }
+  include_dirs = [
+    "include/bundlemgr",
+    "include/default_app",
+  ]
 }
 
 config("appexecfwk_core_config") {
