@@ -33,7 +33,7 @@ public:
     virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) = 0;
     virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) = 0;
 
-    enum class Message : uint32_t {
+    enum Message : uint32_t {
         IS_DEFAULT_APPLICATION = 0,
         GET_DEFAULT_APPLICATION = 1,
         SET_DEFAULT_APPLICATION = 2,

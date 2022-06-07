@@ -19,13 +19,13 @@ namespace OHOS {
 namespace AppExecFwk {
 DefaultAppDb::DefaultAppDb()
 {
-    APP_LOGI("create DefaultAppDb.");
+    APP_LOGD("create DefaultAppDb.");
     OpenKvDb();
 }
 
 DefaultAppDb::~DefaultAppDb()
 {
-    APP_LOGI("destroy DefaultAppDb.");
+    APP_LOGD("destroy DefaultAppDb.");
     dataManager_.CloseKvStore(appId_, kvStorePtr_);
 }
 
@@ -79,4 +79,4 @@ bool DefaultAppDb::DeleteDefaultApplicationInfo(int32_t userId, const std::strin
     return false;
 }
 }
-}
+}

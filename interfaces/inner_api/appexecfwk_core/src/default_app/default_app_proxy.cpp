@@ -191,7 +191,7 @@ bool DefaultAppProxy::SendRequest(IDefaultApp::Message code, MessageParcel& data
         APP_LOGE("failed to send request %{public}d due to remote object null.", code);
         return false;
     }
-    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    int32_t result = remote->SendRequest(code, data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
         return false;

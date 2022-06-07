@@ -44,27 +44,18 @@ int DefaultAppHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case static_cast<uint32_t>(IDefaultApp::Message::IS_DEFAULT_APPLICATION): {
-            HandleIsDefaultApplication(data, reply);
-            break;
-        }
-        case static_cast<uint32_t>(IDefaultApp::Message::GET_DEFAULT_APPLICATION): {
-            HandleGetDefaultApplication(data, reply);
-            break;
-        }
-        case static_cast<uint32_t>(IDefaultApp::Message::SET_DEFAULT_APPLICATION): {
-            HandleSetDefaultApplication(data, reply);
-            break;
-        }
-        case static_cast<uint32_t>(IDefaultApp::Message::RESET_DEFAULT_APPLICATION): {
-            HandleResetDefaultApplication(data, reply);
-            break;
-        }
+        case IDefaultApp::Message::IS_DEFAULT_APPLICATION:
+            return HandleIsDefaultApplication(data, reply);
+        case IDefaultApp::Message::GET_DEFAULT_APPLICATION:
+            return HandleGetDefaultApplication(data, reply);
+        case IDefaultApp::Message::SET_DEFAULT_APPLICATION:
+            return HandleSetDefaultApplication(data, reply);
+        case IDefaultApp::Message::RESET_DEFAULT_APPLICATION:
+            return HandleResetDefaultApplication(data, reply);
         default:
+            APP_LOGW("DefaultAppHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-
-    return NO_ERROR;
 }
 
 ErrCode DefaultAppHost::HandleIsDefaultApplication(Parcel& data, Parcel& reply)
