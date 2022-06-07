@@ -3071,38 +3071,143 @@ static bool ParseHashParam(napi_env env, std::string &key, std::string &value, n
     return true;
 }
 
-static bool ParseHashParams(napi_env env, std::map<std::string, std::string> &hashParams, napi_value args)
+static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string, std::string> &hashParams)
 {
-    bool isArray = false;
-    uint32_t arrayLength = 0;
-    napi_value valueAry = 0;
-    napi_valuetype valueAryType = napi_undefined;
-    NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
-    if (!isArray) {
-        APP_LOGE("hashParams is not array!");
-        return false;
-    }
-
-    NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
-    APP_LOGD("ParseHashParams property is array, length=%{public}ud", arrayLength);
-    for (uint32_t j = 0; j < arrayLength; j++) {
-        NAPI_CALL_BASE(env, napi_get_element(env, args, j, &valueAry), false);
-        NAPI_CALL_BASE(env, napi_typeof(env, valueAry, &valueAryType), false);
-        std::string key;
-        std::string value;
-        if (!ParseHashParam(env, key, value, valueAry)) {
-            APP_LOGD("parse hash param failed");
+    bool hasKey = false;
+    napi_has_named_property(env, args, "hashParams", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "hashParams", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named hashParams property error!");
+            return false;
+        }
+        bool isArray = false;
+        uint32_t arrayLength = 0;
+        napi_value valueAry = 0;
+        napi_valuetype valueAryType = napi_undefined;
+        NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
+        if (!isArray) {
+            APP_LOGE("hashParams is not array!");
             return false;
         }
 
-        if (hashParams.find(key) != hashParams.end()) {
-            APP_LOGD("moduleName(%{public}s) is duplicate", key.c_str());
+        NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
+        APP_LOGD("ParseHashParams property is array, length=%{public}ud", arrayLength);
+        for (uint32_t j = 0; j < arrayLength; j++) {
+            NAPI_CALL_BASE(env, napi_get_element(env, args, j, &valueAry), false);
+            NAPI_CALL_BASE(env, napi_typeof(env, valueAry, &valueAryType), false);
+            std::string key;
+            std::string value;
+            if (!ParseHashParam(env, key, value, valueAry)) {
+                APP_LOGD("parse hash param failed");
+                return false;
+            }
+            if (hashParams.find(key) != hashParams.end()) {
+                APP_LOGD("moduleName(%{public}s) is duplicate", key.c_str());
+                return false;
+            }
+            hashParams.emplace(key, value);
+        }
+    }
+    return true;
+}
+
+static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "userId", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "userId", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named userId property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_number) {
+            APP_LOGE("param(userId) type incorrect!");
             return false;
         }
 
-        hashParams.emplace(key, value);
+        userId = Constants::UNSPECIFIED_USERID;
+        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &userId), false);
+        if (userId < Constants::DEFAULT_USERID) {
+            APP_LOGE("param userId(%{public}d) is invalid.", userId);
+            return false;
+        }
     }
+    return true;
+}
 
+static bool ParseInstallFlag(napi_env env, napi_value args, InstallFlag &installFlag)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "installFlag", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "installFlag", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named installFlag property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_number) {
+            APP_LOGE("param(installFlag) type incorrect!");
+            return false;
+        }
+
+        int32_t flag = 0;
+        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &flag), false);
+        installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(flag);
+    }
+    return true;
+}
+
+static bool ParseIsKeepData(napi_env env, napi_value args, bool &isKeepData)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "isKeepData", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "isKeepData", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named isKeepData property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_boolean) {
+            APP_LOGE("param(isKeepData) type incorrect!");
+            return false;
+        }
+
+        NAPI_CALL_BASE(env, napi_get_value_bool(env, property, &isKeepData), false);
+    }
+    return true;
+}
+
+static bool ParseCrowdtestDeadline(napi_env env, napi_value args, int64_t &crowdtestDeadline)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "crowdtestDeadline", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "crowdtestDeadline", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named crowdtestDeadline property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_number) {
+            APP_LOGE("param(crowdtestDeadline) type incorrect!");
+            return false;
+        }
+        NAPI_CALL_BASE(env, napi_get_value_int64(env, property, &crowdtestDeadline), false);
+    }
     return true;
 }
 
@@ -3114,94 +3219,13 @@ static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_val
         APP_LOGE("args type incorrect!");
         return false;
     }
-    
-    napi_status status;
-    napi_value property = nullptr;
-    bool hasKey = false;
-    napi_has_named_property(env, args, "userId", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "userId", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named userId property error!");
-            return false;
-        }
 
-        napi_typeof(env, property, &valueType);
-        if (valueType != napi_number) {
-            APP_LOGE("param(userId) type incorrect!");
-            return false;
-        }
-
-        int userId = Constants::UNSPECIFIED_USERID;
-        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &userId), false);
-        if (userId < Constants::DEFAULT_USERID) {
-            APP_LOGE("param userId(%{public}d) is invalid.", userId);
-            return false;
-        }
-        installParam.userId = userId;
+    if (!ParseUserId(env, args, installParam.userId) || !ParseInstallFlag(env, args, installParam.installFlag) ||
+        !ParseIsKeepData(env, args, installParam.isKeepData) || !ParseHashParams(env, args, installParam.hashParams) ||
+        !ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline)) {
+        APP_LOGE("ParseInstallParam failed");
+        return false;
     }
-    APP_LOGI("ParseInstallParam userId=%{public}d.", installParam.userId);
-
-    property = nullptr;
-    hasKey = false;
-    napi_has_named_property(env, args, "installFlag", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "installFlag", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named installFlag property error!");
-            return false;
-        }
-
-        napi_typeof(env, property, &valueType);
-        if (valueType != napi_number) {
-            APP_LOGE("param(installFlag) type incorrect!");
-            return false;
-        }
-
-        int installFlag = 0;
-        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &installFlag), false);
-        installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(installFlag);
-    }
-    APP_LOGI("ParseInstallParam installFlag=%{public}d.", installParam.installFlag);
-
-    property = nullptr;
-    hasKey = false;
-    napi_has_named_property(env, args, "isKeepData", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "isKeepData", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named isKeepData property error!");
-            return false;
-        }
-
-        napi_typeof(env, property, &valueType);
-        if (valueType != napi_boolean) {
-            APP_LOGE("param(isKeepData) type incorrect!");
-            return false;
-        }
-
-        bool isKeepData = false;
-        NAPI_CALL_BASE(env, napi_get_value_bool(env, property, &isKeepData), false);
-        installParam.isKeepData = isKeepData;
-    }
-    APP_LOGI("ParseInstallParam isKeepData=%{public}d.", installParam.isKeepData);
-
-    property = nullptr;
-    hasKey = false;
-    napi_has_named_property(env, args, "hashParams", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "hashParams", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named hashParams property error!");
-            return false;
-        }
-
-        if (!ParseHashParams(env, installParam.hashParams, property)) {
-            APP_LOGE("parse hash params failed!");
-            return false;
-        }
-    }
-    APP_LOGI("ParseInstallParam hashParams size = %{public}zu.", installParam.hashParams.size());
     return true;
 }
 

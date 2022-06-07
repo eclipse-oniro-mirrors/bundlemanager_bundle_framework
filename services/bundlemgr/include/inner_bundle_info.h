@@ -1547,6 +1547,10 @@ public:
 
     std::string GetProvisionType() const;
 
+    void SetAppCrowdtestDeadline(int64_t crowdtestDeadline);
+
+    int64_t GetAppCrowdtestDeadline() const;
+
 private:
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;

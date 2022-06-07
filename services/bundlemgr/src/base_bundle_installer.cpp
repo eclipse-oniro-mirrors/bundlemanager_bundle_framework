@@ -1510,6 +1510,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     InstallCheckParam checkParam;
     checkParam.isPreInstallApp = installParam.isPreInstallApp;
+    checkParam.crowdtestDeadline = installParam.crowdtestDeadline;
     checkParam.appType = appType;
     ErrCode ret = bundleInstallChecker_->ParseHapFiles(
         bundlePaths, checkParam, hapVerifyRes, infos);

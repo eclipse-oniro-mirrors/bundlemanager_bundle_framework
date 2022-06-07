@@ -43,7 +43,7 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string hashValue = Str16ToStr8(parcel.ReadString16());
         hashParams.emplace(moduleName, hashValue);
     }
-
+    crowdtestDeadline = parcel.ReadInt64();
     return true;
 }
 
@@ -70,6 +70,7 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hashParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hashParam.second));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
 
     return true;
 }

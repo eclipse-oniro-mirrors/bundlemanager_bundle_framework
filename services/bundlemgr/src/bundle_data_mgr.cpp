@@ -391,6 +391,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
+        oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.UpdateModuleInfo(newInfo);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);

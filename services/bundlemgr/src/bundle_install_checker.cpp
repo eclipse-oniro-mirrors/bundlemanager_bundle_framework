@@ -177,6 +177,11 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
         newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
         newInfo.SetProvisionType(GetProvisionType(provisionInfo.type));
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
+            newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
+        } else {
+            newInfo.SetAppCrowdtestDeadline(Constants::INVALID_CROWDTEST_DEADLINE);
+        }
         if ((result = CheckSystemSize(bundlePaths[i], checkParam.appType)) != ERR_OK) {
             APP_LOGE("install failed due to insufficient disk memory");
             return result;

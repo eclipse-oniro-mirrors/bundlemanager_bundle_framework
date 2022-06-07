@@ -90,7 +90,7 @@ const std::string APPLICATION_ICON_RESOURCE = "iconResource";
 const std::string APPLICATION_LABEL_RESOURCE = "labelResource";
 const std::string APPLICATION_DESCRIPTION_RESOURCE = "descriptionResource";
 const std::string APPLICATION_MULTI_PROJECTS = "multiProjects";
-
+const std::string APPLICATION_CROWDTEST_DEADLINE = "crowdtestDeadline";
 const std::string RESOURCE_BUNDLE_NAME = "bundleName";
 const std::string RESOURCE_MODULE_NAME = "moduleName";
 const std::string RESOURCE_ID = "id";
@@ -395,6 +395,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_LABEL_RESOURCE, applicationInfo.labelResource},
         {APPLICATION_DESCRIPTION_RESOURCE, applicationInfo.descriptionResource},
         {APPLICATION_MULTI_PROJECTS, applicationInfo.multiProjects},
+        {APPLICATION_CROWDTEST_DEADLINE, applicationInfo.crowdtestDeadline},
     };
 }
 
@@ -871,6 +872,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         APPLICATION_MULTI_PROJECTS,
         applicationInfo.multiProjects,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int64_t>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_CROWDTEST_DEADLINE,
+        applicationInfo.crowdtestDeadline,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
