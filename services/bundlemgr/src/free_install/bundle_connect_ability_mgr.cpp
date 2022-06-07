@@ -20,7 +20,7 @@
 #include "free_install_params.h"
 #include "json_util.h"
 #include "parcel.h"
-#include "service_center_death_recipient.h"
+#include "service_center_connection.h"
 #include "service_center_status_callback.h"
 #include "string_ex.h"
 
@@ -207,7 +207,7 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
             return false;
         }
         serviceCenterConnection_ = new (std::nothrow) ServiceCenterConnection(connectState_,
-            cv_, freeInstallParamsMap_);
+            cv_, weak_from_this());
         if (serviceCenterConnection_ == nullptr) {
             APP_LOGE("ServiceCenterConnection is nullptr");
             connectState_ = ServiceCenterConnectState::DISCONNECTED;

@@ -19,27 +19,22 @@
 #include <map>
 #include <string>
 
-#include "free_install_params.h"
+#include "bundle_connect_ability_mgr.h"
 #include "iremote_object.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleConnectAbilityMgr;
 class ServiceCenterDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    ServiceCenterDeathRecipient(std::map<std::string, FreeInstallParams> &freeInstallParamsMap)
-        : freeInstallParamsMap_(freeInstallParamsMap)
+    ServiceCenterDeathRecipient(const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr)
+        : connectAbilityMgr_(connectAbilityMgr)
     {
     }
     void OnRemoteDied(const wptr<IRemoteObject> &wptrDeath) override;
 
 private:
-    /**
-     * @brief Send atomic service status callback to ability manager service.
-     * @param freeInstallParams Relevant information sent to ability manager service.
-     * @param transactId The key of ability manager service Call Back Map.
-     */
-    void SendCallBack(FreeInstallParams &freeInstallParams, std::string transactId);
-    std::map<std::string, FreeInstallParams> &freeInstallParamsMap_;
+    std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
