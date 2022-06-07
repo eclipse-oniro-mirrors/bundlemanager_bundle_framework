@@ -50,7 +50,6 @@ constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr size_t ARGS_SIZE_FOUR = 4;
-constexpr int32_t DEFAULT_INT32 = 0;
 constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM2 = 2;
@@ -316,10 +315,6 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
     napi_value nEnabled;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.enabled, &nEnabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "enabled", nEnabled));
-
-    napi_value nFlags;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, DEFAULT_INT32, &nFlags));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "flags", nFlags));
 
     napi_value nUid;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.uid, &nUid));
@@ -916,7 +911,7 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
         env, napi_set_named_property(env, objBundleInfo, "reqPermissionDetails", nReqPermissionDetails));
 
     napi_value nMinCompatibleVersionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, DEFAULT_INT32, &nMinCompatibleVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInfo.minCompatibleVersionCode, &nMinCompatibleVersionCode));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, objBundleInfo, "minCompatibleVersionCode", nMinCompatibleVersionCode));
 
