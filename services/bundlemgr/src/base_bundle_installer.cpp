@@ -27,17 +27,14 @@
 #include "bundle_extractor.h"
 #include "bundle_mgr_service.h"
 #include "bundle_sandbox_installer.h"
-#include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
-#include "bundle_verify_mgr.h"
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
-#include "systemcapability.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -53,37 +50,10 @@ std::string GetHapPath(const InnerBundleInfo &info)
 {
     return GetHapPath(info, info.GetModuleName(info.GetCurrentModulePackage()));
 }
-
-std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
-{
-    switch (type) {
-        case Security::Verify::AppDistType::NONE_TYPE:
-            return Constants::APP_DISTRIBUTION_TYPE_NONE;
-        case Security::Verify::AppDistType::APP_GALLERY:
-            return Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY;
-        case Security::Verify::AppDistType::ENTERPRISE:
-            return Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE;
-        case Security::Verify::AppDistType::OS_INTEGRATION:
-            return Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION;
-        case Security::Verify::AppDistType::CROWDTESTING:
-            return Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING;
-        default:
-            APP_LOGE("wrong AppDistType");
-            return Constants::APP_DISTRIBUTION_TYPE_NONE;
-    }
-}
-
-std::string GetProvisionType(const Security::Verify::ProvisionType &type)
-{
-    if (type == Security::Verify::ProvisionType::DEBUG) {
-        return Constants::PROVISION_TYPE_DEBUG;
-    } else {
-        return Constants::PROVISION_TYPE_RELEASE;
-    }
-}
 }
 
 BaseBundleInstaller::BaseBundleInstaller()
+    : bundleInstallChecker_(std::make_unique<BundleInstallChecker>())
 {
     APP_LOGI("base bundle installer instance is created");
 }
@@ -1490,27 +1460,6 @@ ErrCode BaseBundleInstaller::RemoveModuleDataDir(
     return result;
 }
 
-ErrCode BaseBundleInstaller::ParseBundleInfo(const std::string &bundleFilePath, InnerBundleInfo &info,
-    BundlePackInfo &packInfo) const
-{
-    BundleParser bundleParser;
-    ErrCode result = bundleParser.Parse(bundleFilePath, info);
-    if (result != ERR_OK) {
-        APP_LOGE("parse bundle info failed, error: %{public}d", result);
-        return result;
-    }
-    if (!packInfo.GetValid()) {
-        result = bundleParser.ParsePackInfo(bundleFilePath, packInfo);
-        if (result != ERR_OK) {
-            APP_LOGE("parse bundle pack info failed, error: %{public}d", result);
-            return result;
-        }
-        info.SetBundlePackInfo(packInfo);
-        packInfo.SetValid(true);
-    }
-    return ERR_OK;
-}
-
 ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, const std::string &modulePath,
     const std::string &targetSoPath, const std::string &cpuAbi)
 {
@@ -1539,227 +1488,52 @@ ErrCode BaseBundleInstaller::RenameModuleDir(const InnerBundleInfo &info) const
 ErrCode BaseBundleInstaller::CheckSysCap(const std::vector<std::string> &bundlePaths)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("check hap syscaps start.");
-    if (bundlePaths.empty()) {
-        APP_LOGE("check hap syscaps failed due to empty bundlePaths!");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-
-    ErrCode result = ERR_OK;
-    BundleParser bundleParser;
-    for (auto bundlePath : bundlePaths) {
-        std::vector<std::string> bundleSysCaps;
-        result = bundleParser.ParseSysCap(bundlePath, bundleSysCaps);
-        if (result != ERR_OK) {
-            APP_LOGE("parse bundle syscap failed, error: %{public}d", result);
-            return result;
-        }
-
-        for (auto bundleSysCapItem : bundleSysCaps) {
-            APP_LOGD("check syscap(%{public}s)", bundleSysCapItem.c_str());
-            if (!HasSystemCapability(bundleSysCapItem.c_str())) {
-                APP_LOGE("check syscap failed which %{public}s is not exsit",
-                    bundleSysCapItem.c_str());
-                return ERR_APPEXECFWK_INSTALL_CHECK_SYSCAP_FAILED;
-            }
-        }
-    }
-
-    APP_LOGD("finish check hap syscaps");
-    return result;
+    return bundleInstallChecker_->CheckSysCap(bundlePaths);
 }
 
-ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(const std::vector<std::string> &bundlePaths,
-    const InstallParam &installParam, std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes) const
+ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(
+    const std::vector<std::string> &bundlePaths,
+    const InstallParam &installParam,
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("Check multiple haps signInfo");
-    if (bundlePaths.empty()) {
-        APP_LOGE("check hap sign info failed due to empty bundlePaths!");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-    for (const std::string &bundlePath : bundlePaths) {
-        Security::Verify::HapVerifyResult hapVerifyResult;
-        auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
-        if (verifyRes != ERR_OK) {
-            APP_LOGE("hap file verify failed");
-            return verifyRes;
-        }
-        hapVerifyRes.emplace_back(hapVerifyResult);
-    }
-    if (hapVerifyRes.empty()) {
-        APP_LOGE("no sign info in the all haps!");
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-    }
-    auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
-    APP_LOGD("bundle appid is %{private}s", appId.c_str());
-    auto isValid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(), [&](auto &hapVerifyResult) {
-        APP_LOGD("module appid is %{private}s", hapVerifyResult.GetProvisionInfo().appId.c_str());
-        return appId != hapVerifyResult.GetProvisionInfo().appId;
-    });
-    if (isValid) {
-        APP_LOGE("hap files have different signuature info");
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
-    }
-    auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
-    APP_LOGD("bundle apl is %{public}s", apl.c_str());
-    isValid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(), [&](auto &hapVerifyResult) {
-        APP_LOGD("module appid is %{private}s", hapVerifyResult.GetProvisionInfo().bundleInfo.apl.c_str());
-        return apl != hapVerifyResult.GetProvisionInfo().bundleInfo.apl;
-    });
-    if (isValid) {
-        APP_LOGE("hap files have different apl info");
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
-    }
-    APP_LOGD("finish check multiple haps signInfo");
-    return ERR_OK;
+    return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
 }
 
-ErrCode BaseBundleInstaller::ParseHapFiles(const std::vector<std::string> &bundlePaths,
-    const InstallParam &installParam, const Constants::AppType appType,
+ErrCode BaseBundleInstaller::ParseHapFiles(
+    const std::vector<std::string> &bundlePaths,
+    const InstallParam &installParam,
+    const Constants::AppType appType,
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("Parse hap file");
-    ErrCode result = ERR_OK;
-    BundlePackInfo packInfo;
-    for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
-        InnerBundleInfo newInfo;
-        newInfo.SetAppType(appType);
-        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP ||
-            provisionInfo.bundleInfo.appFeature == Constants::OHOS_SYSTEM_APP);
-        if (isSystemApp) {
-            newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
-        }
-        newInfo.SetUserId(installParam.userId);
-        newInfo.SetIsPreInstallApp(installParam.isPreInstallApp);
-        result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
-        if (result != ERR_OK) {
-            APP_LOGE("bundle parse failed %{public}d", result);
-            return result;
-        }
-        if (newInfo.HasEntry()) {
-            if (isContainEntry_) {
-                APP_LOGE("more than one entry hap in the direction!");
-                return ERR_APPEXECFWK_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP;
-            } else {
-                isContainEntry_ = true;
-            }
-        }
-        SetEntryInstallationFree(packInfo, newInfo);
-        newInfo.SetProvisionId(provisionInfo.appId);
-        newInfo.SetAppFeature(provisionInfo.bundleInfo.appFeature);
-        newInfo.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
-        newInfo.SetAllowedAcls(provisionInfo.acls.allowedAcls);
-        newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
-        newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
-        newInfo.SetProvisionType(GetProvisionType(provisionInfo.type));
-        if ((result = CheckSystemSize(bundlePaths[i], appType)) != ERR_OK) {
-            APP_LOGE("install failed due to insufficient disk memory");
-            return result;
-        }
-
-        infos.emplace(bundlePaths[i], newInfo);
-    }
-    APP_LOGD("finish parse hap file");
-    return result;
+    InstallCheckParam checkParam;
+    checkParam.isPreInstallApp = installParam.isPreInstallApp;
+    checkParam.appType = appType;
+    ErrCode ret = bundleInstallChecker_->ParseHapFiles(
+        bundlePaths, checkParam, hapVerifyRes, infos);
+    isContainEntry_ = bundleInstallChecker_->IsContainEntry();
+    return ret;
 }
 
 ErrCode BaseBundleInstaller::CheckHapHashParams(
     std::unordered_map<std::string, InnerBundleInfo> &infos,
     std::map<std::string, std::string> hashParams)
 {
-    if (hashParams.empty()) {
-        APP_LOGD("hashParams is empty");
-        return ERR_OK;
-    }
-
-    std::vector<std::string> hapModuleNames;
-    for (auto &info : infos) {
-        std::vector<std::string> moduleNames;
-        info.second.GetModuleNames(moduleNames);
-        if (moduleNames.empty()) {
-            APP_LOGE("hap(%{public}s) moduleName is empty", info.first.c_str());
-            return ERR_APPEXECFWK_INSTALL_FAILED_MODULE_NAME_EMPTY;
-        }
-
-        if (std::find(hapModuleNames.begin(), hapModuleNames.end(), moduleNames[0]) != hapModuleNames.end()) {
-            APP_LOGE("hap moduleName(%{public}s) duplicate", moduleNames[0].c_str());
-            return ERR_APPEXECFWK_INSTALL_FAILED_MODULE_NAME_DUPLICATE;
-        }
-
-        hapModuleNames.emplace_back(moduleNames[0]);
-        auto hashParamIter = hashParams.find(moduleNames[0]);
-        if (hashParamIter != hashParams.end()) {
-            info.second.SetModuleHashValue(hashParamIter->second);
-            hashParams.erase(hashParamIter);
-        }
-    }
-
-    if (!hashParams.empty()) {
-        APP_LOGE("Some hashParam moduleName is not exist in hap moduleNames");
-        return ERR_APPEXECFWK_INSTALL_FAILED_CHECK_HAP_HASH_PARAM;
-    }
-
-    return ERR_OK;
+    return bundleInstallChecker_->CheckHapHashParams(infos, hashParams);
 }
 
 ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGD("Check APP label");
-    ErrCode ret = ERR_OK;
-    std::string bundleName = (infos.begin()->second).GetBundleName();
-    std::string vendor = (infos.begin()->second).GetVendor();
-    versionCode_ = (infos.begin()->second).GetVersionCode();
-    std::string versionName = (infos.begin()->second).GetVersionName();
-    uint32_t minCompatibleVersionCode = (infos.begin()->second).GetMinCompatibleVersionCode();
-    uint32_t target = (infos.begin()->second).GetTargetVersion();
-    std::string releaseType = (infos.begin()->second).GetReleaseType();
-    uint32_t compatible = (infos.begin()->second).GetCompatibleVersion();
-    bool singleton = (infos.begin()->second).IsSingleton();
-    Constants::AppType appType = (infos.begin()->second).GetAppType();
-
-    for (const auto &info : infos) {
-        // check bundleName
-        if (bundleName != info.second.GetBundleName()) {
-            return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
-        }
-        // check version
-        if (versionCode_ != info.second.GetVersionCode()) {
-            return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
-        }
-        if (versionName != info.second.GetVersionName()) {
-            return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-        }
-        if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
-            return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
-        }
-        // check vendor
-        if (vendor != info.second.GetVendor()) {
-            return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
-        }
-        // check release type
-        if (target != info.second.GetTargetVersion()) {
-            return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
-        }
-        if (compatible != info.second.GetCompatibleVersion()) {
-            return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
-        }
-        if (releaseType != info.second.GetReleaseType()) {
-            return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
-        }
-        if (singleton != info.second.IsSingleton()) {
-            return ERR_APPEXECFWK_INSTALL_SINGLETON_NOT_SAME;
-        }
-        if (appType != info.second.GetAppType()) {
-            return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
-        }
+    ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
+    if (ret != ERR_OK) {
+        return ret;
     }
-    bundleName_ = bundleName;
-    APP_LOGD("finish check APP label");
-    return ret;
+
+    bundleName_ = (infos.begin()->second).GetBundleName();
+    versionCode_ = (infos.begin()->second).GetVersionCode();
+    return ERR_OK;
 }
 
 bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
@@ -1877,24 +1651,6 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     }
     APP_LOGD("finish to uninstall lower version feature hap");
     return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::CheckSystemSize(const std::string &bundlePath, const Constants::AppType appType) const
-{
-    if ((appType == Constants::AppType::SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::SYSTEM_APP_INSTALL_PATH))) {
-        return ERR_OK;
-    }
-    if ((appType == Constants::AppType::THIRD_SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_SYSTEM_APP_INSTALL_PATH))) {
-        return ERR_OK;
-    }
-    if ((appType == Constants::AppType::THIRD_PARTY_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_PARTY_APP_INSTALL_PATH))) {
-        return ERR_OK;
-    }
-    APP_LOGE("install failed due to insufficient disk memory");
-    return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
 }
 
 int32_t BaseBundleInstaller::GetUserId(const int32_t &userId) const
@@ -2117,27 +1873,9 @@ void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
     }
 }
 
-void BaseBundleInstaller::SetEntryInstallationFree(const BundlePackInfo &bundlePackInfo,
-    InnerBundleInfo &innrBundleInfo)
-{
-    APP_LOGI("SetEntryInstallationFree start");
-    if (!bundlePackInfo.GetValid()) {
-        APP_LOGW("no pack.info in the hap file");
-        return;
-    }
-    auto packageModule = bundlePackInfo.summary.modules;
-    auto installationFree = std::any_of(packageModule.begin(), packageModule.end(), [&](auto &module) {
-        return module.distro.moduleType == "entry" && module.distro.installationFree;
-    });
-    if (installationFree) {
-        APP_LOGI("install or upddate hm service");
-    }
-    innrBundleInfo.SetEntryInstallationFree(installationFree);
-    APP_LOGI("SetEntryInstallationFree end");
-}
-
 void BaseBundleInstaller::ResetInstallProperties()
 {
+    bundleInstallChecker_->ResetProperties();
     isContainEntry_ = false;
     isAppExist_ = false;
     hasInstalledInUser_ = false;

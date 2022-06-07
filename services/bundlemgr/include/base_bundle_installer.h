@@ -21,13 +21,10 @@
 
 #include "nocopyable.h"
 
-#include "appexecfwk_errors.h"
 #include "bundle_clone_mgr.h"
 #include "bundle_data_mgr.h"
-#include "bundle_pack_info.h"
-#include "bundle_verify_mgr.h"
+#include "bundle_install_checker.h"
 #include "event_report.h"
-#include "inner_bundle_info.h"
 #include "install_param.h"
 
 namespace OHOS {
@@ -242,13 +239,6 @@ private:
     ErrCode RemoveModuleAndDataDir(const InnerBundleInfo &info,
         const std::string &modulePackage, int32_t userId, bool isKeepData) const;
     /**
-     * @brief Parse the bundle config.json file.
-     * @param bundleFilePath Indicates the HAP file path.
-     * @param InnerBundleInfo Indicates the InnerBundleInfo object of a bundle.
-     * @return Returns ERR_OK if the bundle parsed successfully; returns error code otherwise.
-     */
-    ErrCode ParseBundleInfo(const std::string &bundleFilePath, InnerBundleInfo &info, BundlePackInfo &packInfo) const;
-    /**
      * @brief Remove the current installing module directory.
      * @param info Indicates the InnerBundleInfo object of a bundle under installing.
      * @return Returns ERR_OK if the module directory removed successfully; returns error code otherwise.
@@ -334,8 +324,10 @@ private:
      * @param hapVerifyRes Indicates the signature info.
      * @return Returns ERR_OK if the every hap has signature info and all haps have same signature info.
      */
-    ErrCode CheckMultipleHapsSignInfo(const std::vector<std::string> &bundlePaths, const InstallParam &installParam,
-        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
+    ErrCode CheckMultipleHapsSignInfo(
+        const std::vector<std::string> &bundlePaths,
+        const InstallParam &installParam,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     /**
      * @brief To parse hap files and to obtain innerBundleInfo of each hap.
      * @param bundlePaths Indicates the file paths of all HAP packages.
@@ -345,8 +337,11 @@ private:
      * @param infos Indicates the innerBundleinfo of each hap.
      * @return Returns ERR_OK if each hap is parsed successfully; returns error code otherwise.
      */
-    ErrCode ParseHapFiles(const std::vector<std::string> &bundlePaths, const InstallParam &installParam,
-        const Constants::AppType appType, std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    ErrCode ParseHapFiles(
+        const std::vector<std::string> &bundlePaths,
+        const InstallParam &installParam,
+        const Constants::AppType appType,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To check the hap hash param.
@@ -425,13 +420,6 @@ private:
      */
     ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec);
     /**
-     * @brief Check whether the disk path memory is available for installing the hap.
-     * @param bundlePath Indicates the file path.
-     * @param appType Indicates the bundle type of the application.
-     * @return Returns ERR_OK if system memory is adequate; returns error code otherwise.
-     */
-    ErrCode CheckSystemSize(const std::string &bundlePath, const Constants::AppType appType) const;
-    /**
      * @brief To get userId.
      * @param installParam Indicates the installParam of the bundle.
      * @return Returns userId.
@@ -455,7 +443,6 @@ private:
 
     ErrCode CheckHapModleOrType(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    void SetEntryInstallationFree(const BundlePackInfo &bundlePackInfo, InnerBundleInfo &innerBundleInfo);
 
 private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
@@ -525,6 +512,7 @@ private:
     std::map<std::string, std::string> hapPathRecords_;
     // used to record system event infos
     EventInfo sysEventInfo_;
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
