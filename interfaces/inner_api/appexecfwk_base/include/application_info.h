@@ -193,6 +193,9 @@ struct ApplicationInfo : public Parcelable {
     bool isCompressNativeLibs = true;
     std::string signatureKey;
 
+    // switch
+    bool multiProjects = false;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -203,6 +203,7 @@ struct App {
     bool accessible = false;
     std::vector<std::string> targetBundleList;
     std::map<std::string, DeviceConfig> deviceConfigs;
+    bool multiProjects = false;
 };
 
 struct Module {
@@ -948,6 +949,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_ROUTER] = deviceConfig;
     }
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_MULTI_PROJECTS,
+        app.multiProjects,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1300,6 +1309,7 @@ bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &a
         applicationInfo.nativeLibraryPath.c_str(), applicationInfo.cpuAbi.c_str());
 
     applicationInfo.enabled = true;
+    applicationInfo.multiProjects = app.multiProjects;
     return true;
 }
 

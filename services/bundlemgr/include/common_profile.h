@@ -349,6 +349,7 @@ const std::string APP_SMART_VISION = "smartVision";
 const std::string APP_ROUTER = "router";
 const std::string APP_ACCESSIBLE = "accessible";
 const std::string APP_TARGETBUNDLELIST = "targetBundleList";
+const std::string APP_MULTI_PROJECTS = "multiProjects";
 // module
 const std::string MODULE_NAME = "name";
 const std::string MODULE_TYPE = "type";
