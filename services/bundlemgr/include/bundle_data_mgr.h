@@ -45,6 +45,9 @@
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "element.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -732,6 +735,13 @@ public:
     bool SetDisposedStatus(const std::string &bundleName, int32_t status);
 
     int32_t GetDisposedStatus(const std::string &bundleName);
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    bool QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
+        AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const;
+
+    bool GetElement(int32_t userId, const ElementName& elementName, Element& element) const;
+#endif
 
 private:
     /**

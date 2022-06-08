@@ -15,7 +15,8 @@
         ],
         "features": [
             "bundle_framework_graphics",
-            "bundle_framework_free_install"
+            "bundle_framework_free_install",
+            "bundle_framework_default_app"
         ],
         "hisysevent_config": [
             "//foundation/bundlemanager/bundle_framework/hisysevent.yaml"

@@ -209,6 +209,16 @@ bool BundleMgrService::Init()
     APP_LOGI("create BundleConnectAbility success");
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    if (defaultAppHostImpl_ == nullptr) {
+        defaultAppHostImpl_ = new (std::nothrow) DefaultAppHostImpl();
+        if (defaultAppHostImpl_ == nullptr) {
+            APP_LOGE("create DefaultAppHostImpl failed.");
+            return false;
+        }
+    }
+#endif
+
     CheckAllUser();
     ready_ = true;
     APP_LOGI("init end success");
@@ -261,6 +271,13 @@ sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
 {
     return userMgrHost_;
 }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
+{
+    return defaultAppHostImpl_;
+}
+#endif
 
 void BundleMgrService::CheckAllUser()
 {

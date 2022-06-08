@@ -118,12 +118,12 @@ public:
     std::vector<SkillUri> uris;
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
+    bool MatchType(const std::string &type, const std::string &skillUriType) const;
 private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
-    bool MatchType(const std::string &type, const std::string &skillUriType) const;
 };
 
 enum InstallExceptionStatus : int32_t {

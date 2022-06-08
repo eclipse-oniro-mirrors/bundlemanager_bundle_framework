@@ -176,11 +176,10 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_BUNDLE_INFO, &BundleMgrHost::HandleGetSandboxBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::SET_DISPOSED_STATUS, &BundleMgrHost::HandleSetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::GET_DISPOSED_STATUS, &BundleMgrHost::HandleGetDisposedStatus);
-    funcMap_.emplace(IBundleMgr::Message::IS_DEFAULT_APPLICATION, &BundleMgrHost::HandleIsDefaultApplication);
-    funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APPLICATION, &BundleMgrHost::HandleGetDefaultApplication);
-    funcMap_.emplace(IBundleMgr::Message::SET_DEFAULT_APPLICATION, &BundleMgrHost::HandleSetDefaultApplication);
-    funcMap_.emplace(IBundleMgr::Message::RESET_DEFAULT_APPLICATION, &BundleMgrHost::HandleResetDefaultApplication);
     funcMap_.emplace(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, &BundleMgrHost::HandleObtainCallingBundleName);
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, &BundleMgrHost::HandleGetDefaultAppProxy);
+#endif
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1771,85 +1770,6 @@ ErrCode BundleMgrHost::HandleGetDisposedStatus(Parcel &data, Parcel &reply)
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleIsDefaultApplication(Parcel &data, Parcel &reply)
-{
-    APP_LOGD("begin to HandleIsDefaultApplication.");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-
-    std::string type = data.ReadString();
-    bool ret = IsDefaultApplication(type);
-
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write ret failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetDefaultApplication(Parcel &data, Parcel &reply)
-{
-    APP_LOGD("begin to HandleGetDefaultApplication.");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-
-    int32_t userId = data.ReadInt32();
-    std::string type = data.ReadString();
-    BundleInfo bundleInfo;
-    bool ret = GetDefaultApplication(userId, type, bundleInfo);
-
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write ret failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret) {
-        if (!reply.WriteParcelable(&bundleInfo)) {
-            APP_LOGE("write bundleInfo failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleSetDefaultApplication(Parcel &data, Parcel &reply)
-{
-    APP_LOGD("begin to HandleSetDefaultApplication.");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-
-    int32_t userId = data.ReadInt32();
-    std::string type = data.ReadString();
-    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
-    if (want == nullptr) {
-        APP_LOGE("ReadParcelable<want> failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    bool ret = SetDefaultApplication(userId, type, *want);
-
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write ret failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleResetDefaultApplication(Parcel &data, Parcel &reply)
-{
-    APP_LOGD("begin to HandleResetDefaultApplication.");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-
-    int32_t userId = data.ReadInt32();
-    std::string type = data.ReadString();
-    bool ret = ResetDefaultApplication(userId, type);
-
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write ret failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    return ERR_OK;
-}
-
 ErrCode BundleMgrHost::HandleObtainCallingBundleName(Parcel &data, Parcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1865,6 +1785,24 @@ ErrCode BundleMgrHost::HandleObtainCallingBundleName(Parcel &data, Parcel &reply
     }
     return ERR_OK;
 }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+ErrCode BundleMgrHost::HandleGetDefaultAppProxy(Parcel &data, Parcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IDefaultApp> defaultAppProxy = GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("defaultAppProxy is nullptr.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(defaultAppProxy->AsObject())) {
+        APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+#endif
 
 template<typename T>
 bool BundleMgrHost::WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &reply)
