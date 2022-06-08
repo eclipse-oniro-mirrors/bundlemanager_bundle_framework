@@ -12,18 +12,18 @@
 # limitations under the License.
 
 aafwk_path = "//foundation/ability/ability_runtime"
-appexecfwk_path = "//foundation/bundlemanager/bundle_framework"
+aafwk_innerkits_path =
+    "//foundation/ability/ability_runtime/interfaces/inner_api"
 
-libs_path = "${appexecfwk_path}/libs"
+appexecfwk_path = "//foundation/bundlemanager/bundle_framework"
 common_path = "${appexecfwk_path}/common"
 services_path = "${appexecfwk_path}/services"
 kits_path = "${appexecfwk_path}/interfaces/kits"
-innerkits_path = "${appexecfwk_path}/interfaces/innerkits"
 inner_api_path = "${appexecfwk_path}/interfaces/inner_api"
 tools_path = "${appexecfwk_path}/tools"
-aafwk_innerkits_path =
-    "//foundation/ability/ability_runtime/interfaces/inner_api"
+
 use_pre_bundle_profile = false
+
 declare_args() {
   bundle_framework_graphics = true
   bundle_framework_free_install = true
