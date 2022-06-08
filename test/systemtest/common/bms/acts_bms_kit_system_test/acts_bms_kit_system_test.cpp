@@ -3213,7 +3213,8 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0100, Function | MediumTest | Le
             APP_LOGE("bundle mgr proxy is nullptr.");
             EXPECT_EQ(bundleMgrProxy, nullptr);
         }
-        bool queryResult = bundleMgrProxy->QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, USERID, abilityInfo);
+        bool queryResult =
+            bundleMgrProxy->QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, USERID, abilityInfo);
         EXPECT_TRUE(queryResult);
         EXPECT_EQ(abilityInfo.name, abilityName);
         EXPECT_EQ(abilityInfo.bundleName, appName);
@@ -3268,7 +3269,8 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0200, Function | MediumTest | Le
             APP_LOGE("bundle mgr proxy is nullptr.");
             EXPECT_EQ(bundleMgrProxy, nullptr);
         }
-        bool queryResult = bundleMgrProxy->QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, USERID, abilityInfo);
+        bool queryResult =
+        bundleMgrProxy->QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, USERID, abilityInfo);
         EXPECT_FALSE(queryResult);
 
         resvec.clear();
