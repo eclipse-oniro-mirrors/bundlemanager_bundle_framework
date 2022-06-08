@@ -125,6 +125,10 @@ public:
     ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 
+    ErrCode MoveFile(const std::string &oldPath, const std::string &newPath);
+
+    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath);
+
 private:
     /**
      * @brief Get the installd proxy object.

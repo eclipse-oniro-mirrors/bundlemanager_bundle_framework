@@ -127,6 +127,22 @@ public:
      */
     virtual ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) = 0;
+
+    /**
+     * @brief Move file from oldPath to newPath.
+     * @param oldPath Indicates oldPath.
+     * @param newPath Indicates newPath.
+     * @return Returns ERR_OK if move file successfully; returns error code otherwise.
+     */
+    virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) = 0;
+
+    /**
+     * @brief Copy file from oldPath to newPath.
+     * @param oldPath Indicates oldPath.
+     * @param newPath Indicates newPath.
+     * @return Returns ERR_OK if copy file successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) = 0;
 protected:
     enum Message : uint32_t {
         CREATE_BUNDLE_DIR = 1,
@@ -140,7 +156,9 @@ protected:
         GET_BUNDLE_STATS,
         SET_DIR_APL,
         GET_BUNDLE_CACHE_PATH,
-        SCAN_DIR
+        SCAN_DIR,
+        MOVE_FILE,
+        COPY_FILE
     };
 };
 

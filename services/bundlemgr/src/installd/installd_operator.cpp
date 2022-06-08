@@ -453,5 +453,32 @@ bool InstalldOperator::ScanDir(
     closedir(dir);
     return true;
 }
+
+bool InstalldOperator::CopyFile(
+    const std::string &sourceFile, const std::string &destinationFile)
+{
+    if (sourceFile.empty() || destinationFile.empty()) {
+        APP_LOGE("Copy file failed due to sourceFile or destinationFile is empty");
+        return false;
+    }
+
+    std::ifstream in(sourceFile);
+    if (!in.is_open()) {
+        APP_LOGE("Copy file failed due to open sourceFile failed");
+        return false;
+    }
+
+    std::ofstream out(destinationFile);
+    if (!out.is_open()) {
+        APP_LOGE("Copy file failed due to open destinationFile failed");
+        in.close();
+        return false;
+    }
+
+    out << in.rdbuf();
+    in.close();
+    out.close();
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

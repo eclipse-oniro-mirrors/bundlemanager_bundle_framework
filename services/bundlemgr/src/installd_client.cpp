@@ -133,6 +133,7 @@ ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<s
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+
     return CallService(&IInstalld::GetBundleCachePath, dir, cachePath);
 }
 
@@ -177,6 +178,26 @@ ErrCode InstalldClient::ScanDir(
     }
 
     return CallService(&IInstalld::ScanDir, dir, scanMode, resultMode, paths);
+}
+
+ErrCode InstalldClient::MoveFile(const std::string &oldPath, const std::string &newPath)
+{
+    if (oldPath.empty() || newPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::MoveFile, oldPath, newPath);
+}
+
+ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath)
+{
+    if (oldPath.empty() || newPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CopyFile, oldPath, newPath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

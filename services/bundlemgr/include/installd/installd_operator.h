@@ -158,6 +158,8 @@ public:
 
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
+
+    static bool CopyFile(const std::string &sourceFile, const std::string &destinationFile);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

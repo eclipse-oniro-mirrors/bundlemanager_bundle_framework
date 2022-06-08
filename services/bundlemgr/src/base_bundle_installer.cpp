@@ -1859,7 +1859,8 @@ void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
         if (moveFileMode) {
-            if (!BundleUtil::RenameFile(hapPathRecord.first, hapPathRecord.second)) {
+            if (InstalldClient::GetInstance()->MoveFile(
+                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 APP_LOGE("Move hap to install path failed");
                 return;
             }
@@ -1867,7 +1868,8 @@ void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
             continue;
         }
 
-        if (!BundleUtil::CopyFile(hapPathRecord.first, hapPathRecord.second)) {
+        if (InstalldClient::GetInstance()->CopyFile(
+            hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
             APP_LOGE("Copy hap to install path failed");
             return;
         }
