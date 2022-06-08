@@ -2537,5 +2537,15 @@ std::string InnerBundleInfo::GetProvisionType() const
 {
     return baseApplicationInfo_.provisionType;
 }
+
+void InnerBundleInfo::SetAppCrowdtestDeadline(int64_t crowdtestDeadline)
+{
+    baseApplicationInfo_.crowdtestDeadline = crowdtestDeadline;
+}
+
+int64_t InnerBundleInfo::GetAppCrowdtestDeadline() const
+{
+    return baseApplicationInfo_.crowdtestDeadline;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

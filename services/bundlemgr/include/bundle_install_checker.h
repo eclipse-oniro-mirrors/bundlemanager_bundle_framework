@@ -30,6 +30,7 @@ namespace AppExecFwk {
 struct InstallCheckParam {
     bool isPreInstallApp = false;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
 };
 
 class BundleInstallChecker {

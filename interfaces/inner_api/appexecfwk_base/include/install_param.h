@@ -40,7 +40,8 @@ enum class InstallLocation {
 struct InstallParam : public Parcelable {
     InstallFlag installFlag = InstallFlag::NORMAL;
     InstallLocation installLocation = InstallLocation::INTERNAL_ONLY;
-    int userId = Constants::UNSPECIFIED_USERID;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
     // is keep user data while uninstall.
     bool isKeepData = false;
     bool needSavePreInstallInfo = false;

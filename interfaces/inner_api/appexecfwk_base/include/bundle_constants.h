@@ -257,6 +257,9 @@ const std::string APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
 // provision type
 const std::string PROVISION_TYPE_DEBUG = "debug";
 const std::string PROVISION_TYPE_RELEASE = "release";
+
+// crowdtesting
+constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

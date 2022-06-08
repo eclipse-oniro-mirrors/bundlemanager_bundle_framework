@@ -121,6 +121,7 @@ struct ApplicationInfo : public Parcelable {
 
     uint32_t apiCompatibleVersion = 0;
     int32_t apiTargetVersion = 0;
+    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE;
 
     std::string iconPath;
     int32_t iconId = 0;
