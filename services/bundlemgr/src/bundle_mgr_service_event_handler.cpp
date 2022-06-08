@@ -16,8 +16,12 @@
 #include "bundle_mgr_service_event_handler.h"
 
 #include <future>
+#include <sys/stat.h>
 
+#include "accesstoken_kit.h"
+#include "access_token.h"
 #include "app_log_wrapper.h"
+#include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -27,7 +31,9 @@
 #include "config_policy_utils.h"
 #endif
 #include "event_report.h"
+#include "installd_client.h"
 #include "perf_profile.h"
+#include "status_receiver_host.h"
 #include "system_bundle_installer.h"
 
 namespace OHOS {
@@ -45,6 +51,16 @@ std::string GetScanBundleName(const std::string &str)
     
     return "";
 }
+
+class InnerReceiverImpl : public StatusReceiverHost {
+public:
+    InnerReceiverImpl() = default;
+    virtual ~InnerReceiverImpl() override = default;
+
+    virtual void OnStatusNotify(const int progress) override {}
+    virtual void OnFinished(
+        const int32_t resultCode, const std::string &resultMsg) override {}
+};
 }
 
 BMSEventHandler::BMSEventHandler(const std::shared_ptr<EventRunner> &runner) : EventHandler(runner)
@@ -95,7 +111,50 @@ void BMSEventHandler::OnBmsStarting()
         return;
     }
 
-    BundleBootStartEvent();
+    // If the preInstall infos does not exist in preInstall db,
+    // all preInstall directory applications will be reinstalled.
+    if (!LoadAllPreInstallBundleInfos()) {
+        APP_LOGE("Load all preInstall bundleInfos failed.");
+        needRebootOta_ = true;
+    }
+
+    /* Guard against install infos lossed strategy.
+     * 1. Scan user data dir
+     *   1.1. If no data, first boot.
+     *   1.2. If has data, but parse data to InnerBundleUserInfos failed,
+     *        reInstall all app from install dir and preInstall dir
+     *   1.3. If has data and parse data to InnerBundleUserInfos success, goto 2
+     * 2. Scan installDir include common install dir and preInstall dir
+     *    And the parse the hap to InnerBundleInfos
+     * 3. Combine InnerBundleInfos and InnerBundleUserInfos to cache and db
+     * 4. According to needRebootOta determine whether OTA detection is required
+     */
+    ResultCode resultCode = GuardAgainstInstallInfosLossedStrategy();
+    switch (resultCode) {
+        case ResultCode::RECOVER_OK: {
+            APP_LOGD("Guard against install infos lossed strategy take effect.");
+            if (needRebootOta_) {
+                BundleRebootStartEvent();
+            } else {
+                DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+            }
+
+            break;
+        }
+        case ResultCode::REINSTALL_OK: {
+            APP_LOGD("ReInstall all haps.");
+            DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+            break;
+        }
+        case ResultCode::NO_INSTALLED_DATA: {
+            // First boot
+            BundleBootStartEvent();
+            break;
+        }
+        default:
+            APP_LOGE("System internal error, install informations missing.");
+            break;
+    }
 }
 
 void BMSEventHandler::AfterBmsStart()
@@ -127,6 +186,392 @@ void BMSEventHandler::BundleRebootStartEvent()
 {
     OnBundleRebootStart();
     DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+}
+
+ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
+{
+    APP_LOGD("GuardAgainstInstallInfosLossedStrategy start");
+    // Check user path, and parse userData to InnerBundleUserInfo
+    std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
+    ScanResultCode scanResultCode = ScanAndAnalyzeUserDatas(innerBundleUserInfoMaps);
+    if (scanResultCode == ScanResultCode::SCAN_NO_DATA) {
+        APP_LOGE("Scan the user data directory failed");
+        return ResultCode::NO_INSTALLED_DATA;
+    }
+
+    // When data exist, but parse all userinfo fails, reinstall all app.
+    // For example: the AT database is lost or others.
+    if (scanResultCode == ScanResultCode::SCAN_HAS_DATA_PARSE_FAILED) {
+        // Reinstall all app from install dir
+        return ReInstallAllInstallDirApps();
+    }
+
+    // When data exist and parse all userinfo success,
+    // it can be judged that some bundles has installed.
+    // Check install dir, and parse the hap in install dir to InnerBundleInfo
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    ScanAndAnalyzeInstallInfos(installInfos);
+    if (installInfos.empty()) {
+        APP_LOGE("check bundle path failed due to hap lossd or parse failed");
+        return ResultCode::SYSTEM_ERROR;
+    }
+
+    // Combine InnerBundleInfo and InnerBundleUserInfo
+    if (!CombineBundleInfoAndUserInfo(installInfos, innerBundleUserInfoMaps)) {
+        APP_LOGE("System internal error");
+        return ResultCode::SYSTEM_ERROR;
+    }
+
+    return ResultCode::RECOVER_OK;
+}
+
+ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
+    std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps)
+{
+    ScanResultCode scanResultCode = ScanResultCode::SCAN_NO_DATA;
+    std::string baseDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1];
+    std::vector<std::string> userIds;
+    if (!ScanDir(baseDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userIds)) {
+        APP_LOGD("Check the base user directory(%{public}s) failed", baseDataDir.c_str());
+        return scanResultCode;
+    }
+
+    for (const auto &userId : userIds) {
+        int32_t userIdInt = Constants::INVALID_USERID;
+        if (!StrToInt(userId, userIdInt)) {
+            APP_LOGE("UserId(%{public}s) strToInt failed", userId.c_str());
+            continue;
+        }
+
+        std::vector<std::string> userDataBundleNames;
+        std::string userDataDir = baseDataDir + Constants::FILE_SEPARATOR_CHAR + userId + Constants::BASE;
+        if (!ScanDir(userDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userDataBundleNames)) {
+            APP_LOGD("Check the user installation directory(%{public}s) failed", userDataDir.c_str());
+            continue;
+        }
+
+        for (const auto &userDataBundleName : userDataBundleNames) {
+            if (scanResultCode == ScanResultCode::SCAN_NO_DATA) {
+                scanResultCode = ScanResultCode::SCAN_HAS_DATA_PARSE_FAILED;
+            }
+
+            if (AnalyzeUserData(userIdInt, userDataDir, userDataBundleName, userMaps)) {
+                scanResultCode = ScanResultCode::SCAN_HAS_DATA_PARSE_SUCCESS;
+            }
+        }
+    }
+
+    return scanResultCode;
+}
+
+bool BMSEventHandler::AnalyzeUserData(
+    int32_t userId, const std::string &userDataDir, const std::string &userDataBundleName,
+    std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps)
+{
+    if (userDataDir.empty() || userDataBundleName.empty()) {
+        APP_LOGE("UserDataDir or UserDataBundleName is empty");
+        return false;
+    }
+
+    struct stat s;
+    std::string userDataBundlePath = userDataDir + userDataBundleName;
+    APP_LOGD("Analyze user data path(%{public}s)", userDataBundlePath.c_str());
+    if (stat(userDataBundlePath.c_str(), &s) != 0) {
+        APP_LOGE("Stat user data path(%{public}s) failed", userDataBundlePath.c_str());
+        return false;
+    }
+
+    // It should be a bundleName dir
+    if (!(s.st_mode & S_IFDIR)) {
+        APP_LOGE("UserDataBundlePath(%{public}s) is not dir", userDataBundlePath.c_str());
+        return false;
+    }
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = userDataBundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    innerBundleUserInfo.uid = static_cast<int32_t>(s.st_uid);
+    innerBundleUserInfo.gids.emplace_back(static_cast<int32_t>(s.st_gid));
+    innerBundleUserInfo.installTime = static_cast<int64_t>(s.st_mtime);
+    innerBundleUserInfo.updateTime = innerBundleUserInfo.installTime;
+    auto tokenId = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(
+        innerBundleUserInfo.bundleUserInfo.userId, userDataBundleName, 0);
+    if (tokenId == 0) {
+        APP_LOGE("get tokenId failed.");
+        return false;
+    }
+
+    innerBundleUserInfo.accessTokenId = tokenId;
+    auto userIter = userMaps.find(userDataBundleName);
+    if (userIter == userMaps.end()) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos = { innerBundleUserInfo };
+        userMaps.emplace(userDataBundleName, innerBundleUserInfos);
+        return true;
+    }
+
+    userMaps.at(userDataBundleName).emplace_back(innerBundleUserInfo);
+    return true;
+}
+
+ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
+{
+    // First, reinstall all preInstall app from preInstall dir
+    std::vector<std::string> preInstallDirs;
+    GetPreInstallDir(preInstallDirs);
+    for (const auto &preInstallDir : preInstallDirs) {
+        std::vector<std::string> filePaths { preInstallDir };
+        if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP)) {
+            APP_LOGE("Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
+            continue;
+        }
+    }
+
+    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    if (installer == nullptr) {
+        APP_LOGE("installer is nullptr");
+        return ResultCode::SYSTEM_ERROR;
+    }
+
+    // Second, reInstall all common install app from install dir
+    std::map<std::string, std::vector<std::string>> hapPathsMap;
+    ScanInstallDir(hapPathsMap);
+    for (const auto &hapPaths : hapPathsMap) {
+        InstallParam installParam;
+        installParam.userId = Constants::ALL_USERID;
+        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+        installParam.streamInstallMode = true;
+        sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
+        installer->Install(hapPaths.second, installParam, innerReceiverImpl);
+    }
+
+    return ResultCode::REINSTALL_OK;
+}
+
+void BMSEventHandler::ScanAndAnalyzeInstallInfos(
+    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
+{
+    // Scan the installed directory
+    std::map<std::string, std::vector<std::string>> hapPathsMap;
+    ScanInstallDir(hapPathsMap);
+    AnalyzeHaps(false, hapPathsMap, installInfos);
+
+    // Scan preBundle directory
+    std::vector<std::string> preInstallDirs;
+    GetPreInstallDir(preInstallDirs);
+    AnalyzeHaps(true, preInstallDirs, installInfos);
+}
+
+void BMSEventHandler::ScanInstallDir(
+    std::map<std::string, std::vector<std::string>> &hapPathsMap)
+{
+    APP_LOGD("Scan the installed directory start");
+    std::vector<std::string> bundleNameList;
+    if (!ScanDir(Constants::BUNDLE_CODE_DIR, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, bundleNameList)) {
+        APP_LOGE("Check the bundle directory(%{public}s) failed", Constants::BUNDLE_CODE_DIR.c_str());
+        return;
+    }
+
+    for (const auto &bundleName : bundleNameList) {
+        std::vector<std::string> hapPaths;
+        auto appCodePath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
+        if (!ScanDir(appCodePath, ScanMode::SUB_FILE_FILE, ResultMode::ABSOLUTE_PATH, hapPaths)) {
+            APP_LOGE("Scan the appCodePath(%{public}s) failed", appCodePath.c_str());
+            continue;
+        }
+
+        if (hapPaths.empty()) {
+            APP_LOGD("The directory(%{public}s) scan result is empty", appCodePath.c_str());
+            continue;
+        }
+
+        std::vector<std::string> checkHapPaths = CheckHapPaths(hapPaths);
+        hapPathsMap.emplace(bundleName, checkHapPaths);
+    }
+
+    APP_LOGD("Scan the installed directory end");
+}
+
+std::vector<std::string> BMSEventHandler::CheckHapPaths(
+    const std::vector<std::string> &hapPaths)
+{
+    std::vector<std::string> checkHapPaths;
+    for (const auto &hapPath : hapPaths) {
+        if (!BundleUtil::CheckFileType(hapPath, Constants::INSTALL_FILE_SUFFIX)) {
+            APP_LOGE("Check hapPath(%{public}s) failed", hapPath.c_str());
+            continue;
+        }
+
+        checkHapPaths.emplace_back(hapPath);
+    }
+
+    return checkHapPaths;
+}
+
+void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    std::set<PreScanInfo> scanInfos;
+    GetBundleDirFromPreBundleProFile(
+        scanInfos, uninstallBundleNames, preBundleConfigInfos);
+    for (const auto &scanInfo : scanInfos) {
+        bundleDirs.emplace_back(scanInfo.bundleDir);
+    }
+#else
+    std::list<std::string> scanbundleDirs;
+    GetBundleDirFromScan(scanbundleDirs);
+    for (const auto &scanbundleDir : scanbundleDirs) {
+        bundleDirs.emplace_back(scanbundleDir);
+    }
+#endif
+}
+
+void BMSEventHandler::AnalyzeHaps(
+    bool isPreInstallApp,
+    const std::map<std::string, std::vector<std::string>> &hapPathsMap,
+    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
+{
+    for (const auto &hapPaths : hapPathsMap) {
+        AnalyzeHaps(isPreInstallApp, hapPaths.second, installInfos);
+    }
+}
+
+void BMSEventHandler::AnalyzeHaps(
+    bool isPreInstallApp,
+    const std::vector<std::string> &bundleDirs,
+    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
+{
+    for (const auto &bundleDir : bundleDirs) {
+        std::unordered_map<std::string, InnerBundleInfo> hapInfos;
+        if (!CheckAndParseHapFiles(bundleDir, isPreInstallApp, hapInfos) || hapInfos.empty()) {
+            APP_LOGE("Parse bundleDir(%{public}s) failed", bundleDir.c_str());
+            continue;
+        }
+
+        CollectInstallInfos(hapInfos, installInfos);
+    }
+}
+
+void BMSEventHandler::CollectInstallInfos(
+    const std::unordered_map<std::string, InnerBundleInfo> &hapInfos,
+    std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
+{
+    for (const auto &hapInfoIter : hapInfos) {
+        auto bundleName = hapInfoIter.second.GetBundleName();
+        if (installInfos.find(bundleName) == installInfos.end()) {
+            std::vector<InnerBundleInfo> innerBundleInfos { hapInfoIter.second };
+            installInfos.emplace(bundleName, innerBundleInfos);
+            continue;
+        }
+
+        installInfos.at(bundleName).emplace_back(hapInfoIter.second);
+    }
+}
+
+bool BMSEventHandler::CombineBundleInfoAndUserInfo(
+    const std::map<std::string, std::vector<InnerBundleInfo>> &installInfos,
+    const std::map<std::string, std::vector<InnerBundleUserInfo>> &userInfoMaps)
+{
+    APP_LOGD("Combine code information and user data start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    if (installInfos.empty() || userInfoMaps.empty()) {
+        APP_LOGE("bundleInfos or userInfos is empty");
+        return false;
+    }
+
+    for (auto hasInstallInfo : installInfos) {
+        auto bundleName = hasInstallInfo.first;
+        auto userIter = userInfoMaps.find(bundleName);
+        if (userIter == userInfoMaps.end()) {
+            APP_LOGE("User data directory missing with bundle %{public}s ", bundleName.c_str());
+            needRebootOta_ = true;
+            continue;
+        }
+
+        for (auto &info : hasInstallInfo.second) {
+            SaveInstallInfoToCache(info);
+        }
+
+        for (const auto &userInfo : userIter->second) {
+            dataMgr->AddInnerBundleUserInfo(bundleName, userInfo);
+        }
+    }
+
+    // Parsing uid, gids and other user information
+    dataMgr->RestoreUidAndGid();
+    // Load all bundle state data from jsonDb
+    dataMgr->LoadAllBundleStateDataFromJsonDb();
+    APP_LOGD("Combine code information and user data end");
+    return true;
+}
+
+void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+
+    auto bundleName = info.GetBundleName();
+    auto appCodePath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
+    info.SetAppCodePath(appCodePath);
+
+    std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1]
+        + Constants::DATABASE + bundleName;
+    info.SetAppDataBaseDir(dataBaseDir);
+
+    auto moduleDir = info.GetAppCodePath() + Constants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+    info.AddModuleSrcDir(moduleDir);
+    info.AddModuleResPath(moduleDir);
+
+    bool bundleExist = false;
+    InnerBundleInfo dbInfo;
+    {
+        auto &mtx = dataMgr->GetBundleMutex(bundleName);
+        std::lock_guard lock { mtx };
+        bundleExist = dataMgr->GetInnerBundleInfo(bundleName, dbInfo);
+        if (bundleExist) {
+            dataMgr->EnableBundle(bundleName);
+        }
+    }
+
+    if (!bundleExist) {
+        dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+        dataMgr->AddInnerBundleInfo(bundleName, info);
+        dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
+        return;
+    }
+
+    auto& hapModuleName = info.GetCurModuleName();
+    std::vector<std::string> dbModuleNames;
+    dbInfo.GetModuleNames(dbModuleNames);
+    auto iter = std::find(dbModuleNames.begin(), dbModuleNames.end(), hapModuleName);
+    if (iter != dbModuleNames.end()) {
+        APP_LOGE("module(%{public}s) has install", hapModuleName.c_str());
+        return;
+    }
+
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::UPDATING_START);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::UPDATING_SUCCESS);
+    dataMgr->AddNewModuleInfo(bundleName, info, dbInfo);
+}
+
+bool BMSEventHandler::ScanDir(
+    const std::string& dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &resultList)
+{
+    APP_LOGD("Scan the directory(%{public}s) start", dir.c_str());
+    ErrCode result = InstalldClient::GetInstance()->ScanDir(dir, scanMode, resultMode, resultList);
+    if (result != ERR_OK) {
+        APP_LOGE("Scan the directory(%{public}s) failed", dir.c_str());
+        return false;
+    }
+
+    return true;
 }
 
 void BMSEventHandler::OnBundleBootStart(int32_t userId)
@@ -403,7 +848,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     for (auto &scanPathIter : scanPathList) {
         APP_LOGD("reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         std::unordered_map<std::string, InnerBundleInfo> infos;
-        if (!ParseHapFiles(scanPathIter, true, infos) || infos.empty()) {
+        if (!CheckAndParseHapFiles(scanPathIter, true, infos) || infos.empty()) {
             APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
             continue;
         }
@@ -631,87 +1076,54 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     return installer.OTAInstallSystemBundle(filePaths, appType);
 }
 
-bool BMSEventHandler::ParseHapFiles(const std::string &hapFilePath,
-    bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &infos)
+bool BMSEventHandler::CheckAndParseHapFiles(
+    const std::string &hapFilePath,
+    bool isPreInstallApp,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
     std::vector<std::string> hapFilePathVec { hapFilePath };
     std::vector<std::string> realPaths;
     auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
     if (ret != ERR_OK) {
-        APP_LOGE("File path %{private}s invalid", hapFilePath.c_str());
+        APP_LOGE("File path %{public}s invalid", hapFilePath.c_str());
         return false;
     }
 
-    BundleParser bundleParser;
-    for (auto realPath : realPaths) {
-        InnerBundleInfo innerBundleInfo;
-        ret = bundleParser.Parse(realPath, innerBundleInfo);
-        if (ret != ERR_OK) {
-            APP_LOGE("parse bundle info failed, error: %{public}d", ret);
-            continue;
-        }
-
-        infos.emplace(realPath, innerBundleInfo);
+    ret = bundleInstallChecker->CheckSysCap(realPaths);
+    if (ret != ERR_OK) {
+        APP_LOGE("hap(%{public}s) syscap check failed", hapFilePath.c_str());
+        return false;
     }
 
-    ret = CheckAppLabelInfo(infos);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckMultipleHapsSignInfo %{public}s failed", hapFilePath.c_str());
+        return false;
+    }
+
+    InstallCheckParam checkParam;
+    checkParam.isPreInstallApp = isPreInstallApp;
+    if (isPreInstallApp) {
+        checkParam.appType = Constants::AppType::SYSTEM_APP;
+    }
+
+    ret = bundleInstallChecker->ParseHapFiles(
+        realPaths, checkParam, hapVerifyResults, infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("parse haps file(%{public}s) failed", hapFilePath.c_str());
+        return false;
+    }
+
+    ret = bundleInstallChecker->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
         APP_LOGE("Check APP label failed %{public}d", ret);
         return false;
     }
 
     return true;
-}
-
-ErrCode BMSEventHandler::CheckAppLabelInfo(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos)
-{
-    ErrCode ret = ERR_OK;
-    if (infos.empty()) {
-        return ret;
-    }
-
-    std::string bundleName = (infos.begin()->second).GetBundleName();
-    std::string vendor = (infos.begin()->second).GetVendor();
-    auto versionCode = (infos.begin()->second).GetVersionCode();
-    std::string versionName = (infos.begin()->second).GetVersionName();
-    uint32_t target = (infos.begin()->second).GetTargetVersion();
-    uint32_t compatible = (infos.begin()->second).GetCompatibleVersion();
-    bool singleton = (infos.begin()->second).IsSingleton();
-    Constants::AppType appType = (infos.begin()->second).GetAppType();
-
-    for (const auto &info :infos) {
-        // check bundleName
-        if (bundleName != info.second.GetBundleName()) {
-            return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
-        }
-        // check version
-        if (versionCode != info.second.GetVersionCode()) {
-            return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
-        }
-        if (versionName != info.second.GetVersionName()) {
-            return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-        }
-        // check vendor
-        if (vendor != info.second.GetVendor()) {
-            return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
-        }
-        // check release type
-        if (target != info.second.GetTargetVersion()) {
-            return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
-        }
-        if (compatible != info.second.GetCompatibleVersion()) {
-            return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
-        }
-        if (singleton != info.second.IsSingleton()) {
-            return ERR_APPEXECFWK_INSTALL_SINGLETON_NOT_SAME;
-        }
-        if (appType != info.second.GetAppType()) {
-            return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
-        }
-    }
-
-    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

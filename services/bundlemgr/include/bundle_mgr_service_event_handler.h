@@ -24,6 +24,21 @@
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrService;
+enum class ScanMode;
+enum class ResultMode;
+
+enum class ResultCode {
+    RECOVER_OK = 0,
+    REINSTALL_OK,
+    NO_INSTALLED_DATA,
+    SYSTEM_ERROR,
+};
+
+enum class ScanResultCode {
+    SCAN_HAS_DATA_PARSE_SUCCESS,
+    SCAN_HAS_DATA_PARSE_FAILED,
+    SCAN_NO_DATA,
+};
 
 class BMSEventHandler : public EventHandler {
 public:
@@ -66,6 +81,124 @@ private:
      * @return Returns true if load successfully; returns false otherwise.
      */
     bool LoadInstallInfosFromDb();
+    /**
+     * @brief Guard against install infos lossed strategy.
+     * @return Returns ResultCode for recover install infos.
+     */
+    ResultCode GuardAgainstInstallInfosLossedStrategy();
+    /**
+     * @brief Scan and analyze install infos.
+     * @param installInfos Indicates the install infos.
+     * @return
+     */
+    void ScanAndAnalyzeInstallInfos(
+        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos);
+    /**
+     * @brief Scan and analyze common install dir.
+     * @param installInfos Indicates the install infos.
+     * @return
+     */
+    void ScanInstallDir(
+        std::map<std::string, std::vector<std::string>> &hapPathsMap);
+    /**
+     * @brief Get preInstall haps.
+     * @param bundleDirs Indicates preInstall hapPath.
+     * @return
+     */
+    void GetPreInstallDir(std::vector<std::string> &bundleDirs);
+    /**
+     * @brief Analyze hap to InnerBundleInfo.
+     * @param isPreInstallApp Indicates is preInstallApp or not.
+     * @param hapPathsMap Indicates the hapPathsMap which will be analyzed.
+     * @param installInfos Indicates the install infos.
+     * @return
+     */
+    void AnalyzeHaps(
+        bool isPreInstallApp,
+        const std::map<std::string, std::vector<std::string>> &hapPathsMap,
+        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos);
+    /**
+     * @brief Analyze hap to InnerBundleInfo.
+     * @param isPreInstallApp Indicates is preInstallApp or not.
+     * @param bundleDirs Indicates the bundleDirs which will be analyzed.
+     * @param installInfos Indicates the install infos.
+     * @return
+     */
+    void AnalyzeHaps(
+        bool isPreInstallApp,
+        const std::vector<std::string> &bundleDirs,
+        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos);
+    /**
+     * @brief Get preBundle install dir.
+     * @param bundleDirs Indicates the bundleDirs.
+     * @return
+     */
+    void GetPreBundleDir(std::list<std::string> &bundleDirs);
+    /**
+     * @brief Check scaned hapPath whether end with .hap.
+     * @param hapPaths Indicates the hapPaths.
+     * @return Returns the checked hapPaths.
+     */
+    std::vector<std::string> CheckHapPaths(const std::vector<std::string> &hapPaths);
+    /**
+     * @brief Collect install infos from parse result.
+     * @param hapInfos Indicates the parse result.
+     * @param installInfos Indicates the saved installInfos.
+     * @return.
+     */
+    void CollectInstallInfos(
+        const std::unordered_map<std::string, InnerBundleInfo> &hapInfos,
+        std::map<std::string, std::vector<InnerBundleInfo>> &installInfos);
+    /**
+     * @brief Scan and analyze userDatas.
+     * @param userMaps Indicates the userMaps to save userInfo.
+     * @return Returns ScanResultCode if Scan and analyze infos successfully; returns false otherwise.
+     */
+    ScanResultCode ScanAndAnalyzeUserDatas(
+        std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps);
+    /**
+     * @brief Analyze userDatas.
+     * @param userId Indicates the userId.
+     * @param userDataDir Indicates the userDataDir.
+     * @param userDataBundleName Indicates the userDataBundleName.
+     * @param userMaps Indicates the userMaps to save userInfo.
+     * @return Returns true if analyze infos successfully; returns false otherwise.
+     */
+    bool AnalyzeUserData(
+        int32_t userId, const std::string &userDataDir, const std::string &userDataBundleName,
+        std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps);
+    /**
+     * @brief ReInstall all Apps from installDir.
+     * @return Returns the ResultCode indicates the result of this action.
+     */
+    ResultCode ReInstallAllInstallDirApps();
+    /**
+     * @brief Combine install infos and userInfos.
+     * @param installInfos Indicates the installInfos.
+     * @param userInfoMaps Indicates the userInfoMaps.
+     * @return Returns true if combine infos successfully; returns false otherwise.
+     */
+    bool CombineBundleInfoAndUserInfo(
+        const std::map<std::string, std::vector<InnerBundleInfo>> &installInfos,
+        const std::map<std::string, std::vector<InnerBundleUserInfo>> &userInfoMaps);
+    /**
+     * @brief Save recover info to cache.
+     * @param info Indicates the InnerBundleInfo.
+     * @return
+     */
+    void SaveInstallInfoToCache(InnerBundleInfo &info);
+    /**
+     * @brief Scan dir by scanMode and resultMode, this function will perform
+     *        scan through installd because installd has higher permissions.
+     * @param scanMode Indicates the scanMode,
+     *        which maybe SUB_FILE_ALL SUB_FILE_DIR or SUB_FILE_FILE.
+     * @param resultMode Indicates the resultMode,
+     *        which maybe ABSOLUTE_PATH or RELATIVE_PATH.
+     * @param resultList Indicates the scan resultList.
+     * @return Returns true if Scan successfully; returns false otherwise.
+     */
+    bool ScanDir(const std::string& dir, ScanMode scanMode,
+        ResultMode resultMode, std::vector<std::string> &resultList);
     /**
      * @brief Bundle boot start event.
      * @return
@@ -225,18 +358,11 @@ private:
     /**
      * @brief Get bundleinfo of HAP by path.
      * @param hapFilePath Indicates the absolute file path of the HAP.
-     * @param isPreInstallApp Indicates the hap is preInstallApp or not.
      * @param infos Indicates the obtained BundleInfo object.
      * @return Returns true if the BundleInfo is successfully obtained; returns false otherwise.
      */
-    bool ParseHapFiles(const std::string &hapFilePath,
+    bool CheckAndParseHapFiles(const std::string &hapFilePath,
         bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &infos);
-    /**
-     * @brief To check the version code and bundleName in all haps.
-     * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
-     * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
-     */
-    ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief OTA Install system app and system vendor bundles.
      * @param filePaths Indicates the filePaths.
@@ -272,6 +398,8 @@ private:
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.
     std::map<std::string, PreInstallBundleInfo> loadExistData_;
+    // Used to mark Whether trigger OTA check
+    bool needRebootOta_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
