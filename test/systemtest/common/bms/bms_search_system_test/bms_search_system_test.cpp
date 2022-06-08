@@ -360,7 +360,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0200, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, appName);
     bool isSubStrExist = false;
@@ -394,7 +395,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0300, Function | MediumTest | Level2)
 
     appName = BASE_BUNDLE_NAME + "e";
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_FALSE(getInfoResult);
     std::cout << "END BMS_SEARCH_0300" << std::endl;
 }
@@ -1354,6 +1356,5 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3700, Function | MediumTest | Level1)
     }
     std::cout << "END BMS_SEARCH_3700" << std::endl;
 }
-
 }  // namespace AppExecFwk
 }  // namespace OHOS

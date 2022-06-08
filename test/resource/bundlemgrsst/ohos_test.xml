@@ -166,19 +166,19 @@
   </target>
     <target name="BmsCompatibleSystemTest">
     <preparer>
-      <option name="push" value="stThirdBundle/bmsThirdBundle1.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle2.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle3.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle4.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle5.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle6.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundleDataAbility.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stSystemBundle/bmsSystemBundle1.hap -> /system/app/" src="res" />
-      <option name="push" value="stSystemBundle/bmsSystemBundle2.hap -> /system/app/" src="res" />
-      <option name="push" value="stSystemBundle/bmsSystemBundle3.hap -> /system/app/" src="res" />
-      <option name="push" value="stSystemBundle/bmsSystemBundle2Feature.hap -> /system/app/" src="res" />
-      <option name="push" value="stSystemBundle/bmsSystemBundle2Feature2.hap -> /system/app/" src="res" />
-      <option name="push" value="stSystemBundle/bmsSystemBundle2Update.hap -> /system/app/" src="res" />
+      <option name="push" value="jsBundle/jsThirdBundle/bmsThirdBundle1.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="jsBundle/jsThirdBundle/bmsThirdBundle2.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="jsBundle/jsThirdBundle/bmsThirdBundle3.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="jsBundle/jsThirdBundle/bmsThirdBundle4.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="jsBundle/jsThirdBundle/bmsThirdBundle5.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="jsBundle/jsThirdBundle/bmsThirdBundle6.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="jsBundle/jsThirdBundle/bmsThirdBundleDataAbility.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="jsBundle/jsSystemBundle/bmsSystemBundle1.hap -> /system/app/" src="res" />
+      <option name="push" value="jsBundle/jsSystemBundle/bmsSystemBundle2.hap -> /system/app/" src="res" />
+      <option name="push" value="jsBundle/jsSystemBundle/bmsSystemBundle3.hap -> /system/app/" src="res" />
+      <option name="push" value="jsBundle/jsSystemBundle/bmsSystemBundle2Feature.hap -> /system/app/" src="res" />
+      <option name="push" value="jsBundle/jsSystemBundle/bmsSystemBundle2Feature2.hap -> /system/app/" src="res" />
+      <option name="push" value="jsBundle/jsSystemBundle/bmsSystemBundle2Update.hap -> /system/app/" src="res" />
     </preparer>
   </target>
   <target name="BmsLauncherServiceSystemTest">
