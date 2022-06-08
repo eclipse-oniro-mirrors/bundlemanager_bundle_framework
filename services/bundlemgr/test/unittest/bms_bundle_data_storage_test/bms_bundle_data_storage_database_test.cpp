@@ -74,6 +74,11 @@ protected:
                         "debug": false,
                         "description": "",
                         "descriptionId": 0,
+                        "descriptionResource": {
+                            "bundleName": "",
+                            "id": 0,
+                            "moduleName": ""
+                        },
                         "deviceId": "",
                         "distributedNotificationEnabled": true,
                         "enabled": false,
@@ -84,6 +89,11 @@ protected:
                         "icon": "",
                         "iconId": 0,
                         "iconPath": "",
+                        "iconResource": {
+                            "bundleName": "",
+                            "id": 0,
+                            "moduleName": ""
+                        },
                         "isCloned": false,
                         "fingerprint": "",
                         "isCompressNativeLibs": true,
@@ -92,6 +102,11 @@ protected:
                         "keepAlive": false,
                         "label": "",
                         "labelId": 0,
+                        "labelResource": {
+                            "bundleName": "",
+                            "id": 0,
+                            "moduleName": ""
+                        },
                         "metaData": {},
                         "metadata": {},
                         "minCompatibleVersionCode": 0,
@@ -127,6 +142,7 @@ protected:
                     "backgroundModes": 0,
                     "bundleName": "com.ohos.launcher",
                     "codePath": "",
+                    "compileMode": 0,
                     "configChanges": [
                     ],
                     "continuable": false,
@@ -330,6 +346,11 @@ protected:
                 "debug": false,
                 "description": "$string: mainability_description",
                 "descriptionId": 218103837,
+                "descriptionResource": {
+                    "bundleName": "",
+                    "id": 0,
+                    "moduleName": ""
+                },
                 "deviceId": "PHONE-001",
                 "distributedNotificationEnabled": true,
                 "enabled": true,
@@ -340,6 +361,11 @@ protected:
                 "icon": "",
                 "iconId": 218103847,
                 "iconPath": "$media: icon",
+                "iconResource": {
+                    "bundleName": "",
+                    "id": 0,
+                    "moduleName": ""
+                },
                 "isCloned": false,
                 "fingerprint":"",
                 "isCompressNativeLibs": true,
@@ -348,6 +374,11 @@ protected:
                 "keepAlive": false,
                 "label": "$string: entry_MainAbility",
                 "labelId": 218103828,
+                "labelResource": {
+                    "bundleName": "",
+                    "id": 0,
+                    "moduleName": ""
+                },
                 "metaData": {
                 },
                 "metadata": {
@@ -398,6 +429,11 @@ protected:
                     "debug": false,
                     "description": "",
                     "descriptionId": 0,
+                    "descriptionResource": {
+                        "bundleName": "",
+                        "id": 0,
+                        "moduleName": ""
+                    },
                     "deviceId": "",
                     "distributedNotificationEnabled": true,
                     "enabled": false,
@@ -408,6 +444,11 @@ protected:
                     "icon": "",
                     "iconId": 0,
                     "iconPath": "",
+                    "iconResource": {
+                        "bundleName": "",
+                        "id": 0,
+                        "moduleName": ""
+                    },
                     "isCloned": false,
                     "fingerprint":"",
                     "isCompressNativeLibs": true,
@@ -416,6 +457,11 @@ protected:
                     "keepAlive": false,
                     "label": "",
                     "labelId": 0,
+                    "labelResource": {
+                        "bundleName": "",
+                        "id": 0,
+                        "moduleName": ""
+                    },
                     "metaData": {
                     },
                     "metadata": {

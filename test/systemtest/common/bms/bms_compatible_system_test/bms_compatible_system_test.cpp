@@ -45,6 +45,7 @@ const int DEFAULT_HEIGHT = 100;
 const int DEFAULT_WIDTH = 200;
 const uint32_t FORM_NUM = 3;
 const size_t CESINFO_LEN = 2;
+const int32_t USERID = 100;
 }  // namespace
 using OHOS::AAFwk::Want;
 using namespace testing::ext;
@@ -127,7 +128,7 @@ void BmsCompatibleSystemTest::Install(
     }
     InstallParam installParam;
     installParam.installFlag = installFlag;
-    installParam.userId = Constants::DEFAULT_USERID;
+    installParam.userId = USERID;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     installerProxy->Install(bundleFilePath, installParam, statusReceiver);
@@ -145,7 +146,7 @@ void BmsCompatibleSystemTest::Install(
     }
     InstallParam installParam;
     installParam.installFlag = installFlag;
-    installParam.userId = Constants::DEFAULT_USERID;
+    installParam.userId = USERID;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     installerProxy->Install(bundleFilePaths, installParam, statusReceiver);
@@ -166,7 +167,7 @@ void BmsCompatibleSystemTest::Uninstall(const std::string &bundleName, std::stri
         uninstallMessage = OPERATION_FAILED;
     } else {
         InstallParam installParam;
-        installParam.userId = Constants::DEFAULT_USERID;
+        installParam.userId = USERID;
         sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
         EXPECT_NE(statusReceiver, nullptr);
         installerProxy->Uninstall(bundleName, installParam, statusReceiver);
@@ -495,7 +496,6 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0700, Function | Mediu
     std::string bundleName = "com.example.third1";
     std::string abilityName = "com.example.third1.MainAbility";
     std::string message;
-    int userId = Constants::DEFAULT_USERID;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -506,7 +506,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0700, Function | Mediu
     ApplicationInfo appInfo;
     CompatibleApplicationInfo compatibleApplicationInfo;
     bool result =
-        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_TRUE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, bundleName);
@@ -529,7 +529,6 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | Mediu
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap";
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "6";
     std::string CAMERA = "ohos.permission.CAMERA";
-    int userId = Constants::DEFAULT_USERID;
 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -542,7 +541,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | Mediu
     ApplicationInfo appInfo;
     CompatibleApplicationInfo compatibleApplicationInfo;
     bool result = bundleMgrProxy->GetApplicationInfo(
-        bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, appInfo);
+        bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, appInfo);
     EXPECT_TRUE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, bundleName);
@@ -564,7 +563,6 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0900, Function | Mediu
     std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
     std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
     std::string abilityName = "com.example.system1.MainAbility";
-    int userId = Constants::DEFAULT_USERID;
     std::string message;
 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
@@ -578,7 +576,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0900, Function | Mediu
     ApplicationInfo appInfo;
     CompatibleApplicationInfo compatibleApplicationInfo;
     bool result =
-        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_TRUE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, bundleName);
@@ -600,7 +598,6 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1000, Function | Mediu
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
     std::string message;
-    int userId = Constants::DEFAULT_USERID;
 
     Install(bundleFilePath1, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -615,7 +612,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1000, Function | Mediu
     ApplicationInfo appInfo;
     CompatibleApplicationInfo compatibleApplicationInfo;
     bool result =
-        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_TRUE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, bundleName);
@@ -636,7 +633,6 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1100, Function | Mediu
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleName = "com.example.third1";
     std::string message;
-    int userId = Constants::DEFAULT_USERID;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
     Uninstall(bundleName, message);
@@ -650,7 +646,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1100, Function | Mediu
     ApplicationInfo appInfo;
     CompatibleApplicationInfo compatibleApplicationInfo;
     bool result =
-        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_FALSE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, "");
@@ -665,7 +661,6 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1200, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_1200";
     std::string bundleName = "";
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
@@ -674,7 +669,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1200, Function | Mediu
     ApplicationInfo appInfo;
     CompatibleApplicationInfo compatibleApplicationInfo;
     bool result =
-        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_FALSE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, "");
