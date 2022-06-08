@@ -18,6 +18,7 @@ import("appexecfwk_bundlemgr.gni")
 config("bundlemgr_common_config") {
   include_dirs = [
     "include",
+    "include/default_app",
     "include/free_install",
     "include/sandbox_app",
     "//utils/system/safwk/native/include",
@@ -214,6 +215,11 @@ ohos_shared_library("libbms") {
       "power_manager_native:powermgr_client",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+
+  if (bundle_framework_default_app) {
+    sources += default_app
+    defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
   }
 
   if (configpolicy_enable) {

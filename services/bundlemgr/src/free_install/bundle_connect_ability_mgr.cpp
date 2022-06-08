@@ -20,18 +20,16 @@
 #include "free_install_params.h"
 #include "json_util.h"
 #include "parcel.h"
-#include "service_center_death_recipient.h"
+#include "service_center_connection.h"
 #include "service_center_status_callback.h"
 #include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
-const std::string serviceCenterBundleName = "com.ohos.hag.famanager";
-const std::string serviceCenterAbilityName = "com.ohos.hag.famanager.HapInstallServiceAbility";
+const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
+const std::string SERVICE_CENTER_ABILITY_NAME = "com.ohos.hag.famanager.HapInstallServiceAbility";
 const std::string DEFAULT_VERSION = "1";
-constexpr uint32_t FREE_INSTALL_DONE = 0;
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ONE_COMPATIBLE = 0;
 constexpr uint32_t BIT_TWO_BACK_MODE = 1;
@@ -152,7 +150,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag,
 {
     APP_LOGI("SendRequestToServiceCenter");
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(serviceCenterBundleName, serviceCenterAbilityName);
+    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, callerToken);
     if (!isConnectSuccess) {
         APP_LOGE("Fail to connect ServiceCenter");
@@ -181,7 +179,7 @@ void BundleConnectAbilityMgr::WaitFromConnecting(std::unique_lock<std::mutex> &l
 {
     APP_LOGI("ConnectAbility await start CONNECTING");
     while (connectState_ == ServiceCenterConnectState::CONNECTING) {
-            cv_.wait(lock);
+        cv_.wait(lock);
     }
     APP_LOGI("ConnectAbility await end CONNECTING");
 }
@@ -209,7 +207,7 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
             return false;
         }
         serviceCenterConnection_ = new (std::nothrow) ServiceCenterConnection(connectState_,
-            cv_, freeInstallParamsMap_);
+            cv_, weak_from_this());
         if (serviceCenterConnection_ == nullptr) {
             APP_LOGE("ServiceCenterConnection is nullptr");
             connectState_ = ServiceCenterConnectState::DISCONNECTED;
@@ -358,7 +356,7 @@ void BundleConnectAbilityMgr::SendRequest(
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     const std::string dataString = GetJsonStrFromInfo(targetAbilityInfo);
-    APP_LOGI("TargetAbilityInfo - > ToJsonString : %{public}s", dataString.c_str());
+    APP_LOGI("TargetAbilityInfo to JsonString : %{public}s", dataString.c_str());
 
     if (!data.WriteString16(Str8ToStr16(dataString))) {
         APP_LOGE("%{public}s failed to WriteParcelable targetAbilityInfo", __func__);
@@ -528,7 +526,7 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
         freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
         auto ret = freeInstallParamsMap_.emplace(targetInfo->transactId, *freeInstallParams);
         if (!ret.second) {
-            APP_LOGE("BundleConnectAbilityMgr::QueryAbilityInfo map emplace error");
+            APP_LOGE("BundleConnectAbilityMgr::CheckIsModuleNeedUpdate map emplace error");
             CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, callBack);
         }
         this->UpgradeInstall(*targetAbilityInfo, want, nullptr, userId);
@@ -554,6 +552,10 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName,
         flags, innerBundleInfo, userId);
     bool abilityInfoResult = bundleDataMgr_->QueryAbilityInfo(want, flags, userId, abilityInfo);
+    if (!abilityInfoResult) {
+        std::vector<ExtensionAbilityInfo> extensionInfos;
+        abilityInfoResult = bundleDataMgr_->QueryExtensionAbilityInfos(want, flags, userId, extensionInfos);
+    }
     if (innerBundleInfoResult && abilityInfoResult) {
         bool isModuleNeedUpdate = CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
         if (!isModuleNeedUpdate) {
@@ -574,7 +576,7 @@ bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     }
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
-        APP_LOGD("freeInstallParams is nullptr");
+        APP_LOGE("freeInstallParams is nullptr");
         return false;
     }
     freeInstallParams->callback = callBack;
@@ -582,12 +584,12 @@ bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     freeInstallParams->userId = userId;
     sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
     if (targetAbilityInfo == nullptr) {
-        APP_LOGD("targetAbilityInfo is nullptr");
+        APP_LOGE("targetAbilityInfo is nullptr");
         return false;
     }
     sptr<TargetInfo> targetInfo = new(std::nothrow) TargetInfo();
     if (targetInfo == nullptr) {
-        APP_LOGD("targetInfo is nullptr");
+        APP_LOGE("targetInfo is nullptr");
         return false;
     }
     sptr<TargetExtSetting> targetExtSetting = new(std::nothrow) TargetExtSetting();
@@ -617,17 +619,17 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     InnerBundleInfo innerBundleInfo;
     sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
     if (targetAbilityInfo == nullptr) {
-        APP_LOGD("targetAbilityInfo is nullptr");
+        APP_LOGE("targetAbilityInfo is nullptr");
         return;
     }
     sptr<TargetInfo> targetInfo = new(std::nothrow) TargetInfo();
     if (targetInfo == nullptr) {
-        APP_LOGD("targetInfo is nullptr");
+        APP_LOGE("targetInfo is nullptr");
         return;
     }
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
-        APP_LOGD("freeInstallParams is nullptr");
+        APP_LOGE("freeInstallParams is nullptr");
         return;
     }
     bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName, want.GetFlags(), innerBundleInfo, userId);
@@ -642,7 +644,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_CHECK;
     auto ret = freeInstallParamsMap_.emplace(targetInfo->transactId, *freeInstallParams);
     if (!ret.second) {
-        APP_LOGE("BundleConnectAbilityMgr::QueryAbilityInfo map emplace error");
+        APP_LOGE("BundleConnectAbilityMgr::UpgradeAtomicService map emplace error");
         return;
     }
     this->UpgradeCheck(*targetAbilityInfo, want, nullptr, userId);

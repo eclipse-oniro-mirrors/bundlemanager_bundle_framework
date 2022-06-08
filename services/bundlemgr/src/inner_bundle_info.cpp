@@ -101,6 +101,16 @@ const std::string APP_INDEX = "appIndex";
 const std::string BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
+const std::string MODULE_COMPILE_MODE = "compileMode";
+
+inline CompileMode ConvertCompileMode(const std::string& compileMode)
+{
+    if (compileMode == Profile::COMPILE_MODE_ES_MODULE) {
+        return CompileMode::ES_MODULE;
+    } else {
+        return CompileMode::JS_BUNDLE;
+    }
+}
 
 const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t userId)
 {
@@ -375,7 +385,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_IS_MODULE_JSON, info.isModuleJson},
         {MODULE_IS_STAGE_BASED_MODEL, info.isStageBasedModel},
         {MODULE_DEPENDENCIES, info.dependencies},
-        {MODULE_HAP_PATH, info.hapPath}
+        {MODULE_HAP_PATH, info.hapPath},
+        {MODULE_COMPILE_MODE, info.compileMode}
     };
 }
 
@@ -766,6 +777,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         ProfileReader::parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPILE_MODE,
+        info.compileMode,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1384,6 +1403,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         }
     }
     hapInfo.dependencies = it->second.dependencies;
+    hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
     return hapInfo;
 }
 
@@ -1572,6 +1592,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
         baseApplicationInfo_.nativeLibraryPath = applicationInfo.nativeLibraryPath;
         baseApplicationInfo_.cpuAbi = applicationInfo.cpuAbi;
     }
+    baseApplicationInfo_.appDistributionType = applicationInfo.appDistributionType;
+    baseApplicationInfo_.provisionType = applicationInfo.provisionType;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
@@ -2200,6 +2222,15 @@ void InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     infoItem->second.bundleUserInfo.enabled = enabled;
 }
 
+const std::string &InnerBundleInfo::GetCurModuleName() const
+{
+    if (innerModuleInfos_.find(currentPackage_) != innerModuleInfos_.end()) {
+        return innerModuleInfos_.at(currentPackage_).moduleName;
+    }
+
+    return Constants::EMPTY_STRING;
+}
+
 bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
 {
     APP_LOGD("userId is %{public}d", userId);
@@ -2485,6 +2516,36 @@ void InnerBundleInfo::SetDisposedStatus(int32_t status)
 int32_t InnerBundleInfo::GetDisposedStatus() const
 {
     return disposedStatus_;
+}
+
+void InnerBundleInfo::SetAppDistributionType(const std::string &appDistributionType)
+{
+    baseApplicationInfo_.appDistributionType = appDistributionType;
+}
+
+std::string InnerBundleInfo::GetAppDistributionType() const
+{
+    return baseApplicationInfo_.appDistributionType;
+}
+
+void InnerBundleInfo::SetProvisionType(const std::string &provisionType)
+{
+    baseApplicationInfo_.provisionType = provisionType;
+}
+
+std::string InnerBundleInfo::GetProvisionType() const
+{
+    return baseApplicationInfo_.provisionType;
+}
+
+void InnerBundleInfo::SetAppCrowdtestDeadline(int64_t crowdtestDeadline)
+{
+    baseApplicationInfo_.crowdtestDeadline = crowdtestDeadline;
+}
+
+int64_t InnerBundleInfo::GetAppCrowdtestDeadline() const
+{
+    return baseApplicationInfo_.crowdtestDeadline;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

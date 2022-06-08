@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "bundle_death_recipient.h"
+#include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "cleancache_callback.h"
@@ -51,7 +52,6 @@ constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr size_t ARGS_SIZE_FOUR = 4;
 constexpr size_t ARGS_SIZE_FIVE = 5;
-constexpr int32_t DEFAULT_INT32 = 0;
 constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM2 = 2;
@@ -205,6 +205,23 @@ static void ConvertInnerMetadata(napi_env env, napi_value value, const Metadata 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "resource", nResource));
 }
 
+static void ConvertResource(napi_env env, napi_value objResource, const Resource &resource)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, resource.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "bundleName", nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, resource.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "moduleName", nModuleName));
+
+    napi_value nId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, resource.id, &nId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "id", nId));
+}
+
 static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo)
 {
     napi_value nName;
@@ -339,10 +356,6 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.enabled, &nEnabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "enabled", nEnabled));
 
-    napi_value nFlags;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, DEFAULT_INT32, &nFlags));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "flags", nFlags));
-
     napi_value nUid;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.uid, &nUid));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "uid", nUid));
@@ -360,6 +373,21 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.fingerprint.c_str(), NAPI_AUTO_LENGTH,
         &nFingerprint));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "fingerprint", nFingerprint));
+
+    napi_value nIconResource;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nIconResource));
+    ConvertResource(env, nIconResource, appInfo.iconResource);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "iconResource", nIconResource));
+
+    napi_value nLabelResource;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nLabelResource));
+    ConvertResource(env, nLabelResource, appInfo.labelResource);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "labelResource", nLabelResource));
+
+    napi_value nDescriptionResource;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nDescriptionResource));
+    ConvertResource(env, nDescriptionResource, appInfo.descriptionResource);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "descriptionResource", nDescriptionResource));
 
     APP_LOGI("ConvertApplicationInfo entryDir=%{public}s.", appInfo.entryDir.c_str());
 }
@@ -393,15 +421,6 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, abilityInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIconPath));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "icon", nIconPath));
-
-    napi_value nsrcPath;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.srcPath.c_str(), NAPI_AUTO_LENGTH, &nsrcPath));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "srcPath", nsrcPath));
-
-    napi_value nLaunguage;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, abilityInfo.srcLanguage.c_str(), NAPI_AUTO_LENGTH, &nLaunguage));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "srcLanguage", nLaunguage));
 
     napi_value nVisible;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.visible, &nVisible));
@@ -516,10 +535,6 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, abilityInfo.targetAbility.c_str(), NAPI_AUTO_LENGTH, &nTargetAbility));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "targetAbility", nTargetAbility));
-
-    napi_value nTheme;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.theme.c_str(), NAPI_AUTO_LENGTH, &nTheme));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "theme", nTheme));
 
     napi_value nMetaData;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nMetaData));
@@ -677,12 +692,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 0, &ndescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "descriptionId", ndescriptionId));
 
-    napi_value nIconPath;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, hapModuleInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIconPath));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "iconPath", nIconPath));
-    APP_LOGI("ConvertHapModuleInfo iconPath=%{private}s.", hapModuleInfo.iconPath.c_str());
-
     napi_value nIcon;
     std::string theIcon = "";
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, theIcon.c_str(), NAPI_AUTO_LENGTH, &nIcon));
@@ -747,10 +756,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nAbilityInfos, idx, objAbilityInfo));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "abilityInfo", nAbilityInfos));
-
-    napi_value nColorMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(hapModuleInfo.colorMode), &nColorMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "colorMode", nColorMode));
 
     napi_value nMainAbilityName;
     NAPI_CALL_RETURN_VOID(
@@ -952,7 +957,7 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
         env, napi_set_named_property(env, objBundleInfo, "reqPermissionDetails", nReqPermissionDetails));
 
     napi_value nMinCompatibleVersionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, DEFAULT_INT32, &nMinCompatibleVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInfo.minCompatibleVersionCode, &nMinCompatibleVersionCode));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, objBundleInfo, "minCompatibleVersionCode", nMinCompatibleVersionCode));
 
@@ -3067,38 +3072,143 @@ static bool ParseHashParam(napi_env env, std::string &key, std::string &value, n
     return true;
 }
 
-static bool ParseHashParams(napi_env env, std::map<std::string, std::string> &hashParams, napi_value args)
+static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string, std::string> &hashParams)
 {
-    bool isArray = false;
-    uint32_t arrayLength = 0;
-    napi_value valueAry = 0;
-    napi_valuetype valueAryType = napi_undefined;
-    NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
-    if (!isArray) {
-        APP_LOGE("hashParams is not array!");
-        return false;
-    }
-
-    NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
-    APP_LOGD("ParseHashParams property is array, length=%{public}ud", arrayLength);
-    for (uint32_t j = 0; j < arrayLength; j++) {
-        NAPI_CALL_BASE(env, napi_get_element(env, args, j, &valueAry), false);
-        NAPI_CALL_BASE(env, napi_typeof(env, valueAry, &valueAryType), false);
-        std::string key;
-        std::string value;
-        if (!ParseHashParam(env, key, value, valueAry)) {
-            APP_LOGD("parse hash param failed");
+    bool hasKey = false;
+    napi_has_named_property(env, args, "hashParams", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "hashParams", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named hashParams property error!");
+            return false;
+        }
+        bool isArray = false;
+        uint32_t arrayLength = 0;
+        napi_value valueAry = 0;
+        napi_valuetype valueAryType = napi_undefined;
+        NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
+        if (!isArray) {
+            APP_LOGE("hashParams is not array!");
             return false;
         }
 
-        if (hashParams.find(key) != hashParams.end()) {
-            APP_LOGD("moduleName(%{public}s) is duplicate", key.c_str());
+        NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
+        APP_LOGD("ParseHashParams property is array, length=%{public}ud", arrayLength);
+        for (uint32_t j = 0; j < arrayLength; j++) {
+            NAPI_CALL_BASE(env, napi_get_element(env, args, j, &valueAry), false);
+            NAPI_CALL_BASE(env, napi_typeof(env, valueAry, &valueAryType), false);
+            std::string key;
+            std::string value;
+            if (!ParseHashParam(env, key, value, valueAry)) {
+                APP_LOGD("parse hash param failed");
+                return false;
+            }
+            if (hashParams.find(key) != hashParams.end()) {
+                APP_LOGD("moduleName(%{public}s) is duplicate", key.c_str());
+                return false;
+            }
+            hashParams.emplace(key, value);
+        }
+    }
+    return true;
+}
+
+static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "userId", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "userId", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named userId property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_number) {
+            APP_LOGE("param(userId) type incorrect!");
             return false;
         }
 
-        hashParams.emplace(key, value);
+        userId = Constants::UNSPECIFIED_USERID;
+        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &userId), false);
+        if (userId < Constants::DEFAULT_USERID) {
+            APP_LOGE("param userId(%{public}d) is invalid.", userId);
+            return false;
+        }
     }
+    return true;
+}
 
+static bool ParseInstallFlag(napi_env env, napi_value args, InstallFlag &installFlag)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "installFlag", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "installFlag", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named installFlag property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_number) {
+            APP_LOGE("param(installFlag) type incorrect!");
+            return false;
+        }
+
+        int32_t flag = 0;
+        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &flag), false);
+        installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(flag);
+    }
+    return true;
+}
+
+static bool ParseIsKeepData(napi_env env, napi_value args, bool &isKeepData)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "isKeepData", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "isKeepData", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named isKeepData property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_boolean) {
+            APP_LOGE("param(isKeepData) type incorrect!");
+            return false;
+        }
+
+        NAPI_CALL_BASE(env, napi_get_value_bool(env, property, &isKeepData), false);
+    }
+    return true;
+}
+
+static bool ParseCrowdtestDeadline(napi_env env, napi_value args, int64_t &crowdtestDeadline)
+{
+    bool hasKey = false;
+    napi_has_named_property(env, args, "crowdtestDeadline", &hasKey);
+    if (hasKey) {
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, "crowdtestDeadline", &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named crowdtestDeadline property error!");
+            return false;
+        }
+        napi_valuetype valueType;
+        napi_typeof(env, property, &valueType);
+        if (valueType != napi_number) {
+            APP_LOGE("param(crowdtestDeadline) type incorrect!");
+            return false;
+        }
+        NAPI_CALL_BASE(env, napi_get_value_int64(env, property, &crowdtestDeadline), false);
+    }
     return true;
 }
 
@@ -3110,94 +3220,13 @@ static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_val
         APP_LOGE("args type incorrect!");
         return false;
     }
-    
-    napi_status status;
-    napi_value property = nullptr;
-    bool hasKey = false;
-    napi_has_named_property(env, args, "userId", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "userId", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named userId property error!");
-            return false;
-        }
 
-        napi_typeof(env, property, &valueType);
-        if (valueType != napi_number) {
-            APP_LOGE("param(userId) type incorrect!");
-            return false;
-        }
-
-        int userId = Constants::UNSPECIFIED_USERID;
-        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &userId), false);
-        if (userId < Constants::DEFAULT_USERID) {
-            APP_LOGE("param userId(%{public}d) is invalid.", userId);
-            return false;
-        }
-        installParam.userId = userId;
+    if (!ParseUserId(env, args, installParam.userId) || !ParseInstallFlag(env, args, installParam.installFlag) ||
+        !ParseIsKeepData(env, args, installParam.isKeepData) || !ParseHashParams(env, args, installParam.hashParams) ||
+        !ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline)) {
+        APP_LOGE("ParseInstallParam failed");
+        return false;
     }
-    APP_LOGI("ParseInstallParam userId=%{public}d.", installParam.userId);
-
-    property = nullptr;
-    hasKey = false;
-    napi_has_named_property(env, args, "installFlag", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "installFlag", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named installFlag property error!");
-            return false;
-        }
-
-        napi_typeof(env, property, &valueType);
-        if (valueType != napi_number) {
-            APP_LOGE("param(installFlag) type incorrect!");
-            return false;
-        }
-
-        int installFlag = 0;
-        NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &installFlag), false);
-        installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(installFlag);
-    }
-    APP_LOGI("ParseInstallParam installFlag=%{public}d.", installParam.installFlag);
-
-    property = nullptr;
-    hasKey = false;
-    napi_has_named_property(env, args, "isKeepData", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "isKeepData", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named isKeepData property error!");
-            return false;
-        }
-
-        napi_typeof(env, property, &valueType);
-        if (valueType != napi_boolean) {
-            APP_LOGE("param(isKeepData) type incorrect!");
-            return false;
-        }
-
-        bool isKeepData = false;
-        NAPI_CALL_BASE(env, napi_get_value_bool(env, property, &isKeepData), false);
-        installParam.isKeepData = isKeepData;
-    }
-    APP_LOGI("ParseInstallParam isKeepData=%{public}d.", installParam.isKeepData);
-
-    property = nullptr;
-    hasKey = false;
-    napi_has_named_property(env, args, "hashParams", &hasKey);
-    if (hasKey) {
-        status = napi_get_named_property(env, args, "hashParams", &property);
-        if (status != napi_ok) {
-            APP_LOGE("napi get named hashParams property error!");
-            return false;
-        }
-
-        if (!ParseHashParams(env, installParam.hashParams, property)) {
-            APP_LOGE("parse hash params failed!");
-            return false;
-        }
-    }
-    APP_LOGI("ParseInstallParam hashParams size = %{public}zu.", installParam.hashParams.size());
     return true;
 }
 
@@ -5793,7 +5822,7 @@ bool ParseModuleName(napi_env env, napi_value param, std::string &moduleName)
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo)
 {
     napi_valuetype valueType;
-    NAPI_CALL(env, napi_typeof(env, param, &valueType));
+    NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE("param type mismatch!");
         return false;
@@ -6834,6 +6863,179 @@ napi_value GetDispatcherVersionWrap(
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
+}
+
+static bool InnerGetProfile(napi_env env, AsyncGetProfileInfo &info)
+{
+    APP_LOGD("InnerGetProfile begin");
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("InnerGetProfile can not get iBundleMgr");
+        return false;
+    }
+    std::string bundleName = "";
+    if (!iBundleMgr->ObtainCallingBundleName(bundleName)) {
+        APP_LOGE("InnerGetProfile failed when obtain calling bundelName");
+        return false;
+    }
+    if (info.abilityName.empty() || info.moduleName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty abilityName or moduleName");
+        return false;
+    }
+    Want want;
+    ElementName elementName("", bundleName, info.abilityName, info.moduleName);
+    want.SetElement(elementName);
+    BundleMgrClient client;
+    if (info.type == ProfileType::ABILITY_PROFILE) {
+        AbilityInfo abilityInfo;
+        if (!iBundleMgr->QueryAbilityInfo(want, AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA,
+            Constants::UNSPECIFIED_USERID, abilityInfo)) {
+            APP_LOGE("InnerGetProfile failed due to no ability info");
+            return false;
+        }
+        return client.GetProfileFromSandDir(abilityInfo, info.metadataName, info.profileVec);
+    }
+    if (info.type == ProfileType::EXTENSION_PROFILE) {
+        std::vector<ExtensionAbilityInfo> extensionInfos;
+        if (!iBundleMgr->QueryExtensionAbilityInfos(want,
+            ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA, Constants::UNSPECIFIED_USERID,
+            extensionInfos) || extensionInfos.empty()) {
+            APP_LOGE("InnerGetProfile failed due to no extension ability info");
+            return false;
+        }
+        return client.GetProfileFromSandDir(extensionInfos[0], info.metadataName, info.profileVec);
+    }
+    APP_LOGE("InnerGetProfile failed due to incorrect profile type");
+    return false;
+}
+
+static void ConvertProfile(napi_env env, napi_value result, const std::vector<std::string> &profilrVec)
+{
+    if (profilrVec.empty()) {
+        APP_LOGE("there is no profile in the vector");
+        return;
+    }
+
+    napi_value value = nullptr;
+    for (size_t index = 0; index < profilrVec.size(); ++index) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, profilrVec[index].c_str(), NAPI_AUTO_LENGTH, &value));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index, value));
+    }
+}
+
+napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType)
+{
+    size_t argc = ARGS_SIZE_FOUR;
+    napi_value argv[ARGS_SIZE_FOUR] = { nullptr };
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    APP_LOGD("the count of input arguments is [%{public}zu]", argc);
+
+    std::unique_ptr<AsyncGetProfileInfo> callbackPtr = std::make_unique<AsyncGetProfileInfo>(env);
+    if (callbackPtr == nullptr) {
+        APP_LOGE("GetProfile failed due to null callbackPtr");
+        return nullptr;
+    }
+
+    if (argc < ARGS_SIZE_ONE || argc > ARGS_SIZE_FOUR) {
+        APP_LOGE("the number of input arguments is invalid");
+        return nullptr;
+    }
+    callbackPtr->type = profileType;
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
+        if ((i == 0) && (valueType == napi_string)) {
+            ParseString(env, callbackPtr->moduleName, argv[i]);
+        } else if ((i == ARGS_SIZE_ONE) && (valueType == napi_string)) {
+            ParseString(env, callbackPtr->abilityName, argv[i]);
+        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_string)) {
+            ParseString(env, callbackPtr->metadataName, argv[i]);
+        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+        } else if ((i == ARGS_SIZE_THREE) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+        } else {
+            callbackPtr->errCode = PARAM_TYPE_ERROR;
+        }
+    }
+
+    APP_LOGD("GetProfile finish to parse arguments with errCode %{public}d", callbackPtr->errCode);
+    napi_value promise = nullptr;
+    if (callbackPtr->callback == nullptr) {
+        NAPI_CALL(env, napi_create_promise(env, &callbackPtr->deferred, &promise));
+    } else {
+        NAPI_CALL(env, napi_get_undefined(env, &promise));
+    }
+
+    if (GetProfileAsync(env, promise, callbackPtr) == nullptr) {
+        APP_LOGE("GetProfileAsync failed");
+        return nullptr;
+    }
+
+    callbackPtr.release();
+    return promise;
+}
+
+napi_value GetProfileAsync(napi_env env, napi_value value, std::unique_ptr<AsyncGetProfileInfo> &callbackPtr)
+{
+    napi_value resource = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, "GetProfileAsync", NAPI_AUTO_LENGTH, &resource));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
+        AsyncGetProfileInfo *info = (AsyncGetProfileInfo *)data;
+        if (info == nullptr) {
+            APP_LOGE("GetProfileAsync failed with nullptr");
+            return;
+        }
+        if (!info->errCode) {
+            info->ret = InnerGetProfile(env, *info);
+        }
+    }, [](napi_env env, napi_status status, void *data) {
+        AsyncGetProfileInfo *info = (AsyncGetProfileInfo *)data;
+        std::unique_ptr<AsyncGetProfileInfo> callbackPtr {info};
+        napi_value result[2] = { 0 };
+        if (info->errCode) {
+            NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(info->errCode), &result[0]));
+            NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "type mismatch", NAPI_AUTO_LENGTH, &result[1]));
+        } else {
+            if (info->ret) {
+                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
+                NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, info->profileVec.size(), &result[1]));
+                ConvertProfile(env, result[1], info->profileVec);
+            } else {
+                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
+                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "GetProfile failed",
+                    NAPI_AUTO_LENGTH, &result[1]));
+            }
+        }
+        if (info->deferred) {
+            if (info->ret) {
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, info->deferred, result[1]));
+            } else {
+                NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, info->deferred, result[0]));
+            }
+        } else {
+            napi_value callback = nullptr;
+            napi_value placeHolder = nullptr;
+            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, info->callback, &callback));
+            NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+                sizeof(result) / sizeof(result[0]), result, &placeHolder));
+        }
+    }, (void*)callbackPtr.get(), &callbackPtr->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, callbackPtr->asyncWork));
+    return value;
+}
+
+napi_value GetProfileByAbility(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetProfileByAbility start in NAPI");
+    return GetProfile(env, info, ProfileType::ABILITY_PROFILE);
+}
+
+napi_value GetProfileByExAbility(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetProfileByExAbility start in NAPI");
+    return GetProfile(env, info, ProfileType::EXTENSION_PROFILE);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

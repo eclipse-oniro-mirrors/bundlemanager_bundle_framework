@@ -94,7 +94,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref addCallback = nullptr;
     napi_value addValue = nullptr;
     status = napi_get_named_property(env, args, "add", &addValue);
-    NAPI_ASSERT(env, status == napi_ok, "property name incorrect!");
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
     napi_typeof(env, addValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("add param type mismatch!");
@@ -106,7 +106,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref updateCallback = nullptr;
     napi_value updateValue = nullptr;
     status = napi_get_named_property(env, args, "update", &updateValue);
-    NAPI_ASSERT(env, status == napi_ok, "property name incorrect!");
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
     napi_typeof(env, updateValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("update param type mismatch!");
@@ -118,7 +118,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref removeCallback = nullptr;
     napi_value removeValue = nullptr;
     status = napi_get_named_property(env, args, "remove", &removeValue);
-    NAPI_ASSERT(env, status == napi_ok, "property name incorrect!");
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
     napi_typeof(env, removeValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("remove param type mismatch!");
@@ -560,6 +560,38 @@ static bool InnerJSLauncherServiceOff()
     return true;
 }
 
+static void LauncherServiceOffComplete(napi_env env, napi_status status, void* data)
+{
+    AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+    if (!asyncCallbackInfo->err) {
+        asyncCallbackInfo->ret = InnerJSLauncherServiceOff();
+    }
+    napi_value result[INDEX_TWO] = { 0 };
+    if (asyncCallbackInfo->ret) {
+        napi_create_uint32(env, 0, &result[0]);
+        napi_create_string_utf8(env, "unregister success", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
+    } else {
+        napi_create_uint32(env, INDEX_ONE, &result[0]);
+        napi_create_string_utf8(env, "unregister failed", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->ret) {
+            napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[INDEX_ONE]);
+        } else {
+            napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]);
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
+        napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
+        napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+    }
+    napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
+    delete asyncCallbackInfo;
+    asyncCallbackInfo = nullptr;
+}
+
 static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
 {
     size_t requireArgc = INDEX_ONE;
@@ -584,10 +616,10 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
         } else if ((i == INDEX_ONE) && (valueType == napi_function))  {
             napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callbackRef);
         } else {
-            NAPI_ASSERT(env, false, "type mismatch");
+            asyncCallbackInfo->err = OPERATION_TYPE_MIAMATCH;
+            asyncCallbackInfo->message = "type mismatch";
         }
     }
-
     napi_value promise = nullptr;
     if (command != UNREGISTERCALLBACK) {
         APP_LOGE("Input wrong command");
@@ -597,53 +629,17 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
         }
         return promise;
     }
-
     if (asyncCallbackInfo->callbackRef == nullptr) {
         napi_create_promise(env, &asyncCallbackInfo->deferred, &promise);
     } else {
         napi_get_undefined(env,  &promise);
     }
-
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSLauncherServiceOn", NAPI_AUTO_LENGTH, &resource);
-
     napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
-        },
-        [](napi_env env, napi_status status, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
-            if (!asyncCallbackInfo->err) {
-                asyncCallbackInfo->ret = InnerJSLauncherServiceOff();
-            }
-            napi_value result[INDEX_TWO] = { 0 };
-            if (asyncCallbackInfo->ret) {
-                napi_create_uint32(env, 0, &result[0]);
-                napi_create_string_utf8(env, "unregister success", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
-            } else {
-                napi_create_uint32(env, INDEX_ONE, &result[0]);
-                napi_create_string_utf8(env, "unregister failed", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
-            }
-            if (asyncCallbackInfo->deferred) {
-              if (asyncCallbackInfo->ret) {
-                  napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[INDEX_ONE]);
-              } else {
-                  napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]);
-              }
-            } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
-                napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-                napi_delete_reference(env, asyncCallbackInfo->callbackRef);
-            }
-            napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        },
+        env, nullptr, resource, [](napi_env env, void* data) {}, LauncherServiceOffComplete,
         (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
-
     return promise;
 }
 
@@ -761,7 +757,8 @@ static bool InnerJSGetLauncherAbilityInfos(napi_env env, std::string& bundleName
 
     auto result = launcher->GetAbilityList(bundleName, userId, launcherAbilityInfos);
     if (!result) {
-        APP_LOGE("GetAbilityList call error");
+        APP_LOGE("GetAbilityList call error, bundlename is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
         return false;
     }
     return true;

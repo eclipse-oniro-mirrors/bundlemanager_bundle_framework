@@ -15,7 +15,10 @@ import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
 config("bundlemgr_sdk_config") {
-  include_dirs = [ "include/bundlemgr" ]
+  include_dirs = [
+    "include/bundlemgr",
+    "include/default_app",
+  ]
 }
 
 config("appexecfwk_core_config") {
@@ -78,6 +81,14 @@ ohos_shared_library("appexecfwk_core") {
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
     external_deps += [ "multimedia_image_standard:image_native" ]
+  }
+
+  if (bundle_framework_default_app) {
+    defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+    sources += [
+      "src/default_app/default_app_host.cpp",
+      "src/default_app/default_app_proxy.cpp",
+    ]
   }
 
   if (global_resmgr_enable) {

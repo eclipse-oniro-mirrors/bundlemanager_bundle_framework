@@ -273,20 +273,23 @@ ErrCode HidumpHelper::GetAbilityInfoByName(const std::string &name, std::string 
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
+    nlohmann::json jsonObject;
     for (auto &bundleInfo : bundleInfos) {
         for (auto abilityInfo :  bundleInfo.abilityInfos) {
             if (abilityInfo.name == name) {
-                result.append(abilityInfo.name);
-                result.append(":\n");
-                nlohmann::json jsonObject = abilityInfo;
-                result.append(jsonObject.dump(Constants::DUMP_INDENT));
-                result.append("\n");
-                return ERR_OK;
+                jsonObject[abilityInfo.bundleName][abilityInfo.moduleName] = abilityInfo;
             }
         }
     }
 
-    return ERR_APPEXECFWK_HIDUMP_ERROR;
+    if (jsonObject.is_discarded() || jsonObject.empty()) {
+        APP_LOGE("get ability by abilityName failed.");
+        return ERR_APPEXECFWK_HIDUMP_ERROR;
+    }
+
+    result.append(jsonObject.dump(Constants::DUMP_INDENT));
+    result.append("\n");
+    return ERR_OK;
 }
 
 ErrCode HidumpHelper::GetAllBundleInfo(std::string &result)

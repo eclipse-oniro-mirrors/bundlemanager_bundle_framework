@@ -58,17 +58,17 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bund
     sptr<IAppMgr> appMgrProxy = iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
     if (appMgrProxy == nullptr) {
         APP_LOGE("fail to find the app mgr service to check app is running");
-        return FILEED;
+        return FAILED;
     }
     if (bundleUid < 0) {
         APP_LOGE("bundleUid is error.");
-        return FILEED;
+        return FAILED;
     }
     std::vector<RunningProcessInfo> runningList;
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
     if (result != ERR_OK) {
         APP_LOGE("GetAllRunningProcesses failed.");
-        return FILEED;
+        return FAILED;
     }
     for (RunningProcessInfo info : runningList) {
         if (info.uid_ == bundleUid) {
@@ -84,7 +84,7 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bund
     return NOT_RUNNING;
 #else
     APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
-    return FILEED;
+    return FAILED;
 #endif
 }
 }  // namespace AppExecFwk

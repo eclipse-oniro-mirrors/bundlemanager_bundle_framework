@@ -18,7 +18,6 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <semaphore.h>
 #include <string>
 
 #include "ability_connect_callback_interface.h"
@@ -30,13 +29,13 @@
 #include "install_result.h"
 #include "ipc_skeleton.h"
 #include "iremote_broker.h"
-#include "service_center_connection.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+class ServiceCenterConnection;
 class BundleConnectAbilityMgr : public std::enable_shared_from_this<BundleConnectAbilityMgr> {
 public:
     BundleConnectAbilityMgr();
@@ -64,6 +63,11 @@ public:
      * @param installResult The json string of InstallResult
      */
     void OnServiceCenterCall(std::string installResult);
+
+    /**
+     * @brief Disconnect service center
+     */
+    void DisconnectAbility();
 
 private:
     void Init();
@@ -139,11 +143,6 @@ private:
      * @return Returns true if successfully connected to service center; returns false otherwise.
      */
     bool ConnectAbility(const Want &want, const sptr<IRemoteObject> &callerToken);
-
-    /**
-     * @brief Disconnect service center
-     */
-    void DisconnectAbility();
 
     /**
      * @brief Send atomic service status callback to ability manager service

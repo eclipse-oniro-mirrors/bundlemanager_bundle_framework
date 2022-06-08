@@ -45,6 +45,9 @@
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "element.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -643,6 +646,16 @@ public:
      * @return Returns PreInstallBundleInfos.
      */
     const std::vector<PreInstallBundleInfo>& GetAllPreInstallBundleInfos();
+    /**
+     * @brief Restore uid and gid .
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    bool RestoreUidAndGid();
+    /**
+     * @brief Load all bundle state data from jsonDb .
+     * @return
+     */
+    void LoadAllBundleStateDataFromJsonDb();
 
     bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
@@ -723,6 +736,13 @@ public:
 
     int32_t GetDisposedStatus(const std::string &bundleName);
 
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    bool QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
+        AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const;
+
+    bool GetElement(int32_t userId, const ElementName& elementName, Element& element) const;
+#endif
+
 private:
     /**
      * @brief Init transferStates.
@@ -755,11 +775,6 @@ private:
      * @return Returns true if install state is INSTALL_SUCCESS; returns false otherwise.
      */
     bool IsAppOrAbilityInstalled(const std::string &bundleName) const;
-    /**
-     * @brief Restore uid and gid .
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool RestoreUidAndGid();
     /**
      * @brief Implicit query abilityInfos by the given Want.
      * @param want Indicates the information of the ability.
@@ -801,7 +816,6 @@ private:
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
     void CompatibleOldBundleStateInKvDb();
     void ResetBundleStateData();
-    void LoadAllBundleStateDataFromJsonDb();
 
 private:
     mutable std::mutex bundleInfoMutex_;

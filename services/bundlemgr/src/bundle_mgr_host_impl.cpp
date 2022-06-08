@@ -532,7 +532,7 @@ bool BundleMgrHostImpl::CleanBundleCacheFiles(
         return false;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERNISSION_REMOVECACHEFILE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
         return false;
@@ -1588,6 +1588,11 @@ ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
 bool BundleMgrHostImpl::SetDisposedStatus(const std::string &bundleName, int32_t status)
 {
     APP_LOGD("SetDisposedStatus: bundleName: %{public}s, status: %{public}d", bundleName.c_str(), status);
+    // check permission
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS)) {
+        APP_LOGE("SetDisposedStatus bundleName: %{public}s failed due to lack of permission", bundleName.c_str());
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1599,6 +1604,11 @@ bool BundleMgrHostImpl::SetDisposedStatus(const std::string &bundleName, int32_t
 int32_t BundleMgrHostImpl::GetDisposedStatus(const std::string &bundleName)
 {
     APP_LOGD("GetDisposedStatus: bundleName: %{public}s", bundleName.c_str());
+    // check permission
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS)) {
+        APP_LOGE("GetDisposedStatus bundleName: %{public}s failed due to lack of permission", bundleName.c_str());
+        return Constants::DEFAULT_DISPOSED_STATUS;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1607,28 +1617,22 @@ int32_t BundleMgrHostImpl::GetDisposedStatus(const std::string &bundleName)
     return dataMgr->GetDisposedStatus(bundleName);
 }
 
-bool BundleMgrHostImpl::IsDefaultApplication(const std::string& type)
+bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 {
-    APP_LOGD("begin to call IsDefaultApplication, type : %{public}s.", type.c_str());
-    return false;
+    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
+    if (!ret) {
+        APP_LOGE("query calling bundle name failed");
+        return false;
+    }
+    APP_LOGD("calling bundleName is : %{public}s", bundleName.c_str());
+    return ret;
 }
 
-bool BundleMgrHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 {
-    APP_LOGD("begin to GetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
-    return false;
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetDefaultAppProxy();
 }
-
-bool BundleMgrHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
-{
-    APP_LOGD("begin to SetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
-    return false;
-}
-
-bool BundleMgrHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
-{
-    APP_LOGD("begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s.", userId, type.c_str());
-    return false;
-}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS

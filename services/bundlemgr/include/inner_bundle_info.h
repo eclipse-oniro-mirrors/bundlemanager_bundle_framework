@@ -98,6 +98,7 @@ struct InnerModuleInfo {
     std::vector<Metadata> metadata;
     int32_t upgradeFlag = 0;
     std::vector<std::string> dependencies;
+    std::string compileMode;
 };
 
 struct SkillUri {
@@ -117,12 +118,12 @@ public:
     std::vector<SkillUri> uris;
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
+    bool MatchType(const std::string &type, const std::string &skillUriType) const;
 private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
-    bool MatchType(const std::string &type, const std::string &skillUriType) const;
 };
 
 enum InstallExceptionStatus : int32_t {
@@ -879,6 +880,8 @@ public:
         return Constants::EMPTY_STRING;
     }
 
+    const std::string &GetCurModuleName() const;
+
     std::vector<DefinePermission> GetDefPermissions() const
     {
         std::vector<DefinePermission> defPermissions;
@@ -1535,6 +1538,18 @@ public:
     void SetDisposedStatus(int32_t status);
 
     int32_t GetDisposedStatus() const;
+
+    void SetAppDistributionType(const std::string &appDistributionType);
+
+    std::string GetAppDistributionType() const;
+
+    void SetProvisionType(const std::string &provisionType);
+
+    std::string GetProvisionType() const;
+
+    void SetAppCrowdtestDeadline(int64_t crowdtestDeadline);
+
+    int64_t GetAppCrowdtestDeadline() const;
 
 private:
     void GetBundleWithAbilities(

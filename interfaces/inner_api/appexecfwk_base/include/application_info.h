@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "bundle_constants.h"
 #include "module_info.h"
 #include "parcel.h"
 
@@ -61,6 +62,21 @@ struct CustomizeData : public Parcelable {
 
 struct MetaData {
     std::vector<CustomizeData> customizeData;
+};
+
+struct Resource : public Parcelable {
+    /** the hap bundle name */
+    std::string bundleName;
+
+    /** the hap module name */
+    std::string moduleName;
+
+    /** the resource id in hap */
+    int32_t id = 0;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static Resource *Unmarshalling(Parcel &parcel);
 };
 
 struct ApplicationInfo;
@@ -105,13 +121,19 @@ struct ApplicationInfo : public Parcelable {
 
     uint32_t apiCompatibleVersion = 0;
     int32_t apiTargetVersion = 0;
+    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE;
 
     std::string iconPath;
     int32_t iconId = 0;
+    Resource iconResource;
+
     std::string label;
     int32_t labelId = 0;
+    Resource labelResource;
+
     std::string description;
     int32_t descriptionId = 0;
+    Resource descriptionResource;
 
     bool keepAlive = false;
     bool removable = true;
@@ -140,6 +162,9 @@ struct ApplicationInfo : public Parcelable {
 
     // apl
     std::string appPrivilegeLevel = AVAILABLELEVEL_NORMAL;
+    // provision
+    std::string appDistributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    std::string provisionType = Constants::PROVISION_TYPE_RELEASE;
 
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;
@@ -168,6 +193,9 @@ struct ApplicationInfo : public Parcelable {
     std::string entryModuleName;
     bool isCompressNativeLibs = true;
     std::string signatureKey;
+
+    // switch
+    bool multiProjects = false;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

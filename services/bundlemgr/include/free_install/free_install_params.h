@@ -23,6 +23,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
+    constexpr uint32_t FREE_INSTALL_DONE = 0;
+};
+
 enum UpgradeFlag {
     NOT_UPGRADE = 0,
     SINGLE_UPGRADE = 1,
@@ -30,10 +35,10 @@ enum UpgradeFlag {
 };
 
 enum FreeInstallErrorCode {
-    CONNECT_ERROR = 0x600001,
-    SERVICE_CENTER_CRASH = 0x600002,
-    SERVICE_CENTER_TIMEOUT = 0x600003,
-    UNDEFINED_ERROR = 0x600004,
+    CONNECT_ERROR = 0x820101,
+    SERVICE_CENTER_CRASH = 0x820102,
+    SERVICE_CENTER_TIMEOUT = 0x820103,
+    UNDEFINED_ERROR = 0x820104,
 };
 
 enum ServiceCenterFunction {

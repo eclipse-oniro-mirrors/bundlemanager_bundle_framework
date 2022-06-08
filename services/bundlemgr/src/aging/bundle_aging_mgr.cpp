@@ -44,39 +44,42 @@ void BundleAgingMgr::InitAgingRunner()
     }
     SetEventRunner(agingRunner);
 }
+void BundleAgingMgr::InitAgingTimerInterval()
+{
+    char szTimerThresold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_TIMER_INTERVAL.c_str(), "", szTimerThresold,
+        AgingConstants::THRESHOLD_VAL_LEN);
+    APP_LOGD("ret is %{public}d, szTimerThresold is %{public}d", ret, atoi(szTimerThresold));
+    if (ret <= 0) {
+        APP_LOGE("GetParameter failed");
+        return;
+    }
+    if (strcmp(szTimerThresold, "") != 0) {
+        agingTimerInterval = atoi(szTimerThresold);
+        APP_LOGD("BundleAgingMgr init aging timer success");
+    }
+}
+
+void BundleAgingMgr::InitAgingBatteryThresold()
+{
+    char szBatteryThresold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_BATTER_THRESHOLD.c_str(), "", szBatteryThresold,
+        AgingConstants::THRESHOLD_VAL_LEN);
+    APP_LOGD("ret is %{public}d, szBatteryThresold is %{public}d", ret, atoi(szBatteryThresold));
+    if (ret <= 0) {
+        APP_LOGE("GetParameter failed");
+        return;
+    }
+    if (strcmp(szBatteryThresold, "") != 0) {
+        agingBatteryThresold = atoi(szBatteryThresold);
+        APP_LOGD("BundleAgingMgr init battery threshold success");
+    }
+}
 
 void BundleAgingMgr::InitAgingtTimer()
 {
-    char szTimerThresold[AgingConstants::THRESHOLD_VAL_LEN + 1] = {0};
-    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_TIMER_INTERVAL.c_str(), "", szTimerThresold,
-        AgingConstants::THRESHOLD_VAL_LEN);
-    if (ret <= 0) {
-        APP_LOGE("GetParameter failed");
-        return;
-    }
-    APP_LOGD("ret is %{public}d, szTimerThresold is %{public}d", ret, atoi(szTimerThresold));
-    if (strcmp(szTimerThresold, "") == 0) {
-        agingTimerInterval = AgingConstants::DEFAULT_AGING_TIMER_INTERVAL;
-    } else {
-        agingTimerInterval = atoi(szTimerThresold);
-    }
-
-    char szBatteryThresold[AgingConstants::THRESHOLD_VAL_LEN + 1] = {0};
-    ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_BATTER_THRESHOLD.c_str(), "", szBatteryThresold,
-        AgingConstants::THRESHOLD_VAL_LEN);
-    if (ret <= 0) {
-        APP_LOGE("GetParameter failed");
-        return;
-    }
-    if (strcmp(szBatteryThresold, "") == 0) {
-        agingBatteryThresold = AgingConstants::DEFAULT_AGING_BATTERY_THRESHOLD;
-    } else {
-        agingBatteryThresold = atoi(szBatteryThresold);
-    }
-
-    APP_LOGD("BundleAgingMgr init aging timer, interval : %{public}" PRId64 ", battery threshold: %{public}" PRId64,
-        agingTimerInterval, agingBatteryThresold);
-
+    InitAgingBatteryThresold();
+    InitAgingTimerInterval();
     bool isEventStarted = SendEvent(InnerEvent::Get(EVENT_AGING_NOW), agingTimerInterval);
     if (!isEventStarted) {
         APP_LOGE("faild to send event is not started");
@@ -85,7 +88,6 @@ void BundleAgingMgr::InitAgingtTimer()
             running = false;
         }
     }
-    APP_LOGD("BundleAgingMgr init aging timer success");
 }
 
 int BundleAgingMgr::AgingQueryFormStatistics(std::vector<DeviceUsageStats::BundleActiveModuleRecord>& results,

@@ -117,6 +117,8 @@ private:
      */
     bool HandleGetBundleCachePath(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleScanDir(MessageParcel &data, MessageParcel &reply);
+
     using InstalldFunc = bool (InstalldHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, InstalldFunc> funcMap_;
 };

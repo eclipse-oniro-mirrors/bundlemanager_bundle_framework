@@ -23,7 +23,7 @@ namespace AppExecFwk {
 class AbilityManagerHelper {
 public:
     enum IsRunningResult {
-        FILEED = -1,
+        FAILED = -1,
         NOT_RUNNING = 0,
         RUNNING = 1,
     };

@@ -554,13 +554,12 @@ private:
 
     ErrCode HandleGetDisposedStatus(Parcel &data, Parcel &reply);
 
-    ErrCode HandleIsDefaultApplication(Parcel &data, Parcel &reply);
+    ErrCode HandleObtainCallingBundleName(Parcel &data, Parcel &reply);
 
-    ErrCode HandleGetDefaultApplication(Parcel &data, Parcel &reply);
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    ErrCode HandleGetDefaultAppProxy(Parcel &data, Parcel &reply);
+#endif
 
-    ErrCode HandleSetDefaultApplication(Parcel &data, Parcel &reply);
-
-    ErrCode HandleResetDefaultApplication(Parcel &data, Parcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

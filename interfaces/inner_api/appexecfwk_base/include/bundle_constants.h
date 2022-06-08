@@ -30,7 +30,7 @@ const std::string BUNDLE_PACKFILE_NAME = "pack.info";
 const std::string SYSCAP_NAME = "rpcid.sc";
 const std::string INSTALL_FILE_SUFFIX = ".hap";
 const std::string PROFILE_FILE_SUFFIX = ".json";
-const std::string PROFILE_FILE_COLON = ":";
+const std::string PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
 const std::string FILE_UNDERLINE = "_";
 const std::string ILLEGAL_PATH_FIELD = "../";
@@ -149,7 +149,8 @@ const std::string PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
 const std::string PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
 const std::string PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
-const std::string PERNISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE_FILES";
+const std::string PERMISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE_FILES";
+const std::string PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 
 // install list permissions file
 const std::string INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/permission/install_list_permissions.json";
@@ -246,6 +247,19 @@ constexpr int32_t MAX_APP_INDEX = 100;
 
 // disposed status
 constexpr int32_t DEFAULT_DISPOSED_STATUS = 0;
+
+// app-distribution-type
+const std::string APP_DISTRIBUTION_TYPE_NONE = "none";
+const std::string APP_DISTRIBUTION_TYPE_APP_GALLERY = "app_gallery";
+const std::string APP_DISTRIBUTION_TYPE_ENTERPRISE = "enterprise";
+const std::string APP_DISTRIBUTION_TYPE_OS_INTEGRATION = "os_integration";
+const std::string APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
+// provision type
+const std::string PROVISION_TYPE_DEBUG = "debug";
+const std::string PROVISION_TYPE_RELEASE = "release";
+
+// crowdtesting
+constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

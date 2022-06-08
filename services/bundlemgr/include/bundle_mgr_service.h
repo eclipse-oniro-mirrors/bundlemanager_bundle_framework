@@ -28,6 +28,9 @@
 #include "aging/bundle_aging_mgr.h"
 #include "bundle_connect_ability_mgr.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_host_impl.h"
+#endif
 #include "bundle_clone_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
@@ -85,6 +88,11 @@ public:
      * @return Returns the pointer of IBundleUserMgr object.
      */
     sptr<BundleUserMgrHostImpl> GetBundleUserMgr() const;
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    sptr<IDefaultApp> GetDefaultAppProxy() const;
+#endif
+
     /**
      * @brief Check all user.
      */
@@ -128,10 +136,11 @@ private:
      */
     void AfterRegisterToService();
 
+    void BmsStart();
+
 private:
     bool ready_ = false;
     bool registerToService_ = false;
-    bool needToScan_ = false;
     bool notifyBundleScanStatus = false;
     std::shared_ptr<EventRunner> runner_;
     std::shared_ptr<BMSEventHandler> handler_;
@@ -149,6 +158,10 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     std::shared_ptr<DistributedMonitor> distributedSub_;
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    sptr<DefaultAppHostImpl> defaultAppHostImpl_;
+#endif
 
     DISALLOW_COPY_AND_MOVE(BundleMgrService);
 };

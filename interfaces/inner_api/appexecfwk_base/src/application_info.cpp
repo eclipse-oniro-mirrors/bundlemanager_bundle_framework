@@ -26,7 +26,6 @@
 #include "string_ex.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -85,6 +84,16 @@ const std::string APPLICATION_CPU_ABI = "cpuAbi";
 const std::string APPLICATION_IS_COMPRESS_NATIVE_LIBS = "isCompressNativeLibs";
 const std::string APPLICATION_SIGNATURE_KEY = "signatureKey";
 const std::string APPLICATION_TARGETBUNDLELIST = "targetBundleList";
+const std::string APPLICATION_APP_DISTRIBUTION_TYPE = "appDistributionType";
+const std::string APPLICATION_PROVISION_TYPE = "provisionType";
+const std::string APPLICATION_ICON_RESOURCE = "iconResource";
+const std::string APPLICATION_LABEL_RESOURCE = "labelResource";
+const std::string APPLICATION_DESCRIPTION_RESOURCE = "descriptionResource";
+const std::string APPLICATION_MULTI_PROJECTS = "multiProjects";
+const std::string APPLICATION_CROWDTEST_DEADLINE = "crowdtestDeadline";
+const std::string RESOURCE_BUNDLE_NAME = "bundleName";
+const std::string RESOURCE_MODULE_NAME = "moduleName";
+const std::string RESOURCE_ID = "id";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -149,6 +158,33 @@ bool CustomizeData::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(value));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(extra));
     return true;
+}
+
+bool Resource::ReadFromParcel(Parcel &parcel)
+{
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    id = parcel.ReadInt32();
+    return true;
+}
+
+bool Resource::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, id);
+    return true;
+}
+
+Resource *Resource::Unmarshalling(Parcel &parcel)
+{
+    Resource *resource = new (std::nothrow) Resource;
+    if (resource && !resource->ReadFromParcel(parcel)) {
+        APP_LOGE("read from parcel failed");
+        delete resource;
+        resource = nullptr;
+    }
+    return resource;
 }
 
 bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
@@ -255,6 +291,48 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
     return;
 }
 
+void to_json(nlohmann::json &jsonObject, const Resource &resource)
+{
+    jsonObject = nlohmann::json {
+        {RESOURCE_BUNDLE_NAME, resource.bundleName},
+        {RESOURCE_MODULE_NAME, resource.moduleName},
+        {RESOURCE_ID, resource.id}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, Resource &resource)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        RESOURCE_BUNDLE_NAME,
+        resource.bundleName,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        RESOURCE_MODULE_NAME,
+        resource.moduleName,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        RESOURCE_ID,
+        resource.id,
+        JsonType::NUMBER,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read Resource from database error, error code : %{public}d", parseResult);
+    }
+}
+
 void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
 {
     jsonObject = nlohmann::json {
@@ -311,6 +389,13 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_IS_COMPRESS_NATIVE_LIBS, applicationInfo.isCompressNativeLibs},
         {APPLICATION_SIGNATURE_KEY, applicationInfo.signatureKey},
         {APPLICATION_TARGETBUNDLELIST, applicationInfo.targetBundleList},
+        {APPLICATION_APP_DISTRIBUTION_TYPE, applicationInfo.appDistributionType},
+        {APPLICATION_PROVISION_TYPE, applicationInfo.provisionType},
+        {APPLICATION_ICON_RESOURCE, applicationInfo.iconResource},
+        {APPLICATION_LABEL_RESOURCE, applicationInfo.labelResource},
+        {APPLICATION_DESCRIPTION_RESOURCE, applicationInfo.descriptionResource},
+        {APPLICATION_MULTI_PROJECTS, applicationInfo.multiProjects},
+        {APPLICATION_CROWDTEST_DEADLINE, applicationInfo.crowdtestDeadline},
     };
 }
 
@@ -742,6 +827,62 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_DISTRIBUTION_TYPE,
+        applicationInfo.appDistributionType,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_PROVISION_TYPE,
+        applicationInfo.provisionType,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Resource>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ICON_RESOURCE,
+        applicationInfo.iconResource,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Resource>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_LABEL_RESOURCE,
+        applicationInfo.labelResource,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Resource>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_DESCRIPTION_RESOURCE,
+        applicationInfo.descriptionResource,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_MULTI_PROJECTS,
+        applicationInfo.multiProjects,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int64_t>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_CROWDTEST_DEADLINE,
+        applicationInfo.crowdtestDeadline,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }

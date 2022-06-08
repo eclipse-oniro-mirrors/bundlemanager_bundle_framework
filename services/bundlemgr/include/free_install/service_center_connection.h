@@ -17,22 +17,21 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_FREE_INSTALL_SERVICE_CENTER_CONNECTION_H
 
 #include <condition_variable>
-#include <map>
-#include <semaphore.h>
 
 #include "ability_connect_callback_stub.h"
-#include "free_install_params.h"
+#include "bundle_connect_ability_mgr.h"
 #include "service_center_death_recipient.h"
-#include "target_ability_info.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleConnectAbilityMgr;
+class ServiceCenterDeathRecipient;
+
 class ServiceCenterConnection : public AAFwk::AbilityConnectionStub {
 public:
     ServiceCenterConnection(int32_t &connectState, std::condition_variable &cv,
-        std::map<std::string, FreeInstallParams> &freeInstallParamsMap)
-        : connectState_(connectState), cv_(cv), freeInstallParamsMap_(freeInstallParamsMap)
+        const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr)
+        : connectState_(connectState), cv_(cv), connectAbilityMgr_(connectAbilityMgr)
     {
     }
     virtual ~ServiceCenterConnection();
@@ -55,13 +54,11 @@ public:
     sptr<IRemoteObject> GetRemoteObject();
 
 private:
-    TargetAbilityInfo targetAbilityInfo_;
     sptr<IRemoteObject> serviceCenterRemoteObject_;
-    AAFwk::Want want_;
     int32_t &connectState_;
     std::condition_variable &cv_;
     sptr<ServiceCenterDeathRecipient> deathRecipient_;
-    std::map<std::string, FreeInstallParams> &freeInstallParamsMap_;
+    std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

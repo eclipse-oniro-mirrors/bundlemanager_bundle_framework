@@ -27,6 +27,7 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "../default_app/default_app_interface.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
@@ -968,24 +969,14 @@ public:
         return false;
     }
 
-    virtual bool IsDefaultApplication(const std::string& type)
+    virtual bool ObtainCallingBundleName(std::string &bundleName)
     {
         return false;
     }
 
-    virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+    virtual sptr<IDefaultApp> GetDefaultAppProxy()
     {
-        return false;
-    }
-
-    virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
-    {
-        return false;
-    }
-
-    virtual bool ResetDefaultApplication(int32_t userId, const std::string& type)
-    {
-        return false;
+        return nullptr;
     }
 
     enum Message : uint32_t {
@@ -1074,10 +1065,8 @@ public:
         GET_SANDBOX_APP_BUNDLE_INFO,
         SET_DISPOSED_STATUS,
         GET_DISPOSED_STATUS,
-        IS_DEFAULT_APPLICATION,
-        GET_DEFAULT_APPLICATION,
-        SET_DEFAULT_APPLICATION,
-        RESET_DEFAULT_APPLICATION,
+        QUERY_CALLING_BUNDLE_NAME,
+        GET_DEFAULT_APP_PROXY,
     };
 };
 }  // namespace AppExecFwk

@@ -122,6 +122,9 @@ public:
      */
     ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath);
 
+    ErrCode ScanDir(
+        const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
+
 private:
     /**
      * @brief Get the installd proxy object.

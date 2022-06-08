@@ -22,6 +22,7 @@
 #include "iremote_broker.h"
 
 #include "appexecfwk_errors.h"
+#include "installd/installd_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -112,6 +113,20 @@ public:
      * @return Returns ERR_OK if get cache file path successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath) = 0;
+    /**
+     * @brief Scan dir by scanMode and resultMode. this interface has higher permissions to scan.
+     * @param dir Indicates the directory to be scanned.
+     * @param scanMode Indicates the scan mode.
+     *                 Scan all subfiles and subfolders in the directory in SUB_FILE_ALL mode
+     *                 Scan all subfolders in the directory in SUB_FILE_DIR mode
+     *                 Scan all subfiles in the directory in SUB_FILE_FILE mode
+     * @param resultMode Indicates the result mode.
+     *                 Get absolute path in ABSOLUTE_PATH mode
+     *                 Get relative path in RELATIVE_PATH mode
+     * @return Returns ERR_OK if scan dir successfully; returns error code otherwise.
+     */
+    virtual ErrCode ScanDir(
+        const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) = 0;
 protected:
     enum Message : uint32_t {
         CREATE_BUNDLE_DIR = 1,
@@ -124,7 +139,8 @@ protected:
         REMOVE_DIR,
         GET_BUNDLE_STATS,
         SET_DIR_APL,
-        GET_BUNDLE_CACHE_PATH
+        GET_BUNDLE_CACHE_PATH,
+        SCAN_DIR
     };
 };
 

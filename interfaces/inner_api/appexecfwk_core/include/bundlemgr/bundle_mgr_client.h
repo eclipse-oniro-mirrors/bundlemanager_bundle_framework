@@ -75,6 +75,10 @@ public:
 
     std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId);
 
+    bool GetProfileFromSandDir(ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
+        std::vector<std::string> &profileInfos) const;
+    bool GetProfileFromSandDir(AbilityInfo &abilityInfo, const std::string &metadataName,
+        std::vector<std::string> &profileInfos) const;
     /**
      * @brief Install sandbox application.
      * @param bundleName Indicates the bundle name of the sandbox application to be install.

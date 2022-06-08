@@ -39,7 +39,7 @@ public:
     bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo);
     bool GetHapModuleInfo(const std::string &bundleName, const std::string &hapName, HapModuleInfo &hapModuleInfo);
     bool GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos) const;
     bool GetResConfigFile(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
     bool GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
@@ -48,9 +48,14 @@ public:
     ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId, int32_t &appIndex);
     ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId);
     ErrCode GetSandboxBundleInfo(const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info);
+    bool GetProfileFromSandDir(ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
+        std::vector<std::string> &profileInfos) const;
+    bool GetProfileFromSandDir(AbilityInfo &abilityInfo, const std::string &metadataName,
+        std::vector<std::string> &profileInfos) const;
 
 private:
     ErrCode Connect();
+    bool ConvertResourcePath(std::string &resPath, const std::string &bundleName) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,
         const std ::string &resourcePath, std::vector<std::string> &profileInfos) const;
 #ifdef GLOBAL_RESMGR_ENABLE

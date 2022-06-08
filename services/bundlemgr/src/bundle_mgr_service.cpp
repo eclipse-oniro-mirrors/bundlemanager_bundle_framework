@@ -75,10 +75,6 @@ void BundleMgrService::OnStart()
         return;
     }
 
-    PerfProfile::GetInstance().SetBmsLoadEndTime(GetTickCount());
-    if (!needToScan_) {
-        PerfProfile::GetInstance().Dump();
-    }
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 #ifdef DEVICE_MANAGER_ENABLE
     AddSystemAbilityListener(DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
@@ -161,6 +157,8 @@ bool BundleMgrService::Init()
             APP_LOGE("create data manager fail");
             return false;
         }
+
+        dataMgr_->AddUserId(Constants::DEFAULT_USERID);
     }
     APP_LOGD("create dataManager success");
 
@@ -172,15 +170,7 @@ bool BundleMgrService::Init()
         }
     }
     APP_LOGD("create userMgrHost success");
-    if (!(dataMgr_->LoadDataFromPersistentStorage())) {
-        APP_LOGW("load data from persistent storage fail");
-        dataMgr_->AddUserId(Constants::DEFAULT_USERID);
-        handler_->SendEvent(BMSEventHandler::BUNDLE_SCAN_START);
-        needToScan_ = true;
-    } else {
-        APP_LOGD("Reboot start scan");
-        handler_->SendEvent(BMSEventHandler::BUNDLE_REBOOT_SCAN_START);
-    }
+    BmsStart();
 
     if (cloneMgr_ == nullptr) {
         APP_LOGI("Create BundleCloneMgr");
@@ -206,8 +196,7 @@ bool BundleMgrService::Init()
         agingMgr_ = DelayedSingleton<BundleAgingMgr>::GetInstance();
         if (agingMgr_ == nullptr) {
             APP_LOGE("Create aging manager faild.");
-        }
-        if (agingMgr_) {
+        } else {
             APP_LOGI("Create aging manager success.");
             agingMgr_->InitAgingRunner();
             agingMgr_->InitAgingtTimer();
@@ -220,10 +209,25 @@ bool BundleMgrService::Init()
     APP_LOGI("create BundleConnectAbility success");
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    if (defaultAppHostImpl_ == nullptr) {
+        defaultAppHostImpl_ = new (std::nothrow) DefaultAppHostImpl();
+        if (defaultAppHostImpl_ == nullptr) {
+            APP_LOGE("create DefaultAppHostImpl failed.");
+            return false;
+        }
+    }
+#endif
+
     CheckAllUser();
     ready_ = true;
     APP_LOGI("init end success");
     return true;
+}
+
+void BundleMgrService::BmsStart()
+{
+    handler_->SendEvent(BMSEventHandler::BMS_START);
 }
 
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
@@ -260,9 +264,6 @@ void BundleMgrService::SelfClean()
         if (registerToService_) {
             registerToService_ = false;
         }
-        if (needToScan_) {
-            needToScan_ = false;
-        }
     }
 }
 
@@ -270,6 +271,13 @@ sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
 {
     return userMgrHost_;
 }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
+{
+    return defaultAppHostImpl_;
+}
+#endif
 
 void BundleMgrService::CheckAllUser()
 {
@@ -303,6 +311,9 @@ void BundleMgrService::RegisterService()
         APP_LOGI("register to sam success");
         registerToService_ = true;
     }
+
+    PerfProfile::GetInstance().SetBmsLoadEndTime(GetTickCount());
+    PerfProfile::GetInstance().Dump();
     AfterRegisterToService();
 }
 

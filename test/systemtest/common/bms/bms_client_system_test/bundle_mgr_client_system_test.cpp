@@ -222,7 +222,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_001, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = "";
     BundleMgrClient bundleMgrClient;
@@ -248,7 +248,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_002, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = "resourcePath";
     BundleMgrClient bundleMgrClient;
@@ -274,7 +274,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_003, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "extensionName";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -325,7 +325,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_005, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -358,7 +358,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_006, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -397,11 +397,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_007, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms1";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -442,11 +442,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_008, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -488,7 +488,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_009, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -526,11 +526,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_010, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms1";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -570,7 +570,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_011, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config1";
+    data.resource = "$profile:form_config1";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -606,7 +606,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_012, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config2";
+    data.resource = "$profile:form_config2";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -642,7 +642,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_013, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config3";
+    data.resource = "$profile:form_config3";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -678,10 +678,10 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_014, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     Metadata data1;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config1";
+    data.resource = "$profile:form_config1";
 
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
@@ -713,7 +713,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_015, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = "";
     BundleMgrClient bundleMgrClient;
@@ -739,7 +739,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_016, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = "resourcePath";
     BundleMgrClient bundleMgrClient;
@@ -765,7 +765,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_017, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "extensionName";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -816,7 +816,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_019, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -849,7 +849,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_020, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -888,11 +888,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_021, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms1";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -933,11 +933,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_022, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -979,7 +979,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_023, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1017,11 +1017,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_024, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms1";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -1061,7 +1061,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_025, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config1";
+    data.resource = "$profile:form_config1";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1097,7 +1097,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_026, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config2";
+    data.resource = "$profile:form_config2";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1133,7 +1133,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_027, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config3";
+    data.resource = "$profile:form_config3";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1169,10 +1169,10 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_028, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     Metadata data1;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config1";
+    data.resource = "$profile:form_config1";
 
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
@@ -1204,7 +1204,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_029, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = "";
     BundleMgrClient bundleMgrClient;
@@ -1230,7 +1230,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_030, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = "resourcePath";
     BundleMgrClient bundleMgrClient;
@@ -1256,7 +1256,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_031, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "extensionName";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1307,7 +1307,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_033, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1340,7 +1340,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_034, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1379,11 +1379,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_035, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms1";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -1424,11 +1424,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_036, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -1470,7 +1470,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_037, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1508,11 +1508,11 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_038, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
 
     Metadata data1;
     data1.name = "ohos.extension.forms1";
-    data1.resource = "@profile:shortcuts_config";
+    data1.resource = "$profile:shortcuts_config";
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
@@ -1552,7 +1552,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_039, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config1";
+    data.resource = "$profile:form_config1";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1588,7 +1588,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_040, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config2";
+    data.resource = "$profile:form_config2";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1624,7 +1624,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_041, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config3";
+    data.resource = "$profile:form_config3";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
     BundleMgrClient bundleMgrClient;
@@ -1660,10 +1660,10 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_042, TestSize.Level1)
     std::vector<Metadata> &metadata = info.metadata;
     Metadata data;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config";
+    data.resource = "$profile:form_config";
     Metadata data1;
     data.name = "ohos.extension.forms";
-    data.resource = "@profile:form_config1";
+    data.resource = "$profile:form_config1";
 
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;

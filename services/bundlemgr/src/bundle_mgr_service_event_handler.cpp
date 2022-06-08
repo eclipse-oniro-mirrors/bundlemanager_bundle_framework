@@ -60,21 +60,8 @@ BMSEventHandler::~BMSEventHandler()
 void BMSEventHandler::ProcessEvent(const InnerEvent::Pointer &event)
 {
     switch (event->GetInnerEventId()) {
-        case BUNDLE_SCAN_START: {
-            OnBootStartScanning(Constants::DEFAULT_USERID);
-            SetAllInstallFlag();
-            DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
-            break;
-        }
-        case BUNDLE_SCAN_FINISHED:
-            break;
-        case BMS_START_FINISHED:
-            break;
-        case BUNDLE_REBOOT_SCAN_START: {
-            OnRebootStartScanning();
-            SetAllInstallFlag();
-            DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
-            DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+        case BMS_START: {
+            BmsStartEvent();
             break;
         }
         default:
@@ -83,20 +70,73 @@ void BMSEventHandler::ProcessEvent(const InnerEvent::Pointer &event)
     }
 }
 
-void BMSEventHandler::OnBootStartScanning(int32_t userId)
+void BMSEventHandler::BmsStartEvent()
+{
+    BeforeBmsStart();
+    OnBmsStarting();
+    AfterBmsStart();
+}
+
+void BMSEventHandler::BeforeBmsStart()
 {
     if (!BundlePermissionMgr::Init()) {
         APP_LOGW("BundlePermissionMgr::Init failed");
     }
+
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
+}
+
+void BMSEventHandler::OnBmsStarting()
+{
+    // Judge whether there is install info in the persistent Db
+    if (LoadInstallInfosFromDb()) {
+        APP_LOGD("Load install info from db success");
+        BundleRebootStartEvent();
+        return;
+    }
+
+    BundleBootStartEvent();
+}
+
+void BMSEventHandler::AfterBmsStart()
+{
+    SetAllInstallFlag();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
+    EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
+    BundlePermissionMgr::UnInit();
+}
+
+bool BMSEventHandler::LoadInstallInfosFromDb()
+{
+    APP_LOGD("Load install infos from db");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    return dataMgr->LoadDataFromPersistentStorage();
+}
+
+void BMSEventHandler::BundleBootStartEvent()
+{
+    OnBundleBootStart(Constants::DEFAULT_USERID);
+}
+
+void BMSEventHandler::BundleRebootStartEvent()
+{
+    OnBundleRebootStart();
+    DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+}
+
+void BMSEventHandler::OnBundleBootStart(int32_t userId)
+{
 #ifdef USE_PRE_BUNDLE_PROFILE
     ProcessBootBundleInstallFromPreBundleProFile(userId);
 #else
     ProcessBootBundleInstallFromScan(userId);
 #endif
     PerfProfile::GetInstance().Dump();
-    EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
-    BundlePermissionMgr::UnInit();
 }
 
 void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
@@ -273,25 +313,15 @@ void BMSEventHandler::SetAllInstallFlag() const
     dataMgr->SetInitialUserFlag(true);
 }
 
-void BMSEventHandler::OnRebootStartScanning(int32_t userId)
+void BMSEventHandler::OnBundleRebootStart()
 {
-    if (!BundlePermissionMgr::Init()) {
-        APP_LOGW("BundlePermissionMgr::Init failed");
-    }
-    EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
-    ProcessRebootBundle(userId);
-    EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
-    BundlePermissionMgr::UnInit();
+    ProcessRebootBundle();
 }
 
-void BMSEventHandler::ProcessRebootBundle(int32_t userId)
+void BMSEventHandler::ProcessRebootBundle()
 {
     APP_LOGD("Process reboot bundle start");
-    if (!LoadAllPreInstallBundleInfos()) {
-        APP_LOGE("Load all preInstall bundleInfos failed.");
-        return;
-    }
-
+    LoadAllPreInstallBundleInfos();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
 }
@@ -310,7 +340,7 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
         loadExistData_.emplace(iter.GetBundleName(), iter);
     }
 
-    return true;
+    return !preInstallBundleInfos.empty();
 }
 
 void BMSEventHandler::ProcessRebootBundleInstall()
@@ -373,7 +403,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     for (auto &scanPathIter : scanPathList) {
         APP_LOGD("reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         std::unordered_map<std::string, InnerBundleInfo> infos;
-        if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
+        if (!ParseHapFiles(scanPathIter, true, infos) || infos.empty()) {
             APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
             continue;
         }
@@ -601,10 +631,9 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     return installer.OTAInstallSystemBundle(filePaths, appType);
 }
 
-bool BMSEventHandler::ParseHapFiles(
-    const std::string &hapFilePath, std::unordered_map<std::string, InnerBundleInfo> &infos)
+bool BMSEventHandler::ParseHapFiles(const std::string &hapFilePath,
+    bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     std::vector<std::string> hapFilePathVec { hapFilePath };
     std::vector<std::string> realPaths;
     auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
@@ -637,7 +666,6 @@ bool BMSEventHandler::ParseHapFiles(
 ErrCode BMSEventHandler::CheckAppLabelInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGD("Check APP label");
     ErrCode ret = ERR_OK;
     if (infos.empty()) {
         return ret;
@@ -682,7 +710,7 @@ ErrCode BMSEventHandler::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
         }
     }
-    APP_LOGD("finish check APP label");
+
     return ret;
 }
 }  // namespace AppExecFwk

@@ -113,6 +113,9 @@ public:
      */
     virtual ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath) override;
 
+    virtual ErrCode ScanDir(
+        const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) override;
+
 private:
     ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

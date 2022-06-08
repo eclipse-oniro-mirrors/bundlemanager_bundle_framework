@@ -26,6 +26,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/ability_manager_helper.cpp",
   "${services_path}/bundlemgr/src/base_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/bundle_exception_handler.cpp",
+  "${services_path}/bundlemgr/src/bundle_install_checker.cpp",
   "${services_path}/bundlemgr/src/bundle_installer.cpp",
   "${services_path}/bundlemgr/src/bundle_installer_host.cpp",
   "${services_path}/bundlemgr/src/bundle_installer_manager.cpp",
@@ -67,6 +68,12 @@ free_install = [
   "${services_path}/bundlemgr/src/free_install/service_center_death_recipient.cpp",
   "${services_path}/bundlemgr/src/free_install/service_center_status_callback.cpp",
   "${services_path}/bundlemgr/src/free_install/service_center_status_callback_stub.cpp",
+]
+
+default_app = [
+  "${services_path}/bundlemgr/src/default_app/default_app_db.cpp",
+  "${services_path}/bundlemgr/src/default_app/default_app_host_impl.cpp",
+  "${services_path}/bundlemgr/src/default_app/default_app_mgr.cpp",
 ]
 
 bundle_install_deps = [

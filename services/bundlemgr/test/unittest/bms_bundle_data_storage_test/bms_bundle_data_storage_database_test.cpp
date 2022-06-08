@@ -129,7 +129,8 @@ protected:
                         "versionCode": 0,
                         "versionName": "",
                         "appDistributionType": "none",
-                        "provisionType": "release"
+                        "provisionType": "release",
+                        "crowdtestDeadline": -1
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -405,7 +406,8 @@ protected:
                 "versionCode": 1000000,
                 "versionName": "1.0.0",
                 "appDistributionType": "none",
-                "provisionType": "release"
+                "provisionType": "release",
+                "crowdtestDeadline": -1
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -487,7 +489,8 @@ protected:
                     "versionCode": 0,
                     "versionName": "",
                     "appDistributionType": "none",
-                    "provisionType": "release"
+                    "provisionType": "release",
+                    "crowdtestDeadline": -1
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",

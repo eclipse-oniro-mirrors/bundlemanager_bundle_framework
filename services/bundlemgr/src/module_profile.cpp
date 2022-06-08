@@ -19,6 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_util.h"
 #include "common_profile.h"
 #include "parameter.h"
 #include "string_ex.h"
@@ -202,6 +203,7 @@ struct App {
     bool accessible = false;
     std::vector<std::string> targetBundleList;
     std::map<std::string, DeviceConfig> deviceConfigs;
+    bool multiProjects = false;
 };
 
 struct Module {
@@ -224,6 +226,7 @@ struct Module {
     std::vector<RequestPermission> requestPermissions;
     std::vector<DefinePermission> definePermissions;
     std::vector<std::string> dependencies;
+    std::string compileMode;
 };
 
 struct ModuleJson {
@@ -946,6 +949,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_ROUTER] = deviceConfig;
     }
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_MULTI_PROJECTS,
+        app.multiProjects,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1104,6 +1115,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPILE_MODE,
+        module.compileMode,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1160,10 +1179,11 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
     return true;
 }
 
-bool ToApplicationInfo(const Profile::App &app, ApplicationInfo &applicationInfo,
+bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &applicationInfo,
     bool isPreInstallApp, const BundleExtractor &bundleExtractor)
 {
     APP_LOGD("transform ModuleJson to ApplicationInfo");
+    auto app = moduleJson.app;
     applicationInfo.name = app.bundleName;
     applicationInfo.bundleName = app.bundleName;
 
@@ -1184,6 +1204,12 @@ bool ToApplicationInfo(const Profile::App &app, ApplicationInfo &applicationInfo
     applicationInfo.labelId = app.labelId;
     applicationInfo.description = app.description;
     applicationInfo.descriptionId = app.descriptionId;
+    applicationInfo.iconResource =
+        BundleUtil::GetResource(app.bundleName, moduleJson.module.name, app.iconId);
+    applicationInfo.labelResource =
+        BundleUtil::GetResource(app.bundleName, moduleJson.module.name, app.labelId);
+    applicationInfo.descriptionResource =
+        BundleUtil::GetResource(app.bundleName, moduleJson.module.name, app.descriptionId);
     applicationInfo.targetBundleList = app.targetBundleList;
 
     if (applicationInfo.isSystemApp && isPreInstallApp) {
@@ -1283,6 +1309,7 @@ bool ToApplicationInfo(const Profile::App &app, ApplicationInfo &applicationInfo
         applicationInfo.nativeLibraryPath.c_str(), applicationInfo.cpuAbi.c_str());
 
     applicationInfo.enabled = true;
+    applicationInfo.multiProjects = app.multiProjects;
     return true;
 }
 
@@ -1323,6 +1350,15 @@ uint32_t GetBackgroundModes(const std::vector<std::string> &backgroundModes)
         }
     }
     return backgroundMode;
+}
+
+inline CompileMode ConvertCompileMode(const std::string& compileMode)
+{
+    if (compileMode == Profile::COMPILE_MODE_ES_MODULE) {
+        return CompileMode::ES_MODULE;
+    } else {
+        return CompileMode::JS_BUNDLE;
+    }
 }
 
 bool ToAbilityInfo(const Profile::ModuleJson &moduleJson, const Profile::Ability &ability,
@@ -1369,6 +1405,7 @@ bool ToAbilityInfo(const Profile::ModuleJson &moduleJson, const Profile::Ability
     abilityInfo.startWindowBackground = ability.startWindowBackground;
     abilityInfo.startWindowBackgroundId = ability.startWindowBackgroundId;
     abilityInfo.removeMissionAfterTerminate = ability.removeMissionAfterTerminate;
+    abilityInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
     return true;
 }
 
@@ -1489,6 +1526,7 @@ bool ToInnerModuleInfo(const Profile::ModuleJson &moduleJson, InnerModuleInfo &i
     innerModuleInfo.pages = moduleJson.module.pages;
     GetPermissions(moduleJson, innerModuleInfo, isSystemApp, isPreInstallApp);
     innerModuleInfo.dependencies = moduleJson.module.dependencies;
+    innerModuleInfo.compileMode = moduleJson.module.compileMode;
     innerModuleInfo.isModuleJson = true;
     innerModuleInfo.isStageBasedModel = true;
     // abilities and extensionAbilities store in InnerBundleInfo
@@ -1506,7 +1544,7 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
     bool isPreInstallApp = innerBundleInfo.IsPreInstallApp();
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
-    ToApplicationInfo(moduleJson.app, applicationInfo, isPreInstallApp, bundleExtractor);
+    ToApplicationInfo(moduleJson, applicationInfo, isPreInstallApp, bundleExtractor);
 
     InnerModuleInfo innerModuleInfo;
     ToInnerModuleInfo(moduleJson, innerModuleInfo, applicationInfo.isSystemApp, isPreInstallApp);
