@@ -18,7 +18,7 @@ module_output_path = "bundle_framework/bundlemgrsst"
 ohos_systemtest("BmsLauncherServiceSystemTest") {
   module_out_path = module_output_path
 
-  configs = [ "${libs_path}/libeventhandler:libeventhandler_config" ]
+  configs = [ "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config" ]
 
   cflags = []
   if (target_cpu == "arm") {

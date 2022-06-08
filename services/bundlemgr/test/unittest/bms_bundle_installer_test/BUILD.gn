@@ -56,8 +56,8 @@ ohos_unittest("BmsBundleInstallerTest") {
   sources += [ "bms_bundle_installer_test.cpp" ]
 
   configs = [
-    "${libs_path}/libeventhandler:libeventhandler_config",
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -178,8 +178,8 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   sources += [ "bms_multiple_installer_test.cpp" ]
 
   configs = [
-    "${libs_path}/libeventhandler:libeventhandler_config",
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {

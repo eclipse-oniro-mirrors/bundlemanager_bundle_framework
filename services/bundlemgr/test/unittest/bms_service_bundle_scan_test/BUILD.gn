@@ -50,7 +50,7 @@ ohos_unittest("BmsServiceBundleScanTest") {
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "${libs_path}/libeventhandler:libeventhandler_config",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
