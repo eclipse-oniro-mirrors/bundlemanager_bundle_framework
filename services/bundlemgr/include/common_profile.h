@@ -275,7 +275,7 @@ constexpr uint32_t VALUE_BLUETOOTH_INTERACTION = 1 << 4;
 // 0010 0000 represents multi device connection services
 constexpr uint32_t VALUE_MULTI_DEVICE_CONNECTION = 1 << 5;
 
-// 0100 0000 represents WiFi scanning, connection, transmission services (clone, multi-screen)
+// 0100 0000 represents WiFi scanning, connection, transmission services (multi-screen)
 constexpr uint32_t VALUE_WIFI_INTERACTION = 1 << 6;
 
 // 1000 0000 represents audio call,VOIP service

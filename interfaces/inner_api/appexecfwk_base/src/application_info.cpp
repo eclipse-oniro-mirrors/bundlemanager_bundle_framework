@@ -74,7 +74,6 @@ const std::string APPLICATION_MODULE_SOURCE_DIRS = "moduleSourceDirs";
 const std::string APPLICATION_MODULE_INFOS = "moduleInfos";
 const std::string APPLICATION_META_DATA_CONFIG_JSON = "metaData";
 const std::string APPLICATION_META_DATA_MODULE_JSON = "metadata";
-const std::string APPLICATION_IS_CLONED = "isCloned";
 const std::string APPLICATION_FINGERPRINT = "fingerprint";
 const std::string APPLICATION_ICON = "icon";
 const std::string APPLICATION_FLAGS = "flags";
@@ -379,7 +378,6 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_MODULE_INFOS, applicationInfo.moduleInfos},
         {APPLICATION_META_DATA_CONFIG_JSON, applicationInfo.metaData},
         {APPLICATION_META_DATA_MODULE_JSON, applicationInfo.metadata},
-        {APPLICATION_IS_CLONED, applicationInfo.isCloned},
         {APPLICATION_FINGERPRINT, applicationInfo.fingerprint},
         {APPLICATION_ICON, applicationInfo.icon},
         {APPLICATION_FLAGS, applicationInfo.flags},
@@ -744,14 +742,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         APPLICATION_META_DATA_MODULE_JSON,
         applicationInfo.metadata,
         JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_IS_CLONED,
-        applicationInfo.isCloned,
-        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

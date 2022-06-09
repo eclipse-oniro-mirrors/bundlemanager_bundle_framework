@@ -445,7 +445,6 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[APP_FEATURE] = appFeature_;
     jsonObject[MODULE_FORMS] = formInfos_;
     jsonObject[MODULE_SHORTCUT] = shortcutInfos_;
-    jsonObject[NEW_BUNDLE_NAME] = newBundleName_;
     jsonObject[MODULE_COMMON_EVENT] = commonEvents_;
     jsonObject[INSTALL_MARK] = mark_;
     jsonObject[INNER_BUNDLE_USER_INFOS] = innerBundleUserInfos_;
@@ -1207,14 +1206,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         true,
         ProfileReader::parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        NEW_BUNDLE_NAME,
-        newBundleName_,
-        JsonType::STRING,
-        true,
-        ProfileReader::parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<InstallMark>(jsonObject,
         jsonObjectEnd,
         INSTALL_MARK,
@@ -1478,25 +1469,6 @@ std::optional<std::vector<ExtensionAbilityInfo>> InnerBundleInfo::FindExtensionI
     }
 
     return std::nullopt;
-}
-
-void InnerBundleInfo::FindAbilityInfosForClone(const std::string &bundleName,
-    const std::string &abilityName, int32_t userId, std::vector<AbilityInfo> &abilitys)
-{
-    if (bundleName.empty()) {
-        return;
-    }
-
-    for (auto &ability : baseAbilityInfos_) {
-        APP_LOGE("FindAbilityInfosForClonekey = %{public}s", ability.first.c_str());
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.bundleName == bundleName && (abilityInfo.name == abilityName))) {
-            GetApplicationInfo(
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, abilityInfo.applicationInfo);
-            abilitys.emplace_back(abilityInfo);
-        }
-    }
-    return;
 }
 
 bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)

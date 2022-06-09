@@ -239,15 +239,6 @@ public:
      */
     std::optional<std::vector<ExtensionAbilityInfo>> FindExtensionInfos(const std::string &bundleName) const;
     /**
-     * @brief Find abilityInfo of list for clone by bundle name and ability name.
-     * @param bundleName Indicates the bundle name.
-     * @param abilityName Indicates the ability name
-     * @param userId Indicates the user ID.
-     * @return Returns the AbilityInfo of list if find it; returns null otherwise.
-     */
-    void FindAbilityInfosForClone(const std::string &bundleName,
-        const std::string &abilityName, int32_t userId, std::vector<AbilityInfo> &abilitys);
-    /**
      * @brief Transform the InnerBundleInfo object to string.
      * @return Returns the string object
      */
@@ -918,69 +909,9 @@ public:
         return (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end());
     }
 
-    void SetIsKeepAlive(bool isKeepAlive)
-    {
-        baseBundleInfo_.isKeepAlive = isKeepAlive;
-    }
-
     bool GetIsKeepAlive() const
     {
         return baseBundleInfo_.isKeepAlive;
-    }
-
-    void SetIsNativeApp(bool isNativeApp)
-    {
-        baseBundleInfo_.isNativeApp = isNativeApp;
-    }
-
-    bool GetIsNativeApp() const
-    {
-        return baseBundleInfo_.isNativeApp;
-    }
-
-    void SetApplicationInfoUid()
-    {
-        baseApplicationInfo_.uid = uid_;
-    }
-
-    int GetApplicationInfoUid() const
-    {
-        return baseApplicationInfo_.uid;
-    }
-
-    void SetIsCloned(bool isClone)
-    {
-        baseApplicationInfo_.isCloned = isClone;
-    }
-
-    bool GetisCloned() const
-    {
-        return baseApplicationInfo_.isCloned;
-    }
-
-    void SetNewBundleName(std::string bundlename)
-    {
-        std::string strUid = std::to_string(uid_);
-        newBundleName_ = bundlename + '#' + strUid;
-        APP_LOGI("set clone newBundleName_ %{public}s", newBundleName_.c_str());
-    }
-
-    std::string GetDBKeyBundleName() const
-    {
-        if (!baseApplicationInfo_.isCloned) {
-            return baseApplicationInfo_.bundleName;
-        }
-        return newBundleName_;
-    }
-
-    void SetIsLauncherApp(bool isLauncher)
-    {
-        baseApplicationInfo_.isLauncherApp = isLauncher;
-    }
-
-    bool GetIsLauncherApp() const
-    {
-        return baseApplicationInfo_.isLauncherApp;
     }
 
     void SetIsFreeInstallApp(bool isFreeInstall)
@@ -1577,7 +1508,6 @@ private:
 
     // only using for install or update progress, doesn't need to save to database
     std::string currentPackage_;
-    std::string newBundleName_;
     // Auxiliary property, which is used when the application
     // has been installed when the user is created.
     bool onlyCreateBundleUser_ = false;

@@ -22,7 +22,6 @@
 #endif
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
-#include "bundle_clone_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_mgr_service.h"
@@ -686,12 +685,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
-    std::string cloneName;
-    if (dataMgr_->GetClonedBundleName(bundleName, cloneName)) {
-        APP_LOGI("GetClonedBundleName new name %{public}s ", cloneName.c_str());
-        cloneMgr_->RemoveClonedBundle(bundleName, cloneName);
-    }
-
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -740,7 +733,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    cloneMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetCloneMgr();
     if (!dataMgr_) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -812,18 +804,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // if it is the only module in the bundle
     if (oldInfo.IsOnlyModule(modulePackage)) {
         APP_LOGI("%{public}s is only module", modulePackage.c_str());
-        std::string cloneName;
-        if (dataMgr_->GetClonedBundleName(bundleName, cloneName)) {
-            APP_LOGI("GetClonedBundleName new name %{public}s ", cloneName.c_str());
-            cloneMgr_->RemoveClonedBundle(bundleName, cloneName);
-        }
-
         enableGuard.Dismiss();
         stateGuard.Dismiss();
         if (onlyInstallInUser) {
             return RemoveBundle(oldInfo, installParam.isKeepData);
         }
-
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
     }
 

@@ -19,7 +19,6 @@
 
 #include "ability_manager_client.h"
 #include "ability_info.h"
-#include "bundle_clone_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -192,7 +191,6 @@ public:
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     std::shared_ptr<LauncherService> GetLauncherService() const;
-    std::shared_ptr<BundleCloneMgr> GetBundleCloneMgr() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::vector<std::string> &dependencies,
         InnerBundleInfo &innerBundleInfo) const;
@@ -278,11 +276,6 @@ std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
     return bundleMgrService_->GetDataMgr();
 }
 
-std::shared_ptr<BundleCloneMgr> BmsBundleKitServiceTest::GetBundleCloneMgr() const
-{
-    return bundleMgrService_->GetCloneMgr();
-}
-
 std::shared_ptr<LauncherService> BmsBundleKitServiceTest::GetLauncherService() const
 {
     return launcherService_;
@@ -320,7 +313,6 @@ void BmsBundleKitServiceTest::AddApplicationInfo(const std::string &bundleName, 
     appInfo.cacheDir = CACHE_DIR;
     appInfo.flags = APPLICATION_INFO_FLAGS;
     appInfo.enabled = true;
-    appInfo.isCloned = false;
     appInfo.userDataClearable = userDataClearable;
     appInfo.isSystemApp = isSystemApp;
 }
@@ -1856,64 +1848,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0800, Function | SmallTest |
         EXPECT_EQ(MODULE_NAME_TEST_1, result[0].moduleName);
     }
     MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: QueryAbilityInfosForClone_0100
- * @tc.name: test can get the ability info of list by want
- * @tc.desc: 1.system run normally
- *           2.get ability info successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosForClone_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    Want want;
-    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
-    std::vector<AbilityInfo> result;
-    bool testRet = GetBundleDataMgr()->QueryAbilityInfosForClone(want, result);
-    EXPECT_EQ(true, testRet);
-    CheckAbilityInfos(BUNDLE_NAME_TEST, ABILITY_NAME_TEST,
-        GET_ABILITY_INFO_WITH_PERMISSION | GET_ABILITY_INFO_WITH_METADATA, result);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: QueryAbilityInfosForClone_0200
- * @tc.name: test can not get the ability info by want in which element name is wrong
- * @tc.desc: 1.system run normally
- *           2.get ability info failed
- */
-HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosForClone_0200, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    Want want;
-    want.SetElementName(BUNDLE_NAME_DEMO, ABILITY_NAME_TEST);
-    std::vector<AbilityInfo> result;
-    bool testRet = GetBundleDataMgr()->QueryAbilityInfosForClone(want, result);
-    EXPECT_EQ(false, testRet);
-
-    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_DEMO);
-    testRet = GetBundleDataMgr()->QueryAbilityInfosForClone(want, result);
-    EXPECT_EQ(false, testRet);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: QueryAbilityInfosForClone_0300
- * @tc.name: test can not get the ability info by want which bundle doesn't exist
- * @tc.desc: 1.system run normally
- *           2.get ability info failed
- */
-HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosForClone_0300, Function | SmallTest | Level1)
-{
-    Want want;
-    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
-    std::vector<AbilityInfo> result;
-    bool testRet = GetBundleDataMgr()->QueryAbilityInfosForClone(want, result);
-    EXPECT_EQ(false, testRet);
 }
 
 /**
@@ -3926,36 +3860,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllCommonEventInfo_0500, Function | SmallTe
     std::vector<CommonEventInfo> commonEventInfos;
     GetBundleDataMgr()->GetAllCommonEventInfo(COMMON_EVENT_EVENT_NOT_EXISTS_KEY, commonEventInfos);
     EXPECT_TRUE(commonEventInfos.empty());
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: BundleClone_0200.
- * @tc.name: test the error bundle name can't be cloned.
- * @tc.desc: 1.the bundle name is error.
- *           2.the bundle can't be cloned success.
- */
-HWTEST_F(BmsBundleKitServiceTest, BundleClone_0200, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    auto result = GetBundleCloneMgr()->BundleClone(BUNDLE_NAME_DEMO);
-    EXPECT_FALSE(result);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: RemoveClonedBundle_0200.
- * @tc.name: test the cloned bundle can't be removed when the bundle name is error.
- * @tc.desc: 1. the bundle is already cloned.
- *           2. the cloned bundle can't be removed successfully.
- */
-HWTEST_F(BmsBundleKitServiceTest, RemoveClonedBundle_0200, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    std::string cloneName;
-    GetBundleDataMgr()->GetClonedBundleName(BUNDLE_NAME_TEST, cloneName);
-    auto result = GetBundleCloneMgr()->RemoveClonedBundle(BUNDLE_NAME_TEST, cloneName);
-    EXPECT_FALSE(result);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 

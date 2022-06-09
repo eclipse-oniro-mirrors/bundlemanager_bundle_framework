@@ -352,16 +352,6 @@ public:
         return false;
     }
     /**
-     * @brief Query the AbilityInfo of list for clone by the given Want.
-     * @param want Indicates the information of the ability.
-     * @param abilityInfos Indicates the obtained AbilityInfos object.
-     * @return Returns true if the AbilityInfos is successfully obtained; returns false otherwise.
-     */
-    virtual bool QueryAbilityInfosForClone(const Want &want, std::vector<AbilityInfo> &abilityInfos)
-    {
-        return false;
-    }
-    /**
      * @brief Query the AllAbilityInfos of list by the given userId.
      * @param userId Indicates the information of the user.
      * @param abilityInfos Indicates the obtained AbilityInfos object.
@@ -722,63 +712,12 @@ public:
         return false;
     }
     /**
-     * @brief Get module usage record list in descending order of lastLaunchTime.
-     * @param maxNum the return size of the records, must be in range of 1 to 1000.
-     * @param moduleUsageRecords List of ModuleUsageRecord objects if obtained.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    virtual bool GetModuleUsageRecords(const int32_t number, std::vector<ModuleUsageRecord> &moduleUsageRecords)
-    {
-        return false;
-    }
-    /**
      * @brief Obtains the interface used to install and uninstall bundles.
      * @return Returns a pointer to IBundleInstaller class if exist; returns nullptr otherwise.
      */
     virtual sptr<IBundleInstaller> GetBundleInstaller()
     {
         return nullptr;
-    }
-    /**
-     * @brief Notify a specified ability for ability.
-     * @param bundleName Indicates the bundle name of the ability to ability.
-     * @param abilityName Indicates the name of the ability to ability.
-     * @param launchTime Indicates the ability launchTime.
-     * @param uid Indicates the uid.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    virtual bool NotifyAbilityLifeStatus(
-        const std::string &bundleName, const std::string &abilityName, const int64_t launchTime, const int uid = 0)
-    {
-        return false;
-    }
-    /**
-     * @brief Remove cloned bundle.
-     * @param bundleName Indicates the bundle name of remove cloned bundle.
-     * @param uid Indicates the uid of remove cloned bundle.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    virtual bool RemoveClonedBundle(const std::string &bundleName, const int32_t uid)
-    {
-        return false;
-    }
-    /**
-     * @brief create bundle clone.
-     * @param bundleName Indicates the bundle name of create bundle clone.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    virtual bool BundleClone(const std::string &bundleName)
-    {
-        return false;
-    }
-     /**
-     * @brief Determine whether the application is in the allow list.
-     * @param bundleName Indicates the bundle Names.
-     * @return Returns true if bundle name in the allow list successfully; returns false otherwise.
-     */
-    virtual bool CheckBundleNameInAllowList(const std::string &bundleName)
-    {
-        return false;
     }
     /**
      * @brief Obtains the interface used to create or delete user.
@@ -997,7 +936,6 @@ public:
         GET_BUNDLE_INFOS_BY_METADATA,
         QUERY_ABILITY_INFO,
         QUERY_ABILITY_INFOS,
-        QUERY_ABILITY_INFOS_FOR_CLONE,
         QUERY_ABILITY_INFO_BY_URI,
         QUERY_ABILITY_INFOS_BY_URI,
         QUERY_KEEPALIVE_BUNDLE_INFOS,
@@ -1031,9 +969,6 @@ public:
         GET_SHORTCUT_INFO,
         GET_ALL_COMMON_EVENT_INFO,
         GET_BUNDLE_INSTALLER,
-        REMOVE_CLONED_BUNDLE,
-        BUNDLE_CLONE,
-        CHECK_BUNDLE_NAME_IN_ALLOWLIST,
         QUERY_ABILITY_INFO_MUTI_PARAM,
         QUERY_ABILITY_INFOS_MUTI_PARAM,
         QUERY_ALL_ABILITY_INFOS,

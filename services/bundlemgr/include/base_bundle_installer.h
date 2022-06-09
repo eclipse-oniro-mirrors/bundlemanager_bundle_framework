@@ -21,7 +21,6 @@
 
 #include "nocopyable.h"
 
-#include "bundle_clone_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "event_report.h"
@@ -490,7 +489,6 @@ private:
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
-    std::shared_ptr<BundleCloneMgr> cloneMgr_ = nullptr;
     std::string bundleName_;
     std::string moduleTmpDir_;
     std::string modulePath_;

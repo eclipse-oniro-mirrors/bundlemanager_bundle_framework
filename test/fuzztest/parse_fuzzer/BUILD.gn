@@ -21,7 +21,6 @@ module_output_path = "bundle_framework/fuzz"
 ##############################fuzztest##########################################
 ohos_fuzztest("ParseFuzzTest") {
   module_out_path = module_output_path
-  use_exceptions = true
   fuzz_config_file = "../../fuzztest/parse_fuzzer"
 
   include_dirs = [ "//utils/system/safwk/native/include" ]
@@ -36,9 +35,9 @@ ohos_fuzztest("ParseFuzzTest") {
 
   deps = [
     "${common_path}:libappexecfwk_common",
-    "${services_path}/bundlemgr:bms_target",
     "${services_path}/bundlemgr:bundle_parser",
     "${services_path}/bundlemgr:parser_common",
+    "//third_party/googletest:gtest_main",
   ]
   external_deps = [
     "ability_base:want",

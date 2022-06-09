@@ -845,26 +845,6 @@ bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std:
     return true;
 }
 
-bool BundleMgrProxy::QueryAbilityInfosForClone(const Want &want, std::vector<AbilityInfo> &abilityInfos)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfo due to write MessageParcel fail");
-        return false;
-    }
-    if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write want fail");
-        return false;
-    }
-
-    if (!GetParcelableInfos<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFOS_FOR_CLONE, data, abilityInfos)) {
-        APP_LOGE("fail to QueryAbilityInfos from server");
-        return false;
-    }
-    return true;
-}
-
 bool BundleMgrProxy::QueryAbilityInfoByUri(const std::string &abilityUri, AbilityInfo &abilityInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2059,96 +2039,6 @@ bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vec
         return false;
     }
     return true;
-}
-
-bool BundleMgrProxy::GetModuleUsageRecords(const int32_t number, std::vector<ModuleUsageRecord> &moduleUsageRecords)
-{
-    return false;
-}
-
-bool BundleMgrProxy::NotifyAbilityLifeStatus(
-    const std::string &bundleName, const std::string &abilityName, const int64_t launchTime, const int uid)
-{
-    return false;
-}
-
-bool BundleMgrProxy::CheckBundleNameInAllowList(const std::string &bundleName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin to Check BundleName In AllowList");
-    if (bundleName.empty()) {
-        APP_LOGE("fail to Check BundleName In AllowList due to params empty");
-        return false;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to Check BundleName In AllowList due to write MessageParcel fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to Check BundleName In AllowList due to write bundleName fail");
-        return false;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::BUNDLE_CLONE, data, reply)) {
-        APP_LOGE("fail to Check BundleName In AllowList from server");
-        return false;
-    }
-    return reply.ReadBool();
-}
-
-bool BundleMgrProxy::BundleClone(const std::string &bundleName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin to bundle clone");
-    if (bundleName.empty()) {
-        APP_LOGE("fail to bundle clone due to params empty");
-        return false;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to bundle clone due to write MessageParcel fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to bundle clone due to write bundleName fail");
-        return false;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::BUNDLE_CLONE, data, reply)) {
-        APP_LOGE("fail to bundle clone from server");
-        return false;
-    }
-    return reply.ReadBool();
-}
-
-bool BundleMgrProxy::RemoveClonedBundle(const std::string &bundleName, const int32_t uid)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin to remove cloned bundle");
-    if (bundleName.empty()) {
-        APP_LOGE("fail to remove cloned bundle due to params empty");
-        return false;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to remove cloned bundle due to write MessageParcel fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to remove cloned bundle due to write bundleName fail");
-        return false;
-    }
-    if (!data.WriteInt32(uid)) {
-        APP_LOGE("fail to  remove cloned bundle due to write uid fail");
-        return false;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::REMOVE_CLONED_BUNDLE, data, reply)) {
-        APP_LOGE("fail to remove cloned bundle from server");
-        return false;
-    }
-    return reply.ReadBool();
 }
 
 bool BundleMgrProxy::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,

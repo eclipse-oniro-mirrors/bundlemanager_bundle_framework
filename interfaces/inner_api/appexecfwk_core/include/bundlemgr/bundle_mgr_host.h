@@ -186,13 +186,6 @@ private:
      */
     ErrCode HandleQueryAbilityInfos(Parcel &data, Parcel &reply);
     /**
-     * @brief Handles the QueryAbilityInfosForClone function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleQueryAbilityInfosForClone(Parcel &data, Parcel &reply);
-    /**
      * @brief Handles the QueryAbilityInfoByUri function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -444,26 +437,6 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetAllCommonEventInfo(Parcel &data, Parcel &reply);
-    /**
-     * @brief Handles the HandleRemoveClonedBundle function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleRemoveClonedBundle(Parcel &data, Parcel &reply);
-    /**
-     * @brief Handles the HandleBundleClone function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleBundleClone(Parcel &data, Parcel &reply);
-    /**
-     * @brief Determine whether the application is in the allow list.
-     * @param bundleName Indicates the bundle Names.
-     * @return Returns true if bundle name in the allow list successfully; returns false otherwise.
-     */
-    ErrCode HandleCheckBundleNameInAllowList(Parcel &data, Parcel &reply);
     /**
      * @brief Handles the GetDistributedBundleInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

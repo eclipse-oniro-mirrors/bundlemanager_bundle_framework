@@ -730,52 +730,6 @@ static void BenchmarkTestQueryAbilityInfosByFlags(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestQueryAbilityInfosForClone
- * @tc.desc: Testcase for testing QueryAbilityInfosForClone.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestQueryAbilityInfosForClone(benchmark::State &state)
-{
-    Want want;
-    ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
-    want.SetElement(name);
-
-    std::vector<AbilityInfo> abilityInfos;
-    AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
-    abilityInfos.push_back(info);
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->QueryAbilityInfosForClone(want, abilityInfos);
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestQueryAbilityInfosById
  * @tc.desc: Testcase for testing QueryAllAbilityInfos.
  * @tc.type: FUNC
@@ -1503,39 +1457,6 @@ static void BenchmarkTestGetAllCommonEventInfo(benchmark::State &state)
     }
 }
 
-
-/**
- * @tc.name: BenchmarkTestRemoveClonedBundle
- * @tc.desc: Testcase for testing RemoveClonedBundle.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestRemoveClonedBundle(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->RemoveClonedBundle(bundleName, DEFAULT_USERID);
-    }
-}
-
-/**
- * @tc.name: BenchmarkTestCheckBundleNameInAllowList
- * @tc.desc: Testcase for testing CheckBundleNameInAllowList.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestCheckBundleNameInAllowList(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->CheckBundleNameInAllowList(bundleName);
-    }
-}
-
 /**
  * @tc.name: BenchmarkTestGetDistributedBundleInfo
  * @tc.desc: Testcase for testing GetDistributedBundleInfo.
@@ -1835,7 +1756,6 @@ BENCHMARK(BenchmarkTestQueryAbilityInfo)->Iterations(1000);
 BENCHMARK(BenchmarkTestQueryAbilityInfoByFlags)->Iterations(1000);
 BENCHMARK(BenchmarkTestQueryAbilityInfos)->Iterations(1000);
 BENCHMARK(BenchmarkTestQueryAbilityInfosByFlags)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfosForClone)->Iterations(1000);
 BENCHMARK(BenchmarkTestQueryAbilityInfosById)->Iterations(1000);
 BENCHMARK(BenchmarkTestQueryAbilityInfoByUriAndId)->Iterations(1000);
 BENCHMARK(BenchmarkTestQueryAbilityInfoByUri)->Iterations(1000);
@@ -1865,8 +1785,6 @@ BENCHMARK(BenchmarkTestGetFormsInfoByApp)->Iterations(1000);
 BENCHMARK(BenchmarkTestGetFormsInfoByModule)->Iterations(1000);
 BENCHMARK(BenchmarkTestGetShortcutInfos)->Iterations(1000);
 BENCHMARK(BenchmarkTestGetAllCommonEventInfo)->Iterations(1000);
-BENCHMARK(BenchmarkTestRemoveClonedBundle)->Iterations(1000);
-BENCHMARK(BenchmarkTestCheckBundleNameInAllowList)->Iterations(1000);
 BENCHMARK(BenchmarkTestGetDistributedBundleInfo)->Iterations(1000);
 BENCHMARK(BenchmarkTestGetAppPrivilegeLevel)->Iterations(1000);
 BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByWant)->Iterations(1000);
