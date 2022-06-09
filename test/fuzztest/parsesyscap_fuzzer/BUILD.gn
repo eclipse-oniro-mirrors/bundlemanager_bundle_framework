@@ -37,7 +37,6 @@ ohos_fuzztest("ParseSysCapFuzzTest") {
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:bundle_parser",
     "${services_path}/bundlemgr:parser_common",
-    "//third_party/googletest:gtest_main",
   ]
   external_deps = [
     "ability_base:want",
