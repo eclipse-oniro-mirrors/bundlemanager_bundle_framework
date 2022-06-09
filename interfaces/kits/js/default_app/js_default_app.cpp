@@ -122,6 +122,10 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
     void *data = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     APP_LOGD("argc = [%{public}zu]", argc);
+    if (argc > ARGS_SIZE_TWO) {
+        APP_LOGE("param count invalid.");
+        return WrapVoidToJS(env);
+    }
     DefaultAppInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
@@ -139,6 +143,10 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
         } else {
             asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
         }
+    }
+    if (argc == ARGS_SIZE_ZERO) {
+        APP_LOGE("param is zero.");
+        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
     }
     napi_value promise = nullptr;
     if (asyncCallbackInfo->callback == nullptr) {
