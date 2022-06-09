@@ -39,7 +39,6 @@ constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr size_t ARGS_SIZE_FOUR = 4;
 
-
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 }
