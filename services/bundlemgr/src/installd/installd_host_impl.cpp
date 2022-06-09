@@ -235,30 +235,34 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 ErrCode InstalldHostImpl::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
 {
-    APP_LOGD("InstalldHostImpl::GetBundleStats start");
     if (bundleName.empty()) {
-        APP_LOGE("Calling the function GetBundleStats with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    // index 0 : bundle data size
     std::string path = Constants::BUNDLE_CODE_DIR + Constants::FILE_SEPARATOR_CHAR + bundleName;
     int64_t fileSize = InstalldOperator::GetDiskUsage(path);
-    bundleStats.push_back(fileSize);
-
-    // index 1 : local bundle data size
     std::vector<std::string> bundlePath;
-    for (auto &el : Constants::BUNDLE_EL) {
+    std::vector<std::string> cachePath;
+    int64_t allBundleLocalSize = 0;
+    for (const auto &el : Constants::BUNDLE_EL) {
         std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::FILE_SEPARATOR_CHAR +
             std::to_string(userId) + Constants::BASE + bundleName;
-        bundlePath.push_back(filePath);
-    }
-    std::vector<std::string> cachePath;
-    for (auto &st : bundlePath) {
-        InstalldOperator::TraverseCacheDirectory(st, cachePath);
+        allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
+        if (el == Constants::BUNDLE_EL[1]) {
+            for (const auto &dataDir : Constants::BUNDLE_DATA_DIR) {
+                bundlePath.push_back(filePath + dataDir);
+            }
+        } else {
+            bundlePath.push_back(filePath);
+        }
+        InstalldOperator::TraverseCacheDirectory(filePath, cachePath);
     }
     int64_t bundleLocalSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+    int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
+    // index 0 : bundle data size
+    bundleStats.push_back(fileSize + systemFolderSize);
     int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
     bundleLocalSize -= cacheSize;
+    // index 1 : local bundle data size
     bundleStats.push_back(bundleLocalSize);
 
     // index 2 : distributed data size
@@ -280,7 +284,6 @@ ErrCode InstalldHostImpl::GetBundleStats(
 
     // index 4 : cache size
     bundleStats.push_back(cacheSize);
-    APP_LOGD("InstalldHostImpl::GetBundleStats end");
     return ERR_OK;
 }
 
