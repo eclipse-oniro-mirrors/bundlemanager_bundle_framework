@@ -28,8 +28,8 @@ ohos_systemtest("BmsCompatibleSystemTest") {
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:libbms",
     "${services_path}/test/moduletest/utils:tool_common",
-    "//third_party/googletest:gtest_main",
     "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler",
+    "//third_party/googletest:gtest_main",
   ]
   sources = [ "bms_compatible_system_test.cpp" ]
 
