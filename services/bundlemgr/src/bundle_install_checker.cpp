@@ -109,27 +109,32 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
 
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
-    APP_LOGD("bundle appid is %{private}s", appId.c_str());
-    auto isValid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(), [&](auto &hapVerifyResult) {
-        APP_LOGD("module appid is %{private}s", hapVerifyResult.GetProvisionInfo().appId.c_str());
-        return appId != hapVerifyResult.GetProvisionInfo().appId;
-    });
-    if (isValid) {
-        APP_LOGE("hap files have different signuature info");
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
-    }
-
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
-    APP_LOGD("bundle apl is %{public}s", apl.c_str());
-    isValid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(), [&](auto &hapVerifyResult) {
-        APP_LOGD("module appid is %{private}s", hapVerifyResult.GetProvisionInfo().bundleInfo.apl.c_str());
-        return apl != hapVerifyResult.GetProvisionInfo().bundleInfo.apl;
+    auto appDistributionType = hapVerifyRes[0].GetProvisionInfo().distributionType;
+    auto appProvisionType = hapVerifyRes[0].GetProvisionInfo().type;
+    bool isInvalid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(),
+        [appId, apl, appDistributionType, appProvisionType](const auto &hapVerifyResult) {
+            if (appId != hapVerifyResult.GetProvisionInfo().appId) {
+                APP_LOGE("error: hap files have different appId");
+                return true;
+            }
+            if (apl != hapVerifyResult.GetProvisionInfo().bundleInfo.apl) {
+                APP_LOGE("error: hap files have different apl");
+                return true;
+            }
+            if (appDistributionType != hapVerifyResult.GetProvisionInfo().distributionType) {
+                APP_LOGE("error: hap files have different appDistributionType");
+                return true;
+            }
+            if (appProvisionType != hapVerifyResult.GetProvisionInfo().type) {
+                APP_LOGE("error: hap files have different appProvisionType");
+                return true;
+            }
+        return false;
     });
-    if (isValid) {
-        APP_LOGE("hap files have different apl info");
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
+    if (isInvalid) {
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
-
     APP_LOGD("finish check multiple haps signInfo");
     return ERR_OK;
 }
