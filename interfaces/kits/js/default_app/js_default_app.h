@@ -19,6 +19,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -28,6 +29,7 @@ struct DefaultAppInfo {
 
     int32_t userId = 0;
     std::string type;
+    OHOS::AAFwk::Want want;
     bool result = false;
     int32_t errCode = 0;
     std::string errMsg;
@@ -43,4 +45,4 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info);
 napi_value ResetDefaultApplication(napi_env env, napi_callback_info info);
 }
 }
-#endif
+#endif
