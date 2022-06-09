@@ -27,6 +27,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using namespace OHOS::AAFwk;
+
 namespace {
 constexpr int32_t NO_ERROR = 0;
 constexpr int32_t PARAM_TYPE_ERROR = 1;
@@ -34,6 +36,9 @@ constexpr int32_t PARAM_TYPE_ERROR = 1;
 constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
+constexpr size_t ARGS_SIZE_THREE = 3;
+constexpr size_t ARGS_SIZE_FOUR = 4;
+
 
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
@@ -109,7 +114,7 @@ static void ParseElementName(napi_env env, napi_value args, Want &want)
 {
     APP_LOGD("begin to parse ElementName.");
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, value, &valueType);
+    napi_typeof(env, args, &valueType);
     if (valueType != napi_object) {
         APP_LOGE("args not object type.");
         return;
