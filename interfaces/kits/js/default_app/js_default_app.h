@@ -16,6 +16,7 @@
 #ifndef NAPI_JS_DEFAULT_APP_H
 #define NAPI_JS_DEFAULT_APP_H
 
+#include "bundle_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -30,6 +31,7 @@ struct DefaultAppInfo {
     int32_t userId = 0;
     std::string type;
     OHOS::AAFwk::Want want;
+    BundleInfo bundleInfo;
     bool result = false;
     int32_t errCode = 0;
     std::string errMsg;

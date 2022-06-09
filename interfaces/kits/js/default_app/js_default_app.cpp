@@ -142,6 +142,113 @@ static napi_value WrapVoidToJS(napi_env env)
     return result;
 }
 
+static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const AbilityInfo &abilityInfo)
+{
+    APP_LOGD("begin to ConvertAbilityInfo.");
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, abilityInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "bundleName", nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, abilityInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "moduleName", nModuleName));
+
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "name", nName));
+
+    napi_value nLabel;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.label.c_str(), NAPI_AUTO_LENGTH, &nLabel));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "label", nLabel));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "labelId", nLabelId));
+
+    napi_value nDescription;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, abilityInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "description", nDescription));
+
+    napi_value nDescriptionId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "descriptionId", nDescriptionId));
+
+    napi_value nIconPath;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, abilityInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIconPath));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "icon", nIconPath));
+
+    napi_value nIconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "iconId", nIconId));
+    APP_LOGD("ConvertAbilityInfo done.");
+}
+
+static void ConvertExtensionInfo(napi_env env, napi_value objExtensionInfo, const ExtensionAbilityInfo& extensionInfo)
+{
+    APP_LOGD("begin to ConvertExtensionInfo.");
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, extensionInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, "bundleName", nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, extensionInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, "moduleName", nModuleName));
+
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, "name", nName));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, "labelId", nLabelId));
+
+    napi_value nDescriptionId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, "descriptionId", nDescriptionId));
+
+    napi_value nIconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, "iconId", nIconId));
+    APP_LOGD("ConvertExtensionInfo done.");
+}
+
+static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const BundleInfo &bundleInfo)
+{
+    APP_LOGD("begin to ConvertBundleInfo.");
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "name", nName));
+
+    napi_value nAbilityInfos;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nAbilityInfos));
+    for (size_t idx = 0; idx < bundleInfo.abilityInfos.size(); idx++) {
+        napi_value objAbilityInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAbilityInfo));
+        ConvertAbilityInfo(env, objAbilityInfo, bundleInfo.abilityInfos[idx]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nAbilityInfos, idx, objAbilityInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "abilityInfos", nAbilityInfos));
+
+
+    napi_value nExtensionAbilityInfos;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nExtensionAbilityInfos));
+    for (size_t idx = 0; idx < bundleInfo.extensionInfos.size(); idx++) {
+        napi_value objExtensionInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objExtensionInfo));
+        ConvertExtensionInfo(env, objExtensionInfo, bundleInfo.extensionInfos[idx]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nExtensionAbilityInfos, idx, objExtensionInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objBundleInfo, "extensionAbilityInfo", nExtensionAbilityInfos));
+    APP_LOGD("ConvertBundleInfo done.");
+}
+
 static bool InnerIsDefaultApplication(napi_env env, const std::string& type)
 {
     auto defaultAppProxy = GetDefaultAppProxy();
@@ -150,6 +257,16 @@ static bool InnerIsDefaultApplication(napi_env env, const std::string& type)
         return false;
     }
     return defaultAppProxy->IsDefaultApplication(type);
+}
+
+static bool InnerGetDefaultApplication(napi_env env, int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("defaultAppProxy is null.");
+        return false;
+    }
+    return defaultAppProxy->GetDefaultApplication(userId, type, bundleInfo);
 }
 
 static bool InnerSetDefaultApplication(napi_env env, int32_t userId, const std::string& type, const Want& want)
@@ -259,7 +376,104 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
 
 napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
 {
-    return WrapVoidToJS(env);
+    APP_LOGI("begin to GetDefaultApplication.");
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
+    APP_LOGD("argc = [%{public}zu]", argc);
+    if (argc > ARGS_SIZE_THREE) {
+        APP_LOGE("param count invalid.");
+        return WrapVoidToJS(env);
+    }
+    DefaultAppInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        return WrapVoidToJS(env);
+    }
+    std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[i], &valueType);
+        if ((i == ARGS_SIZE_ZERO) && (valueType == napi_string)) {
+            ParseString(env, argv[i], asyncCallbackInfo->type);
+        } else if (i == ARGS_SIZE_ONE) {
+            if (valueType == napi_number) {
+                napi_get_value_int32(env, argv[i], &asyncCallbackInfo->userId);
+            } else if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            } else {
+                asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
+            }
+        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
+        }
+    }
+    if (argc == ARGS_SIZE_ZERO) {
+        APP_LOGE("param is zero.");
+        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
+    }
+    napi_value promise = nullptr;
+    if (asyncCallbackInfo->callback == nullptr) {
+        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
+    } else {
+        NAPI_CALL(env, napi_get_undefined(env,  &promise));
+    }
+    napi_value resource = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, "GetDefaultApplication", NAPI_AUTO_LENGTH, &resource));
+    NAPI_CALL(env, napi_create_async_work(
+        env, nullptr, resource,
+        [](napi_env env, void *data) {
+            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            if (asyncCallbackInfo->errCode == NO_ERROR) {
+                asyncCallbackInfo->result = InnerGetDefaultApplication(env, asyncCallbackInfo->userId,
+                    asyncCallbackInfo->type, asyncCallbackInfo->bundleInfo);
+            }
+        },
+        [](napi_env env, napi_status status, void *data) {
+            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
+            napi_value result[2] = { 0 };
+            if (asyncCallbackInfo->errCode != NO_ERROR) {
+                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->errCode),
+                    &result[0]));
+                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "type mismatch",
+                    NAPI_AUTO_LENGTH, &result[1]));
+            } else {
+                if (asyncCallbackInfo->result) {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
+                    ConvertBundleInfo(env, result[1], asyncCallbackInfo->bundleInfo);
+                } else {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+                }
+            }
+            if (asyncCallbackInfo->deferred) {
+                if (asyncCallbackInfo->result) {
+                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+                } else {
+                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+                }
+            } else {
+                napi_value callback = nullptr;
+                napi_value placeHolder = nullptr;
+                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
+            }
+        },
+        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    callbackPtr.release();
+    APP_LOGI("call GetDefaultApplication done.");
+    return promise;
 }
 
 napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
