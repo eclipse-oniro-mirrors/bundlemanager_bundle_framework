@@ -86,57 +86,6 @@ static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy()
     return defaultAppProxy;
 }
 
-static std::string GetStringFromNAPI(napi_env env, napi_value value)
-{
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, value, &valueType);
-    if (valueType != napi_string) {
-        APP_LOGE("GetStringFromNAPI type mismatch!");
-        return "";
-    }
-    std::string result;
-    size_t size = 0;
-
-    if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
-        APP_LOGE("can not get string size");
-        return "";
-    }
-    result.reserve(size + NAPI_RETURN_ONE);
-    result.resize(size);
-    if (napi_get_value_string_utf8(env, value, result.data(), (size + NAPI_RETURN_ONE), &size) != napi_ok) {
-        APP_LOGE("can not get string value");
-        return "";
-    }
-    return result;
-}
-
-static void ParseElementName(napi_env env, napi_value args, Want &want)
-{
-    APP_LOGD("begin to parse ElementName.");
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args, &valueType);
-    if (valueType != napi_object) {
-        APP_LOGE("args not object type.");
-        return;
-    }
-    napi_value prop = nullptr;
-    napi_get_named_property(env, args, "bundleName", &prop);
-    std::string bundleName = GetStringFromNAPI(env, prop);
-
-    prop = nullptr;
-    napi_get_named_property(env, args, "moduleName", &prop);
-    std::string moduleName = GetStringFromNAPI(env, prop);
-
-    prop = nullptr;
-    napi_get_named_property(env, args, "abilityName", &prop);
-    std::string abilityName = GetStringFromNAPI(env, prop);
-
-    APP_LOGD("ParseElementName, bundleName:%{public}s, moduleName: %{public}s, abilityName:%{public}s",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
-    ElementName elementName("", bundleName, moduleName, abilityName);
-    want.SetElement(elementName);
-}
-
 static void ParseString(napi_env env, napi_value value, std::string& result)
 {
     napi_valuetype valueType = napi_undefined;
@@ -155,6 +104,36 @@ static void ParseString(napi_env env, napi_value value, std::string& result)
     if (napi_get_value_string_utf8(env, value, result.data(), (size + 1), &size) != napi_ok) {
         APP_LOGE("napi_get_value_string_utf8 error");
     }
+}
+
+static void ParseElementName(napi_env env, napi_value args, Want &want)
+{
+    APP_LOGD("begin to parse ElementName.");
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, args, &valueType);
+    if (valueType != napi_object) {
+        APP_LOGE("args not object type.");
+        return;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, args, "bundleName", &prop);
+    std::string bundleName;
+    ParseString(env, prop, bundleName);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, "moduleName", &prop);
+    std::string moduleName;
+    ParseString(env, prop, moduleName);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, "abilityName", &prop);
+    std::string abilityName;
+    ParseString(env, prop, abilityName);
+
+    APP_LOGD("ParseElementName, bundleName:%{public}s, moduleName: %{public}s, abilityName:%{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    ElementName elementName("", bundleName, moduleName, abilityName);
+    want.SetElement(elementName);
 }
 
 static napi_value WrapVoidToJS(napi_env env)
