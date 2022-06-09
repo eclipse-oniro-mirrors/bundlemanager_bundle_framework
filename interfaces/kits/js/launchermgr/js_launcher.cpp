@@ -254,6 +254,12 @@ static void ConvertElementName(napi_env env, napi_value elementInfo, const OHOS:
         env, napi_create_string_utf8(env, elementName.GetBundleName().c_str(), NAPI_AUTO_LENGTH, &bundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "bundleName", bundleName));
 
+    // wrap moduleName
+    napi_value moduleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetModuleName().c_str(), NAPI_AUTO_LENGTH, &moduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "moduleName", moduleName));
+
     // wrap abilityName
     napi_value abilityName;
     NAPI_CALL_RETURN_VOID(
