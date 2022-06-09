@@ -250,7 +250,7 @@ bool BundleConnectAbilityMgr::GetAbilityMgrProxy()
 }
 
 void BundleConnectAbilityMgr::SendCallBack(
-    int32_t resultCode, const AAFwk::Want &want, int32_t userId, std::string transactId)
+    int32_t resultCode, const AAFwk::Want &want, int32_t userId, const std::string &transactId)
 {
     APP_LOGI("SendCallBack");
     sptr<IRemoteObject> amsCallBack = GetAbilityManagerServiceCallBack(transactId);
@@ -291,6 +291,47 @@ void BundleConnectAbilityMgr::SendCallBack(
             DisconnectAbility();
         }
     }
+}
+
+void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const FreeInstallParams &freeInstallParams)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
+        APP_LOGE("Write interface token failed");
+        return;
+    }
+    if (!data.WriteInt32(FreeInstallErrorCode::SERVICE_CENTER_CRASH)) {
+        APP_LOGE("Write result code error");
+        return;
+    }
+    if (!data.WriteParcelable(&(freeInstallParams.want))) {
+        APP_LOGE("Write want failed");
+        return;
+    }
+    if (!data.WriteInt32(freeInstallParams.userId)) {
+        APP_LOGE("Write userId error");
+        return;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    if (freeInstallParams.callback->SendRequest(FREE_INSTALL_DONE, data, reply, option) != ERR_OK) {
+        APP_LOGE("BundleConnectAbilityMgr::SendCallBack SendRequest failed");
+    }
+}
+
+void BundleConnectAbilityMgr::DeathRecipientSendCallback()
+{
+    APP_LOGI("DeathRecipientSendCallback start");
+    for (auto &it : freeInstallParamsMap_) {
+        SendCallBack(it.first, it.second);
+    }
+    freeInstallParamsMap_.clear();
+
+    connectState_ = ServiceCenterConnectState::DISCONNECTED;
+    serviceCenterRemoteObject_ = nullptr;
+    cv_.notify_all();
+
+    APP_LOGI("DeathRecipientSendCallback end");
 }
 
 void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)

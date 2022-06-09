@@ -30,7 +30,7 @@ void ServiceCenterDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &wptrDe
         APP_LOGE("mgr pointer is nullptr.");
         return;
     }
-    mgr->DisconnectAbility();
+    mgr->DeathRecipientSendCallback();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
