@@ -179,7 +179,7 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
                     NAPI_AUTO_LENGTH, &result[1]));
             } else {
                 NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, defaultAppInfo->result, &result[1]));
+                NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->result, &result[1]));
             }
             if (asyncCallbackInfo->deferred) {
                 if (asyncCallbackInfo->errCode == NO_ERROR) {
