@@ -130,6 +130,7 @@ constexpr int32_t INVALID_ACCESS_TOKEN_ID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t C_UESRID = 200; // clone bundle userId.
 constexpr int32_t BMS_UID = 1000;
+constexpr int32_t FOUNDATION_UID = 5523;
 constexpr int32_t BMS_GID = 1000;
 constexpr int32_t BASE_SYS_UID = 2100;
 constexpr int32_t MAX_SYS_UID = 2899;

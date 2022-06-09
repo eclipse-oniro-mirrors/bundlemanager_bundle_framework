@@ -74,7 +74,7 @@ bool InstalldService::InitDir(const std::string &path)
         APP_LOGI("Path already exists");
         return false;
     }
-    if (!InstalldOperator::MkOwnerDir(path, true, Constants::BMS_UID, Constants::BMS_GID)) {
+    if (!InstalldOperator::MkOwnerDir(path, true, Constants::FOUNDATION_UID, Constants::BMS_GID)) {
         APP_LOGE("create path failed, errno : %{public}d", errno);
         return false;
     }
