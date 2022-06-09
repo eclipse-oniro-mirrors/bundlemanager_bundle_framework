@@ -235,7 +235,6 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "abilityInfos", nAbilityInfos));
 
-
     napi_value nExtensionAbilityInfos;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nExtensionAbilityInfos));
     for (size_t idx = 0; idx < bundleInfo.extensionInfos.size(); idx++) {
