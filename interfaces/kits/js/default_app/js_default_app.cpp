@@ -28,24 +28,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t NAPI_ERR_NO_ERROR = 0;
-constexpr int32_t INVALID_PARAM = 2;
-
 constexpr int32_t NO_ERROR = 0;
 constexpr int32_t PARAM_TYPE_ERROR = 1;
-
-constexpr int32_t PARAM0 = 0;
-constexpr int32_t PARAM1 = 1;
 
 constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
-constexpr size_t ARGS_SIZE_THREE = 3;
-constexpr size_t ARGS_SIZE_FOUR = 4;
-constexpr size_t ARGS_SIZE_FIVE = 5;
-
-constexpr size_t ARGS_ASYNC_COUNT = 1;
-constexpr size_t ARGS_MAX_COUNT = 10;
 
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
