@@ -89,8 +89,6 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS, &BundleMgrHost::HandleQueryAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM,
         &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_FOR_CLONE,
-        &BundleMgrHost::HandleQueryAbilityInfosForClone);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, &BundleMgrHost::HandleQueryAllAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI, &BundleMgrHost::HandleQueryAbilityInfoByUri);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_BY_URI, &BundleMgrHost::HandleQueryAbilityInfosByUri);
@@ -140,10 +138,6 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_FORMS_INFO_BY_MODULE, &BundleMgrHost::HandleGetFormsInfoByModule);
     funcMap_.emplace(IBundleMgr::Message::GET_SHORTCUT_INFO, &BundleMgrHost::HandleGetShortcutInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_COMMON_EVENT_INFO, &BundleMgrHost::HandleGetAllCommonEventInfo);
-    funcMap_.emplace(IBundleMgr::Message::CHECK_BUNDLE_NAME_IN_ALLOWLIST,
-        &BundleMgrHost::HandleCheckBundleNameInAllowList);
-    funcMap_.emplace(IBundleMgr::Message::BUNDLE_CLONE, &BundleMgrHost::HandleBundleClone);
-    funcMap_.emplace(IBundleMgr::Message::REMOVE_CLONED_BUNDLE, &BundleMgrHost::HandleRemoveClonedBundle);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_USER_MGR, &BundleMgrHost::HandleGetBundleUserMgr);
     funcMap_.emplace(IBundleMgr::Message::GET_DISTRIBUTE_BUNDLE_INFO, &BundleMgrHost::HandleGetDistributedBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_PRIVILEGE_LEVEL, &BundleMgrHost::HandleGetAppPrivilegeLevel);
@@ -652,30 +646,6 @@ ErrCode BundleMgrHost::HandleQueryAllAbilityInfos(Parcel &data, Parcel &reply)
     }
     if (ret) {
         if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleQueryAbilityInfosForClone(Parcel &data, Parcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
-    if (want == nullptr) {
-        APP_LOGE("ReadParcelable<want> failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    std::vector<AbilityInfo> abilityInfos;
-    bool ret = QueryAbilityInfosForClone(*want, abilityInfos);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret) {
-        if (!WriteParcelableVector(abilityInfos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -1388,46 +1358,6 @@ ErrCode BundleMgrHost::HandleGetAllCommonEventInfo(Parcel &data, Parcel &reply)
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleCheckBundleNameInAllowList(Parcel &data, Parcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string bundleName = data.ReadString();
-    APP_LOGI("bundleName %{public}s," PRId64, bundleName.c_str());
-    bool ret = CheckBundleNameInAllowList(bundleName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleBundleClone(Parcel &data, Parcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string bundleName = data.ReadString();
-    APP_LOGI("bundleName %{public}s," PRId64, bundleName.c_str());
-    bool ret = BundleClone(bundleName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleRemoveClonedBundle(Parcel &data, Parcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string bundleName = data.ReadString();
-    int32_t uid = data.ReadInt32();
-    APP_LOGI("bundleName %{public}s," PRId64, bundleName.c_str());
-    bool ret = RemoveClonedBundle(bundleName, uid);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

@@ -137,18 +137,6 @@ public:
      */
     void RecycleUidAndGid(const InnerBundleInfo &info);
     /**
-     * @brief Generate cloned uid by cloned bundle.
-     * @param info Indicates the InnerBundleInfo object.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool GenerateCloneUid(InnerBundleInfo &info);
-    /**
-     * @brief save the new cloned inner bundle info by cloned bundle.
-     * @param info Indicates the InnerBundleInfo object.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool SaveNewInfoToDB(const std::string &bundleName, InnerBundleInfo &info);
-    /**
      * @brief Query the AbilityInfo by the given Want.
      * @param want Indicates the information of the ability.
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.
@@ -168,13 +156,6 @@ public:
     bool QueryAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     /**
-     * @brief Query a AbilityInfo of list for clone by the given Want.
-     * @param want Indicates the information of the ability.
-     * @param abilityInfo Indicates the obtained AbilityInfo of list.
-     * @return Returns true if the AbilityInfo is successfully obtained; returns false otherwise.
-     */
-    bool QueryAbilityInfosForClone(const Want &want, std::vector<AbilityInfo> &abilityInfo);
- /**
      * @brief Query all match launcher ability infos by given wants.
      * @param want Indicates the match infomation for abilities.
      * @param info Indicates the bundleInfo.
@@ -507,19 +488,6 @@ public:
      */
     bool UpdateUsageRecordOnModuleRemoved(
         bool keepUsage, const int userId, const std::string &bundleName, const std::string &moduleName) const;
-    /**
-     * @brief Remove cloned bundle info.
-     * @param bundleName Indicates the bundle name of remove cloned bundle.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool RemoveClonedBundleInfo(const std::string &bundleName);
-    /**
-     * @brief Get cloned bundle's name.
-     * @param bundleName Indicates the bundle name of the ontology bundle name.
-     * @param newName Indicates the cloned name to be return.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool GetClonedBundleName(const std::string &bundleName, std::string &newName);
     /**
      * @brief Obtains the PreInstallBundleInfo objects provided by bundleName.
      * @param bundleName Indicates the bundle name of the application.

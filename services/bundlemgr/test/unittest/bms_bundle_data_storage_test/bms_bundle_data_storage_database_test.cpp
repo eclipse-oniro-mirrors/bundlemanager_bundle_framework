@@ -94,7 +94,6 @@ protected:
                             "id": 0,
                             "moduleName": ""
                         },
-                        "isCloned": false,
                         "fingerprint": "",
                         "isCompressNativeLibs": true,
                         "isLauncherApp": false,
@@ -366,7 +365,6 @@ protected:
                     "id": 0,
                     "moduleName": ""
                 },
-                "isCloned": false,
                 "fingerprint":"",
                 "isCompressNativeLibs": true,
                 "isLauncherApp": true,
@@ -449,7 +447,6 @@ protected:
                         "id": 0,
                         "moduleName": ""
                     },
-                    "isCloned": false,
                     "fingerprint":"",
                     "isCompressNativeLibs": true,
                     "isLauncherApp": false,
@@ -812,7 +809,6 @@ protected:
             "isSupportBackup": false,
             "mainAbility": "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility",
             "mainAbilityName": "com.ohos.launcher.MainAbility",
-            "newBundleName": "",
             "shortcutInfos": {
             },
             "skillInfos": {

@@ -218,35 +218,6 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
     return false;
 }
 
-bool BundleDataMgr::SaveNewInfoToDB(const std::string &bundleName, InnerBundleInfo &info)
-{
-    APP_LOGD("SaveNewInfoToDB start");
-    std::string Newbundlename = info.GetDBKeyBundleName();
-    APP_LOGI("to save clone newinfo to DB info:%{public}s", Newbundlename.c_str());
-    if (bundleName.empty()) {
-        APP_LOGW("clone newinfo save info fail, empty bundle name");
-        return false;
-    }
-
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(Newbundlename);
-    if (infoItem != bundleInfos_.end()) {
-        APP_LOGE("clone newinfo bundle info already exist");
-        return false;
-    }
-
-    int64_t time = BundleUtil::GetCurrentTime();
-    APP_LOGI("the clone newinfo bundle install time is %{public}" PRId64, time);
-    info.SetBundleInstallTime(time);
-    if (dataStorage_->SaveStorageBundleInfo(info)) {
-        APP_LOGI("clone newinfo write storage success bundle:%{public}s", Newbundlename.c_str());
-        bundleInfos_.emplace(Newbundlename, info);
-        return true;
-    }
-    APP_LOGD("SaveNewInfoToDB finish");
-    return false;
-}
-
 bool BundleDataMgr::AddNewModuleInfo(
     const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
@@ -526,60 +497,6 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const std::string &bundleName, cons
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
         innerBundleInfo.GetApplicationInfo(
             ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, abilityInfo.applicationInfo);
-    }
-    return true;
-}
-
-bool BundleDataMgr::QueryAbilityInfosForClone(const Want &want, std::vector<AbilityInfo> &abilityInfo)
-{
-    ElementName element = want.GetElement();
-    std::string abilityName = element.GetAbilityName();
-    std::string bundleName = element.GetBundleName();
-    if (bundleName.empty()) {
-        return false;
-    }
-    std::string keyName = bundleName + abilityName;
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGI("bundleInfos_ is empty");
-        return false;
-    }
-    std::string cloneBundleName = bundleName;
-    std::string name = bundleName + "#";
-    for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
-        if (it->first.find(name) != std::string::npos) {
-            cloneBundleName = it->first;
-            APP_LOGI("new name is %{public}s", cloneBundleName.c_str());
-            break;
-        } else {
-            ++it;
-        }
-    }
-    if (cloneBundleName != bundleName) {
-        auto itemClone = bundleInfos_.find(cloneBundleName);
-        if (itemClone == bundleInfos_.end()) {
-            APP_LOGI("bundle:%{public}s not find", bundleName.c_str());
-            return false;
-        }
-        InnerBundleInfo &infoClone = itemClone->second;
-        if (infoClone.IsDisabled()) {
-            return false;
-        }
-
-        int32_t responseUserId = infoClone.GetResponseUserId(GetUserId());
-        infoClone.FindAbilityInfosForClone(bundleName, abilityName, responseUserId, abilityInfo);
-    }
-
-    auto item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        APP_LOGI("bundle:%{public}s not find", bundleName.c_str());
-        return false;
-    }
-    InnerBundleInfo &info = item->second;
-    int32_t responseUserId = info.GetResponseUserId(GetUserId());
-    info.FindAbilityInfosForClone(bundleName, abilityName, responseUserId, abilityInfo);
-    if (abilityInfo.size() == 0) {
-        return false;
     }
     return true;
 }
@@ -1976,11 +1893,6 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     BundleUtil::RemoveHmdfsConfig(innerBundleUserInfo.bundleName);
 }
 
-bool BundleDataMgr::GenerateCloneUid(InnerBundleInfo &info)
-{
-    return true;
-}
-
 bool BundleDataMgr::RestoreUidAndGid()
 {
     for (const auto &info : bundleInfos_) {
@@ -2266,40 +2178,6 @@ bool BundleDataMgr::GetAllCommonEventInfo(const std::string &eventKey,
     }
     APP_LOGE("commonEventInfos find success");
     return true;
-}
-
-bool BundleDataMgr::RemoveClonedBundleInfo(const std::string &bundleName)
-{
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem != bundleInfos_.end()) {
-        APP_LOGI("del bundle name:%{public}s", bundleName.c_str());
-        const InnerBundleInfo &innerBundleInfo = infoItem->second;
-        RecycleUidAndGid(innerBundleInfo);
-        bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
-        if (!ret) {
-            APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
-            return false;
-        }
-        bundleInfos_.erase(bundleName);
-    }
-    return true;
-}
-
-bool BundleDataMgr::GetClonedBundleName(const std::string &bundleName, std::string &newName)
-{
-    APP_LOGI("GetCloneBundleName start");
-    std::string name = bundleName + "#";
-    for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
-        if (it->first.find(name) != std::string::npos) {
-            newName = it->first;
-            APP_LOGI("new name is %{public}s", newName.c_str());
-            return true;
-        } else {
-            ++it;
-        }
-    }
-    return false;
 }
 
 bool BundleDataMgr::SavePreInstallBundleInfo(

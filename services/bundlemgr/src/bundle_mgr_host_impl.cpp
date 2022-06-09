@@ -303,16 +303,6 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
     return dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
 }
 
-bool BundleMgrHostImpl::QueryAbilityInfosForClone(const Want &want, std::vector<AbilityInfo> &abilityInfos)
-{
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
-    return dataMgr->QueryAbilityInfosForClone(want, abilityInfos);
-}
-
 bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     APP_LOGD("start QueryAllAbilityInfos, userId : %{public}d", userId);
@@ -1168,66 +1158,6 @@ bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
     return dataMgr->GetAllCommonEventInfo(eventKey, commonEventInfos);
 }
 
-bool BundleMgrHostImpl::GetModuleUsageRecords(const int32_t number, std::vector<ModuleUsageRecord> &moduleUsageRecords)
-{
-    return false;
-}
-
-bool BundleMgrHostImpl::NotifyAbilityLifeStatus(
-    const std::string &bundleName, const std::string &abilityName, const int64_t launchTime, const int uid)
-{
-    return false;
-}
-
-bool BundleMgrHostImpl::RemoveClonedBundle(const std::string &bundleName, const int32_t uid)
-{
-    APP_LOGI("RemoveClonedBundle begin");
-    if (bundleName.empty()) {
-        APP_LOGI("remove cloned bundle failed");
-        return false;
-    }
-    auto cloneMgr = GetCloneMgrFromService();
-    if (cloneMgr == nullptr) {
-        APP_LOGE("cloneMgr is nullptr");
-        return false;
-    }
-    std::string struid = std::to_string(uid);
-    std::string newName = bundleName + "#" + struid;
-    return cloneMgr->RemoveClonedBundle(bundleName, newName);
-}
-
-bool BundleMgrHostImpl::BundleClone(const std::string &bundleName)
-{
-    APP_LOGI("bundle clone begin");
-    if (bundleName.empty()) {
-        APP_LOGI("bundle clone failed");
-        return false;
-    }
-    auto cloneMgr = GetCloneMgrFromService();
-    if (cloneMgr == nullptr) {
-        APP_LOGE("cloneMgr is nullptr");
-        return false;
-    }
-    auto result = cloneMgr->BundleClone(bundleName);
-    return result;
-}
-
-bool BundleMgrHostImpl::CheckBundleNameInAllowList(const std::string &bundleName)
-{
-    APP_LOGI("Check BundleName In AllowList begin");
-    if (bundleName.empty()) {
-        APP_LOGI("Check BundleName In AllowList failed");
-        return false;
-    }
-    auto cloneMgr = GetCloneMgrFromService();
-    if (cloneMgr == nullptr) {
-        APP_LOGE("cloneMgr is nullptr");
-        return false;
-    }
-    auto result = cloneMgr->CheckBundleNameInAllowList(bundleName);
-    return result;
-}
-
 bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
     DistributedBundleInfo &distributedBundleInfo)
 {
@@ -1320,11 +1250,6 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
         return false;
     }
     return true;
-}
-
-const std::shared_ptr<BundleCloneMgr> BundleMgrHostImpl::GetCloneMgrFromService()
-{
-    return DelayedSingleton<BundleMgrService>::GetInstance()->GetCloneMgr();
 }
 
 const std::shared_ptr<BundleDataMgr> BundleMgrHostImpl::GetDataMgrFromService()
@@ -1467,16 +1392,9 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
     bool ret = dataMgr->GetBundleInfos(GET_BUNDLE_DEFAULT, bundleInfos, userId);
     if (ret) {
         for (auto bundleInfo : bundleInfos) {
-            if (userId == Constants::C_UESRID) {
-                if (bundleInfo.name == bundleName && bundleInfo.applicationInfo.isCloned) {
-                    uid = bundleInfo.uid;
-                    break;
-                }
-            } else {
-                if (bundleInfo.name == bundleName && !bundleInfo.applicationInfo.isCloned) {
-                    uid = bundleInfo.uid;
-                    break;
-                }
+            if (bundleInfo.name == bundleName) {
+                uid = bundleInfo.uid;
+                break;
             }
         }
         APP_LOGD("get bundle uid success");

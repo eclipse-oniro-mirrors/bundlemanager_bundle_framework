@@ -53,9 +53,6 @@ BundleMgrService::~BundleMgrService()
     if (dataMgr_) {
         dataMgr_.reset();
     }
-    if (cloneMgr_) {
-        cloneMgr_.reset();
-    }
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     if (connectAbilityMgr_ != nullptr) {
         connectAbilityMgr_.reset();
@@ -172,12 +169,6 @@ bool BundleMgrService::Init()
     APP_LOGD("create userMgrHost success");
     BmsStart();
 
-    if (cloneMgr_ == nullptr) {
-        APP_LOGI("Create BundleCloneMgr");
-        cloneMgr_ = std::make_shared<BundleCloneMgr>();
-    }
-    APP_LOGI("create BundleCloneMgr success");
-
 #ifdef DEVICE_MANAGER_ENABLE
     if (deviceManager_ == nullptr) {
         APP_LOGI("Create device manager");
@@ -251,11 +242,6 @@ const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbili
     return connectAbilityMgr_;
 }
 #endif
-
-const std::shared_ptr<BundleCloneMgr> BundleMgrService::GetCloneMgr() const
-{
-    return cloneMgr_;
-}
 
 void BundleMgrService::SelfClean()
 {

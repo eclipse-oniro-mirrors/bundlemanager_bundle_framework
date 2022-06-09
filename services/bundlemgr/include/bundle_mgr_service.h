@@ -31,7 +31,6 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_host_impl.h"
 #endif
-#include "bundle_clone_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_installer_host.h"
@@ -63,11 +62,6 @@ public:
      * @return Returns true if the bundle manager service is ready; returns false otherwise.
      */
     bool IsServiceReady() const;
-    /**
-     * @brief Get a shared pointer to the BundleDataMgr object.
-     * @return Returns the pointer of BundleDataMgr object.
-     */
-    const std::shared_ptr<BundleCloneMgr> GetCloneMgr() const;
 
     const std::shared_ptr<BundleDataMgr> GetDataMgr() const;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -145,7 +139,6 @@ private:
     std::shared_ptr<EventRunner> runner_;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
-    std::shared_ptr<BundleCloneMgr> cloneMgr_;
 #ifdef DEVICE_MANAGER_ENABLE
     std::shared_ptr<BmsDeviceManager> deviceManager_;
 #endif

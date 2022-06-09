@@ -19,14 +19,14 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    bool fuzzelCommonEventInfo(const uint8_t* data, size_t size)
+    void fuzzelCommonEventInfo(const uint8_t* data, size_t size)
     {
-        CommonEventInfo commonEventInfo;
-        commonEventInfo.name = reinterpret_cast<const char*>(data);
         Parcel dataMessageParcel;
-        commonEventInfo.Marshalling(dataMessageParcel);
-        auto eventInfo = CommonEventInfo::Unmarshalling(dataMessageParcel);
-        return eventInfo != nullptr;
+        int ret = dataMessageParcel.WriteBuffer(data, size);
+        dataMessageParcel.RewindRead(0);
+        if (ret) {
+            CommonEventInfo::Unmarshalling(dataMessageParcel);
+        }
     }
 }
 

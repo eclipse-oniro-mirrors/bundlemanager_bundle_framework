@@ -184,7 +184,6 @@ struct ApplicationInfo : public Parcelable {
     // Installation-free
     std::vector<std::string> targetBundleList;
 
-    bool isCloned = false;
     std::string fingerprint;
 
     // unused
