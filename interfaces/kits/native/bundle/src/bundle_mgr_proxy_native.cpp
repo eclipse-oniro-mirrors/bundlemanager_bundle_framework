@@ -15,64 +15,90 @@
 
 #include "bundle_mgr_proxy_native.h"
 
-#include "ipc_types.h"
-#include "parcel.h"
-#include "string_ex.h"
-
 #include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-#include "bundle_constants.h"
-#include "securec.h"
+#include "if_system_ability_manager.h"
+#include "ipc_skeleton.h"
+#include "iservice_registry.h"
+#include "string_ex.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-BundleMgrProxyNative::BundleMgrProxyNative(const sptr<IRemoteObject> &impl) : IRemoteProxy<IBundleMgr>(impl)
-{
-    APP_LOGI("create bundle mgr proxy native instance");
+namespace {
+    const std::u16string BMS_PROXY_INTERFACE_TOKEN = u"ohos.appexecfwk.BundleMgr";
 }
 
-BundleMgrProxyNative::~BundleMgrProxyNative()
+sptr<IRemoteObject> BundleMgrProxyNative::GetBmsProxy()
 {
-    APP_LOGI("destroy create bundle mgr proxy native instance");
-}
-
-std::string BundleMgrProxyNative::GetAppIdByBundleName(const std::string &bundleName, const int userId)
-{
-    if (bundleName.empty()) {
-        APP_LOGE("failed to GetAppIdByBundleName due to bundleName empty");
-        return Constants::EMPTY_STRING;
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        APP_LOGE("fail to get samgr.");
+        return nullptr;
     }
-    APP_LOGD("begin to get appId of %{public}s", bundleName.c_str());
+    return samgrProxy->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+}
 
+bool BundleMgrProxyNative::GetBundleNameForUid(const int uid, std::string &bundleName)
+{
+    APP_LOGI("begin to GetBundleNameForUid of %{private}d", uid);
     MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to GetAppIdByBundleName due to write InterfaceToken fail");
-        return Constants::EMPTY_STRING;
+    if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
+        APP_LOGE("fail to GetBundleNameForUid due to write InterfaceToken fail");
+        return false;
     }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("failed to GetAppIdByBundleName due to write bundleName fail");
-        return Constants::EMPTY_STRING;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("failed to GetAppIdByBundleName due to write uid fail");
-        return Constants::EMPTY_STRING;
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE("fail to GetBundleNameForUid due to write uid fail");
+        return false;
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_APPID_BY_BUNDLE_NAME, data, reply)) {
-        APP_LOGE("failed to GetAppIdByBundleName from server");
-        return Constants::EMPTY_STRING;
+    if (!SendTransactCmd(GET_BUNDLE_NAME_FOR_UID, data, reply)) {
+        APP_LOGE("fail to GetBundleNameForUid from server");
+        return false;
     }
-    std::string appId = reply.ReadString();
-    APP_LOGD("appId is %{private}s", appId.c_str());
-    return appId;
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+    bundleName = reply.ReadString();
+    return true;
 }
 
-bool BundleMgrProxyNative::SendTransactCmd(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply)
+bool BundleMgrProxyNative::GetApplicationInfo(
+    const std::string &appName, ApplicationFlag flag, int32_t userId, ApplicationInfo &appInfo)
+{
+    APP_LOGI("begin to GetApplicationInfo : %{private}s", appName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
+        APP_LOGE("fail to GetBundleNameForUid due to write InterfaceToken fail");
+        return false;
+    }
+
+    if (!data.WriteString(appName)) {
+        APP_LOGE("fail to GetApplicationInfo due to write appName fail");
+        return false;
+    }
+    if (!data.WriteInt32(static_cast<int>(flag))) {
+        APP_LOGE("fail to GetApplicationInfo due to write flag fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetApplicationInfo due to write userId fail");
+        return false;
+    }
+
+    if (!GetParcelableInfo<ApplicationInfo>(GET_APPLICATION_INFO, data, appInfo)) {
+        APP_LOGE("fail to GetApplicationInfo from server");
+        return false;
+    }
+    return true;
+}
+
+bool BundleMgrProxyNative::SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
-    sptr<IRemoteObject> remote = Remote();
+    sptr<IRemoteObject> remote = GetBmsProxy();
     if (remote == nullptr) {
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
@@ -82,6 +108,29 @@ bool BundleMgrProxyNative::SendTransactCmd(IBundleMgr::Message code, MessageParc
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
+    return true;
+}
+
+template<typename T>
+bool BundleMgrProxyNative::GetParcelableInfo(uint32_t code, MessageParcel &data, T &parcelableInfo)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        return false;
+    }
+
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+
+    std::unique_ptr<T> info(reply.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return false;
+    }
+    parcelableInfo = *info;
+    APP_LOGD("get parcelable info success");
     return true;
 }
 }  // namespace AppExecFwk

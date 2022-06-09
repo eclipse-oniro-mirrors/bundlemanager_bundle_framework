@@ -109,6 +109,8 @@ void to_json(nlohmann::json &jsonObject, const Packages &packages);
 void from_json(const nlohmann::json &jsonObject, Packages &packages);
 void to_json(nlohmann::json &jsonObject, const BundlePackInfo &bundlePackInfo);
 void from_json(const nlohmann::json &jsonObject, BundlePackInfo &bundlePackInfo);
+void to_json(nlohmann::json &jsonObject, const Resource &resource);
+void from_json(const nlohmann::json &jsonObject, Resource &resource);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

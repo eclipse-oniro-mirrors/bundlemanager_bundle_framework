@@ -26,7 +26,7 @@
 /**
  * @file native_interface_bundle.h
  *
- * @brief Declares the <b>Bundle</b>-specific function, including function for obtaining application ID.
+ * @brief Declares the <b>Bundle</b>-specific function, including function for obtaining application info.
  *
  * @since 9
  * @version 1.0
@@ -37,15 +37,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+struct OH_NativeBundle_ApplicationInfo {
+    char* bundleName;
+
+    char* fingerprint;
+};
+
 /**
- * @brief Obtains the application ID based on the given bundle name.
+ * @brief Obtains the application info based on the The current bundle.
  *
- * @param bundleName Indicates the bundle name of the application.
- * @return Returns the application ID pointer if successfully obtained and needs to be freed; returns nullptr otherwise.
+ * @return Returns the application info.
  * @since 9
  * @version 1.0
  */
-char* OH_NativeBundle_GetAppIdByBundleName(const char* bundleName);
+OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo();
 
 #ifdef __cplusplus
 };

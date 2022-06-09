@@ -18,36 +18,44 @@
 
 #include <string>
 
-#include "iremote_proxy.h"
-
-#include "bundle_mgr_interface.h"
-#include "element_name.h"
-#include "bundle_status_callback_interface.h"
-#include "clean_cache_callback_interface.h"
+#include "application_info.h"
+#include "iremote_broker.h"
+#include "iremote_object.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class BundleMgrProxyNative : public IRemoteProxy<IBundleMgr> {
+class BundleMgrProxyNative {
 public:
-    explicit BundleMgrProxyNative(const sptr<IRemoteObject> &impl);
-    virtual ~BundleMgrProxyNative() override;
+    BundleMgrProxyNative() = default;
+    virtual ~BundleMgrProxyNative() = default;
     /**
-     * @brief Obtains the application ID based on the given bundle name and user ID.
-     * @param bundleName Indicates the bundle name of the application.
+     * @brief Obtains the bundle name of a specified application based on the given UID through the proxy object.
+     * @param uid Indicates the uid.
+     * @param bundleName Indicates the obtained bundle name.
+     * @return Returns true if the bundle name is successfully obtained; returns false otherwise.
+     */
+    bool GetBundleNameForUid(const int uid, std::string &bundleName);
+    /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name through the proxy object.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flag Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
      * @param userId Indicates the user ID.
-     * @return Returns the application ID if successfully obtained; returns empty string otherwise.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns true if the application is successfully obtained; returns false otherwise.
      */
-    virtual std::string GetAppIdByBundleName(const std::string &bundleName, const int userId) override;
+    bool GetApplicationInfo(
+        const std::string &appName, ApplicationFlag flags, int32_t userId, ApplicationInfo &appInfo);
+
+    enum {
+        GET_APPLICATION_INFO = 0,
+        GET_BUNDLE_NAME_FOR_UID = 7,
+    };
 private:
-    /**
-     * @brief Send a command message from the proxy object.
-     * @param code Indicates the message code to be sent.
-     * @param data Indicates the objects to be sent.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns true if message send successfully; returns false otherwise.
-     */
-    bool SendTransactCmd(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply);
-    static inline BrokerDelegator<BundleMgrProxyNative> delegator_;
+    sptr<IRemoteObject> GetBmsProxy();
+    template <typename T>
+    bool GetParcelableInfo(uint32_t code, MessageParcel &data, T &parcelableInfo);
+    bool SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
