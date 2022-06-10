@@ -30,9 +30,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-
 using namespace OHOS::AAFwk;
-
 class ServiceCenterConnection;
 class BundleConnectAbilityMgr : public std::enable_shared_from_this<BundleConnectAbilityMgr> {
 public:
