@@ -159,7 +159,7 @@
       <option name="push" value="stThirdBundle/e21.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e22.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e23.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stVendorBundle/bmsVendorBundle1.hap -> /system/vendor/" src="res" />
+      <option name="push" value="stVendorBundle/bmsVendorBundle1.hap -> /system/app/" src="res" />
       <option name="push" value="stVendorBundle/bmsVendorBundle2.hap -> /system/vendor/" src="res" />
       <option name="push" value="stVendorBundle/bmsVendorBundle3.hap -> /system/vendor/" src="res" />
     </preparer>

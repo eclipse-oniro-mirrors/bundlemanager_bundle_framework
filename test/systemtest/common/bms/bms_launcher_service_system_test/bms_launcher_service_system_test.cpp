@@ -790,7 +790,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0100, Function | Mediu
 
     LauncherAbilityInfo launcherAbilityInfo;
     LauncherService launcherservice;
-    bool result = launcherservice.GetAbilityInfo(want, 100, launcherAbilityInfo);
+    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfo);
     EXPECT_TRUE(result);
     CheckAbilityInfo(launcherAbilityInfo, abilityName);
     EXPECT_EQ(launcherAbilityInfo.elementName.GetAbilityName(), abilityName);
@@ -823,7 +823,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0200, Function | Mediu
 
     LauncherAbilityInfo launcherAbilityInfos;
     LauncherService launcherservice;
-    bool result = launcherservice.GetAbilityInfo(want, 100, launcherAbilityInfos);
+    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfos);
     EXPECT_TRUE(result) << "Get ability list failed";
     EXPECT_EQ(launcherAbilityInfos.elementName.GetAbilityName(), abilityName);
     Uninstall(bundleName, message);
@@ -858,7 +858,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0300, Function | Mediu
     LauncherAbilityInfo launcherAbilityInfo;
     LauncherService launcherservice;
 
-    bool result = launcherservice.GetAbilityInfo(want, 100, launcherAbilityInfo);
+    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfo);
     EXPECT_FALSE(result);
     GTEST_LOG_(INFO) << "END GetAbilityInfo_0300";
 }
@@ -887,7 +887,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0400, Function | Mediu
 
     LauncherAbilityInfo launcherAbilityInfo;
     LauncherService launcherservice;
-    bool result = launcherservice.GetAbilityInfo(want, 100, launcherAbilityInfo);
+    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(launcherAbilityInfo.elementName.GetAbilityName(), abilityName);
 
@@ -925,7 +925,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0500, Function | Mediu
 
     LauncherAbilityInfo launcherAbilityInfos;
     LauncherService launcherservice;
-    bool result = launcherservice.GetAbilityInfo(want, 100, launcherAbilityInfos);
+    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfos);
     EXPECT_TRUE(result);
     EXPECT_EQ(launcherAbilityInfos.elementName.GetAbilityName(), abilityName);
     Uninstall(bundleName, message);
@@ -1128,7 +1128,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0200, Function | Med
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = bundleName;
     abilityInfo.name = abilityName;
-    abilityInfo.package = "com.third.hiworld.example.h1";
+    abilityInfo.package = "bmsThirdBundle1";
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
