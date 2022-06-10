@@ -126,11 +126,9 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_INFO, &BundleMgrHost::HandleGetAbilityInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_INFO_WITH_MODULE_NAME,
         &BundleMgrHost::HandleGetAbilityInfoWithModuleName);
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
     funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_PIXELMAP_ICON, &BundleMgrHost::HandleGetAbilityPixelMapIcon);
     funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_PIXELMAP_ICON_WITH_MODULE_NAME,
         &BundleMgrHost::HandleGetAbilityPixelMapIconWithModuleName);
-#endif
     funcMap_.emplace(IBundleMgr::Message::DUMP_INFOS, &BundleMgrHost::HandleDumpInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INSTALLER, &BundleMgrHost::HandleGetBundleInstaller);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_FORMS_INFO, &BundleMgrHost::HandleGetAllFormsInfo);
@@ -1180,9 +1178,9 @@ ErrCode BundleMgrHost::HandleGetAbilityInfoWithModuleName(Parcel &data, Parcel &
     return ERR_OK;
 }
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
 ErrCode BundleMgrHost::HandleGetAbilityPixelMapIcon(Parcel &data, Parcel &reply)
 {
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
@@ -1201,11 +1199,13 @@ ErrCode BundleMgrHost::HandleGetAbilityPixelMapIcon(Parcel &data, Parcel &reply)
         APP_LOGE("pixelMap write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+#endif
     return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleGetAbilityPixelMapIconWithModuleName(Parcel &data, Parcel &reply)
 {
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
@@ -1226,9 +1226,9 @@ ErrCode BundleMgrHost::HandleGetAbilityPixelMapIconWithModuleName(Parcel &data, 
         APP_LOGE("pixelMap write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+#endif
     return ERR_OK;
 }
-#endif
 
 ErrCode BundleMgrHost::HandleGetBundleInstaller(Parcel &data, Parcel &reply)
 {

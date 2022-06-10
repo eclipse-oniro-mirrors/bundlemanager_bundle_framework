@@ -16,6 +16,7 @@
 #include <benchmark/benchmark.h>
 
 #include "bundle_constants.h"
+#include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_host.h"
 #include "clean_cache_callback_host.h"
@@ -31,12 +32,14 @@ using namespace OHOS::AppExecFwk;
 
 namespace {
 const std::string SYSTEM_SETTINGS_BUNDLE_NAME = "com.ohos.settings";
-const std::string bundleName = "com.ohos.contactsdataability";
-const std::string abilityName = "com.ohos.contactsdataability.MainAbility";
-const std::string hapFilePath = "/data/test/benchmark/test.hap";
+const std::string BUNDLE_NAME = "com.ohos.contactsdataability";
+const std::string ABILITY_NAME = "com.ohos.contactsdataability.MainAbility";
+const std::string HAP_FILE = "/data/test/benchmark/test.hap";
 const std::string MODULE_NAME_TEST = "entry";
 const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
-const int32_t DEFAULT_USERID = 100;
+constexpr int32_t DEFAULT_USERID = 100;
+constexpr int32_t BENCHMARK_TIMES = 1000;
+
 class BundleStatusCallbackImpl : public BundleStatusCallbackHost {
 public:
     BundleStatusCallbackImpl() = default;
@@ -106,24 +109,16 @@ sptr<IBundleMgr> BundleMgrProxyTest::GetBundleMgrProxy()
 
 static void BenchmarkTestGetApplicationInfoByFlag(benchmark::State &state)
 {
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     ApplicationInfo appInfo;
-    appInfo.name = "com.ohos.contactsdataability";
-    appInfo.bundleName = "com.ohos.contactsdataability";
-    appInfo.versionName = "1.0";
-    appInfo.iconPath = "$media:icon";
-    appInfo.description = "dataability_description";
-    appInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    appInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    appInfo.apiReleaseType = "Release";
-    appInfo.deviceId = "PHONE-001";
-    appInfo.entityType = "unsppecified";
-    appInfo.vendor = "ohos";
-    appInfo.nativeLibraryPath = "libs/arm";
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetApplicationInfo in loop */
+        bundleMgrProxy->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO,
+            Constants::DEFAULT_USERID, appInfo);
     }
 }
 
@@ -133,28 +128,18 @@ static void BenchmarkTestGetApplicationInfoByFlag(benchmark::State &state)
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-
 static void BenchmarkTestGetApplicationInfoByUserId(benchmark::State &state)
 {
-    int userId = Constants::DEFAULT_USERID;
     int32_t flags = 0;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     ApplicationInfo appInfo;
-    appInfo.name = "com.ohos.contactsdataability";
-    appInfo.bundleName = "com.ohos.contactsdataability";
-    appInfo.versionName = "1.0";
-    appInfo.iconPath = "$media:icon";
-    appInfo.description = "dataability_description";
-    appInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    appInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    appInfo.apiReleaseType = "Release";
-    appInfo.deviceId = "PHONE-001";
-    appInfo.entityType = "unsppecified";
-    appInfo.vendor = "ohos";
-    appInfo.nativeLibraryPath = "libs/arm";
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetApplicationInfo(bundleName, flags, userId, appInfo);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetApplicationInfo in loop */
+        bundleMgrProxy->GetApplicationInfo(BUNDLE_NAME, flags, DEFAULT_USERID, appInfo);
     }
 }
 
@@ -167,26 +152,16 @@ static void BenchmarkTestGetApplicationInfoByUserId(benchmark::State &state)
 
 static void BenchmarkTestGetApplicationInfosByApplicationFlag(benchmark::State &state)
 {
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<ApplicationInfo> appInfos;
-    ApplicationInfo appInfo;
-    appInfo.name = "com.ohos.contactsdataability";
-    appInfo.bundleName = "com.ohos.contactsdataability";
-    appInfo.versionName = "1.0";
-    appInfo.iconPath = "$media:icon";
-    appInfo.description = "dataability_description";
-    appInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    appInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    appInfo.apiReleaseType = "Release";
-    appInfo.deviceId = "PHONE-001";
-    appInfo.entityType = "unsppecified";
-    appInfo.vendor = "ohos";
-    appInfo.nativeLibraryPath = "libs/arm";
-    appInfos.push_back(appInfo);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetApplicationInfos(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, appInfos);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetApplicationInfos in loop */
+        bundleMgrProxy->GetApplicationInfos(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, DEFAULT_USERID,
+            appInfos);
     }
 }
 
@@ -199,27 +174,16 @@ static void BenchmarkTestGetApplicationInfosByApplicationFlag(benchmark::State &
 
 static void BenchmarkTestGetApplicationInfosByFlags(benchmark::State &state)
 {
-    int userId = Constants::DEFAULT_USERID;
     int32_t flags = 0;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<ApplicationInfo> appInfos;
-    ApplicationInfo appInfo;
-    appInfo.name = "com.ohos.contactsdataability";
-    appInfo.bundleName = "com.ohos.contactsdataability";
-    appInfo.versionName = "1.0";
-    appInfo.iconPath = "$media:icon";
-    appInfo.description = "dataability_description";
-    appInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    appInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    appInfo.apiReleaseType = "Release";
-    appInfo.deviceId = "PHONE-001";
-    appInfo.entityType = "unsppecified";
-    appInfo.vendor = "ohos";
-    appInfo.nativeLibraryPath = "libs/arm";
-    appInfos.push_back(appInfo);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetApplicationInfos(flags, userId, appInfos);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetApplicationInfos in loop */
+        bundleMgrProxy->GetApplicationInfos(flags, DEFAULT_USERID, appInfos);
     }
 }
 
@@ -234,31 +198,13 @@ static void BenchmarkTestGetBundleInfoByBundleFlag(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, info);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleInfo in loop */
+        bundleMgrProxy->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, info);
     }
 }
 
@@ -268,37 +214,18 @@ static void BenchmarkTestGetBundleInfoByBundleFlag(benchmark::State &state)
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-
 static void BenchmarkTestGetBundleInfoByFlags(benchmark::State &state)
 {
     int32_t flags = 0;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetBundleInfo(bundleName, flags, info);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleInfo in loop */
+        bundleMgrProxy->GetBundleInfo(BUNDLE_NAME, flags, info);
     }
 }
 
@@ -313,32 +240,12 @@ static void BenchmarkTestGetBundleInfosByBundleFlag(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<BundleInfo> bundleInfos;
-    BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
-    bundleInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleInfos in loop */
         bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
     }
 }
@@ -355,32 +262,12 @@ static void BenchmarkTestGetBundleInfosByFlags(benchmark::State &state)
     int32_t flags = 0;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<BundleInfo> bundleInfos;
-    BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
-    bundleInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleInfos in loop */
         bundleMgrProxy->GetBundleInfos(flags, bundleInfos);
     }
 }
@@ -394,11 +281,13 @@ static void BenchmarkTestGetBundleInfosByFlags(benchmark::State &state)
 
 static void BenchmarkTestGetUidByBundleName(benchmark::State &state)
 {
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetUidByBundleName(bundleName, userId);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetUidByBundleName in loop */
+        bundleMgrProxy->GetUidByBundleName(BUNDLE_NAME, DEFAULT_USERID);
     }
 }
 
@@ -408,14 +297,15 @@ static void BenchmarkTestGetUidByBundleName(benchmark::State &state)
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-
 static void BenchmarkTestGetAppIdByBundleName(benchmark::State &state)
 {
-    int userId = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetAppIdByBundleName(bundleName, userId);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAppIdByBundleName in loop */
+        bundleMgrProxy->GetAppIdByBundleName(BUNDLE_NAME, DEFAULT_USERID);
     }
 }
 
@@ -425,15 +315,16 @@ static void BenchmarkTestGetAppIdByBundleName(benchmark::State &state)
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-
 static void BenchmarkTestGetBundleNameForUid(benchmark::State &state)
 {
-    int uid = Constants::INVALID_UID;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    std::string bundleName = "com.ohos.contactsdataability";
+    std::string bundleName;
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleNameForUid in loop */
+        bundleMgrProxy->GetBundleNameForUid(Constants::INVALID_UID, bundleName);
     }
 }
 
@@ -443,16 +334,17 @@ static void BenchmarkTestGetBundleNameForUid(benchmark::State &state)
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-
 static void BenchmarkTestGetBundlesForUid(benchmark::State &state)
 {
-    int uid = Constants::INVALID_UID;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<std::string> bundleNames;
-    bundleNames.push_back(bundleName);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetBundlesForUid(uid, bundleNames);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundlesForUid in loop */
+        bundleMgrProxy->GetBundlesForUid(Constants::INVALID_UID, bundleNames);
     }
 }
 
@@ -462,15 +354,16 @@ static void BenchmarkTestGetBundlesForUid(benchmark::State &state)
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-
 static void BenchmarkTestGetNameForUid(benchmark::State &state)
 {
-    int uid = Constants::INVALID_UID;
     std::string name;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetNameForUid(uid, name);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetNameForUid in loop */
+        bundleMgrProxy->GetNameForUid(Constants::INVALID_UID, name);
     }
 }
 
@@ -485,7 +378,10 @@ static void BenchmarkTestGetAppType(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAppType in loop */
         bundleMgrProxy->GetAppType(SYSTEM_SETTINGS_BUNDLE_NAME);
     }
 }
@@ -499,11 +395,13 @@ static void BenchmarkTestGetAppType(benchmark::State &state)
 
 static void BenchmarkTestCheckIsSystemAppByUid(benchmark::State &state)
 {
-    int uid = Constants::DEFAULT_USERID;
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->CheckIsSystemAppByUid(uid);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call CheckIsSystemAppByUid in loop */
+        bundleMgrProxy->CheckIsSystemAppByUid(Constants::INVALID_UID);
     }
 }
 
@@ -517,34 +415,13 @@ static void BenchmarkTestCheckIsSystemAppByUid(benchmark::State &state)
 static void BenchmarkTestGetBundleInfosByMetaData(benchmark::State &state)
 {
     std::vector<BundleInfo> bundleInfos;
-    BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
-    bundleInfos.push_back(info);
     std::string metadata = "string";
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleInfosByMetaData in loop */
         bundleMgrProxy->GetBundleInfosByMetaData(metadata, bundleInfos);
     }
 }
@@ -560,35 +437,14 @@ static void BenchmarkTestQueryAbilityInfo(benchmark::State &state)
 {
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
     want.SetElement(name);
-
     AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        /* @tc.steps: step1.call QueryAbilityInfo in loop */
         bundleMgrProxy->QueryAbilityInfo(want, info);
     }
 }
@@ -604,36 +460,19 @@ static void BenchmarkTestQueryAbilityInfoByFlags(benchmark::State &state)
 {
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
     want.SetElement(name);
 
     AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
+
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->QueryAbilityInfo(want, 0, 0, info);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryAbilityInfo in loop */
+        bundleMgrProxy->QueryAbilityInfo(want, 0, DEFAULT_USERID, info);
     }
 }
 
@@ -648,37 +487,18 @@ static void BenchmarkTestQueryAbilityInfos(benchmark::State &state)
 {
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
     want.SetElement(name);
 
     std::vector<AbilityInfo> abilityInfos;
-    AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
-    abilityInfos.push_back(info);
+
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryAbilityInfos in loop */
         bundleMgrProxy->QueryAbilityInfos(want, abilityInfos);
     }
 }
@@ -694,38 +514,18 @@ static void BenchmarkTestQueryAbilityInfosByFlags(benchmark::State &state)
 {
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
     want.SetElement(name);
 
     std::vector<AbilityInfo> abilityInfos;
-    AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
-    abilityInfos.push_back(info);
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->QueryAbilityInfos(want, 0, 0, abilityInfos);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryAbilityInfos in loop */
+        bundleMgrProxy->QueryAbilityInfos(want, 0, DEFAULT_USERID, abilityInfos);
     }
 }
 
@@ -740,37 +540,18 @@ static void BenchmarkTestQueryAbilityInfosById(benchmark::State &state)
 {
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
     want.SetElement(name);
 
     std::vector<AbilityInfo> abilityInfos;
-    AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
-    abilityInfos.push_back(info);
+
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryAllAbilityInfos in loop */
         bundleMgrProxy->QueryAllAbilityInfos(want, 0, abilityInfos);
     }
 }
@@ -786,30 +567,13 @@ static void BenchmarkTestQueryAbilityInfoByUri(benchmark::State &state)
 {
     std::string abilityUri = "err://com.test.demo.weatherfa.UserADataAbility";
     AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
+
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryAbilityInfoByUri in loop */
         bundleMgrProxy->QueryAbilityInfoByUri(abilityUri, info);
     }
 }
@@ -825,31 +589,14 @@ static void BenchmarkTestQueryAbilityInfoByUriAndId(benchmark::State &state)
 {
     std::string abilityUri = "err://com.test.demo.weatherfa.UserADataAbility";
     AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
+
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->QueryAbilityInfoByUri(abilityUri, 0, info);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryAbilityInfoByUri in loop */
+        bundleMgrProxy->QueryAbilityInfoByUri(abilityUri, DEFAULT_USERID, info);
     }
 }
 
@@ -864,32 +611,13 @@ static void BenchmarkTestQueryAbilityInfosByUri(benchmark::State &state)
 {
     std::string abilityUri = "err://com.test.demo.weatherfa.UserADataAbility";
     std::vector<AbilityInfo> abilityInfos;
-    AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
-    abilityInfos.push_back(info);
+
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryAbilityInfosByUri in loop */
         bundleMgrProxy->QueryAbilityInfosByUri(abilityUri, abilityInfos);
     }
 }
@@ -905,32 +633,12 @@ static void BenchmarkTestQueryKeepAliveBundleInfos(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<BundleInfo> bundleInfos;
-    BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
-    bundleInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryKeepAliveBundleInfos in loop */
         bundleMgrProxy->QueryKeepAliveBundleInfos(bundleInfos);
     }
 }
@@ -946,8 +654,11 @@ static void BenchmarkTestGetAbilityLabel(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetAbilityLabel(bundleName, abilityName);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAbilityLabel in loop */
+        bundleMgrProxy->GetAbilityLabel(BUNDLE_NAME, ABILITY_NAME);
     }
 }
 
@@ -962,31 +673,12 @@ static void BenchmarkTestGetBundleArchiveInfo(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, 0, info);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleArchiveInfo in loop */
+        bundleMgrProxy->GetBundleArchiveInfo(HAP_FILE, 0, info);
     }
 }
 
@@ -1001,31 +693,12 @@ static void BenchmarkTestGetBundleArchiveInfoByFlag(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     BundleInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.versionName = "1.0";
-    info.vendor = "ohos";
-    info.releaseType = "Release";
-    info.mainEntry = "com.ohos.contactsdataability";
-    info.entryModuleName = "entry";
-    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
-        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    info.cpuAbi = "armeabi";
-    info.description = "dataability_description";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, BundleFlag::GET_BUNDLE_DEFAULT, info);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleArchiveInfo in loop */
+        bundleMgrProxy->GetBundleArchiveInfo(HAP_FILE, BundleFlag::GET_BUNDLE_DEFAULT, info);
     }
 }
 
@@ -1041,8 +714,11 @@ static void BenchmarkTestGetLaunchWantForBundle(benchmark::State &state)
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     Want want;
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetLaunchWantForBundle(bundleName, want);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetLaunchWantForBundle in loop */
+        bundleMgrProxy->GetLaunchWantForBundle(BUNDLE_NAME, want);
     }
 }
 
@@ -1058,10 +734,12 @@ static void BenchmarkTestGetPermissionDef(benchmark::State &state)
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::string permissionName;
     PermissionDef info;
-    info.bundleName = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetPermissionDef in loop */
         bundleMgrProxy->GetPermissionDef(permissionName, info);
     }
 }
@@ -1077,8 +755,11 @@ static void BenchmarkTestHasSystemCapability(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->HasSystemCapability(abilityName);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call HasSystemCapability in loop */
+        bundleMgrProxy->HasSystemCapability(ABILITY_NAME);
     }
 }
 
@@ -1094,7 +775,10 @@ static void BenchmarkTestGetSystemAvailableCapabilities(benchmark::State &state)
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<std::string> systemCaps = {"bmsSystemBundle_A1"};
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetSystemAvailableCapabilities in loop */
         bundleMgrProxy->GetSystemAvailableCapabilities(systemCaps);
     }
 }
@@ -1110,7 +794,10 @@ static void BenchmarkTestIsSafeMode(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call IsSafeMode in loop */
         bundleMgrProxy->IsSafeMode();
     }
 }
@@ -1126,8 +813,11 @@ static void BenchmarkTestCleanBundleDataFiles(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->CleanBundleDataFiles(bundleName, 0);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call CleanBundleDataFiles in loop */
+        bundleMgrProxy->CleanBundleDataFiles(BUNDLE_NAME, 0);
     }
 }
 
@@ -1142,9 +832,12 @@ static void BenchmarkTestRegisterBundleStatusCallback(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     sptr<BundleStatusCallbackImpl> bundleStatusCallback = (new (std::nothrow) BundleStatusCallbackImpl());
-    bundleStatusCallback->SetBundleName(bundleName);
+    bundleStatusCallback->SetBundleName(BUNDLE_NAME);
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call RegisterBundleStatusCallback in loop */
         bundleMgrProxy->RegisterBundleStatusCallback(bundleStatusCallback);
     }
 }
@@ -1160,9 +853,12 @@ static void BenchmarkTestClearBundleStatusCallback(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     sptr<BundleStatusCallbackImpl> bundleStatusCallback = (new (std::nothrow) BundleStatusCallbackImpl());
-    bundleStatusCallback->SetBundleName(bundleName);
+    bundleStatusCallback->SetBundleName(BUNDLE_NAME);
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call ClearBundleStatusCallback in loop */
         bundleMgrProxy->ClearBundleStatusCallback(bundleStatusCallback);
     }
 }
@@ -1178,7 +874,10 @@ static void BenchmarkTestUnregisterBundleStatusCallback(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call UnregisterBundleStatusCallback in loop */
         bundleMgrProxy->UnregisterBundleStatusCallback();
     }
 }
@@ -1196,9 +895,12 @@ static void BenchmarkTestDumpInfos(benchmark::State &state)
     const std::string EMPTY_STRING = "";
     std::string allInfoResult;
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-    bundleMgrProxy->DumpInfos(
-        DumpFlag::DUMP_ALL_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, allInfoResult);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call DumpInfos in loop */
+        bundleMgrProxy->DumpInfos(
+            DumpFlag::DUMP_ALL_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, allInfoResult);
     }
 }
 
@@ -1213,8 +915,11 @@ static void BenchmarkTestIsApplicationEnabled(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->IsApplicationEnabled(bundleName);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call IsApplicationEnabled in loop */
+        bundleMgrProxy->IsApplicationEnabled(BUNDLE_NAME);
     }
 }
 
@@ -1229,8 +934,11 @@ static void BenchmarkTestSetApplicationEnabled(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->SetApplicationEnabled(bundleName, false);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call SetApplicationEnabled in loop */
+        bundleMgrProxy->SetApplicationEnabled(BUNDLE_NAME, false);
     }
 }
 
@@ -1245,29 +953,12 @@ static void BenchmarkTestIsAbilityEnabled(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call IsAbilityEnabled in loop */
         bundleMgrProxy->IsAbilityEnabled(info);
     }
 }
@@ -1283,29 +974,12 @@ static void BenchmarkTestSetAbilityEnabled(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call SetAbilityEnabled in loop */
         bundleMgrProxy->SetAbilityEnabled(info, false);
     }
 }
@@ -1321,7 +995,10 @@ static void BenchmarkTestGetBundleInstaller(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleInstaller in loop */
         bundleMgrProxy->GetBundleInstaller();
     }
 }
@@ -1337,7 +1014,10 @@ static void BenchmarkTestGetBundleUserMgr(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetBundleUserMgr in loop */
         bundleMgrProxy->GetBundleUserMgr();
     }
 }
@@ -1353,15 +1033,12 @@ static void BenchmarkTestGetAllFormsInfo(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<FormInfo> formInfos;
-    FormInfo info;
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.name = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
-    formInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAllFormsInfo in loop */
         bundleMgrProxy->GetAllFormsInfo(formInfos);
     }
 }
@@ -1377,16 +1054,13 @@ static void BenchmarkTestGetFormsInfoByApp(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<FormInfo> formInfos;
-    FormInfo info;
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.name = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
-    formInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetFormsInfoByApp(bundleName, formInfos);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetFormsInfoByApp in loop */
+        bundleMgrProxy->GetFormsInfoByApp(BUNDLE_NAME, formInfos);
     }
 }
 
@@ -1401,16 +1075,13 @@ static void BenchmarkTestGetFormsInfoByModule(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<FormInfo> formInfos;
-    FormInfo info;
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.name = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
-    formInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetFormsInfoByModule(bundleName, MODULE_NAME_TEST, formInfos);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetFormsInfoByModule in loop */
+        bundleMgrProxy->GetFormsInfoByModule(BUNDLE_NAME, MODULE_NAME_TEST, formInfos);
     }
 }
 
@@ -1425,14 +1096,13 @@ static void BenchmarkTestGetShortcutInfos(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<ShortcutInfo> shortcutInfos;
-    ShortcutInfo info;
-    info.bundleName = "com.ohos.contactsdataability";
-    info.iconId = 0;
-    info.labelId = 0;
-    shortcutInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetShortcutInfos(bundleName, shortcutInfos);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetShortcutInfos in loop */
+        bundleMgrProxy->GetShortcutInfos(BUNDLE_NAME, shortcutInfos);
     }
 }
 
@@ -1447,12 +1117,12 @@ static void BenchmarkTestGetAllCommonEventInfo(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<CommonEventInfo> commonEventInfos;
-    CommonEventInfo info;
-    info.name = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    commonEventInfos.push_back(info);
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAllCommonEventInfo in loop */
         bundleMgrProxy->GetAllCommonEventInfo(COMMON_EVENT_EVENT, commonEventInfos);
     }
 }
@@ -1467,14 +1137,16 @@ static void BenchmarkTestGetAllCommonEventInfo(benchmark::State &state)
 static void BenchmarkTestGetDistributedBundleInfo(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    std::string networkId;
-    DistributedBundleInfo distributedBundleInfo;
-    distributedBundleInfo.bundleName = "com.ohos.contactsdataability";
-    distributedBundleInfo.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
+    std::string networkId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
         "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+    DistributedBundleInfo distributedBundleInfo;
+
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetDistributedBundleInfo in loop */
+        bundleMgrProxy->GetDistributedBundleInfo(networkId, BUNDLE_NAME, distributedBundleInfo);
     }
 }
 
@@ -1489,8 +1161,11 @@ static void BenchmarkTestGetAppPrivilegeLevel(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetAppPrivilegeLevel(bundleName);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAppPrivilegeLevel in loop */
+        bundleMgrProxy->GetAppPrivilegeLevel(BUNDLE_NAME);
     }
 }
 
@@ -1506,36 +1181,16 @@ static void BenchmarkTestQueryExtensionAbilityInfosByWant(benchmark::State &stat
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
     want.SetElement(name);
     int32_t flags = 0;
     std::vector<ExtensionAbilityInfo> infos;
-    ExtensionAbilityInfo info;
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.name = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.uri = "dataability://com.ohos.callogability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
-    infos.push_back(info);
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryExtensionAbilityInfos in loop */
         bundleMgrProxy->QueryExtensionAbilityInfos(want, flags, DEFAULT_USERID, infos);
     }
 }
@@ -1551,31 +1206,11 @@ static void BenchmarkTestQueryExtensionAbilityInfosByType(benchmark::State &stat
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::vector<ExtensionAbilityInfo> infos;
-    ExtensionAbilityInfo info;
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.name = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.uri = "dataability://com.ohos.callogability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
-    infos.push_back(info);
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryExtensionAbilityInfos in loop */
         bundleMgrProxy->QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, DEFAULT_USERID, infos);
     }
 }
@@ -1592,36 +1227,16 @@ static void BenchmarkTestQueryExtensionAbilityInfos(benchmark::State &state)
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
     want.SetElement(name);
     int32_t flags = 0;
     std::vector<ExtensionAbilityInfo> infos;
-    ExtensionAbilityInfo info;
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.name = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.uri = "dataability://com.ohos.callogability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
-    infos.push_back(info);
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryExtensionAbilityInfos in loop */
         bundleMgrProxy->QueryExtensionAbilityInfos(want, ExtensionAbilityType::FORM, flags, DEFAULT_USERID, infos);
     }
 }
@@ -1638,7 +1253,10 @@ static void BenchmarkTestVerifyCallingPermission(benchmark::State &state)
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     std::string appPermission = "USER_GRANT";
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call VerifyCallingPermission in loop */
         bundleMgrProxy->VerifyCallingPermission(appPermission);
     }
 }
@@ -1654,7 +1272,10 @@ static void BenchmarkTestGetAccessibleAppCodePaths(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAccessibleAppCodePaths in loop */
         bundleMgrProxy->GetAccessibleAppCodePaths(DEFAULT_USERID);
     }
 }
@@ -1670,31 +1291,60 @@ static void BenchmarkTestQueryExtensionAbilityInfoByUri(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     ExtensionAbilityInfo info;
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.name = "com.ohos.contactsdataability";
-    info.description = "dataability_description";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.uri = "dataability://com.ohos.callogability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
-    info.applicationInfo.versionName = "1.0";
-    info.applicationInfo.iconPath = "$media:icon";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
-    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
-    info.applicationInfo.apiReleaseType = "Release";
-    info.applicationInfo.deviceId = "PHONE-001";
-    info.applicationInfo.entityType = "unsppecified";
-    info.applicationInfo.vendor = "ohos";
-    info.applicationInfo.nativeLibraryPath = "libs/arm";
     const std::string URI = "dataability://com.example.hiworld.himusic.UserADataAbility";
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call QueryExtensionAbilityInfoByUri in loop */
         bundleMgrProxy->QueryExtensionAbilityInfoByUri(URI, DEFAULT_USERID, info);
+    }
+}
+
+/**
+ * @tc.name: BenchmarkTestImplicitQueryInfoByPriority
+ * @tc.desc: Testcase for testing ImplicitQueryInfoByPriority.
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+
+static void BenchmarkTestImplicitQueryInfoByPriority(benchmark::State &state)
+{
+    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
+    Want want;
+    ElementName name;
+    name.SetAbilityName(ABILITY_NAME);
+    name.SetBundleName(BUNDLE_NAME);
+    want.SetElement(name);
+    int32_t flags = 0;
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    for (auto _ : state) {
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call ImplicitQueryInfoByPriority in loop */
+        bundleMgrProxy->ImplicitQueryInfoByPriority(want, flags, DEFAULT_USERID, abilityInfo, extensionInfo);
+    }
+}
+
+/**
+ * @tc.name: BenchmarkTestGetSandboxBundleInfo
+ * @tc.desc: Testcase for testing GetSandboxBundleInfo.
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+
+static void BenchmarkTestGetSandboxBundleInfo(benchmark::State &state)
+{
+    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
+    BundleInfo info;
+    for (auto _ : state) {
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetSandboxBundleInfo in loop */
+        bundleMgrProxy->GetSandboxBundleInfo(BUNDLE_NAME, 0, DEFAULT_USERID, info);
     }
 }
 
@@ -1709,91 +1359,97 @@ static void BenchmarkTestGetAbilityInfo(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     AbilityInfo info;
-    info.name = "allLogAbility";
-    info.description = "dataability_description";
-    info.iconPath = "$media:icon";
-    info.labelId = 0;
-    info.descriptionId = 0;
-    info.iconId = 0;
-    info.kind = "data";
-    info.deviceTypes = {"smartVision"};
-    info.uri = "dataability://com.ohos.callogability";
-    info.readPermission = "ohos.permission.READ_CALL_LOG";
-    info.writePermission = "ohos.permission.WRITE_CALL_LOG";
-    info.package = "com.ohos.contactsdataability";
-    info.bundleName = "com.ohos.contactsdataability";
-    info.moduleName = "entry";
-    info.applicationName = "com.ohos.contactsdataability";
-    info.resourcePath = "/data/app/el1/budle/public/com.ohos.contactsdataability"\
-        "/com.ohos.contactsdataability/assets/entry/resources.index";
-    info.versionName = "1.0";
-    info.applicationInfo.name = "com.ohos.contactsdataability";
-    info.applicationInfo.description = "dataability_description";
-    info.applicationInfo.cpuAbi = "armeabi";
     for (auto _ : state) {
-        /* @tc.steps: step1.call ReadFromParcel in loop */
-        bundleMgrProxy->GetAbilityInfo(bundleName, abilityName, info);
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+
+        /* @tc.steps: step1.call GetAbilityInfo in loop */
+        bundleMgrProxy->GetAbilityInfo(BUNDLE_NAME, ABILITY_NAME, info);
     }
 }
 
-BENCHMARK(BenchmarkTestGetApplicationInfoByFlag)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetApplicationInfoByUserId)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetApplicationInfosByApplicationFlag)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetApplicationInfosByFlags)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleInfoByBundleFlag)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleInfoByFlags)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleInfosByBundleFlag)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleInfosByFlags)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetUidByBundleName)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAppIdByBundleName)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleNameForUid)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundlesForUid)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetNameForUid)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAppType)->Iterations(1000);
-BENCHMARK(BenchmarkTestCheckIsSystemAppByUid)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleInfosByMetaData)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfo)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfoByFlags)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfos)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfosByFlags)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfosById)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfoByUriAndId)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfoByUri)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryAbilityInfosByUri)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryKeepAliveBundleInfos)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAbilityLabel)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleArchiveInfo)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleArchiveInfoByFlag)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetLaunchWantForBundle)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetPermissionDef)->Iterations(1000);
-BENCHMARK(BenchmarkTestHasSystemCapability)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetSystemAvailableCapabilities)->Iterations(1000);
-BENCHMARK(BenchmarkTestIsSafeMode)->Iterations(1000);
-BENCHMARK(BenchmarkTestCleanBundleDataFiles)->Iterations(1000);
-BENCHMARK(BenchmarkTestRegisterBundleStatusCallback)->Iterations(1000);
-BENCHMARK(BenchmarkTestClearBundleStatusCallback)->Iterations(1000);
-BENCHMARK(BenchmarkTestUnregisterBundleStatusCallback)->Iterations(1000);
-BENCHMARK(BenchmarkTestDumpInfos)->Iterations(1000);
-BENCHMARK(BenchmarkTestIsApplicationEnabled)->Iterations(1000);
-BENCHMARK(BenchmarkTestSetApplicationEnabled)->Iterations(1000);
-BENCHMARK(BenchmarkTestIsAbilityEnabled)->Iterations(1000);
-BENCHMARK(BenchmarkTestSetAbilityEnabled)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleInstaller)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetBundleUserMgr)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAllFormsInfo)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetFormsInfoByApp)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetFormsInfoByModule)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetShortcutInfos)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAllCommonEventInfo)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetDistributedBundleInfo)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAppPrivilegeLevel)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByWant)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryExtensionAbilityInfos)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByType)->Iterations(1000);
-BENCHMARK(BenchmarkTestVerifyCallingPermission)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAccessibleAppCodePaths)->Iterations(1000);
-BENCHMARK(BenchmarkTestQueryExtensionAbilityInfoByUri)->Iterations(1000);
-BENCHMARK(BenchmarkTestGetAbilityInfo)->Iterations(1000);
+/**
+ * @tc.name: BenchmarkTestGetAbilityInfoByModuleName
+ * @tc.desc: Testcase for testing GetAbilityInfo.
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+
+static void BenchmarkTestGetAbilityInfoByModuleName(benchmark::State &state)
+{
+    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
+    AbilityInfo info;
+    for (auto _ : state) {
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call GetAbilityInfo in loop */
+        bundleMgrProxy->GetAbilityInfo(BUNDLE_NAME, MODULE_NAME_TEST, ABILITY_NAME, info);
+    }
+}
+
+BENCHMARK(BenchmarkTestGetApplicationInfoByFlag)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetApplicationInfoByUserId)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetApplicationInfosByApplicationFlag)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetApplicationInfosByFlags)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleInfoByBundleFlag)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleInfoByFlags)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleInfosByBundleFlag)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleInfosByFlags)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetUidByBundleName)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAppIdByBundleName)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleNameForUid)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundlesForUid)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetNameForUid)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAppType)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestCheckIsSystemAppByUid)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleInfosByMetaData)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfo)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfoByFlags)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfos)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfosByFlags)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfosById)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfoByUriAndId)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfoByUri)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryAbilityInfosByUri)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryKeepAliveBundleInfos)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAbilityLabel)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleArchiveInfo)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleArchiveInfoByFlag)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetLaunchWantForBundle)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetPermissionDef)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestHasSystemCapability)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetSystemAvailableCapabilities)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestIsSafeMode)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestCleanBundleDataFiles)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestRegisterBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestClearBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestUnregisterBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestDumpInfos)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestIsApplicationEnabled)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestSetApplicationEnabled)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestIsAbilityEnabled)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestSetAbilityEnabled)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleInstaller)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetBundleUserMgr)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAllFormsInfo)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetFormsInfoByApp)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetFormsInfoByModule)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetShortcutInfos)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAllCommonEventInfo)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetDistributedBundleInfo)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAppPrivilegeLevel)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByWant)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryExtensionAbilityInfos)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByType)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestVerifyCallingPermission)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAccessibleAppCodePaths)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestQueryExtensionAbilityInfoByUri)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestImplicitQueryInfoByPriority)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetSandboxBundleInfo)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAbilityInfo)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAbilityInfoByModuleName)->Iterations(BENCHMARK_TIMES);
 }  // namespace
 
 BENCHMARK_MAIN();
