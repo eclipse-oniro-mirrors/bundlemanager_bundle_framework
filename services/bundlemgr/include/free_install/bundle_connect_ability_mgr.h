@@ -20,21 +20,19 @@
 #include <mutex>
 #include <string>
 
-#include "ability_connect_callback_interface.h"
-#include "ability_manager_interface.h"
 #include "event_handler.h"
 #include "event_runner.h"
 #include "free_install_params.h"
 #include "inner_bundle_info.h"
 #include "install_result.h"
-#include "ipc_skeleton.h"
 #include "iremote_broker.h"
-#include "system_ability_definition.h"
-#include "system_ability_helper.h"
 #include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+
+using namespace OHOS::AAFwk;
+
 class ServiceCenterConnection;
 class BundleConnectAbilityMgr : public std::enable_shared_from_this<BundleConnectAbilityMgr> {
 public:
@@ -233,7 +231,6 @@ private:
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
     std::mutex mutex_;
-    sptr<AAFwk::IAbilityManager> abilityMgrProxy_;
     sptr<ServiceCenterConnection> serviceCenterConnection_;
     std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
     sptr<IRemoteObject> serviceCenterRemoteObject_;
