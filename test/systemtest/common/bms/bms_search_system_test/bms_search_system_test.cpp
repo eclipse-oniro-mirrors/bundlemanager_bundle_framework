@@ -318,6 +318,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0100, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_0100" << std::endl;
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
     CommonTool commonTool;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -326,7 +327,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0100, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, appName);
     std::cout << bundleInfo.name << std::endl;
@@ -339,6 +341,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0100, Function | MediumTest | Level1)
     std::cout << commonTool.VectorToStr(bundleInfo.moduleNames) << std::endl;
     std::cout << commonTool.VectorToStr(bundleInfo.hapModuleNames) << std::endl;
     std::cout << commonTool.VectorToStr(bundleInfo.modulePublicDirs) << std::endl;
+    
+    TearDownTestCase();
     std::cout << "END BMS_Search_0100" << std::endl;
 }
 
@@ -353,6 +357,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0200, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_0200" << std::endl;
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -372,6 +377,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0200, Function | MediumTest | Level1)
         }
     }
     EXPECT_TRUE(isSubStrExist);
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_0200" << std::endl;
 }
 
@@ -386,6 +392,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0300, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_SEARCH_0300" << std::endl;
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -398,6 +405,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0300, Function | MediumTest | Level2)
     bool getInfoResult =
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_FALSE(getInfoResult);
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_0300" << std::endl;
 }
 
@@ -411,6 +419,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0300, Function | MediumTest | Level2)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_0400, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_0400" << std::endl;
+    SetUpTestCase();
 
     std::string appName = BASE_BUNDLE_NAME + "1";
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -424,6 +433,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0400, Function | MediumTest | Level1)
         bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(appInfo.name, appName);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_0400" << std::endl;
 }
 
@@ -438,6 +449,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0500, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_0500" << std::endl;
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     CommonTool commonTool;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -452,6 +464,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0500, Function | MediumTest | Level1)
             appName, ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, appInfo);
     std::string permission = commonTool.VectorToStr(appInfo.permissions);
     EXPECT_TRUE(getInfoResult);
+    TearDownTestCase();
+
     std::cout << permission << std::endl;
     std::cout << "END BMS_SEARCH_0500" << std::endl;
 }
@@ -466,8 +480,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0500, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_0600, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_SEARCH_0600" << std::endl;
-
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -480,6 +494,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0600, Function | MediumTest | Level2)
     bool getInfoResult =
         bundleMgrProxy->GetApplicationInfo(appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_FALSE(getInfoResult);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_0600" << std::endl;
 }
 
@@ -493,9 +509,9 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0600, Function | MediumTest | Level2)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_0700, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_0700" << std::endl;
-
     std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     BundleInfo bundleInfo;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -503,8 +519,11 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0700, Function | MediumTest | Level1)
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool getInfoResult = bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_TRUE(getInfoResult);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_0700" << std::endl;
 }
 
@@ -520,6 +539,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0800, Function | MediumTest | Level1)
     std::cout << "START BMS_SEARCH_0800" << std::endl;
     std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     BundleInfo bundleInfo;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -539,6 +559,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0800, Function | MediumTest | Level1)
         }
     }
     EXPECT_TRUE(isSubStrExist);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_0800" << std::endl;
 }
 
@@ -552,9 +574,9 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0800, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_0900, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_SEARCH_0900" << std::endl;
-
     std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     BundleInfo bundleInfo;
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -563,8 +585,11 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0900, Function | MediumTest | Level2)
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     hapFilePath = THIRD_BUNDLE_PATH + "tt.hap";
-    bool getInfoResult = bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_0900" << std::endl;
 }
 
@@ -578,8 +603,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0900, Function | MediumTest | Level2)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_1000, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_1000" << std::endl;
-
     std::string bundleName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -589,7 +614,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1000, Function | MediumTest | Level1)
 
     int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID);
     EXPECT_GE(uid, Constants::BASE_APP_UID);
-    EXPECT_LE(uid, Constants::MAX_APP_UID);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_1000" << std::endl;
 }
 
@@ -603,8 +629,9 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1000, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_1100, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_SEARCH_1100" << std::endl;
-
     std::string bundleName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
+
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -614,6 +641,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1100, Function | MediumTest | Level2)
     bundleName = BASE_BUNDLE_NAME + "e";
     int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID);
     EXPECT_EQ(uid, Constants::INVALID_UID);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_1100" << std::endl;
 }
 
@@ -627,8 +656,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1100, Function | MediumTest | Level2)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_1200, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_1200" << std::endl;
-
     std::string appName = BASE_BUNDLE_NAME + "1";
+    SetUpTestCase();
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -644,6 +673,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1200, Function | MediumTest | Level1)
     bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleName, appName);
+    TearDownTestCase();
+
     std::cout << "END BMS_SEARCH_1200" << std::endl;
 }
 
@@ -714,7 +745,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1500, Function | MediumTest | Level1)
     }
 
     std::vector<BundleInfo> bundleInfos;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
     EXPECT_TRUE(getInfoResult);
     for (int i = INDEX_TWO; i <= INDEX_THREE; i++) {
         std::string appName = BASE_BUNDLE_NAME + std::to_string(i);
@@ -756,7 +788,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1600, Function | MediumTest | Level1)
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     std::vector<BundleInfo> bundleInfos;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
     EXPECT_TRUE(getInfoResult);
     std::cout << "END BMS_SEARCH_1600" << std::endl;
 }
@@ -787,7 +820,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1700, Function | MediumTest | Level1)
         EXPECT_EQ(installResult, "Success") << "install fail!";
         resvec.clear();
     }
-    int userId = Constants::DEFAULT_USERID;
     for (int i = INDEX_SEVEN; i <= INDEX_EIGHT; i++) {
         std::vector<std::string> resvec;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
@@ -799,7 +831,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1700, Function | MediumTest | Level1)
         std::vector<ApplicationInfo> appInfos;
         bool getInfoResult =
             bundleMgrProxy->GetApplicationInfos(
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, appInfos);
+                ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, appInfos);
         EXPECT_TRUE(getInfoResult);
         bool isSubStrExist = false;
         for (auto iter = appInfos.begin(); iter != appInfos.end(); iter++) {
@@ -866,7 +898,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1900, Function | MediumTest | Level1)
     int userId = Constants::DEFAULT_USERID;
     int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
     EXPECT_GE(uid, Constants::BASE_SYS_UID);
-    EXPECT_LE(uid, Constants::MAX_SYS_UID);
 
     resvec.clear();
     Uninstall(bundleName, resvec);
@@ -884,7 +915,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1900, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2000, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_2000" << std::endl;
-    std::string bundleFilePath = VENDOR_BUNDLE_PATH + "bmsVendorBundle3.hap";
+    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsVendorBundle3.hap";
     std::string bundleName = "com.vendor.hiworld.examplev3";
     CommonTool commonTool;
     std::vector<std::string> resvec;
@@ -900,10 +931,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2000, Function | MediumTest | Level1)
     bool queryResult = QueryJsonFile(bundleName);
     EXPECT_TRUE(queryResult);
 
-    int userId = Constants::DEFAULT_USERID;
-    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
+    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID);
     EXPECT_GE(uid, Constants::BASE_APP_UID);
-    EXPECT_LE(uid, Constants::MAX_APP_UID);
 
     Uninstall(bundleName, resvec);
     EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "uninstall fail!";
@@ -964,7 +993,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2100, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2200, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_2200" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle1_A1";
 
@@ -980,6 +1009,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2200, Function | MediumTest | Level1)
     want.SetElementName(appName, abilityName);
     bool launchWantResult = bundleMgrProxy->GetLaunchWantForBundle(appName, want);
     EXPECT_TRUE(launchWantResult);
+    TearDownTestCase();
 
     std::cout << "END BMS_SEARCH_2200" << std::endl;
 }
@@ -994,13 +1024,14 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2200, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2300, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_2300" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     std::vector<int> gids;
     bool getGidsResult = bundleMgrProxy->GetBundleGids(appName, gids);
-    EXPECT_TRUE(getGidsResult);
+    EXPECT_FALSE(getGidsResult);
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_2300" << std::endl;
 }
 
@@ -1014,7 +1045,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2300, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2400, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_2400" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle1_A1";
 
@@ -1022,6 +1053,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2400, Function | MediumTest | Level1)
 
     bool result = bundleMgrProxy->HasSystemCapability(abilityName);
     EXPECT_TRUE(result);
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_2400" << std::endl;
 }
 
@@ -1049,13 +1081,14 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2500, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2600, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_2600" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle1_A1";
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
 
     std::string result = bundleMgrProxy->GetAppType(appName);
-    EXPECT_EQ(result, "third-party");
+    EXPECT_EQ(result, "");
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_2600" << std::endl;
 }
 
@@ -1117,13 +1150,14 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2800, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2900, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_2900" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
 
     std::vector<BundleInfo> bundleInfos;
     bool result = bundleMgrProxy->QueryKeepAliveBundleInfos(bundleInfos);
     EXPECT_TRUE(result);
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_2900" << std::endl;
 }
 
@@ -1137,7 +1171,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2900, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_3100, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_3100" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "MainAbility";
 
@@ -1146,6 +1180,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3100, Function | MediumTest | Level1)
     std::vector<PermissionDef> permissionDefs;
     std::string result = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
     EXPECT_NE(result, "EMPTY_STRING");
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_3100" << std::endl;
 }
 
@@ -1159,6 +1194,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3100, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_3200, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_3200" << std::endl;
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle_A1";
 
@@ -1172,12 +1208,14 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3200, Function | MediumTest | Level1)
     want.SetElement(name);
 
     AbilityInfo abilityInfo;
-    bool queryResult = bundleMgrProxy->QueryAbilityInfo(want, abilityInfo);
+    bool queryResult =
+        bundleMgrProxy->QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, USERID, abilityInfo);
     EXPECT_TRUE(queryResult);
 
     EXPECT_EQ(abilityInfo.name, "bmsThirdBundle_A1");
     EXPECT_EQ(abilityInfo.bundleName, "com.third.hiworld.example1");
     EXPECT_EQ(commonTool.VectorToStr(abilityInfo.deviceTypes), "tvcar");
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_3200" << std::endl;
 }
 
@@ -1191,7 +1229,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3200, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_3300, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_3300" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
 
     CommonTool commonTool;
@@ -1202,12 +1240,13 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3300, Function | MediumTest | Level1)
     }
 
     BundleInfo bundleInfo;
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_EQ(bundleInfo.label, "bmsThirdBundle_A1 Ability");
     EXPECT_EQ(commonTool.VectorToStr(bundleInfo.hapModuleNames), "com.third.hiworld.example.h1");
     EXPECT_EQ(commonTool.VectorToStr(bundleInfo.moduleNames), "testability");
+    TearDownTestCase();
     std::cout << "END BMS_Search_3300" << std::endl;
 }
 
@@ -1221,7 +1260,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3300, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_3400, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_3400" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -1238,6 +1277,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3400, Function | MediumTest | Level1)
     EXPECT_EQ(appInfo.description, "himusic main ability");
     EXPECT_EQ(appInfo.iconPath, "$media:ic_launcher");
     EXPECT_EQ(appInfo.supportedModes, 0);
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_3400" << std::endl;
 }
 
@@ -1251,7 +1291,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3400, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_3500, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_SEARCH_3500" << std::endl;
-
+    SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle1_A1";
 
@@ -1266,6 +1306,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3500, Function | MediumTest | Level1)
     EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
     EXPECT_EQ(hapModuleInfo.moduleName, "testability");
     EXPECT_TRUE(queryResult);
+    TearDownTestCase();
     std::cout << "END BMS_SEARCH_3500" << std::endl;
 }
 
