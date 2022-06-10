@@ -310,7 +310,7 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId)
         APP_LOGE("mkdir %{private}s failed", tempDir.c_str());
         return "";
     }
-    if (chown(tempDir.c_str(), Constants::BMS_UID, Constants::BMS_GID) != 0) {
+    if (chown(tempDir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
         APP_LOGE("fail to change %{private}s ownership", tempDir.c_str());
         return "";
     }
