@@ -1110,7 +1110,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2700, Function | SmallTes
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE);
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
     CheckFileNonExist();
 }
 

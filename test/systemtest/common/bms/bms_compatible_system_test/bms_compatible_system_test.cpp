@@ -698,7 +698,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0100, Function | Med
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_TRUE(false);
     }
-    bool result = bundleMgrProxy->QueryAbilityInfoByUri(abilityUri, 100, abilityInfo);
+    bool result = bundleMgrProxy->QueryAbilityInfoByUri(abilityUri, USERID, abilityInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(abilityInfo.name, abilityName);
     EXPECT_EQ(abilityInfo.bundleName, bundleName);
