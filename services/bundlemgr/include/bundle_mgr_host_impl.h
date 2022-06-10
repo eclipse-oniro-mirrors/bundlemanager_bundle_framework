@@ -632,7 +632,6 @@ private:
         const std::string &bundleName, int32_t userId, InnerBundleUserInfo &innerBundleUserInfo);
     bool GetBundleUserInfos(
         const std::string &bundleName, std::vector<InnerBundleUserInfo> &innerBundleUserInfos);
-    bool TraverseCacheDirectory(const std::string& rootDir, std::vector<std::string>& cacheDirs);
     bool GetShortcutInfos(
         const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
     bool DumpAllBundleInfoNames(int32_t userId, std::string &result);
@@ -642,6 +641,8 @@ private:
     bool DumpShortcutInfo(const std::string &bundleName, int32_t userId, std::string &result);
     std::set<int32_t> GetExistsCommonUserIs();
     bool VerifyQueryPermission(const std::string &queryBundleName);
+    void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
+        const std::string &applicationDataDir, int32_t userId);
 
     std::shared_ptr<BMSEventHandler> handler_;
 };
