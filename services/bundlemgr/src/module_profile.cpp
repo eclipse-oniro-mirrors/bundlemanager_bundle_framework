@@ -191,7 +191,7 @@ struct App {
     int32_t versionCode = 0;
     std::string versionName;
     int32_t minCompatibleVersionCode = -1;
-    int32_t minAPIVersion = 0;
+    uint32_t minAPIVersion = 0;
     int32_t targetAPIVersion = 0;
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
     bool distributedNotificationEnabled = true;
@@ -762,7 +762,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         APP_MIN_API_VERSION,
         app.minAPIVersion,
