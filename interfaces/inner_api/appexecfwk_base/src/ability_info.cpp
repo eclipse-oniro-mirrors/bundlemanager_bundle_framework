@@ -96,27 +96,130 @@ const std::string PRIORITY = "priority";
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
+    name = Str16ToStr8(parcel.ReadString16());
+    label = Str16ToStr8(parcel.ReadString16());
+    description = Str16ToStr8(parcel.ReadString16());
+    iconPath = Str16ToStr8(parcel.ReadString16());
+    labelId = parcel.ReadInt32();
+    descriptionId = parcel.ReadInt32();
+    iconId = parcel.ReadInt32();
+    theme = Str16ToStr8(parcel.ReadString16());
+    visible = parcel.ReadBool();
+    kind = Str16ToStr8(parcel.ReadString16());
+    type = static_cast<AbilityType>(parcel.ReadInt32());
+    extensionAbilityType = static_cast<ExtensionAbilityType>(parcel.ReadInt32());
+    orientation = static_cast<DisplayOrientation>(parcel.ReadInt32());
+    launchMode = static_cast<LaunchMode>(parcel.ReadInt32());
+    srcPath = Str16ToStr8(parcel.ReadString16());
+    srcLanguage = Str16ToStr8(parcel.ReadString16());
+
+    int32_t permissionsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
+    for (auto i = 0; i < permissionsSize; i++) {
+        permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    process = Str16ToStr8(parcel.ReadString16());
+
+    int32_t deviceTypesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypesSize);
+    for (auto i = 0; i < deviceTypesSize; i++) {
+        deviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t deviceCapabilitiesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceCapabilitiesSize);
+    for (auto i = 0; i < deviceCapabilitiesSize; i++) {
+        deviceCapabilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+    uri = Str16ToStr8(parcel.ReadString16());
+    targetAbility = Str16ToStr8(parcel.ReadString16());
+
+    std::unique_ptr<ApplicationInfo> appInfo(parcel.ReadParcelable<ApplicationInfo>());
+    if (!appInfo) {
+        APP_LOGE("ReadParcelable<ApplicationInfo> failed");
         return false;
     }
-    uint32_t length = messageParcel->ReadUint32();
-    if (length == 0) {
-        APP_LOGE("Invalid data length");
-        return false;
+    applicationInfo = *appInfo;
+
+    isLauncherAbility = parcel.ReadBool();
+    isNativeAbility = parcel.ReadBool();
+    enabled = parcel.ReadBool();
+    supportPipMode = parcel.ReadBool();
+    formEnabled = parcel.ReadBool();
+    removeMissionAfterTerminate = parcel.ReadBool();
+
+    readPermission = Str16ToStr8(parcel.ReadString16());
+    writePermission = Str16ToStr8(parcel.ReadString16());
+    int32_t configChangesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, configChangesSize);
+    for (auto i = 0; i < configChangesSize; i++) {
+        configChanges.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    const char *data = reinterpret_cast<const char *>(messageParcel->ReadRawData(length));
-    if (!data) {
-        APP_LOGE("Fail to read raw data, length = %{public}d", length);
-        return false;
+    formEntity = parcel.ReadUint32();
+    minFormHeight = parcel.ReadInt32();
+    defaultFormHeight = parcel.ReadInt32();
+    minFormWidth = parcel.ReadInt32();
+    defaultFormWidth = parcel.ReadInt32();
+    int32_t metaDataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaDataSize);
+    for (auto i = 0; i < metaDataSize; i++) {
+        std::unique_ptr<CustomizeData> customizeDataPtr(parcel.ReadParcelable<CustomizeData>());
+        if (!customizeDataPtr) {
+            APP_LOGE("ReadParcelable<Metadata> failed");
+            return false;
+        }
+        metaData.customizeData.emplace_back(*customizeDataPtr);
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse ApplicationInfo");
-        return false;
+    backgroundModes = parcel.ReadUint32();
+
+    package = Str16ToStr8(parcel.ReadString16());
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    applicationName = Str16ToStr8(parcel.ReadString16());
+
+    codePath = Str16ToStr8(parcel.ReadString16());
+    resourcePath = Str16ToStr8(parcel.ReadString16());
+
+    srcEntrance = Str16ToStr8(parcel.ReadString16());
+    int32_t metadataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    for (auto i = 0; i < metadataSize; i++) {
+        std::unique_ptr<Metadata> metadataPtr(parcel.ReadParcelable<Metadata>());
+        if (!metadataPtr) {
+            APP_LOGE("ReadParcelable<Metadata> failed");
+            return false;
+        }
+        metadata.emplace_back(*metadataPtr);
     }
-    *this = jsonObject.get<AbilityInfo>();
+    isModuleJson = parcel.ReadBool();
+    isStageBasedModel = parcel.ReadBool();
+    continuable = parcel.ReadBool();
+    priority = parcel.ReadInt32();
+
+    startWindowIcon = Str16ToStr8(parcel.ReadString16());
+    startWindowIconId = parcel.ReadInt32();
+    startWindowBackground = Str16ToStr8(parcel.ReadString16());
+    startWindowBackgroundId = parcel.ReadInt32();
+
+    originalBundleName = Str16ToStr8(parcel.ReadString16());
+    appName = Str16ToStr8(parcel.ReadString16());
+    privacyUrl = Str16ToStr8(parcel.ReadString16());
+    privacyName = Str16ToStr8(parcel.ReadString16());
+    downloadUrl = Str16ToStr8(parcel.ReadString16());
+    versionName = Str16ToStr8(parcel.ReadString16());
+    className = Str16ToStr8(parcel.ReadString16());
+    originalClassName = Str16ToStr8(parcel.ReadString16());
+    uriPermissionMode = Str16ToStr8(parcel.ReadString16());
+    uriPermissionPath = Str16ToStr8(parcel.ReadString16());
+    packageSize = parcel.ReadUint32();
+    multiUserShared = parcel.ReadBool();
+    grantPermission = parcel.ReadBool();
+    directLaunch = parcel.ReadBool();
+    subType = static_cast<AbilitySubType>(parcel.ReadInt32());
+    libPath = Str16ToStr8(parcel.ReadString16());
+    deviceId = Str16ToStr8(parcel.ReadString16());
+    compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     return true;
 }
 
@@ -133,21 +236,105 @@ AbilityInfo *AbilityInfo::Unmarshalling(Parcel &parcel)
 
 bool AbilityInfo::Marshalling(Parcel &parcel) const
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(theme));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, visible);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(kind));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(extensionAbilityType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(orientation));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(launchMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcLanguage));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
+    for (auto &permission : permissions) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));
     }
-    nlohmann::json json = *this;
-    std::string str = json.dump();
-    if (!messageParcel->WriteUint32(str.size() + 1)) {
-        APP_LOGE("Failed to write data size");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypes.size());
+    for (auto &deviceType : deviceTypes) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceType));
     }
-    if (!messageParcel->WriteRawData(str.c_str(), str.size() + 1)) {
-        APP_LOGE("Failed to write data");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceCapabilities.size());
+    for (auto &deviceCapability : deviceCapabilities) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceCapability));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetAbility));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &applicationInfo);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLauncherAbility);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isNativeAbility);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, supportPipMode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, formEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, removeMissionAfterTerminate);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(readPermission));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(writePermission));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, configChanges.size());
+    for (auto &configChange : configChanges) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configChange));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formEntity);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, minFormHeight);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defaultFormHeight);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, minFormWidth);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defaultFormWidth);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaData.customizeData.size());
+    for (auto &meta : metaData.customizeData) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &meta);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, backgroundModes);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(package));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(applicationName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(codePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(resourcePath));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcEntrance));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
+    for (auto &meta : metadata) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &meta);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isModuleJson);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isStageBasedModel);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, continuable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindowIcon));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, startWindowIconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindowBackground));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, startWindowBackgroundId);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(originalBundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(privacyUrl));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(privacyName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(downloadUrl));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(className));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(originalClassName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uriPermissionMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uriPermissionPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, packageSize);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, multiUserShared);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, grantPermission);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, directLaunch);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(subType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(libPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
     return true;
 }
 

@@ -208,27 +208,140 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
 
 bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
+    name = Str16ToStr8(parcel.ReadString16());
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    versionCode = parcel.ReadUint32();
+    versionName = Str16ToStr8(parcel.ReadString16());
+    minCompatibleVersionCode = parcel.ReadInt32();
+    apiCompatibleVersion = parcel.ReadUint32();
+    apiTargetVersion = parcel.ReadInt32();
+    crowdtestDeadline = parcel.ReadInt64();
+
+    iconPath = Str16ToStr8(parcel.ReadString16());
+    iconId = parcel.ReadInt32();
+    std::unique_ptr<Resource> iconResourcePtr(parcel.ReadParcelable<Resource>());
+    if (!iconResourcePtr) {
+        APP_LOGE("icon ReadParcelable<Resource> failed");
         return false;
     }
-    uint32_t length = messageParcel->ReadUint32();
-    if (length == 0) {
-        APP_LOGE("Invalid data length");
+    iconResource = *iconResourcePtr;
+
+    label = Str16ToStr8(parcel.ReadString16());
+    labelId = parcel.ReadInt32();
+    std::unique_ptr<Resource> labelResourcePtr(parcel.ReadParcelable<Resource>());
+    if (!labelResourcePtr) {
+        APP_LOGE("label ReadParcelable<Resource> failed");
         return false;
     }
-    const char *data = reinterpret_cast<const char *>(messageParcel->ReadRawData(length));
-    if (!data) {
-        APP_LOGE("Fail to read raw data, length = %{public}d", length);
+    labelResource = *labelResourcePtr;
+
+    description = Str16ToStr8(parcel.ReadString16());
+    descriptionId = parcel.ReadInt32();
+    std::unique_ptr<Resource> descriptionResourcePtr(parcel.ReadParcelable<Resource>());
+    if (!descriptionResourcePtr) {
+        APP_LOGE("description ReadParcelable<Resource> failed");
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse ApplicationInfo");
-        return false;
+    descriptionResource = *descriptionResourcePtr;
+
+    keepAlive = parcel.ReadBool();
+    removable = parcel.ReadBool();
+    singleton = parcel.ReadBool();
+    userDataClearable = parcel.ReadBool();
+    accessible = parcel.ReadBool();
+    isSystemApp = parcel.ReadBool();
+    isLauncherApp = parcel.ReadBool();
+    isFreeInstallApp = parcel.ReadBool();
+    
+    codePath = Str16ToStr8(parcel.ReadString16());
+    dataDir = Str16ToStr8(parcel.ReadString16());
+    dataBaseDir = Str16ToStr8(parcel.ReadString16());
+    cacheDir = Str16ToStr8(parcel.ReadString16());
+    entryDir = Str16ToStr8(parcel.ReadString16());
+
+    apiReleaseType = Str16ToStr8(parcel.ReadString16());
+    debug = parcel.ReadBool();
+    deviceId = Str16ToStr8(parcel.ReadString16());
+    distributedNotificationEnabled = parcel.ReadBool();
+    entityType = Str16ToStr8(parcel.ReadString16());
+    process = Str16ToStr8(parcel.ReadString16());
+    supportedModes = parcel.ReadInt32();
+    vendor = Str16ToStr8(parcel.ReadString16());
+    appPrivilegeLevel = Str16ToStr8(parcel.ReadString16());
+    appDistributionType = Str16ToStr8(parcel.ReadString16());
+    provisionType = Str16ToStr8(parcel.ReadString16());
+    accessTokenId = parcel.ReadUint32();
+    enabled = parcel.ReadBool();
+    uid = parcel.ReadInt32();
+    nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
+    cpuAbi = Str16ToStr8(parcel.ReadString16());
+    
+    int32_t permissionsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
+    for (auto i = 0; i < permissionsSize; i++) {
+        permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    *this = jsonObject.get<ApplicationInfo>();
+
+    int32_t moduleSourceDirsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleSourceDirsSize);
+    for (auto i = 0; i < moduleSourceDirsSize; i++) {
+        moduleSourceDirs.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t moduleInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleInfosSize);
+    for (auto i = 0; i < moduleInfosSize; i++) {
+        std::unique_ptr<ModuleInfo> moduleInfo(parcel.ReadParcelable<ModuleInfo>());
+        if (!moduleInfo) {
+            APP_LOGE("ReadParcelable<ModuleInfo> failed");
+            return false;
+        }
+        moduleInfos.emplace_back(*moduleInfo);
+    }
+
+    int32_t metaDataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaDataSize);
+    for (int32_t i = 0; i < metaDataSize; ++i) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        int32_t customizeDataSize = parcel.ReadInt32();
+        for (int n = 0; n < customizeDataSize; ++n) {
+            std::unique_ptr<CustomizeData> customizeData(parcel.ReadParcelable<CustomizeData>());
+            if (!customizeData) {
+                APP_LOGE("ReadParcelable<CustomizeData> failed");
+                return false;
+            }
+            metaData[key].emplace_back(*customizeData);
+        }
+    }
+
+    int32_t metadataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    for (int32_t i = 0; i < metadataSize; ++i) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        int32_t metaSize = parcel.ReadInt32();
+        for (int n = 0; n < metaSize; ++n) {
+            std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
+            if (!meta) {
+                APP_LOGE("ReadParcelable<Metadata> failed");
+                return false;
+            }
+            metadata[key].emplace_back(*meta);
+        }
+    }
+
+    int32_t targetBundleListSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetBundleListSize);
+    for (auto i = 0; i < targetBundleListSize; i++) {
+        targetBundleList.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    fingerprint = Str16ToStr8(parcel.ReadString16());
+    icon = Str16ToStr8(parcel.ReadString16());
+    flags = parcel.ReadInt32();
+    entryModuleName = Str16ToStr8(parcel.ReadString16());
+    isCompressNativeLibs = parcel.ReadBool();
+    signatureKey = Str16ToStr8(parcel.ReadString16());
+    multiProjects = parcel.ReadBool();
     return true;
 }
 
@@ -245,21 +358,110 @@ ApplicationInfo *ApplicationInfo::Unmarshalling(Parcel &parcel)
 
 bool ApplicationInfo::Marshalling(Parcel &parcel) const
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
+    APP_LOGD("ApplicationInfo::Marshalling called");
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, minCompatibleVersionCode);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, apiCompatibleVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, apiTargetVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &iconResource);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &labelResource);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &descriptionResource);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, keepAlive);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, removable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, singleton);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, userDataClearable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, accessible);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSystemApp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLauncherApp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isFreeInstallApp);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(codePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataDir));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataBaseDir));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cacheDir));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entryDir));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(apiReleaseType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, debug);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedNotificationEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(vendor));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appPrivilegeLevel));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appDistributionType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(provisionType));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, accessTokenId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
+    for (auto &permission : permissions) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));
     }
-    nlohmann::json json = *this;
-    std::string str = json.dump();
-    if (!messageParcel->WriteUint32(str.size() + 1)) {
-        APP_LOGE("Failed to write data size");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleSourceDirs.size());
+    for (auto &moduleSourceDir : moduleSourceDirs) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleSourceDir));
     }
-    if (!messageParcel->WriteRawData(str.c_str(), str.size() + 1)) {
-        APP_LOGE("Failed to write data");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleInfos.size());
+    for (auto &moduleInfo : moduleInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &moduleInfo);
     }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaData.size());
+    for (auto &item : metaData) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item.second.size());
+        for (auto &customizeData : item.second) {
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &customizeData);
+        }
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
+    for (auto &item : metadata) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item.second.size());
+        for (auto &meta : item.second) {
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &meta);
+        }
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetBundleList.size());
+    for (auto &targetBundle : targetBundleList) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetBundle));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fingerprint));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, flags);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entryModuleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompressNativeLibs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(signatureKey));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, multiProjects);
     return true;
 }
 
