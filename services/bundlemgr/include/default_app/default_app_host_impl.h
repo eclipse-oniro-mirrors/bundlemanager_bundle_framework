@@ -27,9 +27,6 @@ public:
     virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) override;
     virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
     virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) override;
-
-private:
-    std::shared_ptr<DefaultAppMgr> defaultAppMgr_ = std::make_shared<DefaultAppMgr>();
 };
 }
 }

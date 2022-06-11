@@ -2883,7 +2883,7 @@ std::shared_ptr<Media::PixelMap> BundleDataMgr::LoadImageFile(const std::string 
 bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
     AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const
 {
-    APP_LOGI("begin to QueryInfoAndSkillsByElement.");
+    APP_LOGD("begin to QueryInfoAndSkillsByElement.");
     const std::string& bundleName = element.bundleName;
     const std::string& moduleName = element.moduleName;
     const std::string& abilityName = element.abilityName;
@@ -2922,12 +2922,12 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
     const InnerBundleInfo& innerBundleInfo = item->second;
     if (isAbility) {
         std::string key;
-        key.append(bundleName).append(".").append(moduleName).append(".").append(abilityName);
+        key.append(bundleName).append(".").append(abilityInfo.package).append(".").append(abilityName);
         APP_LOGD("begin to find ability skills, key : %{public}s.", key.c_str());
         for (const auto& item : innerBundleInfo.GetInnerSkillInfos()) {
             if (item.first == key) {
                 skills = item.second;
-                APP_LOGI("find ability skills success.");
+                APP_LOGD("find ability skills success.");
                 break;
             }
         }
@@ -2938,18 +2938,18 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         for (const auto& item : innerBundleInfo.GetExtensionSkillInfos()) {
             if (item.first == key) {
                 skills = item.second;
-                APP_LOGI("find extension skills success.");
+                APP_LOGD("find extension skills success.");
                 break;
             }
         }
     }
-    APP_LOGI("QueryInfoAndSkillsByElement success.");
+    APP_LOGD("QueryInfoAndSkillsByElement success.");
     return true;
 }
 
 bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, Element& element) const
 {
-    APP_LOGI("begin to GetElement.");
+    APP_LOGD("begin to GetElement.");
     const std::string& bundleName = elementName.GetBundleName();
     const std::string& moduleName = elementName.GetModuleName();
     const std::string& abilityName = elementName.GetAbilityName();
@@ -2962,7 +2962,7 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
     bool ret = ExplicitQueryAbilityInfo(bundleName, moduleName, abilityName,
         GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
     if (ret) {
-        APP_LOGI("ElementName is ability.");
+        APP_LOGD("ElementName is ability.");
         element.bundleName = bundleName;
         element.moduleName = moduleName;
         element.abilityName = abilityName;
@@ -2973,7 +2973,7 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
     ret = ExplicitQueryExtensionInfo(bundleName, moduleName, abilityName,
         GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
     if (ret) {
-        APP_LOGI("ElementName is extension.");
+        APP_LOGD("ElementName is extension.");
         element.bundleName = bundleName;
         element.moduleName = moduleName;
         element.extensionName = abilityName;

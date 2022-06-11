@@ -29,33 +29,37 @@ namespace OHOS {
 namespace AppExecFwk {
 bool DefaultAppHostImpl::IsDefaultApplication(const std::string& type)
 {
-    APP_LOGI("begin to call IsDefaultApplication.");
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    return defaultAppMgr_->IsDefaultApplication(userId, type);
+    APP_LOGD("begin to call IsDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    return DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type);
 }
 
 bool DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
-    APP_LOGI("begin to GetDefaultApplication.");
-    return defaultAppMgr_->GetDefaultApplication(userId, type, bundleInfo);
+    APP_LOGD("begin to GetDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    return DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
 }
 
 bool DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
-    APP_LOGI("begin to SetDefaultApplication.");
+    APP_LOGD("begin to SetDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    const ElementName& elementName = want.GetElement();
+    const std::string& bundleName = elementName.GetBundleName();
+    const std::string& moduleName = elementName.GetModuleName();
+    const std::string& abilityName = elementName.GetAbilityName();
+    APP_LOGD("ElementName, bundleName : %{public}s, moduleName : %{public}s, abilityName : %{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     // case1 : ElementName is empty.
-    ElementName elementName =  want.GetElement();
-    bool isEmpty = elementName.GetBundleName().empty() && elementName.GetModuleName().empty()
-        && elementName.GetAbilityName().empty();
+    bool isEmpty = bundleName.empty() && moduleName.empty() && abilityName.empty();
     if (isEmpty) {
-        APP_LOGI("ElementName is empty.");
+        APP_LOGD("ElementName is empty.");
         Element element;
-        return defaultAppMgr_->SetDefaultApplication(userId, type, element);
+        return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
     }
     // case2 : ElementName is valid ability or valid extension.
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        APP_LOGE("DataMgr is nullptr.");
         return false;
     }
     Element element;
@@ -64,13 +68,13 @@ bool DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string
         APP_LOGE("GetElement failed.");
         return false;
     }
-    return defaultAppMgr_->SetDefaultApplication(userId, type, element);
+    return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
 }
 
 bool DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
-    APP_LOGI("begin to ResetDefaultApplication.");
-    return defaultAppMgr_->ResetDefaultApplication(userId, type);
+    APP_LOGD("begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    return DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);
 }
 }
 }

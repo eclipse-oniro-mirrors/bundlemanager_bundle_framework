@@ -15,12 +15,22 @@
 
 #include "default_app_db.h"
 
+#include <unistd.h>
+
+#include "app_log_wrapper.h"
+
+using namespace OHOS::DistributedKv;
+
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    constexpr int32_t TRY_TIMES = 10;
+    constexpr int32_t SLEEP_INTERVAL = 100 * 1000;  // 100ms
+}
+
 DefaultAppDb::DefaultAppDb()
 {
     APP_LOGD("create DefaultAppDb.");
-    OpenKvDb();
 }
 
 DefaultAppDb::~DefaultAppDb()
@@ -29,54 +39,199 @@ DefaultAppDb::~DefaultAppDb()
     dataManager_.CloseKvStore(appId_, kvStorePtr_);
 }
 
+bool DefaultAppDb::GetDefaultApplicationInfos(int32_t userId, std::map<std::string, Element>& infos)
+{
+    APP_LOGD("begin to GetDefaultApplicationInfos, userId : %{public}d.", userId);
+    bool ret = GetDataFromDb(userId, infos);
+    if (!ret) {
+        APP_LOGE("GetDataFromDb failed.");
+        return false;
+    }
+    APP_LOGD("GetDefaultApplicationInfos success.");
+    return true;
+}
+
+bool DefaultAppDb::GetDefaultApplicationInfo(int32_t userId, const std::string& type, Element& element)
+{
+    APP_LOGD("begin to GetDefaultApplicationInfo, userId : %{public}d, type : %{public}s.", userId, type.c_str());
+    std::map<std::string, Element> infos;
+    bool ret = GetDefaultApplicationInfos(userId, infos);
+    if (!ret) {
+        APP_LOGE("GetDefaultApplicationInfos failed.");
+        return false;
+    }
+    if (infos.find(type) == infos.end()) {
+        APP_LOGD("type is not saved in db.");
+        return false;
+    }
+    element = infos.find(type)->second;
+    APP_LOGD("GetDefaultApplicationInfo success.");
+    return true;
+}
+
+bool DefaultAppDb::SetDefaultApplicationInfos(int32_t userId, const std::map<std::string, Element>& infos)
+{
+    APP_LOGD("begin to SetDefaultApplicationInfos, userId : %{public}d.", userId);
+    bool ret = SaveDataToDb(userId, infos);
+    if (!ret) {
+        APP_LOGE("SaveDataToDb failed.");
+        return false;
+    }
+    APP_LOGD("SetDefaultApplicationInfos success.");
+    return true;
+}
+
+bool DefaultAppDb::SetDefaultApplicationInfo(int32_t userId, const std::string& type, const Element& element)
+{
+    APP_LOGD("begin to SetDefaultApplicationInfo, userId : %{public}d, type : %{public}s.", userId, type.c_str());
+    std::map<std::string, Element> infos;
+    bool ret = GetDefaultApplicationInfos(userId, infos);
+    if (!ret) {
+        APP_LOGE("GetDefaultApplicationInfos failed.");
+        return false;
+    }
+    if (infos.find(type) == infos.end()) {
+        APP_LOGD("add default app info.");
+        infos.emplace(type, element);
+    } else {
+        APP_LOGD("modify default app info.");
+        infos[type] = element;
+    }
+    ret = SaveDataToDb(userId, infos);
+    if (!ret) {
+        APP_LOGE("SaveDataToDb failed.");
+        return false;
+    }
+    APP_LOGD("SetDefaultApplicationInfo success.");
+    return true;
+}
+
+bool DefaultAppDb::DeleteDefaultApplicationInfos(int32_t userId)
+{
+    APP_LOGD("begin to DeleteDefaultApplicationInfos, userId : %{public}d.", userId);
+    bool ret = DeleteDataFromDb(userId);
+    if (!ret) {
+        APP_LOGE("DeleteDataFromDb failed.");
+        return false;
+    }
+    APP_LOGD("DeleteDefaultApplicationInfos success.");
+    return true;
+}
+
+bool DefaultAppDb::DeleteDefaultApplicationInfo(int32_t userId, const std::string& type)
+{
+    APP_LOGD("begin to DeleteDefaultApplicationInfo, userId : %{public}d, type : %{public}s.", userId, type.c_str());
+    std::map<std::string, Element> infos;
+    bool ret = GetDataFromDb(userId, infos);
+    if (!ret) {
+        APP_LOGE("GetDataFromDb failed.");
+        return false;
+    }
+    if (infos.find(type) == infos.end()) {
+        APP_LOGD("type doesn't exists in db.");
+        return true;
+    }
+    infos.erase(type);
+    ret = SaveDataToDb(userId, infos);
+    if (!ret) {
+        APP_LOGE("SaveDataToDb failed.");
+        return false;
+    }
+    APP_LOGD("DeleteDefaultApplicationInfo success.");
+    return true;
+}
+
 bool DefaultAppDb::OpenKvDb()
 {
+    APP_LOGD("begin to OpenKvDb.");
+    Options options = {
+        .createIfMissing = true,
+        .encrypt = false,
+        .autoSync = false,
+        .kvStoreType = KvStoreType::SINGLE_VERSION
+    };
+    Status status = Status::ERROR;
+    int32_t count = 1;
+    while (count <= TRY_TIMES) {
+        status = dataManager_.GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
+        if (status == Status::SUCCESS && kvStorePtr_ != nullptr) {
+            APP_LOGD("OpenKvDb success.");
+            return true;
+        }
+        APP_LOGW("GetSingleKvStore failed, error : %{public}d, try times : %{public}d", status, count);
+        usleep(SLEEP_INTERVAL);
+        count++;
+    }
+    APP_LOGE("OpenKvDb failed, error : %{public}d", status);
     return false;
 }
 
 bool DefaultAppDb::GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos)
 {
-    return false;
+    if (kvStorePtr_ == nullptr && !OpenKvDb()) {
+        APP_LOGE("OpenKvDb failed.");
+        return false;
+    }
+
+    Key key(std::to_string(userId));
+    std::vector<Entry> entries;
+    Status status = kvStorePtr_->GetEntries(key, entries);
+    if (status != Status::SUCCESS) {
+        APP_LOGE("get raw data from db failed, error : %{public}d", status);
+        return false;
+    }
+    // empty is considered correct
+    APP_LOGD("get raw data from db success.");
+    for (const auto& item : entries) {
+        DefaultAppData defaultAppData;
+        nlohmann::json jsonObject = nlohmann::json::parse(item.value.ToString(), nullptr, false);
+        if (jsonObject.is_discarded() || defaultAppData.FromJson(jsonObject) != ERR_OK) {
+            APP_LOGE("error key : %{private}s", item.key.ToString().c_str());
+            kvStorePtr_->Delete(item.key);
+            continue;
+        }
+        infos = defaultAppData.infos;
+        break;
+    }
+    APP_LOGD("GetDataFromDb success.");
+    return true;
 }
 
 bool DefaultAppDb::SaveDataToDb(int32_t userId, const std::map<std::string, Element>& infos)
 {
-    return false;
+    if (kvStorePtr_ == nullptr && !OpenKvDb()) {
+        APP_LOGE("OpenKvDb failed.");
+        return false;
+    }
+
+    DefaultAppData defaultAppData;
+    defaultAppData.infos = infos;
+    Key key(std::to_string(userId));
+    Value value(defaultAppData.ToString());
+    Status status = kvStorePtr_->Put(key, value);
+    if (status != Status::SUCCESS) {
+        APP_LOGE("put data to db failed, error : %{public}d", status);
+        return false;
+    }
+    APP_LOGD("SaveDataToDb success.");
+    return true;
 }
 
 bool DefaultAppDb::DeleteDataFromDb(int32_t userId)
 {
-    return false;
-}
+    if (kvStorePtr_ == nullptr && !OpenKvDb()) {
+        APP_LOGE("OpenKvDb failed.");
+        return false;
+    }
 
-bool DefaultAppDb::GetDefaultApplicationInfos(int32_t userId, std::map<std::string, Element>& infos)
-{
-    return false;
-}
-
-bool DefaultAppDb::GetDefaultApplicationInfo(int32_t userId, const std::string& type, Element& element)
-{
-    return false;
-}
-
-bool DefaultAppDb::SetDefaultApplicationInfos(int32_t userId, const std::map<std::string, Element>& infos)
-{
-    return false;
-}
-
-bool DefaultAppDb::SetDefaultApplicationInfo(int32_t userId, const std::string& type, const Element& element)
-{
-    return false;
-}
-
-bool DefaultAppDb::DeleteDefaultApplicationInfos(int32_t userId)
-{
-    return false;
-}
-
-bool DefaultAppDb::DeleteDefaultApplicationInfo(int32_t userId, const std::string& type)
-{
-    return false;
+    Key key(std::to_string(userId));
+    Status status = kvStorePtr_->Delete(key);
+    if (status != Status::SUCCESS) {
+        APP_LOGE("DeleteDataFromDb failed, error : %{public}d", status);
+        return false;
+    }
+    APP_LOGD("DeleteDataFromDb success.");
+    return true;
 }
 }
 }
