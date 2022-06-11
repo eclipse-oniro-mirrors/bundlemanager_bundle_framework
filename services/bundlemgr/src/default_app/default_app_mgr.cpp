@@ -24,7 +24,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    constexpr int32_t INITIAL_USER_ID = -1;
     const std::string PERMISSION_GET_DEFAULT_APPLICATION = "ohos.permission.GET_DEFAULT_APPLICATION";
     const std::string PERMISSION_SET_DEFAULT_APPLICATION = "ohos.permission.SET_DEFAULT_APPLICATION";
     const std::string BROWSER = "BROWSER";

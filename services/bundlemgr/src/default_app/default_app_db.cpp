@@ -186,7 +186,7 @@ bool DefaultAppDb::GetDataFromDb(int32_t userId, std::map<std::string, Element>&
         DefaultAppData defaultAppData;
         nlohmann::json jsonObject = nlohmann::json::parse(item.value.ToString(), nullptr, false);
         if (jsonObject.is_discarded() || defaultAppData.FromJson(jsonObject) != ERR_OK) {
-            APP_LOGE("error key : %{private}s", item.key.ToString().c_str());
+            APP_LOGE("error key : %{public}s", item.key.ToString().c_str());
             kvStorePtr_->Delete(item.key);
             continue;
         }
