@@ -210,7 +210,6 @@ bool BundleMgrService::Init()
     }
 #endif
 
-    CheckAllUser();
     ready_ = true;
     APP_LOGI("init end success");
     return true;
