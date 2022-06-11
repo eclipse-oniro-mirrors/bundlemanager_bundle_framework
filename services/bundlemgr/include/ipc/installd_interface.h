@@ -143,6 +143,17 @@ public:
      * @return Returns ERR_OK if copy file successfully; returns error code otherwise.
      */
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) = 0;
+
+    /**
+     * @brief Create directory recursively.
+     * @param dir Indicates dir which will be created.
+     * @param mode Indicates dir mode.
+     * @param uid Indicates dir uid.
+     * @param gid Indicates dir gid.
+     * @return Returns ERR_OK if create directory successfully; returns error code otherwise.
+     */
+    virtual ErrCode Mkdir(
+        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) = 0;
 protected:
     enum Message : uint32_t {
         CREATE_BUNDLE_DIR = 1,
@@ -158,7 +169,8 @@ protected:
         GET_BUNDLE_CACHE_PATH,
         SCAN_DIR,
         MOVE_FILE,
-        COPY_FILE
+        COPY_FILE,
+        MKDIR
     };
 };
 

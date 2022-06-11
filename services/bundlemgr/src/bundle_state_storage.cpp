@@ -16,6 +16,8 @@
 #include "bundle_state_storage.h"
 
 #include <fstream>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -65,8 +67,9 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
     APP_LOGD("Json db not exist, and create it");
     bool isDirExist = BundleUtil::IsExistDir(Constants::BUNDLE_MANAGER_SERVICE_PATH);
     if (!isDirExist) {
-        ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(
-            Constants::BUNDLE_MANAGER_SERVICE_PATH);
+        mode_t mode = S_IRWXU | S_IXGRP | S_IXOTH;
+        ErrCode result = InstalldClient::GetInstance()->Mkdir(
+            Constants::BUNDLE_MANAGER_SERVICE_PATH, mode, getuid(), getgid());
         if (result != ERR_OK) {
             APP_LOGE("fail to create dir, error is %{public}d", result);
             return false;

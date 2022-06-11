@@ -199,5 +199,16 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
 
     return CallService(&IInstalld::CopyFile, oldPath, newPath);
 }
+
+ErrCode InstalldClient::Mkdir(
+    const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+{
+    if (dir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::Mkdir, dir, mode, uid, gid);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
