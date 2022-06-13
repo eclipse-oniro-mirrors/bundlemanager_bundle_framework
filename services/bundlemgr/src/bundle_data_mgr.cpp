@@ -2835,11 +2835,11 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     // step2 : implicit query infos
     bool abilityRet =
         ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos) && (abilityInfos.size() > 0);
-    APP_LOGD("abilityRet: %{public}d, abilityInfos size: %{public}lu", abilityRet, abilityInfos.size());
+    APP_LOGD("abilityRet: %{public}d, abilityInfos size: %{public}u", abilityRet, abilityInfos.size());
 
     bool extensionRet =
         ImplicitQueryExtensionInfos(want, flags, userId, extensionInfos) && (extensionInfos.size() > 0);
-    APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}lu", extensionRet, extensionInfos.size());
+    APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}u", extensionRet, extensionInfos.size());
     return abilityRet || extensionRet;
 }
 

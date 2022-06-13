@@ -20,6 +20,9 @@
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_mgr.h"
+#endif
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -178,6 +181,12 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         dataMgr_->NotifyBundleStatus(
             bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, result, NotifyType::UNINSTALL_BUNDLE, uid);
     }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    if (result == ERR_OK) {
+        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+    }
+#endif
 
     if (result == ERR_OK) {
         DistributedDataStorage::GetInstance()->DeleteStorageDistributeInfo(bundleName, userId_);

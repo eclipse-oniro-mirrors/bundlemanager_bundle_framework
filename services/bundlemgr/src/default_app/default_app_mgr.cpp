@@ -201,6 +201,10 @@ bool DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& t
     return true;
 }
 
+void DefaultAppMgr::HandleUninstallBundle(int32_t userId, std::string& bundleName) const
+{
+}
+
 bool DefaultAppMgr::GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     Element element;
