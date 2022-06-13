@@ -68,18 +68,16 @@ constexpr int32_t BENCHMARK_TIMES = 1000;
      * @tc.type: FUNC
      * @tc.require: Issue Number
      */
-    static void BenchmarkTestForMetaDataToJson(benchmark::State &state)
+    static void BenchmarkTestForMetadataToJson(benchmark::State &state)
     {
         nlohmann::json jsonObject;
-        MetaData metaData;
-        CustomizeData customizeData;
-        customizeData.name = "ohos.global.systemres";
-        customizeData.value = "1";
-        customizeData.extra = "/data/accounts/account_0/applications/ohos.global.systemres";
-        metaData.customizeData = {customizeData};
+        Metadata metadata;
+        metadata.name = "ohos.global.systemres";
+        metadata.value = "1";
+        metadata.resource = "/data/accounts/account_0/applications/ohos.global.systemres";
         for (auto _ : state) {
             /* @tc.steps: step1.call to_json in loop */
-            to_json(jsonObject, metaData);
+            to_json(jsonObject, metadata);
         }
     }
 
@@ -89,16 +87,16 @@ constexpr int32_t BENCHMARK_TIMES = 1000;
      * @tc.type: FUNC
      * @tc.require: Issue Number
      */
-    static void BenchmarkTestForMetaDataFromJson(benchmark::State &state)
+    static void BenchmarkTestForMetadataFromJson(benchmark::State &state)
     {
         nlohmann::json jsonObject;
         jsonObject["name"] = "ohos.global.systemres";
         jsonObject["value"] = "1";
         jsonObject["resource"] = "/data/accounts/account_0/applications/ohos.global.systemres";
-        MetaData metaData;
+        Metadata metadata;
         for (auto _ : state) {
             /* @tc.steps: step1.call from_json in loop */
-            from_json(jsonObject, metaData);
+            from_json(jsonObject, metadata);
         }
     }
 
@@ -397,9 +395,16 @@ constexpr int32_t BENCHMARK_TIMES = 1000;
     static void BenchmarkTestForCommonEventInfoFromJson(benchmark::State &state)
     {
         nlohmann::json jsonObject;
+        std::vector<std::string> data;
+        std::vector<std::string> type;
+        std::vector<std::string> events;
         jsonObject["name"] = "ohos.global.systemres";
         jsonObject["permission"] = "1";
         jsonObject["bundleName"] = "ohos_global_systemres";
+        jsonObject["uid"] = -1;
+        jsonObject["data"] = data;
+        jsonObject["type"] = type;
+        jsonObject["events"] = events;
         CommonEventInfo commonEvent;
         for (auto _ : state) {
             /* @tc.steps: step1.call from_json in loop */
@@ -608,8 +613,8 @@ constexpr int32_t BENCHMARK_TIMES = 1000;
 
     BENCHMARK(BenchmarkTestForCustomizeDataToJson)->Iterations(BENCHMARK_TIMES);
     BENCHMARK(BenchmarkTestForCustomizeDataFromJson)->Iterations(BENCHMARK_TIMES);
-    BENCHMARK(BenchmarkTestForMetaDataToJson)->Iterations(BENCHMARK_TIMES);
-    BENCHMARK(BenchmarkTestForMetaDataFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForMetadataToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForMetadataFromJson)->Iterations(BENCHMARK_TIMES);
     BENCHMARK(BenchmarkTestForAbilityInfoToJson)->Iterations(BENCHMARK_TIMES);
     BENCHMARK(BenchmarkTestForAbilityInfoFromJson)->Iterations(BENCHMARK_TIMES);
     BENCHMARK(BenchmarkTestForExtensionAbilityInfoToJson)->Iterations(BENCHMARK_TIMES);
