@@ -557,6 +557,9 @@ public:
     virtual bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo) override;
 
+    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
         const std::string &abilityName) override;

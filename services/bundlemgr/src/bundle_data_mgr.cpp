@@ -31,6 +31,9 @@
 #include "bundle_util.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_mgr.h"
+#endif
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 #include "image_source.h"
 #endif
@@ -2804,6 +2807,40 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
         extensionInfo = extensionInfos[0];
     }
     return true;
+}
+
+bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    // step1 : find default infos
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    std::string type = want.GetType();
+    APP_LOGD("type : %{public}s", type.c_str());
+    BundleInfo bundleInfo;
+    bool ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
+    if (ret) {
+        if (bundleInfo.abilityInfos.size() == 1) {
+            abilityInfos = bundleInfo.abilityInfos;
+            APP_LOGD("find default ability.");
+            return true;
+        } else if (bundleInfo.extensionInfos.size() == 1) {
+            extensionInfos = bundleInfo.extensionInfos;
+            APP_LOGD("find default extension.");
+            return true;
+        } else {
+            APP_LOGD("GetDefaultApplication failed.");
+        }
+    }
+#endif
+    // step2 : implicit query infos
+    bool abilityRet =
+        ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos) && (abilityInfos.size() > 0);
+    APP_LOGD("abilityRet: %{public}d, abilityInfos size: %{public}lu", abilityRet, abilityInfos.size());
+
+    bool extensionRet =
+        ImplicitQueryExtensionInfos(want, flags, userId, extensionInfos) && (extensionInfos.size() > 0);
+    APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}lu", extensionRet, extensionInfos.size());
+    return abilityRet || extensionRet;
 }
 
 bool BundleDataMgr::GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
