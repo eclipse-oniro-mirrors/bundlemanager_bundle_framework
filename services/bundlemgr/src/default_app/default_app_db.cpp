@@ -175,8 +175,6 @@ bool DefaultAppDb::DeleteDefaultApplicationInfo(int32_t userId, const std::strin
     return true;
 }
 
-
-
 bool DefaultAppDb::GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos)
 {
     if (kvStorePtr_ == nullptr && !OpenKvDb()) {

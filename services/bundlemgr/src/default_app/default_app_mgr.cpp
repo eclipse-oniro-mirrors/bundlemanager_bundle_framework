@@ -139,8 +139,6 @@ bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Ski
     return false;
 }
 
-
-
 bool DefaultAppMgr::IsTypeValid(const std::string& type) const
 {
     return IsAppType(type) || IsFileType(type);
