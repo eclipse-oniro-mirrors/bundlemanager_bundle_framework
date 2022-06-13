@@ -131,7 +131,7 @@ static void ParseElementName(napi_env env, napi_value args, Want &want)
 
     APP_LOGD("ParseElementName, bundleName:%{public}s, moduleName: %{public}s, abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
-    ElementName elementName("", bundleName, moduleName, abilityName);
+    ElementName elementName("", bundleName, abilityName, moduleName);
     want.SetElement(elementName);
 }
 
@@ -404,7 +404,6 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                 napi_get_value_int32(env, argv[i], &asyncCallbackInfo->userId);
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-                break;
             } else {
                 asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
             }
@@ -508,7 +507,6 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
                 napi_get_value_int32(env, argv[i], &asyncCallbackInfo->userId);
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-                break;
             } else {
                 asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
             }
@@ -604,7 +602,6 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
                 napi_get_value_int32(env, argv[i], &asyncCallbackInfo->userId);
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-                break;
             } else {
                 asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
             }

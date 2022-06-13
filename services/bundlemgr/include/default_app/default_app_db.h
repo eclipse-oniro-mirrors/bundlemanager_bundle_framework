@@ -18,21 +18,14 @@
 
 #include <map>
 
+#include "bundle_constants.h"
+#include "default_app_data.h"
 #include "distributed_kv_data_manager.h"
 #include "element.h"
 #include "inner_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-    const std::string APP_ID = "bundle_manager_service";
-    const std::string DEFAULT_APP_DATA_STORE_ID = "default_app_datas";
-}
-
-struct DefaultAppInfo {
-    std::map<std::string, Element> infos;
-};
-
 class DefaultAppDb {
 public:
     DefaultAppDb();
@@ -44,13 +37,14 @@ public:
     bool DeleteDefaultApplicationInfos(int32_t userId);
     bool DeleteDefaultApplicationInfo(int32_t userId, const std::string& type);
 private:
+    void Init();
     bool OpenKvDb();
     bool GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos);
     bool SaveDataToDb(int32_t userId, const std::map<std::string, Element>& infos);
     bool DeleteDataFromDb(int32_t userId);
 
-    const DistributedKv::AppId appId_ { APP_ID };
-    const DistributedKv::StoreId storeId_ { DEFAULT_APP_DATA_STORE_ID };
+    const DistributedKv::AppId appId_ { Constants::APP_ID };
+    const DistributedKv::StoreId storeId_ { Constants::DEFAULT_APP_DATA_STORE_ID };
     DistributedKv::DistributedKvDataManager dataManager_;
     std::shared_ptr<DistributedKv::SingleKvStore> kvStorePtr_;
 };

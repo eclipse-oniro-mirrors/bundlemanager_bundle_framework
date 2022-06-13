@@ -19,31 +19,41 @@
 #include<set>
 
 #include "default_app_db.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class DefaultAppMgr {
 public:
+    static DefaultAppMgr& GetInstance();
+    bool IsDefaultApplication(int32_t userId, const std::string& type) const;
+    bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    bool SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
+    bool ResetDefaultApplication(int32_t userId, const std::string& type) const;
+private:
     DefaultAppMgr();
     ~DefaultAppMgr();
-    bool IsDefaultApplication(int32_t userId, const std::string& type);
-    bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo);
-    bool SetDefaultApplication(int32_t userId, const std::string& type, const Element& element);
-    bool ResetDefaultApplication(int32_t userId, const std::string& type);
-private:
-    bool GetBundleInfo(int32_t userId, const std::string& type, const Element& element, BundleInfo& bundleInfo);
+    DISALLOW_COPY_AND_MOVE(DefaultAppMgr);
+    void Init();
     void InitSupportAppTypes();
-    bool IsAppType(const std::string& type);
-    bool IsFileType(const std::string& type);
-    bool IsMatch(const std::string& type, const std::vector<Skill>& skills);
-    bool MatchAppType(const std::string& type, const std::vector<Skill>& skills);
-    bool MatchFileType(const std::string& type, const std::vector<Skill>& skills);
-    bool IsElementValid(const Element& element);
-    bool IsUserIdExist(int32_t userId);
-    bool IsBrowserSkillsValid(const std::vector<Skill>& skills);
-    bool IsImageSkillsValid(const std::vector<Skill>& skills);
-    bool IsAudioSkillsValid(const std::vector<Skill>& skills);
-    bool IsVideoSkillsValid(const std::vector<Skill>& skills);
+    bool GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    bool GetFileTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    bool GetBundleInfo(int32_t userId, const std::string& type, const Element& element, BundleInfo& bundleInfo) const;
+    bool IsTypeValid(const std::string& type) const;
+    bool IsAppType(const std::string& type) const;
+    bool IsFileType(const std::string& type) const;
+    bool IsMatch(const std::string& type, const std::vector<Skill>& skills) const;
+    bool MatchAppType(const std::string& type, const std::vector<Skill>& skills) const;
+    bool MatchFileType(const std::string& type, const std::vector<Skill>& skills) const;
+    bool IsElementEmpty(const Element& element) const;
+    bool VerifyElementFormat(const Element& element) const;
+    bool IsElementValid(int32_t userId, const std::string& type, const Element& element) const;
+    bool IsUserIdExist(int32_t userId) const;
+    bool VerifyUserIdAndType(int32_t userId, const std::string& type) const;
+    bool IsBrowserSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsImageSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsAudioSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsVideoSkillsValid(const std::vector<Skill>& skills) const;
     
     std::shared_ptr<DefaultAppDb> defaultAppDb_;
     std::set<std::string> supportAppTypes;
