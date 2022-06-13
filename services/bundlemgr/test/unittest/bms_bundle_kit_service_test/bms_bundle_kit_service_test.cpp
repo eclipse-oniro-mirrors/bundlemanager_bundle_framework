@@ -180,6 +180,7 @@ const std::string URI_PATH_REGEX_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 
     PORT_SEPARATOR + PORT_001 + PATH_SEPARATOR + PATH_REGEX_001;
 const int32_t DEFAULT_USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
+constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -4318,5 +4319,83 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_004, Function | Sma
         EXPECT_EQ(dependentModuleName[MODULE_NAMES_SIZE_ONE], MODULE_NAME_TEST_2);
         EXPECT_EQ(dependentModuleName[MODULE_NAMES_SIZE_TWO], MODULE_NAME_TEST_3);
     }
+}
+
+/**
+ * @tc.number: SetDisposedStatus_001
+ * @tc.name: test SetDisposedStatus
+ * @tc.desc: bundleName empty, expect false
+ * @tc.require: SR000H7MUF
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_001, Function | SmallTest | Level1)
+{
+    bool result = GetBundleDataMgr()->SetDisposedStatus("", DISPOSED_STATUS);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: SetDisposedStatus_002
+ * @tc.name: test SetDisposedStatus
+ * @tc.desc: wrong bundleName, expect false
+ * @tc.require: SR000H7MUF
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_002, Function | SmallTest | Level1)
+{
+    bool result = GetBundleDataMgr()->SetDisposedStatus("wrong", DISPOSED_STATUS);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: SetDisposedStatus_003
+ * @tc.name: test SetDisposedStatus
+ * @tc.desc: right bundleName, expect true
+ * @tc.require: AR000H7N9D
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_003, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    bool result = GetBundleDataMgr()->SetDisposedStatus(BUNDLE_NAME_TEST, DISPOSED_STATUS);
+    EXPECT_TRUE(result);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetDisposedStatus_001
+ * @tc.name: test GetDisposedStatus
+ * @tc.desc: empty bundleName, expect 0
+ * @tc.require: AR000H7N9D
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_001, Function | SmallTest | Level1)
+{
+    int32_t status = GetBundleDataMgr()->GetDisposedStatus("");
+    EXPECT_EQ(status, 0);
+}
+
+/**
+ * @tc.number: GetDisposedStatus_002
+ * @tc.name: test GetDisposedStatus
+ * @tc.desc: wrong bundleName, expect 0
+ * @tc.require: AR000H7N9D
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_002, Function | SmallTest | Level1)
+{
+    int32_t status = GetBundleDataMgr()->GetDisposedStatus("wrong");
+    EXPECT_EQ(status, 0);
+}
+
+/**
+ * @tc.number: GetDisposedStatus_003
+ * @tc.name: test GetDisposedStatus
+ * @tc.desc: right bundleName, expect true
+ * @tc.require: AR000H7N9D
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_003, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    bool result = GetBundleDataMgr()->SetDisposedStatus(BUNDLE_NAME_TEST, DISPOSED_STATUS);
+    EXPECT_TRUE(result);
+    int32_t status = GetBundleDataMgr()->GetDisposedStatus(BUNDLE_NAME_TEST);
+    EXPECT_EQ(status, DISPOSED_STATUS);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 }
