@@ -129,6 +129,9 @@ public:
 
     ErrCode CopyFile(const std::string &oldPath, const std::string &newPath);
 
+    ErrCode Mkdir(
+        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid);
+
 private:
     /**
      * @brief Get the installd proxy object.

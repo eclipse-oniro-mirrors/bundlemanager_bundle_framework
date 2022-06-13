@@ -159,6 +159,7 @@ void BMSEventHandler::OnBmsStarting()
 
 void BMSEventHandler::AfterBmsStart()
 {
+    DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     SetAllInstallFlag();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
@@ -229,6 +230,12 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
     std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps)
 {
     ScanResultCode scanResultCode = ScanResultCode::SCAN_NO_DATA;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return scanResultCode;
+    }
+
     std::string baseDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1];
     std::vector<std::string> userIds;
     if (!ScanDir(baseDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userIds)) {
@@ -243,6 +250,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
             continue;
         }
 
+        dataMgr->AddUserId(userIdInt);
         std::vector<std::string> userDataBundleNames;
         std::string userDataDir = baseDataDir + Constants::FILE_SEPARATOR_CHAR + userId + Constants::BASE;
         if (!ScanDir(userDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userDataBundleNames)) {
@@ -613,6 +621,8 @@ void BMSEventHandler::GetBundleDirFromScan(std::list<std::string> &bundleDirs)
         APP_LOGD("cfgDir: %{public}s ", cfgDir);
         ProcessScanDir(cfgDir + APP_SUFFIX, bundleDirs);
     }
+
+    FreeCfgDirList(cfgDirList);
 #endif
     auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH_NEW);
     if (iter != bundleDirs.end()) {
@@ -678,6 +688,8 @@ void BMSEventHandler::GetBundleDirFromPreBundleProFile(
         preBundleProFileDirs.insert(preBundleProFileDir);
         ParsePreBundleProFile(preBundleProFileDir, scanInfos, uninstallBundleNames, preBundleConfigInfos);
     }
+
+    FreeCfgDirList(cfgDirList);
 #endif
     // Default catalog
     if (preBundleProFileDirs.find(Constants::DEFAULT_PRE_BUNDLE_PROFILE) == preBundleProFileDirs.end()) {

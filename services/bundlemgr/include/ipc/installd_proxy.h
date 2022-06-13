@@ -120,6 +120,9 @@ public:
 
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) override;
 
+    virtual ErrCode Mkdir(
+        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) override;
+
 private:
     ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

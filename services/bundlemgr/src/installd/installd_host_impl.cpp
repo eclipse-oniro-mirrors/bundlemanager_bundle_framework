@@ -354,5 +354,22 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
 
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::Mkdir(
+    const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+{
+    APP_LOGD("Mkdir start %{public}s", dir.c_str());
+    if (dir.empty()) {
+        APP_LOGE("Calling the function Mkdir with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::MkOwnerDir(dir, mode, uid, gid)) {
+        APP_LOGE("Mkdir %{public}s failed", dir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_MKDIR_FAILED;
+    }
+
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

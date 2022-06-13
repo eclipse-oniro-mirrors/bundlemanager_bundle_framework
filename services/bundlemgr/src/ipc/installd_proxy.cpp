@@ -236,6 +236,21 @@ ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &n
     return TransactInstalldCmd(IInstalld::Message::COPY_FILE, data, reply, option);
 }
 
+ErrCode InstalldProxy::Mkdir(
+    const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+    INSTALLD_PARCEL_WRITE(data, Int32, mode);
+    INSTALLD_PARCEL_WRITE(data, Int32, uid);
+    INSTALLD_PARCEL_WRITE(data, Int32, gid);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(IInstalld::Message::MKDIR, data, reply, option);
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
