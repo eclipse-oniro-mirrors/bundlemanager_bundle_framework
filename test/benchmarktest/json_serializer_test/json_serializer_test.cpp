@@ -22,6 +22,8 @@ using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 
 namespace {
+constexpr int32_t BENCHMARK_TIMES = 1000;
+
     /**
      * @tc.name: BenchmarkTestForCustomizeDataToJson
      * @tc.desc: Testcase for testing 'to_json' function.
@@ -316,13 +318,16 @@ namespace {
     static void BenchmarkTestForFormInfoFromJson(benchmark::State &state)
     {
         nlohmann::json jsonObject;
-        jsonObject["name"] = "ohos.global.systemres";
-        jsonObject["description"] = "1";
-        jsonObject["src"] = "/data/accounts/account_0/applications/ohos.global.systemres";
         FormInfo formInfo;
+        formInfo.name = "ohos.global.systemres";
+        formInfo.description = "1";
+        formInfo.src = "/data/accounts/account_0/applications/ohos.global.systemres";
+        to_json(jsonObject, formInfo);
+        FormInfo formInfoTest;
+
         for (auto _ : state) {
             /* @tc.steps: step1.call from_json in loop */
-            from_json(jsonObject, formInfo);
+            from_json(jsonObject, formInfoTest);
         }
     }
 
@@ -601,37 +606,37 @@ namespace {
         }
     }
 
-    BENCHMARK(BenchmarkTestForCustomizeDataToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForCustomizeDataFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForMetaDataToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForMetaDataFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForAbilityInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForAbilityInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForExtensionAbilityInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForExtensionAbilityInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForApplicationInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForApplicationInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForBundleInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForBundleInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForModuleInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForModuleInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForFormInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForFormInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForShortcutInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForShortcutInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForCommonEventInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForCommonEventInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForHapModuleInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForHapModuleInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForBundleUserInfoToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForBundleUserInfoFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForShortcutWantFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForShortcutFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForShortcutJsonFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForReqPermissionUsedSceToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForReqPermissionUsedSceFromJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForRequestPermissionToJson)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForRequestPermissionFromJson)->Iterations(1000);
+    BENCHMARK(BenchmarkTestForCustomizeDataToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForCustomizeDataFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForMetaDataToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForMetaDataFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForAbilityInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForAbilityInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForExtensionAbilityInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForExtensionAbilityInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForApplicationInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForApplicationInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForBundleInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForBundleInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForModuleInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForModuleInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForFormInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForFormInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForShortcutInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForShortcutInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForCommonEventInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForCommonEventInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForHapModuleInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForHapModuleInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForBundleUserInfoToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForBundleUserInfoFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForShortcutWantFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForShortcutFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForShortcutJsonFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForReqPermissionUsedSceToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForReqPermissionUsedSceFromJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForRequestPermissionToJson)->Iterations(BENCHMARK_TIMES);
+    BENCHMARK(BenchmarkTestForRequestPermissionFromJson)->Iterations(BENCHMARK_TIMES);
 }
 
 BENCHMARK_MAIN();
