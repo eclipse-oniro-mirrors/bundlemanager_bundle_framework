@@ -34,7 +34,7 @@ private:
     DefaultAppMgr();
     ~DefaultAppMgr();
     DISALLOW_COPY_AND_MOVE(DefaultAppMgr);
-    bool Init();
+    void Init();
     void InitSupportAppTypes();
     bool GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool GetFileTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
