@@ -32,7 +32,7 @@ namespace {
     {
         ExtensionFormProfile info;
         const std::string formProfile;
-        std::vector<ExtensionFormInfo> infos;
+        std::vector<ExtensionFormInfo> infos(1);
         infos[0].name = "com.ohos.contactsdataability";
         infos[0].description = "dataability_description";
         for (auto _ : state) {
