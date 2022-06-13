@@ -19,10 +19,6 @@
 #include "system_ability_helper.h"
 #include "system_ability_definition.h"
 
-#ifdef ABILITY_RUNTIME_ENABLE
-#include "ability_manager_interface.h"
-#endif
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "app_mgr_interface.h"
 #include "running_process_info.h"
@@ -34,14 +30,9 @@ bool AbilityManagerHelper::UninstallApplicationProcesses(const std::string &bund
 {
 #ifdef ABILITY_RUNTIME_ENABLE
     APP_LOGI("uninstall kill running processes, app name is %{public}s", bundleName.c_str());
-    sptr<AAFwk::IAbilityManager> abilityMgrProxy =
-        iface_cast<AAFwk::IAbilityManager>(SystemAbilityHelper::GetSystemAbility(ABILITY_MGR_SERVICE_ID));
-    if (abilityMgrProxy == nullptr) {
-        APP_LOGE("fail to find the app mgr service to kill application");
-        return false;
-    }
-    if (abilityMgrProxy->UninstallApp(bundleName, uid) != 0) {
+    if (SystemAbilityHelper::UninstallApp(bundleName, uid) != 0) {
         APP_LOGE("kill application process failed");
+
         return false;
     }
     return true;

@@ -38,7 +38,7 @@ declare_args() {
   hisysevent_enable = true
 
   if (defined(global_parts_info) &&
-      !defined(global_parts_info.aafwk_ability_runtime)) {
+      !defined(global_parts_info.ability_ability_runtime)) {
     ability_runtime_enable = false
     bundle_framework_free_install = false
   }

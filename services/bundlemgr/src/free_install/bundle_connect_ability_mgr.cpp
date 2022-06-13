@@ -15,6 +15,7 @@
 
 #include "bundle_connect_ability_mgr.h"
 
+#include "ability_manager_client.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "free_install_params.h"
@@ -168,7 +169,7 @@ void BundleConnectAbilityMgr::DisconnectAbility()
 {
     if (serviceCenterConnection_ != nullptr) {
         APP_LOGI("DisconnectAbility");
-        int result = abilityMgrProxy_->DisconnectAbility(serviceCenterConnection_);
+        int result = AbilityManagerClient::GetInstance()->DisconnectAbility(serviceCenterConnection_);
         if (result != ERR_OK) {
             APP_LOGE("BundleConnectAbilityMgr::DisconnectAbility fail, resultCode: %{public}d", result);
         }
@@ -201,11 +202,6 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
         WaitFromConnecting(lock);
     } else if (connectState_ == ServiceCenterConnectState::DISCONNECTED) {
         connectState_ = ServiceCenterConnectState::CONNECTING;
-        if (!GetAbilityMgrProxy()) {
-            connectState_ = ServiceCenterConnectState::DISCONNECTED;
-            cv_.notify_all();
-            return false;
-        }
         serviceCenterConnection_ = new (std::nothrow) ServiceCenterConnection(connectState_,
             cv_, weak_from_this());
         if (serviceCenterConnection_ == nullptr) {
@@ -215,7 +211,7 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
             return false;
         }
         APP_LOGI("ConnectAbility start");
-        int result = abilityMgrProxy_->ConnectAbility(want, serviceCenterConnection_, callerToken);
+        int result = AbilityManagerClient::GetInstance()->ConnectAbility(want, serviceCenterConnection_, callerToken);
         if (result == ERR_OK) {
             if (connectState_ != ServiceCenterConnectState::CONNECTED) {
                 WaitFromConnected(lock);
@@ -234,19 +230,6 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
         connectState_ = ServiceCenterConnectState::DISCONNECTED;
         return false;
     }
-}
-
-bool BundleConnectAbilityMgr::GetAbilityMgrProxy()
-{
-    if (abilityMgrProxy_ == nullptr) {
-        abilityMgrProxy_ =
-            iface_cast<AAFwk::IAbilityManager>(SystemAbilityHelper::GetSystemAbility(ABILITY_MGR_SERVICE_ID));
-    }
-    if ((abilityMgrProxy_ == nullptr) || (abilityMgrProxy_->AsObject() == nullptr)) {
-        APP_LOGE("Failed to get system ability manager services ability");
-        return false;
-    }
-    return true;
 }
 
 void BundleConnectAbilityMgr::SendCallBack(

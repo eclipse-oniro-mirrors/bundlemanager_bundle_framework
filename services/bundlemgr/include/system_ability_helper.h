@@ -43,6 +43,15 @@ public:
      * @return Returns true if the service unregistered successfully; returns false otherwise.
      */
     static bool RemoveSystemAbility(const int32_t systemAbilityId);
+
+    /**
+     * Uninstall app
+     *
+     * @param bundleName bundle name of uninstalling app.
+     * @param uid uid of bundle.
+     * @return Returns ERR_OK on success, others on failure.
+     */
+    static int UninstallApp(const std::string &bundleName, int32_t uid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

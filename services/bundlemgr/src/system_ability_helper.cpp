@@ -15,11 +15,16 @@
 
 #include "system_ability_helper.h"
 
+#ifdef ABILITY_RUNTIME_ENABLE
+#include "ability_manager_interface.h"
+#endif
+
 #include "app_log_wrapper.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "string_ex.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -51,6 +56,21 @@ bool SystemAbilityHelper::RemoveSystemAbility(const int32_t systemAbilityId)
     }
     APP_LOGE("fail to remove %{public}d from system ability manager", systemAbilityId);
     return false;
+}
+
+int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid)
+{
+#ifdef ABILITY_RUNTIME_ENABLE
+    sptr<AAFwk::IAbilityManager> abilityMgrProxy =
+        iface_cast<AAFwk::IAbilityManager>(SystemAbilityHelper::GetSystemAbility(ABILITY_MGR_SERVICE_ID));
+    if (abilityMgrProxy == nullptr) {
+        APP_LOGE("fail to find the app mgr service to kill application");
+        return -1;
+    }
+    return abilityMgrProxy->UninstallApp(bundleName, uid);
+#else
+    return 0;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
