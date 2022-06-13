@@ -55,7 +55,7 @@ declare_args() {
   }
 
   if (defined(global_parts_info) &&
-      !defined(global_parts_info.distributedhardware_device_manager_base)) {
+      !defined(global_parts_info.distributedhardware_device_manager)) {
     device_manager_enable = false
   }
 
