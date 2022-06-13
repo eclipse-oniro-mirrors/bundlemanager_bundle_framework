@@ -24,6 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct ShortcutWant {
     std::string bundleName;
+    std::string moduleName;
     std::string abilityName;
 };
 
@@ -42,6 +43,7 @@ struct ShortcutJson {
 
 struct ShortcutIntent {
     std::string targetBundle;
+    std::string targetModule;
     std::string targetClass;
 };
 

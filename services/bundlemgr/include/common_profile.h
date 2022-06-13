@@ -233,6 +233,7 @@ const std::string BUNDLE_MODULE_PROFILE_KEY_SHORTCUT_WANTS = "intents";
 // sub BUNDLE_MODULE_PROFILE_KEY_SHORTCUT_WANTS
 const std::string BUNDLE_MODULE_PROFILE_KEY_TARGET_CLASS = "targetClass";
 const std::string BUNDLE_MODULE_PROFILE_KEY_TARGET_BUNDLE = "targetBundle";
+const std::string BUNDLE_MODULE_PROFILE_KEY_TARGET_MODULE = "targetModule";
 // sub BUNDLE_INSTALL_MARK
 const std::string BUNDLE_INSTALL_MARK_BUNDLE = "installMarkBundle";
 const std::string BUNDLE_INSTALL_MARK_PACKAGE = "installMarkPackage";
