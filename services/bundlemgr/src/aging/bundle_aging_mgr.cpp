@@ -93,13 +93,9 @@ void BundleAgingMgr::InitAgingtTimer()
 int BundleAgingMgr::AgingQueryFormStatistics(std::vector<DeviceUsageStats::BundleActiveModuleRecord>& results,
     const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
-    auto bundleActiveClient = std::make_unique<DeviceUsageStats::BundleActiveClient>();
-    if (bundleActiveClient == nullptr) {
-        APP_LOGE("bundleActiveClient is nullptr");
-        return -1;
-    }
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    int ret = bundleActiveClient->QueryFormStatistics(AgingConstants::COUNT_MODULE_RECODES_GET, results, userId);
+    int ret = DeviceUsageStats::BundleActiveClient::GetInstance().QueryFormStatistics(
+        AgingConstants::COUNT_MODULE_RECODES_GET, results, userId);
     APP_LOGD("activeModuleRecord size %{public}zu, ret:%{public}d", results.size(), ret);
     return ret;
 }
