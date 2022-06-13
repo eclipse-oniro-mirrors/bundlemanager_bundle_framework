@@ -203,6 +203,7 @@ bool DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& t
 
 void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName) const
 {
+    APP_LOGD("begin to HandleUninstallBundle.");
     std::map<std::string, Element> infos;
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
     if (!ret) {
