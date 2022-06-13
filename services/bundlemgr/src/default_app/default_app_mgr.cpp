@@ -201,8 +201,22 @@ bool DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& t
     return true;
 }
 
-void DefaultAppMgr::HandleUninstallBundle(int32_t userId, std::string& bundleName) const
+void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName) const
 {
+    std::map<std::string, Element> infos;
+    bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
+    if (!ret) {
+        APP_LOGE("GetDefaultApplicationInfos failed.");
+        return;
+    }
+    for (auto item = infos.begin(); item != infos.end();) {
+        if (item->second.bundleName == bundleName) {
+            item = infos.erase(item);
+        } else {
+            item++;
+        }
+    }
+    defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
 }
 
 bool DefaultAppMgr::GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const

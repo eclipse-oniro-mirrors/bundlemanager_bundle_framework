@@ -30,7 +30,7 @@ public:
     bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
     bool ResetDefaultApplication(int32_t userId, const std::string& type) const;
-    void HandleUninstallBundle(int32_t userId, std::string& bundleName) const;
+    void HandleUninstallBundle(int32_t userId, const std::string& bundleName) const;
 private:
     DefaultAppMgr();
     ~DefaultAppMgr();
