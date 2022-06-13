@@ -1512,7 +1512,7 @@ void from_json(const nlohmann::json &jsonObject, Intent &intents)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_MODULE_PROFILE_KEY_TARGET_BUNDLE,
+        BUNDLE_MODULE_PROFILE_KEY_TARGET_MODULE,
         intents.targetModule,
         JsonType::STRING,
         false,
