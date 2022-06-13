@@ -31,12 +31,46 @@ namespace {
 DefaultAppDb::DefaultAppDb()
 {
     APP_LOGD("create DefaultAppDb.");
+    Init();
 }
 
 DefaultAppDb::~DefaultAppDb()
 {
     APP_LOGD("destroy DefaultAppDb.");
     dataManager_.CloseKvStore(appId_, kvStorePtr_);
+}
+
+void DefaultAppDb::Init()
+{
+    bool ret = OpenKvDb();
+    if (!ret) {
+        APP_LOGE("OpenKvDb failed.");
+    }
+}
+
+bool DefaultAppDb::OpenKvDb()
+{
+    APP_LOGD("begin to OpenKvDb.");
+    Options options = {
+        .createIfMissing = true,
+        .encrypt = false,
+        .autoSync = false,
+        .kvStoreType = KvStoreType::SINGLE_VERSION
+    };
+    Status status = Status::ERROR;
+    int32_t count = 1;
+    while (count <= TRY_TIMES) {
+        status = dataManager_.GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
+        if (status == Status::SUCCESS && kvStorePtr_ != nullptr) {
+            APP_LOGD("OpenKvDb success.");
+            return true;
+        }
+        APP_LOGW("GetSingleKvStore failed, error : %{public}d, try times : %{public}d", status, count);
+        usleep(SLEEP_INTERVAL);
+        count++;
+    }
+    APP_LOGE("OpenKvDb failed, error : %{public}d", status);
+    return false;
 }
 
 bool DefaultAppDb::GetDefaultApplicationInfos(int32_t userId, std::map<std::string, Element>& infos)
@@ -141,30 +175,7 @@ bool DefaultAppDb::DeleteDefaultApplicationInfo(int32_t userId, const std::strin
     return true;
 }
 
-bool DefaultAppDb::OpenKvDb()
-{
-    APP_LOGD("begin to OpenKvDb.");
-    Options options = {
-        .createIfMissing = true,
-        .encrypt = false,
-        .autoSync = false,
-        .kvStoreType = KvStoreType::SINGLE_VERSION
-    };
-    Status status = Status::ERROR;
-    int32_t count = 1;
-    while (count <= TRY_TIMES) {
-        status = dataManager_.GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
-        if (status == Status::SUCCESS && kvStorePtr_ != nullptr) {
-            APP_LOGD("OpenKvDb success.");
-            return true;
-        }
-        APP_LOGW("GetSingleKvStore failed, error : %{public}d, try times : %{public}d", status, count);
-        usleep(SLEEP_INTERVAL);
-        count++;
-    }
-    APP_LOGE("OpenKvDb failed, error : %{public}d", status);
-    return false;
-}
+
 
 bool DefaultAppDb::GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos)
 {

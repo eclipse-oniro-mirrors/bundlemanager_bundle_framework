@@ -37,6 +37,7 @@ public:
     bool DeleteDefaultApplicationInfos(int32_t userId);
     bool DeleteDefaultApplicationInfo(int32_t userId, const std::string& type);
 private:
+    void Init();
     bool OpenKvDb();
     bool GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos);
     bool SaveDataToDb(int32_t userId, const std::map<std::string, Element>& infos);

@@ -19,6 +19,7 @@
 #include<set>
 
 #include "default_app_db.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -32,10 +33,12 @@ public:
 private:
     DefaultAppMgr();
     ~DefaultAppMgr();
+    DISALLOW_COPY_AND_MOVE(DefaultAppMgr);
+    bool Init();
+    void InitSupportAppTypes();
     bool GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool GetFileTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool GetBundleInfo(int32_t userId, const std::string& type, const Element& element, BundleInfo& bundleInfo) const;
-    void InitSupportAppTypes();
     bool IsTypeValid(const std::string& type) const;
     bool IsAppType(const std::string& type) const;
     bool IsFileType(const std::string& type) const;
@@ -52,7 +55,7 @@ private:
     bool IsAudioSkillsValid(const std::vector<Skill>& skills) const;
     bool IsVideoSkillsValid(const std::vector<Skill>& skills) const;
     
-    std::shared_ptr<DefaultAppDb> defaultAppDb_ = std::make_shared<DefaultAppDb>();
+    std::shared_ptr<DefaultAppDb> defaultAppDb_;
     std::set<std::string> supportAppTypes;
 };
 }

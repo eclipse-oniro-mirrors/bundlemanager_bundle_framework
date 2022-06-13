@@ -41,12 +41,26 @@ DefaultAppMgr& DefaultAppMgr::GetInstance()
 DefaultAppMgr::DefaultAppMgr()
 {
     APP_LOGD("create DefaultAppMgr.");
-    InitSupportAppTypes();
+    Init();
 }
 
 DefaultAppMgr::~DefaultAppMgr()
 {
     APP_LOGD("destroy DefaultAppMgr.");
+}
+
+void DefaultAppMgr::Init()
+{
+    defaultAppDb_ = std::make_shared<DefaultAppDb>();
+    InitSupportAppTypes();
+}
+
+void DefaultAppMgr::InitSupportAppTypes()
+{
+    supportAppTypes.insert(BROWSER);
+    supportAppTypes.insert(IMAGE);
+    supportAppTypes.insert(AUDIO);
+    supportAppTypes.insert(VIDEO);
 }
 
 bool DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type) const
@@ -125,13 +139,7 @@ bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Ski
     return false;
 }
 
-void DefaultAppMgr::InitSupportAppTypes()
-{
-    supportAppTypes.insert(BROWSER);
-    supportAppTypes.insert(IMAGE);
-    supportAppTypes.insert(AUDIO);
-    supportAppTypes.insert(VIDEO);
-}
+
 
 bool DefaultAppMgr::IsTypeValid(const std::string& type) const
 {
