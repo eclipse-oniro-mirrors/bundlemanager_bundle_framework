@@ -83,20 +83,6 @@ bool DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type
         APP_LOGW("VerifyUserIdAndType failed.");
         return false;
     }
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGW("get BundleDataMgr failed.");
-        return false;
-    }
-    // get bundle name via calling uid
-    APP_LOGD("callingUid : %{public}d", IPCSkeleton::GetCallingUid());
-    std::string callingBundleName;
-    ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    if (!ret) {
-        APP_LOGW("GetBundleNameForUid failed.");
-        return false;
-    }
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
     Element element;
     ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
@@ -108,6 +94,19 @@ bool DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type
         APP_LOGW("Element is invalid.");
         return false;
     }
+    // get bundle name via calling uid
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("get BundleDataMgr failed.");
+        return false;
+    }
+    std::string callingBundleName;
+    ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    if (!ret) {
+        APP_LOGW("GetBundleNameForUid failed.");
+        return false;
+    }
+    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
     return element.bundleName == callingBundleName;
 }
 
@@ -124,9 +123,9 @@ bool DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& typ
     }
 
     if (IsAppType(type)) {
-        return GetAppTypeInfo(userId, type, bundleInfo);
+        return GetBundleInfoByAppType(userId, type, bundleInfo);
     } else if (IsFileType(type)) {
-        return GetFileTypeInfo(userId, type, bundleInfo);
+        return GetBundleInfoByFileType(userId, type, bundleInfo);
     } else {
         APP_LOGW("invalid type, not app type or file type.");
         return false;
@@ -220,7 +219,7 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
     defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
 }
 
-bool DefaultAppMgr::GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+bool DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     Element element;
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
@@ -233,11 +232,11 @@ bool DefaultAppMgr::GetAppTypeInfo(int32_t userId, const std::string& type, Bund
         APP_LOGW("GetBundleInfo failed.");
         return false;
     }
-    APP_LOGD("GetAppTypeInfo success.");
+    APP_LOGD("GetBundleInfoByAppType success.");
     return true;
 }
 
-bool DefaultAppMgr::GetFileTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+bool DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     std::map<std::string, Element> infos;
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
@@ -269,7 +268,7 @@ bool DefaultAppMgr::GetFileTypeInfo(int32_t userId, const std::string& type, Bun
             return true;
         }
     }
-    APP_LOGW("GetFileTypeInfo failed.");
+    APP_LOGW("GetBundleInfoByFileType failed.");
     return false;
 }
 

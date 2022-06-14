@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include <pthread.h>
 #include <cstdio>
 #include <cstring>
+#include <pthread.h>
 #include <unistd.h>
 
 #include "app_log_wrapper.h"

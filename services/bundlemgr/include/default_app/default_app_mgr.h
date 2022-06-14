@@ -37,8 +37,8 @@ private:
     DISALLOW_COPY_AND_MOVE(DefaultAppMgr);
     void Init();
     void InitSupportAppTypes();
-    bool GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
-    bool GetFileTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    bool GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    bool GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool GetBundleInfo(int32_t userId, const std::string& type, const Element& element, BundleInfo& bundleInfo) const;
     bool IsTypeValid(const std::string& type) const;
     bool IsAppType(const std::string& type) const;
