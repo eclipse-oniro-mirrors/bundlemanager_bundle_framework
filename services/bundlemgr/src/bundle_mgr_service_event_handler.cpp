@@ -164,6 +164,13 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     BundlePermissionMgr::UnInit();
+    ClearCache();
+}
+
+void BMSEventHandler::ClearCache()
+{
+    hapParseInfoMap_.clear();
+    loadExistData_.clear();
 }
 
 bool BMSEventHandler::LoadInstallInfosFromDb()
@@ -860,7 +867,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     for (auto &scanPathIter : scanPathList) {
         APP_LOGD("reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         std::unordered_map<std::string, InnerBundleInfo> infos;
-        if (!CheckAndParseHapFiles(scanPathIter, true, infos) || infos.empty()) {
+        if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
             APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
             continue;
         }
@@ -1132,6 +1139,38 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     ret = bundleInstallChecker->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
         APP_LOGE("Check APP label failed %{public}d", ret);
+        return false;
+    }
+
+    return true;
+}
+
+bool BMSEventHandler::ParseHapFiles(
+    const std::string &hapFilePath,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::vector<std::string> hapFilePathVec { hapFilePath };
+    std::vector<std::string> realPaths;
+    auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
+    if (ret != ERR_OK) {
+        APP_LOGE("File path %{public}s invalid", hapFilePath.c_str());
+        return false;
+    }
+
+    BundleParser bundleParser;
+    for (auto realPath : realPaths) {
+        InnerBundleInfo innerBundleInfo;
+        ret = bundleParser.Parse(realPath, innerBundleInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("Parse bundle info failed, error: %{public}d", ret);
+            continue;
+        }
+
+        infos.emplace(realPath, innerBundleInfo);
+    }
+
+    if (infos.empty()) {
+        APP_LOGE("Parse hap(%{public}s) empty ", hapFilePath.c_str());
         return false;
     }
 
