@@ -356,13 +356,23 @@ private:
      */
     void SetAllInstallFlag() const;
     /**
-     * @brief Get bundleinfo of HAP by path.
+     * @brief Check and parse hap.
      * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param isPreInstallApp Indicates the hap is preInstallApp or not.
      * @param infos Indicates the obtained BundleInfo object.
      * @return Returns true if the BundleInfo is successfully obtained; returns false otherwise.
      */
     bool CheckAndParseHapFiles(const std::string &hapFilePath,
         bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &infos);
+    /**
+     * @brief Parse hap.
+     * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param infos Indicates the obtained BundleInfo object.
+     * @return Returns true if the BundleInfo is successfully obtained; returns false otherwise.
+     */
+    bool ParseHapFiles(
+        const std::string &hapFilePath,
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief OTA Install system app and system vendor bundles.
      * @param filePaths Indicates the filePaths.
@@ -393,6 +403,10 @@ private:
      */
     void AddParseInfosToMap(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    /**
+     * @brief Clear cache.
+     */
+    void ClearCache();
 
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
