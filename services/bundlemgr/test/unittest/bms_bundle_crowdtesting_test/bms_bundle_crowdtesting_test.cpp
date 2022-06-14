@@ -206,7 +206,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_001, Function | Sm
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -230,7 +230,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_002, Function | Sm
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_2, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_2);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -254,7 +254,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_003, Function | Sm
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_2, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
     EXPECT_EQ(appInfo.crowdtestDeadline, Constants::INVALID_CROWDTEST_DEADLINE);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_2);
@@ -279,7 +279,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_004, Function | Sm
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
     EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -304,7 +304,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_005, Function | Sm
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
     EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE);
 
     ErrCode updateResult = UpdateBundle(HAP_FILE_PATH + HAP_NAME_ENTRY_C, CROWDTEST_DEADLINE2);
@@ -312,7 +312,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_005, Function | Sm
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
     EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE2); // module update effect the crowdtestDeadline
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -337,7 +337,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_006, Function | Sm
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
     EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE);
 
     ErrCode updateResult = InstallBundle(HAP_FILE_PATH + HAP_NAME_ENTRY_B, CROWDTEST_DEADLINE2);
@@ -345,7 +345,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_006, Function | Sm
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
     EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE); // new module install does not effect crowdtestDealine
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -373,7 +373,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_007, Function | Sm
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, 0, USERID, appInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-    EXPECT_EQ(appInfo.provisionType, Constants::PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
     EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
