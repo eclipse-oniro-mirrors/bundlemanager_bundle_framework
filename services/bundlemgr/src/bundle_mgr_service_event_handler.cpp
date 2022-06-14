@@ -624,16 +624,10 @@ void BMSEventHandler::GetBundleDirFromScan(std::list<std::string> &bundleDirs)
 
     FreeCfgDirList(cfgDirList);
 #endif
-    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH_NEW);
+    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
     if (iter != bundleDirs.end()) {
         bundleDirs.erase(iter);
-        bundleDirs.insert(bundleDirs.begin(), Constants::SYSTEM_RESOURCES_APP_PATH_NEW);
-    } else {
-        iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
-        if (iter != bundleDirs.end()) {
-            bundleDirs.erase(iter);
-            bundleDirs.insert(bundleDirs.begin(), Constants::SYSTEM_RESOURCES_APP_PATH);
-        }
+        bundleDirs.insert(bundleDirs.begin(), Constants::SYSTEM_RESOURCES_APP_PATH);
     }
 }
 
