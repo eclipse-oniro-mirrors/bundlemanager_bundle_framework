@@ -235,4 +235,11 @@
     <option name="push" value="test_bundle/sandboxTest.hap -> /data/test/resource/bms/install_bundle/" src="res" />
     </preparer>
   </target>
+  <target name="BmsBundleCrowdtestingTest">
+    <preparer>
+    <option name="push" value="bundle_dependencies/dependencies_entry_B.hap -> /data/test/resource/bms/crowdtesting/" src="res" />
+    <option name="push" value="bundle_dependencies/dependencies_entry_C.hap -> /data/test/resource/bms/crowdtesting/" src="res" />
+    <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/crowdtesting/" src="res" />
+    </preparer>
+  </target>
 </configuration>
