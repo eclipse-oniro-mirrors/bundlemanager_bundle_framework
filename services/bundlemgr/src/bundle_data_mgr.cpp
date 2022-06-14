@@ -2742,12 +2742,12 @@ bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundle
     for (auto &it : bundleInfos_) {
         APP_LOGD("bundleName: %{public}s", it.first.c_str());
         int32_t userId = AccountHelper::GetCurrentActiveUserId();
-        APP_LOGD("bundle userId is %{public}d, userId= %{public}d", it.second.GetUserId(), userId);
+        APP_LOGD("bundle userId= %{public}d", userId);
         if (!it.second.HasInnerBundleUserInfo(userId)) {
             continue;
         }
         if (it.second.IsBundleRemovable(userId)) {
-            bundlenameAndUids.emplace(it.first, it.second.GetUid(it.second.GetUserId()));
+            bundlenameAndUids.emplace(it.first, it.second.GetUid(userId));
         }
     }
     return true;
