@@ -438,7 +438,7 @@ private:
      */
     ErrCode CreateBundleUserData(InnerBundleInfo &innerBundleInfo);
 
-    bool verifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate = false) const;
+    bool VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate = false) const;
 
     ErrCode CheckHapModleOrType(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
