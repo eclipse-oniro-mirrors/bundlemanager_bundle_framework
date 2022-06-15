@@ -282,7 +282,6 @@ struct Js {
 
 struct Intent {
     std::string targetClass;
-    std::string targetModule;
     std::string targetBundle;
 };
 
@@ -1512,14 +1511,6 @@ void from_json(const nlohmann::json &jsonObject, Intent &intents)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_MODULE_PROFILE_KEY_TARGET_MODULE,
-        intents.targetModule,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
         BUNDLE_MODULE_PROFILE_KEY_TARGET_BUNDLE,
         intents.targetBundle,
         JsonType::STRING,
@@ -2290,7 +2281,7 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
         for (const auto &intent : info.intents) {
             ShortcutIntent shortcutIntent;
             shortcutIntent.targetBundle = intent.targetBundle;
-            shortcutIntent.targetModule = intent.targetModule;
+            shortcutIntent.targetModule = Constants::EMPTY_STRING;
             shortcutIntent.targetClass = intent.targetClass;
             shortcutInfo.intents.emplace_back(shortcutIntent);
         }

@@ -328,15 +328,16 @@ static void ConvertShortcutIntent(napi_env env, napi_value objShortcutInfo,
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, shortcutIntent.targetBundle.c_str(), NAPI_AUTO_LENGTH, &nTargetBundle));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "targetBundle", nTargetBundle));
-    napi_value nTargetClass;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "targetClass", nTargetClass));
 
     napi_value nTargetModule;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, shortcutIntent.targetModule.c_str(), NAPI_AUTO_LENGTH, &nTargetModule));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "targetModule", nTargetModule));
+
+    napi_value nTargetClass;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "targetClass", nTargetClass));
 }
 
 static void ConvertShortcutInfo(
