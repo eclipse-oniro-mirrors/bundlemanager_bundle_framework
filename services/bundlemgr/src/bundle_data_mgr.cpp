@@ -2741,6 +2741,7 @@ bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundle
 {
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ is data is empty.");
+        return false;
     }
     for (auto &it : bundleInfos_) {
         APP_LOGD("bundleName: %{public}s", it.first.c_str());
