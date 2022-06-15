@@ -519,6 +519,8 @@ private:
 
     ErrCode HandleImplicitQueryInfoByPriority(Parcel &data, Parcel &reply);
 
+    ErrCode HandleImplicitQueryInfos(Parcel &data, Parcel &reply);
+
     ErrCode HandleGetAllDependentModuleNames(Parcel &data, Parcel &reply);
 
     ErrCode HandleGetSandboxBundleInfo(Parcel &data, Parcel &reply);

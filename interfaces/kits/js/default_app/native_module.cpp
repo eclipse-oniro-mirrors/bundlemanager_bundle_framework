@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include <pthread.h>
 #include <cstdio>
 #include <cstring>
+#include <pthread.h>
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
@@ -23,13 +23,37 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+static void SetNamedProperty(napi_env env, napi_value dstObj, const char *objName, const char *propName)
+{
+    napi_value prop = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, objName, NAPI_AUTO_LENGTH, &prop));
+    NAPI_CALL_RETURN_VOID(env,  napi_set_named_property(env, dstObj, propName, prop));
+}
+
+static void CreateApplicationType(napi_env env, napi_value value)
+{
+    SetNamedProperty(env, value, "BROWSER", "BROWSER");
+    SetNamedProperty(env, value, "IMAGE", "IMAGE");
+    SetNamedProperty(env, value, "AUDIO", "AUDIO");
+    SetNamedProperty(env, value, "VIDEO", "VIDEO");
+    SetNamedProperty(env, value, "PDF", "PDF");
+    SetNamedProperty(env, value, "WORD", "WORD");
+    SetNamedProperty(env, value, "EXCEL", "EXCEL");
+    SetNamedProperty(env, value, "PPT", "PPT");
+}
+
 static napi_value DefaultAppExport(napi_env env, napi_value exports)
 {
+    napi_value applicationType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &applicationType));
+    CreateApplicationType(env, applicationType);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("isDefaultApplication", IsDefaultApplication),
         DECLARE_NAPI_FUNCTION("getDefaultApplication", GetDefaultApplication),
         DECLARE_NAPI_FUNCTION("setDefaultApplication", SetDefaultApplication),
         DECLARE_NAPI_FUNCTION("resetDefaultApplication", ResetDefaultApplication),
+        DECLARE_NAPI_PROPERTY("ApplicationType", applicationType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
@@ -52,4 +76,4 @@ extern "C" __attribute__((constructor)) void DefaultAppRegister(void)
     napi_module_register(&default_app_module);
 }
 }
-}
+}

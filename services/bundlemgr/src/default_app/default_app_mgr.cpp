@@ -24,8 +24,21 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+    constexpr int32_t INITIAL_USER_ID = -1;
+    constexpr int32_t TYPE_PART_COUNT = 2;
+    constexpr int32_t INDEX_ZERO = 0;
+    constexpr int32_t INDEX_ONE = 1;
+    const std::string SPLIT = "/";
     const std::string PERMISSION_GET_DEFAULT_APPLICATION = "ohos.permission.GET_DEFAULT_APPLICATION";
     const std::string PERMISSION_SET_DEFAULT_APPLICATION = "ohos.permission.SET_DEFAULT_APPLICATION";
+    const std::string ACTION_VIEW_DATA = "ohos.want.action.viewData";
+    const std::string ENTITY_BROWSER = "entity.system.browsable";
+    const std::string HTTP = "http";
+    const std::string HTTPS = "https";
+    const std::string WILDCARD = "*";
+    const std::string IMAGE_TYPE = "image/*";
+    const std::string AUDIO_TYPE = "audio/*";
+    const std::string VIDEO_TYPE = "video/*";
     const std::string BROWSER = "BROWSER";
     const std::string IMAGE = "IMAGE";
     const std::string AUDIO = "AUDIO";
@@ -65,77 +78,364 @@ void DefaultAppMgr::InitSupportAppTypes()
 
 bool DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type) const
 {
-    return false;
+    bool ret = VerifyUserIdAndType(userId, type);
+    if (!ret) {
+        APP_LOGW("VerifyUserIdAndType failed.");
+        return false;
+    }
+    Element element;
+    ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
+    if (!ret) {
+        APP_LOGW("GetDefaultApplicationInfo failed.");
+        return false;
+    }
+    ret = IsElementValid(userId, type, element);
+    if (!ret) {
+        APP_LOGW("Element is invalid.");
+        return false;
+    }
+    // get bundle name via calling uid
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("get BundleDataMgr failed.");
+        return false;
+    }
+    std::string callingBundleName;
+    ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    if (!ret) {
+        APP_LOGW("GetBundleNameForUid failed.");
+        return false;
+    }
+    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
+    return element.bundleName == callingBundleName;
 }
 
 bool DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
-    return false;
+    bool ret = VerifyUserIdAndType(userId, type);
+    if (!ret) {
+        APP_LOGW("VerifyUserIdAndType failed.");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_GET_DEFAULT_APPLICATION)) {
+        APP_LOGW("verify permission ohos.permission.GET_DEFAULT_APPLICATION failed.");
+        return false;
+    }
+
+    if (IsAppType(type)) {
+        return GetBundleInfoByAppType(userId, type, bundleInfo);
+    } else if (IsFileType(type)) {
+        return GetBundleInfoByFileType(userId, type, bundleInfo);
+    } else {
+        APP_LOGW("invalid type, not app type or file type.");
+        return false;
+    }
 }
 
 bool DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
 {
-    return false;
+    bool ret = VerifyUserIdAndType(userId, type);
+    if (!ret) {
+        APP_LOGW("VerifyUserIdAndType failed.");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
+        APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
+        return false;
+    }
+    // clear default app
+    ret = IsElementEmpty(element);
+    if (ret) {
+        APP_LOGD("clear default app.");
+        ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
+        if (!ret) {
+            APP_LOGW("DeleteDefaultApplicationInfo failed.");
+            return false;
+        }
+        APP_LOGD("SetDefaultApplication success.");
+        return true;
+    }
+    ret = IsElementValid(userId, type, element);
+    if (!ret) {
+        APP_LOGW("Element is invalid.");
+        return false;
+    }
+    ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
+    if (!ret) {
+        APP_LOGW("SetDefaultApplicationInfo failed.");
+        return false;
+    }
+    APP_LOGD("SetDefaultApplication success.");
+    return true;
 }
 
 bool DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
-    return false;
+    bool ret = VerifyUserIdAndType(userId, type);
+    if (!ret) {
+        APP_LOGW("VerifyUserIdAndType failed.");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
+        APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
+        return false;
+    }
+    Element element;
+    ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, type, element);
+    if (!ret) {
+        APP_LOGD("directly delete default info.");
+        return defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
+    }
+    ret = IsElementValid(userId, type, element);
+    if (!ret) {
+        APP_LOGW("Element is invalid.");
+        return false;
+    }
+    ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
+    if (!ret) {
+        APP_LOGW("SetDefaultApplicationInfo failed.");
+        return false;
+    }
+    APP_LOGD("ResetDefaultApplication success.");
+    return true;
 }
 
-bool DefaultAppMgr::GetAppTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName) const
 {
-    return false;
+    APP_LOGD("begin to HandleUninstallBundle.");
+    std::map<std::string, Element> infos;
+    bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
+    if (!ret) {
+        APP_LOGW("GetDefaultApplicationInfos failed.");
+        return;
+    }
+    for (auto item = infos.begin(); item != infos.end();) {
+        if (item->second.bundleName == bundleName) {
+            item = infos.erase(item);
+        } else {
+            item++;
+        }
+    }
+    defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
 }
 
-bool DefaultAppMgr::GetFileTypeInfo(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+bool DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
-    return false;
+    Element element;
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
+    if (!ret) {
+        APP_LOGW("GetDefaultApplicationInfo failed.");
+        return false;
+    }
+    ret = GetBundleInfo(userId, type, element, bundleInfo);
+    if (!ret) {
+        APP_LOGW("GetBundleInfo failed.");
+        return false;
+    }
+    APP_LOGD("GetBundleInfoByAppType success.");
+    return true;
 }
 
-bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, const Element& element) const
+bool DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
+    std::map<std::string, Element> infos;
+    bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
+    if (!ret) {
+        APP_LOGW("GetDefaultApplicationInfos failed.");
+        return false;
+    }
+    std::map<std::string, Element> defaultAppTypeInfos;
+    std::map<std::string, Element> defaultFileTypeInfos;
+    for (const auto& item : infos) {
+        if (IsAppType(item.first)) {
+            defaultAppTypeInfos.emplace(item.first, item.second);
+        }
+        if (IsFileType(item.first)) {
+            defaultFileTypeInfos.emplace(item.first, item.second);
+        }
+    }
+    // match default app type
+    for (const auto& item : defaultAppTypeInfos) {
+        if (GetBundleInfo(userId, type, item.second, bundleInfo)) {
+            APP_LOGD("match default app type success.");
+            return true;
+        }
+    }
+    // match default file type
+    for (const auto& item : defaultFileTypeInfos) {
+        if (item.first == type && GetBundleInfo(userId, type, item.second, bundleInfo)) {
+            APP_LOGD("match default file type success.");
+            return true;
+        }
+    }
+    APP_LOGW("GetBundleInfoByFileType failed.");
     return false;
 }
 
 bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const Element& element,
     BundleInfo& bundleInfo) const
 {
-    return false;
+    APP_LOGD("begin to GetBundleInfo.");
+    bool ret = VerifyElementFormat(element);
+    if (!ret) {
+        APP_LOGW("VerifyElementFormat failed.");
+        return false;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("get BundleDataMgr failed.");
+        return false;
+    }
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    std::vector<Skill> skills;
+    // verify if element exists
+    ret = dataMgr->QueryInfoAndSkillsByElement(userId, element, abilityInfo, extensionInfo, skills);
+    if (!ret) {
+        APP_LOGW("GetBundleInfo, QueryInfoAndSkillsByElement failed.");
+        return false;
+    }
+    // match type and skills
+    ret = IsMatch(type, skills);
+    if (!ret) {
+        APP_LOGW("GetBundleInfo, type and skills not match.");
+        return false;
+    }
+    ret = dataMgr->GetBundleInfo(element.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    if (!ret) {
+        APP_LOGW("GetBundleInfo failed.");
+        return false;
+    }
+    bool isAbility = !element.abilityName.empty();
+    if (isAbility) {
+        bundleInfo.abilityInfos.emplace_back(abilityInfo);
+    } else {
+        bundleInfo.extensionInfos.emplace_back(extensionInfo);
+    }
+    APP_LOGD("GetBundleInfo success.");
+    return true;
 }
 
 bool DefaultAppMgr::IsMatch(const std::string& type, const std::vector<Skill>& skills) const
 {
-    return false;
+    if (IsAppType(type)) {
+        return MatchAppType(type, skills);
+    } else if (IsFileType(type)) {
+        return MatchFileType(type, skills);
+    } else {
+        APP_LOGW("invalid type.");
+        return false;
+    }
 }
 
 bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skill>& skills) const
 {
-    return false;
+    APP_LOGW("begin to match app type, type : %{public}s.", type.c_str());
+    if (type == BROWSER) {
+        return IsBrowserSkillsValid(skills);
+    } else if (type == IMAGE) {
+        return IsImageSkillsValid(skills);
+    } else if (type == AUDIO) {
+        return IsAudioSkillsValid(skills);
+    } else if (type == VIDEO) {
+        return IsVideoSkillsValid(skills);
+    } else {
+        return false;
+    }
 }
 
 bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
 {
+    APP_LOGD("begin to verify browser skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        item = std::find(skill.entities.cbegin(), skill.entities.cend(), ENTITY_BROWSER);
+        if (item == skill.entities.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skillUri.scheme == HTTP || skillUri.scheme == HTTPS) {
+                APP_LOGD("browser skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("browser skills is invalid.");
     return false;
 }
 
 bool DefaultAppMgr::IsImageSkillsValid(const std::vector<Skill>& skills) const
 {
+    APP_LOGD("begin to verify image skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skill.MatchType(IMAGE_TYPE, skillUri.type)) {
+                APP_LOGD("image skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("image skills is invalid.");
     return false;
 }
 
 bool DefaultAppMgr::IsAudioSkillsValid(const std::vector<Skill>& skills) const
 {
+    APP_LOGD("begin to verify audio skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skill.MatchType(AUDIO_TYPE, skillUri.type)) {
+                APP_LOGD("audio skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("audio skills is invalid.");
     return false;
 }
 
 bool DefaultAppMgr::IsVideoSkillsValid(const std::vector<Skill>& skills) const
 {
+    APP_LOGD("begin to verify video skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skill.MatchType(VIDEO_TYPE, skillUri.type)) {
+                APP_LOGD("video skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("video skills is invalid.");
     return false;
 }
 
 bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Skill>& skills) const
 {
+    APP_LOGW("begin to match file type, type : %{public}s.", type.c_str());
+    for (const Skill& skill : skills) {
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skill.MatchType(type, skillUri.type)) {
+                APP_LOGW("match file type success.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("match file type failed.");
     return false;
 }
 
@@ -154,6 +454,17 @@ bool DefaultAppMgr::IsAppType(const std::string& type) const
 
 bool DefaultAppMgr::IsFileType(const std::string& type) const
 {
+    // valid fileType format : type/subType
+    if (type.empty() || type.find(WILDCARD) != type.npos) {
+        APP_LOGW("file type not allow contains *.");
+        return false;
+    }
+    std::vector<std::string> vector;
+    SplitStr(type, SPLIT, vector, false, false);
+    if (vector.size() == TYPE_PART_COUNT && !vector[INDEX_ZERO].empty() && !vector[INDEX_ONE].empty()) {
+        return true;
+    }
+    APP_LOGW("file type format invalid.");
     return false;
 }
 
@@ -161,7 +472,7 @@ bool DefaultAppMgr::IsUserIdExist(int32_t userId) const
 {
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("get BundleDataMgr failed.");
+        APP_LOGW("get BundleDataMgr failed.");
         return false;
     }
     return dataMgr->HasUserId(userId);
@@ -171,12 +482,12 @@ bool DefaultAppMgr::VerifyUserIdAndType(int32_t userId, const std::string& type)
 {
     bool ret = IsUserIdExist(userId);
     if (!ret) {
-        APP_LOGE("userId doesn't exist.");
+        APP_LOGW("userId %{public}d doesn't exist.", userId);
         return false;
     }
     ret = IsTypeValid(type);
     if (!ret) {
-        APP_LOGE("invalid type, not app type or file type.");
+        APP_LOGW("invalid type %{public}s, not app type or file type.", type.c_str());
         return false;
     }
     return true;
@@ -195,21 +506,52 @@ bool DefaultAppMgr::VerifyElementFormat(const Element& element) const
     const std::string& abilityName = element.abilityName;
     const std::string& extensionName = element.extensionName;
     if (bundleName.empty()) {
-        APP_LOGE("bundleName empty, bad Element format.");
+        APP_LOGW("bundleName empty, bad Element format.");
         return false;
     }
     if (moduleName.empty()) {
-        APP_LOGE("moduleName empty, bad Element format.");
+        APP_LOGW("moduleName empty, bad Element format.");
         return false;
     }
     if (abilityName.empty() && extensionName.empty()) {
-        APP_LOGE("abilityName and extensionName both empty, bad Element format.");
+        APP_LOGW("abilityName and extensionName both empty, bad Element format.");
         return false;
     }
     if (!abilityName.empty() && !extensionName.empty()) {
-        APP_LOGE("abilityName and extensionName both non-empty, bad Element format.");
+        APP_LOGW("abilityName and extensionName both non-empty, bad Element format.");
         return false;
     }
+    return true;
+}
+
+bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, const Element& element) const
+{
+    bool ret = VerifyElementFormat(element);
+    if (!ret) {
+        APP_LOGW("VerifyElementFormat failed.");
+        return false;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("get BundleDataMgr failed.");
+        return false;
+    }
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    std::vector<Skill> skills;
+    // verify if element exists
+    ret = dataMgr->QueryInfoAndSkillsByElement(userId, element, abilityInfo, extensionInfo, skills);
+    if (!ret) {
+        APP_LOGW("QueryInfoAndSkillsByElement failed.");
+        return false;
+    }
+    // match type and skills
+    ret = IsMatch(type, skills);
+    if (!ret) {
+        APP_LOGW("type and skills not match.");
+        return false;
+    }
+    APP_LOGD("Element is valid.");
     return true;
 }
 }

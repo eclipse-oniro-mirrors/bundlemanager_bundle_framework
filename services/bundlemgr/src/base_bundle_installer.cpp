@@ -20,6 +20,9 @@
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_mgr.h"
+#endif
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -180,6 +183,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     }
 
     if (result == ERR_OK) {
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+#endif
         DistributedDataStorage::GetInstance()->DeleteStorageDistributeInfo(bundleName, userId_);
     }
 
@@ -958,8 +964,8 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
 
 ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid)
 {
-    if (!verifyUriPrefix(info, userId_)) {
-        APP_LOGE("verifyUriPrefix failed");
+    if (!VerifyUriPrefix(info, userId_)) {
+        APP_LOGE("VerifyUriPrefix failed");
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
     modulePackage_ = info.GetCurrentModulePackage();
@@ -1063,8 +1069,8 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 {
     APP_LOGD("ProcessNewModuleInstall %{public}s, userId: %{public}d.",
         newInfo.GetBundleName().c_str(), userId_);
-    if (!verifyUriPrefix(newInfo, userId_)) {
-        APP_LOGE("verifyUriPrefix failed");
+    if (!VerifyUriPrefix(newInfo, userId_)) {
+        APP_LOGE("VerifyUriPrefix failed");
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
 
@@ -1135,8 +1141,8 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 {
     APP_LOGD("ProcessModuleUpdate, bundleName : %{public}s, moduleName : %{public}s, userId: %{public}d.",
         newInfo.GetBundleName().c_str(), newInfo.GetCurrentModulePackage().c_str(), userId_);
-    if (!verifyUriPrefix(newInfo, userId_, true)) {
-        APP_LOGE("verifyUriPrefix failed");
+    if (!VerifyUriPrefix(newInfo, userId_, true)) {
+        APP_LOGE("VerifyUriPrefix failed");
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
 
@@ -1759,7 +1765,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::verifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate) const
+bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate) const
 {
     // uriPrefix must be unique
     // verify current module uriPrefix

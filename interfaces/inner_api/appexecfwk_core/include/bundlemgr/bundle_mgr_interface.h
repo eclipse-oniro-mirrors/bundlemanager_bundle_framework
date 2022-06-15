@@ -831,6 +831,12 @@ public:
         return false;
     }
 
+    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    {
+        return false;
+    }
+
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
         const std::string &abilityName)
@@ -996,6 +1002,7 @@ public:
         SET_MODULE_NEED_UPDATE,
         GET_HAP_MODULE_INFO_WITH_USERID,
         IMPLICIT_QUERY_INFO_BY_PRIORITY,
+        IMPLICIT_QUERY_INFOS,
         GET_ALL_DEPENDENT_MODULE_NAMES,
         GET_SANDBOX_APP_BUNDLE_INFO,
         SET_DISPOSED_STATUS,
