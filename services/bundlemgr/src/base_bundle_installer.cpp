@@ -184,9 +184,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
     if (result == ERR_OK) {
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-        if (result == ERR_OK) {
-            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
-        }
+        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
 #endif
         DistributedDataStorage::GetInstance()->DeleteStorageDistributeInfo(bundleName, userId_);
     }
