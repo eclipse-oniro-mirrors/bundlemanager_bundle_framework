@@ -93,6 +93,10 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_value nInstallErrorCode = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nInstallErrorCode));
     CreateInstallErrorCodeObject(env, nInstallErrorCode);
+
+    napi_value nSupportWindowMode  = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nSupportWindowMode));
+    CreateSupportWindowModesObject(env, nBundleFlag);
     /*
      * Propertise define
      */
@@ -145,6 +149,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ShortcutExistence", nShortcutExistence),
         DECLARE_NAPI_PROPERTY("QueryShortCutFlag", nQueryShortCutFlag),
         DECLARE_NAPI_PROPERTY("InstallErrorCode", nInstallErrorCode),
+        DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityType", nExtensionAbilityType),
         DECLARE_NAPI_PROPERTY("BundleFlag", nBundleFlag),
         DECLARE_NAPI_PROPERTY("ExtensionFlag", nExtensionFlag)

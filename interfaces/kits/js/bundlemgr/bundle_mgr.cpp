@@ -555,6 +555,41 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
     napi_value nEnabled;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.enabled, &nEnabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "enabled", nEnabled));
+
+    napi_value nSupportWindowMode;
+    size = abilityInfo.windowModes.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSupportWindowMode));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value innerMode;
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_int32(env, static_cast<int32_t>(abilityInfo.windowModes[index]), &innerMode));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSupportWindowMode, index, innerMode));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "supportWindowMode", nSupportWindowMode));
+
+    napi_value nMaxWindowRatio;
+    NAPI_CALL_RETURN_VOID(env, napi_create_double(env, abilityInfo.maxWindowRatio, &nMaxWindowRatio));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "maxWindowRatio", nMaxWindowRatio));
+
+    napi_value mMinWindowRatio;
+    NAPI_CALL_RETURN_VOID(env, napi_create_double(env, abilityInfo.minWindowRatio, &mMinWindowRatio));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "minWindowRatio", mMinWindowRatio));
+
+    napi_value nMaxWindowWidth;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, abilityInfo.maxWindowWidth, &nMaxWindowWidth));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "maxWindowWidth", nMaxWindowWidth));
+
+    napi_value nMinWindowWidth;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, abilityInfo.minWindowWidth, &nMinWindowWidth));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "minWindowWidth", nMinWindowWidth));
+
+    napi_value nMaxWindowHeight;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, abilityInfo.maxWindowHeight, &nMaxWindowHeight));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "maxWindowHeight", nMaxWindowHeight));
+
+    napi_value nMinWindowHeight;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, abilityInfo.minWindowHeight, &nMinWindowHeight));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "minWindowHeight", nMinWindowHeight));
 }
 
 static void ProcessAbilityInfos(
@@ -6196,6 +6231,50 @@ void CreateDisplayOrientationObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(
         env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::FOLLOWRECENT), &nFollowrecent));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FOLLOW_RECENT", nFollowrecent));
+    napi_value nReverseLandscape;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LANDSCAPE_INVERTED), &nReverseLandscape));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LANDSCAPE_INVERTED", nReverseLandscape));
+    napi_value nReversePortrait;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED), &nReversePortrait));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PORTRAIT_INVERTED", nReversePortrait));
+    napi_value nAutoRotation;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION), &nAutoRotation));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION", nAutoRotation));
+    napi_value nAutoRotationLandscape;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE),
+            &nAutoRotationLandscape));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE", nAutoRotationLandscape));
+    napi_value nAutoRotationPortrait;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT),
+            &nAutoRotationPortrait));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT", nAutoRotationPortrait));
+    napi_value nAutoRotationRestricted;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_RESTRICTED),
+            &nAutoRotationRestricted));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_RESTRICTED",
+        nAutoRotationRestricted));
+    napi_value nAutoRotationLandscapeRestricted;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED),
+            &nAutoRotationLandscapeRestricted));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE_RESTRICTED", nAutoRotationLandscapeRestricted));
+    napi_value nAutoRotationPortraitRestricted;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED),
+            &nAutoRotationPortraitRestricted));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT_RESTRICTED",
+        nAutoRotationPortraitRestricted));
+    napi_value nLocked;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LOCKED", nLocked));
 }
 
 void CreateLaunchModeObject(napi_env env, napi_value value)
@@ -7036,6 +7115,22 @@ napi_value GetProfileByExAbility(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetProfileByExAbility start in NAPI");
     return GetProfile(env, info, ProfileType::EXTENSION_PROFILE);
+}
+
+void CreateSupportWindowModesObject(napi_env env, napi_value value)
+{
+    napi_value nFullscreen;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FULLSCREEN), &nFullscreen));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULLSCREEN", nFullscreen));
+
+    napi_value nSplit;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::SPLIT), &nSplit));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SPLIT", nSplit));
+
+    napi_value nFloat;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FLOATING), &nFloat));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLOATING", nFloat));
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

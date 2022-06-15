@@ -65,6 +65,15 @@ enum class DisplayOrientation {
     LANDSCAPE,
     PORTRAIT,
     FOLLOWRECENT,
+    LANDSCAPE_INVERTED,
+    PORTRAIT_INVERTED,
+    AUTO_ROTATION,
+    AUTO_ROTATION_LANDSCAPE,
+    AUTO_ROTATION_PORTRAIT,
+    AUTO_ROTATION_RESTRICTED,
+    AUTO_ROTATION_LANDSCAPE_RESTRICTED,
+    AUTO_ROTATION_PORTRAIT_RESTRICTED,
+    LOCKED,
 };
 
 enum class LaunchMode {
@@ -77,6 +86,12 @@ enum class LaunchMode {
 enum class CompileMode {
     JS_BUNDLE = 0,
     ES_MODULE,
+};
+
+enum class SupportWindowMode {
+    FULLSCREEN = 0,
+    SPLIT,
+    FLOATING,
 };
 
 struct AbilityInfo;
@@ -212,6 +227,15 @@ struct AbilityInfo : public Parcelable {
     int32_t startWindowIconId;
     std::string startWindowBackground;
     int32_t startWindowBackgroundId;
+
+    // support windows mode
+    std::vector<SupportWindowMode> windowModes;
+    double maxWindowRatio = 0;
+    double minWindowRatio = 0;
+    uint32_t maxWindowWidth = 0;
+    uint32_t minWindowWidth = 0;
+    uint32_t maxWindowHeight = 0;
+    uint32_t minWindowHeight = 0;
 
     // unused
     std::string originalBundleName;

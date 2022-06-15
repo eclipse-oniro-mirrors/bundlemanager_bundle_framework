@@ -92,6 +92,13 @@ const std::string IS_MODULE_JSON = "isModuleJson";
 const std::string IS_STAGE_BASED_MODEL = "isStageBasedModel";
 const std::string CONTINUABLE = "continuable";
 const std::string PRIORITY = "priority";
+const std::string JOSN_KEY_SUPPORT_WINDOW_MODE = "supportWindowMode";
+const std::string JOSN_KEY_MAX_WINDOW_RATIO = "maxWindowRatio";
+const std::string JOSN_KEY_MIN_WINDOW_RATIO = "minWindowRatio";
+const std::string JOSN_KEY_MAX_WINDOW_WIDTH = "maxWindowWidth";
+const std::string JOSN_KEY_MIN_WINDOW_WIDTH = "minWindowWidth";
+const std::string JOSN_KEY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
+const std::string JOSN_KEY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 }  // namespace
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -262,7 +269,14 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_START_WINDOW_BACKGROUND, abilityInfo.startWindowBackground},
         {JSON_KEY_START_WINDOW_BACKGROUND_ID, abilityInfo.startWindowBackgroundId},
         {JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE, abilityInfo.removeMissionAfterTerminate},
-        {JSON_KEY_COMPILE_MODE, abilityInfo.compileMode}
+        {JSON_KEY_COMPILE_MODE, abilityInfo.compileMode},
+        {JOSN_KEY_SUPPORT_WINDOW_MODE, abilityInfo.windowModes},
+        {JOSN_KEY_MAX_WINDOW_RATIO, abilityInfo.maxWindowRatio},
+        {JOSN_KEY_MIN_WINDOW_RATIO, abilityInfo.minWindowRatio},
+        {JOSN_KEY_MAX_WINDOW_WIDTH, abilityInfo.maxWindowWidth},
+        {JOSN_KEY_MIN_WINDOW_WIDTH, abilityInfo.minWindowWidth},
+        {JOSN_KEY_MAX_WINDOW_HEIGHT, abilityInfo.maxWindowHeight},
+        {JOSN_KEY_MIN_WINDOW_HEIGHT, abilityInfo.minWindowHeight}
     };
 }
 
@@ -792,6 +806,62 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         jsonObjectEnd,
         JSON_KEY_COMPILE_MODE,
         abilityInfo.compileMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<SupportWindowMode>>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_SUPPORT_WINDOW_MODE,
+        abilityInfo.windowModes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
+    GetValueIfFindKey<double>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_MAX_WINDOW_RATIO,
+        abilityInfo.maxWindowRatio,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<double>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_MIN_WINDOW_RATIO,
+        abilityInfo.minWindowRatio,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_MAX_WINDOW_WIDTH,
+        abilityInfo.maxWindowWidth,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_MIN_WINDOW_WIDTH,
+        abilityInfo.minWindowWidth,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_MAX_WINDOW_HEIGHT,
+        abilityInfo.maxWindowHeight,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_MIN_WINDOW_HEIGHT,
+        abilityInfo.minWindowHeight,
         JsonType::NUMBER,
         false,
         parseResult,
