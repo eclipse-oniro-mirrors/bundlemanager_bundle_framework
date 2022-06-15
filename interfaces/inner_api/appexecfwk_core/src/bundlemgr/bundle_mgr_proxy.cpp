@@ -184,7 +184,7 @@ bool BundleMgrProxy::GetApplicationInfos(
         return false;
     }
 
-    if (!GetParcelableInfos<ApplicationInfo>(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS,
+    if (!GetParcelableInfosFromAshmem<ApplicationInfo>(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS,
         data, appInfos)) {
         APP_LOGE("fail to GetApplicationInfos from server");
         return false;
@@ -814,7 +814,8 @@ bool BundleMgrProxy::QueryAbilityInfos(
         return false;
     }
 
-    if (!GetParcelableInfos<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM, data, abilityInfos)) {
+    if (!GetParcelableInfosFromAshmem<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM,
+                                                   data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos mutiparam from server");
         return false;
     }

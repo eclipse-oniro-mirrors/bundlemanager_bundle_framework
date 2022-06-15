@@ -273,7 +273,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(Parcel &data, Parce
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVector(infos, reply)) {
+        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -619,7 +619,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosMutiparam(Parcel &data, Parcel &re
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVector(abilityInfos, reply)) {
+        if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
