@@ -83,7 +83,7 @@ const nlohmann::json CONFIG_JSON = R"(
                     "intents": [
                       {
                         "targetBundle": "com.demo.hiworld.himusic",
-                        "targetClass": "com.demo.hiworld.himusic.entry.MainAbility"
+                        "targetClass": "com.demo.hiworld.himusic.entry.MainAbility",
                         "targetModule": "com.demo.hiworld.himusic.entry.MainApplication"
                       }
                     ]

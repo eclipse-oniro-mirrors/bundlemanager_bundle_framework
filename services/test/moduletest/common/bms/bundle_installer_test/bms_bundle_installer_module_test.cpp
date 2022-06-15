@@ -378,7 +378,7 @@ protected:
                     "intents": [
                         {
                             "targetBundle": "com.example.myapplication1",
-                            "targetClass": "com.example.myapplication.MainAbility"
+                            "targetClass": "com.example.myapplication.MainAbility",
                             "targetModule": "com.example.myapplication.MyApplication"
                         }
                     ],
