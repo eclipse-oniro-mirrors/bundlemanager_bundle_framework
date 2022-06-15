@@ -51,7 +51,7 @@ void BundleAgingMgr::InitAgingTimerInterval()
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szTimerThresold is %{public}d", ret, atoi(szTimerThresold));
     if (ret <= 0) {
-        APP_LOGE("GetParameter failed");
+        APP_LOGD("GetParameter failed");
         return;
     }
     if (strcmp(szTimerThresold, "") != 0) {
@@ -67,7 +67,7 @@ void BundleAgingMgr::InitAgingBatteryThresold()
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szBatteryThresold is %{public}d", ret, atoi(szBatteryThresold));
     if (ret <= 0) {
-        APP_LOGE("GetParameter failed");
+        APP_LOGD("GetParameter failed");
         return;
     }
     if (strcmp(szBatteryThresold, "") != 0) {

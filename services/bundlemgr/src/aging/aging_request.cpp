@@ -37,7 +37,7 @@ void AgingRequest::InitAgingDatasizeThreshold()
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szDatasizeThreshold is %{public}d", ret, atoi(szDatasizeThreshold));
     if (ret <= 0) {
-        APP_LOGE("GetParameter failed");
+        APP_LOGD("GetParameter failed");
         return;
     }
     if (strcmp(szDatasizeThreshold, "") != 0) {
@@ -53,7 +53,7 @@ void AgingRequest::InitAgingOneDayTimeMs()
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szOneDayTimeMs is %{public}d", ret, atoi(szOneDayTimeMs));
     if (ret <= 0) {
-        APP_LOGE("GetParameter failed");
+        APP_LOGD("GetParameter failed");
         return;
     }
     if (strcmp(szOneDayTimeMs, "") != 0) {
