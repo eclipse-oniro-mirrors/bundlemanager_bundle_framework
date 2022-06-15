@@ -45,6 +45,26 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string GetCommonEventData(const NotifyType type)
+{
+    const std::unordered_map<NotifyType, EventFwk::CommonEventSupport> eventMap = {
+        { NotifyType::INSTALL, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED },
+        { NotifyType::UNINSTALL_BUNDLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED },
+        { NotifyType::UNINSTALL_MODULE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED },
+        { NotifyType::UPDATE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
+        { NotifyType::ABILITY_ENABLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
+        { NotifyType::APPLICATION_ENABLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
+        { NotifyType::BUNDLE_DATA_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_DATA_CLEARED },
+    };
+    auto iter = eventMap.find(type);
+    if (iter == eventMap.end()) {
+        APP_LOGW("event type error");
+        return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED;
+    }
+    return iter->second;
+}
+}
 BundleDataMgr::BundleDataMgr()
 {
     InitStateTransferMap();
@@ -1945,25 +1965,7 @@ bool BundleDataMgr::NotifyBundleStatus(const std::string& bundleName, const std:
     if (resultCode != ERR_OK) {
         return true;
     }
-    std::string eventData = [type]() -> std::string {
-        switch (type) {
-            case NotifyType::INSTALL:
-                return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED;
-            case NotifyType::UNINSTALL_BUNDLE:
-                return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED;
-            case NotifyType::UNINSTALL_MODULE:
-                return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED;
-            case NotifyType::UPDATE:
-                return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED;
-            case NotifyType::ABILITY_ENABLE:
-                return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED;
-            case NotifyType::APPLICATION_ENABLE:
-                return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED;
-            default:
-                APP_LOGE("event type error");
-                return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED;
-        }
-    }();
+    std::string eventData = GetCommonEventData(type);
     APP_LOGD("will send event data %{public}s", eventData.c_str());
     Want want;
     want.SetAction(eventData);

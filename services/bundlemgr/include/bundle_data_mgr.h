@@ -51,7 +51,15 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class NotifyType { INSTALL, UPDATE, UNINSTALL_BUNDLE, UNINSTALL_MODULE, ABILITY_ENABLE, APPLICATION_ENABLE };
+enum class NotifyType {
+    INSTALL = 1,
+    UPDATE,
+    UNINSTALL_BUNDLE,
+    UNINSTALL_MODULE,
+    ABILITY_ENABLE,
+    APPLICATION_ENABLE,
+    BUNDLE_DATA_CLEARED,
+};
 
 enum class InstallState {
     INSTALL_START = 1,
