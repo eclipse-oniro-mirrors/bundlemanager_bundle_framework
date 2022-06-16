@@ -389,7 +389,15 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
     ConvertResource(env, nDescriptionResource, appInfo.descriptionResource);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "descriptionResource", nDescriptionResource));
 
-    APP_LOGI("ConvertApplicationInfo entryDir=%{public}s.", appInfo.entryDir.c_str());
+    napi_value nAppDistributionType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.appDistributionType.c_str(), NAPI_AUTO_LENGTH,
+        &nAppDistributionType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "appDistributionType", nAppDistributionType));
+
+    napi_value nAppProvisionType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.appProvisionType.c_str(), NAPI_AUTO_LENGTH,
+        &nAppProvisionType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "appProvisionType", nAppProvisionType));
 }
 
 static void ConvertMetaData(napi_env env, napi_value objMetaData, const MetaData &metaData)

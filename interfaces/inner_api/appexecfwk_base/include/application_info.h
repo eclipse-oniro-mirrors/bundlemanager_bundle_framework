@@ -164,7 +164,7 @@ struct ApplicationInfo : public Parcelable {
     std::string appPrivilegeLevel = AVAILABLELEVEL_NORMAL;
     // provision
     std::string appDistributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
-    std::string provisionType = Constants::PROVISION_TYPE_RELEASE;
+    std::string appProvisionType = Constants::APP_PROVISION_TYPE_RELEASE;
 
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;

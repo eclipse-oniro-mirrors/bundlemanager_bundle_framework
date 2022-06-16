@@ -129,7 +129,7 @@ protected:
                         "versionCode": 0,
                         "versionName": "",
                         "appDistributionType": "none",
-                        "provisionType": "release",
+                        "appProvisionType": "release",
                         "crowdtestDeadline": -1
                     },
                     "extensionAbilityType": 9,
@@ -406,7 +406,7 @@ protected:
                 "versionCode": 1000000,
                 "versionName": "1.0.0",
                 "appDistributionType": "none",
-                "provisionType": "release",
+                "appProvisionType": "release",
                 "crowdtestDeadline": -1
             },
             "baseBundleInfo": {
@@ -489,7 +489,7 @@ protected:
                     "versionCode": 0,
                     "versionName": "",
                     "appDistributionType": "none",
-                    "provisionType": "release",
+                    "appProvisionType": "release",
                     "crowdtestDeadline": -1
                 },
                 "compatibleVersion": 8,

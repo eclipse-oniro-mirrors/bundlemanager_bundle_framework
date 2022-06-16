@@ -84,7 +84,7 @@ const std::string APPLICATION_IS_COMPRESS_NATIVE_LIBS = "isCompressNativeLibs";
 const std::string APPLICATION_SIGNATURE_KEY = "signatureKey";
 const std::string APPLICATION_TARGETBUNDLELIST = "targetBundleList";
 const std::string APPLICATION_APP_DISTRIBUTION_TYPE = "appDistributionType";
-const std::string APPLICATION_PROVISION_TYPE = "provisionType";
+const std::string APPLICATION_APP_PROVISION_TYPE = "appProvisionType";
 const std::string APPLICATION_ICON_RESOURCE = "iconResource";
 const std::string APPLICATION_LABEL_RESOURCE = "labelResource";
 const std::string APPLICATION_DESCRIPTION_RESOURCE = "descriptionResource";
@@ -590,7 +590,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_SIGNATURE_KEY, applicationInfo.signatureKey},
         {APPLICATION_TARGETBUNDLELIST, applicationInfo.targetBundleList},
         {APPLICATION_APP_DISTRIBUTION_TYPE, applicationInfo.appDistributionType},
-        {APPLICATION_PROVISION_TYPE, applicationInfo.provisionType},
+        {APPLICATION_APP_PROVISION_TYPE, applicationInfo.appProvisionType},
         {APPLICATION_ICON_RESOURCE, applicationInfo.iconResource},
         {APPLICATION_LABEL_RESOURCE, applicationInfo.labelResource},
         {APPLICATION_DESCRIPTION_RESOURCE, applicationInfo.descriptionResource},
@@ -1029,8 +1029,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        APPLICATION_PROVISION_TYPE,
-        applicationInfo.provisionType,
+        APPLICATION_APP_PROVISION_TYPE,
+        applicationInfo.appProvisionType,
         JsonType::STRING,
         false,
         parseResult,
