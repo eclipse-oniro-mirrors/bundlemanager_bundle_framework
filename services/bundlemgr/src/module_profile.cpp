@@ -115,6 +115,26 @@ const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"standard", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
+const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
+    {"unspecified", DisplayOrientation::UNSPECIFIED},
+    {"landscape", DisplayOrientation::LANDSCAPE},
+    {"portrait", DisplayOrientation::PORTRAIT},
+    {"followrecent", DisplayOrientation::FOLLOWRECENT},
+    {"landscape_inverted", DisplayOrientation::LANDSCAPE_INVERTED},
+    {"portrait_inverted", DisplayOrientation::PORTRAIT_INVERTED},
+    {"auto_rotation", DisplayOrientation::AUTO_ROTATION},
+    {"auto_rotation_landscape", DisplayOrientation::AUTO_ROTATION_LANDSCAPE},
+    {"auto_rotation_portrait", DisplayOrientation::AUTO_ROTATION_PORTRAIT},
+    {"auto_rotation_restricted", DisplayOrientation::AUTO_ROTATION_RESTRICTED},
+    {"auto_rotation_landscape_restricted", DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED},
+    {"auto_rotation_portrait_restricted", DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED},
+    {"locked", DisplayOrientation::LOCKED}
+};
+const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
+    {"fullscreen", SupportWindowMode::FULLSCREEN},
+    {"split", SupportWindowMode::SPLIT},
+    {"floating", SupportWindowMode::FLOATING}
+};
 
 struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
@@ -156,6 +176,14 @@ struct Ability {
     std::string startWindowBackground;
     int32_t startWindowBackgroundId = 0;
     bool removeMissionAfterTerminate = false;
+    std::string orientation = "unspecified";
+    std::vector<std::string> windowModes;
+    double maxWindowRatio = 0;
+    double minWindowRatio = 0;
+    uint32_t maxWindowWidth = 0;
+    uint32_t minWindowWidth = 0;
+    uint32_t maxWindowHeight = 0;
+    uint32_t minWindowHeight = 0;
 };
 
 struct Extension {
@@ -433,6 +461,70 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ABILITY_REMOVE_MISSION_AFTER_TERMINATE,
         ability.removeMissionAfterTerminate,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_ORIENTATION,
+        ability.orientation,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_SUPPORT_WINDOW_MODE,
+        ability.windowModes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<double>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_MAX_WINDOW_RATIO,
+        ability.maxWindowRatio,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<double>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_MIN_WINDOW_RATIO,
+        ability.minWindowRatio,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_MAX_WINDOW_WIDTH,
+        ability.maxWindowWidth,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_MIN_WINDOW_WIDTH,
+        ability.minWindowWidth,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_MAX_WINDOW_HEIGHT,
+        ability.maxWindowHeight,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_MIN_WINDOW_HEIGHT,
+        ability.minWindowHeight,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -1361,6 +1453,24 @@ inline CompileMode ConvertCompileMode(const std::string& compileMode)
     }
 }
 
+std::set<SupportWindowMode> ConvertToAbilityWindowMode(const std::vector<std::string> &windowModes,
+    const std::unordered_map<std::string, SupportWindowMode> &windowMap)
+{
+    std::set<SupportWindowMode> modes;
+    for_each(windowModes.begin(), windowModes.end(),
+        [&windowMap, &modes](const auto &mode)->decltype(auto) {
+        if (windowMap.find(mode) != windowMap.end()) {
+            modes.emplace(windowMap.at(mode));
+        }
+    });
+    if (modes.empty()) {
+        modes.insert(SupportWindowMode::FULLSCREEN);
+        modes.insert(SupportWindowMode::SPLIT);
+        modes.insert(SupportWindowMode::FLOATING);
+    }
+    return modes;
+}
+
 bool ToAbilityInfo(const Profile::ModuleJson &moduleJson, const Profile::Ability &ability,
     AbilityInfo &abilityInfo, bool isSystemApp, bool isPreInstallApp)
 {
@@ -1406,6 +1516,21 @@ bool ToAbilityInfo(const Profile::ModuleJson &moduleJson, const Profile::Ability
     abilityInfo.startWindowBackgroundId = ability.startWindowBackgroundId;
     abilityInfo.removeMissionAfterTerminate = ability.removeMissionAfterTerminate;
     abilityInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
+    auto iterOrientation = std::find_if(std::begin(Profile::DISPLAY_ORIENTATION_MAP),
+        std::end(Profile::DISPLAY_ORIENTATION_MAP),
+        [&ability](const auto &item) { return item.first == ability.orientation; });
+    if (iterOrientation != Profile::DISPLAY_ORIENTATION_MAP.end()) {
+        abilityInfo.orientation = iterOrientation->second;
+    }
+
+    auto modesSet = ConvertToAbilityWindowMode(ability.windowModes, Profile::WINDOW_MODE_MAP);
+    abilityInfo.windowModes.assign(modesSet.begin(), modesSet.end());
+    abilityInfo.maxWindowRatio = ability.maxWindowRatio;
+    abilityInfo.minWindowRatio = ability.minWindowRatio;
+    abilityInfo.maxWindowWidth = ability.maxWindowWidth;
+    abilityInfo.minWindowWidth = ability.minWindowWidth;
+    abilityInfo.maxWindowHeight = ability.maxWindowHeight;
+    abilityInfo.minWindowHeight = ability.minWindowHeight;
     return true;
 }
 

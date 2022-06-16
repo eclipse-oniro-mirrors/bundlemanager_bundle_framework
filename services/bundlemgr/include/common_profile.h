@@ -400,6 +400,14 @@ const std::string ABILITY_START_WINDOW_ICON_ID = "startWindowIconId";
 const std::string ABILITY_START_WINDOW_BACKGROUND = "startWindowBackground";
 const std::string ABILITY_START_WINDOW_BACKGROUND_ID = "startWindowBackgroundId";
 const std::string ABILITY_REMOVE_MISSION_AFTER_TERMINATE = "removeMissionAfterTerminate";
+const std::string ABILITY_ORIENTATION = "orientation";
+const std::string ABILITY_SUPPORT_WINDOW_MODE = "supportWindowMode";
+const std::string ABILITY_MAX_WINDOW_RATIO = "maxWindowRatio";
+const std::string ABILITY_MIN_WINDOW_RATIO = "minWindowRatio";
+const std::string ABILITY_MAX_WINDOW_WIDTH = "maxWindowWidth";
+const std::string ABILITY_MIN_WINDOW_WIDTH = "minWindowWidth";
+const std::string ABILITY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
+const std::string ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 // extension ability
 const std::string EXTENSION_ABILITY_NAME = "name";
 const std::string EXTENSION_ABILITY_TYPE = "type";
