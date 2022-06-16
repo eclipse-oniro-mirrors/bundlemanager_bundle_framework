@@ -28,6 +28,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleParser {
 public:
+    static bool ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf);
     /**
      * @brief Parse bundle by the path name, then save in innerBundleInfo info.
      * @param pathName Indicates the path of Bundle.

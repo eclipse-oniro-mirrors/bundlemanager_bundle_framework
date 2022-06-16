@@ -219,6 +219,24 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
     defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
 }
 
+void DefaultAppMgr::HandleCreateUser(int32_t userId) const
+{
+    APP_LOGD("begin to HandleCreateUser.");
+    std::map<std::string, Element> infos;
+    bool ret = defaultAppDb_->GetDefaultApplicationInfos(INITIAL_USER_ID, infos);
+    if (!ret) {
+        APP_LOGW("GetDefaultApplicationInfos failed.");
+        return;
+    }
+    defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
+}
+
+void DefaultAppMgr::HandleRemoveUser(int32_t userId) const
+{
+    APP_LOGD("begin to HandleRemoveUser.");
+    defaultAppDb_->DeleteDefaultApplicationInfos(userId);
+}
+
 bool DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     Element element;
@@ -499,7 +517,7 @@ bool DefaultAppMgr::IsElementEmpty(const Element& element) const
         && element.abilityName.empty() && element.extensionName.empty();
 }
 
-bool DefaultAppMgr::VerifyElementFormat(const Element& element) const
+bool DefaultAppMgr::VerifyElementFormat(const Element& element)
 {
     const std::string& bundleName = element.bundleName;
     const std::string& moduleName = element.moduleName;

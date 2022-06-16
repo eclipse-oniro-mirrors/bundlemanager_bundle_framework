@@ -22,6 +22,9 @@
 #include "bundle_util.h"
 #include "hitrace_meter.h"
 #include "status_receiver_host.h"
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_mgr.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -108,6 +111,9 @@ void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
     BundlePermissionMgr::UnInit();
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    DefaultAppMgr::GetInstance().HandleCreateUser(userId);
+#endif
     APP_LOGD("CreateNewUser end userId: (%{public}d)", userId);
 }
 
@@ -159,6 +165,9 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         bundlePromise->WaitForAllTasksExecute();
     }
     dataMgr->RemoveUserId(userId);
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
+#endif
     APP_LOGD("RemoveUser end userId: (%{public}d)", userId);
 }
 
