@@ -64,27 +64,96 @@ const std::string HAP_MODULE_INFO_COMPILE_MODE = "compileMode";
 
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
+    name = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    description = Str16ToStr8(parcel.ReadString16());
+    descriptionId = parcel.ReadInt32();
+    iconPath = Str16ToStr8(parcel.ReadString16());
+    label = Str16ToStr8(parcel.ReadString16());
+    labelId = parcel.ReadInt32();
+    backgroundImg = Str16ToStr8(parcel.ReadString16());
+    mainAbility = Str16ToStr8(parcel.ReadString16());
+    srcPath = Str16ToStr8(parcel.ReadString16());
+    hashValue = Str16ToStr8(parcel.ReadString16());
+    hapPath = Str16ToStr8(parcel.ReadString16());
+    supportedModes = parcel.ReadInt32();
+
+    int32_t reqCapabilitiesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilitiesSize);
+    for (auto i = 0; i < reqCapabilitiesSize; i++) {
+        reqCapabilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    uint32_t length = messageParcel->ReadUint32();
-    if (length == 0) {
-        APP_LOGE("Invalid data length");
-        return false;
+
+    int32_t deviceTypesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypesSize);
+    for (auto i = 0; i < deviceTypesSize; i++) {
+        deviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    const char *data = reinterpret_cast<const char *>(messageParcel->ReadRawData(length));
-    if (!data) {
-        APP_LOGE("Fail to read raw data, length = %{public}d", length);
-        return false;
+
+    int32_t dependenciesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependenciesSize);
+    for (auto i = 0; i < dependenciesSize; i++) {
+        dependencies.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse HapModuleInfo");
-        return false;
+
+    int32_t abilityInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfosSize);
+    for (auto i = 0; i < abilityInfosSize; i++) {
+        std::unique_ptr<AbilityInfo> abilityInfo(parcel.ReadParcelable<AbilityInfo>());
+        if (!abilityInfo) {
+            APP_LOGE("ReadParcelable<AbilityInfo> failed");
+            return false;
+        }
+        abilityInfos.emplace_back(*abilityInfo);
     }
-    *this = jsonObject.get<HapModuleInfo>();
+
+    colorMode = static_cast<ModuleColorMode>(parcel.ReadInt32());
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    mainElementName = Str16ToStr8(parcel.ReadString16());
+    pages = Str16ToStr8(parcel.ReadString16());
+    process = Str16ToStr8(parcel.ReadString16());
+    resourcePath = Str16ToStr8(parcel.ReadString16());
+    srcEntrance = Str16ToStr8(parcel.ReadString16());
+    uiSyntax = Str16ToStr8(parcel.ReadString16());
+    virtualMachine = Str16ToStr8(parcel.ReadString16());
+    deliveryWithInstall = parcel.ReadBool();
+    installationFree = parcel.ReadBool();
+    isModuleJson = parcel.ReadBool();
+    isStageBasedModel = parcel.ReadBool();
+
+    int32_t isRemovableSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, isRemovableSize);
+    for (auto i = 0; i < isRemovableSize; i++) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        bool isRemove = parcel.ReadBool();
+        isRemovable[key] = isRemove;
+    }
+    moduleType = static_cast<ModuleType>(parcel.ReadInt32());
+
+    int32_t extensionInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfosSize);
+    for (auto i = 0; i < extensionInfosSize; i++) {
+        std::unique_ptr<ExtensionAbilityInfo> extensionAbilityInfo(parcel.ReadParcelable<ExtensionAbilityInfo>());
+        if (!extensionAbilityInfo) {
+            APP_LOGE("ReadParcelable<ExtensionAbilityInfo> failed");
+            return false;
+        }
+        extensionInfos.emplace_back(*extensionAbilityInfo);
+    }
+
+    int32_t metadataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    for (int32_t i = 0; i < metadataSize; ++i) {
+        std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
+        if (!meta) {
+            APP_LOGE("ReadParcelable<Metadata> failed");
+            return false;
+        }
+        metadata.emplace_back(*meta);
+    }
+
+    upgradeFlag = parcel.ReadInt32();
+    compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     return true;
 }
 
@@ -101,21 +170,74 @@ HapModuleInfo *HapModuleInfo::Unmarshalling(Parcel &parcel)
 
 bool HapModuleInfo::Marshalling(Parcel &parcel) const
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(backgroundImg));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mainAbility));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hashValue));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilities.size());
+    for (auto &reqCapability : reqCapabilities) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(reqCapability));
     }
-    nlohmann::json json = *this;
-    std::string str = json.dump();
-    if (!messageParcel->WriteUint32(str.size() + 1)) {
-        APP_LOGE("Failed to write data size");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypes.size());
+    for (auto &deviceType : deviceTypes) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceType));
     }
-    if (!messageParcel->WriteRawData(str.c_str(), str.size() + 1)) {
-        APP_LOGE("Failed to write data");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependencies.size());
+    for (auto &dependency : dependencies) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dependency));
     }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfos.size());
+    for (auto &abilityInfo : abilityInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(colorMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mainElementName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pages));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(resourcePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcEntrance));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uiSyntax));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(virtualMachine));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, deliveryWithInstall);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, installationFree);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isModuleJson);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isStageBasedModel);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, isRemovable.size());
+    for (auto &item : isRemovable) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, item.second);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(moduleType));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfos.size());
+    for (auto &extensionInfo : extensionInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
+    for (auto &mete : metadata) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &mete);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, upgradeFlag);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
     return true;
 }
 
