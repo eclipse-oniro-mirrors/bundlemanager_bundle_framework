@@ -95,6 +95,7 @@ void BMSEventHandler::BmsStartEvent()
 
 void BMSEventHandler::BeforeBmsStart()
 {
+    needNotifyBundleScanStatus_ = false;
     if (!BundlePermissionMgr::Init()) {
         APP_LOGW("BundlePermissionMgr::Init failed");
     }
@@ -136,14 +137,14 @@ void BMSEventHandler::OnBmsStarting()
             if (needRebootOta_) {
                 BundleRebootStartEvent();
             } else {
-                DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+                needNotifyBundleScanStatus_ = true;
             }
 
             break;
         }
         case ResultCode::REINSTALL_OK: {
             APP_LOGD("ReInstall all haps.");
-            DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+            needNotifyBundleScanStatus_ = true;
             break;
         }
         case ResultCode::NO_INSTALLED_DATA: {
@@ -165,6 +166,9 @@ void BMSEventHandler::AfterBmsStart()
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     BundlePermissionMgr::UnInit();
     ClearCache();
+    if (needNotifyBundleScanStatus_) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+    }
 }
 
 void BMSEventHandler::ClearCache()
@@ -193,7 +197,7 @@ void BMSEventHandler::BundleBootStartEvent()
 void BMSEventHandler::BundleRebootStartEvent()
 {
     OnBundleRebootStart();
-    DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+    needNotifyBundleScanStatus_ = true;
 }
 
 ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
