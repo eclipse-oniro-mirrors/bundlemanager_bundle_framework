@@ -269,7 +269,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     vendor = Str16ToStr8(parcel.ReadString16());
     appPrivilegeLevel = Str16ToStr8(parcel.ReadString16());
     appDistributionType = Str16ToStr8(parcel.ReadString16());
-    provisionType = Str16ToStr8(parcel.ReadString16());
+    appProvisionType = Str16ToStr8(parcel.ReadString16());
     accessTokenId = parcel.ReadUint32();
     enabled = parcel.ReadBool();
     uid = parcel.ReadInt32();
@@ -407,7 +407,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appPrivilegeLevel));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appDistributionType));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(provisionType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appProvisionType));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, accessTokenId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
