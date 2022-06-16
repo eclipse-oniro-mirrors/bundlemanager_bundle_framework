@@ -78,7 +78,7 @@ bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
         }
         Element element;
         from_json(object, element);
-        if (!DefaultAppMgr::VerifyElementFormat(element) || element.type.empty()) {
+        if (element.type.empty() || !DefaultAppMgr::VerifyElementFormat(element)) {
             APP_LOGW("bad element format.");
             continue;
         }
