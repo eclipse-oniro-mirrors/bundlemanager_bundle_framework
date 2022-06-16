@@ -30,8 +30,7 @@ struct Element {
     bool operator==(const Element& other)
     {
         if (this->bundleName == other.bundleName && this->moduleName == other.moduleName
-            && this->abilityName == other.abilityName && this->extensionName == other.extensionName)
-        {
+            && this->abilityName == other.abilityName && this->extensionName == other.extensionName) {
             return true;
         }
         return false;

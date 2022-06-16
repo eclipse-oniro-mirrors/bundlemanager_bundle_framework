@@ -112,11 +112,12 @@ void DefaultAppDb::LoadDefaultApplicationConfig()
         for (const auto& item : defaultAppData.infos) {
             const std::string& type = item.first;
             const Element& element = item.second;
-            if(infos.find(type) != infos.end() && preInfos.find(type) != preInfos.end()
+            if (infos.find(type) != infos.end() && preInfos.find(type) != preInfos.end()
                 && infos.find(type)->second == preInfos.find(type)->second) {
                 infos[type] = element;
+            } else {
+                infos.try_emplace(type, element);
             }
-            infos.try_emplace(type, element);
         }
         SetDefaultApplicationInfos(userId, infos);
     }
