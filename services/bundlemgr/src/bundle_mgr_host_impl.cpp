@@ -565,7 +565,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         rootDir.emplace_back(dataDir);
     }
 
-    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback]() {
+    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, this]() {
         std::vector<std::string> caches;
         for (const auto &st : rootDir) {
             std::vector<std::string> cache;
@@ -590,12 +590,12 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         APP_LOGD("CleanBundleCacheFiles with error %{public}d", error);
         cleanCacheCallback->OnCleanCacheFinished(error);
         InnerBundleUserInfo innerBundleUserInfo;
-        if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
+        if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
             APP_LOGW("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
             return;
         }
         dataMgr->NotifyBundleStatus(bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, ERR_OK,
-                                    NotifyType::BUNDLE_DATA_CLEARED, innerBundleUserInfo.uid);
+                                    NotifyType::BUNDLE_CACHE_CLEARED, innerBundleUserInfo.uid);
     };
     handler_->PostTask(cleanCache);
 }
