@@ -29,6 +29,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string APPLICAION_INFO = "applicationInfo";
 const std::string JSON_KEY_PACKAGE = "package";
 const std::string JSON_KEY_NAME = "name";
 const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
@@ -387,6 +388,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_DEVICE_CAPABILITIES, abilityInfo.deviceCapabilities},
         {JSON_KEY_URI, abilityInfo.uri},
         {JSON_KEY_TARGET_ABILITY, abilityInfo.targetAbility},
+        {APPLICAION_INFO, abilityInfo.applicationInfo},
         {JSON_KEY_PACKAGE, abilityInfo.package},
         {JSON_KEY_BUNDLE_NAME, abilityInfo.bundleName},
         {JSON_KEY_MODULE_NAME, abilityInfo.moduleName},
@@ -530,6 +532,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         JSON_KEY_THEME,
         abilityInfo.theme,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<ApplicationInfo>(jsonObject,
+        jsonObjectEnd,
+        APPLICAION_INFO,
+        abilityInfo.applicationInfo,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
