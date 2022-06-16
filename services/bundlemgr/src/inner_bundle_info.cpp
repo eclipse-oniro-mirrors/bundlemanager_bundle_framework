@@ -1906,6 +1906,7 @@ void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos)
                 for (const ShortcutWant &shortcutWant : item.wants) {
                     ShortcutIntent shortcutIntent;
                     shortcutIntent.targetBundle = shortcutWant.bundleName;
+                    shortcutIntent.targetModule = shortcutWant.moduleName;
                     shortcutIntent.targetClass = shortcutWant.abilityName;
                     shortcutInfo.intents.emplace_back(shortcutIntent);
                 }

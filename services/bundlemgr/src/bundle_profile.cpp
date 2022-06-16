@@ -2281,6 +2281,7 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
         for (const auto &intent : info.intents) {
             ShortcutIntent shortcutIntent;
             shortcutIntent.targetBundle = intent.targetBundle;
+            shortcutIntent.targetModule = Constants::EMPTY_STRING;
             shortcutIntent.targetClass = intent.targetClass;
             shortcutInfo.intents.emplace_back(shortcutIntent);
         }

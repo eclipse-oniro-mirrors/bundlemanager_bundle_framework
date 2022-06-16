@@ -144,6 +144,7 @@ const std::string SHORTCUT_ICON = "/data/test/bms_bundle";
 const std::string SHORTCUT_LABEL = "shortcutLabel";
 const std::string SHORTCUT_DISABLE_MESSAGE = "shortcutDisableMessage";
 const std::string SHORTCUT_INTENTS_TARGET_BUNDLE = "targetBundle";
+const std::string SHORTCUT_INTENTS_TARGET_MODULE = "targetModule";
 const std::string SHORTCUT_INTENTS_TARGET_CLASS = "targetClass";
 const std::string COMMON_EVENT_NAME = ".MainAbililty";
 const std::string COMMON_EVENT_PERMISSION = "permission";
@@ -492,6 +493,7 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutInfos.isEnables = true;
     for (auto &info : shortcutInfos.intents) {
         info.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+        info.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
         info.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
     }
     return shortcutInfos;
@@ -944,6 +946,7 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isEnables, true);
         for (auto &intent : shortcutInfo.intents) {
             EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
@@ -982,6 +985,7 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isEnables, true);
         for (auto &intent : shortcutInfo.intents) {
             EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
