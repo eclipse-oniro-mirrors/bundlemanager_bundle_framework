@@ -51,7 +51,6 @@ namespace OHOS {
         BundleParser bundleParser;
         auto ret = bundleParser.Parse("myHap.hap", info);
         if (ret != ERR_OK) {
-            std::cout << "parse bundle info failed";
             return false;
         }
         return true;
