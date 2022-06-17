@@ -227,6 +227,8 @@ struct AbilityInfo : public Parcelable {
     int32_t startWindowIconId;
     std::string startWindowBackground;
     int32_t startWindowBackgroundId;
+    // whether to display in the missions list
+    bool excludeFromMissions = false;
 
     // support windows mode
     std::vector<SupportWindowMode> windowModes;

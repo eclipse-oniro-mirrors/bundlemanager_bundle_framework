@@ -184,6 +184,7 @@ struct Ability {
     uint32_t minWindowWidth = 0;
     uint32_t maxWindowHeight = 0;
     uint32_t minWindowHeight = 0;
+    bool excludeFromMissions = false;
 };
 
 struct Extension {
@@ -525,6 +526,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ABILITY_MIN_WINDOW_HEIGHT,
         ability.minWindowHeight,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_EXCLUDE_FROM_MISSIONS,
+        ability.excludeFromMissions,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -1485,6 +1494,7 @@ bool ToAbilityInfo(const Profile::ModuleJson &moduleJson, const Profile::Ability
     abilityInfo.labelId = ability.labelId;
     if (isSystemApp && isPreInstallApp) {
         abilityInfo.priority = ability.priority;
+        abilityInfo.excludeFromMissions = ability.excludeFromMissions;
     }
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
