@@ -30,7 +30,7 @@ namespace AppExecFwk {
 class DefaultAppDb : public std::enable_shared_from_this<DefaultAppDb>, public DistributedKv::KvStoreDeathRecipient {
 public:
     DefaultAppDb();
-    ~DefaultAppDb();
+    virtual ~DefaultAppDb();
     bool GetDefaultApplicationInfos(int32_t userId, std::map<std::string, Element>& infos);
     bool GetDefaultApplicationInfo(int32_t userId, const std::string& type, Element& element);
     bool SetDefaultApplicationInfos(int32_t userId, const std::map<std::string, Element>& infos);
