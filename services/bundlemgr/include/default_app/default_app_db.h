@@ -23,10 +23,11 @@
 #include "distributed_kv_data_manager.h"
 #include "element.h"
 #include "inner_bundle_info.h"
+#include "kvstore_death_recipient.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class DefaultAppDb {
+class DefaultAppDb : public std::enable_shared_from_this<DefaultAppDb>, public DistributedKv::KvStoreDeathRecipient {
 public:
     DefaultAppDb();
     ~DefaultAppDb();
@@ -36,6 +37,7 @@ public:
     bool SetDefaultApplicationInfo(int32_t userId, const std::string& type, const Element& element);
     bool DeleteDefaultApplicationInfos(int32_t userId);
     bool DeleteDefaultApplicationInfo(int32_t userId, const std::string& type);
+    virtual void OnRemoteDied() override;
 private:
     void Init();
     bool OpenKvDb();

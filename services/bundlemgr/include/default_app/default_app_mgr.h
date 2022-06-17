@@ -57,6 +57,10 @@ private:
     bool IsImageSkillsValid(const std::vector<Skill>& skills) const;
     bool IsAudioSkillsValid(const std::vector<Skill>& skills) const;
     bool IsVideoSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsPdfSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsWordSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsExcelSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsPptSkillsValid(const std::vector<Skill>& skills) const;
     
     std::shared_ptr<DefaultAppDb> defaultAppDb_;
     std::set<std::string> supportAppTypes;

@@ -39,10 +39,21 @@ namespace {
     const std::string IMAGE_TYPE = "image/*";
     const std::string AUDIO_TYPE = "audio/*";
     const std::string VIDEO_TYPE = "video/*";
+    const std::string PDF_TYPE = "application/pdf";
+    const std::string DOC_TYPE = "application/msword";
+    const std::string DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const std::string XLS_TYPE = "application/vnd.ms-excel";
+    const std::string XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    const std::string PPT_TYPE = "application/vnd.ms-powerpoint";
+    const std::string PPTX_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
     const std::string BROWSER = "BROWSER";
     const std::string IMAGE = "IMAGE";
     const std::string AUDIO = "AUDIO";
     const std::string VIDEO = "VIDEO";
+    const std::string PDF = "PDF";
+    const std::string WORD = "WORD";
+    const std::string EXCEL = "EXCEL";
+    const std::string PPT = "PPT";
 }
 
 DefaultAppMgr& DefaultAppMgr::GetInstance()
@@ -74,6 +85,10 @@ void DefaultAppMgr::InitSupportAppTypes()
     supportAppTypes.insert(IMAGE);
     supportAppTypes.insert(AUDIO);
     supportAppTypes.insert(VIDEO);
+    supportAppTypes.insert(PDF);
+    supportAppTypes.insert(WORD);
+    supportAppTypes.insert(EXCEL);
+    supportAppTypes.insert(PPT);
 }
 
 bool DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type) const
@@ -357,6 +372,14 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
         return IsAudioSkillsValid(skills);
     } else if (type == VIDEO) {
         return IsVideoSkillsValid(skills);
+    } else if (type == PDF) {
+        return IsPdfSkillsValid(skills);
+    } else if (type == WORD) {
+        return IsWordSkillsValid(skills);
+    } else if (type == EXCEL) {
+        return IsExcelSkillsValid(skills);
+    } else if (type == PPT) {
+        return IsPptSkillsValid(skills);
     } else {
         return false;
     }
@@ -439,6 +462,82 @@ bool DefaultAppMgr::IsVideoSkillsValid(const std::vector<Skill>& skills) const
         }
     }
     APP_LOGW("video skills is invalid.");
+    return false;
+}
+
+bool DefaultAppMgr::IsPdfSkillsValid(const std::vector<Skill>& skills) const
+{
+    APP_LOGD("begin to verify pdf skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skillUri.type == PDF_TYPE) {
+                APP_LOGD("pdf skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("pdf skills is invalid.");
+    return false;
+}
+
+bool DefaultAppMgr::IsWordSkillsValid(const std::vector<Skill>& skills) const
+{
+    APP_LOGD("begin to verify word skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skillUri.type == DOC_TYPE || skillUri.type == DOCX_TYPE) {
+                APP_LOGD("word skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("word skills is invalid.");
+    return false;
+}
+
+bool DefaultAppMgr::IsExcelSkillsValid(const std::vector<Skill>& skills) const
+{
+    APP_LOGD("begin to verify excel skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skillUri.type == XLS_TYPE || skillUri.type == XLSX_TYPE) {
+                APP_LOGD("excel skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("excel skills is invalid.");
+    return false;
+}
+
+bool DefaultAppMgr::IsPptSkillsValid(const std::vector<Skill>& skills) const
+{
+    APP_LOGD("begin to verify ppt skills.");
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skillUri.type == PPT_TYPE || skillUri.type == PPTX_TYPE) {
+                APP_LOGD("ppt skills is valid.");
+                return true;
+            }
+        }
+    }
+    APP_LOGW("ppt skills is invalid.");
     return false;
 }
 

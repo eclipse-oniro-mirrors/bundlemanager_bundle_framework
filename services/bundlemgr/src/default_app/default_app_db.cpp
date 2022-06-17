@@ -53,6 +53,7 @@ void DefaultAppDb::Init()
         return;
     }
     LoadDefaultApplicationConfig();
+    dataManager_.RegisterKvStoreServiceDeathRecipient(shared_from_this());
 }
 
 bool DefaultAppDb::OpenKvDb()
@@ -240,6 +241,7 @@ bool DefaultAppDb::GetDataFromDb(int32_t userId, std::map<std::string, Element>&
     Status status = kvStorePtr_->GetEntries(key, entries);
     if (status != Status::SUCCESS) {
         APP_LOGE("get raw data from db failed, error : %{public}d", status);
+        kvStorePtr_ = nullptr;
         return false;
     }
     // empty is considered correct
@@ -273,6 +275,7 @@ bool DefaultAppDb::SaveDataToDb(int32_t userId, const std::map<std::string, Elem
     Status status = kvStorePtr_->Put(key, value);
     if (status != Status::SUCCESS) {
         APP_LOGE("put data to db failed, error : %{public}d", status);
+        kvStorePtr_ = nullptr;
         return false;
     }
     APP_LOGD("SaveDataToDb success.");
@@ -290,10 +293,17 @@ bool DefaultAppDb::DeleteDataFromDb(int32_t userId)
     Status status = kvStorePtr_->Delete(key);
     if (status != Status::SUCCESS) {
         APP_LOGE("DeleteDataFromDb failed, error : %{public}d", status);
+        kvStorePtr_ = nullptr;
         return false;
     }
     APP_LOGD("DeleteDataFromDb success.");
     return true;
+}
+
+void DefaultAppDb::OnRemoteDied()
+{
+    APP_LOGD("OnRemoteDied.");
+    kvStorePtr_ = nullptr;
 }
 }
 }
