@@ -71,11 +71,13 @@ DefaultAppMgr::DefaultAppMgr()
 DefaultAppMgr::~DefaultAppMgr()
 {
     APP_LOGD("destroy DefaultAppMgr.");
+    defaultAppDb_->UnRegisterDeathListener();
 }
 
 void DefaultAppMgr::Init()
 {
     defaultAppDb_ = std::make_shared<DefaultAppDb>();
+    defaultAppDb_->RegisterDeathListener();
     InitSupportAppTypes();
 }
 

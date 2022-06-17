@@ -38,6 +38,8 @@ public:
     bool DeleteDefaultApplicationInfos(int32_t userId);
     bool DeleteDefaultApplicationInfo(int32_t userId, const std::string& type);
     virtual void OnRemoteDied() override;
+    void RegisterDeathListener();
+    void UnRegisterDeathListener();
 private:
     void Init();
     bool OpenKvDb();

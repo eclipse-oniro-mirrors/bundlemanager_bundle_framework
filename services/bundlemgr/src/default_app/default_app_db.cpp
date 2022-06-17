@@ -53,7 +53,6 @@ void DefaultAppDb::Init()
         return;
     }
     LoadDefaultApplicationConfig();
-    dataManager_.RegisterKvStoreServiceDeathRecipient(shared_from_this());
 }
 
 bool DefaultAppDb::OpenKvDb()
@@ -304,6 +303,18 @@ void DefaultAppDb::OnRemoteDied()
 {
     APP_LOGD("OnRemoteDied.");
     kvStorePtr_ = nullptr;
+}
+
+void DefaultAppDb::RegisterDeathListener()
+{
+    APP_LOGD("RegisterDeathListener.");
+    dataManager_.RegisterKvStoreServiceDeathRecipient(shared_from_this());
+}
+
+void DefaultAppDb::UnRegisterDeathListener()
+{
+    APP_LOGD("UnRegisterDeathListener.");
+    dataManager_.UnRegisterKvStoreServiceDeathRecipient(shared_from_this());
 }
 }
 }
