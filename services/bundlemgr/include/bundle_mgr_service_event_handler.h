@@ -400,6 +400,7 @@ private:
     std::map<std::string, PreInstallBundleInfo> loadExistData_;
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
+    bool needNotifyBundleScanStatus_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
