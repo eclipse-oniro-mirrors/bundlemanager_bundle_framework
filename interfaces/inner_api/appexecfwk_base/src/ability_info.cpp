@@ -1076,7 +1076,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         JsonType::NUMBER,
         false,
         parseResult,
-        ArrayType::NOT_ARRAY); 
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         JOSN_KEY_EXCLUDE_FROM_MISSIONS,
