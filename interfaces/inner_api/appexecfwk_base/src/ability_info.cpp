@@ -227,6 +227,17 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     libPath = Str16ToStr8(parcel.ReadString16());
     deviceId = Str16ToStr8(parcel.ReadString16());
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
+
+    int32_t windowModeSize = parcel.ReadInt32();
+    for (auto index = 0; index < windowModeSize; ++index) {
+        windowModes.emplace_back(static_cast<SupportWindowMode>(parcel.ReadInt32()));
+    }
+    maxWindowRatio = parcel.ReadDouble();
+    minWindowRatio = parcel.ReadDouble();
+    maxWindowWidth = parcel.ReadUint32();
+    minWindowWidth = parcel.ReadUint32();
+    maxWindowHeight = parcel.ReadUint32();
+    minWindowHeight = parcel.ReadUint32();
     return true;
 }
 
@@ -342,6 +353,17 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(libPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, windowModes.size());
+    for (auto &mode : windowModes) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(mode));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Double, parcel, maxWindowRatio);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Double, parcel, minWindowRatio);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, maxWindowWidth);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, minWindowWidth);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, maxWindowHeight);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, minWindowHeight);
     return true;
 }
 
