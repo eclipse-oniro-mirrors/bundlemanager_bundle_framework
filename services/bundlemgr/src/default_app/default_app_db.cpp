@@ -18,6 +18,9 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "bundle_data_mgr.h"
+#include "bundle_mgr_service.h"
+#include "bundle_parser.h"
 
 using namespace OHOS::DistributedKv;
 
@@ -26,6 +29,8 @@ namespace AppExecFwk {
 namespace {
     constexpr int32_t TRY_TIMES = 10;
     constexpr int32_t SLEEP_INTERVAL = 100 * 1000;  // 100ms
+    constexpr int32_t INITIAL_USER_ID = -1;
+    const std::string DEFAULT_APP_JSON_PATH = "/system/etc/app/default_app.json";
 }
 
 DefaultAppDb::DefaultAppDb()
@@ -45,7 +50,9 @@ void DefaultAppDb::Init()
     bool ret = OpenKvDb();
     if (!ret) {
         APP_LOGE("OpenKvDb failed.");
+        return;
     }
+    LoadDefaultApplicationConfig();
 }
 
 bool DefaultAppDb::OpenKvDb()
@@ -71,6 +78,52 @@ bool DefaultAppDb::OpenKvDb()
     }
     APP_LOGE("OpenKvDb failed, error : %{public}d", status);
     return false;
+}
+
+void DefaultAppDb::LoadDefaultApplicationConfig()
+{
+    APP_LOGD("begin to LoadDefaultApplicationConfig.");
+    // load default app config from json file
+    nlohmann::json jsonObject;
+    bool ret = BundleParser::ReadFileIntoJson(DEFAULT_APP_JSON_PATH, jsonObject);
+    if (!ret) {
+        APP_LOGW("read default app json file failed.");
+        return;
+    }
+    DefaultAppData defaultAppData;
+    ret = defaultAppData.ParseDefaultApplicationConfig(jsonObject);
+    if (!ret) {
+        APP_LOGW("default app json file format invalid.");
+        return;
+    }
+    // get pre default app config
+    std::map<std::string, Element> preInfos;
+    GetDefaultApplicationInfos(INITIAL_USER_ID, preInfos);
+    // save to each user
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("get BundleDataMgr failed.");
+        return;
+    }
+    std::set<int32_t> allUsers = dataMgr->GetAllUser();
+    for (int32_t userId : allUsers) {
+        std::map<std::string, Element> infos;
+        GetDefaultApplicationInfos(userId, infos);
+        for (const auto& item : defaultAppData.infos) {
+            const std::string& type = item.first;
+            const Element& element = item.second;
+            if (infos.find(type) != infos.end() && preInfos.find(type) != preInfos.end()
+                && infos.find(type)->second == preInfos.find(type)->second) {
+                infos[type] = element;
+            } else {
+                infos.try_emplace(type, element);
+            }
+        }
+        SetDefaultApplicationInfos(userId, infos);
+    }
+    // save default app config to db
+    SetDefaultApplicationInfos(INITIAL_USER_ID, defaultAppData.infos);
+    APP_LOGD("LoadDefaultApplicationConfig done.");
 }
 
 bool DefaultAppDb::GetDefaultApplicationInfos(int32_t userId, std::map<std::string, Element>& infos)
@@ -187,6 +240,7 @@ bool DefaultAppDb::GetDataFromDb(int32_t userId, std::map<std::string, Element>&
     Status status = kvStorePtr_->GetEntries(key, entries);
     if (status != Status::SUCCESS) {
         APP_LOGE("get raw data from db failed, error : %{public}d", status);
+        kvStorePtr_ = nullptr;
         return false;
     }
     // empty is considered correct
@@ -220,6 +274,7 @@ bool DefaultAppDb::SaveDataToDb(int32_t userId, const std::map<std::string, Elem
     Status status = kvStorePtr_->Put(key, value);
     if (status != Status::SUCCESS) {
         APP_LOGE("put data to db failed, error : %{public}d", status);
+        kvStorePtr_ = nullptr;
         return false;
     }
     APP_LOGD("SaveDataToDb success.");
@@ -237,10 +292,29 @@ bool DefaultAppDb::DeleteDataFromDb(int32_t userId)
     Status status = kvStorePtr_->Delete(key);
     if (status != Status::SUCCESS) {
         APP_LOGE("DeleteDataFromDb failed, error : %{public}d", status);
+        kvStorePtr_ = nullptr;
         return false;
     }
     APP_LOGD("DeleteDataFromDb success.");
     return true;
+}
+
+void DefaultAppDb::OnRemoteDied()
+{
+    APP_LOGD("OnRemoteDied.");
+    kvStorePtr_ = nullptr;
+}
+
+void DefaultAppDb::RegisterDeathListener()
+{
+    APP_LOGD("RegisterDeathListener.");
+    dataManager_.RegisterKvStoreServiceDeathRecipient(shared_from_this());
+}
+
+void DefaultAppDb::UnRegisterDeathListener()
+{
+    APP_LOGD("UnRegisterDeathListener.");
+    dataManager_.UnRegisterKvStoreServiceDeathRecipient(shared_from_this());
 }
 }
 }

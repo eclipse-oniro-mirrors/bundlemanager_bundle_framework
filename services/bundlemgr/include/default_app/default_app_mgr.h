@@ -26,11 +26,14 @@ namespace AppExecFwk {
 class DefaultAppMgr {
 public:
     static DefaultAppMgr& GetInstance();
+    static bool VerifyElementFormat(const Element& element);
     bool IsDefaultApplication(int32_t userId, const std::string& type) const;
     bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
     bool ResetDefaultApplication(int32_t userId, const std::string& type) const;
     void HandleUninstallBundle(int32_t userId, const std::string& bundleName) const;
+    void HandleCreateUser(int32_t userId) const;
+    void HandleRemoveUser(int32_t userId) const;
 private:
     DefaultAppMgr();
     ~DefaultAppMgr();
@@ -47,7 +50,6 @@ private:
     bool MatchAppType(const std::string& type, const std::vector<Skill>& skills) const;
     bool MatchFileType(const std::string& type, const std::vector<Skill>& skills) const;
     bool IsElementEmpty(const Element& element) const;
-    bool VerifyElementFormat(const Element& element) const;
     bool IsElementValid(int32_t userId, const std::string& type, const Element& element) const;
     bool IsUserIdExist(int32_t userId) const;
     bool VerifyUserIdAndType(int32_t userId, const std::string& type) const;
@@ -55,6 +57,10 @@ private:
     bool IsImageSkillsValid(const std::vector<Skill>& skills) const;
     bool IsAudioSkillsValid(const std::vector<Skill>& skills) const;
     bool IsVideoSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsPdfSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsWordSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsExcelSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsPptSkillsValid(const std::vector<Skill>& skills) const;
     
     std::shared_ptr<DefaultAppDb> defaultAppDb_;
     std::set<std::string> supportAppTypes;

@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "default_app_mgr.h"
 #include "nlohmann/json.hpp"
 
 namespace OHOS {
@@ -63,6 +64,29 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
     return parseResult;
 }
 
+bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObject)
+{
+    APP_LOGD("begin to ParseDefaultApplicationConfig.");
+    if (jsonObject.is_discarded() || !jsonObject.is_array() || jsonObject.empty()) {
+        APP_LOGW("json format error.");
+        return false;
+    }
+    for (const auto& object : jsonObject) {
+        if (!object.is_object()) {
+            APP_LOGW("not json object.");
+            continue;
+        }
+        Element element;
+        from_json(object, element);
+        if (element.type.empty() || !DefaultAppMgr::VerifyElementFormat(element)) {
+            APP_LOGW("bad element format.");
+            continue;
+        }
+        infos.try_emplace(element.type, element);
+    }
+    return true;
+}
+
 void to_json(nlohmann::json& jsonObject, const Element& element)
 {
     APP_LOGD("Element to_json begin.");
@@ -85,7 +109,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         BUNDLE_NAME,
         element.bundleName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -93,7 +117,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         MODULE_NAME,
         element.moduleName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -101,7 +125,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         ABILITY_NAME,
         element.abilityName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -109,7 +133,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         EXTENSION_NAME,
         element.extensionName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -117,7 +141,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         TYPE,
         element.type,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {

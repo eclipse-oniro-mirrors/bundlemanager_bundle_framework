@@ -32,6 +32,7 @@ using namespace OHOS::AAFwk;
 namespace {
 constexpr int32_t NO_ERROR = 0;
 constexpr int32_t PARAM_TYPE_ERROR = 1;
+constexpr int32_t EXECUTE_ERROR = 1;
 
 constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
@@ -540,19 +541,18 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
         [](napi_env env, napi_status status, void *data) {
             DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[2] = { 0 };
+            if (!asyncCallbackInfo->result) {
+                asyncCallbackInfo->errCode = EXECUTE_ERROR;
+            }
+            napi_value result[1] = { 0 };
             if (asyncCallbackInfo->errCode != NO_ERROR) {
                 NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->errCode),
                     &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "type mismatch",
-                    NAPI_AUTO_LENGTH, &result[1]));
-            } else {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->result, &result[1]));
             }
             if (asyncCallbackInfo->deferred) {
                 if (asyncCallbackInfo->errCode == NO_ERROR) {
-                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
                 } else {
                     NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
                 }
@@ -635,19 +635,18 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
         [](napi_env env, napi_status status, void *data) {
             DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[2] = { 0 };
+            if (!asyncCallbackInfo->result) {
+                asyncCallbackInfo->errCode = EXECUTE_ERROR;
+            }
+            napi_value result[1] = { 0 };
             if (asyncCallbackInfo->errCode != NO_ERROR) {
                 NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->errCode),
                     &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "type mismatch",
-                    NAPI_AUTO_LENGTH, &result[1]));
-            } else {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->result, &result[1]));
             }
             if (asyncCallbackInfo->deferred) {
                 if (asyncCallbackInfo->errCode == NO_ERROR) {
-                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
                 } else {
                     NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
                 }
