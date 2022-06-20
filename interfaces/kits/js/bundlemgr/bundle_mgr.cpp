@@ -6659,6 +6659,12 @@ void CreateInstallErrorCodeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT), &nNoSpaceLeft));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_FAILED_NO_SPACE_LEFT", nNoSpaceLeft));
+    napi_value nRecoverFailure;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID), &nRecoverFailure));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "STATUS_RECOVER_FAILURE_INVALID", nRecoverFailure));
 }
 
 static bool InnerQueryExtensionInfo(napi_env env, AsyncExtensionInfoCallbackInfo &info)
