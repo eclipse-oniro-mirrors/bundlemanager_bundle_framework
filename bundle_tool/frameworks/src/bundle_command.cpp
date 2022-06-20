@@ -332,6 +332,14 @@ ErrCode BundleManagerShellCommand::CreateMessageMap()
             "error: install version not compatible",
         },
         {
+            IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME,
+            "error: install distribution type not same",
+        },
+        {
+            IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME,
+            "error: install provision type not same",
+        },
+        {
             IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP,
             "error: install invalid number of entry hap",
         },
