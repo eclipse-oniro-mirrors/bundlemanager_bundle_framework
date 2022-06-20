@@ -637,7 +637,7 @@ HWTEST_F(BmsBundleInstallerTest, BackupExtension_0100, Function | SmallTest | Le
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    Want want;
+    AAFwk::Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", "");
@@ -667,7 +667,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0100, Function | Sma
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    Want want;
+    AAFwk::Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
@@ -698,7 +698,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0200, Function | Sma
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    Want want;
+    AAFwk::Want want;
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
@@ -721,7 +721,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0300, Function | Sma
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    Want want;
+    AAFwk::Want want;
     want.SetElementName("", BUNDLE_BACKUP_NAME, EXTENSION_ABILITY_NAME, "");
     std::vector<ExtensionAbilityInfo> infos;
     bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
@@ -750,7 +750,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0400, Function | Sma
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    Want want;
+    AAFwk::Want want;
     want.SetElementName("", BUNDLE_BACKUP_NAME, EXTENSION_ABILITY_NAME, MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
