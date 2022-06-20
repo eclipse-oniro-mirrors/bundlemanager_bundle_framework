@@ -1931,6 +1931,9 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
     applicationInfo.distributedNotificationEnabled = true;
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.process = configJson.deveicConfig.defaultDevice.process;
+    if (applicationInfo.process.empty()) {
+        applicationInfo.process = applicationInfo.bundleName;
+    }
     auto it = find(configJson.module.supportedModes.begin(),
         configJson.module.supportedModes.end(),
         ProfileReader::MODULE_SUPPORTED_MODES_VALUE_DRIVE);
@@ -1989,6 +1992,10 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
     applicationInfo.labelId = configJson.app.labelId;
 
     applicationInfo.enabled = true;
+    if (ProfileReader::MODULE_DISTRO_MODULE_TYPE_VALUE_ENTRY.compare(configJson.module.distro.moduleType) == 0) {
+        applicationInfo.description = configJson.module.description;
+        applicationInfo.descriptionId = configJson.module.descriptionId;
+    }
     return true;
 }
 
@@ -2136,7 +2143,7 @@ bool ToAbilityInfo(const ProfileReader::ConfigJson &configJson, const ProfileRea
     for (const auto &permission : ability.permissions) {
         abilityInfo.permissions.emplace_back(permission);
     }
-    abilityInfo.process = (ability.process.empty()) ? configJson.deveicConfig.defaultDevice.process : ability.process;
+    abilityInfo.process = (ability.process.empty()) ? configJson.app.bundleName : ability.process;
     abilityInfo.theme = ability.theme;
     abilityInfo.deviceTypes = configJson.module.deviceType;
     abilityInfo.deviceCapabilities = ability.deviceCapability;
@@ -2272,8 +2279,6 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
                     applicationInfo.labelId = ability.labelId;
                     applicationInfo.iconPath = ability.icon;
                     applicationInfo.iconId = ability.iconId;
-                    applicationInfo.description = ability.description;
-                    applicationInfo.descriptionId = ability.descriptionId;
                     if (innerModuleInfo.label.empty()) {
                         innerModuleInfo.label = ability.label;
                         innerModuleInfo.labelId = ability.labelId;
