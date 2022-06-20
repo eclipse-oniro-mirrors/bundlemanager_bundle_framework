@@ -22,9 +22,7 @@
 #include "aging/aging_constants.h"
 #include "aging/aging_handler_chain.h"
 #include "aging/aging_request.h"
-#ifdef DEVICE_USAGE_STATISTICS_ENABLE
 #include "bundle_active_client.h"
-#endif
 #include "bundle_data_mgr.h"
 #include "event_handler.h"
 #include "singleton.h"
