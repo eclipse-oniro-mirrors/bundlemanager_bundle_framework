@@ -362,15 +362,6 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
         env, napi_create_string_utf8(env, abilityInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIconPath));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "icon", nIconPath));
 
-    napi_value nsrcPath;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.srcPath.c_str(), NAPI_AUTO_LENGTH, &nsrcPath));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "srcPath", nsrcPath));
-
-    napi_value nLaunguage;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, abilityInfo.srcLanguage.c_str(), NAPI_AUTO_LENGTH, &nLaunguage));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "srcLanguage", nLaunguage));
-
     napi_value nVisible;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.visible, &nVisible));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "isVisible", nVisible));
@@ -484,10 +475,6 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, abilityInfo.targetAbility.c_str(), NAPI_AUTO_LENGTH, &nTargetAbility));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "targetAbility", nTargetAbility));
-
-    napi_value nTheme;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.theme.c_str(), NAPI_AUTO_LENGTH, &nTheme));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "theme", nTheme));
 
     napi_value nMetaData;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nMetaData));
@@ -645,12 +632,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 0, &ndescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "descriptionId", ndescriptionId));
 
-    napi_value nIconPath;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, hapModuleInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIconPath));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "iconPath", nIconPath));
-    APP_LOGI("ConvertHapModuleInfo iconPath=%{public}s.", hapModuleInfo.iconPath.c_str());
-
     napi_value nIcon;
     std::string theIcon = "";
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, theIcon.c_str(), NAPI_AUTO_LENGTH, &nIcon));
@@ -709,10 +690,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nAbilityInfos, idx, objAbilityInfo));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "abilityInfo", nAbilityInfos));
-
-    napi_value nColorMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(hapModuleInfo.colorMode), &nColorMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "colorMode", nColorMode));
 
     napi_value nMainAbilityName;
     NAPI_CALL_RETURN_VOID(
