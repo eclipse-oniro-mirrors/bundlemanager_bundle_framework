@@ -16,9 +16,7 @@
 
 #include "account_helper.h"
 #include "battery_srv_client.h"
-#ifdef DEVICE_USAGE_STATISTICS_ENABLE
 #include "bundle_active_period_stats.h"
-#endif
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "display_power_mgr_client.h"
@@ -92,7 +90,6 @@ void BundleAgingMgr::InitAgingtTimer()
     }
 }
 
-#ifdef DEVICE_USAGE_STATISTICS_ENABLE
 int BundleAgingMgr::AgingQueryFormStatistics(std::vector<DeviceUsageStats::BundleActiveModuleRecord>& results,
     const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
@@ -102,7 +99,6 @@ int BundleAgingMgr::AgingQueryFormStatistics(std::vector<DeviceUsageStats::Bundl
     APP_LOGD("activeModuleRecord size %{public}zu, ret:%{public}d", results.size(), ret);
     return ret;
 }
-#endif
 
 bool BundleAgingMgr::ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
@@ -119,7 +115,6 @@ bool BundleAgingMgr::ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &da
     }
     APP_LOGD("ReInitAgingRequest: removable bundles size %{public}zu", bundleNamesAndUid.size());
 
-#ifdef DEVICE_USAGE_STATISTICS_ENABLE
     std::vector<DeviceUsageStats::BundleActiveModuleRecord> activeModuleRecord;
     int ret = AgingQueryFormStatistics(activeModuleRecord, dataMgr);
     if (ret != 0) {
@@ -151,7 +146,6 @@ bool BundleAgingMgr::ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &da
         }
     }
     request.SetTotalDataBytes(dataMgr->GetAllFreeInstallBundleSpaceSize());
-#endif
     return request.SortAgingBundles() > 0;
 }
 

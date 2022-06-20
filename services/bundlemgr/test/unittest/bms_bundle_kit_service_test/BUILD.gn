@@ -110,13 +110,10 @@ ohos_unittest("BmsBundleKitServiceTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager_native:batterysrv_client",
+      "device_usage_statistics:usagestatsinner",
       "display_manager_native:displaymgr",
       "power_manager_native:powermgr_client",
     ]
-    if (device_usage_enable) {
-      external_deps += [ "device_usage_statistics:usagestatsinner" ]
-      defines += [ "DEVICE_USAGE_STATISTICS_ENABLE" ]
-    }
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
   if (device_manager_enable) {

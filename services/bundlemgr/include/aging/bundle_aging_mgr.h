@@ -54,10 +54,8 @@ private:
     void ProcessEvent(const InnerEvent::Pointer &event) override;
     bool CheckPrerequisite(AgingTriggertype type) const;
     bool ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &dataMgr);
-#ifdef DEVICE_USAGE_STATISTICS_ENABLE
     int AgingQueryFormStatistics(std::vector<DeviceUsageStats::BundleActiveModuleRecord>& results,
         const std::shared_ptr<BundleDataMgr> &dataMgr);
-#endif
     void InitAgingTimerInterval();
     void InitAgingBatteryThresold();
 

@@ -482,9 +482,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, InnerBundle
                         deviceId.empty() * BIT_FOUR + BIT_ONE_FIVE_AZ_DEVICE * BIT_FIVE +
                         !ExistBundleNameInCallingBundles(bundleName, callingBundleNames) * BIT_SIX +
                         BIT_ONE_SEVEN_SAME_BUNDLE * BIT_SEVEN;
-#ifdef DEVICE_USAGE_STATISTICS_ENABLE
     targetInfo->callingUid = IPCSkeleton::GetCallingUid();
-#endif
     targetInfo->callingAppType = CALLING_TYPE_HARMONY;
     this->GetCallingInfo(innerBundleInfo, callingBundleNames, callingAppids);
     targetInfo->callingBundleNames = callingBundleNames;

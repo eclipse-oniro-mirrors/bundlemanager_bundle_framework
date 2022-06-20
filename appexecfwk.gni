@@ -36,7 +36,6 @@ declare_args() {
   global_resmgr_enable = true
   hicollie_enable = true
   hisysevent_enable = true
-  device_usage_enable = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -73,18 +72,14 @@ declare_args() {
   if (defined(global_parts_info) &&
       (!defined(global_parts_info.powermgr_power_manager_native) ||
        !defined(global_parts_info.powermgr_battery_manager_native) ||
-       !defined(global_parts_info.powermgr_display_manager_native))) {
+       !defined(global_parts_info.powermgr_display_manager_native) ||
+       !defined(global_parts_info.device_usage_statistics))) {
     bundle_framework_free_install = false
   }
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.hiviewdfx_hisysevent_native)) {
     hisysevent_enable = false
-  }
-
-  if (defined(global_parts_info) &&
-      !defined(global_parts_info.device_usage_statistics)) {
-    device_usage_enable = false
   }
 
   print("bundle_framework_graphics = " + "$bundle_framework_graphics")
