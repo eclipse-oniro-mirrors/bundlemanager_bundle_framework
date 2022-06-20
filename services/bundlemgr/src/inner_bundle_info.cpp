@@ -17,11 +17,13 @@
 
 #include <deque>
 #include <regex>
+
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "common_profile.h"
 #include "distributed_module_info.h"
 #include "distributed_ability_info.h"
+#include "free_install_params.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -449,7 +451,6 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[INSTALL_MARK] = mark_;
     jsonObject[INNER_BUNDLE_USER_INFOS] = innerBundleUserInfos_;
     jsonObject[BUNDLE_IS_NEW_VERSION] = isNewVersion_;
-    jsonObject[BUNDLE_IS_NEED_UPDATE] = upgradeFlag_;
     jsonObject[BUNDLE_BASE_EXTENSION_INFOS] = baseExtensionInfos_;
     jsonObject[BUNDLE_EXTENSION_SKILL_INFOS] = extensionSkillInfos_;
     jsonObject[BUNDLE_PACK_INFO] = bundlePackInfo_;
@@ -1238,14 +1239,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         BUNDLE_IS_NEW_VERSION,
         isNewVersion_,
         JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_IS_NEED_UPDATE,
-        upgradeFlag_,
-        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -2321,13 +2314,25 @@ void InnerBundleInfo::DeleteModuleRemovable(const std::string &moduleName, int32
 
 bool InnerBundleInfo::SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag)
 {
-    upgradeFlag_ = upgradeFlag;
-    return true;
+    APP_LOGD("moduleName= %{public}s, upgradeFlag = %{public}d", moduleName.c_str(), upgradeFlag);
+    for (auto &innerModuleInfo : innerModuleInfos_) {
+        if (innerModuleInfo.second.moduleName == moduleName) {
+            innerModuleInfo.second.upgradeFlag = upgradeFlag;
+            return true;
+        }
+    }
+    return false;
 }
 
 int32_t InnerBundleInfo::GetModuleUpgradeFlag(std::string moduleName) const
 {
-    return upgradeFlag_;
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("get InnerModuleInfo by moduleName(%{public}s) failed", moduleName.c_str());
+        return UpgradeFlag::NOT_UPGRADE;
+    }
+    APP_LOGD("innerModuleInfo.upgradeFlag : %{public}d", moduleInfo->upgradeFlag);
+    return moduleInfo->upgradeFlag;
 }
 
 int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const

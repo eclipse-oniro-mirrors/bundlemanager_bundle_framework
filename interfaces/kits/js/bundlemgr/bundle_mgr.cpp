@@ -94,6 +94,12 @@ enum class InstallErrorCode {
     STATUS_USER_REMOVE_FALIED = 0X53,
 };
 
+enum class UpgradeFlag {
+    NOT_UPGRADE = 0,
+    SINGLE_UPGRADE = 1,
+    RELATION_UPGRADE = 2,
+};
+
 const std::string PERMISSION_CHANGE = "permissionChange";
 const std::string ANY_PERMISSION_CHANGE = "anyPermissionChange";
 
@@ -6536,6 +6542,23 @@ void CreateExtensionFlagObject(napi_env env, napi_value value)
             &nGetExtensionInfoWithMetaData));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_METADATA", nGetExtensionInfoWithMetaData));
+}
+
+void CreateUpgradeFlagObject(napi_env env, napi_value value)
+{
+    napi_value nNotUpgrade;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::NOT_UPGRADE), &nNotUpgrade));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NOT_UPGRADE", nNotUpgrade));
+
+    napi_value nSingleUpgrade;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::SINGLE_UPGRADE), &nSingleUpgrade));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SINGLE_UPGRADE", nSingleUpgrade));
+
+    napi_value nRelationUpgrade;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::RELATION_UPGRADE), &nRelationUpgrade));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "RELATION_UPGRADE", nRelationUpgrade));
 }
 
 void CreateInstallErrorCodeObject(napi_env env, napi_value value)

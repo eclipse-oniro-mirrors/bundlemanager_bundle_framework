@@ -522,6 +522,7 @@ void BundleConnectAbilityMgr::CallAbilityManager(
 bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
     InnerBundleInfo &innerBundleInfo, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
+    APP_LOGI("CheckIsModuleNeedUpdate called");
     if (innerBundleInfo.GetModuleUpgradeFlag(want.GetModuleName()) != 0) {
         sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
         if (targetAbilityInfo == nullptr) {

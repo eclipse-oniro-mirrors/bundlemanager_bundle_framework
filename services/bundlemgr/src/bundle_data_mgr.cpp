@@ -1821,9 +1821,10 @@ bool BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
         return false;
     }
     InnerBundleInfo newInfo = infoItem->second;
-    newInfo.SetModuleUpgradeFlag(moduleName, upgradeFlag);
+    bool setFlag = newInfo.SetModuleUpgradeFlag(moduleName, upgradeFlag);
     if (dataStorage_->SaveStorageBundleInfo(newInfo)) {
-        return infoItem->second.SetModuleUpgradeFlag(moduleName, upgradeFlag);
+        setFlag = infoItem->second.SetModuleUpgradeFlag(moduleName, upgradeFlag);
+        return setFlag;
     }
     APP_LOGD("dataStorage SetModuleUpgradeFlag %{public}s failed", bundleName.c_str());
     return false;
