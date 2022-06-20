@@ -20,12 +20,12 @@ ohos_systemtest("bm_command_install_system_test") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "${aafwk_path}/tools/test/systemtest/aa",
+    "${ability_runtime_path}/tools/test/systemtest/aa",
     "//third_party/jsoncpp/include",
   ]
 
   sources = [
-    "${aafwk_path}/tools/test/systemtest/aa/tool_system_test.cpp",
+    "${ability_runtime_path}/tools/test/systemtest/aa/tool_system_test.cpp",
     "bm_command_install_system_test.cpp",
   ]
 
@@ -40,7 +40,7 @@ ohos_systemtest("bm_command_install_system_test") {
   }
 
   deps = [
-    "${aafwk_path}/tools/aa:tools_aa_source_set",
+    "${ability_runtime_path}/tools/aa:tools_aa_source_set",
     "//third_party/googletest:gtest_main",
     "//third_party/jsoncpp:jsoncpp",
   ]
@@ -60,12 +60,12 @@ ohos_systemtest("bm_command_uninstall_system_test") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "${aafwk_path}/tools/test/systemtest/aa",
+    "${ability_runtime_path}/tools/test/systemtest/aa",
     "//third_party/jsoncpp/include",
   ]
 
   sources = [
-    "${aafwk_path}/tools/test/systemtest/aa/tool_system_test.cpp",
+    "${ability_runtime_path}/tools/test/systemtest/aa/tool_system_test.cpp",
     "bm_command_uninstall_system_test.cpp",
   ]
 
@@ -80,7 +80,7 @@ ohos_systemtest("bm_command_uninstall_system_test") {
   }
 
   deps = [
-    "${aafwk_path}/tools/aa:tools_aa_source_set",
+    "${ability_runtime_path}/tools/aa:tools_aa_source_set",
     "//third_party/googletest:gtest_main",
     "//third_party/jsoncpp:jsoncpp",
   ]
@@ -100,12 +100,12 @@ ohos_systemtest("bm_command_dump_system_test") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "${aafwk_path}/tools/test/systemtest/aa",
+    "${ability_runtime_path}/tools/test/systemtest/aa",
     "//third_party/jsoncpp/include",
   ]
 
   sources = [
-    "${aafwk_path}/tools/test/systemtest/aa/tool_system_test.cpp",
+    "${ability_runtime_path}/tools/test/systemtest/aa/tool_system_test.cpp",
     "bm_command_dump_system_test.cpp",
   ]
 
@@ -120,7 +120,7 @@ ohos_systemtest("bm_command_dump_system_test") {
   }
 
   deps = [
-    "${aafwk_path}/tools/aa:tools_aa_source_set",
+    "${ability_runtime_path}/tools/aa:tools_aa_source_set",
     "//third_party/googletest:gtest_main",
     "//third_party/jsoncpp:jsoncpp",
   ]

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-aafwk_path = "//foundation/ability/ability_runtime"
+ability_runtime_path = "//foundation/ability/ability_runtime"
 aafwk_innerkits_path =
     "//foundation/ability/ability_runtime/interfaces/inner_api"
 
