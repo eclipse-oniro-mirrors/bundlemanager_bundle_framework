@@ -5537,6 +5537,8 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
             } else {
                 napi_create_uint32(env, 0, &result[0]);
                 napi_create_object(env, &result[1]);
+                napi_value exports = nullptr;
+                Media::PixelMapNapi::Init(env, exports);
                 result[1] = Media::PixelMapNapi::CreatePixelMap(env, asyncCallbackInfo->pixelMap);
             }
             if (asyncCallbackInfo->callbackRef) {
