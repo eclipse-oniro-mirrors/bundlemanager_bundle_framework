@@ -408,6 +408,7 @@ const std::string ABILITY_MAX_WINDOW_WIDTH = "maxWindowWidth";
 const std::string ABILITY_MIN_WINDOW_WIDTH = "minWindowWidth";
 const std::string ABILITY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 const std::string ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
+const std::string ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 // extension ability
 const std::string EXTENSION_ABILITY_NAME = "name";
 const std::string EXTENSION_ABILITY_TYPE = "type";

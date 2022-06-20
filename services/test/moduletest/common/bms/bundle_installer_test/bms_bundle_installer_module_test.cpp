@@ -182,7 +182,8 @@ protected:
                     "descriptionId": 1,
                     "iconId": 1,
                     "srcLanguage": "C++",
-                    "srcPath": ""
+                    "srcPath": "",
+                    "excludeFromMissions":false
                 }
             },
             "baseApplicationInfo": {

@@ -99,6 +99,7 @@ const std::string JOSN_KEY_MAX_WINDOW_WIDTH = "maxWindowWidth";
 const std::string JOSN_KEY_MIN_WINDOW_WIDTH = "minWindowWidth";
 const std::string JOSN_KEY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 const std::string JOSN_KEY_MIN_WINDOW_HEIGHT = "minWindowHeight";
+const std::string JOSN_KEY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 }  // namespace
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -485,7 +486,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JOSN_KEY_MAX_WINDOW_WIDTH, abilityInfo.maxWindowWidth},
         {JOSN_KEY_MIN_WINDOW_WIDTH, abilityInfo.minWindowWidth},
         {JOSN_KEY_MAX_WINDOW_HEIGHT, abilityInfo.maxWindowHeight},
-        {JOSN_KEY_MIN_WINDOW_HEIGHT, abilityInfo.minWindowHeight}
+        {JOSN_KEY_MIN_WINDOW_HEIGHT, abilityInfo.minWindowHeight},
+        {JOSN_KEY_EXCLUDE_FROM_MISSIONS, abilityInfo.excludeFromMissions}
     };
 }
 
@@ -1072,6 +1074,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         JOSN_KEY_MIN_WINDOW_HEIGHT,
         abilityInfo.minWindowHeight,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_EXCLUDE_FROM_MISSIONS,
+        abilityInfo.excludeFromMissions,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
