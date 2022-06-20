@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FOUNDATION_AAFWK_STANDARD_TOOLS_ZIP_UTILS_H
-#define FOUNDATION_AAFWK_STANDARD_TOOLS_ZIP_UTILS_H
+#ifndef FOUNDATION_APPEXECFWK_STANDARD_TOOLS_ZIP_UTILS_H
+#define FOUNDATION_APPEXECFWK_STANDARD_TOOLS_ZIP_UTILS_H
 #include <chrono>
 #include <ctime>
 #include <ratio>
@@ -24,7 +24,7 @@
 #include "runnable.h"
 
 namespace OHOS {
-namespace AAFwk {
+namespace AppExecFwk {
 namespace LIBZIP {
 
 using Runnable = OHOS::AppExecFwk::Runnable;
@@ -134,7 +134,7 @@ bool EndsWith(const std::string &str, const std::string &searchFor);
 void PostTask(const std::shared_ptr<Runnable> &runnable);
 bool FilePathCheckValid(const std::string &str);
 }  // namespace LIBZIP
-}  // namespace AAFwk
+}  // namespace AppExecFwk
 }  // namespace OHOS
 
-#endif  // FOUNDATION_AAFWK_STANDARD_TOOLS_ZIP_UTILS_H
+#endif  // FOUNDATION_APPEXECFWK_STANDARD_TOOLS_ZIP_UTILS_H
