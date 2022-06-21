@@ -103,7 +103,9 @@ ohos_unittest("BmsBundleKitServiceTest") {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
   }
-  external_deps += [ "ability_runtime:ability_manager" ]
+  if (ability_runtime_enable) {
+    external_deps += [ "ability_runtime:ability_manager" ]
+  }
   if (bundle_framework_free_install) {
     sources += aging
     sources += free_install
