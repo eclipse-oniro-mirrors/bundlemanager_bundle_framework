@@ -1729,6 +1729,12 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetReleaseType() != newInfo.GetReleaseType()) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
     }
+    if (oldInfo.GetAppDistributionType() != newInfo.GetAppDistributionType()) {
+        return ERR_APPEXECFWK_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME;
+    }
+    if (oldInfo.GetAppProvisionType() != newInfo.GetAppProvisionType()) {
+        return ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME;
+    }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
 }
