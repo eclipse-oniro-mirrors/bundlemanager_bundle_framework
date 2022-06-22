@@ -44,6 +44,9 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
 BundleTestTool::BundleTestTool(int argc, char *argv[]) : ShellCommand(argc, argv, TOOL_NAME)
 {}
 
+BundleTestTool::~BundleTestTool()
+{}
+
 ErrCode BundleTestTool::CreateCommandMap()
 {
     commandMap_ = {

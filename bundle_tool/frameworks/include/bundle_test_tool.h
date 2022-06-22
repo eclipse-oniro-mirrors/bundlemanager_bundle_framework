@@ -25,8 +25,7 @@ namespace AppExecFwk {
 class BundleTestTool : public ShellCommand {
 public:
     BundleTestTool(int argc, char *argv[]);
-    ~BundleTestTool() override
-    {}
+    ~BundleTestTool();
 
 private:
     ErrCode CreateCommandMap() override;

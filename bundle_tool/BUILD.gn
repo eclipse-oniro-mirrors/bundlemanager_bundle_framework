@@ -14,8 +14,5 @@
 import("//build/ohos.gni")
 
 group("bm") {
-  deps = [
-    "frameworks:bm",
-    "frameworks:bundle_test_tool",
-  ]
+  deps = [ "frameworks:tools_bm" ]
 }
