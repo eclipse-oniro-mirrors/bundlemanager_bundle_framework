@@ -161,10 +161,10 @@ void BMSEventHandler::OnBmsStarting()
 void BMSEventHandler::AfterBmsStart()
 {
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
+    BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
-    BundlePermissionMgr::UnInit();
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
