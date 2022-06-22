@@ -32,7 +32,6 @@
 #include "status_receiver_impl.h"
 #include "string_ex.h"
 
-
 namespace OHOS {
 namespace AppExecFwk {
 namespace {

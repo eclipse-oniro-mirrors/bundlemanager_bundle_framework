@@ -47,7 +47,7 @@ sptr<IBundleMgr> BundleCommandCommon::GetBundleMgrProxy()
 
 int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
 {
-   if (userId == Constants::UNSPECIFIED_USERID) {
+    if (userId == Constants::UNSPECIFIED_USERID) {
         std::vector<int> activeIds;
         int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
         if (ret != 0) {
@@ -59,8 +59,8 @@ int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
             return userId;
         }
         return activeIds[0];
-   }
-   return userId;
+    }
+    return userId;
 }
 
 std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
