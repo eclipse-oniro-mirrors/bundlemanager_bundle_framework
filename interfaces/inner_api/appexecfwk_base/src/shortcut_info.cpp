@@ -30,6 +30,7 @@ namespace AppExecFwk {
 namespace {
 const std::string JSON_KEY_BUNDLE_ID = "id";
 const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
+const std::string JSON_KEY_MODULE_NAME = "moduleName";
 const std::string JSON_KEY_BUNDLE_HOST_ABILITY = "hostAbility";
 const std::string JSON_KEY_BUNDLE_ICON = "icon";
 const std::string JSON_KEY_BUNDLE_LABEL = "label";
@@ -59,6 +60,7 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
 {
     id = Str16ToStr8(parcel.ReadString16());
     bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
     hostAbility = Str16ToStr8(parcel.ReadString16());
     icon = Str16ToStr8(parcel.ReadString16());
     label = Str16ToStr8(parcel.ReadString16());
@@ -95,6 +97,7 @@ bool ShortcutInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(id));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hostAbility));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
@@ -129,6 +132,7 @@ void to_json(nlohmann::json &jsonObject, const ShortcutInfo &shortcutInfo)
     jsonObject = nlohmann::json {
         {JSON_KEY_BUNDLE_ID, shortcutInfo.id},
         {JSON_KEY_BUNDLE_NAME, shortcutInfo.bundleName},
+        {JSON_KEY_MODULE_NAME, shortcutInfo.moduleName},
         {JSON_KEY_BUNDLE_HOST_ABILITY, shortcutInfo.hostAbility},
         {JSON_KEY_BUNDLE_ICON, shortcutInfo.icon},
         {JSON_KEY_BUNDLE_LABEL, shortcutInfo.label},
@@ -188,6 +192,14 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         jsonObjectEnd,
         JSON_KEY_BUNDLE_NAME,
         shortcutInfo.bundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_MODULE_NAME,
+        shortcutInfo.moduleName,
         JsonType::STRING,
         false,
         parseResult,

@@ -2281,6 +2281,7 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
         ShortcutInfo shortcutInfo;
         shortcutInfo.id = info.shortcutId;
         shortcutInfo.bundleName = configJson.app.bundleName;
+        shortcutInfo.moduleName = configJson.module.distro.moduleName;
         shortcutInfo.icon = info.icon;
         shortcutInfo.label = info.label;
         shortcutInfo.iconId = info.iconId;
