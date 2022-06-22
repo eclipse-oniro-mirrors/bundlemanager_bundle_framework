@@ -86,6 +86,10 @@ static napi_value Init(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nExtensionFlag));
     CreateExtensionFlagObject(env, nExtensionFlag);
 
+    napi_value nUpgradeFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nUpgradeFlag));
+    CreateUpgradeFlagObject(env, nUpgradeFlag);
+
     napi_value nBundleFlag = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nBundleFlag));
     CreateBundleFlagObject(env, nBundleFlag);
@@ -152,7 +156,8 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityType", nExtensionAbilityType),
         DECLARE_NAPI_PROPERTY("BundleFlag", nBundleFlag),
-        DECLARE_NAPI_PROPERTY("ExtensionFlag", nExtensionFlag)
+        DECLARE_NAPI_PROPERTY("ExtensionFlag", nExtensionFlag),
+        DECLARE_NAPI_PROPERTY("UpgradeFlag", nUpgradeFlag)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 

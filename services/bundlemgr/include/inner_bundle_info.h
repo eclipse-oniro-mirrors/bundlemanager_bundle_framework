@@ -1526,7 +1526,6 @@ private:
     BundlePackInfo bundlePackInfo_;
     // new version fields
     bool isNewVersion_ = false;
-    int32_t upgradeFlag_ = 0;
     std::map<std::string, ExtensionAbilityInfo> baseExtensionInfos_;
     std::map<std::string, std::vector<Skill>> extensionSkillInfos_;
 
