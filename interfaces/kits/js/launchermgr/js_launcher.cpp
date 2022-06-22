@@ -356,6 +356,12 @@ static void ConvertShortcutInfo(
         env, napi_create_string_utf8(env, shortcutInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &bundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "bundleName", bundleName));
 
+    // wrap moduleName
+    napi_value moduleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &moduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "moduleName", moduleName));
+
     // wrap hostAbility
     napi_value hostAbility;
     NAPI_CALL_RETURN_VOID(

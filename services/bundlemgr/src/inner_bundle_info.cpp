@@ -1892,6 +1892,7 @@ void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos)
                 ShortcutInfo shortcutInfo;
                 shortcutInfo.id = item.shortcutId;
                 shortcutInfo.bundleName = abilityInfo.bundleName;
+                shortcutInfo.moduleName = abilityInfo.moduleName;
                 shortcutInfo.icon = item.icon;
                 shortcutInfo.label = item.label;
                 shortcutInfo.iconId = item.iconId;
