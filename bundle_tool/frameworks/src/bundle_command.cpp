@@ -376,6 +376,10 @@ ErrCode BundleManagerShellCommand::CreateMessageMap()
             "error: install failed due to error bundle type"
         },
         {
+            IStatusReceiver::ERR_INSTALL_SDK_INCOMPATIBLE,
+            "error: install failed due to older sdk version in the device"
+        },
+        {
             IStatusReceiver::ERR_INSTALL_URI_DUPLICATE,
             "error: install failed due to uri prefix duplicate",
         },
