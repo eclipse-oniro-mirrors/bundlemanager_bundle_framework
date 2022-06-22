@@ -181,9 +181,6 @@ private:
     ErrCode CreateMessageMap() override;
     ErrCode init() override;
 
-    sptr<IBundleMgr> GetBundleMgrProxy() const;
-    sptr<IBundleInstaller> GetInstallerProxy() const;
-
     ErrCode RunAsHelpCommand();
     ErrCode RunAsInstallCommand();
     ErrCode RunAsUninstallCommand();
@@ -218,7 +215,6 @@ private:
 
     bool GetIsRemovableOperation(
         const std::string &bundleName, const std::string &moduleName, std::string &result) const;
-    int32_t GetCurrentUserId(int32_t userId) const;
 
     ErrCode ParseDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
     sptr<IBundleMgr> bundleMgrProxy_;
