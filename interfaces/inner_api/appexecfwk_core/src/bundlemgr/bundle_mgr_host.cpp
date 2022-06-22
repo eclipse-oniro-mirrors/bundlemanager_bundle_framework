@@ -332,9 +332,10 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfo(Parcel &data, Parcel &reply)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string name = data.ReadString();
     BundlePackFlag flag = static_cast<BundlePackFlag>(data.ReadInt32());
+    int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flag, info);
+    bool ret = GetBundlePackInfo(name, flag, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -353,9 +354,10 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfoWithIntFlags(Parcel &data, Parcel 
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string name = data.ReadString();
     int flags = data.ReadInt32();
+    int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flags, info);
+    bool ret = GetBundlePackInfo(name, flags, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

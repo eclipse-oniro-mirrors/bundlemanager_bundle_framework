@@ -35,7 +35,8 @@ public:
     bool GetBundleNameForUid(const int uid, std::string &bundleName);
     bool GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID);
-    bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo);
+    bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
 
     /**
      * @brief Obtain the profile which are deploied in the Metadata in the bundle.
