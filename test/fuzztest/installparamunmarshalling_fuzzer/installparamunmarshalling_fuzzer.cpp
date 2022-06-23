@@ -19,14 +19,23 @@
 
 #include "installparamunmarshalling_fuzzer.h"
 
+using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    void fuzzinstallparamunmarshalling(const uint8_t* data, size_t size)
+    bool fuzzinstallparamunmarshalling(const uint8_t* data, size_t size)
     {
-        MessageParcel reply;
-        MessageOption option;
-        MessageParcel dataMessageParcel;
-        dataMessageParcel.WriteBuffer(data, size);
-        AppExecFwk::InstallParam::Unmarshalling(dataMessageParcel);
+        Parcel dataMessageParcel;
+        InstallParam oldInstallParam;
+        if (!oldInstallParam.Marshalling(dataMessageParcel)) {
+            return false;
+        }
+        InstallParam *info = new (std::nothrow) InstallParam();
+        if (info == nullptr) {
+            return false;
+        }
+        bool ret = info->ReadFromParcel(dataMessageParcel);
+        delete info;
+        info = nullptr;
+        return ret;
     }
 }
 
