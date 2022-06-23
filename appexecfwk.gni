@@ -12,8 +12,8 @@
 # limitations under the License.
 
 ability_runtime_path = "//foundation/ability/ability_runtime"
-aafwk_innerkits_path =
-    "//foundation/ability/ability_runtime/interfaces/inner_api"
+ability_runtime_innerkits_path =
+    "${ability_runtime_path}/interfaces/inner_api"
 
 appexecfwk_path = "//foundation/bundlemanager/bundle_framework"
 common_path = "${appexecfwk_path}/common"
