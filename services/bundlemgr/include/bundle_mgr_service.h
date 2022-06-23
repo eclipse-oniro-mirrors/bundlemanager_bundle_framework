@@ -87,6 +87,10 @@ public:
     sptr<IDefaultApp> GetDefaultAppProxy() const;
 #endif
 
+#ifdef DEVICE_MANAGER_ENABLE
+    const std::shared_ptr<BmsDeviceManager> GetDeviceManager() const;
+#endif
+
     /**
      * @brief Check all user.
      */
