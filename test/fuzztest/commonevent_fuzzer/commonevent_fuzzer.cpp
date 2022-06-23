@@ -19,14 +19,21 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    bool fuzzelCommonEventInfo(const uint8_t* data, size_t size)
+    bool fuzzelcommoneventinfounmarshalling(const uint8_t* data, size_t size)
     {
-        CommonEventInfo commonEventInfo;
-        commonEventInfo.name = reinterpret_cast<const char*>(data);
         Parcel dataMessageParcel;
-        commonEventInfo.Marshalling(dataMessageParcel);
-        auto eventInfo = CommonEventInfo::Unmarshalling(dataMessageParcel);
-        return eventInfo != nullptr;
+        CommonEventInfo oldCommonEventInfo;
+        if (!oldCommonEventInfo.Marshalling(dataMessageParcel)) {
+            return false;
+        }
+        CommonEventInfo *info = new (std::nothrow) CommonEventInfo();
+        if (info == nullptr) {
+            return false;
+        }
+        bool ret = info->ReadFromParcel(dataMessageParcel);
+        delete info;
+        info = nullptr;
+        return ret;
     }
 }
 
@@ -34,6 +41,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzelCommonEventInfo(data, size);
+    OHOS::fuzzelcommoneventinfounmarshalling(data, size);
     return 0;
 }

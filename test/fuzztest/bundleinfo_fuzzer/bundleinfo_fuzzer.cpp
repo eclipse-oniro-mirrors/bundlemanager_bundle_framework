@@ -19,14 +19,23 @@
 
 #include "bundleinfo_fuzzer.h"
 
+using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    void fuzzabundleinfounmarshalling(const uint8_t* data, size_t size)
+    bool fuzzabundleinfounmarshalling(const uint8_t* data, size_t size)
     {
-        MessageParcel reply;
-        MessageOption option;
-        MessageParcel dataMessageParcel;
-        dataMessageParcel.WriteBuffer(data, size);
-        AppExecFwk::BundleInfo::Unmarshalling(dataMessageParcel);
+        Parcel dataMessageParcel;
+        BundleInfo oldBundleInfo;
+        if (!oldBundleInfo.Marshalling(dataMessageParcel)) {
+            return false;
+        }
+        BundleInfo *info = new (std::nothrow) BundleInfo();
+        if (info == nullptr) {
+            return false;
+        }
+        bool ret = info->ReadFromParcel(dataMessageParcel);
+        delete info;
+        info = nullptr;
+        return ret;
     }
 }
 

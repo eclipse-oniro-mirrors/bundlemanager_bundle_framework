@@ -23,13 +23,21 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    bool fuzzapplicationinfo(const uint8_t* data, size_t size)
+    bool fuzzapplicationinfounmarshalling(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        ApplicationInfo applicationInfo;
-        applicationInfo.bundleName = reinterpret_cast<const char*>(data);
-        auto application = ApplicationInfo::Unmarshalling(dataMessageParcel);
-        return application != nullptr;
+        ApplicationInfo oldApplicationInfo;
+        if (!oldApplicationInfo.Marshalling(dataMessageParcel)) {
+            return false;
+        }
+        ApplicationInfo *info = new (std::nothrow) ApplicationInfo();
+        if (info == nullptr) {
+            return false;
+        }
+        bool ret = info->ReadFromParcel(dataMessageParcel);
+        delete info;
+        info = nullptr;
+        return ret;
     }
 }
 
@@ -37,6 +45,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzapplicationinfo(data, size);
+    OHOS::fuzzapplicationinfounmarshalling(data, size);
     return 0;
 }
