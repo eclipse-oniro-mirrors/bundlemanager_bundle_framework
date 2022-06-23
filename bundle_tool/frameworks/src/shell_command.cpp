@@ -51,7 +51,7 @@ ErrCode ShellCommand::OnCommand()
         respond = commandMap_["help"];
     }
 
-    if (init() == OHOS::ERR_OK) {
+    if (Init() == OHOS::ERR_OK) {
         respond();
     } else {
         result = OHOS::ERR_INVALID_VALUE;

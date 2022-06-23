@@ -38,6 +38,7 @@ ohos_moduletest("bm_command_dump_module_test") {
 
   sources = [
     "${bundletool_path}/src/bundle_command.cpp",
+    "${bundletool_path}/src/bundle_command_common.cpp",
     "${bundletool_path}/src/shell_command.cpp",
     "${bundletool_path}/src/status_receiver_impl.cpp",
     "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
@@ -84,6 +85,7 @@ ohos_moduletest("bm_command_install_module_test") {
 
   sources = [
     "${bundletool_path}/src/bundle_command.cpp",
+    "${bundletool_path}/src/bundle_command_common.cpp",
     "${bundletool_path}/src/shell_command.cpp",
     "${bundletool_path}/src/status_receiver_impl.cpp",
     "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
@@ -130,6 +132,7 @@ ohos_moduletest("bm_command_uninstall_module_test") {
 
   sources = [
     "${bundletool_path}/src/bundle_command.cpp",
+    "${bundletool_path}/src/bundle_command_common.cpp",
     "${bundletool_path}/src/shell_command.cpp",
     "${bundletool_path}/src/status_receiver_impl.cpp",
     "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
