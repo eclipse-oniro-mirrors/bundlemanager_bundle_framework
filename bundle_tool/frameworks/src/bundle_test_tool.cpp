@@ -63,7 +63,7 @@ ErrCode BundleTestTool::CreateMessageMap()
     return OHOS::ERR_OK;
 }
 
-ErrCode BundleTestTool::init()
+ErrCode BundleTestTool::Init()
 {
     ErrCode result = OHOS::ERR_OK;
 

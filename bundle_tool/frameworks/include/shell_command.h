@@ -44,7 +44,7 @@ public:
 
     virtual ErrCode CreateCommandMap() = 0;
     virtual ErrCode CreateMessageMap() = 0;
-    virtual ErrCode init() = 0;
+    virtual ErrCode Init() = 0;
 
 protected:
     static constexpr int MIN_ARGUMENT_NUMBER = 2;

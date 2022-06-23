@@ -149,7 +149,7 @@ ErrCode BundleManagerShellCommand::CreateMessageMap()
     return OHOS::ERR_OK;
 }
 
-ErrCode BundleManagerShellCommand::init()
+ErrCode BundleManagerShellCommand::Init()
 {
     ErrCode result = OHOS::ERR_OK;
 

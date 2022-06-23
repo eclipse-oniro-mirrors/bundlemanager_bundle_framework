@@ -179,7 +179,7 @@ public:
 private:
     ErrCode CreateCommandMap() override;
     ErrCode CreateMessageMap() override;
-    ErrCode init() override;
+    ErrCode Init() override;
 
     ErrCode RunAsHelpCommand();
     ErrCode RunAsInstallCommand();
