@@ -140,47 +140,238 @@ RequestPermission *RequestPermission::Unmarshalling(Parcel &parcel)
 
 bool BundleInfo::ReadFromParcel(Parcel &parcel)
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
+    name = Str16ToStr8(parcel.ReadString16());
+    versionCode = parcel.ReadUint32();
+    versionName = Str16ToStr8(parcel.ReadString16());
+    minCompatibleVersionCode = parcel.ReadUint32();
+    compatibleVersion = parcel.ReadUint32();
+    targetVersion = parcel.ReadUint32();
+    isKeepAlive = parcel.ReadBool();
+    singleton = parcel.ReadBool();
+    isPreInstallApp = parcel.ReadBool();
+
+    vendor = Str16ToStr8(parcel.ReadString16());
+    releaseType = Str16ToStr8(parcel.ReadString16());
+    isNativeApp = parcel.ReadBool();
+
+    mainEntry = Str16ToStr8(parcel.ReadString16());
+    entryModuleName = Str16ToStr8(parcel.ReadString16());
+    entryInstallationFree = parcel.ReadBool();
+
+    appId = Str16ToStr8(parcel.ReadString16());
+    uid = parcel.ReadInt32();
+    gid = parcel.ReadInt32();
+    installTime = parcel.ReadInt64();
+    updateTime = parcel.ReadInt64();
+    std::unique_ptr<ApplicationInfo> appInfo(parcel.ReadParcelable<ApplicationInfo>());
+    if (!appInfo) {
+        APP_LOGE("ReadParcelable<ApplicationInfo> failed");
         return false;
     }
-    uint32_t length = messageParcel->ReadUint32();
-    if (length == 0) {
-        APP_LOGE("Invalid data length");
-        return false;
+    applicationInfo = *appInfo;
+
+    int32_t abilityInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfosSize);
+    for (auto i = 0; i < abilityInfosSize; i++) {
+        std::unique_ptr<AbilityInfo> abilityInfo(parcel.ReadParcelable<AbilityInfo>());
+        if (!abilityInfo) {
+            APP_LOGE("ReadParcelable<AbilityInfo> failed");
+            return false;
+        }
+        abilityInfos.emplace_back(*abilityInfo);
     }
-    const char *data = reinterpret_cast<const char *>(messageParcel->ReadRawData(length));
-    if (!data) {
-        APP_LOGE("Fail to read raw data, length = %{public}d", length);
-        return false;
+
+    int32_t extensionInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfosSize);
+    for (auto i = 0; i < extensionInfosSize; i++) {
+        std::unique_ptr<ExtensionAbilityInfo> extensionAbilityInfo(parcel.ReadParcelable<ExtensionAbilityInfo>());
+        if (!extensionAbilityInfo) {
+            APP_LOGE("ReadParcelable<ExtensionAbilityInfo> failed");
+            return false;
+        }
+        extensionInfos.emplace_back(*extensionAbilityInfo);
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse BundleInfo");
-        return false;
+
+    int32_t hapModuleInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleInfosSize);
+    for (auto i = 0; i < hapModuleInfosSize; i++) {
+        std::unique_ptr<HapModuleInfo> hapModuleInfo(parcel.ReadParcelable<HapModuleInfo>());
+        if (!hapModuleInfo) {
+            APP_LOGE("ReadParcelable<HapModuleInfo> failed");
+            return false;
+        }
+        hapModuleInfos.emplace_back(*hapModuleInfo);
     }
-    *this = jsonObject.get<BundleInfo>();
+
+    int32_t hapModuleNamesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleNamesSize);
+    for (auto i = 0; i < hapModuleNamesSize; i++) {
+        hapModuleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t moduleNamesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleNamesSize);
+    for (auto i = 0; i < moduleNamesSize; i++) {
+        moduleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t modulePublicDirsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, modulePublicDirsSize);
+    for (auto i = 0; i < modulePublicDirsSize; i++) {
+        modulePublicDirs.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t moduleDirsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleDirsSize);
+    for (auto i = 0; i < moduleDirsSize; i++) {
+        moduleDirs.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t moduleResPathsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleResPathsSize);
+    for (auto i = 0; i < moduleResPathsSize; i++) {
+        moduleResPaths.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t reqPermissionsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionsSize);
+    for (auto i = 0; i < reqPermissionsSize; i++) {
+        reqPermissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t defPermissionsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defPermissionsSize);
+    for (auto i = 0; i < defPermissionsSize; i++) {
+        defPermissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
+    int32_t reqPermissionStatesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionStatesSize);
+    for (auto i = 0; i < reqPermissionStatesSize; i++) {
+        reqPermissionStates.emplace_back(parcel.ReadInt32());
+    }
+
+    int32_t reqPermissionDetailsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionDetailsSize);
+    for (auto i = 0; i < reqPermissionDetailsSize; i++) {
+        std::unique_ptr<RequestPermission> requestPermission(parcel.ReadParcelable<RequestPermission>());
+        if (!requestPermission) {
+            APP_LOGE("ReadParcelable<RequestPermission> failed");
+            return false;
+        }
+        reqPermissionDetails.emplace_back(*requestPermission);
+    }
+
+    cpuAbi = Str16ToStr8(parcel.ReadString16());
+    seInfo = Str16ToStr8(parcel.ReadString16());
+    label = Str16ToStr8(parcel.ReadString16());
+    description = Str16ToStr8(parcel.ReadString16());
+    jointUserId = Str16ToStr8(parcel.ReadString16());
+    minSdkVersion = parcel.ReadInt32();
+    maxSdkVersion = parcel.ReadInt32();
+    isDifferentName = parcel.ReadBool();
     return true;
 }
 
 bool BundleInfo::Marshalling(Parcel &parcel) const
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, minCompatibleVersionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, targetVersion);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isKeepAlive);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, singleton);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstallApp);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(vendor));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(releaseType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isNativeApp);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mainEntry));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entryModuleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, entryInstallationFree);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, gid);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, installTime);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, updateTime);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &applicationInfo);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfos.size());
+    for (auto &abilityInfo : abilityInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo);
     }
-    nlohmann::json json = *this;
-    std::string str = json.dump();
-    if (!messageParcel->WriteUint32(str.size() + 1)) {
-        APP_LOGE("Failed to write data size");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfos.size());
+    for (auto &extensionInfo : extensionInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo);
     }
-    if (!messageParcel->WriteRawData(str.c_str(), str.size() + 1)) {
-        APP_LOGE("Failed to write data");
-        return false;
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleInfos.size());
+    for (auto &hapModuleInfo : hapModuleInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hapModuleInfo);
     }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleNames.size());
+    for (auto &hapModuleName : hapModuleNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapModuleName));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleNames.size());
+    for (auto &moduleName : moduleNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, modulePublicDirs.size());
+    for (auto &modulePublicDir : modulePublicDirs) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(modulePublicDir));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleDirs.size());
+    for (auto &moduleDir : moduleDirs) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleDir));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleResPaths.size());
+    for (auto &moduleResPath : moduleResPaths) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleResPath));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissions.size());
+    for (auto &reqPermission : reqPermissions) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(reqPermission));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defPermissions.size());
+    for (auto &defPermission : defPermissions) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(defPermission));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionStates.size());
+    for (auto &reqPermissionState : reqPermissionStates) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionState);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionDetails.size());
+    for (auto &reqPermissionDetail : reqPermissionDetails) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &reqPermissionDetail);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(seInfo));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(jointUserId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, minSdkVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxSdkVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDifferentName);
     return true;
 }
 

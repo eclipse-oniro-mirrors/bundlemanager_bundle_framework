@@ -54,27 +54,49 @@ const std::string PROCESS = "process";
 
 bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    name = Str16ToStr8(parcel.ReadString16());
+    srcEntrance = Str16ToStr8(parcel.ReadString16());
+    icon = Str16ToStr8(parcel.ReadString16());
+    iconId = parcel.ReadInt32();
+    label = Str16ToStr8(parcel.ReadString16());
+    labelId = parcel.ReadInt32();
+    description = Str16ToStr8(parcel.ReadString16());
+    descriptionId = parcel.ReadInt32();
+    priority = parcel.ReadInt32();
+    int32_t permissionsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
+    for (auto i = 0; i < permissionsSize; i++) {
+        permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+    readPermission = Str16ToStr8(parcel.ReadString16());
+    writePermission = Str16ToStr8(parcel.ReadString16());
+    uri = Str16ToStr8(parcel.ReadString16());
+    type = static_cast<ExtensionAbilityType>(parcel.ReadInt32());
+    visible = parcel.ReadBool();
+
+    int32_t metadataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    for (auto i = 0; i < metadataSize; i++) {
+        std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
+        if (!meta) {
+            APP_LOGE("ReadParcelable<Metadata> failed");
+            return false;
+        }
+        metadata.emplace_back(*meta);
+    }
+
+    std::unique_ptr<ApplicationInfo> appInfo(parcel.ReadParcelable<ApplicationInfo>());
+    if (!appInfo) {
+        APP_LOGE("ReadParcelable<ApplicationInfo> failed");
         return false;
     }
-    uint32_t length = messageParcel->ReadUint32();
-    if (length == 0) {
-        APP_LOGE("Invalid data length");
-        return false;
-    }
-    const char *data = reinterpret_cast<const char *>(messageParcel->ReadRawData(length));
-    if (!data) {
-        APP_LOGE("Fail to read raw data, length = %{public}d", length);
-        return false;
-    }
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse ApplicationInfo");
-        return false;
-    }
-    *this = jsonObject.get<ExtensionAbilityInfo>();
+    applicationInfo = *appInfo;
+
+    resourcePath = Str16ToStr8(parcel.ReadString16());
+    enabled = parcel.ReadBool();
+    process = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -91,21 +113,34 @@ ExtensionAbilityInfo *ExtensionAbilityInfo::Unmarshalling(Parcel &parcel)
 
 bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcEntrance));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
+    for (auto &permission : permissions) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));
     }
-    nlohmann::json json = *this;
-    std::string str = json.dump();
-    if (!messageParcel->WriteUint32(str.size() + 1)) {
-        APP_LOGE("Failed to write data size");
-        return false;
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(readPermission));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(writePermission));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, visible);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
+    for (auto &mete : metadata) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &mete);
     }
-    if (!messageParcel->WriteRawData(str.c_str(), str.size() + 1)) {
-        APP_LOGE("Failed to write data");
-        return false;
-    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &applicationInfo);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(resourcePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     return true;
 }
 
