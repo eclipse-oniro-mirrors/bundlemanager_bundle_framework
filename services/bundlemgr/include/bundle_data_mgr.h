@@ -239,7 +239,8 @@ public:
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
      * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
      */
-    bool GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundleInfo) const;
+    bool GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Obtains the BundleInfo of application bundles based on the specified metaData.
      * @param metaData Indicates the metadata to get in the bundle.

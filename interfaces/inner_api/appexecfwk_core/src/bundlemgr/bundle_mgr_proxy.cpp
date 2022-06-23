@@ -263,37 +263,42 @@ bool BundleMgrProxy::GetBundleInfo(
 }
 
 bool BundleMgrProxy::GetBundlePackInfo(
-    const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo)
+    const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetBundleInfo due to params empty");
+        APP_LOGE("fail to GetBundlePackInfo due to params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to GetBundlePackInfo due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBundleInfo due to write bundleName fail");
+        APP_LOGE("fail to GetBundlePackInfo due to write bundleName fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int>(flag))) {
-        APP_LOGE("fail to GetBundleInfo due to write flag fail");
+        APP_LOGE("fail to GetBundlePackInfo due to write flag fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundlePackInfo due to write userId fail");
         return false;
     }
 
     if (!GetParcelableInfo<BundlePackInfo>(IBundleMgr::Message::GET_BUNDLE_PACK_INFO, data, bundlePackInfo)) {
-        APP_LOGE("fail to GetBundleInfo from server");
+        APP_LOGE("fail to GetBundlePackInfo from server");
         return false;
     }
     return true;
 }
 
-bool BundleMgrProxy::GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo)
+bool BundleMgrProxy::GetBundlePackInfo(
+    const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
@@ -315,6 +320,11 @@ bool BundleMgrProxy::GetBundlePackInfo(const std::string &bundleName, int32_t fl
         APP_LOGE("fail to GetBundlePackInfo due to write flag fail");
         return false;
     }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundlePackInfo due to write userId fail");
+        return false;
+    }
+
     if (!GetParcelableInfo<BundlePackInfo>(
             IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS, data, bundlePackInfo)) {
         APP_LOGE("fail to GetBundlePackInfo from server");

@@ -139,10 +139,11 @@ public:
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
+     * @param userId Indicates the user ID.
      * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
      */
     virtual bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag,
-        BundlePackInfo &bundlePackInfo)
+        BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return false;
     }
@@ -152,10 +153,11 @@ public:
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
+     * @param userId Indicates the user ID.
      * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
      */
     virtual bool GetBundlePackInfo(const std::string &bundleName, int32_t flags,
-        BundlePackInfo &bundlePackInfo)
+        BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return false;
     }
