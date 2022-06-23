@@ -7056,27 +7056,26 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
         APP_LOGE("GetProfile failed due to null callbackPtr");
         return nullptr;
     }
-
-    if (argc < ARGS_SIZE_ONE || argc > ARGS_SIZE_FOUR) {
-        APP_LOGE("the number of input arguments is invalid");
-        return nullptr;
-    }
     callbackPtr->type = profileType;
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
-        if ((i == 0) && (valueType == napi_string)) {
-            ParseString(env, callbackPtr->moduleName, argv[i]);
-        } else if ((i == ARGS_SIZE_ONE) && (valueType == napi_string)) {
-            ParseString(env, callbackPtr->abilityName, argv[i]);
-        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_string)) {
-            ParseString(env, callbackPtr->metadataName, argv[i]);
-        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callbackPtr->callback));
-        } else if ((i == ARGS_SIZE_THREE) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callbackPtr->callback));
-        } else {
-            callbackPtr->errCode = PARAM_TYPE_ERROR;
+
+    if (argc < ARGS_SIZE_TWO || argc > ARGS_SIZE_FOUR) {
+        APP_LOGE("the number of input arguments is invalid");
+        callbackPtr->errCode = PARAM_TYPE_ERROR;
+    } else {
+        for (size_t i = 0; i < argc; ++i) {
+            napi_valuetype valueType = napi_undefined;
+            NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
+            if ((i == 0) && (valueType == napi_string)) {
+                ParseString(env, callbackPtr->moduleName, argv[i]);
+            } else if ((i == ARGS_SIZE_ONE) && (valueType == napi_string)) {
+                ParseString(env, callbackPtr->abilityName, argv[i]);
+            } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_string)) {
+                ParseString(env, callbackPtr->metadataName, argv[i]);
+            } else if ((i == ARGS_SIZE_THREE) && (valueType == napi_function)) {
+                NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+            } else {
+                callbackPtr->errCode = PARAM_TYPE_ERROR;
+            }
         }
     }
 
