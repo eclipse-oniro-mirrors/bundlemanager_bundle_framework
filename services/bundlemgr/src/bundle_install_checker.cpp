@@ -17,6 +17,7 @@
 
 #include "bundle_parser.h"
 #include "bundle_util.h"
+#include "parameter.h"
 #include "systemcapability.h"
 
 namespace OHOS {
@@ -361,7 +362,10 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
         }
     }
-
+    // check api sdk version
+    if ((infos.begin()->second).GetCompatibleVersion() > GetSdkApiVersion()) {
+        return ERR_APPEXECFWK_INSTALL_SDK_INCOMPATIBLE;
+    }
     APP_LOGD("finish check APP label");
     return ret;
 }
