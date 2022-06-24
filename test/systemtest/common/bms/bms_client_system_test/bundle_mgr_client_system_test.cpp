@@ -114,12 +114,13 @@ public:
     static void UninstallBundle(const std::string &bundleName, std::string &uninstallMsg, const int userId);
     static sptr<IBundleMgr> GetBundleMgrProxy();
     static sptr<IBundleInstaller> GetInstallerProxy();
+    bool GetProfileFromAbility(const AbilityInfo &info, const std::string &metadataName,
+        std::vector<std::string> &profiles);
+    bool GetProfileFromExtension(const ExtensionAbilityInfo &info, const std::string &metadataName,
+        std::vector<std::string> &profiles);
 
     template<typename... Args>
     static bool GetResConfigFile(Args&&...args);
-
-    template<typename... Args>
-    static bool GetProfileFromSandDir(Args&&...args);
 };
 
 void BundleMgrClientSystemTest::SetUpTestCase()
@@ -232,8 +233,8 @@ bool BundleMgrClientSystemTest::GetResConfigFile(Args&&...args)
     return ret;
 }
 
-template<typename... Args>
-bool BundleMgrClientSystemTest::GetProfileFromSandDir(Args&&...args)
+bool BundleMgrClientSystemTest::GetProfileFromAbility(const AbilityInfo &info,
+    const std::string &metadataName, std::vector<std::string> &profiles)
 {
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
@@ -241,7 +242,24 @@ bool BundleMgrClientSystemTest::GetProfileFromSandDir(Args&&...args)
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
-    auto ret = bundleMgrClient.GetProfileFromSandDir(std::forward<Args>(args)...);
+    auto ret = bundleMgrClient.GetProfileFromAbility(info, metadataName, profiles);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    return ret;
+}
+
+bool BundleMgrClientSystemTest::GetProfileFromExtension(const ExtensionAbilityInfo &info,
+    const std::string &metadataName, std::vector<std::string> &profiles)
+{
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    auto ret = bundleMgrClient.GetProfileFromExtension(info, metadataName, profiles);
 
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
@@ -1609,15 +1627,15 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_045, TestSize.Level1)
 }
 
 /**
- * @tc.number: GetProfileFromSandDir_001
- * @tc.name: GetProfileFromSandDir
- * @tc.desc: Test the interface of GetProfileFromSandDir
+ * @tc.number: GetProfileFromAbility_001
+ * @tc.name: GetProfileFromAbility
+ * @tc.desc: Test the interface of GetProfileFromAbility
  *           1. AbilityInfo without resource path
  * @tc.require: AR000H04IS
  */
-HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_001, TestSize.Level1)
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_001, TestSize.Level1)
 {
-    auto name = std::string("GetProfileFromSandDir_001");
+    auto name = std::string("GetProfileFromAbility_001");
     GTEST_LOG_(INFO) << name << " start";
 
     AbilityInfo info;
@@ -1629,22 +1647,22 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_001, TestSize.Level1)
     metadata.emplace_back(data);
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
-    auto ret = GetProfileFromSandDir(info, metadataName, profileInfo);
+    auto ret = GetProfileFromAbility(info, metadataName, profileInfo);
     EXPECT_FALSE(ret);
 
     GTEST_LOG_(INFO) << name << " end";
 }
 
 /**
- * @tc.number: GetProfileFromSandDir_002
- * @tc.name: GetProfileFromSandDir
- * @tc.desc: Test the interface of GetProfileFromSandDir
+ * @tc.number: GetProfileFromAbility_002
+ * @tc.name: GetProfileFromAbility
+ * @tc.desc: Test the interface of GetProfileFromAbility
  *           1. AbilityInfo has incorrect resource path
  * @tc.require: AR000H04IS
  */
-HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_002, TestSize.Level1)
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_002, TestSize.Level1)
 {
-    auto name = std::string("GetProfileFromSandDir_002");
+    auto name = std::string("GetProfileFromAbility_002");
     GTEST_LOG_(INFO) << name << " start";
 
     AbilityInfo info;
@@ -1657,22 +1675,22 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_002, TestSize.Level1)
     info.resourcePath = RESOURCE_PATH_TEST;
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
-    auto ret = GetProfileFromSandDir(info, metadataName, profileInfo);
+    auto ret = GetProfileFromAbility(info, metadataName, profileInfo);
     EXPECT_FALSE(ret);
 
     GTEST_LOG_(INFO) << name << " end";
 }
 
 /**
- * @tc.number: GetProfileFromSandDir_003
- * @tc.name: GetProfileFromSandDir
- * @tc.desc: Test the interface of GetProfileFromSandDir
+ * @tc.number: GetProfileFromExtension_003
+ * @tc.name: GetProfileFromExtension
+ * @tc.desc: Test the interface of GetProfileFromExtension
  *           1. ExtensionAbilityInfo without resource path
  * @tc.require: AR000H04IS
  */
-HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_003, TestSize.Level1)
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_003, TestSize.Level1)
 {
-    auto name = std::string("GetProfileFromSandDir_003");
+    auto name = std::string("GetProfileFromExtension_003");
     GTEST_LOG_(INFO) << name << " start";
 
     ExtensionAbilityInfo info;
@@ -1684,22 +1702,22 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_003, TestSize.Level1)
     metadata.emplace_back(data);
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
-    auto ret = GetProfileFromSandDir(info, metadataName, profileInfo);
+    auto ret = GetProfileFromExtension(info, metadataName, profileInfo);
     EXPECT_FALSE(ret);
 
     GTEST_LOG_(INFO) << name << " end";
 }
 
 /**
- * @tc.number: GetProfileFromSandDir_004
- * @tc.name: GetProfileFromSandDir
- * @tc.desc: Test the interface of GetProfileFromSandDir
+ * @tc.number: GetProfileFromExtension_004
+ * @tc.name: GetProfileFromExtension
+ * @tc.desc: Test the interface of GetProfileFromExtension
  *           1. ExtensionAbilityInfo has incorrect resource path
  * @tc.require: AR000H04IS
  */
-HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_004, TestSize.Level1)
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_004, TestSize.Level1)
 {
-    auto name = std::string("GetProfileFromSandDir_004");
+    auto name = std::string("GetProfileFromExtensionr_004");
     GTEST_LOG_(INFO) << name << " start";
 
     ExtensionAbilityInfo info;
@@ -1713,7 +1731,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromSandDir_004, TestSize.Level1)
     BundleMgrClient bundleMgrClient;
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
-    auto ret = GetProfileFromSandDir(info, metadataName, profileInfo);
+    auto ret = GetProfileFromExtension(info, metadataName, profileInfo);
     EXPECT_FALSE(ret);
 
     GTEST_LOG_(INFO) << name << " end";

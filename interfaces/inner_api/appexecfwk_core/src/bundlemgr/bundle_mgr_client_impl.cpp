@@ -148,29 +148,49 @@ bool BundleMgrClientImpl::GetResConfigFile(const AbilityInfo &abilityInfo, const
     return true;
 }
 
-bool BundleMgrClientImpl::GetProfileFromSandDir(ExtensionAbilityInfo &extensionInfo,
+bool BundleMgrClientImpl::GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo,
     const std::string &metadataName, std::vector<std::string> &profileInfos) const
 {
-    APP_LOGD("get extension config file from sand dir begin");
-    if (!ConvertResourcePath(extensionInfo.resourcePath, extensionInfo.bundleName)) {
+    APP_LOGD("get extension config file from extension dir begin");
+    std::string resPath = extensionInfo.resourcePath;
+    if (!ConvertResourcePath(extensionInfo.bundleName, resPath)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", extensionInfo.resourcePath.c_str());
         return false;
     }
-    return GetResConfigFile(extensionInfo, metadataName, profileInfos);
+    ExtensionAbilityInfo innerExtension = extensionInfo;
+    innerExtension.resourcePath = resPath;
+    return GetResConfigFile(innerExtension, metadataName, profileInfos);
 }
 
-bool BundleMgrClientImpl::GetProfileFromSandDir(AbilityInfo &abilityInfo, const std::string &metadataName,
+bool BundleMgrClientImpl::GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
-    APP_LOGD("get ability config file from sand dir begin");
-    if (!ConvertResourcePath(abilityInfo.resourcePath, abilityInfo.bundleName)) {
+    APP_LOGD("get ability config file from ability begin");
+    std::string resPath = abilityInfo.resourcePath;
+    if (!ConvertResourcePath(abilityInfo.bundleName, resPath)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", abilityInfo.resourcePath.c_str());
         return false;
     }
-    return GetResConfigFile(abilityInfo, metadataName, profileInfos);
+    AbilityInfo innerAbilityInfo = abilityInfo;
+    innerAbilityInfo.resourcePath = resPath;
+    return GetResConfigFile(innerAbilityInfo, metadataName, profileInfos);
 }
 
-bool BundleMgrClientImpl::ConvertResourcePath(std::string &resPath, const std::string &bundleName) const
+bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
+    std::vector<std::string> &profileInfos) const
+{
+    APP_LOGD("get hap module config file from hap begin");
+    std::string resPath = hapModuleInfo.resourcePath;
+    if (!ConvertResourcePath(hapModuleInfo.bundleName, resPath)) {
+        APP_LOGE("ConvertResourcePath failed %{public}s", hapModuleInfo.resourcePath.c_str());
+        return false;
+    }
+    HapModuleInfo innerHapModuleInfo = hapModuleInfo;
+    innerHapModuleInfo.resourcePath = resPath;
+    return GetResConfigFile(innerHapModuleInfo, metadataName, profileInfos);
+}
+
+bool BundleMgrClientImpl::ConvertResourcePath(const std::string &bundleName, std::string &resPath) const
 {
     if (resPath.empty()) {
         APP_LOGE("res path is empty");

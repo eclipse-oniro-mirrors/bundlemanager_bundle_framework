@@ -481,14 +481,24 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE, abilityInfo.removeMissionAfterTerminate},
         {JSON_KEY_COMPILE_MODE, abilityInfo.compileMode},
         {JOSN_KEY_SUPPORT_WINDOW_MODE, abilityInfo.windowModes},
-        {JOSN_KEY_MAX_WINDOW_RATIO, abilityInfo.maxWindowRatio},
-        {JOSN_KEY_MIN_WINDOW_RATIO, abilityInfo.minWindowRatio},
         {JOSN_KEY_MAX_WINDOW_WIDTH, abilityInfo.maxWindowWidth},
         {JOSN_KEY_MIN_WINDOW_WIDTH, abilityInfo.minWindowWidth},
         {JOSN_KEY_MAX_WINDOW_HEIGHT, abilityInfo.maxWindowHeight},
         {JOSN_KEY_MIN_WINDOW_HEIGHT, abilityInfo.minWindowHeight},
         {JOSN_KEY_EXCLUDE_FROM_MISSIONS, abilityInfo.excludeFromMissions}
     };
+    if (abilityInfo.maxWindowRatio == 0) {
+        // maxWindowRatio in json string will be 0 instead of 0.0
+        jsonObject[JOSN_KEY_MAX_WINDOW_RATIO] = 0;
+    } else {
+        jsonObject[JOSN_KEY_MAX_WINDOW_RATIO] = abilityInfo.maxWindowRatio;
+    }
+
+    if (abilityInfo.minWindowRatio == 0) {
+        jsonObject[JOSN_KEY_MIN_WINDOW_RATIO] = 0;
+    } else {
+        jsonObject[JOSN_KEY_MIN_WINDOW_RATIO] = abilityInfo.minWindowRatio;
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, CustomizeData &customizeData)
