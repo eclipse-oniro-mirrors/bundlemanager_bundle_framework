@@ -894,14 +894,14 @@ static void BenchmarkTestDumpInfos(benchmark::State &state)
 {
     sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
     const std::string EMPTY_STRING = "";
-    std::string allInfoResult;
+    std::string bundleNames;
     for (auto _ : state) {
         if (bundleMgrProxy == nullptr) {
             break;
         }
         /* @tc.steps: step1.call DumpInfos in loop */
         bundleMgrProxy->DumpInfos(
-            DumpFlag::DUMP_ALL_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, allInfoResult);
+            DumpFlag::DUMP_BUNDLE_LIST, EMPTY_STRING, DEFAULT_USERID, bundleNames);
     }
 }
 
