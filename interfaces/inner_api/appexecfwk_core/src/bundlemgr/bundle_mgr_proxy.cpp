@@ -2537,6 +2537,41 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
     return true;
 }
 
+bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userId,
+    std::vector<int64_t> &bundleStats)
+{
+    APP_LOGD("begin to GetBundleStats");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetBundleStats due to write MessageParcel fail");
+        return false;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetBundleStats due to write bundleName fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleStats due to write userId fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_STATS, data, reply)) {
+        APP_LOGE("fail to GetBundleStats from server");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+    if (!reply.ReadInt64Vector(&bundleStats)) {
+        APP_LOGE("fail to GetBundleStats from reply");
+        return false;
+    }
+    return true;
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 {
