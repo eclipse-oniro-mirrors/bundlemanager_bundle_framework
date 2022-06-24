@@ -242,4 +242,9 @@
     <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/crowdtesting/" src="res" />
     </preparer>
   </target>
+  <target name="BmsBundleGetWindowPropertiesTest">
+    <preparer>
+      <option name="push" value="test_bundle/sandboxTest.hap -> /data/test/resource/bms/install_bundle/" src="res" />
+    </preparer>
+  </target>
 </configuration>
