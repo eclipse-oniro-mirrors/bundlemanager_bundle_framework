@@ -106,7 +106,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_HAP_MODULE_INFO, &BundleMgrHost::HandleGetHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, &BundleMgrHost::HandleGetLaunchWantForBundle);
     funcMap_.emplace(IBundleMgr::Message::CHECK_PUBLICKEYS, &BundleMgrHost::HandleCheckPublicKeys);
-    funcMap_.emplace(IBundleMgr::Message::GET_PERMISSION_DEF, &BundleMgrHost::HandleGetAbilityLabel);
+    funcMap_.emplace(IBundleMgr::Message::GET_PERMISSION_DEF, &BundleMgrHost::HandleGetPermissionDef);
     funcMap_.emplace(IBundleMgr::Message::HAS_SYSTEM_CAPABILITY, &BundleMgrHost::HandleHasSystemCapability);
     funcMap_.emplace(IBundleMgr::Message::GET_SYSTEM_AVAILABLE_CAPABILITIES,
         &BundleMgrHost::HandleGetSystemAvailableCapabilities);
