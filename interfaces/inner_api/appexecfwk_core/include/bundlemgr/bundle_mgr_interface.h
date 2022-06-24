@@ -839,20 +839,6 @@ public:
         return false;
     }
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &abilityName)
-    {
-        return nullptr;
-    }
-
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName)
-    {
-        return nullptr;
-    }
-#endif
-
     /**
      * @brief Obtains the AbilityInfo based on a given bundle name.
      * @param bundleName Indicates the bundle name to be queried.
@@ -925,6 +911,25 @@ public:
     {
         return nullptr;
     }
+
+    virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats)
+    {
+        return false;
+    }
+
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &abilityName)
+    {
+        return nullptr;
+    }
+
+    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName)
+    {
+        return nullptr;
+    }
+#endif
 
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
@@ -1011,6 +1016,7 @@ public:
         GET_DISPOSED_STATUS,
         QUERY_CALLING_BUNDLE_NAME,
         GET_DEFAULT_APP_PROXY,
+        GET_BUNDLE_STATS,
     };
 };
 }  // namespace AppExecFwk

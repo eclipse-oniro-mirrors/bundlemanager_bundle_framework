@@ -1560,6 +1560,16 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     return ret;
 }
 
+bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
+    std::vector<int64_t> &bundleStats)
+{
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
+        APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 {

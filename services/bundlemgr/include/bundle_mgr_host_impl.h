@@ -580,13 +580,6 @@ public:
 
     virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &abilityName) override;
-
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName) override;
-#endif
 
     /**
      * @brief Obtains the value of isRemovable based on a given bundle name and module name.
@@ -640,6 +633,17 @@ public:
     virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
 
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
+
+    virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
+        std::vector<int64_t> &bundleStats) override;
+
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &abilityName) override;
+
+    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName) override;
+#endif
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
