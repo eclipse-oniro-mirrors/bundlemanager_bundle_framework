@@ -26,13 +26,18 @@ namespace OHOS {
     bool fuzzabilityinfounmarshalling(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        AbilityInfo abilityInfo;
-        if (dataMessageParcel.WriteBuffer(data, size)) {
-            abilityInfo.Marshalling(dataMessageParcel);
-            auto ability = AbilityInfo::Unmarshalling(dataMessageParcel);
-            return ability != nullptr;
+        AbilityInfo oldAbilityInfo;
+        if (!oldAbilityInfo.Marshalling(dataMessageParcel)) {
+            return false;
         }
-        return false;
+        AbilityInfo *info = new (std::nothrow) AbilityInfo();
+        if (info == nullptr) {
+            return false;
+        }
+        bool ret = info->ReadFromParcel(dataMessageParcel);
+        delete info;
+        info = nullptr;
+        return ret;
     }
 }
 

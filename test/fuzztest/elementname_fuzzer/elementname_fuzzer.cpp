@@ -20,17 +20,21 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    void fuzzelementname(const uint8_t* data, size_t size)
+    bool fuzzelementnameunmarshalling(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        ElementName elementName;
-        elementName.SetBundleName(reinterpret_cast<const char*>(data));
-        elementName.Marshalling(dataMessageParcel);
-        dataMessageParcel.RewindRead(0);
-        ElementName* elname = ElementName::Unmarshalling(dataMessageParcel);
-        if (elname != nullptr) {
-            delete elname;
+        ElementName oldElementName;
+        if (!oldElementName.Marshalling(dataMessageParcel)) {
+            return false;
         }
+        ElementName *info = new (std::nothrow) ElementName();
+        if (info == nullptr) {
+            return false;
+        }
+        bool ret = info->ReadFromParcel(dataMessageParcel);
+        delete info;
+        info = nullptr;
+        return ret;
     }
 }
 
@@ -38,6 +42,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzelementname(data, size);
+    OHOS::fuzzelementnameunmarshalling(data, size);
     return 0;
 }
