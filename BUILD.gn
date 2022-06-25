@@ -20,9 +20,9 @@ group("bms_target") {
     "interfaces/inner_api/appexecfwk_core:appexecfwk_core",
     "interfaces/kits/js:napi_packages",
     "interfaces/kits/native/bundle:bundle_ndk",
+    "interfaces/kits/zip:tools_zip",
     "sa_profile:appexecfwk_sa_profile",
     "services/bundlemgr:bms_target",
-    "tools/zip:tools_zip",
   ]
 }
 
@@ -30,12 +30,12 @@ group("test_target") {
   testonly = true
 
   deps = [
+    "interfaces/kits/zip/test:unittest",
     "services/bundlemgr/test:unittest",
     "services/test/moduletest/common/bms:moduletest",
     "test/benchmarktest:benchmarktest",
     "test/fuzztest:fuzztest",
     "test/resource/bmssystemtestability/abilitySrc:bms_system_test_app",
     "test/systemtest/common/bms:systemtest_bms",
-    "tools/zip/test:unittest",
   ]
 }
