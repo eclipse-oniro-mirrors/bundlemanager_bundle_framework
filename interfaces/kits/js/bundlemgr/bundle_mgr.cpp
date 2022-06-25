@@ -6882,6 +6882,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::WINDOW), &nWindow));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WINDOW", nWindow));
 
+    napi_value nFileAccess;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION), &nFileAccess));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILEACCESS_EXTENSION", nFileAccess));
+
     napi_value nUnspecified;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
