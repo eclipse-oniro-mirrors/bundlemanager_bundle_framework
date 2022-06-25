@@ -337,6 +337,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         // to guarantee that the hap version can be compatible.
         result = CheckVersionCompatibility(oldInfo);
         CHECK_RESULT(result, "The app has been installed and update lower version bundle %{public}d");
+        // to check native so between oldInfo and newInfos.
+        result = CheckNativeSoWithOldInfo(oldInfo, newInfos);
+        CHECK_RESULT(result, "Check native so between oldInfo and newInfos failed %{public}d");
 
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
         if (!hasInstalledInUser_) {
@@ -494,6 +497,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 30%
+
+    // check native so
+    result = CheckMultiNativeSo(newInfos);
+    CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
+    UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 35%
 
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName_);
@@ -1528,6 +1536,12 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
     return ERR_OK;
 }
 
+ErrCode BaseBundleInstaller::CheckMultiNativeSo(
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    return bundleInstallChecker_->CheckMultiNativeSo(infos);
+}
+
 bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
 {
     if (dataMgr_ == nullptr) {
@@ -1704,6 +1718,50 @@ ErrCode BaseBundleInstaller::UninstallAllSandboxApps(const std::string &bundleNa
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     APP_LOGD("UninstallAllSandboxApps finish");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckNativeSoWithOldInfo(
+    const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    APP_LOGD("CheckNativeSoWithOldInfo begin");
+    const auto &newInfo = newInfos.begin()->second;
+    if (newInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+        APP_LOGD("All installed haps will be updated");
+        return ERR_OK;
+    }
+
+    std::vector<std::string> installedModules = oldInfo.GetModuleNameVec();
+    bool allOldModuleUpdate = true;
+    for (const auto &installedModule : installedModules) {
+        auto updateModule = std::find_if(std::begin(newInfos), std::end(newInfos),
+            [ &installedModule ] (const auto &item) { return item.second.FindModule(installedModule); });
+        if (updateModule == newInfos.end()) {
+            APP_LOGD("Some installed haps will not be updated");
+            allOldModuleUpdate = false;
+            break;
+        }
+    }
+
+    bool oldInfoHasSo = !oldInfo.GetNativeLibraryPath().empty();
+    bool newInfoHasSo = !newInfo.GetNativeLibraryPath().empty();
+    if (!allOldModuleUpdate) {
+        if ((oldInfoHasSo && newInfoHasSo) &&
+            (oldInfo.GetNativeLibraryPath() != newInfo.GetNativeLibraryPath()
+            || oldInfo.GetCpuAbi() != newInfo.GetCpuAbi())) {
+            APP_LOGE("Install failed due to so incompatible in oldInfo and newInfo");
+            return ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE;
+        }
+
+        if (oldInfoHasSo && !newInfoHasSo) {
+            for (auto& item : newInfos) {
+                item.second.SetNativeLibraryPath(oldInfo.GetNativeLibraryPath());
+                item.second.SetCpuAbi(oldInfo.GetCpuAbi());
+            }
+        }
+    }
+
+    APP_LOGD("CheckNativeSoWithOldInfo end");
     return ERR_OK;
 }
 

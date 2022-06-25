@@ -294,6 +294,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: install failed due to older sdk version in the device"
     },
     {
+        IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE,
+        "error: install failed due to native so is incompatible"
+    },
+    {
         IStatusReceiver::ERR_INSTALL_URI_DUPLICATE,
         "error: install failed due to uri prefix duplicate",
     },
