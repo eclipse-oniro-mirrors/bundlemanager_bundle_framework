@@ -36,10 +36,12 @@ namespace OHOS {
         auto pFile = fopen("myHap.hap", "wb");
         if (pFile == nullptr) {
             std::cout<< "fopen hap error!";
+            return false;
         }
 
         retCode = fputs(reinterpret_cast<const char*>(data), pFile);
         if (retCode != FILE_RETURN_SUCCESS) {
+            fclose(pFile);
             return false;
         }
         retCode = fclose(pFile);
