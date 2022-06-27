@@ -82,6 +82,7 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "wallpaper",
     "backup",
     "window",
+    "enterpriseAdmin",
     "fileAccess"
 };
 
