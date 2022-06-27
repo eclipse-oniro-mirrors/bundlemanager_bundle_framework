@@ -71,11 +71,11 @@ ohos_moduletest("bm_command_dump_module_test") {
     "common_event_service:cesfwk_innerkits",
     "distributeddatamgr:distributeddata_inner",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
     "utils_base:utils",
   ]
 }
@@ -118,11 +118,11 @@ ohos_moduletest("bm_command_install_module_test") {
     "common_event_service:cesfwk_innerkits",
     "distributeddatamgr:distributeddata_inner",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
     "utils_base:utils",
   ]
 }
@@ -165,11 +165,11 @@ ohos_moduletest("bm_command_uninstall_module_test") {
     "common_event_service:cesfwk_innerkits",
     "distributeddatamgr:distributeddata_inner",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
     "utils_base:utils",
   ]
 }

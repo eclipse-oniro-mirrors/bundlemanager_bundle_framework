@@ -20,10 +20,7 @@ module_output_path = "bundle_framework/bundlemgrservice"
 ohos_unittest("BmsDistributedDataStorageTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [ "${services_path}/bundlemgr/src/distributed_data_storage.cpp" ]
 
   sources += [
@@ -63,7 +60,6 @@ ohos_unittest("BmsDistributedDataStorageTest") {
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
 
   defines = []

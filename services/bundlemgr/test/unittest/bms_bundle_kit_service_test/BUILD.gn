@@ -20,10 +20,7 @@ module_output_path = "bundle_framework/bundlemgrservice"
 ohos_unittest("BmsBundleKitServiceTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
@@ -87,7 +84,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
 
   defines = []
@@ -145,10 +141,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
 ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
@@ -211,7 +204,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
 
   defines = []
