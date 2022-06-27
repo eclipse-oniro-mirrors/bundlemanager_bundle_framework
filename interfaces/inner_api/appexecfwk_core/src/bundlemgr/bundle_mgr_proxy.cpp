@@ -22,7 +22,9 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
+#endif
 #include "hitrace_meter.h"
 #include "json_util.h"
 #include "securec.h"
