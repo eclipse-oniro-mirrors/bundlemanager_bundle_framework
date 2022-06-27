@@ -26,6 +26,10 @@ namespace OHOS {
     bool fuzzapplicationinfounmarshalling(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = reinterpret_cast<const char*>(data);
+        auto application = ApplicationInfo::Unmarshalling(dataMessageParcel);
+        return application != nullptr;
         ApplicationInfo oldApplicationInfo;
         if (!oldApplicationInfo.Marshalling(dataMessageParcel)) {
             return false;
