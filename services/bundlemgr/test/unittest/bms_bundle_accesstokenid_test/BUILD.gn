@@ -22,7 +22,6 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "//third_party/json/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
   ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
@@ -84,7 +83,6 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
   defines = []
   if (configpolicy_enable) {

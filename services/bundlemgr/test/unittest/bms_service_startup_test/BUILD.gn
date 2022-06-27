@@ -77,7 +77,6 @@ ohos_unittest("BmsServiceStartupTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
   defines = []
   if (configpolicy_enable) {

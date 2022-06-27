@@ -19,10 +19,7 @@ module_output_path = "bundle_framework/bundlemgrservice"
 ohos_unittest("BmsBundlePermissionGrantTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${inner_api_path}/appexecfwk_base/src/ability_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
@@ -90,7 +87,6 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
   defines = []
   if (configpolicy_enable) {
