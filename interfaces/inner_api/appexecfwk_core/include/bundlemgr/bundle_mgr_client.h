@@ -76,9 +76,11 @@ public:
 
     std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId);
 
-    bool GetProfileFromSandDir(ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
+    bool GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
-    bool GetProfileFromSandDir(AbilityInfo &abilityInfo, const std::string &metadataName,
+    bool GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
+        std::vector<std::string> &profileInfos) const;
+    bool GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
     /**
      * @brief Install sandbox application.

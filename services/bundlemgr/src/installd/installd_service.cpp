@@ -53,15 +53,6 @@ bool InstalldService::Init()
         APP_LOGI("InstalldHostImpl Init failed");
         return false;
     }
-    if (!InitDir(Constants::THIRD_PARTY_APP_INSTALL_PATH)) {
-        APP_LOGI("THIRD_PARTY_APP_INSTALL_PATH Path already exists");
-    }
-    if (!InitDir(Constants::SYSTEM_APP_INSTALL_PATH)) {
-        APP_LOGI("SYSTEM_APP_INSTALL_PATH is already exists");
-    }
-    if (!InitDir(Constants::EXTRACT_TMP_PATH)) {
-        APP_LOGI("EXTRACT_TMP_PATH is already exists");
-    }
     if (!InitDir(Constants::HAP_COPY_PATH)) {
         APP_LOGI("HAP_COPY_PATH is already exists");
     }

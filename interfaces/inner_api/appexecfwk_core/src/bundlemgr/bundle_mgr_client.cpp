@@ -112,24 +112,34 @@ std::vector<std::string> BundleMgrClient::GetAccessibleAppCodePaths(int32_t user
     return impl_->GetAccessibleAppCodePaths(userId);
 }
 
-bool BundleMgrClient::GetProfileFromSandDir(ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+bool BundleMgrClient::GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo,
+    const std::string &metadataName, std::vector<std::string> &profileInfos) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetProfileFromSandDir(extensionInfo, metadataName, profileInfos);
+    return impl_->GetProfileFromExtension(extensionInfo, metadataName, profileInfos);
 }
 
-bool BundleMgrClient::GetProfileFromSandDir(AbilityInfo &abilityInfo, const std::string &metadataName,
+bool BundleMgrClient::GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetProfileFromSandDir(abilityInfo, metadataName, profileInfos);
+    return impl_->GetProfileFromAbility(abilityInfo, metadataName, profileInfos);
+}
+
+bool BundleMgrClient::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
+    std::vector<std::string> &profileInfos) const
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return false;
+    }
+    return impl_->GetProfileFromHap(hapModuleInfo, metadataName, profileInfos);
 }
 
 ErrCode BundleMgrClient::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,

@@ -7018,7 +7018,7 @@ static bool InnerGetProfile(napi_env env, AsyncGetProfileInfo &info)
             APP_LOGE("InnerGetProfile failed due to no ability info");
             return false;
         }
-        return client.GetProfileFromSandDir(abilityInfo, info.metadataName, info.profileVec);
+        return client.GetProfileFromAbility(abilityInfo, info.metadataName, info.profileVec);
     }
     if (info.type == ProfileType::EXTENSION_PROFILE) {
         std::vector<ExtensionAbilityInfo> extensionInfos;
@@ -7028,7 +7028,7 @@ static bool InnerGetProfile(napi_env env, AsyncGetProfileInfo &info)
             APP_LOGE("InnerGetProfile failed due to no extension ability info");
             return false;
         }
-        return client.GetProfileFromSandDir(extensionInfos[0], info.metadataName, info.profileVec);
+        return client.GetProfileFromExtension(extensionInfos[0], info.metadataName, info.profileVec);
     }
     APP_LOGE("InnerGetProfile failed due to incorrect profile type");
     return false;

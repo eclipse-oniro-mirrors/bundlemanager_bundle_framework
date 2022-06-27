@@ -49,14 +49,16 @@ public:
     ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId, int32_t &appIndex);
     ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId);
     ErrCode GetSandboxBundleInfo(const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info);
-    bool GetProfileFromSandDir(ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
+    bool GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
-    bool GetProfileFromSandDir(AbilityInfo &abilityInfo, const std::string &metadataName,
+    bool GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
+        std::vector<std::string> &profileInfos) const;
+    bool GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
 
 private:
     ErrCode Connect();
-    bool ConvertResourcePath(std::string &resPath, const std::string &bundleName) const;
+    bool ConvertResourcePath(const std::string &bundleName, std::string &resPath) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,
         const std ::string &resourcePath, std::vector<std::string> &profileInfos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
