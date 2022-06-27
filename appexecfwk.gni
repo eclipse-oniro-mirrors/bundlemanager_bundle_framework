@@ -73,7 +73,7 @@ declare_args() {
       (!defined(global_parts_info.powermgr_power_manager_native) ||
        !defined(global_parts_info.powermgr_battery_manager_native) ||
        !defined(global_parts_info.powermgr_display_manager_native) ||
-       !defined(global_parts_info.device_usage_statistics))) {
+       !defined(global_parts_info.resourceschedule_device_usage_statistics))) {
     bundle_framework_free_install = false
   }
 

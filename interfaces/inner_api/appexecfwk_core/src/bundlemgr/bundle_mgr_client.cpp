@@ -53,13 +53,13 @@ bool BundleMgrClient::GetBundleInfo(const std::string &bundleName, const BundleF
 }
 
 bool BundleMgrClient::GetBundlePackInfo(
-    const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo)
+    const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetBundlePackInfo(bundleName, flag, bundlePackInfo);
+    return impl_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }
 
 bool BundleMgrClient::GetHapModuleInfo(const std::string &bundleName, const std::string &hapName,

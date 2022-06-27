@@ -97,7 +97,6 @@ bool DistributedDataStorage::SaveStorageDistributeInfo(const std::string &bundle
         APP_LOGW("InnerSaveStorageDistributeInfo:%{public}s  failed", bundleName.c_str());
         return false;
     }
-    CheckToSyncDistributedData();
     return true;
 }
 
@@ -168,7 +167,6 @@ bool DistributedDataStorage::DeleteStorageDistributeInfo(const std::string &bund
         return false;
     }
     APP_LOGI("delete value to kvStore success");
-    CheckToSyncDistributedData();
     return true;
 }
 
@@ -258,7 +256,7 @@ Status DistributedDataStorage::GetKvStore()
     Options options = {
         .createIfMissing = true,
         .encrypt = false,
-        .autoSync = false,
+        .autoSync = true,
         .securityLevel = SecurityLevel::S1,
         .kvStoreType = KvStoreType::SINGLE_VERSION
     };
@@ -295,7 +293,12 @@ bool DistributedDataStorage::GetLocalUdid(std::string &udid)
 int32_t DistributedDataStorage::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
 {
 #ifdef DEVICE_MANAGER_ENABLE
-    return BmsDeviceManager::GetUdidByNetworkId(networkId, udid);
+    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
+    if (deviceManager == nullptr) {
+        APP_LOGW("Get deviceManager shared_ptr nullptr");
+        return -1;
+    }
+    return deviceManager->GetUdidByNetworkId(networkId, udid);
 #else
     APP_LOGW("DEVICE_MANAGER_ENABLE is false");
     return -1;
@@ -352,23 +355,6 @@ bool DistributedDataStorage::QueryAllDeviceIds(std::vector<std::string> &deviceI
     return !deviceIds.empty();
 }
 
-void DistributedDataStorage::SyncDistributedData(const std::vector<std::string> &deviceList)
-{
-    APP_LOGD("syncDistributedData");
-    if (kvStorePtr_ == nullptr) {
-        APP_LOGE("kvStorePtr_ is null");
-        return;
-    }
-    if (deviceList.size() == 0) {
-        APP_LOGE("deviceList parameter is invalid");
-        return;
-    }
-    Status status = kvStorePtr_->Sync(deviceList, SyncMode::PUSH);
-    if (status != Status::SUCCESS) {
-        APP_LOGE("kvStorePtr_ Sync error: %{public}d", status);
-    }
-}
-
 void DistributedDataStorage::UpdateDistributedData(const std::vector<BundleInfo> &bundleInfos)
 {
     APP_LOGI("UpdateDistributedData");
@@ -409,7 +395,6 @@ void DistributedDataStorage::UpdateDistributedData(const std::vector<BundleInfo>
             APP_LOGW("UpdateDistributedData SaveStorageDistributeInfo:%{public}s failed", bundleInfo.name.c_str());
         }
     }
-    CheckToSyncDistributedData();
 }
 
 void DistributedDataStorage::RemoveDeviceData(const std::string &networkId)
@@ -423,26 +408,6 @@ void DistributedDataStorage::RemoveDeviceData(const std::string &networkId)
     if (status != Status::SUCCESS) {
         APP_LOGE("kvStorePtr_ remove error: %{public}d", status);
     }
-}
-
-void DistributedDataStorage::CheckToSyncDistributedData()
-{
-    APP_LOGD("CheckToSyncDistributedData");
-    std::vector<DeviceInfo> deviceInfoList;
-    Status status = dataManager_.GetDeviceList(deviceInfoList, DeviceFilterStrategy::FILTER);
-    if (status != Status::SUCCESS) {
-        APP_LOGE("get GetDeviceList error: %{public}d", status);
-        return;
-    }
-    if (deviceInfoList.size() == 0) {
-        APP_LOGW("deviceInfoList is invalid");
-        return;
-    }
-    std::vector<std::string> deviceIds;
-    for (auto deviceInfo : deviceInfoList) {
-        deviceIds.emplace_back(deviceInfo.deviceId);
-    }
-    SyncDistributedData(deviceIds);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

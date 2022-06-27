@@ -106,7 +106,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_HAP_MODULE_INFO, &BundleMgrHost::HandleGetHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, &BundleMgrHost::HandleGetLaunchWantForBundle);
     funcMap_.emplace(IBundleMgr::Message::CHECK_PUBLICKEYS, &BundleMgrHost::HandleCheckPublicKeys);
-    funcMap_.emplace(IBundleMgr::Message::GET_PERMISSION_DEF, &BundleMgrHost::HandleGetAbilityLabel);
+    funcMap_.emplace(IBundleMgr::Message::GET_PERMISSION_DEF, &BundleMgrHost::HandleGetPermissionDef);
     funcMap_.emplace(IBundleMgr::Message::HAS_SYSTEM_CAPABILITY, &BundleMgrHost::HandleHasSystemCapability);
     funcMap_.emplace(IBundleMgr::Message::GET_SYSTEM_AVAILABLE_CAPABILITIES,
         &BundleMgrHost::HandleGetSystemAvailableCapabilities);
@@ -171,6 +171,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::SET_DISPOSED_STATUS, &BundleMgrHost::HandleSetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::GET_DISPOSED_STATUS, &BundleMgrHost::HandleGetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, &BundleMgrHost::HandleObtainCallingBundleName);
+    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_STATS, &BundleMgrHost::HandleGetBundleStats);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, &BundleMgrHost::HandleGetDefaultAppProxy);
 #endif
@@ -332,9 +333,10 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfo(Parcel &data, Parcel &reply)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string name = data.ReadString();
     BundlePackFlag flag = static_cast<BundlePackFlag>(data.ReadInt32());
+    int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flag, info);
+    bool ret = GetBundlePackInfo(name, flag, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -353,9 +355,10 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfoWithIntFlags(Parcel &data, Parcel 
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string name = data.ReadString();
     int flags = data.ReadInt32();
+    int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flags, info);
+    bool ret = GetBundlePackInfo(name, flags, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1910,6 +1913,24 @@ ErrCode BundleMgrHost::HandleUpgradeAtomicService(Parcel &data, Parcel &reply)
     }
     int32_t userId = data.ReadInt32();
     UpgradeAtomicService(*want, userId);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleStats(Parcel &data, Parcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    std::vector<int64_t> bundleStats;
+    bool ret = GetBundleStats(bundleName, userId, bundleStats);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret && !reply.WriteInt64Vector(bundleStats)) {
+        APP_LOGE("write bundleStats failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

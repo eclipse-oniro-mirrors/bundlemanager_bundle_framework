@@ -36,7 +36,8 @@ public:
 
     bool GetBundleNameForUid(const int uid, std::string &bundleName);
     bool GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo, int32_t userId);
-    bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo);
+    bool GetBundlePackInfo(
+        const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId);
     bool GetHapModuleInfo(const std::string &bundleName, const std::string &hapName, HapModuleInfo &hapModuleInfo);
     bool GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;

@@ -871,10 +871,16 @@ bool BundleDataMgr::GetBundleInfo(
 }
 
 bool BundleDataMgr::GetBundlePackInfo(
-    const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo) const
+    const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId) const
 {
     APP_LOGD("Service BundleDataMgr GetBundlePackInfo start");
-    int32_t requestUserId = GetUserIdByCallingUid();
+    int32_t requestUserId = Constants::INVALID_USERID;
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        requestUserId = GetUserIdByCallingUid();
+    } else {
+        requestUserId = userId;
+    }
+
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("getBundlePackInfo userId is invalid");
         return false;

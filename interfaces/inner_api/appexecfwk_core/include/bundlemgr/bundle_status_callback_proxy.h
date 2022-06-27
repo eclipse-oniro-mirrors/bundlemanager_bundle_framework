@@ -16,9 +16,10 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STATUS_CALLBACK_PROXY_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STATUS_CALLBACK_PROXY_H
 
-#include "iremote_proxy.h"
+#include <unordered_map>
 
 #include "bundle_status_callback_interface.h"
+#include "iremote_proxy.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -58,6 +59,9 @@ public:
     virtual void OnBundleRemoved(const std::string &bundleName, const int userId) override {};
 
 private:
+    void InitResultMap();
+
+    std::unordered_map<int32_t, std::string> resultMap_;
     static inline BrokerDelegator<BundleStatusCallbackProxy> delegator_;
 };
 }  // namespace AppExecFwk

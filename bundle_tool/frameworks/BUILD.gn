@@ -33,6 +33,7 @@ ohos_source_set("tools_bm_source_set") {
     "${common_path}/log/src/app_log_wrapper.cpp",
     "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
     "src/bundle_command.cpp",
+    "src/bundle_command_common.cpp",
     "src/main.cpp",
     "src/shell_command.cpp",
     "src/status_receiver_impl.cpp",
@@ -70,6 +71,52 @@ ohos_executable("bm") {
   part_name = "bundle_tool"
 }
 
+ohos_source_set("tools_test_bm_source_set") {
+  sources = [
+    "${common_path}/log/src/app_log_wrapper.cpp",
+    "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
+    "src/bundle_command_common.cpp",
+    "src/bundle_test_tool.cpp",
+    "src/main_test_tool.cpp",
+    "src/shell_command.cpp",
+    "src/status_receiver_impl.cpp",
+  ]
+
+  public_configs = [ ":tools_bm_config" ]
+
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  external_deps = [
+    "ability_base:want",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "resource_management:global_resmgr",
+    "samgr_standard:samgr_proxy",
+    "startup_l2:syspara",
+    "utils_base:utils",
+  ]
+
+  part_name = "bundle_tool"
+}
+
+ohos_executable("bundle_test_tool") {
+  deps = [ ":tools_test_bm_source_set" ]
+
+  install_enable = false
+
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_tool"
+}
+
 group("tools_bm") {
-  deps = [ ":bm" ]
+  deps = [
+    ":bm",
+    ":bundle_test_tool",
+  ]
 }

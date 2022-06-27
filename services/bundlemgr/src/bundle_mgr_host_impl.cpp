@@ -103,18 +103,20 @@ bool BundleMgrHostImpl::GetBundleInfo(
 }
 
 bool BundleMgrHostImpl::GetBundlePackInfo(
-    const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo)
+    const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
-    return GetBundlePackInfo(bundleName, static_cast<int32_t>(flag), bundlePackInfo);
+    return GetBundlePackInfo(bundleName, static_cast<int32_t>(flag), bundlePackInfo, userId);
 }
-bool BundleMgrHostImpl::GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo)
+
+bool BundleMgrHostImpl::GetBundlePackInfo(
+    const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
+    return dataMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo, userId);
 }
 
 bool BundleMgrHostImpl::GetBundleUserInfo(
@@ -1556,6 +1558,16 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     }
     APP_LOGD("calling bundleName is : %{public}s", bundleName.c_str());
     return ret;
+}
+
+bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
+    std::vector<int64_t> &bundleStats)
+{
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
+        APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

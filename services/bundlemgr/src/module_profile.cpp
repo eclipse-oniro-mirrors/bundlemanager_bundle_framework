@@ -81,7 +81,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "staticSubscriber",
     "wallpaper",
     "backup",
-    "window"
+    "window",
+    "fileAccess"
 };
 
 const std::set<std::string> ENTITY_TYPE_SET = {
@@ -1298,7 +1299,7 @@ bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &a
 
     applicationInfo.apiCompatibleVersion = app.minAPIVersion;
     applicationInfo.apiTargetVersion = app.targetAPIVersion;
-    
+
     applicationInfo.iconPath = app.icon;
     applicationInfo.iconId = app.iconId;
     applicationInfo.label = app.label;
@@ -1580,16 +1581,13 @@ bool ToExtensionInfo(const Profile::ModuleJson &moduleJson, const Profile::Exten
     extensionInfo.bundleName = moduleJson.app.bundleName;
     extensionInfo.moduleName = moduleJson.module.name;
 
-    if (extensionInfo.type == ExtensionAbilityType::BACKUP) {
+    if (extensionInfo.type != ExtensionAbilityType::SERVICE &&
+        extensionInfo.type != ExtensionAbilityType::DATASHARE) {
         extensionInfo.process = extensionInfo.bundleName;
         extensionInfo.process.append(".");
         extensionInfo.process.append(extensionInfo.moduleName);
         extensionInfo.process.append(":");
         extensionInfo.process.append(extensionInfo.name);
-    } else {
-        extensionInfo.process = extensionInfo.bundleName;
-        extensionInfo.process.append(":");
-        extensionInfo.process.append(Constants::EXTENSION_PROCESS_NAME);
     }
 
     return true;

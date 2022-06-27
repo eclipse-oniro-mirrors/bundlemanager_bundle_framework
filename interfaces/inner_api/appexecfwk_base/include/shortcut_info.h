@@ -50,6 +50,7 @@ struct ShortcutIntent {
 struct ShortcutInfo : public Parcelable {
     std::string id;
     std::string bundleName;
+    std::string moduleName;
     std::string hostAbility;
     int32_t iconId;
     int32_t labelId;

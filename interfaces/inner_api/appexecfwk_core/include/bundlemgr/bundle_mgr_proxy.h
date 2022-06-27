@@ -99,19 +99,21 @@ public:
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
+     * @param userId Indicates the user ID.
      * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
      */
     virtual bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flags,
-        BundlePackInfo &bundlePackInfo) override;
+        BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
+     * @param userId Indicates the user ID.
      * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
      */
     virtual bool GetBundlePackInfo(const std::string &bundleName, int32_t flags,
-        BundlePackInfo &bundlePackInfo) override;
+        BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains BundleInfo of all bundles available in the system through the proxy object.
      * @param flag Indicates the flag used to specify information contained in the BundleInfo that will be returned.
@@ -560,13 +562,6 @@ public:
     virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &abilityName) override;
-
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName) override;
-#endif
     /**
      * @brief Obtains the AbilityInfo based on a given bundle name through the proxy object.
      * @param bundleName Indicates the bundle name to be queried.
@@ -642,6 +637,17 @@ public:
     virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
 
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
+
+    virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
+        std::vector<int64_t> &bundleStats) override;
+
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &abilityName) override;
+
+    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName) override;
+#endif
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;

@@ -237,9 +237,6 @@ const std::string PREINSTALL_CONFIG = "/preinstall_config.json";
 const std::string PREINSTALL_UNINSTALL_CONFIG = "/pre_uninstall_config.json";
 const std::string PREINSTALL_ABILITY_CONFIG = "/preinstall_ability_config.json";
 
-// extension info
-const std::string EXTENSION_PROCESS_NAME = "extension";
-
 // sandbox application
 const std::string SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
