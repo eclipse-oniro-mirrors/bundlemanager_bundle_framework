@@ -36,7 +36,7 @@ bool ImageBuffer::MallocImageMap(int components)
     return true;
 }
 
-int32_t ImageBuffer::SetCompressData(unsigned char* buffer, int32_t length)
+size_t ImageBuffer::SetCompressData(unsigned char* buffer, size_t length)
 {
     compressDataBuffer = std::make_unique<unsigned char[]>(length);
     unsigned char* dataBuffer = compressDataBuffer.get();
