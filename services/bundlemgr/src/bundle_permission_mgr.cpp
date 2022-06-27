@@ -416,6 +416,7 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(Security::AccessToken::Ac
             AccessToken::PermissionFlag flag = userCancellable ?
                 AccessToken::PermissionFlag::PERMISSION_DEFAULT_FLAG :
                 AccessToken::PermissionFlag::PERMISSION_SYSTEM_FIXED;
+            flag |= AccessToken::PermissionFlag::PERMISSION_GRANTED_BY_POLICY;
             if (!GrantPermission(tokenId, perm, flag, bundleName)) {
                 return false;
             }
