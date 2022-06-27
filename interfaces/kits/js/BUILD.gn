@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../../../appexecfwk.gni")
 
 group("napi_packages") {
   deps = []
@@ -22,5 +23,9 @@ group("napi_packages") {
       "launchermgr:innerbundlemanager",
       "package:package",
     ]
+
+    if (bundle_framework_default_app) {
+      deps += [ "default_app:defaultappmanager" ]
+    }
   }
 }
