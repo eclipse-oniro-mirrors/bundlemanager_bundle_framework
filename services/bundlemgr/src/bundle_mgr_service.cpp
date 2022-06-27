@@ -242,6 +242,13 @@ const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbili
 }
 #endif
 
+#ifdef DEVICE_MANAGER_ENABLE
+const std::shared_ptr<BmsDeviceManager> BundleMgrService::GetDeviceManager() const
+{
+    return deviceManager_;
+}
+#endif
+
 void BundleMgrService::SelfClean()
 {
     if (ready_) {
