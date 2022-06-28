@@ -38,7 +38,6 @@ public:
         DistributedBundleInfo &info);
     bool QueryAllDeviceIds(std::vector<std::string> &deviceIds);
     void UpdateDistributedData(const std::vector<BundleInfo> &bundleInfos);
-    void SyncDistributedData(const std::vector<std::string> &deviceList);
     void RemoveDeviceData(const std::string &networkId);
 
 private:
@@ -49,7 +48,6 @@ private:
     bool GetLocalUdid(std::string &udid);
     DistributedBundleInfo ConvertToDistributedBundleInfo(const BundleInfo &bundleInfo);
     int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid);
-    void CheckToSyncDistributedData();
     bool InnerSaveStorageDistributeInfo(const DistributedBundleInfo distributedBundleInfo);
 private:
     static std::recursive_mutex mutex_;

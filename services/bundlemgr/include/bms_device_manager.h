@@ -30,7 +30,7 @@ public:
     BmsDeviceManager();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId);
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId);
-    static int32_t GetUdidByNetworkId(const std::string &netWorkId, std::string &udid);
+    int32_t GetUdidByNetworkId(const std::string &netWorkId, std::string &udid);
     
 private:
     static void StartDynamicSystemProcess(int32_t systemAbilityId);
@@ -38,6 +38,8 @@ private:
     bool InitDeviceManager();
     int GetTrustedDeviceListSize();
 
+    mutable std::mutex isInitMutex_;
+    bool isInit_ = false;
     std::shared_ptr<DistributedHardware::DmInitCallback> initCallback_;
     std::shared_ptr<DistributedHardware::DeviceStateCallback> stateCallback_;
 
