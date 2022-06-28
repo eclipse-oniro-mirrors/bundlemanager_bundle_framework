@@ -109,15 +109,15 @@ public:
     {
         return compressDataBuffer;
     }
-    int32_t GetCompressSize() const
+    size_t GetCompressSize() const
     {
         return compressSize;
     }
-    void SetCompressSize(int32_t compressSize)
+    void SetCompressSize(size_t compressSize)
     {
         this->compressSize = compressSize;
     }
-    int32_t SetCompressData(unsigned char* buffer, int32_t length); 
+    size_t SetCompressData(unsigned char* buffer, size_t length); 
 
 private:
     uint32_t width;
@@ -131,7 +131,7 @@ private:
     std::unique_ptr<unsigned char[]> imageDataPointer = nullptr;
     std::unique_ptr<unsigned char[]> compressDataBuffer = nullptr;
     std::string imageType;
-    int32_t compressSize;
+    size_t compressSize;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
