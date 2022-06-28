@@ -292,6 +292,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(Parcel &data, Parcel &reply)
     int userId = data.ReadInt32();
     APP_LOGI("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flag, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
@@ -314,6 +315,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(Parcel &data, Parcel &rep
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flags, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
