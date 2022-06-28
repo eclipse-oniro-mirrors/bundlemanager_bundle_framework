@@ -29,7 +29,7 @@ ohos_benchmarktest("BenchmarkTestForBundleInfo") {
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "utils_base:utils",
   ]
 }

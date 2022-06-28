@@ -43,7 +43,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "bundle_framework:appexecfwk_core",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "samgr_standard:samgr_proxy",
   ]
   defines = []

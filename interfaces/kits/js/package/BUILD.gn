@@ -36,7 +36,7 @@ ohos_shared_library("package") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "napi:ace_napi",
     "samgr_standard:samgr_proxy",
     "utils_base:utils",

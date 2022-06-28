@@ -44,7 +44,7 @@ ohos_fuzztest("ParseFuzzTest") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "utils_base:utils",
   ]
 }
