@@ -50,7 +50,7 @@ ohos_shared_library("bundle_ndk") {
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "samgr_standard:samgr_proxy",
     "utils_base:utils",
   ]

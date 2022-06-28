@@ -80,7 +80,7 @@ ohos_moduletest("BmsBundleUninstallerModuleTest") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "resource_management:global_resmgr",
   ]
   defines = []

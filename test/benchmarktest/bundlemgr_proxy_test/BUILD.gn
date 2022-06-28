@@ -36,7 +36,7 @@ ohos_benchmarktest("BenchmarkTestBundleMgrProxy") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "samgr_standard:samgr_proxy",
   ]
 
