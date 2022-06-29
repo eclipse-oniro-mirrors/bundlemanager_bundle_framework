@@ -24,8 +24,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::QUICK_FIX_INFO_VERSION_CODE = "versionCode";
-const std::QUICK_FIX_INFO_VERSION_NAME = "versionName";
 const std::QUICK_FIX_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::QUICK_FIX_INFO_HAP_QUICK_FIX_INFOS = "hapQuickFixInfos";
 }
@@ -33,8 +31,6 @@ const std::QUICK_FIX_INFO_HAP_QUICK_FIX_INFOS = "hapQuickFixInfos";
 void to_json(nlohmann::json &jsonObject, const QuickFixInfo &quickFixInfo)
 {
     jsonObject = nlohmann::json {
-        {QUICK_FIX_INFO_VERSION_CODE, quickFixInfo.versionCode},
-        {QUICK_FIX_INFO_VERSION_NAME, quickFixInfo.versionName},
         {QUICK_FIX_INFO_NATIVE_LIBRARY_PATH, quickFixInfo.nativeLibraryPath},
         {QUICK_FIX_INFO_HAP_QUICK_FIX_INFOS, quickFixInfo.hapQuickFixInfos}
     };
@@ -44,22 +40,6 @@ void from_json(const nlohmann::json &jsonObject, QuickFixInfo &quickFixInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        QUICK_FIX_INFO_VERSION_CODE,
-        quickFixInfo.versionCode,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        QUICK_FIX_INFO_VERSION_NAME,
-        quickFixInfo.versionName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         QUICK_FIX_INFO_NATIVE_LIBRARY_PATH,
@@ -80,8 +60,6 @@ void from_json(const nlohmann::json &jsonObject, QuickFixInfo &quickFixInfo)
 
 bool QuickFixInfo::ReadFromParcel(Parcel &parcel)
 {
-    versionCode = parcel.ReadInt32();
-    versionName = Str16ToStr8(parcel.ReadString16());
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     int32_t hapQuickFixSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapQuickFixSize);
@@ -98,8 +76,6 @@ bool QuickFixInfo::ReadFromParcel(Parcel &parcel)
 
 bool QuickFixInfo::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, Str8ToStr16(versionCode));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapQuickFixInfo.size());
     for (auto &hapQuickFixInfo : hapQuickFixInfos) {

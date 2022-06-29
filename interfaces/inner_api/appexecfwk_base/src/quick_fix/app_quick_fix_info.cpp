@@ -27,6 +27,8 @@ namespace {
 const std::string APP_QUICK_FIX_INFO_BUNDLE_NAME = "bundleName";
 const std::string APP_QUICK_FIX_INFO_VERSION_CODE = "versionCode";
 const std::string APP_QUICK_FIX_INFO_VERSION_NAME = "versionName";
+const std::string APP_QUICK_FIX_INFO_PATCH_VERSION_CODE = "patchVersionCode";
+const std::string APP_QUICK_FIX_INFO_PATCH_VERSION_NAME = "patchVersionName";
 const std::string APP_QUICK_FIX_INFO_DEPLOYED_QUICK_FIX = "deployedQuickFix";
 const std::string APP_QUICK_FIX_INFO_DEPLOYING_QUICK_FIX = "deployingQuickFix";
 }
@@ -37,6 +39,8 @@ void to_json(nlohmann::json &jsonObject, const AppQuickFixInfo &appQuickFixInfo)
         {APP_QUICK_FIX_INFO_BUNDLE_NAME, appQuickFixInfo.bundleName},
         {APP_QUICK_FIX_INFO_VERSION_CODE, appQuickFixInfo.versionCode},
         {APP_QUICK_FIX_INFO_VERSION_NAME, appQuickFixInfo.versionName},
+        {APP_QUICK_FIX_INFO_PATCH_VERSION_CODE, appQuickFixInfo.patchVersionCode},
+        {APP_QUICK_FIX_INFO_PATCH_VERSION_NAME, appQuickFixInfo.patchVersionName},
         {APP_QUICK_FIX_INFO_DEPLOYED_QUICK_FIX, appQuickFixInfo.deployedQuickFix},
         {APP_QUICK_FIX_INFO_DEPLOYING_QUICK_FIX, appQuickFixInfo.deployingQuickFix}
     };
@@ -70,6 +74,22 @@ void from_json(const nlohmann::json &jsonObject, AppQuickFixInfo &appQuickFixInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_QUICK_FIX_INFO_PATCH_VERSION_CODE,
+        appQuickFixInfo.patchVersionCode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_QUICK_FIX_INFO_PATCH_VERSION_NAME,
+        appQuickFixInfo.patchVersionName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<QuickFixInfo>(jsonObject,
         jsonObjectEnd,
         APP_QUICK_FIX_INFO_DEPLOYED_QUICK_FIX,
@@ -93,6 +113,8 @@ bool AppQuickFixInfo::ReadFromParcel(Parcel &parcel)
     bundleName = Str16ToStr8(parcel.ReadString16());
     versionCode = parcel.ReadInt32();
     versionName = Str16ToStr8(parcel.ReadString16());
+    patchVersionCode = parcel.ReadInt32();
+    patchVersionName = Str16ToStr8(parcel.ReadString16());
     std::unique_ptr<AppQuickFixInfo> deployedAppQuickFixInfo(parcel.ReadParcelable<AppQuickFixInfo>());
     if (!deployedAppQuickFixInfo) {
         APP_LOGE("ReadParcelable<AppQuickFixInfo> failed");
@@ -114,6 +136,8 @@ bool AppQuickFixInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, Str8ToStr16(versionCode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, Str8ToStr16(patchVersionCode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(patchVersionName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &deployedQuickFix);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &deployingQuickFix);
     return true;

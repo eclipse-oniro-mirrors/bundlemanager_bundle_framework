@@ -25,10 +25,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct QuickFixInfo : public Parcelable {
-    int32_t versionCode; // quick fix patch version code
-    std::string versionName; // quick fix patch version name
     std::string nativeLibraryPath; // quick fix so path
-
     std::vector<HapQuickFixInfo> hapQuickFixInfos;
 
     bool ReadFromParcel(Parcel &parcel);

@@ -28,6 +28,9 @@ struct AppQuickFixInfo : public Parcelable {
     int32_t versionCode; // original bundle version code
     std::string versionName; // original bundle version name
 
+    int32_t patchVersionCode; // quick fix patch version code
+    std::string patchVersionName; // quick fix patch version name
+
     QuickFixInfo deployedQuickFix; // deployed quick fix patch
     QuickFixInfo deployingQuickFix; // deploying quick fix patch
 
