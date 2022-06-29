@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
 
+#include "app_quick_fix_info.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_user_info.h"
@@ -116,6 +117,12 @@ void to_json(nlohmann::json &jsonObject, const SummaryAbilityInfo &summaryAbilit
 void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbilityInfo);
 void to_json(nlohmann::json &jsonObject, const RpcIdResult &rpcIdResult);
 void from_json(const nlohmann::json &jsonObject, RpcIdResult &rpcIdResult);
+void to_json(nlohmann::json &jsonObject, const AppQuickFixInfo &appQuickFixInfo);
+void from_json(const nlohmann::json &jsonObject, AppQuickFixInfo &appQuickFixInfo);
+void to_json(nlohmann::json &jsonObject, const QuickFixInfo &quickFixInfo);
+void from_json(const nlohmann::json &jsonObject, QuickFixInfo &quickFixInfo);
+void to_json(nlohmann::json &jsonObject, const HapQuickFixInfo &hapQuickFixInfo);
+void from_json(const nlohmann::json &jsonObject, HapQuickFixInfo &hapQuickFixInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
