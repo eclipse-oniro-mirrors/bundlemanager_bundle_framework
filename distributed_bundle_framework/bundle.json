@@ -20,11 +20,10 @@
         "ram": "100KB",
         "deps": {
             "components": [
-                "access_token",
                 "ability_base",
+                "access_token",
                 "bundle_framework",
                 "common",
-                "distributeddatamgr",
                 "hisysevent_native",
                 "hiviewdfx_hilog_native",
                 "i18n",

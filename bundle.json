@@ -33,7 +33,6 @@
                 "access_token",
                 "appverify",
                 "battery_manager_native",
-                "bytrace",
                 "common",
                 "common_event_service",
                 "config_policy",
