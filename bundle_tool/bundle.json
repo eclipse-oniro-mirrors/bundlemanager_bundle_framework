@@ -23,7 +23,9 @@
                 "ability_base",
                 "bundle_framework",
                 "hiviewdfx_hilog_native",
+                "init",
                 "ipc",
+                "os_account",
                 "resource_management",
                 "samgr_standard",
                 "utils_base"
