@@ -24,9 +24,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::HAP_QUICK_FIX_INFO_MODULE_NAME = "moduleName";
-const std::HAP_QUICK_FIX_INFO_HAP_HASH256 = "hapHash256";
-const std::HAP_QUICK_FIX_INFO_HAP_FILE_PATH = "hapFilePath";
+const std::string HAP_QUICK_FIX_INFO_MODULE_NAME = "moduleName";
+const std::string HAP_QUICK_FIX_INFO_HAP_HASH256 = "hapHash256";
+const std::string HAP_QUICK_FIX_INFO_HAP_FILE_PATH = "hapFilePath";
 }
 
 void to_json(nlohmann::json &jsonObject, const HapQuickFixInfo &hapQuickFixInfo)

@@ -16,7 +16,6 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
 
-#include "app_quick_fix_info.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_user_info.h"
@@ -29,6 +28,7 @@
 #include "free_install/install_result.h"
 #include "free_install/target_ability_info.h"
 #include "nlohmann/json.hpp"
+#include "quick_fix/app_quick_fix_info.h"
 #include "shortcut_info.h"
 
 namespace OHOS {

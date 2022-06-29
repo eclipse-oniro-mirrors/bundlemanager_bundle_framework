@@ -24,8 +24,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::QUICK_FIX_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
-const std::QUICK_FIX_INFO_HAP_QUICK_FIX_INFOS = "hapQuickFixInfos";
+const std::string QUICK_FIX_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
+const std::string QUICK_FIX_INFO_HAP_QUICK_FIX_INFOS = "hapQuickFixInfos";
 }
 
 void to_json(nlohmann::json &jsonObject, const QuickFixInfo &quickFixInfo)
@@ -77,7 +77,7 @@ bool QuickFixInfo::ReadFromParcel(Parcel &parcel)
 bool QuickFixInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapQuickFixInfo.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapQuickFixInfos.size());
     for (auto &hapQuickFixInfo : hapQuickFixInfos) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hapQuickFixInfo);
     }
