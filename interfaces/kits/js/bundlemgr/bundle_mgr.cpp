@@ -931,7 +931,7 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
         nReqPermissionStates));
 
     napi_value nIsCompressNativeLibs;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, false, &nIsCompressNativeLibs));
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, true, &nIsCompressNativeLibs));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, objBundleInfo, "isCompressNativeLibs", nIsCompressNativeLibs));
 
