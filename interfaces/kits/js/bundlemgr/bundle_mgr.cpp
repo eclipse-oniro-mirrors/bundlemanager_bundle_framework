@@ -3338,6 +3338,7 @@ static void ConvertInstallResult(InstallResult &installResult)
                 installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_ABORTED";
                 break;
             }
+            [[fallthrough]];
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR):
             if (CheckIsSystemApp()) {
@@ -3345,6 +3346,7 @@ static void ConvertInstallResult(InstallResult &installResult)
                 installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_CONFLICT";
                 break;
             }
+            [[fallthrough]];
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_BUNDLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE):
