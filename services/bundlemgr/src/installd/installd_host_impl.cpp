@@ -99,6 +99,19 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
     return ERR_OK;
 }
 
+static void CreateBackupExtHomeDir(const std::string &bundleName, const int userid, const int uid)
+{
+    // Setup BackupExtensionAbility's home directory in a harmless way
+    std::string bundleBackupDir = Constants::BUNDLE_BACKUP_HOME_PATH + bundleName;
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
+        static std::once_flag logOnce;
+        std::call_once(logOnce, []() {
+            APP_LOGW("CreateBundledatadir MkOwnerDir(backup's home dir) failed");
+        });
+    }
+}
+
 ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
     const int userid, const int uid, const int gid, const std::string &apl)
 {
@@ -153,6 +166,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
     }
+    CreateBackupExtHomeDir(bundleName, userid, uid);
     return ERR_OK;
 }
 
