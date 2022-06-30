@@ -42,7 +42,7 @@ ohos_fuzztest("ParseSysCapFuzzTest") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
   ]
   defines = []
   if (global_resmgr_enable) {

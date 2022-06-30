@@ -46,7 +46,7 @@ ohos_moduletest("BmsBundleParserModuleTest") {
     "bundle_framework:appexecfwk_core",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
   ]
   resource_config_file =
       "${appexecfwk_path}/test/resource/mstbundlemgrservice/ohos_test.xml"

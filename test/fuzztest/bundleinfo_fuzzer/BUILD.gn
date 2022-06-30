@@ -35,7 +35,7 @@ ohos_fuzztest("BundleInfoFuzzTest") {
   deps = [ "${common_path}:libappexecfwk_common" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
     "utils_base:utils",
   ]
 }

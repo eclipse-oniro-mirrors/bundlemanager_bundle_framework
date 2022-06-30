@@ -51,7 +51,7 @@ ohos_unittest("BmsBundleParserTest") {
     "ability_base:want",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
   ]
   defines = []
   if (ability_runtime_enable) {

@@ -113,7 +113,7 @@ ohos_source_set("bundle_parser") {
     "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
     "utils_base:utils",
   ]
 
@@ -185,7 +185,7 @@ ohos_shared_library("libbms") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]
@@ -285,7 +285,7 @@ ohos_executable("installs") {
     "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
     "samgr_standard:samgr_proxy",
   ]
 
