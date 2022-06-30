@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "hap_quick_fix_info.h"
+#include "hqf_info.h"
 
 #include "app_log_wrapper.h"
 #include "json_util.h"
@@ -24,51 +24,51 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string HAP_QUICK_FIX_INFO_MODULE_NAME = "moduleName";
-const std::string HAP_QUICK_FIX_INFO_HAP_HASH256 = "hapHash256";
-const std::string HAP_QUICK_FIX_INFO_HAP_FILE_PATH = "hapFilePath";
+const std::string HQF_INFO_MODULE_NAME = "moduleName";
+const std::string HQF_INFO_HAP_HASH256 = "hapHash256";
+const std::string HQF_INFO_HAP_FILE_PATH = "hapFilePath";
 }
 
-void to_json(nlohmann::json &jsonObject, const HapQuickFixInfo &hapQuickFixInfo)
+void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
 {
     jsonObject = nlohmann::json {
-        {HAP_QUICK_FIX_INFO_MODULE_NAME, hapQuickFixInfo.moduleName},
-        {HAP_QUICK_FIX_INFO_HAP_HASH256, hapQuickFixInfo.hapHash256},
-        {HAP_QUICK_FIX_INFO_HAP_FILE_PATH, hapQuickFixInfo.hapFilePath}
+        {HQF_INFO_MODULE_NAME, hqfInfo.moduleName},
+        {HQF_INFO_HAP_HASH256, hqfInfo.hapHash256},
+        {HQF_INFO_HAP_FILE_PATH, hqfInfo.hapFilePath}
     };
 }
 
-void from_json(const nlohmann::json &jsonObject, HapQuickFixInfo &hapQuickFixInfo)
+void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        HAP_QUICK_FIX_INFO_MODULE_NAME,
-        hapQuickFixInfo.moduleName,
+        HQF_INFO_MODULE_NAME,
+        hqfInfo.moduleName,
         JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        HAP_QUICK_FIX_INFO_HAP_HASH256,
-        hapQuickFixInfo.hapHash256,
+        HQF_INFO_HAP_HASH256,
+        hqfInfo.hapHash256,
         JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        HAP_QUICK_FIX_INFO_HAP_FILE_PATH,
-        hapQuickFixInfo.hapFilePath,
+        HQF_INFO_HAP_FILE_PATH,
+        hqfInfo.hapFilePath,
         JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
 }
 
-bool HapQuickFixInfo::ReadFromParcel(Parcel &parcel)
+bool HqfInfo::ReadFromParcel(Parcel &parcel)
 {
     moduleName = Str16ToStr8(parcel.ReadString16());
     hapHash256 = Str16ToStr8(parcel.ReadString16());
@@ -76,7 +76,7 @@ bool HapQuickFixInfo::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
-bool HapQuickFixInfo::Marshalling(Parcel &parcel) const
+bool HqfInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapHash256));
@@ -84,9 +84,9 @@ bool HapQuickFixInfo::Marshalling(Parcel &parcel) const
     return true;
 }
 
-HapQuickFixInfo *HapQuickFixInfo::Unmarshalling(Parcel &parcel)
+HqfInfo *HqfInfo::Unmarshalling(Parcel &parcel)
 {
-    HapQuickFixInfo *info = new (std::nothrow) HapQuickFixInfo();
+    HqfInfo *info = new (std::nothrow) HqfInfo();
     if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;

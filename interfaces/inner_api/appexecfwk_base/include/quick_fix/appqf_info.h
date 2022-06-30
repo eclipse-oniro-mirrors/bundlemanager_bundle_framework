@@ -19,18 +19,20 @@
 #include <string>
 #include <vector>
 
-#include "hap_quick_fix_info.h"
+#include "hqf_info.h"
 #include "parcel.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-struct QuickFixInfo : public Parcelable {
+struct AppqfInfo : public Parcelable {
+    int32_t versionCode; // quick fix version code
+    std::string versionName; // quick fix version name
     std::string nativeLibraryPath; // quick fix so path
-    std::vector<HapQuickFixInfo> hapQuickFixInfos;
+    std::vector<HqfInfo> hqfInfos;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static QuickFixInfo *Unmarshalling(Parcel &parcel);
+    static AppqfInfo *Unmarshalling(Parcel &parcel);
 };
 }
 }

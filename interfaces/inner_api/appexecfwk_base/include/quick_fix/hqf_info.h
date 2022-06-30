@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_HAP_QUICK_FIX_INFO_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_HAP_QUICK_FIX_INFO_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_HQF_INFO_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_HQF_INFO_H
 
 #include <string>
 
@@ -22,15 +22,15 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-struct HapQuickFixInfo : public Parcelable {
+struct HqfInfo : public Parcelable {
     std::string moduleName;
     std::string hapHash256;
     std::string hapFilePath;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static HapQuickFixInfo *Unmarshalling(Parcel &parcel);
+    static HqfInfo *Unmarshalling(Parcel &parcel);
 };
 }
 }
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_HAP_QUICK_FIX_INFO_H
+#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_HQF_INFO_H

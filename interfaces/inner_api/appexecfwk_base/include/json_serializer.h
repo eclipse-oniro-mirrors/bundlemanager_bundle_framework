@@ -28,7 +28,7 @@
 #include "free_install/install_result.h"
 #include "free_install/target_ability_info.h"
 #include "nlohmann/json.hpp"
-#include "quick_fix/app_quick_fix_info.h"
+#include "quick_fix/app_quick_fix.h"
 #include "shortcut_info.h"
 
 namespace OHOS {
@@ -117,12 +117,12 @@ void to_json(nlohmann::json &jsonObject, const SummaryAbilityInfo &summaryAbilit
 void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbilityInfo);
 void to_json(nlohmann::json &jsonObject, const RpcIdResult &rpcIdResult);
 void from_json(const nlohmann::json &jsonObject, RpcIdResult &rpcIdResult);
-void to_json(nlohmann::json &jsonObject, const AppQuickFixInfo &appQuickFixInfo);
-void from_json(const nlohmann::json &jsonObject, AppQuickFixInfo &appQuickFixInfo);
-void to_json(nlohmann::json &jsonObject, const QuickFixInfo &quickFixInfo);
-void from_json(const nlohmann::json &jsonObject, QuickFixInfo &quickFixInfo);
-void to_json(nlohmann::json &jsonObject, const HapQuickFixInfo &hapQuickFixInfo);
-void from_json(const nlohmann::json &jsonObject, HapQuickFixInfo &hapQuickFixInfo);
+void to_json(nlohmann::json &jsonObject, const AppQuickFix &appQuickFix);
+void from_json(const nlohmann::json &jsonObject, AppQuickFix &appQuickFix);
+void to_json(nlohmann::json &jsonObject, const AppqfInfo &appqfInfo);
+void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo);
+void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo);
+void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

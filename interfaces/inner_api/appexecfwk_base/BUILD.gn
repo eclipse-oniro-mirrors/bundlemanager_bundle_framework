@@ -51,9 +51,9 @@ ohos_shared_library("appexecfwk_base") {
     "src/module_usage_record.cpp",
     "src/perf_profile.cpp",
     "src/permission_define.cpp",
-    "src/quick_fix/app_quick_fix_info.cpp",
-    "src/quick_fix/hap_quick_fix_info.cpp",
-    "src/quick_fix/quick_fix_info.cpp",
+    "src/quick_fix/app_quick_fix.cpp",
+    "src/quick_fix/appqf_info.cpp",
+    "src/quick_fix/hqf_info.cpp",
     "src/remote_ability_info.cpp",
     "src/shortcut_info.cpp",
   ]

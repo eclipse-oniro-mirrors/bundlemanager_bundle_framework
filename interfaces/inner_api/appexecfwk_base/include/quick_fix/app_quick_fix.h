@@ -13,31 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_QUICK_FIX_INFO_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_QUICK_FIX_INFO_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_QUICK_FIX_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_QUICK_FIX_H
 
 #include <string>
 
+#include "appqf_info.h"
 #include "parcel.h"
-#include "quick_fix_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-struct AppQuickFixInfo : public Parcelable {
+struct AppQuickFix : public Parcelable {
     std::string bundleName; // original bundle name
     int32_t versionCode; // original bundle version code
     std::string versionName; // original bundle version name
 
-    int32_t patchVersionCode; // quick fix patch version code
-    std::string patchVersionName; // quick fix patch version name
-
-    QuickFixInfo deployedQuickFix; // deployed quick fix patch
-    QuickFixInfo deployingQuickFix; // deploying quick fix patch
+    AppqfInfo deployedAppqfInfo; // deployed quick fix patch
+    AppqfInfo deployingAppqfInfo; // deploying quick fix patch
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static AppQuickFixInfo *Unmarshalling(Parcel &parcel);
+    static AppQuickFix *Unmarshalling(Parcel &parcel);
 };
 }
 }
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_QUICK_FIX_INFO_H
+#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_QUICK_FIX_H
