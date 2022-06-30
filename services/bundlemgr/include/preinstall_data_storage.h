@@ -20,32 +20,19 @@
 
 #include "bundle_constants.h"
 #include "distributed_kv_data_manager.h"
-#include "pre_install_bundle_info.h"
+#include "preinstall_data_storage_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class PreInstallDataStorage : public std::enable_shared_from_this<PreInstallDataStorage> {
+class PreInstallDataStorage :
+    public IPreInstallDataStorage, public std::enable_shared_from_this<PreInstallDataStorage>  {
 public:
     PreInstallDataStorage();
     ~PreInstallDataStorage();
-    /**
-     * @brief Save the preInstall bundle data corresponding to the device Id of the bundle name to KvStore.
-     * @param preInstallBundleInfo Indicates the PreInstallBundleInfo object to be save.
-     * @return Returns true if the data is successfully saved; returns false otherwise.
-     */
-    bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo);
-    /**
-     * @brief Obtains the PreInstallBundleInfo objects provided by bundleName.
-     * @param preInstallBundleInfos Indicates information about the PreInstallBundleInfo.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos);
-    /**
-     * @brief Delete the bundle data corresponding to the device Id of the bundle name to KvStore.
-     * @param innerBundleInfo Indicates the InnerBundleInfo object to be Delete.
-     * @return Returns true if the data is successfully deleted; returns false otherwise.
-     */
-    bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo);
+
+    bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override;
+    bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos) override;
+    bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override;
 
 private:
     void TryTwice(const std::function<DistributedKv::Status()>& func) const;

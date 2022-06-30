@@ -36,6 +36,7 @@ declare_args() {
   global_resmgr_enable = true
   hicollie_enable = true
   hisysevent_enable = true
+  bms_rdb_enable = false
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -82,6 +83,11 @@ declare_args() {
     hisysevent_enable = false
   }
 
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.distributeddatamgr_relational_store)) {
+    bms_rdb_enable = false
+  }
+
   print("bundle_framework_graphics = " + "$bundle_framework_graphics")
   print("bundle_framework_free_install = " + "$bundle_framework_free_install")
   print("bundle_framework_default_app = " + "$bundle_framework_default_app")
@@ -93,4 +99,5 @@ declare_args() {
   print("hicollie_enable = " + "$hicollie_enable")
   print("support_jsapi = " + "$support_jsapi")
   print("hisysevent_enable = " + "$hisysevent_enable")
+  print("bms_rdb_enable = " + "$bms_rdb_enable")
 }
