@@ -29,7 +29,7 @@ ohos_benchmarktest("BenchmarkTestForJsonSerializer") {
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
     "utils_base:utils",
   ]
 }

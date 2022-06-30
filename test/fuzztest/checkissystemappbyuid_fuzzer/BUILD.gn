@@ -37,7 +37,7 @@ ohos_fuzztest("CheckIsSystemAppByUidFuzzTest") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
     "utils_base:utils",

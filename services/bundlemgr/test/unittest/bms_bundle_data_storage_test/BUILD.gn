@@ -57,7 +57,7 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
   external_deps = [
     "ability_base:want",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_single",
+    "ipc:ipc_core",
   ]
   defines = []
   if (ability_runtime_enable) {
