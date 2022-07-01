@@ -101,8 +101,6 @@ const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
     "temp",
     "preferences",
     "haps",
-    "el3/base",
-    "el4/base"
 };
 }  // namespace
 
