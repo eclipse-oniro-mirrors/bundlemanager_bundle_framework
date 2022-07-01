@@ -65,6 +65,15 @@ public:
      */
     void DeathRecipientSendCallback();
 
+    /**
+     * @brief Connecte service center
+     * @param callerToken Caller form extension token.
+     * @return Returns true if successfully connected to service center; returns false otherwise.
+     */
+    bool ConnectAbility(const Want &want, const sptr<IRemoteObject> &callerToken);
+
+    bool SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply);
+
 private:
     void Init();
     /**
@@ -132,13 +141,6 @@ private:
      */
     bool CheckIsModuleNeedUpdate(
         InnerBundleInfo &innerBundleInfo, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack);
-
-    /**
-     * @brief Connecte service center
-     * @param callerToken Caller form extension token.
-     * @return Returns true if successfully connected to service center; returns false otherwise.
-     */
-    bool ConnectAbility(const Want &want, const sptr<IRemoteObject> &callerToken);
 
     /**
      * @brief Disconnect service center

@@ -257,6 +257,12 @@ const std::string APP_PROVISION_TYPE_RELEASE = "release";
 
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
+
+// syscap
+const std::string SYSCAP_SERVICE_ID = "syscap";
+const std::string SYSCAP_SERVICE_TYPE = "syscap";
+const std::string CHARACTER_OS_SYSCAP = "ossyscap";
+const std::string CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

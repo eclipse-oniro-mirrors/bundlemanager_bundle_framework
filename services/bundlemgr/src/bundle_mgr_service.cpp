@@ -18,6 +18,7 @@
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_distributed_manager.h"
 #include "bundle_permission_mgr.h"
 #include "datetime_ex.h"
 #include "perf_profile.h"
@@ -198,6 +199,11 @@ bool BundleMgrService::Init()
         connectAbilityMgr_ = std::make_shared<BundleConnectAbilityMgr>();
     }
     APP_LOGI("create BundleConnectAbility success");
+
+    if (bundleDistributedManager_ == nullptr) {
+        APP_LOGI("Create bundleDistributedManager_");
+        bundleDistributedManager_ = std::make_shared<BundleDistributedManager>();
+    }
 #endif
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -239,6 +245,11 @@ const std::shared_ptr<BundleAgingMgr> BundleMgrService::GetAgingMgr() const
 const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbility() const
 {
     return connectAbilityMgr_;
+}
+
+const std::shared_ptr<BundleDistributedManager> BundleMgrService::GetBundleDistributedManager() const
+{
+    return bundleDistributedManager_;
 }
 #endif
 

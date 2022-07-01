@@ -27,6 +27,7 @@
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #include "bundle_connect_ability_mgr.h"
+#include "bundle_distributed_manager.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_host_impl.h"
@@ -71,6 +72,8 @@ public:
      * @return Returns the pointer of BundleConnectAbility object.
      */
     const std::shared_ptr<BundleConnectAbilityMgr> GetConnectAbility() const;
+
+    const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
 #endif
     /**
      * @brief Get a IBundleInstaller object for IPC
@@ -150,6 +153,7 @@ private:
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     std::shared_ptr<BundleAgingMgr> agingMgr_;
     std::shared_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;
+    std::shared_ptr<BundleDistributedManager> bundleDistributedManager_;
 #endif
     sptr<BundleMgrHostImpl> host_;
     sptr<BundleInstallerHost> installer_;

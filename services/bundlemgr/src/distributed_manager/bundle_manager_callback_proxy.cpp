@@ -13,27 +13,22 @@
  * limitations under the License.
  */
 
-#include "service_center_status_callback_stub.h"
+#include "bundle_manager_callback_proxy.h"
 
-#include "app_log_wrapper.h"
 #include "message_parcel.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
+using OHOS::AppExecFwk::IBundleManagerCallback;
+
+BundleManagerCallbackProxy::BundleManagerCallbackProxy(const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IBundleManagerCallback>(impl)
 {
-    APP_LOGI("ServiceCenterStatusCallbackStub is created");
 }
 
-int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
-    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t BundleManagerCallbackProxy::OnQueryRpcIdFinished(const std::string &installResult)
 {
-    data.ReadInterfaceToken();
-    auto result = data.ReadString16();
-    APP_LOGI("ServiceCenterStatusCallbackStub OnRemoteRequest:code:%{public}d, result:%{public}s",
-        code, Str16ToStr8(result).c_str());
-    return OnInstallFinished(Str16ToStr8(result));
+    return 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
