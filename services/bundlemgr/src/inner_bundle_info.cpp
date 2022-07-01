@@ -312,6 +312,14 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
 
 InnerBundleInfo::InnerBundleInfo()
 {
+    baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    if (baseApplicationInfo_ == nullptr) {
+        APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
+    }
+    baseBundleInfo_ = std::make_shared<BundleInfo>();
+    if (baseBundleInfo_ == nullptr) {
+        APP_LOGE("baseBundleInfo_ is nullptr, create failed");
+    }
     APP_LOGD("inner bundle info instance is created");
 }
 
@@ -438,8 +446,8 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BASE_DATA_DIR] = baseDataDir_;
     jsonObject[BUNDLE_STATUS] = bundleStatus_;
     jsonObject[ALLOWED_ACLS] = allowedAcls_;
-    jsonObject[BASE_APPLICATION_INFO] = baseApplicationInfo_;
-    jsonObject[BASE_BUNDLE_INFO] = baseBundleInfo_;
+    jsonObject[BASE_APPLICATION_INFO] = *baseApplicationInfo_;
+    jsonObject[BASE_BUNDLE_INFO] = *baseBundleInfo_;
     jsonObject[BASE_ABILITY_INFO] = baseAbilityInfos_;
     jsonObject[INNER_MODULE_INFO] = innerModuleInfos_;
     jsonObject[SKILL_INFOS] = skillInfos_;
@@ -1130,7 +1138,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
     GetValueIfFindKey<BundleInfo>(jsonObject,
         jsonObjectEnd,
         BASE_BUNDLE_INFO,
-        baseBundleInfo_,
+        *baseBundleInfo_,
         JsonType::OBJECT,
         true,
         ProfileReader::parseResult,
@@ -1138,7 +1146,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
     GetValueIfFindKey<ApplicationInfo>(jsonObject,
         jsonObjectEnd,
         BASE_APPLICATION_INFO,
-        baseApplicationInfo_,
+        *baseApplicationInfo_,
         JsonType::OBJECT,
         true,
         ProfileReader::parseResult,
@@ -1308,15 +1316,15 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 void InnerBundleInfo::BuildDefaultUserInfo()
 {
     APP_LOGD("BuildDefaultUserInfo: bundleName: %{public}s.",
-        baseApplicationInfo_.bundleName.c_str());
+        baseApplicationInfo_->bundleName.c_str());
     InnerBundleUserInfo defaultInnerBundleUserInfo;
     defaultInnerBundleUserInfo.bundleUserInfo.userId = GetUserId();
     defaultInnerBundleUserInfo.uid = uid_;
     defaultInnerBundleUserInfo.gids.emplace_back(gid_);
-    defaultInnerBundleUserInfo.installTime = baseBundleInfo_.installTime;
-    defaultInnerBundleUserInfo.updateTime = baseBundleInfo_.updateTime;
-    defaultInnerBundleUserInfo.bundleName = baseApplicationInfo_.bundleName;
-    defaultInnerBundleUserInfo.bundleUserInfo.enabled = baseApplicationInfo_.enabled;
+    defaultInnerBundleUserInfo.installTime = baseBundleInfo_->installTime;
+    defaultInnerBundleUserInfo.updateTime = baseBundleInfo_->updateTime;
+    defaultInnerBundleUserInfo.bundleName = baseApplicationInfo_->bundleName;
+    defaultInnerBundleUserInfo.bundleUserInfo.enabled = baseApplicationInfo_->enabled;
     AddInnerBundleUserInfo(defaultInnerBundleUserInfo);
 }
 
@@ -1337,13 +1345,13 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.mainAbility = it->second.mainAbility;
     hapInfo.srcPath = it->second.srcPath;
     hapInfo.hapPath = it->second.hapPath;
-    hapInfo.supportedModes = baseApplicationInfo_.supportedModes;
+    hapInfo.supportedModes = baseApplicationInfo_->supportedModes;
     hapInfo.reqCapabilities = it->second.reqCapabilities;
     hapInfo.colorMode = it->second.colorMode;
     hapInfo.isRemovable = it->second.isRemovable;
     hapInfo.upgradeFlag = it->second.upgradeFlag;
 
-    hapInfo.bundleName = baseApplicationInfo_.bundleName;
+    hapInfo.bundleName = baseApplicationInfo_->bundleName;
     hapInfo.mainElementName = it->second.mainAbility;
     hapInfo.pages = it->second.pages;
     hapInfo.process = it->second.process;
@@ -1487,78 +1495,78 @@ bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
 
 void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool isEntry)
 {
-    baseBundleInfo_.name = bundleInfo.name;
+    baseBundleInfo_->name = bundleInfo.name;
 
-    baseBundleInfo_.versionCode = bundleInfo.versionCode;
-    baseBundleInfo_.versionName = bundleInfo.versionName;
-    baseBundleInfo_.minCompatibleVersionCode = bundleInfo.minCompatibleVersionCode;
+    baseBundleInfo_->versionCode = bundleInfo.versionCode;
+    baseBundleInfo_->versionName = bundleInfo.versionName;
+    baseBundleInfo_->minCompatibleVersionCode = bundleInfo.minCompatibleVersionCode;
 
-    baseBundleInfo_.compatibleVersion = bundleInfo.compatibleVersion;
-    baseBundleInfo_.targetVersion = bundleInfo.targetVersion;
+    baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
+    baseBundleInfo_->targetVersion = bundleInfo.targetVersion;
 
-    baseBundleInfo_.isKeepAlive = bundleInfo.isKeepAlive;
-    baseBundleInfo_.singleton = bundleInfo.singleton;
-    baseBundleInfo_.isPreInstallApp = bundleInfo.isPreInstallApp;
+    baseBundleInfo_->isKeepAlive = bundleInfo.isKeepAlive;
+    baseBundleInfo_->singleton = bundleInfo.singleton;
+    baseBundleInfo_->isPreInstallApp = bundleInfo.isPreInstallApp;
 
-    baseBundleInfo_.vendor = bundleInfo.vendor;
-    baseBundleInfo_.releaseType = bundleInfo.releaseType;
-    if (!baseBundleInfo_.isNativeApp) {
-        baseBundleInfo_.isNativeApp = bundleInfo.isNativeApp;
+    baseBundleInfo_->vendor = bundleInfo.vendor;
+    baseBundleInfo_->releaseType = bundleInfo.releaseType;
+    if (!baseBundleInfo_->isNativeApp) {
+        baseBundleInfo_->isNativeApp = bundleInfo.isNativeApp;
     }
 
     if (isEntry) {
-        baseBundleInfo_.mainEntry = bundleInfo.mainEntry;
-        baseBundleInfo_.entryModuleName = bundleInfo.entryModuleName;
+        baseBundleInfo_->mainEntry = bundleInfo.mainEntry;
+        baseBundleInfo_->entryModuleName = bundleInfo.entryModuleName;
     }
 }
 
 void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicationInfo)
 {
-    baseApplicationInfo_.name = applicationInfo.name;
-    baseApplicationInfo_.bundleName = applicationInfo.bundleName;
+    baseApplicationInfo_->name = applicationInfo.name;
+    baseApplicationInfo_->bundleName = applicationInfo.bundleName;
 
-    baseApplicationInfo_.versionCode = applicationInfo.versionCode;
-    baseApplicationInfo_.versionName = applicationInfo.versionName;
-    baseApplicationInfo_.minCompatibleVersionCode = applicationInfo.minCompatibleVersionCode;
+    baseApplicationInfo_->versionCode = applicationInfo.versionCode;
+    baseApplicationInfo_->versionName = applicationInfo.versionName;
+    baseApplicationInfo_->minCompatibleVersionCode = applicationInfo.minCompatibleVersionCode;
 
-    baseApplicationInfo_.apiCompatibleVersion = applicationInfo.apiCompatibleVersion;
-    baseApplicationInfo_.apiTargetVersion = applicationInfo.apiTargetVersion;
+    baseApplicationInfo_->apiCompatibleVersion = applicationInfo.apiCompatibleVersion;
+    baseApplicationInfo_->apiTargetVersion = applicationInfo.apiTargetVersion;
 
-    baseApplicationInfo_.iconPath = applicationInfo.iconPath;
-    baseApplicationInfo_.iconId = applicationInfo.iconId;
-    baseApplicationInfo_.label = applicationInfo.label;
-    baseApplicationInfo_.labelId = applicationInfo.labelId;
-    baseApplicationInfo_.description = applicationInfo.description;
-    baseApplicationInfo_.descriptionId = applicationInfo.descriptionId;
+    baseApplicationInfo_->iconPath = applicationInfo.iconPath;
+    baseApplicationInfo_->iconId = applicationInfo.iconId;
+    baseApplicationInfo_->label = applicationInfo.label;
+    baseApplicationInfo_->labelId = applicationInfo.labelId;
+    baseApplicationInfo_->description = applicationInfo.description;
+    baseApplicationInfo_->descriptionId = applicationInfo.descriptionId;
 
-    baseApplicationInfo_.keepAlive = applicationInfo.keepAlive;
-    baseApplicationInfo_.removable = applicationInfo.removable;
-    baseApplicationInfo_.singleton = applicationInfo.singleton;
-    baseApplicationInfo_.userDataClearable = applicationInfo.userDataClearable;
-    baseApplicationInfo_.accessible = applicationInfo.accessible;
+    baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
+    baseApplicationInfo_->removable = applicationInfo.removable;
+    baseApplicationInfo_->singleton = applicationInfo.singleton;
+    baseApplicationInfo_->userDataClearable = applicationInfo.userDataClearable;
+    baseApplicationInfo_->accessible = applicationInfo.accessible;
 
-    if (!baseApplicationInfo_.isSystemApp) {
-        baseApplicationInfo_.isSystemApp = applicationInfo.isSystemApp;
+    if (!baseApplicationInfo_->isSystemApp) {
+        baseApplicationInfo_->isSystemApp = applicationInfo.isSystemApp;
     }
-    if (!baseApplicationInfo_.isLauncherApp) {
-        baseApplicationInfo_.isLauncherApp = applicationInfo.isLauncherApp;
+    if (!baseApplicationInfo_->isLauncherApp) {
+        baseApplicationInfo_->isLauncherApp = applicationInfo.isLauncherApp;
     }
 
-    baseApplicationInfo_.apiReleaseType = applicationInfo.apiReleaseType;
-    baseApplicationInfo_.debug = applicationInfo.debug;
-    baseApplicationInfo_.deviceId = applicationInfo.deviceId;
-    baseApplicationInfo_.distributedNotificationEnabled = applicationInfo.distributedNotificationEnabled;
-    baseApplicationInfo_.entityType = applicationInfo.entityType;
-    baseApplicationInfo_.process = applicationInfo.process;
-    baseApplicationInfo_.supportedModes = applicationInfo.supportedModes;
-    baseApplicationInfo_.vendor = applicationInfo.vendor;
+    baseApplicationInfo_->apiReleaseType = applicationInfo.apiReleaseType;
+    baseApplicationInfo_->debug = applicationInfo.debug;
+    baseApplicationInfo_->deviceId = applicationInfo.deviceId;
+    baseApplicationInfo_->distributedNotificationEnabled = applicationInfo.distributedNotificationEnabled;
+    baseApplicationInfo_->entityType = applicationInfo.entityType;
+    baseApplicationInfo_->process = applicationInfo.process;
+    baseApplicationInfo_->supportedModes = applicationInfo.supportedModes;
+    baseApplicationInfo_->vendor = applicationInfo.vendor;
 
-    if (baseApplicationInfo_.nativeLibraryPath.empty()) {
-        baseApplicationInfo_.nativeLibraryPath = applicationInfo.nativeLibraryPath;
-        baseApplicationInfo_.cpuAbi = applicationInfo.cpuAbi;
+    if (baseApplicationInfo_->nativeLibraryPath.empty()) {
+        baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
+        baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
     }
-    baseApplicationInfo_.appDistributionType = applicationInfo.appDistributionType;
-    baseApplicationInfo_.appProvisionType = applicationInfo.appProvisionType;
+    baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
+    baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
@@ -1589,8 +1597,8 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
 
     auto oldModuleInfo = it->second;
     if (oldModuleInfo.isEntry) {
-        baseBundleInfo_.mainEntry.clear();
-        baseBundleInfo_.entryModuleName.clear();
+        baseBundleInfo_->mainEntry.clear();
+        baseBundleInfo_->entryModuleName.clear();
     }
     innerModuleInfos_.erase(it);
     std::string key;
@@ -1668,7 +1676,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
 
-    appInfo = baseApplicationInfo_;
+    appInfo = *baseApplicationInfo_;
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
     appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
@@ -1717,7 +1725,7 @@ void InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         return;
     }
 
-    bundleInfo = baseBundleInfo_;
+    bundleInfo = *baseBundleInfo_;
 
     bundleInfo.uid = innerBundleUserInfo.uid;
     if (!innerBundleUserInfo.gids.empty()) {
@@ -2499,32 +2507,32 @@ int32_t InnerBundleInfo::GetDisposedStatus() const
 
 void InnerBundleInfo::SetAppDistributionType(const std::string &appDistributionType)
 {
-    baseApplicationInfo_.appDistributionType = appDistributionType;
+    baseApplicationInfo_->appDistributionType = appDistributionType;
 }
 
 std::string InnerBundleInfo::GetAppDistributionType() const
 {
-    return baseApplicationInfo_.appDistributionType;
+    return baseApplicationInfo_->appDistributionType;
 }
 
 void InnerBundleInfo::SetAppProvisionType(const std::string &appProvisionType)
 {
-    baseApplicationInfo_.appProvisionType = appProvisionType;
+    baseApplicationInfo_->appProvisionType = appProvisionType;
 }
 
 std::string InnerBundleInfo::GetAppProvisionType() const
 {
-    return baseApplicationInfo_.appProvisionType;
+    return baseApplicationInfo_->appProvisionType;
 }
 
 void InnerBundleInfo::SetAppCrowdtestDeadline(int64_t crowdtestDeadline)
 {
-    baseApplicationInfo_.crowdtestDeadline = crowdtestDeadline;
+    baseApplicationInfo_->crowdtestDeadline = crowdtestDeadline;
 }
 
 int64_t InnerBundleInfo::GetAppCrowdtestDeadline() const
 {
-    return baseApplicationInfo_.crowdtestDeadline;
+    return baseApplicationInfo_->crowdtestDeadline;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
