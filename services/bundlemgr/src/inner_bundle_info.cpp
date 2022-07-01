@@ -311,7 +311,13 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
 InnerBundleInfo::InnerBundleInfo()
 {
     baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    if (baseApplicationInfo_ == nullptr) {
+        APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
+    }
     baseBundleInfo_ = std::make_shared<BundleInfo>();
+    if (baseBundleInfo_ == nullptr) {
+        APP_LOGE("baseBundleInfo_ is nullptr, create failed");
+    }
     APP_LOGD("inner bundle info instance is created");
 }
 
