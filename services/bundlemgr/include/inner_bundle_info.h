@@ -909,6 +909,14 @@ public:
         return (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end());
     }
 
+    bool IsEntryModule(std::string modulePackage) const
+    {
+        if (FindModule(modulePackage)) {
+            return innerModuleInfos_.at(modulePackage).isEntry;
+        }
+        return false;
+    }
+
     bool GetIsKeepAlive() const
     {
         return baseBundleInfo_.isKeepAlive;

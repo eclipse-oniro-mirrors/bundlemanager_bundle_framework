@@ -1145,6 +1145,12 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("VerifyUriPrefix failed");
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
+    if (newInfo.HasEntry() && oldInfo.HasEntry()) {
+        if (!oldInfo.IsEntryModule(modulePackage_)) {
+            APP_LOGE("install more than one entry module");
+            return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
+        }
+    }
 
     ErrCode result = ERR_OK;
     if (versionCode_ == oldInfo.GetVersionCode()) {
