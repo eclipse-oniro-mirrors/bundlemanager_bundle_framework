@@ -380,7 +380,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
     return false;
 }
 
-bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo) const
+bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
+    int32_t appIndex) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -390,12 +391,11 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
-    std::string moduleName = element.GetModuleName();
-    APP_LOGD("QueryAbilityInfo bundle name:%{public}s, moduleName:%{public}s, ability name:%{public}s",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    APP_LOGD("QueryAbilityInfo bundle name:%{public}s, ability name:%{public}s",
+        bundleName.c_str(), abilityName.c_str());
     // explicit query
     if (!bundleName.empty() && !abilityName.empty()) {
-        bool ret = ExplicitQueryAbilityInfo(bundleName, moduleName, abilityName, flags, requestUserId, abilityInfo);
+        bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
             APP_LOGE("explicit queryAbilityInfo error");
             return false;
@@ -403,7 +403,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
         return true;
     }
     std::vector<AbilityInfo> abilityInfos;
-    bool ret = ImplicitQueryAbilityInfos(want, flags, requestUserId, abilityInfos);
+    bool ret = ImplicitQueryAbilityInfos(want, flags, requestUserId, abilityInfos, appIndex);
     if (!ret) {
         APP_LOGE("implicit queryAbilityInfos error");
         return false;
@@ -427,14 +427,12 @@ bool BundleDataMgr::QueryAbilityInfos(
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
-    std::string moduleName = element.GetModuleName();
-    APP_LOGD("QueryAbilityInfos bundle name:%{public}s, moduleName:%{public}s, ability name:%{public}s",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    APP_LOGD("QueryAbilityInfos bundle name:%{public}s, ability name:%{public}s",
+        bundleName.c_str(), abilityName.c_str());
     // explicit query
     if (!bundleName.empty() && !abilityName.empty()) {
         AbilityInfo abilityInfo;
-        bool ret = ExplicitQueryAbilityInfo(
-            bundleName, moduleName, abilityName, flags, requestUserId, abilityInfo);
+        bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo);
         if (!ret) {
             APP_LOGE("explicit queryAbilityInfo error");
             return false;
@@ -455,12 +453,17 @@ bool BundleDataMgr::QueryAbilityInfos(
     return true;
 }
 
-bool BundleDataMgr::ExplicitQueryAbilityInfo(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, int32_t flags, int32_t userId, AbilityInfo &abilityInfo) const
+bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
+    AbilityInfo &abilityInfo, int32_t appIndex) const
 {
+    ElementName element = want.GetElement();
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    std::string moduleName = element.GetModuleName();
     APP_LOGD("ExplicitQueryAbilityInfo bundleName:%{public}s, moduleName:%{public}s, abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     APP_LOGD("flags:%{public}d, userId:%{public}d", flags, userId);
+
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
@@ -468,9 +471,17 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const std::string &bundleName, cons
 
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-    if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
-        APP_LOGE("ExplicitQueryAbilityInfo failed");
+    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId))) {
+        APP_LOGE("ExplicitQueryAbiliyInfo failed");
         return false;
+    }
+    // explict query from sandbox manager
+    if (appIndex > 0) {
+        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            return false;
+        }
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
@@ -479,29 +490,8 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const std::string &bundleName, cons
         APP_LOGE("ability not found");
         return false;
     }
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_SYSTEMAPP_ONLY) == GET_ABILITY_INFO_SYSTEMAPP_ONLY &&
-        !innerBundleInfo.IsSystemApp()) {
-        return false;
-    }
-    if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)) {
-        if (!innerBundleInfo.IsAbilityEnabled((*ability), responseUserId)) {
-            APP_LOGE("ability:%{public}s is disabled", ability->name.c_str());
-            return false;
-        }
-    }
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION) != GET_ABILITY_INFO_WITH_PERMISSION) {
-        ability->permissions.clear();
-    }
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_METADATA) != GET_ABILITY_INFO_WITH_METADATA) {
-        ability->metaData.customizeData.clear();
-        ability->metadata.clear();
-    }
-    abilityInfo = (*ability);
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
-        innerBundleInfo.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, abilityInfo.applicationInfo);
-    }
-    return true;
+
+    return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
 }
 
 void BundleDataMgr::FilterAbilityInfosByModuleName(const std::string &moduleName,
@@ -521,7 +511,7 @@ void BundleDataMgr::FilterAbilityInfosByModuleName(const std::string &moduleName
 }
 
 bool BundleDataMgr::ImplicitQueryAbilityInfos(
-    const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
+    const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -544,27 +534,13 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
     std::string bundleName = want.GetElement().GetBundleName();
     if (!bundleName.empty()) {
         // query in current bundleName
-        InnerBundleInfo innerBundleInfo;
-        if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
-            APP_LOGE("ImplicitQueryAbilityInfos failed");
+        if (!ImplicitQueryCurAbilityInfos(want, flags, requestUserId, abilityInfos, appIndex)) {
+            APP_LOGE("ImplicitQueryCurAbilityInfos failed");
             return false;
         }
-        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-        GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos);
-        FilterAbilityInfosByModuleName(want.GetElement().GetModuleName(), abilityInfos);
     } else {
         // query all
-        for (const auto &item : bundleInfos_) {
-            InnerBundleInfo innerBundleInfo;
-            if (!GetInnerBundleInfoWithFlags(
-                item.first, flags, innerBundleInfo, requestUserId)) {
-                APP_LOGE("ImplicitQueryAbilityInfos failed");
-                continue;
-            }
-
-            int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos);
-        }
+        ImplicitQueryAllAbilityInfos(want, flags, requestUserId, abilityInfos, appIndex);
     }
     // sort by priority, descending order.
     if (abilityInfos.size() > 1) {
@@ -572,6 +548,98 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
             [](AbilityInfo a, AbilityInfo b) { return a.priority > b.priority; });
     }
     return true;
+}
+
+bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
+    const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const
+{
+    APP_LOGD("begin to QueryAbilityInfoWithFlags.");
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_SYSTEMAPP_ONLY) == GET_ABILITY_INFO_SYSTEMAPP_ONLY &&
+        !innerBundleInfo.IsSystemApp()) {
+        return false;
+    }
+    if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)) {
+        if (!innerBundleInfo.IsAbilityEnabled((*option), userId)) {
+            APP_LOGE("ability:%{public}s is disabled", option->name.c_str());
+            return false;
+        }
+    }
+    info = (*option);
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION) != GET_ABILITY_INFO_WITH_PERMISSION) {
+        info.permissions.clear();
+    }
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_METADATA) != GET_ABILITY_INFO_WITH_METADATA) {
+        info.metaData.customizeData.clear();
+        info.metadata.clear();
+    }
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
+        innerBundleInfo.GetApplicationInfo(
+            ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, info.applicationInfo);
+    }
+    return true;
+}
+
+bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
+{
+    APP_LOGD("begin to ImplicitQueryCurAbilityInfos.");
+    std::string bundleName = want.GetElement().GetBundleName();
+    InnerBundleInfo innerBundleInfo;
+    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId))) {
+        APP_LOGE("ImplicitQueryCurAbilityInfos failed");
+        return false;
+    }
+    if (appIndex > 0) {
+        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            return false;
+        }
+    }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos);
+    FilterAbilityInfosByModuleName(want.GetElement().GetModuleName(), abilityInfos);
+    return true;
+}
+
+void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
+{
+    APP_LOGD("begin to ImplicitQueryAllAbilityInfos.");
+    // query from bundleInfos_
+    if (appIndex == 0) {
+        for (const auto &item : bundleInfos_) {
+            InnerBundleInfo innerBundleInfo;
+            if (!GetInnerBundleInfoWithFlags(
+                item.first, flags, innerBundleInfo, userId)) {
+                APP_LOGW("ImplicitQueryAllAbilityInfos failed");
+                continue;
+            }
+
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos);
+        }
+    } else {
+        // query from sandbox manager for sandbox bundle
+        auto sandboxMap = sandboxDataMgr_->GetSandboxAppInfoMap();
+        for (const auto &item : sandboxMap) {
+            InnerBundleInfo info;
+            size_t pos = item.first.rfind(Constants::FILE_UNDERLINE);
+            if (pos == std::string::npos) {
+                APP_LOGW("sandbox map contains invalid element");
+                continue;
+            }
+            std::string innerBundleName = item.first.substr(0, pos);
+            if (sandboxDataMgr_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
+                APP_LOGW("obtain innerBundleInfo of sandbox app failed");
+                continue;
+            }
+
+            int32_t responseUserId = info.GetResponseUserId(userId);
+            GetMatchAbilityInfos(want, flags, info, responseUserId, abilityInfos);
+        }
+    }
+    APP_LOGD("finish to ImplicitQueryAllAbilityInfos.");
 }
 
 void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
@@ -1621,8 +1689,10 @@ bool BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo) const
 {
     int32_t flags = GET_ABILITY_INFO_DEFAULT;
     AbilityInfo abilityInfoIn;
-    return ExplicitQueryAbilityInfo(abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.name,
-        flags, GetUserId(), abilityInfoIn);
+    Want want;
+    ElementName elementName("", abilityInfo.bundleName, abilityInfo.name, abilityInfo.moduleName);
+    want.SetElement(elementName);
+    return ExplicitQueryAbilityInfo(want, flags, GetUserId(), abilityInfoIn);
 }
 
 bool BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
@@ -2426,7 +2496,7 @@ std::string BundleDataMgr::GetAppPrivilegeLevel(const std::string &bundleName, i
 }
 
 bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
-    std::vector<ExtensionAbilityInfo> &extensionInfos) const
+    std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -2435,14 +2505,13 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
-    std::string moduleName = element.GetModuleName();
     std::string extensionName = element.GetAbilityName();
-    APP_LOGD("bundle name:%{public}s, moduleName:%{public}s, extension name:%{public}s",
-        bundleName.c_str(), moduleName.c_str(), extensionName.c_str());
+    APP_LOGD("bundle name:%{public}s, extension name:%{public}s",
+        bundleName.c_str(), extensionName.c_str());
     // explicit query
     if (!bundleName.empty() && !extensionName.empty()) {
         ExtensionAbilityInfo info;
-        bool ret = ExplicitQueryExtensionInfo(bundleName, moduleName, extensionName, flags, requestUserId, info);
+        bool ret = ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex);
         if (!ret) {
             APP_LOGE("explicit queryExtensionInfo error");
             return false;
@@ -2451,7 +2520,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         return true;
     }
 
-    bool ret = ImplicitQueryExtensionInfos(want, flags, requestUserId, extensionInfos);
+    bool ret = ImplicitQueryExtensionInfos(want, flags, requestUserId, extensionInfos, appIndex);
     if (!ret) {
         APP_LOGE("implicit queryExtensionAbilityInfos error");
         return false;
@@ -2464,9 +2533,13 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
     return true;
 }
 
-bool BundleDataMgr::ExplicitQueryExtensionInfo(const std::string &bundleName, const std::string &moduleName,
-    const std::string &extensionName, int32_t flags, int32_t userId, ExtensionAbilityInfo &extensionInfo) const
+bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
+    ExtensionAbilityInfo &extensionInfo, int32_t appIndex) const
 {
+    ElementName element = want.GetElement();
+    std::string bundleName = element.GetBundleName();
+    std::string moduleName = element.GetModuleName();
+    std::string extensionName = element.GetAbilityName();
     APP_LOGD("bundleName:%{public}s, moduleName:%{public}s, abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), extensionName.c_str());
     APP_LOGD("flags:%{public}d, userId:%{public}d", flags, userId);
@@ -2476,9 +2549,16 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const std::string &bundleName, co
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-    if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
+    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId))) {
         APP_LOGE("ExplicitQueryExtensionInfo failed");
         return false;
+    }
+    if (appIndex > 0) {
+        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            return false;
+        }
     }
     auto extension = innerBundleInfo.FindExtensionInfo(bundleName, moduleName, extensionName);
     if (!extension) {
@@ -2516,8 +2596,8 @@ void BundleDataMgr::FilterExtensionAbilityInfosByModuleName(const std::string &m
     }
 }
 
-bool BundleDataMgr::ImplicitQueryExtensionInfos(
-    const Want &want, int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) const
+bool BundleDataMgr::ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
     if (want.GetAction().empty() && want.GetEntities().empty()
         && want.GetUriString().empty() && want.GetType().empty()) {
@@ -2536,25 +2616,13 @@ bool BundleDataMgr::ImplicitQueryExtensionInfos(
     std::string bundleName = want.GetElement().GetBundleName();
     if (!bundleName.empty()) {
         // query in current bundle
-        InnerBundleInfo innerBundleInfo;
-        if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
-            APP_LOGE("ImplicitQueryExtensionAbilityInfos failed");
+        if (!ImplicitQueryCurExtensionInfos(want, flags, requestUserId, extensionInfos, appIndex)) {
+            APP_LOGE("ImplicitQueryCurExtensionInfos failed");
             return false;
         }
-        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-        GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, extensionInfos);
-        FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), extensionInfos);
     } else {
         // query all
-        for (const auto &item : bundleInfos_) {
-            InnerBundleInfo innerBundleInfo;
-            if (!GetInnerBundleInfoWithFlags(item.first, flags, innerBundleInfo, requestUserId)) {
-                APP_LOGE("ImplicitQueryExtensionAbilityInfos failed");
-                continue;
-            }
-            int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-            GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, extensionInfos);
-        }
+        ImplicitQueryAllExtensionInfos(want, flags, requestUserId, extensionInfos, appIndex);
     }
     // sort by priority, descending order.
     if (extensionInfos.size() > 1) {
@@ -2562,6 +2630,68 @@ bool BundleDataMgr::ImplicitQueryExtensionInfos(
             [](ExtensionAbilityInfo a, ExtensionAbilityInfo b) { return a.priority > b.priority; });
     }
     return true;
+}
+
+bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
+{
+    APP_LOGD("begin to ImplicitQueryCurExtensionInfos");
+    std::string bundleName = want.GetElement().GetBundleName();
+    InnerBundleInfo innerBundleInfo;
+    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId))) {
+        APP_LOGE("ImplicitQueryExtensionAbilityInfos failed");
+        return false;
+    }
+    if (appIndex > 0) {
+        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            return false;
+        }
+    }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos);
+    FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), infos);
+    APP_LOGD("finish to ImplicitQueryCurExtensionInfos");
+    return true;
+}
+
+void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
+{
+    APP_LOGD("begin to ImplicitQueryAllExtensionInfos");
+    // query from bundleInfos_
+    if (appIndex == 0) {
+        for (const auto &item : bundleInfos_) {
+            InnerBundleInfo innerBundleInfo;
+            if (!GetInnerBundleInfoWithFlags(item.first, flags, innerBundleInfo, userId)) {
+                APP_LOGE("ImplicitQueryExtensionAbilityInfos failed");
+                continue;
+            }
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+            GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos);
+        }
+    } else {
+        // query from sandbox manager for sandbox bundle
+        auto sandboxMap = sandboxDataMgr_->GetSandboxAppInfoMap();
+        for (const auto &item : sandboxMap) {
+            InnerBundleInfo info;
+            size_t pos = item.first.rfind(Constants::FILE_UNDERLINE);
+            if (pos == std::string::npos) {
+                APP_LOGW("sandbox map contains invalid element");
+                continue;
+            }
+            std::string innerBundleName = item.first.substr(0, pos);
+            if (sandboxDataMgr_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
+                APP_LOGW("obtain innerBundleInfo of sandbox app failed");
+                continue;
+            }
+
+            int32_t responseUserId = info.GetResponseUserId(userId);
+            GetMatchExtensionInfos(want, flags, responseUserId, info, infos);
+        }
+    }
+    APP_LOGD("finish to ImplicitQueryAllExtensionInfos");
 }
 
 void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId,
@@ -2933,20 +3063,23 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
     const std::string& moduleName = element.moduleName;
     const std::string& abilityName = element.abilityName;
     const std::string& extensionName = element.extensionName;
+    Want want;
+    ElementName elementName("", bundleName, abilityName, moduleName);
+    want.SetElement(elementName);
     bool isAbility = !element.abilityName.empty();
     bool ret = false;
     if (isAbility) {
         // get ability info
-        ret = ExplicitQueryAbilityInfo(bundleName, moduleName, abilityName,
-            GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
+        ret = ExplicitQueryAbilityInfo(want, GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
         if (!ret) {
             APP_LOGE("ExplicitQueryAbilityInfo failed.");
             return false;
         }
     } else {
         // get extension info
-        ret = ExplicitQueryExtensionInfo(bundleName, moduleName, extensionName,
-            GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
+        elementName.SetAbilityName(extensionName);
+        want.SetElement(elementName);
+        ret = ExplicitQueryExtensionInfo(want, GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
         if (!ret) {
             APP_LOGE("ExplicitQueryExtensionInfo failed.");
             return false;
@@ -3002,10 +3135,10 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
         APP_LOGE("bundleName or moduleName or abilityName is empty.");
         return false;
     }
-
+    Want want;
+    want.SetElement(elementName);
     AbilityInfo abilityInfo;
-    bool ret = ExplicitQueryAbilityInfo(bundleName, moduleName, abilityName,
-        GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
+    bool ret = ExplicitQueryAbilityInfo(want, GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
     if (ret) {
         APP_LOGD("ElementName is ability.");
         element.bundleName = bundleName;
@@ -3015,8 +3148,7 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
     }
 
     ExtensionAbilityInfo extensionInfo;
-    ret = ExplicitQueryExtensionInfo(bundleName, moduleName, abilityName,
-        GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
+    ret = ExplicitQueryExtensionInfo(want, GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
     if (ret) {
         APP_LOGD("ElementName is extension.");
         element.bundleName = bundleName;
