@@ -13,27 +13,28 @@
  * limitations under the License.
  */
 
-#include "service_center_status_callback_stub.h"
+#include "bundle_manager_callback.h"
 
 #include "app_log_wrapper.h"
-#include "message_parcel.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
+BundleManagerCallback::BundleManagerCallback(const std::weak_ptr<BundleDistributedManager> &server)
+    : server_(server)
 {
-    APP_LOGI("ServiceCenterStatusCallbackStub is created");
+    APP_LOGI("%{public}s", __func__);
 }
 
-int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
-    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t BundleManagerCallback::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
 {
-    data.ReadInterfaceToken();
-    auto result = data.ReadString16();
-    APP_LOGI("ServiceCenterStatusCallbackStub OnRemoteRequest:code:%{public}d, result:%{public}s",
-        code, Str16ToStr8(result).c_str());
-    return OnInstallFinished(Str16ToStr8(result));
+    APP_LOGI("OnQueryRpcIdFinished :%{public}s", queryRpcIdResult.c_str());
+    auto server = server_.lock();
+    if (server == nullptr) {
+        APP_LOGE("pointer is nullptr.");
+        return ERR_INVALID_VALUE;
+    }
+    server->OnQueryRpcIdFinished(queryRpcIdResult);
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -533,6 +533,8 @@ private:
 
     ErrCode HandleGetBundleStats(Parcel &data, Parcel &reply);
 
+    ErrCode HandleCheckAbilityEnableInstall(Parcel &data, Parcel &reply);
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(Parcel &data, Parcel &reply);
 #endif

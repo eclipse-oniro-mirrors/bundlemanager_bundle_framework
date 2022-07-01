@@ -70,6 +70,13 @@ free_install = [
   "${services_path}/bundlemgr/src/free_install/service_center_status_callback_stub.cpp",
 ]
 
+distributed_manager = [
+  "${services_path}/bundlemgr/src/distributed_manager/bundle_distributed_manager.cpp",
+  "${services_path}/bundlemgr/src/distributed_manager/bundle_manager_callback_proxy.cpp",
+  "${services_path}/bundlemgr/src/distributed_manager/bundle_manager_callback_stub.cpp",
+  "${services_path}/bundlemgr/src/distributed_manager/bundle_manager_callback.cpp",
+]
+
 default_app = [
   "${services_path}/bundlemgr/src/default_app/default_app_data.cpp",
   "${services_path}/bundlemgr/src/default_app/default_app_db.cpp",

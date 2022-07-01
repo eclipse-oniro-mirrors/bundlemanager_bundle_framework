@@ -1,0 +1,271 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "bundle_distributed_manager.h"
+
+#include "app_log_wrapper.h"
+#include "ability_manager_client.h"
+#include "bundle_manager_callback.h"
+#include "bundle_mgr_service.h"
+#include "distributed_device_profile_client.h"
+#include "json_util.h"
+#include "scope_guard.h"
+#include "syscap_interface.h"
+
+namespace OHOS {
+namespace AppExecFwk {
+namespace {
+const int32_t CHECK_ABILITY_ENABLE_INSTALL = 0;
+const int32_t QUERY_RPC_ID_BY_ABILITY = 1;
+const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
+const std::string SERVICE_CENTER_ABILITY_NAME = "com.ohos.hag.famanager.HapInstallServiceAbility";
+const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
+}
+
+void BundleDistributedManager::Init()
+{
+    runner_ = EventRunner::Create(true);
+    if (runner_ == nullptr) {
+        APP_LOGE("Create runner failed");
+        return;
+    }
+
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    if (handler_ == nullptr) {
+        APP_LOGE("Create handler failed");
+    }
+}
+
+BundleDistributedManager::BundleDistributedManager()
+{
+    Init();
+}
+
+BundleDistributedManager::~BundleDistributedManager()
+{
+    if (handler_ != nullptr) {
+        handler_.reset();
+    }
+    if (runner_ != nullptr) {
+        runner_.reset();
+    }
+}
+
+bool BundleDistributedManager::ConvertTargetAbilityInfo(const Want &want, TargetAbilityInfo &targetAbilityInfo)
+{
+    auto elementName = want.GetElement();
+    std::string bundleName = elementName.GetBundleName();
+    std::string moduleName = elementName.GetModuleName();
+    std::string abilityName = elementName.GetAbilityName();
+    APP_LOGI("ConvertTargetAbilityInfo: %{public}s, %{public}s, %{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    AppExecFwk::TargetInfo targetInfo;
+    targetInfo.transactId = std::to_string(this->GetTransactId());
+    targetInfo.bundleName = bundleName;
+    targetInfo.moduleName = moduleName;
+    targetInfo.abilityName = abilityName;
+    targetAbilityInfo.targetInfo = targetInfo;
+    return true;
+}
+
+int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcIdResult &rpcIdResult)
+{
+    DeviceProfile::ServiceCharacteristicProfile profile;
+    profile.SetServiceId(Constants::SYSCAP_SERVICE_ID);
+    profile.SetServiceType(Constants::SYSCAP_SERVICE_TYPE);
+    int32_t result = DeviceProfile::DistributedDeviceProfileClient::GetInstance().GetDeviceProfile(
+        want.GetElement().GetDeviceID(), Constants::SYSCAP_SERVICE_ID, profile);
+    if (result != 0) {
+        APP_LOGE("GetDeviceProfile failed result:%{public}d", result);
+        return ErrorCode::GET_DEVICE_PROFILE_FAILED;
+    }
+    std::string jsonData = profile.GetCharacteristicProfileJson();
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonData, nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("jsonObject is_discarded");
+        return ErrorCode::DECODE_SYS_CAP_FAILED;
+    }
+    std::vector<int> values = jsonObject[Constants::CHARACTER_OS_SYSCAP].get<std::vector<int>>();
+    int intValues[PCID_MAIN_BYTES];
+    int i = 0;
+    for (int value : values) {
+        intValues[i++] = value;
+    }
+    char (*osOutput)[SINGLE_SYSCAP_LEN] = nullptr;
+    ScopeGuard osOutputGuard([&osOutput] {
+        if (osOutput != nullptr) {
+            free(osOutput);
+        }
+    });
+    int32_t osLength;
+    if (!DecodeOsSyscap((char *)intValues, &osOutput, &osLength)) {
+        APP_LOGE("decode os sys cap failed");
+        return ErrorCode::DECODE_SYS_CAP_FAILED;
+    }
+    std::string capabilities = jsonObject[Constants::CHARACTER_PRIVATE_SYSCAP];
+    char (*priOutput)[SINGLE_SYSCAP_LEN] = nullptr;
+    ScopeGuard priOutputGuard([&priOutput] {
+        if (priOutput != nullptr) {
+            free(priOutput);
+        }
+    });
+    int32_t priLength;
+    if (!DecodePrivateSyscap((char *)capabilities.c_str(), &priOutput, &priLength)) {
+        APP_LOGE("decode private sys cap failed");
+        return ErrorCode::DECODE_SYS_CAP_FAILED;
+    }
+    for (auto &id : rpcIdResult.abilityInfo.rpcId) {
+        CompareError compareError = {{0}, 0, 0};
+        if (osLength != 0) {
+            if (ComparePcidString(*osOutput, const_cast<char *>(id.c_str()), &compareError) != 0) {
+                return ErrorCode::COMPARE_PC_ID_FAILED;
+            }
+        }
+        if (priLength != 0) {
+            if (ComparePcidString(*priOutput, const_cast<char *>(id.c_str()), &compareError) != 0) {
+                return ErrorCode::COMPARE_PC_ID_FAILED;
+            }
+        }
+    }
+    APP_LOGD("decode Os syscap:%{public}s, private syscap:%{public}s", *osOutput, *priOutput);
+    return ErrorCode::NO_ERROR;
+}
+
+bool BundleDistributedManager::CheckAbilityEnableInstall(
+    const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
+{
+    APP_LOGI("BundleDistributedManager::CheckAbilityEnableInstall");
+    AppExecFwk::TargetAbilityInfo targetAbilityInfo;
+    if (!ConvertTargetAbilityInfo(want, targetAbilityInfo)) {
+        return false;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("fail to get data mgr");
+        return false;
+    }
+    ApplicationInfo applicationInfo;
+    if (dataMgr->GetApplicationInfo(
+        targetAbilityInfo.targetInfo.bundleName, 0, Constants::UNSPECIFIED_USERID, applicationInfo)) {
+        APP_LOGE("fail to get bundleName:%{public}s application", targetAbilityInfo.targetInfo.bundleName.c_str());
+        return false;
+    }
+    sptr<QueryRpcIdParams> queryRpcIdParams = new(std::nothrow) QueryRpcIdParams();
+    if (queryRpcIdParams == nullptr) {
+        APP_LOGE("queryRpcIdParams is nullptr");
+        return false;
+    }
+    queryRpcIdParams->missionId = missionId;
+    queryRpcIdParams->callback = callback;
+    queryRpcIdParams->want = want;
+    queryRpcIdParams->versionCode = applicationInfo.versionCode;
+    auto ret = queryAbilityParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, *queryRpcIdParams);
+    if (!ret.second) {
+        APP_LOGE("BundleDistributedManager::QueryAbilityInfo map emplace error");
+        return false;
+    }
+    auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
+        this->queryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    };
+    handler_->PostTask(queryRpcIdByAbilityFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    return true;
+}
+
+bool BundleDistributedManager::queryRpcIdByAbilityToServiceCenter(const TargetAbilityInfo &targetAbilityInfo)
+{
+    APP_LOGI("queryRpcIdByAbilityToServiceCenter");
+    auto connectAbility = DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
+    if (connectAbility == nullptr) {
+        APP_LOGE("fail to connect ServiceCenter");
+        return false;
+    }
+    Want serviceCenterWant;
+    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    bool ret = connectAbility->ConnectAbility(serviceCenterWant, nullptr);
+    if (!ret) {
+        APP_LOGE("fail to connect ServiceCenter");
+        return false;
+    }
+    const std::string targetInfo = GetJsonStrFromInfo(targetAbilityInfo);
+    APP_LOGI("queryRpcId param :%{public}s", targetInfo.c_str());
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteString16(Str8ToStr16(targetInfo))) {
+        APP_LOGE("WriteString16 failed");
+        return false;
+    }
+    sptr<BundleManagerCallback> bundleManagerCallback = new(std::nothrow) BundleManagerCallback(weak_from_this());
+    if (bundleManagerCallback == nullptr) {
+        APP_LOGE("bundleManagerCallback is nullptr");
+        return false;
+    }
+    if (!data.WriteRemoteObject(bundleManagerCallback)) {
+        APP_LOGE("failed to write remote object");
+        return false;
+    }
+    ret = connectAbility->SendRequest(CHECK_ABILITY_ENABLE_INSTALL, data, reply);
+    if (!ret) {
+        APP_LOGE("send request to serviceCenter failed");
+        return false;
+    }
+    return true;
+}
+
+void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
+{
+    RpcIdResult rpcIdResult;
+    if (!ParseInfoFromJsonStr(queryRpcIdResult.c_str(), rpcIdResult)) {
+        APP_LOGE("Parse info from json fail");
+        return;
+    }
+    auto queryAbilityParams = queryAbilityParamsMap_.find(rpcIdResult.transactId);
+    if (queryAbilityParams == queryAbilityParamsMap_.end()) {
+        APP_LOGE("Can not find node in %{public}s function", __func__);
+        return;
+    }
+    int32_t ret = ComparePcIdString(queryAbilityParams->second.want, rpcIdResult);
+    if (ret != 0) {
+        APP_LOGE("Compare pcId fail%{public}d", ret);
+        sendCallbackRequest(ret, queryAbilityParams->second);
+    } else {
+        sendCallbackRequest(rpcIdResult.retCode, queryAbilityParams->second);
+    }
+    queryAbilityParamsMap_.erase(rpcIdResult.transactId);
+}
+
+void BundleDistributedManager::sendCallbackRequest(int32_t resultCode, const QueryRpcIdParams &queryRpcIdParams)
+{
+    auto remoteObject = queryRpcIdParams.callback;
+    if (remoteObject == nullptr) {
+        APP_LOGE("sendCallbackRequest remoteObject is invalid");
+        return;
+    }
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    data.WriteInterfaceToken(DMS_BUNDLE_MANAGER_CALLBACK_TOKEN);
+    data.WriteInt32(resultCode);
+    data.WriteUint32(queryRpcIdParams.versionCode);
+    std::string deviceId = queryRpcIdParams.want.GetElement().GetDeviceID();
+    data.WriteString(deviceId);
+    data.WriteInt32(queryRpcIdParams.missionId);
+    int32_t result = remoteObject->SendRequest(QUERY_RPC_ID_BY_ABILITY, data, reply, option);
+    if (result != 0) {
+        APP_LOGE("failed to send request code:%{public}d", result);
+    }
+}
+}  // namespace AppExecFwk
+}  // namespace OHOS

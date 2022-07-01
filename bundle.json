@@ -37,6 +37,7 @@
                 "common_event_service",
                 "config_policy",
                 "device_manager",
+                "device_profile_core",
                 "device_usage_statistics",
                 "display_manager_native",
                 "distributeddatamgr",
@@ -58,6 +59,7 @@
                 "resource_management",
                 "samgr_standard",
                 "selinux",
+                "syscap_codec",
                 "utils_base",
                 "zlib"
             ],

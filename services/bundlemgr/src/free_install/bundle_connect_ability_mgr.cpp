@@ -423,6 +423,24 @@ void BundleConnectAbilityMgr::SendRequest(
     OutTimeMonitor(targetAbilityInfo.targetInfo.transactId);
 }
 
+bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply)
+{
+    APP_LOGI("BundleConnectAbilityMgr::SendRequest to fa service manager");
+    serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
+    if (serviceCenterRemoteObject_ == nullptr) {
+        APP_LOGE("failed to get remote object");
+        return false;
+    }
+    MessageOption option(MessageOption::TF_ASYNC);
+    int32_t result = serviceCenterRemoteObject_->SendRequest(code, data, reply, option);
+    if (result != ERR_OK) {
+        APP_LOGE("failed to send request code:%{public}d", code);
+        return false;
+    }
+    APP_LOGI("send request code:%{public}d success", code);
+    return true;
+}
+
 sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(std::string transactId)
 {
     APP_LOGI("GetAbilityManagerServiceCallBack");
