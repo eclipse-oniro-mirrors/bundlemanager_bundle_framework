@@ -144,7 +144,8 @@ public:
      * @param abilityInfo Indicates the obtained AbilityInfo object.
      * @return Returns true if the AbilityInfo is successfully obtained; returns false otherwise.
      */
-    bool QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo) const;
+    bool QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
+        int32_t appIndex = 0) const;
     /**
      * @brief Query a AbilityInfo of list by the given Want.
      * @param want Indicates the information of the ability.
@@ -609,7 +610,7 @@ public:
      * @return Returns true if the ExtensionAbilityInfo is successfully obtained; returns false otherwise.
      */
     bool QueryExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &extensionInfos) const;
+        std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     /**
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
@@ -715,6 +716,8 @@ public:
     bool GetElement(int32_t userId, const ElementName& elementName, Element& element) const;
 #endif
 
+    int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
+
 private:
     /**
      * @brief Init transferStates.
@@ -755,23 +758,21 @@ private:
      * @param abilityInfos Indicates the obtained AbilityInfo of list.
      * @return Returns true if the AbilityInfo is successfully obtained; returns false otherwise.
      */
-    bool ImplicitQueryAbilityInfos(
-        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    bool ImplicitQueryAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
-    bool ExplicitQueryAbilityInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, int32_t flags, int32_t userId, AbilityInfo &abilityInfo) const;
+    bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
+        int32_t appIndex = 0) const;
 
-    int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
     bool GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
-    bool ExplicitQueryExtensionInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &extensionName, int32_t flags,
-        int32_t userId, ExtensionAbilityInfo &extensionInfo) const;
+    bool ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
+        ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     bool ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &extensionInfos) const;
+        std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &einfos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
@@ -788,6 +789,16 @@ private:
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
     void CompatibleOldBundleStateInKvDb();
     void ResetBundleStateData();
+    bool QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
+        const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const;
+    bool ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
+    void ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
+    bool ImplicitQueryCurExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+    void ImplicitQueryAllExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
