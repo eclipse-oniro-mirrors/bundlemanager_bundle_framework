@@ -25,9 +25,12 @@ namespace OHOS {
 namespace AppExecFwk {
 enum ErrorCode {
     NO_ERROR = 0,
-    GET_DEVICE_PROFILE_FAILED = -101,
-    DECODE_SYS_CAP_FAILED = -102,
-    COMPARE_PC_ID_FAILED = -103,
+    CONNECT_FAILED = -100,
+    SEND_REQUEST_FAILED = -101,
+    WAITING_TIMEOUT = -102,
+    GET_DEVICE_PROFILE_FAILED = -103,
+    DECODE_SYS_CAP_FAILED = -104,
+    COMPARE_PC_ID_FAILED = -105,
 };
 
 struct QueryRpcIdParams : public virtual RefBase {

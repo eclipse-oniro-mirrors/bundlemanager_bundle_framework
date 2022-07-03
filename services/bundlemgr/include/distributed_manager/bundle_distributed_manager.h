@@ -38,9 +38,11 @@ public:
 private:
     void Init();
     bool ConvertTargetAbilityInfo(const Want &want, TargetAbilityInfo &targetAbilityInfo);
-    bool queryRpcIdByAbilityToServiceCenter(const TargetAbilityInfo &targetInfo);
-    void sendCallbackRequest(int32_t resultCode, const QueryRpcIdParams &queryRpcIdParams);
+    bool QueryRpcIdByAbilityToServiceCenter(const TargetAbilityInfo &targetInfo);
+    void SendCallbackRequest(int32_t resultCode, const std::string &transactId);
+    void SendCallback(int32_t resultCode, const QueryRpcIdParams &queryRpcIdParams);
     int32_t ComparePcIdString(const Want &want, const RpcIdResult &rpcIdResult);
+    void OutTimeMonitor(const std::string transactId);
     int GetTransactId() const
     {
         transactId_++;
