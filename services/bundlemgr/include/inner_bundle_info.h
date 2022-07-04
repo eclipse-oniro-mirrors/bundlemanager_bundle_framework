@@ -43,7 +43,7 @@ struct Distro {
 
 struct DefinePermission {
     std::string name;
-    std::string grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_DEFAULT_VALUE;
+    std::string grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT;
     std::string availableLevel = Profile::DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE;
     std::vector<std::string> availableScope;
     bool provisionEnable = true;

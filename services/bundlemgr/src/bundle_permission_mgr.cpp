@@ -77,7 +77,7 @@ void BundlePermissionMgr::ConvertPermissionDef(
     permDef.bundleName = bundleName;
     permDef.grantMode = [&definePermission]() -> int {
         if (definePermission.grantMode ==
-            ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS_GRANTMODE_SYSTEM_GRANT) {
+            ProfileReader::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT) {
             return AccessToken::GrantMode::SYSTEM_GRANT;
         }
         return AccessToken::GrantMode::USER_GRANT;

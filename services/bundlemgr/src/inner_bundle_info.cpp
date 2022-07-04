@@ -343,7 +343,6 @@ void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermissio
         {Profile::DEFINEPERMISSION_NAME, definePermission.name},
         {Profile::DEFINEPERMISSION_GRANT_MODE, definePermission.grantMode},
         {Profile::DEFINEPERMISSION_AVAILABLE_LEVEL, definePermission.availableLevel},
-        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS_AVAILABLESCOPE, definePermission.availableScope},
         {Profile::DEFINEPERMISSION_PROVISION_ENABLE, definePermission.provisionEnable},
         {Profile::DEFINEPERMISSION_DISTRIBUTED_SCENE_ENABLE, definePermission.distributedSceneEnable},
         {Profile::LABEL, definePermission.label},
@@ -1013,14 +1012,6 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS_AVAILABLESCOPE,
-        definePermission.availableScope,
-        JsonType::ARRAY,
-        false,
-        ProfileReader::parseResult,
-        ArrayType::STRING);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_PROVISION_ENABLE,
