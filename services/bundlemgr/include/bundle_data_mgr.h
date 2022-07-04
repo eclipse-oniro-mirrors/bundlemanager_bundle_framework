@@ -41,7 +41,7 @@
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 #include "pixel_map.h"
 #endif
-#include "preinstall_data_storage.h"
+#include "preinstall_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
 #endif
@@ -828,7 +828,7 @@ private:
     // current-status:previous-statue pair
     std::multimap<InstallState, InstallState> transferStates_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
-    std::shared_ptr<PreInstallDataStorage> preInstallDataStorage_;
+    std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<DistributedDataStorage> distributedDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
     std::vector<PreInstallBundleInfo> preInstallBundleInfos_;

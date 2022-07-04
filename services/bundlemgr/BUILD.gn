@@ -260,6 +260,14 @@ ohos_shared_library("libbms") {
     defines += [ "USE_PRE_BUNDLE_PROFILE" ]
   }
 
+  if (bms_rdb_enable) {
+    defines += [ "BMS_RDB_ENABLE" ]
+    sources += [
+      "src/bundle_data_storage_rdb.cpp",
+      "src/preinstall_data_storage_rdb.cpp",
+    ]
+  }
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
