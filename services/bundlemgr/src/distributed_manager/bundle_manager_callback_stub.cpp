@@ -29,10 +29,26 @@ BundleManagerCallbackStub::BundleManagerCallbackStub()
 int32_t BundleManagerCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    std::string token = Str16ToStr8(data.ReadInterfaceToken());
+    APP_LOGI("bundle mgr callback onReceived message, the message code is %{public}u", code);
+    std::u16string descriptor = BundleManagerCallbackStub::GetDescriptor();
+    std::u16string token = data.ReadInterfaceToken();
+    if (descriptor != token) {
+        APP_LOGE("OnRemoteRequest token is invalid");
+        return OBJECT_NULL;
+    }
+    switch (code) {
+        case static_cast<uint32_t>(IBundleManagerCallback::Message::QUERY_RPC_ID_CALLBACK):
+            return HandleQueryRpcIdCallBack(data, reply);
+        default:
+            APP_LOGW("BundleManagerCallbackStub receives unknown code, code = %{public}d", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+    return NO_ERROR;
+}
+
+int32_t BundleManagerCallbackStub::HandleQueryRpcIdCallBack(MessageParcel &data, MessageParcel &reply)
+{
     std::string queryRpcIdResult = Str16ToStr8(data.ReadString16());
-    APP_LOGI("BundleManagerCallbackStub code:%{public}d, queryRpcIdResult:%{public}s",
-        code, queryRpcIdResult.c_str());
     return OnQueryRpcIdFinished(queryRpcIdResult);
 }
 }  // namespace AppExecFwk

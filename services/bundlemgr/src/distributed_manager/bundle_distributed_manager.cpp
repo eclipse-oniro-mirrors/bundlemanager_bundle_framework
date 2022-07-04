@@ -27,8 +27,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t CHECK_ABILITY_ENABLE_INSTALL = 0;
+const int32_t CHECK_ABILITY_ENABLE_INSTALL = 1;
 const int32_t QUERY_RPC_ID_BY_ABILITY = 1;
+const uint32_t OUT_TIME = 3000;
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "com.ohos.hag.famanager.HapInstallServiceAbility";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
@@ -147,6 +148,10 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
 {
     APP_LOGI("BundleDistributedManager::CheckAbilityEnableInstall");
+    if (handler_ == nullptr) {
+        APP_LOGE("handler_ is nullptr");
+        return false;
+    }
     AppExecFwk::TargetAbilityInfo targetAbilityInfo;
     if (!ConvertTargetAbilityInfo(want, targetAbilityInfo)) {
         return false;
@@ -157,7 +162,7 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
         return false;
     }
     ApplicationInfo applicationInfo;
-    if (dataMgr->GetApplicationInfo(
+    if (!dataMgr->GetApplicationInfo(
         targetAbilityInfo.targetInfo.bundleName, 0, Constants::UNSPECIFIED_USERID, applicationInfo)) {
         APP_LOGE("fail to get bundleName:%{public}s application", targetAbilityInfo.targetInfo.bundleName.c_str());
         return false;
@@ -177,15 +182,15 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
         return false;
     }
     auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
-        this->queryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+        this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
     };
     handler_->PostTask(queryRpcIdByAbilityFunc, targetAbilityInfo.targetInfo.transactId.c_str());
     return true;
 }
 
-bool BundleDistributedManager::queryRpcIdByAbilityToServiceCenter(const TargetAbilityInfo &targetAbilityInfo)
+bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAbilityInfo &targetAbilityInfo)
 {
-    APP_LOGI("queryRpcIdByAbilityToServiceCenter");
+    APP_LOGI("QueryRpcIdByAbilityToServiceCenter");
     auto connectAbility = DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
     if (connectAbility == nullptr) {
         APP_LOGE("fail to connect ServiceCenter");
@@ -196,6 +201,7 @@ bool BundleDistributedManager::queryRpcIdByAbilityToServiceCenter(const TargetAb
     bool ret = connectAbility->ConnectAbility(serviceCenterWant, nullptr);
     if (!ret) {
         APP_LOGE("fail to connect ServiceCenter");
+        SendCallbackRequest(ErrorCode::CONNECT_FAILED, targetAbilityInfo.targetInfo.transactId);
         return false;
     }
     const std::string targetInfo = GetJsonStrFromInfo(targetAbilityInfo);
@@ -216,12 +222,28 @@ bool BundleDistributedManager::queryRpcIdByAbilityToServiceCenter(const TargetAb
         APP_LOGE("failed to write remote object");
         return false;
     }
-    ret = connectAbility->SendRequest(CHECK_ABILITY_ENABLE_INSTALL, data, reply);
+    ret = connectAbility->SendRequest(QUERY_RPC_ID_BY_ABILITY, data, reply);
     if (!ret) {
         APP_LOGE("send request to serviceCenter failed");
+        SendCallbackRequest(ErrorCode::SEND_REQUEST_FAILED, targetAbilityInfo.targetInfo.transactId);
         return false;
     }
+    OutTimeMonitor(targetAbilityInfo.targetInfo.transactId);
     return true;
+}
+
+void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
+{
+    APP_LOGI("BundleDistributedManager::OutTimeMonitor");
+    if (handler_ == nullptr) {
+        APP_LOGE("OutTimeMonitor, handler is nullptr");
+        return;
+    }
+    auto registerEventListenerFunc = [this, transactId]() {
+        APP_LOGI("RegisterEventListenerFunc transactId:%{public}s", transactId.c_str());
+        this->SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, transactId);
+    };
+    handler_->PostTask(registerEventListenerFunc, transactId, OUT_TIME, AppExecFwk::EventQueue::Priority::LOW);
 }
 
 void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
@@ -236,33 +258,69 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
     }
+    if (handler_ != nullptr) {
+        handler_->RemoveTask(rpcIdResult.transactId);
+    }
     int32_t ret = ComparePcIdString(queryAbilityParams->second.want, rpcIdResult);
     if (ret != 0) {
         APP_LOGE("Compare pcId fail%{public}d", ret);
-        sendCallbackRequest(ret, queryAbilityParams->second);
+        SendCallbackRequest(ret, rpcIdResult.transactId);
     } else {
-        sendCallbackRequest(rpcIdResult.retCode, queryAbilityParams->second);
+        SendCallbackRequest(rpcIdResult.retCode, rpcIdResult.transactId);
     }
-    queryAbilityParamsMap_.erase(rpcIdResult.transactId);
 }
 
-void BundleDistributedManager::sendCallbackRequest(int32_t resultCode, const QueryRpcIdParams &queryRpcIdParams)
+void BundleDistributedManager::SendCallbackRequest(int32_t resultCode, const std::string &transactId)
+{
+    APP_LOGI("sendCallbackRequest resultCode:%{public}d, transactId:%{public}s", resultCode, transactId.c_str());
+    auto queryAbilityParams = queryAbilityParamsMap_.find(transactId);
+    if (queryAbilityParams == queryAbilityParamsMap_.end()) {
+        APP_LOGE("Can not find transactId:%{public}s in queryAbilityParamsMap", transactId.c_str());
+        return;
+    }
+    SendCallback(resultCode, queryAbilityParams->second);
+    queryAbilityParamsMap_.erase(transactId);
+    if (queryAbilityParamsMap_.size() == 0) {
+        auto connectAbility = DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
+        if (connectAbility == nullptr) {
+            APP_LOGW("fail to connect ServiceCenter");
+            return;
+        }
+        connectAbility->DisconnectAbility();
+    }
+}
+
+void BundleDistributedManager::SendCallback(int32_t resultCode, const QueryRpcIdParams &queryRpcIdParams)
 {
     auto remoteObject = queryRpcIdParams.callback;
     if (remoteObject == nullptr) {
-        APP_LOGE("sendCallbackRequest remoteObject is invalid");
+        APP_LOGW("sendCallbackRequest remoteObject is invalid");
         return;
     }
     MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_BUNDLE_MANAGER_CALLBACK_TOKEN)) {
+        APP_LOGE("failed to sendCallback due to write MessageParcel fail");
+        return;
+    }
+    if (!data.WriteInt32(resultCode)) {
+        APP_LOGE("fail to sendCallback due to write resultCode fail");
+        return;
+    }
+    if (!data.WriteUint32(queryRpcIdParams.versionCode)) {
+        APP_LOGE("fail to sendCallback due to write versionCode fail");
+        return;
+    }
+    if (!data.WriteString(queryRpcIdParams.want.GetElement().GetDeviceID())) {
+        APP_LOGE("fail to sendCallback due to write deviceId fail");
+        return;
+    }
+    if (!data.WriteInt32(queryRpcIdParams.missionId)) {
+        APP_LOGE("fail to sendCallback due to write missionId fail");
+        return;
+    }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    data.WriteInterfaceToken(DMS_BUNDLE_MANAGER_CALLBACK_TOKEN);
-    data.WriteInt32(resultCode);
-    data.WriteUint32(queryRpcIdParams.versionCode);
-    std::string deviceId = queryRpcIdParams.want.GetElement().GetDeviceID();
-    data.WriteString(deviceId);
-    data.WriteInt32(queryRpcIdParams.missionId);
-    int32_t result = remoteObject->SendRequest(QUERY_RPC_ID_BY_ABILITY, data, reply, option);
+    int32_t result = remoteObject->SendRequest(CHECK_ABILITY_ENABLE_INSTALL, data, reply, option);
     if (result != 0) {
         APP_LOGE("failed to send request code:%{public}d", result);
     }

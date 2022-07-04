@@ -72,6 +72,11 @@ public:
      */
     bool ConnectAbility(const Want &want, const sptr<IRemoteObject> &callerToken);
 
+    /**
+     * @brief Disconnect service center
+     */
+    void DisconnectAbility();
+
     bool SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply);
 
 private:
@@ -141,11 +146,6 @@ private:
      */
     bool CheckIsModuleNeedUpdate(
         InnerBundleInfo &innerBundleInfo, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack);
-
-    /**
-     * @brief Disconnect service center
-     */
-    void DisconnectAbility();
 
     /**
      * @brief Send atomic service status callback to ability manager service
