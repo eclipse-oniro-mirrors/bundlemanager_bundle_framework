@@ -266,7 +266,7 @@ void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 }
 
 bool BundleMgrHostImpl::CheckAbilityEnableInstall(
-    const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
+    const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
     auto elementName = want.GetElement();
     if (elementName.GetDeviceID().empty() || elementName.GetBundleName().empty() ||
@@ -279,7 +279,7 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
         APP_LOGE("bundleDistributedManager failed");
         return false;
     }
-    return bundleDistributedManager->CheckAbilityEnableInstall(want, missionId, callback);
+    return bundleDistributedManager->CheckAbilityEnableInstall(want, missionId, userId, callback);
 }
 #endif
 

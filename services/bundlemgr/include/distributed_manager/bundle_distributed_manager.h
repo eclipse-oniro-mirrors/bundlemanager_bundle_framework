@@ -32,7 +32,8 @@ public:
     BundleDistributedManager();
     ~BundleDistributedManager();
 
-    bool CheckAbilityEnableInstall(const Want &want, int32_t missionId, const sptr<IRemoteObject> &callerToken);
+    bool CheckAbilityEnableInstall(
+        const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callerToken);
 
     void OnQueryRpcIdFinished(const std::string &queryRpcIdResult);
 private:

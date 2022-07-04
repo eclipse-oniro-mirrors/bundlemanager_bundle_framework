@@ -1768,9 +1768,10 @@ ErrCode BundleMgrHost::HandleCheckAbilityEnableInstall(Parcel &data, Parcel &rep
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t missionId = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
     sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
 
-    auto ret = CheckAbilityEnableInstall(*want, missionId, object);
+    auto ret = CheckAbilityEnableInstall(*want, missionId, userId, object);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

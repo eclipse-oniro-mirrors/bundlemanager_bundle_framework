@@ -205,7 +205,7 @@ public:
         AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack) override;
 
     virtual bool CheckAbilityEnableInstall(
-        const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback) override;
+        const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback) override;
 #endif
     /**
      * @brief Obtains the AbilityInfo based on a given bundle name through the proxy object.

@@ -2575,7 +2575,7 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
 }
 
 bool BundleMgrProxy::CheckAbilityEnableInstall(
-    const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
+    const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
     APP_LOGI("begin to CheckAbilityEnableInstall");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2593,6 +2593,11 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
 
     if (!data.WriteInt32(missionId)) {
         APP_LOGE("fail to CheckAbilityEnableInstall due to write missionId fail");
+        return false;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CheckAbilityEnableInstall due to write userId fail");
         return false;
     }
 

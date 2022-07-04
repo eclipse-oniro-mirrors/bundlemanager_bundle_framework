@@ -642,7 +642,7 @@ public:
         std::vector<int64_t> &bundleStats) override;
 
     virtual bool CheckAbilityEnableInstall(
-        const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback) override;
+        const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback) override;
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
