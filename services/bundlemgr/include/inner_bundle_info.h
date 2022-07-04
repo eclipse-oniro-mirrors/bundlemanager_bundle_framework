@@ -1476,22 +1476,22 @@ public:
 
     const std::string &GetNativeLibraryPath() const
     {
-        return baseApplicationInfo_.nativeLibraryPath;
+        return baseApplicationInfo_->nativeLibraryPath;
     }
 
     void SetNativeLibraryPath(const std::string &nativeLibraryPath)
     {
-        baseApplicationInfo_.nativeLibraryPath = nativeLibraryPath;
+        baseApplicationInfo_->nativeLibraryPath = nativeLibraryPath;
     }
 
     const std::string &GetCpuAbi() const
     {
-        return baseApplicationInfo_.cpuAbi;
+        return baseApplicationInfo_->cpuAbi;
     }
 
     void SetCpuAbi(const std::string &cpuAbi)
     {
-        baseApplicationInfo_.cpuAbi = cpuAbi;
+        baseApplicationInfo_->cpuAbi = cpuAbi;
     }
 
     void SetDisposedStatus(int32_t status);
