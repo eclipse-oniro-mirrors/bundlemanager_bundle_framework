@@ -105,7 +105,6 @@ const std::string BUNDLE_MODULE_PROFILE_KEY_ABILITIES = "abilities";
 const std::string BUNDLE_MODULE_PROFILE_KEY_JS = "js";
 const std::string BUNDLE_MODULE_PROFILE_KEY_COMMON_EVENTS = "commonEvents";
 const std::string BUNDLE_MODULE_PROFILE_KEY_SHORTCUTS = "shortcuts";
-const std::string BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS = "defPermissions";
 const std::string BUNDLE_MODULE_PROFILE_KEY_DEFINE_PERMISSIONS = "definePermissions";
 const std::string BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS_NAME = "name";
 const std::string BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS_GRANTMODE = "grantMode";

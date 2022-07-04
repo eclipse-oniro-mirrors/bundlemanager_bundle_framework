@@ -319,7 +319,6 @@ struct Module {
     std::vector<Js> jses;
     std::vector<CommonEvent> commonEvents;
     std::vector<Shortcut> shortcuts;
-    std::vector<DefinePermission> defPermissions;
     std::vector<RequestPermission> requestPermissions;
     std::vector<DefinePermission> definePermissions;
     std::string mainAbility;
@@ -1740,14 +1739,6 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<DefinePermission>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS,
-        module.defPermissions,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<RequestPermission>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_MODULE_PROFILE_KEY_REQ_PERMISSIONS,
@@ -2142,7 +2133,6 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.reqCapabilities = configJson.module.reqCapabilities;
     innerModuleInfo.requestPermissions = configJson.module.requestPermissions;
     innerModuleInfo.definePermissions = configJson.module.definePermissions;
-    innerModuleInfo.defPermissions = configJson.module.defPermissions;
     if (configJson.module.mainAbility.substr(0, 1) == ".") {
         innerModuleInfo.mainAbility = configJson.module.package + configJson.module.mainAbility;
     } else {

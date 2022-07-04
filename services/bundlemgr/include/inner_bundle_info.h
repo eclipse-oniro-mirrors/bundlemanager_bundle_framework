@@ -79,7 +79,6 @@ struct InnerModuleInfo {
     ModuleColorMode colorMode = ModuleColorMode::AUTO;
     Distro distro;
     std::vector<std::string> reqCapabilities;
-    std::vector<DefinePermission> defPermissions;
     std::vector<std::string> abilityKeys;
     std::vector<std::string> skillKeys;
     // new version fields
@@ -872,15 +871,6 @@ public:
     }
 
     const std::string &GetCurModuleName() const;
-
-    std::vector<DefinePermission> GetDefPermissions() const
-    {
-        std::vector<DefinePermission> defPermissions;
-        if (innerModuleInfos_.count(currentPackage_) == 1) {
-            defPermissions = innerModuleInfos_.at(currentPackage_).defPermissions;
-        }
-        return defPermissions;
-    }
 
     std::vector<DefinePermission> GetDefinePermissions() const
     {
