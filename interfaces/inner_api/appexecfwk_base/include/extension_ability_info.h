@@ -42,6 +42,8 @@ enum class ExtensionAbilityType {
     WALLPAPER = 8,
     BACKUP = 9,
     WINDOW = 10,
+    ENTERPRISE_ADMIN = 11,
+    FILEACCESS_EXTENSION = 12,
     UNSPECIFIED = 20
 };
 

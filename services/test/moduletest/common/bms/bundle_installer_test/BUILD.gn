@@ -29,7 +29,6 @@ ohos_moduletest("BmsBundleInstallerModuleTest") {
   ]
 
   include_dirs = [
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
     "//third_party/json/include",
     "//third_party/jsoncpp/include",
     "${services_path}/test/mock/include",

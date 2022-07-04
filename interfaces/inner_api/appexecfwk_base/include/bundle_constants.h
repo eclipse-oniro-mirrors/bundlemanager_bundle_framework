@@ -41,12 +41,11 @@ const std::string BUNDLE_DATA_BASE_DIR = "/data/bundlemgr";
 const std::string BUNDLE_DATA_BASE_FILE = BUNDLE_DATA_BASE_DIR + "/bmsdb.json";
 const std::string SYSTEM_APP_SCAN_PATH = "/system/app";
 const std::string SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
-const std::string SYSTEM_APP_INSTALL_PATH = "/data/accounts";
+const std::string SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
 const std::string THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
-const std::string THIRD_SYSTEM_APP_INSTALL_PATH = "/data/accounts";
-const std::string THIRD_PARTY_APP_INSTALL_PATH = "/data/accounts";
-const std::string EXTRACT_TMP_PATH = "/data/sadata/install_tmp/bundle_haps";
-const std::string HAP_COPY_PATH = "/data/sadata/install_tmp/Tmp_";
+const std::string THIRD_SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
+const std::string THIRD_PARTY_APP_INSTALL_PATH = "/data/app/el1/bundle";
+const std::string HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 const std::string USER_ACCOUNT_DIR = "account";
 const std::string APP_CODE_DIR = "applications";
 const std::string APP_DATA_DIR = "appdata";
@@ -67,6 +66,7 @@ const std::string DATABASE = "/database/";
 const std::string HAPS = "/haps/";
 const std::string BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 const std::string BUNDLE_USER_INFO_PATH = BUNDLE_MANAGER_SERVICE_PATH + "/bundle_user_info.json";
+const std::string BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
 const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 const std::string DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
@@ -76,9 +76,7 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/files",
     "/temp",
     "/preferences",
-    "/haps",
-    "/el3/base",
-    "/el4/base"
+    "/haps"
 };
 
 const std::string BMS_SERVICE_NAME = "BundleMgrService";
@@ -129,6 +127,7 @@ constexpr int32_t INVALID_BUNDLEID = -1;
 constexpr int32_t INVALID_ACCESS_TOKEN_ID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t BMS_UID = 1000;
+constexpr int32_t BACKU_HOME_GID = 1089;
 constexpr int32_t FOUNDATION_UID = 5523;
 constexpr int32_t BMS_GID = 1000;
 constexpr int32_t BASE_SYS_UID = 2100;
@@ -218,6 +217,7 @@ const std::string HOS_SYSTEM_APP = "hos_system_app";
 const std::string OHOS_SYSTEM_APP = "ohos_system_app";
 
 // ipc
+constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 
 // file size
@@ -258,6 +258,12 @@ const std::string APP_PROVISION_TYPE_RELEASE = "release";
 
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
+
+// syscap
+const std::string SYSCAP_SERVICE_ID = "syscap";
+const std::string SYSCAP_SERVICE_TYPE = "syscap";
+const std::string CHARACTER_OS_SYSCAP = "ossyscap";
+const std::string CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -18,6 +18,7 @@ config("appexecfwk_base_sdk_config") {
   include_dirs = [
     "include",
     "include/free_install",
+    "include/distributed_manager",
     "//third_party/json/include",
   ]
 }
@@ -34,6 +35,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/compatible_application_info.cpp",
     "src/distributed_ability_info.cpp",
     "src/distributed_bundle_info.cpp",
+    "src/distributed_manager/rpc_id_result.cpp",
     "src/distributed_module_info.cpp",
     "src/extension_ability_info.cpp",
     "src/extension_form_info.cpp",

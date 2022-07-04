@@ -31,6 +31,8 @@ int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
 {
     data.ReadInterfaceToken();
     auto result = data.ReadString16();
+    APP_LOGI("ServiceCenterStatusCallbackStub OnRemoteRequest:code:%{public}d, result:%{public}s",
+        code, Str16ToStr8(result).c_str());
     return OnInstallFinished(Str16ToStr8(result));
 }
 }  // namespace AppExecFwk

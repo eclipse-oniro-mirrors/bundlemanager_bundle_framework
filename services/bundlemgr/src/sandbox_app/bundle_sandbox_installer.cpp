@@ -120,7 +120,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
     info.SetBundleUpdateTime(0, userId_);
     info.SetAccessTokenId(newTokenId, userId_);
-
+    APP_LOGD("InstallSandboxApp generate uid of sandbox is %{public}d", userInfo.uid);
     ErrCode result = CreateSandboxDataDir(info, userInfo.uid, newAppIndex);
     if (result != ERR_OK) {
         APP_LOGE("InstallSandboxApp create sandbox dir failed");

@@ -20,10 +20,7 @@ module_output_path = "bundle_framework/bundlemgrservice"
 ohos_unittest("BmsBundleInstallerTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
@@ -84,7 +81,6 @@ ohos_unittest("BmsBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
 
   defines = []
@@ -104,13 +100,16 @@ ohos_unittest("BmsBundleInstallerTest") {
   if (bundle_framework_free_install) {
     sources += aging
     sources += free_install
+    sources += distributed_manager
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager_native:batterysrv_client",
+      "device_profile_core:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager_native:displaymgr",
       "power_manager_native:powermgr_client",
+      "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
@@ -141,10 +140,7 @@ ohos_unittest("BmsBundleInstallerTest") {
 ohos_unittest("BmsMultipleBundleInstallerTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
@@ -205,7 +201,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
   ]
 
   defines = []
@@ -227,13 +222,16 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   if (bundle_framework_free_install) {
     sources += aging
     sources += free_install
+    sources += distributed_manager
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager_native:batterysrv_client",
+      "device_profile_core:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager_native:displaymgr",
       "power_manager_native:powermgr_client",
+      "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }

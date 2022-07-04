@@ -202,5 +202,33 @@ std::unordered_map<std::string, InnerBundleInfo> BundleSandboxDataMgr::GetSandbo
     std::shared_lock<std::shared_mutex> lock(sandboxAppMutex_);
     return sandboxAppInfos_;
 }
+
+ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+    HapModuleInfo &hapModuleInfo)
+{
+    APP_LOGD("GetSandboxHapModuleInfo %{public}s", abilityInfo.bundleName.c_str());
+    // check appIndex
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(sandboxAppMutex_);
+    auto key = abilityInfo.bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto infoItem = sandboxAppInfos_.find(key);
+    if (infoItem == sandboxAppInfos_.end()) {
+        APP_LOGE("no sandbox app can be found %{public}s", abilityInfo.bundleName.c_str());
+        return ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP;
+    }
+
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    auto module = innerBundleInfo.FindHapModuleInfo(abilityInfo.package, responseUserId);
+    if (!module) {
+        APP_LOGE("can not find module %{public}s", abilityInfo.package.c_str());
+        return ERR_APPEXECFWK_SANDBOX_QUERY_NO_MODULE_INFO;
+    }
+    hapModuleInfo = *module;
+    return ERR_OK;
+}
 } // AppExecFwk
 } // OHOS

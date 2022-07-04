@@ -21,12 +21,16 @@
         "deps": {
             "components": [
                 "ability_base",
+                "access_token",
                 "bundle_framework",
-                "distributeddatamgr",
+                "common",
                 "hisysevent_native",
                 "hiviewdfx_hilog_native",
+                "i18n",
                 "ipc",
+                "libpng",
                 "napi",
+                "os_account",
                 "resource_management",
                 "safwk",
                 "samgr_standard",

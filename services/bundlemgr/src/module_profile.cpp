@@ -81,7 +81,9 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "staticSubscriber",
     "wallpaper",
     "backup",
-    "window"
+    "window",
+    "enterpriseAdmin",
+    "fileAccess"
 };
 
 const std::set<std::string> ENTITY_TYPE_SET = {

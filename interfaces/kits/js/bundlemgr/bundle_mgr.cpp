@@ -3390,6 +3390,7 @@ static void ConvertInstallResult(InstallResult &installResult)
                 installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_ABORTED";
                 break;
             }
+            [[fallthrough]];
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR):
             if (CheckIsSystemApp()) {
@@ -3397,6 +3398,7 @@ static void ConvertInstallResult(InstallResult &installResult)
                 installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_CONFLICT";
                 break;
             }
+            [[fallthrough]];
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_BUNDLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE):
@@ -6883,6 +6885,16 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::WINDOW), &nWindow));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WINDOW", nWindow));
 
+    napi_value nFileAccess;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION), &nFileAccess));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILEACCESS_EXTENSION", nFileAccess));
+
+    napi_value nEnterpriseAdmin;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN), &nEnterpriseAdmin));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_ADMIN", nEnterpriseAdmin));
+
     napi_value nUnspecified;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
@@ -7014,7 +7026,7 @@ static bool InnerGetProfile(napi_env env, AsyncGetProfileInfo &info)
             APP_LOGE("InnerGetProfile failed due to no ability info");
             return false;
         }
-        return client.GetProfileFromSandDir(abilityInfo, info.metadataName, info.profileVec);
+        return client.GetProfileFromAbility(abilityInfo, info.metadataName, info.profileVec);
     }
     if (info.type == ProfileType::EXTENSION_PROFILE) {
         std::vector<ExtensionAbilityInfo> extensionInfos;
@@ -7024,7 +7036,7 @@ static bool InnerGetProfile(napi_env env, AsyncGetProfileInfo &info)
             APP_LOGE("InnerGetProfile failed due to no extension ability info");
             return false;
         }
-        return client.GetProfileFromSandDir(extensionInfos[0], info.metadataName, info.profileVec);
+        return client.GetProfileFromExtension(extensionInfos[0], info.metadataName, info.profileVec);
     }
     APP_LOGE("InnerGetProfile failed due to incorrect profile type");
     return false;

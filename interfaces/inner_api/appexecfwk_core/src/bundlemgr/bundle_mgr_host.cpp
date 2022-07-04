@@ -172,6 +172,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_DISPOSED_STATUS, &BundleMgrHost::HandleGetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, &BundleMgrHost::HandleObtainCallingBundleName);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_STATS, &BundleMgrHost::HandleGetBundleStats);
+    funcMap_.emplace(IBundleMgr::Message::CHECK_ABILITY_ENABLE_INSTALL,
+        &BundleMgrHost::HandleCheckAbilityEnableInstall);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, &BundleMgrHost::HandleGetDefaultAppProxy);
 #endif
@@ -292,6 +294,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(Parcel &data, Parcel &reply)
     int userId = data.ReadInt32();
     APP_LOGI("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flag, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
@@ -314,6 +317,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(Parcel &data, Parcel &rep
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flags, info, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
@@ -1748,6 +1752,26 @@ ErrCode BundleMgrHost::HandleObtainCallingBundleName(Parcel &data, Parcel &reply
         APP_LOGE("write bundleName failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCheckAbilityEnableInstall(Parcel &data, Parcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t missionId = data.ReadInt32();
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+
+    auto ret = CheckAbilityEnableInstall(*want, missionId, object);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
     return ERR_OK;
 }
 

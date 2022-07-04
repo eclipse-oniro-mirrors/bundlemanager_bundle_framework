@@ -32,7 +32,7 @@ using namespace OHOS::AAFwk;
 namespace {
 constexpr int32_t NO_ERROR = 0;
 constexpr int32_t PARAM_TYPE_ERROR = 1;
-constexpr int32_t EXECUTE_ERROR = 1;
+constexpr int32_t EXECUTE_ERROR = 2;
 
 constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
@@ -450,7 +450,7 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
                     ConvertBundleInfo(env, result[1], asyncCallbackInfo->bundleInfo);
                 } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, EXECUTE_ERROR, &result[0]));
                     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
                 }
             }
@@ -541,7 +541,7 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
         [](napi_env env, napi_status status, void *data) {
             DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
-            if (!asyncCallbackInfo->result) {
+            if (asyncCallbackInfo->errCode == NO_ERROR && !asyncCallbackInfo->result) {
                 asyncCallbackInfo->errCode = EXECUTE_ERROR;
             }
             napi_value result[1] = { 0 };
@@ -635,7 +635,7 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
         [](napi_env env, napi_status status, void *data) {
             DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
-            if (!asyncCallbackInfo->result) {
+            if (asyncCallbackInfo->errCode == NO_ERROR && !asyncCallbackInfo->result) {
                 asyncCallbackInfo->errCode = EXECUTE_ERROR;
             }
             napi_value result[1] = { 0 };

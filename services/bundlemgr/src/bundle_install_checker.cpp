@@ -363,7 +363,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
     }
     // check api sdk version
-    if ((infos.begin()->second).GetCompatibleVersion() > GetSdkApiVersion()) {
+    if ((infos.begin()->second).GetCompatibleVersion() > static_cast<uint32_t>(GetSdkApiVersion())) {
         return ERR_APPEXECFWK_INSTALL_SDK_INCOMPATIBLE;
     }
     APP_LOGD("finish check APP label");

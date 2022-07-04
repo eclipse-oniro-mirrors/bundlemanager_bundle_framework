@@ -22,7 +22,9 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
+#endif
 #include "hitrace_meter.h"
 #include "json_util.h"
 #include "securec.h"
@@ -2570,6 +2572,40 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
         return false;
     }
     return true;
+}
+
+bool BundleMgrProxy::CheckAbilityEnableInstall(
+    const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
+{
+    APP_LOGI("begin to CheckAbilityEnableInstall");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to CheckAbilityEnableInstall due to write MessageParcel fail");
+        return false;
+    }
+
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("fail to CheckAbilityEnableInstall due to write want fail");
+        return false;
+    }
+
+    if (!data.WriteInt32(missionId)) {
+        APP_LOGE("fail to CheckAbilityEnableInstall due to write missionId fail");
+        return false;
+    }
+
+    if (!data.WriteRemoteObject(callback)) {
+        APP_LOGE("fail to callback, for write parcel");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::CHECK_ABILITY_ENABLE_INSTALL, data, reply)) {
+        return false;
+    }
+    return reply.ReadBool();
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

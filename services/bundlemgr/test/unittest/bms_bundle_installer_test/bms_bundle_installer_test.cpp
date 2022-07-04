@@ -764,4 +764,29 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0400, Function | Sma
     }
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
+
+/**
+ * @tc.number: GetBundleStats_001
+ * @tc.name: test the GetBundleStats
+ * @tc.desc: 1.install the hap
+ *           2.GetBundleStats
+ * @tc.require: AR000H035G
+ */
+HWTEST_F(BmsBundleInstallerTest, GetBundleStats_001, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<int64_t> bundleStats;
+    auto ret = InstalldClient::GetInstance()->GetBundleStats(BUNDLE_BACKUP_NAME, USERID, bundleStats);
+    EXPECT_EQ(ret, ERR_OK);
+    if (!bundleStats.empty()) {
+        EXPECT_NE(bundleStats[0], 0);
+        for (size_t index = NUMBER_ONE; index < bundleStats.size(); index++) {
+            EXPECT_EQ(bundleStats[index], 0);
+        }
+    }
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
 } // OHOS

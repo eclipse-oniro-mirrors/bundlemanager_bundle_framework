@@ -62,7 +62,7 @@ ohos_unittest("bm_command_dump_test") {
   }
 
   deps = [
-    "${aafwk_path}/services/abilitymgr:abilityms",
+    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -78,11 +78,11 @@ ohos_unittest("bm_command_dump_test") {
     "distributeddatamgr:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
     "utils_base:utils",
   ]
 }
@@ -113,7 +113,7 @@ ohos_unittest("bm_command_install_test") {
   }
 
   deps = [
-    "${aafwk_path}/services/abilitymgr:abilityms",
+    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -129,11 +129,11 @@ ohos_unittest("bm_command_install_test") {
     "distributeddatamgr:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
     "utils_base:utils",
   ]
 }
@@ -164,7 +164,7 @@ ohos_unittest("bm_command_test") {
   }
 
   deps = [
-    "${aafwk_path}/services/abilitymgr:abilityms",
+    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -180,11 +180,11 @@ ohos_unittest("bm_command_test") {
     "distributeddatamgr:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
     "utils_base:utils",
   ]
 }
@@ -215,7 +215,7 @@ ohos_unittest("bm_command_uninstall_test") {
   }
 
   deps = [
-    "${aafwk_path}/services/abilitymgr:abilityms",
+    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -231,11 +231,11 @@ ohos_unittest("bm_command_uninstall_test") {
     "distributeddatamgr:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "startup_l2:syspara",
     "utils_base:utils",
   ]
 }

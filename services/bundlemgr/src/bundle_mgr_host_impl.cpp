@@ -264,6 +264,23 @@ void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
     }
     connectAbilityMgr->UpgradeAtomicService(want, userId);
 }
+
+bool BundleMgrHostImpl::CheckAbilityEnableInstall(
+    const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
+{
+    auto elementName = want.GetElement();
+    if (elementName.GetDeviceID().empty() || elementName.GetBundleName().empty() ||
+        elementName.GetModuleName().empty() || elementName.GetAbilityName().empty()) {
+        APP_LOGE("check ability install parameter is invalid");
+        return false;
+    }
+    auto bundleDistributedManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleDistributedManager();
+    if (bundleDistributedManager == nullptr) {
+        APP_LOGE("bundleDistributedManager failed");
+        return false;
+    }
+    return bundleDistributedManager->CheckAbilityEnableInstall(want, missionId, callback);
+}
 #endif
 
 bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo)

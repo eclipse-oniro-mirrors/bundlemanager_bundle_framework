@@ -23,6 +23,7 @@
 #include "distributed_ability_info.h"
 #include "distributed_module_info.h"
 #include "form_info.h"
+#include "distributed_manager/rpc_id_result.h"
 #include "free_install/dispatch_info.h"
 #include "free_install/install_result.h"
 #include "free_install/target_ability_info.h"
@@ -111,6 +112,10 @@ void to_json(nlohmann::json &jsonObject, const BundlePackInfo &bundlePackInfo);
 void from_json(const nlohmann::json &jsonObject, BundlePackInfo &bundlePackInfo);
 void to_json(nlohmann::json &jsonObject, const Resource &resource);
 void from_json(const nlohmann::json &jsonObject, Resource &resource);
+void to_json(nlohmann::json &jsonObject, const SummaryAbilityInfo &summaryAbilityInfo);
+void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbilityInfo);
+void to_json(nlohmann::json &jsonObject, const RpcIdResult &rpcIdResult);
+void from_json(const nlohmann::json &jsonObject, RpcIdResult &rpcIdResult);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

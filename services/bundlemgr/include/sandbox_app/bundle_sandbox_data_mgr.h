@@ -41,6 +41,8 @@ public:
     std::unordered_map<std::string, InnerBundleInfo> GetSandboxAppInfoMap() const;
     ErrCode GetSandboxAppInfo(
         const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info) const;
+    ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+        HapModuleInfo &hapModuleInfo);
 
 private:
     mutable std::shared_mutex sandboxAppMutex_;

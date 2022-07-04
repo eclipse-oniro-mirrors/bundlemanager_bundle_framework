@@ -902,6 +902,11 @@ public:
         return false;
     }
 
+    virtual bool CheckAbilityEnableInstall(const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
+    {
+        return false;
+    }
+
     virtual bool ObtainCallingBundleName(std::string &bundleName)
     {
         return false;
@@ -1017,6 +1022,7 @@ public:
         QUERY_CALLING_BUNDLE_NAME,
         GET_DEFAULT_APP_PROXY,
         GET_BUNDLE_STATS,
+        CHECK_ABILITY_ENABLE_INSTALL,
     };
 };
 }  // namespace AppExecFwk
