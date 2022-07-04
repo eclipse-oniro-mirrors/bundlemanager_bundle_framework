@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct HqfInfo : public Parcelable {
     std::string moduleName;
-    std::string hapHash256;
+    std::string hapSha256;
     std::string hapFilePath;
 
     bool ReadFromParcel(Parcel &parcel);
