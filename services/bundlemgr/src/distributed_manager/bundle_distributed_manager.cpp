@@ -145,7 +145,7 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
 }
 
 bool BundleDistributedManager::CheckAbilityEnableInstall(
-    const Want &want, int32_t missionId, const sptr<IRemoteObject> &callback)
+    const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
     APP_LOGI("BundleDistributedManager::CheckAbilityEnableInstall");
     if (handler_ == nullptr) {
@@ -163,7 +163,7 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     }
     ApplicationInfo applicationInfo;
     if (!dataMgr->GetApplicationInfo(
-        targetAbilityInfo.targetInfo.bundleName, 0, Constants::UNSPECIFIED_USERID, applicationInfo)) {
+        targetAbilityInfo.targetInfo.bundleName, 0, userId, applicationInfo)) {
         APP_LOGE("fail to get bundleName:%{public}s application", targetAbilityInfo.targetInfo.bundleName.c_str());
         return false;
     }
@@ -308,10 +308,6 @@ void BundleDistributedManager::SendCallback(int32_t resultCode, const QueryRpcId
     }
     if (!data.WriteUint32(queryRpcIdParams.versionCode)) {
         APP_LOGE("fail to sendCallback due to write versionCode fail");
-        return;
-    }
-    if (!data.WriteString(queryRpcIdParams.want.GetElement().GetDeviceID())) {
-        APP_LOGE("fail to sendCallback due to write deviceId fail");
         return;
     }
     if (!data.WriteInt32(queryRpcIdParams.missionId)) {
