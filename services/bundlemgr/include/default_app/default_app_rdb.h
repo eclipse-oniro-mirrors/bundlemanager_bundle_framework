@@ -17,6 +17,7 @@
 #define FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_RDB
 
 #include "default_app_db_interface.h"
+#include "rdb_data_manager.h"
 
 namespace OHOS {
 namespace AppExecFwk {

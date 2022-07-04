@@ -16,12 +16,19 @@
 #include "bundle_data_storage_rdb.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_exception_handler.h"
+#include "bundle_sandbox_exception_handler.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
     APP_LOGI("instance:%{private}p is created", this);
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.tableName = Constants::BUNDLE_RDB_TABLE_NAME;
+    rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager_->Init();
 }
 
 BundleDataStorageRdb::~BundleDataStorageRdb()
@@ -31,17 +38,109 @@ BundleDataStorageRdb::~BundleDataStorageRdb()
 
 bool BundleDataStorageRdb::LoadAllData(std::map<std::string, InnerBundleInfo> &infos)
 {
-    return true;
+    APP_LOGI("Load all installed bundle data to map");
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    std::map<std::string, std::string> datas;
+    if (!rdbDataManager_->QueryAllData(datas)) {
+        APP_LOGE("QueryAllData failed");
+        return false;
+    }
+
+    TransformStrToInfo(datas, infos);
+    return !infos.empty();
+}
+
+void BundleDataStorageRdb::TransformStrToInfo(
+    const std::map<std::string, std::string> &datas,
+    std::map<std::string, InnerBundleInfo> &infos)
+{
+    APP_LOGI("TransformStrToInfo start");
+    if (rdbDataManager_ == nullptr || datas.empty()) {
+        APP_LOGE("rdbDataManager is null");
+        return;
+    }
+
+    std::map<std::string, InnerBundleInfo> updateInfos;
+    for (const auto &data : datas) {
+        InnerBundleInfo innerBundleInfo;
+        nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
+        if (jsonObject.is_discarded()) {
+            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            rdbDataManager_->DeleteData(data.first);
+            continue;
+        }
+
+        if (innerBundleInfo.FromJson(jsonObject) != ERR_OK) {
+            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            rdbDataManager_->DeleteData(data.first);
+            continue;
+        }
+
+        bool isBundleValid = true;
+        auto handler = std::make_shared<BundleExceptionHandler>(shared_from_this());
+        handler->HandleInvalidBundle(innerBundleInfo, isBundleValid);
+        auto sandboxHandler = std::make_shared<BundleSandboxExceptionHandler>(shared_from_this());
+        sandboxHandler->RemoveSandboxApp(innerBundleInfo);
+        if (!isBundleValid) {
+            continue;
+        }
+
+        infos.emplace(innerBundleInfo.GetBundleName(), innerBundleInfo);
+        // database update
+        std::string key = data.first;
+        if (key != innerBundleInfo.GetBundleName()) {
+            updateInfos.emplace(key, innerBundleInfo);
+        }
+    }
+
+    if (updateInfos.size() > 0) {
+        UpdateDataBase(updateInfos);
+    }
+}
+
+void BundleDataStorageRdb::UpdateDataBase(std::map<std::string, InnerBundleInfo>& infos)
+{
+    APP_LOGD("Begin to update database");
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return;
+    }
+
+    for (const auto& item : infos) {
+        if (SaveStorageBundleInfo(item.second)) {
+            rdbDataManager_->DeleteData(item.first);
+        }
+    }
+    APP_LOGD("Update database done");
 }
 
 bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
-    return true;
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    bool ret = rdbDataManager_->InsertData(
+        innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
+    APP_LOGD("SaveStorageBundleInfo %{public}d", ret);
+    return ret;
 }
 
 bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
-    return true;
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    bool ret = rdbDataManager_->DeleteData(innerBundleInfo.GetBundleName());
+    APP_LOGD("DeleteStorageBundleInfo %{public}d", ret);
+    return ret;
 }
 
 bool BundleDataStorageRdb::ResetKvStore()

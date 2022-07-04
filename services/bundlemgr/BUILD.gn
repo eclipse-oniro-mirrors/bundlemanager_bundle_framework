@@ -34,6 +34,10 @@ config("bundlemgr_common_config") {
   ]
 }
 
+config("rdb_config") {
+  include_dirs = [ "include/rdb" ]
+}
+
 config("bundlemgr_parse_config") {
   include_dirs = [
     "//third_party/json/include",
@@ -258,10 +262,14 @@ ohos_shared_library("libbms") {
   }
 
   if (bms_rdb_enable) {
+    configs += [ ":rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
+    external_deps += [ "relational_store:native_rdb" ]
     sources += [
       "src/bundle_data_storage_rdb.cpp",
       "src/preinstall_data_storage_rdb.cpp",
+      "src/rdb/bms_rdb_open_callback.cpp",
+      "src/rdb/rdb_data_manager.cpp",
     ]
   }
 

@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-BundleExceptionHandler::BundleExceptionHandler(const std::shared_ptr<BundleDataStorageDatabase> &dataStorage)
+BundleExceptionHandler::BundleExceptionHandler(const std::shared_ptr<IBundleDataStorage> &dataStorage)
     : dataStorage_(dataStorage)
 {
     APP_LOGD("create bundle excepetion handler instance");
