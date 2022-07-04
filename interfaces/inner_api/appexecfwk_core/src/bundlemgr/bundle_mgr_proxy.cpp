@@ -2636,6 +2636,105 @@ sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 }
 #endif
 
+ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+    AbilityInfo &info)
+{
+    APP_LOGD("begin to GetSandboxAbilityInfo");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("GetSandboxAbilityInfo params are invalid");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("WriteParcelable want failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("failed to GetSandboxAbilityInfo due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("failed to GetSandboxAbilityInfo due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetSandboxAbilityInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<AbilityInfo>(IBundleMgr::Message::GET_SANDBOX_APP_ABILITY_INFO, data, info);
+}
+
+ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos)
+{
+    APP_LOGD("begin to GetSandboxExtAbilityInfos");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("GetSandboxExtAbilityInfos params are invalid");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("WriteParcelable want failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("failed to GetSandboxExtAbilityInfos due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("failed to GetSandboxExtAbilityInfos due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetSandboxExtAbilityInfos due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfosWithErrCode<ExtensionAbilityInfo>(
+        IBundleMgr::Message::GET_SANDBOX_APP_EXTENSION_INFOS, data, infos);
+}
+
+ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+    HapModuleInfo &info)
+{
+    APP_LOGD("begin to GetSandboxHapModuleInfo");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("GetSandboxHapModuleInfo params are invalid");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&abilityInfo)) {
+        APP_LOGE("WriteParcelable want failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("failed to GetSandboxHapModuleInfo due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetSandboxHapModuleInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<HapModuleInfo>(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, data, info);
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {
@@ -2705,6 +2804,32 @@ bool BundleMgrProxy::GetParcelableInfos(IBundleMgr::Message code, MessageParcel 
     }
     APP_LOGD("get parcelable infos success");
     return true;
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, MessageParcel &data,
+    std::vector<T> &parcelableInfos)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        int32_t infoSize = reply.ReadInt32();
+        for (int32_t i = 0; i < infoSize; i++) {
+            std::unique_ptr<T> info(reply.ReadParcelable<T>());
+            if (info == nullptr) {
+                APP_LOGE("Read Parcelable infos failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+            parcelableInfos.emplace_back(*info);
+        }
+        APP_LOGD("get parcelable infos success");
+    }
+
+    return res;
 }
 
 template <typename T>

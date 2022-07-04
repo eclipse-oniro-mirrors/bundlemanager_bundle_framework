@@ -177,6 +177,10 @@ void BundleMgrHost::init()
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, &BundleMgrHost::HandleGetDefaultAppProxy);
 #endif
+    funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_ABILITY_INFO, &BundleMgrHost::HandleGetSandboxAbilityInfo);
+    funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_EXTENSION_INFOS,
+        &BundleMgrHost::HandleGetSandboxExtAbilityInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, &BundleMgrHost::HandleGetSandboxHapModuleInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1707,7 +1711,7 @@ ErrCode BundleMgrHost::HandleGetSandboxBundleInfo(Parcel &data, Parcel &reply)
     if (!reply.WriteInt32(res)) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
-    if (res == ERR_OK && !reply.WriteParcelable(&info)) {
+    if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1792,6 +1796,79 @@ ErrCode BundleMgrHost::HandleGetDefaultAppProxy(Parcel &data, Parcel &reply)
     return ERR_OK;
 }
 #endif
+
+ErrCode BundleMgrHost::HandleGetSandboxAbilityInfo(Parcel &data, Parcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t appIndex = data.ReadInt32();
+    int32_t flag = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    AbilityInfo info;
+    auto res = GetSandboxAbilityInfo(*want, appIndex, flag, userId, info);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
+        APP_LOGE("write ability info failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSandboxExtAbilityInfos(Parcel &data, Parcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (!want) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t appIndex = data.ReadInt32();
+    int32_t flag = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ExtensionAbilityInfo> infos;
+    auto res = GetSandboxExtAbilityInfos(*want, appIndex, flag, userId, infos);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((res == ERR_OK) && (!WriteParcelableVector(infos, reply))) {
+        APP_LOGE("write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSandboxHapModuleInfo(Parcel &data, Parcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
+    if (abilityInfo == nullptr) {
+        APP_LOGE("ReadParcelable<abilityInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    HapModuleInfo info;
+    auto res = GetSandboxHapModuleInfo(*abilityInfo, appIndex, userId, info);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
+        APP_LOGE("write hap module info failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
 
 template<typename T>
 bool BundleMgrHost::WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &reply)

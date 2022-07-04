@@ -29,6 +29,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using Want = OHOS::AAFwk::Want;
+
 class BundleMgrClientImpl {
 public:
     BundleMgrClientImpl();
@@ -55,6 +57,12 @@ public:
         std::vector<std::string> &profileInfos) const;
     bool GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
+    ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        AbilityInfo &abilityInfo);
+    ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos);
+    ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+        HapModuleInfo &hapModuleInfo);
 
 private:
     ErrCode Connect();

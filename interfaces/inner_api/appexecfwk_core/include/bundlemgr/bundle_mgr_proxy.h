@@ -656,6 +656,13 @@ public:
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif
 
+    virtual ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        AbilityInfo &info) override;
+    virtual ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos) override;
+    virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+        HapModuleInfo &info) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
@@ -686,6 +693,10 @@ private:
      */
     template <typename T>
     bool GetParcelableInfos(IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+
+    template <typename T>
+    ErrCode GetParcelableInfosWithErrCode(IBundleMgr::Message code, MessageParcel &data,
+        std::vector<T> &parcelableInfos);
     /**
      * @brief Send a command message and then get a vector of parcelable information objects from the reply Ashmem.
      * @param code Indicates the message code to be sent.

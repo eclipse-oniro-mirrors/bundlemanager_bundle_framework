@@ -427,6 +427,57 @@ ErrCode BundleMgrClientImpl::GetSandboxBundleInfo(
     return bundleMgr_->GetSandboxBundleInfo(bundleName, appIndex, userId, info);
 }
 
+ErrCode BundleMgrClientImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+    AbilityInfo &abilityInfo)
+{
+    APP_LOGD("GetSandboxAbilityInfo begin");
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("GetSandboxAbilityInfo params are invalid");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("failed to connect");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
+    }
+
+    return bundleMgr_->GetSandboxAbilityInfo(want, appIndex, flags, userId, abilityInfo);
+}
+
+ErrCode BundleMgrClientImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags,
+    int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    APP_LOGD("GetSandboxExtensionAbilityInfos begin");
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("GetSandboxExtensionAbilityInfos params are invalid");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("failed to connect");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
+    }
+
+    return bundleMgr_->GetSandboxExtAbilityInfos(want, appIndex, flags, userId, extensionInfos);
+}
+
+ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+    HapModuleInfo &hapModuleInfo)
+{
+    APP_LOGD("GetSandboxHapModuleInfo begin");
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("GetSandboxHapModuleInfo params are invalid");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("failed to connect");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
+    }
+
+    return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
+}
+
 ErrCode BundleMgrClientImpl::Connect()
 {
     APP_LOGI("connect begin");
