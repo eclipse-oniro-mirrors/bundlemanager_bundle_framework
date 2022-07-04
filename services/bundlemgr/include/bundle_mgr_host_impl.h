@@ -652,6 +652,13 @@ public:
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif
 
+    virtual ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        AbilityInfo &info) override;
+    virtual ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos) override;
+    virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+        HapModuleInfo &info) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL

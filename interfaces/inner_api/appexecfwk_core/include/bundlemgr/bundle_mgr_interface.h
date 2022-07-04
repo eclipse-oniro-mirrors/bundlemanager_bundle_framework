@@ -922,6 +922,24 @@ public:
         return false;
     }
 
+    virtual ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        AbilityInfo &info)
+    {
+        return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
+    }
+
+    virtual ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &einfos)
+    {
+        return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
+    }
+
+    virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+        HapModuleInfo &info)
+    {
+        return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
+    }
+
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
         const std::string &abilityName)
@@ -1023,6 +1041,9 @@ public:
         GET_DEFAULT_APP_PROXY,
         GET_BUNDLE_STATS,
         CHECK_ABILITY_ENABLE_INSTALL,
+        GET_SANDBOX_APP_ABILITY_INFO,
+        GET_SANDBOX_APP_EXTENSION_INFOS,
+        GET_SANDBOX_MODULE_INFO
     };
 };
 }  // namespace AppExecFwk

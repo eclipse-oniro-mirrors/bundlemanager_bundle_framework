@@ -22,10 +22,12 @@
 #include "bundle_pack_info.h"
 #include "extension_ability_info.h"
 #include "hap_module_info.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrClientImpl;
+using Want = OHOS::AAFwk::Want;
 
 class BundleMgrClient {
 public:
@@ -102,6 +104,14 @@ public:
     ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId);
 
     ErrCode GetSandboxBundleInfo(const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info);
+
+    ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        AbilityInfo &abilityInfo);
+    ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos);
+    ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+        HapModuleInfo &hapModuleInfo);
+
 private:
     std::shared_ptr<BundleMgrClientImpl> impl_;
 };

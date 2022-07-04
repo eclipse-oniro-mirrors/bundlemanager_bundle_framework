@@ -1531,7 +1531,11 @@ ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
         APP_LOGE("sandDataMgr is nullptr");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
-    return sandboxDataMgr->GetSandboxAppBundleInfo(bundleName, appIndex, userId, info);
+    int32_t requestUserId = dataMgr->GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID;
+    }
+    return sandboxDataMgr->GetSandboxAppBundleInfo(bundleName, appIndex, requestUserId, info);
 }
 
 bool BundleMgrHostImpl::SetDisposedStatus(const std::string &bundleName, int32_t status)
@@ -1593,5 +1597,60 @@ sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDefaultAppProxy();
 }
 #endif
+
+ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+    AbilityInfo &info)
+{
+    APP_LOGD("start GetSandboxAbilityInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+
+    if (!dataMgr->QueryAbilityInfo(want, flags, userId, info, appIndex)) {
+        APP_LOGE("query ability info failed");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags,
+    int32_t userId, std::vector<ExtensionAbilityInfo> &infos)
+{
+    APP_LOGD("start GetSandboxExtAbilityInfos appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+
+    if (!dataMgr->QueryExtensionAbilityInfos(want, flags, userId, infos, appIndex)) {
+        APP_LOGE("query extension ability info failed");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+    HapModuleInfo &info)
+{
+    APP_LOGD("start GetSandboxHapModuleInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    auto sandboxDataMgr = dataMgr->GetSandboxDataMgr();
+    if (sandboxDataMgr == nullptr) {
+        APP_LOGE("sandDataMgr is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    int32_t requestUserId = dataMgr->GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID;
+    }
+    return sandboxDataMgr->GetSandboxHapModuleInfo(abilityInfo, appIndex, requestUserId, info);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -166,9 +166,39 @@ ErrCode BundleMgrClient::GetSandboxBundleInfo(
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
     return impl_->GetSandboxBundleInfo(bundleName, appIndex, userId, info);
+}
+
+ErrCode BundleMgrClient::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+    AbilityInfo &abilityInfo)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    return impl_->GetSandboxAbilityInfo(want, appIndex, flags, userId, abilityInfo);
+}
+
+ErrCode BundleMgrClient::GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    return impl_->GetSandboxExtAbilityInfos(want, appIndex, flags, userId, extensionInfos);
+}
+
+ErrCode BundleMgrClient::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
+    HapModuleInfo &hapModuleInfo)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    return impl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

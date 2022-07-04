@@ -535,6 +535,12 @@ private:
 
     ErrCode HandleCheckAbilityEnableInstall(Parcel &data, Parcel &reply);
 
+    ErrCode HandleGetSandboxAbilityInfo(Parcel &data, Parcel &reply);
+
+    ErrCode HandleGetSandboxExtAbilityInfos(Parcel &data, Parcel &reply);
+
+    ErrCode HandleGetSandboxHapModuleInfo(Parcel &data, Parcel &reply);
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(Parcel &data, Parcel &reply);
 #endif
