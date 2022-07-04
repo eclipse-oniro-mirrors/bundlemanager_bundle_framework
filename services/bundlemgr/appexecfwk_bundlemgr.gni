@@ -72,10 +72,17 @@ free_install = [
 
 default_app = [
   "${services_path}/bundlemgr/src/default_app/default_app_data.cpp",
-  "${services_path}/bundlemgr/src/default_app/default_app_db.cpp",
   "${services_path}/bundlemgr/src/default_app/default_app_host_impl.cpp",
   "${services_path}/bundlemgr/src/default_app/default_app_mgr.cpp",
 ]
+
+if (bms_rdb_enable) {
+  default_app +=
+      [ "${services_path}/bundlemgr/src/default_app/default_app_rdb.cpp" ]
+} else {
+  default_app +=
+      [ "${services_path}/bundlemgr/src/default_app/default_app_db.cpp" ]
+}
 
 bundle_install_deps = [
   "${services_path}/bundlemgr:bundle_parser",

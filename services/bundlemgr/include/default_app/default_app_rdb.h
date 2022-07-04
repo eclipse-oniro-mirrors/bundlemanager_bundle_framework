@@ -13,44 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_DB
-#define FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_DB
+#ifndef FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_RDB
+#define FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_RDB
 
 #include "default_app_db_interface.h"
-#include "distributed_kv_data_manager.h"
-#include "kvstore_death_recipient.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class DefaultAppDb final :
+class DefaultAppRdb final :
     public IDefaultAppDb,
-    public std::enable_shared_from_this<DefaultAppDb>,
-    public DistributedKv::KvStoreDeathRecipient {
+    public std::enable_shared_from_this<DefaultAppRdb> {
 public:
-    DefaultAppDb();
-    ~DefaultAppDb();
+    DefaultAppRdb();
+    ~DefaultAppRdb();
     bool GetDefaultApplicationInfos(int32_t userId, std::map<std::string, Element>& infos) override;
     bool GetDefaultApplicationInfo(int32_t userId, const std::string& type, Element& element) override;
     bool SetDefaultApplicationInfos(int32_t userId, const std::map<std::string, Element>& infos) override;
     bool SetDefaultApplicationInfo(int32_t userId, const std::string& type, const Element& element) override;
     bool DeleteDefaultApplicationInfos(int32_t userId) override;
     bool DeleteDefaultApplicationInfo(int32_t userId, const std::string& type) override;
-    virtual void OnRemoteDied() override;
     void RegisterDeathListener() override;
     void UnRegisterDeathListener() override;
-private:
-    void Init();
-    bool OpenKvDb();
-    void LoadDefaultApplicationConfig();
-    bool GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos);
-    bool SaveDataToDb(int32_t userId, const std::map<std::string, Element>& infos);
-    bool DeleteDataFromDb(int32_t userId);
-
-    const DistributedKv::AppId appId_ { Constants::APP_ID };
-    const DistributedKv::StoreId storeId_ { Constants::DEFAULT_APP_DATA_STORE_ID };
-    DistributedKv::DistributedKvDataManager dataManager_;
-    std::shared_ptr<DistributedKv::SingleKvStore> kvStorePtr_;
 };
-}
-}
-#endif
+} // namespace AppExecFwk
+} // namespace OHOS
+#endif // FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_RDB
