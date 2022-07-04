@@ -18,7 +18,7 @@
 
 #include<set>
 
-#include "default_app_db.h"
+#include "default_app_db_interface.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -62,7 +62,7 @@ private:
     bool IsExcelSkillsValid(const std::vector<Skill>& skills) const;
     bool IsPptSkillsValid(const std::vector<Skill>& skills) const;
     
-    std::shared_ptr<DefaultAppDb> defaultAppDb_;
+    std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     std::set<std::string> supportAppTypes;
 };
 }
