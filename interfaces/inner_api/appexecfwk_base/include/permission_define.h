@@ -28,7 +28,6 @@ struct PermissionDef : public Parcelable {
     std::string bundleName;
     int32_t grantMode = 0;
     int32_t availableLevel = 1;
-    int32_t availableScope = 0;
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
     std::string label;

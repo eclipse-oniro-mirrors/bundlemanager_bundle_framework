@@ -30,7 +30,6 @@ bool PermissionDef::ReadFromParcel(Parcel &parcel)
     label = Str16ToStr8(parcel.ReadString16());
     description = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableLevel);
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableScope);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, provisionEnable);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedSceneEnable);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, grantMode);
@@ -57,7 +56,6 @@ bool PermissionDef::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableLevel);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableScope);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, provisionEnable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedSceneEnable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, grantMode);
