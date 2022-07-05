@@ -35,6 +35,14 @@ public:
     bool DeleteDefaultApplicationInfo(int32_t userId, const std::string& type) override;
     void RegisterDeathListener() override;
     void UnRegisterDeathListener() override;
+
+private:
+    void LoadDefaultApplicationConfig();
+    bool GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos);
+    bool SaveDataToDb(int32_t userId, const std::map<std::string, Element>& infos);
+    bool DeleteDataFromDb(int32_t userId);
+
+    std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
 } // namespace AppExecFwk
 } // namespace OHOS
