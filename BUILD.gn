@@ -36,6 +36,7 @@ group("test_target") {
     "test/benchmarktest:benchmarktest",
     "test/fuzztest:fuzztest",
     "test/resource/bmssystemtestability/abilitySrc:bms_system_test_app",
+    "test/sceneProject:test_hap",
     "test/systemtest/common/bms:systemtest_bms",
   ]
 }

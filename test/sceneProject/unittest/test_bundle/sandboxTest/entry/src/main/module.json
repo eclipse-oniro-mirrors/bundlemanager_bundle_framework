@@ -1,0 +1,177 @@
+{
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:phone_entry_main",
+                "descriptionId": 16777221,
+                "icon": "$media:icon",
+                "iconId": 16777225,
+                "label": "$string:entry_label",
+                "labelId": 16777218,
+                "metadata": [
+                    {
+                        "name": "ohos.ability.shortcuts",
+                        "resource": "$profile:shortcuts_config"
+                    }
+                ],
+                "name": "MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            },
+            {
+                "name": "MainAbility1",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "unspecified",
+                "supportWindowMode": [
+                    "fullscreen"
+                ]
+            },
+            {
+                "name": "MainAbility2",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "landscape",
+                "supportWindowMode": [
+                    "split"
+                ]
+            },
+            {
+                "name": "MainAbility3",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "portrait",
+                "supportWindowMode": [
+                    "floating"
+                ]
+            },
+            {
+                "name": "MainAbility4",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "landscape_inverted",
+                "supportWindowMode": [
+                    "fullscreen",
+                    "split",
+                    "floating"
+                ]
+            },
+            {
+                "name": "MainAbility5",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "portrait_inverted",
+                "maxWindowRatio": 3.5
+            },
+            {
+                "name": "MainAbility6",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation",
+                "minWindowRatio": 0.5
+            },
+            {
+                "name": "MainAbility7",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_landscape",
+                "maxWindowWidth": 2560
+            },
+            {
+                "name": "MainAbility8",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_portrait",
+                "minWindowWidth": 1400
+            },
+            {
+                "name": "MainAbility9",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_restricted",
+                "maxWindowHeight": 300
+            },
+            {
+                "name": "MainAbility10",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_landscape_restricted",
+                "minWindowHeight": 200
+            },
+            {
+                "name": "MainAbility11",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_portrait_restricted"
+            },
+            {
+                "name": "MainAbility12",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "locked"
+            }
+        ],
+        "deliveryWithInstall": true,
+        "description": "$string:phone_entry_dsc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "phone"
+        ],
+        "extensionAbilities": [
+            {
+                "description": "$string:form_description",
+                "descriptionId": 16777219,
+                "icon": "$media:icon",
+                "iconId": 16777225,
+                "metadata": [
+                    {
+                        "name": "ohos.extension.form",
+                        "resource": "@profile:form_config"
+                    }
+                ],
+                "name": "Form",
+                "srcEntrance": "./ets/Form/MyForm.ts",
+                "type": "form",
+                "visible": true
+            },
+            {
+                "description": "$string:serviceability_description",
+                "descriptionId": 16777222,
+                "icon": "$media:icon",
+                "iconId": 16777225,
+                "name": "WeatherFormAbility",
+                "srcEntrance": "./ets/Weather/WeatherFormAbility.ts",
+                "type": "service"
+            }
+        ],
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "name": "entry_phone",
+        "pages": "@profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "uiSyntax": "ets"
+    }
+}

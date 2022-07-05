@@ -36,7 +36,10 @@ ohos_unittest("BmsInstallDaemonTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${services_path}/bundlemgr:bundle_parser" ]
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${services_path}/bundlemgr:bundle_parser",
+  ]
 
   external_deps = [
     "ability_runtime:ability_manager",
@@ -55,8 +58,9 @@ ohos_unittest("BmsInstallDaemonTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
+
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {

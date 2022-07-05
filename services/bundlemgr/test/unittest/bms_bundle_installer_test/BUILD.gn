@@ -59,7 +59,10 @@ ohos_unittest("BmsBundleInstallerTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+  ]
 
   if (bundle_framework_graphics) {
     include_dirs += [
@@ -134,7 +137,7 @@ ohos_unittest("BmsBundleInstallerTest") {
   }
 
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 ohos_unittest("BmsMultipleBundleInstallerTest") {
@@ -179,7 +182,10 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+  ]
 
   if (bundle_framework_graphics) {
     include_dirs += [
@@ -257,7 +263,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   }
 
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {

@@ -63,7 +63,10 @@ ohos_unittest("BmsBundleCrowdtestingTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+  ]
   if (bundle_framework_graphics) {
     include_dirs += [
       "//foundation/multimedia/image_standard/interfaces/innerkits/include",
@@ -128,7 +131,7 @@ ohos_unittest("BmsBundleCrowdtestingTest") {
   }
 
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {

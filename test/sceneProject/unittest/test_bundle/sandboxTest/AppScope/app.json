@@ -1,0 +1,20 @@
+{
+    "app": {
+        "bundleName": "com.example.ohosproject.hmservice",
+        "car": {
+            "apiCompatibleVersion": 8,
+            "singleUser": false
+        },
+        "distributedNotificationEnabled": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777217,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 8,
+        "targetAPIVersion": 8,
+        "singleUser": true,
+        "vendor": "huawei",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    }
+}
