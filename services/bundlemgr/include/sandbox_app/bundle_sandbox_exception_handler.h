@@ -16,13 +16,13 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLE_SANDBOX_EXCEPTION_HANDLE_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLE_SANDBOX_EXCEPTION_HANDLE_H
 
-#include "bundle_data_storage_database.h"
+#include "bundle_data_storage_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BundleSandboxExceptionHandler final {
 public:
-    explicit BundleSandboxExceptionHandler(const std::shared_ptr<BundleDataStorageDatabase> &dataStorage);
+    explicit BundleSandboxExceptionHandler(const std::shared_ptr<IBundleDataStorage> &dataStorage);
     ~BundleSandboxExceptionHandler();
 
     /**
@@ -36,7 +36,7 @@ private:
         const std::vector<SandboxAppPersistentInfo> &sandboxPersistentInfo);
     void UpdateBundleInfoToStorage(const InnerBundleInfo &info);
 
-    std::weak_ptr<BundleDataStorageDatabase> dataStorage_;
+    std::weak_ptr<IBundleDataStorage> dataStorage_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

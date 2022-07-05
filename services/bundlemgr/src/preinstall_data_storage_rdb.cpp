@@ -22,6 +22,11 @@ namespace AppExecFwk {
 PreInstallDataStorageRdb::PreInstallDataStorageRdb()
 {
     APP_LOGI("instance:%{private}p is created", this);
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.tableName = Constants::PRE_BUNDLE_RDB_TABLE_NAME;
+    rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager_->Init();
 }
 
 PreInstallDataStorageRdb::~PreInstallDataStorageRdb()
@@ -32,19 +37,103 @@ PreInstallDataStorageRdb::~PreInstallDataStorageRdb()
 bool PreInstallDataStorageRdb::LoadAllPreInstallBundleInfos(
     std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
 {
-    return true;
+    APP_LOGI("Load all prebundle data to vector");
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    std::map<std::string, std::string> datas;
+    if (!rdbDataManager_->QueryAllData(datas)) {
+        APP_LOGE("QueryAllData failed");
+        return false;
+    }
+
+    TransformStrToInfo(datas, preInstallBundleInfos);
+    return !preInstallBundleInfos.empty();
+}
+
+void PreInstallDataStorageRdb::TransformStrToInfo(
+    const std::map<std::string, std::string> &datas,
+    std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
+{
+    APP_LOGD("TransformStrToInfo start");
+    if (rdbDataManager_ == nullptr || datas.empty()) {
+        APP_LOGE("data is null");
+        return;
+    }
+
+    std::map<std::string, PreInstallBundleInfo> updateInfos;
+    for (const auto &data : datas) {
+        PreInstallBundleInfo preInstallBundleInfo;
+        nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
+        if (jsonObject.is_discarded()) {
+            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            rdbDataManager_->DeleteData(data.first);
+            continue;
+        }
+
+        if (preInstallBundleInfo.FromJson(jsonObject) != ERR_OK) {
+            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            rdbDataManager_->DeleteData(data.first);
+            continue;
+        }
+
+        preInstallBundleInfos.emplace_back(preInstallBundleInfo);
+        // database update
+        std::string key = data.first;
+        if (key != preInstallBundleInfo.GetBundleName()) {
+            updateInfos.emplace(key, preInstallBundleInfo);
+        }
+    }
+
+    if (updateInfos.size() > 0) {
+        UpdateDataBase(updateInfos);
+    }
+}
+
+void PreInstallDataStorageRdb::UpdateDataBase(
+    std::map<std::string, PreInstallBundleInfo>& infos)
+{
+    APP_LOGD("Begin to update preInstall database");
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return;
+    }
+
+    for (const auto& item : infos) {
+        if (SavePreInstallStorageBundleInfo(item.second)) {
+            rdbDataManager_->DeleteData(item.first);
+        }
+    }
+    APP_LOGD("Update preInstall database done");
 }
 
 bool PreInstallDataStorageRdb::SavePreInstallStorageBundleInfo(
     const PreInstallBundleInfo &preInstallBundleInfo)
 {
-    return true;
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    bool ret = rdbDataManager_->InsertData(
+        preInstallBundleInfo.GetBundleName(), preInstallBundleInfo.ToString());
+    APP_LOGD("SavePreInstallStorageBundleInfo %{public}d", ret);
+    return ret;
 }
 
 bool PreInstallDataStorageRdb::DeletePreInstallStorageBundleInfo(
     const PreInstallBundleInfo &preInstallBundleInfo)
 {
-    return true;
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    bool ret = rdbDataManager_->DeleteData(preInstallBundleInfo.GetBundleName());
+    APP_LOGD("DeletePreInstallStorageBundleInfo %{public}d", ret);
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

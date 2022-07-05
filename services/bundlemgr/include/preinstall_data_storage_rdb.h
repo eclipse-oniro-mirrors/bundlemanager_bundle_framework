@@ -18,6 +18,7 @@
 
 #include "bundle_constants.h"
 #include "preinstall_data_storage_interface.h"
+#include "rdb_data_manager.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -30,6 +31,14 @@ public:
     bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override;
     bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos) override;
     bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override;
+
+private:
+    void TransformStrToInfo(
+        const std::map<std::string, std::string> &datas,
+        std::vector<PreInstallBundleInfo> &preInstallBundleInfos);
+    void UpdateDataBase(std::map<std::string, PreInstallBundleInfo>& infos);
+
+    std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -16,14 +16,14 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLE_EXCEPTION_HANDLE_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLE_EXCEPTION_HANDLE_H
 
-#include "bundle_data_storage_database.h"
+#include "bundle_data_storage_interface.h"
 #include "inner_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BundleExceptionHandler {
 public:
-    explicit BundleExceptionHandler(const std::shared_ptr<BundleDataStorageDatabase> &dataStorage);
+    explicit BundleExceptionHandler(const std::shared_ptr<IBundleDataStorage> &dataStorage);
     virtual ~BundleExceptionHandler();
 
     /**
@@ -54,7 +54,7 @@ public:
     void DeleteBundleInfoFromStorage(const InnerBundleInfo &info);
 
 private:
-    std::weak_ptr<BundleDataStorageDatabase> dataStorage_;
+    std::weak_ptr<IBundleDataStorage> dataStorage_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

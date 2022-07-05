@@ -19,6 +19,7 @@
 #include "bundle_constants.h"
 #include "bundle_data_storage_interface.h"
 #include "inner_bundle_info.h"
+#include "rdb_data_manager.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -32,6 +33,14 @@ public:
     bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override;
     bool DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override;
     virtual bool ResetKvStore() override;
+
+private:
+    void TransformStrToInfo(
+        const std::map<std::string, std::string> &datas,
+        std::map<std::string, InnerBundleInfo> &infos);
+    void UpdateDataBase(std::map<std::string, InnerBundleInfo>& infos);
+
+    std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

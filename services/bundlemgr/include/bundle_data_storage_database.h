@@ -18,11 +18,10 @@
 
 #include <map>
 
-#include "distributed_kv_data_manager.h"
-
 #include "bundle_constants.h"
-#include "inner_bundle_info.h"
 #include "bundle_data_storage_interface.h"
+#include "distributed_kv_data_manager.h"
+#include "inner_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
