@@ -16,6 +16,7 @@
 #include "service_center_status_callback_stub.h"
 
 #include "app_log_wrapper.h"
+#include "free_install_params.h"
 #include "message_parcel.h"
 #include "string_ex.h"
 
@@ -29,10 +30,13 @@ ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
 int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    data.ReadInterfaceToken();
+    if (data.ReadInterfaceToken() != SEEVICE_CENTER_CALLBACK_TOKEN) {
+        APP_LOGE("verify interface token failed");
+        return -1;
+    }
+
     auto result = data.ReadString16();
-    APP_LOGI("ServiceCenterStatusCallbackStub OnRemoteRequest:code:%{public}d, result:%{public}s",
-        code, Str16ToStr8(result).c_str());
+    APP_LOGD("OnRemoteRequest:code:%{public}d, result:%{public}s", code, Str16ToStr8(result).c_str());
     return OnInstallFinished(Str16ToStr8(result));
 }
 }  // namespace AppExecFwk

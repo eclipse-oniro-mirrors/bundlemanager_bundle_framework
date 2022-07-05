@@ -36,7 +36,7 @@ void ServiceCenterConnection::OnAbilityConnectDone(
     }
 
     if (remoteObject == nullptr) {
-        APP_LOGE("OnAbilityConnectDone resultCode is nullptr");
+        APP_LOGE("OnAbilityConnectDone remoteObject is nullptr");
         cv_.notify_all();
         return;
     }
