@@ -29,7 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
-const std::string SERVICE_CENTER_ABILITY_NAME = "com.ohos.hag.famanager.HapInstallServiceAbility";
+const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ONE_COMPATIBLE = 0;
@@ -375,13 +375,18 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 void BundleConnectAbilityMgr::SendRequest(
     int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want, int32_t userId)
 {
-    APP_LOGI("BundleConnectAbilityMgr::SendRequest");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(SERVICE_CENTER_TOKEN)) {
+        APP_LOGE("failed to WriteInterfaceToken");
+        SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId,
+            targetAbilityInfo.targetInfo.transactId);
+        SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
+        return;
+    }
     const std::string dataString = GetJsonStrFromInfo(targetAbilityInfo);
     APP_LOGI("TargetAbilityInfo to JsonString : %{public}s", dataString.c_str());
-
     if (!data.WriteString16(Str8ToStr16(dataString))) {
         APP_LOGE("%{public}s failed to WriteParcelable targetAbilityInfo", __func__);
         SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId,
@@ -402,7 +407,6 @@ void BundleConnectAbilityMgr::SendRequest(
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
-    APP_LOGI("ServiceCenterRemoteObject->SendRequest");
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         APP_LOGE("%{public}s failed to get remote object", __func__);
