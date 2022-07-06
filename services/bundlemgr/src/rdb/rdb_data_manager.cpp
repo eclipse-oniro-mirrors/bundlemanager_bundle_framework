@@ -122,8 +122,15 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
         return false;
     }
 
-    if (absSharedResultSet->GetString(BMS_VALUE_INDEX, value) != NativeRdb::E_OK) {
-        APP_LOGE("QueryData failed");
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return false;
+    }
+
+    ret = absSharedResultSet->GetString(BMS_VALUE_INDEX, value);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("QueryData failed, ret: %{public}d", ret);
         return false;
     }
 
