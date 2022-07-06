@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -204,7 +205,7 @@ std::unordered_map<std::string, InnerBundleInfo> BundleSandboxDataMgr::GetSandbo
 }
 
 ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
-    HapModuleInfo &hapModuleInfo)
+    HapModuleInfo &hapModuleInfo) const
 {
     APP_LOGD("GetSandboxHapModuleInfo %{public}s", abilityInfo.bundleName.c_str());
     // check appIndex
@@ -229,6 +230,35 @@ ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &ability
     }
     hapModuleInfo = *module;
     return ERR_OK;
+}
+
+ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const
+{
+    APP_LOGD("GetInnerBundleInfoByUid with uid is %{public}d", uid);
+    int32_t userId = BundleUtil::GetUserIdByUid(uid);
+    APP_LOGD("GetInnerBundleInfoByUid with userId is %{public}d", userId);
+    if (userId == Constants::UNSPECIFIED_USERID || userId == Constants::INVALID_USERID) {
+        APP_LOGE("the uid %{public}d is illegal when get bundleName by uid.", uid);
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID;
+    }
+
+    {
+        std::shared_lock<std::shared_mutex> lock(sandboxAppMutex_);
+        if (sandboxAppInfos_.empty()) {
+            APP_LOGE("sandboxAppInfos_ is empty");
+            return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+        }
+        for (const auto &item : sandboxAppInfos_) {
+            const InnerBundleInfo &info = item.second;
+            auto innerUid = info.GetUid(userId);
+            APP_LOGD("GetInnerBundleInfoByUid with innerUid is %{public}d", innerUid);
+            if (innerUid == uid) {
+                innerBundleInfo = info;
+                return ERR_OK;
+            }
+        }
+    }
+    return ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP;
 }
 } // AppExecFwk
 } // OHOS

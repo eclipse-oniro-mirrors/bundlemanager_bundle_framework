@@ -488,6 +488,10 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     }
     // explict query from sandbox manager
     if (appIndex > 0) {
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("sandboxDataMgr_ is nullptr");
+            return false;
+        }
         auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
@@ -601,6 +605,10 @@ bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags
         return false;
     }
     if (appIndex > 0) {
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("sandboxDataMgr_ is nullptr");
+            return false;
+        }
         auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
@@ -632,6 +640,10 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
         }
     } else {
         // query from sandbox manager for sandbox bundle
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("sandboxDataMgr_ is nullptr");
+            return;
+        }
         auto sandboxMap = sandboxDataMgr_->GetSandboxAppInfoMap();
         for (const auto &item : sandboxMap) {
             InnerBundleInfo info;
@@ -1115,8 +1127,15 @@ bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) 
 {
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoByUid(uid, innerBundleInfo)) {
-        APP_LOGE("get innerBundleInfo by uid failed.");
-        return false;
+        APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("sandboxDataMgr_ is nullptr");
+            return false;
+        }
+        if (sandboxDataMgr_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
+            APP_LOGE("get innerBundleInfo from sandboxDataMgr by uid failed.");
+            return false;
+        }
     }
 
     bundleName = innerBundleInfo.GetBundleName();
@@ -1224,14 +1243,7 @@ bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bu
 
 bool BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
 {
-    InnerBundleInfo innerBundleInfo;
-    if (!GetInnerBundleInfoByUid(uid, innerBundleInfo)) {
-        APP_LOGE("get innerBundleInfo by uid failed.");
-        return false;
-    }
-
-    name = innerBundleInfo.GetBundleName();
-    return true;
+    return GetBundleNameForUid(uid, name);
 }
 
 bool BundleDataMgr::GetBundleGids(const std::string &bundleName, std::vector<int> &gids) const
@@ -2565,6 +2577,10 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
         return false;
     }
     if (appIndex > 0) {
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("sandboxDataMgr_ is nullptr");
+            return false;
+        }
         auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
@@ -2654,6 +2670,10 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
         return false;
     }
     if (appIndex > 0) {
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("sandboxDataMgr_ is nullptr");
+            return false;
+        }
         auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
@@ -2684,6 +2704,10 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
         }
     } else {
         // query from sandbox manager for sandbox bundle
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("sandboxDataMgr_ is nullptr");
+            return;
+        }
         auto sandboxMap = sandboxDataMgr_->GetSandboxAppInfoMap();
         for (const auto &item : sandboxMap) {
             InnerBundleInfo info;
