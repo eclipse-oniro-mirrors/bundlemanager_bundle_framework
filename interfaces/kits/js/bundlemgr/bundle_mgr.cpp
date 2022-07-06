@@ -4618,7 +4618,7 @@ void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
         if (asyncCallbackInfo->errCode) {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
         } else {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM1]));
         }
     }
     APP_LOGD("NAPI_SetDisposedStatus, main event thread complete end.");
@@ -4700,13 +4700,12 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
     DisposedStatusInfo* asyncCallbackInfo = static_cast<DisposedStatusInfo*>(data);
     std::unique_ptr<DisposedStatusInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[PARAM2] = { 0 };
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[PARAM0]));
     if (asyncCallbackInfo->errCode) {
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[PARAM0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->errMssage.c_str(),
                               NAPI_AUTO_LENGTH, &result[PARAM1]));
     } else {
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->status, &result[PARAM0]));
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[PARAM1]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->status, &result[PARAM1]));
     }
     if (asyncCallbackInfo->callback) {
         napi_value callback = nullptr;
@@ -4718,7 +4717,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
         if (asyncCallbackInfo->errCode) {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
         } else {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM1]));
         }
     }
     APP_LOGD("NAPI_GetDisposedStatus, main event thread complete end.");
