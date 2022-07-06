@@ -32,17 +32,17 @@ const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
-constexpr uint32_t BIT_ONE_COMPATIBLE = 0;
-constexpr uint32_t BIT_TWO_BACK_MODE = 1;
-constexpr uint32_t BIT_THREE_CUSTOM = 0;
-constexpr uint32_t BIT_ONE_FIVE_AZ_DEVICE = 0;
-constexpr uint32_t BIT_ONE_SEVEN_SAME_BUNDLE = 0;
-constexpr uint32_t BIT_TWO = 2;
-constexpr uint32_t BIT_THREE = 4;
-constexpr uint32_t BIT_FOUR = 8;
-constexpr uint32_t BIT_FIVE = 16;
-constexpr uint32_t BIT_SIX = 32;
-constexpr uint32_t BIT_SEVEN = 64;
+constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
+constexpr uint32_t BIT_ONE_FRONT_MODE = 0;
+constexpr uint32_t BIT_TWO_CUSTOM = 0;
+constexpr uint32_t BIT_FOUR_AZ_DEVICE = 0;
+constexpr uint32_t BIT_SIX_SAME_BUNDLE = 0;
+constexpr uint32_t BIT_ONE = 2;
+constexpr uint32_t BIT_TWO = 4;
+constexpr uint32_t BIT_THREE = 8;
+constexpr uint32_t BIT_FOUR = 16;
+constexpr uint32_t BIT_FIVE = 32;
+constexpr uint32_t BIT_SIX = 64;
 constexpr uint32_t OUT_TIME = 30000;
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
@@ -465,7 +465,7 @@ void BundleConnectAbilityMgr::GetCallingInfo(InnerBundleInfo &innerBundleInfo,
     callingAppIds.emplace_back(innerBundleInfo.GetBaseBundleInfo().appId);
 }
 
-bool ExistBundleNameInCallingBundles(std::string &bundleName, std::vector<std::string> &callingBundleNames)
+bool ExistBundleNameInCallingBundles(const std::string &bundleName, const std::vector<std::string> &callingBundleNames)
 {
     for (auto bundleNameItem : callingBundleNames) {
         if (bundleNameItem == bundleName) {
@@ -473,6 +473,20 @@ bool ExistBundleNameInCallingBundles(std::string &bundleName, std::vector<std::s
         }
     }
     return false;
+}
+
+int32_t GetTargetInfoFlag(const std::string deviceId, const std::string &bundleName,
+    const std::vector<std::string> &callingBundleNames)
+{
+    // make int from bits.
+    int32_t flagZero = BIT_ZERO_COMPATIBLE;
+    int32_t flagOne = BIT_ONE_FRONT_MODE * BIT_ONE;
+    int32_t flagTwo = BIT_TWO_CUSTOM * BIT_TWO;
+    int32_t flagThree = deviceId.empty() * BIT_THREE;
+    int32_t flagFour = BIT_FOUR_AZ_DEVICE * BIT_FOUR;
+    int32_t flagFive = !ExistBundleNameInCallingBundles(bundleName, callingBundleNames) * BIT_FIVE;
+    int32_t flagSix = BIT_SIX_SAME_BUNDLE * BIT_SIX;
+    return flagZero + flagOne + flagTwo + flagThree + flagFour + flagFive + flagSix;
 }
 
 void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, InnerBundleInfo &innerBundleInfo,
@@ -499,15 +513,11 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, InnerBundle
     targetInfo->bundleName = bundleName;
     targetInfo->moduleName = moduleName;
     targetInfo->abilityName = abilityName;
-    // make int from bits.
-    targetInfo->flags = BIT_ONE_COMPATIBLE + BIT_TWO_BACK_MODE * BIT_TWO + BIT_THREE_CUSTOM * BIT_THREE +
-                        deviceId.empty() * BIT_FOUR + BIT_ONE_FIVE_AZ_DEVICE * BIT_FIVE +
-                        !ExistBundleNameInCallingBundles(bundleName, callingBundleNames) * BIT_SIX +
-                        BIT_ONE_SEVEN_SAME_BUNDLE * BIT_SEVEN;
     targetInfo->callingUid = IPCSkeleton::GetCallingUid();
     targetInfo->callingAppType = CALLING_TYPE_HARMONY;
     this->GetCallingInfo(innerBundleInfo, callingBundleNames, callingAppids);
     targetInfo->callingBundleNames = callingBundleNames;
+    targetInfo->flags = GetTargetInfoFlag(deviceId, bundleName, callingBundleNames);
     targetInfo->callingAppIds = callingAppids;
     targetAbilityInfo->targetInfo = *targetInfo;
     targetAbilityInfo->version = DEFAULT_VERSION;
