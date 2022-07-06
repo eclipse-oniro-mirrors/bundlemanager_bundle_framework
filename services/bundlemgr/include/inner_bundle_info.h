@@ -157,6 +157,7 @@ public:
     };
 
     InnerBundleInfo();
+    InnerBundleInfo &operator=(const InnerBundleInfo &info);
     ~InnerBundleInfo();
     /**
      * @brief Transform the InnerBundleInfo object to json.

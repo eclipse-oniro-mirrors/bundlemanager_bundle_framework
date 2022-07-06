@@ -42,7 +42,8 @@ public:
     ErrCode GetSandboxAppInfo(
         const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info) const;
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
-        HapModuleInfo &hapModuleInfo);
+        HapModuleInfo &hapModuleInfo) const;
+    ErrCode GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const;
 
 private:
     mutable std::shared_mutex sandboxAppMutex_;

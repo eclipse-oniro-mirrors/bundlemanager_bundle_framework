@@ -323,6 +323,50 @@ InnerBundleInfo::InnerBundleInfo()
     APP_LOGD("inner bundle info instance is created");
 }
 
+InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
+{
+    if (this == &info) {
+        return *this;
+    }
+    this->appType_ = info.appType_;
+    this->uid_ = info.uid_;
+    this->gid_ = info.gid_;
+    this->userId_ = info.userId_;
+    this->baseDataDir_ = info.baseDataDir_;
+    this->bundleStatus_ = info.bundleStatus_;
+    this->appFeature_ = info.appFeature_;
+    this->allowedAcls_ = info.allowedAcls_;
+    this->mark_ = info.mark_;
+    this->appIndex_ = info.appIndex_;
+    this->disposedStatus_ = info.disposedStatus_;
+    this->isSandboxApp_ = info.isSandboxApp_;
+    this->currentPackage_ = info.currentPackage_;
+    this->onlyCreateBundleUser_ = info.onlyCreateBundleUser_;
+    this->innerModuleInfos_ = info.innerModuleInfos_;
+    this->formInfos_ = info.formInfos_;
+    this->commonEvents_ = info.commonEvents_;
+    this->shortcutInfos_ = info.shortcutInfos_;
+    this->baseAbilityInfos_ = info.baseAbilityInfos_;
+    this->skillInfos_ = info.skillInfos_;
+    this->innerBundleUserInfos_ = info.innerBundleUserInfos_;
+    this->bundlePackInfo_ = info.bundlePackInfo_;
+    this->isNewVersion_ = info.isNewVersion_;
+    this->baseExtensionInfos_= info.baseExtensionInfos_;
+    this->extensionSkillInfos_ = info.extensionSkillInfos_;
+    this->sandboxPersistentInfo_ = info.sandboxPersistentInfo_;
+    this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    if (this->baseApplicationInfo_ == nullptr) {
+        APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
+    }
+    *(this->baseApplicationInfo_) = *(info.baseApplicationInfo_);
+    this->baseBundleInfo_ = std::make_shared<BundleInfo>();
+    if (this->baseBundleInfo_ == nullptr) {
+        APP_LOGE("baseBundleInfo_ is nullptr, create failed");
+    }
+    *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
+    return *this;
+}
+
 InnerBundleInfo::~InnerBundleInfo()
 {
     APP_LOGD("inner bundle info instance is destroyed");
