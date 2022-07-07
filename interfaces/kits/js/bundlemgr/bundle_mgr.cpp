@@ -6888,16 +6888,6 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION), &nFileAccess));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILEACCESS_EXTENSION", nFileAccess));
 
-    napi_value nTHUMBNAIL;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::THUMBNAIL), &nTHUMBNAIL));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "THUMBNAIL", nTHUMBNAIL));
-
-    napi_value nPREVIEW;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::PREVIEW), &nPREVIEW));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PREVIEW", nPREVIEW));
-
     napi_value nEnterpriseAdmin;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN), &nEnterpriseAdmin));
