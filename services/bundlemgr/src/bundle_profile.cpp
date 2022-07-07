@@ -1958,6 +1958,96 @@ bool ConvertFormInfo(FormInfo &formInfo, const ProfileReader::Forms &form)
     return true;
 }
 
+bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bundleExtractor)
+{
+    std::string abis = GetAbiList();
+    std::vector<std::string> abiList;
+    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    if (abiList.empty()) {
+        APP_LOGD("Abi is empty");
+        return false;
+    }
+
+    bool isDefault =
+        std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
+    bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
+    APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
+    bool soExist = bundleExtractor.IsDirExist(Constants::LIBS);
+    if (!soExist) {
+        APP_LOGD("so not exist");
+        if (isDefault) {
+            applicationInfo.cpuAbi =
+                isSystemLib64Exist ? Constants::ARM64_V8A : Constants::ARM_EABI_V7A;
+            return true;
+        }
+
+        for (const auto &abi : abiList) {
+            if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end()) {
+                applicationInfo.cpuAbi = abi;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    APP_LOGD("so exist");
+    if (isDefault) {
+        if (isSystemLib64Exist) {
+            if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM64_V8A)) {
+                applicationInfo.cpuAbi = Constants::ARM64_V8A;
+                applicationInfo.nativeLibraryPath =
+                    Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A);
+                return true;
+            }
+
+            if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::X86_64)) {
+                applicationInfo.cpuAbi = Constants::X86_64;
+                applicationInfo.nativeLibraryPath =
+                    Constants::LIBS + Constants::ABI_MAP.at(Constants::X86_64);
+                return true;
+            }
+
+            return false;
+        }
+
+        if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI_V7A)) {
+            applicationInfo.cpuAbi = Constants::ARM_EABI_V7A;
+            applicationInfo.nativeLibraryPath =
+                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI_V7A);
+            return true;
+        }
+
+        if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI)) {
+            applicationInfo.cpuAbi = Constants::ARM_EABI;
+            applicationInfo.nativeLibraryPath =
+                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI);
+            return true;
+        }
+
+        if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::X86)) {
+            applicationInfo.cpuAbi = Constants::X86;
+            applicationInfo.nativeLibraryPath =
+                Constants::LIBS + Constants::ABI_MAP.at(Constants::X86);
+            return true;
+        }
+
+        return false;
+    }
+
+    for (const auto &abi : abiList) {
+        std::string libsPath;
+        libsPath.append(Constants::LIBS).append(abi).append(Constants::PATH_SEPARATOR);
+        if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && bundleExtractor.IsDirExist(libsPath)) {
+            applicationInfo.cpuAbi = abi;
+            applicationInfo.nativeLibraryPath = Constants::LIBS + Constants::ABI_MAP.at(abi);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
     ApplicationInfo &applicationInfo, bool isPreInstallApp, const BundleExtractor &bundleExtractor)
 {
@@ -2007,46 +2097,10 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
         applicationInfo.supportedModes = 0;
     }
     applicationInfo.vendor = configJson.app.vendor;
-
     // handle native so
-    std::string abis = GetAbiList();
-    bool isDefault = abis == Constants::ABI_DEFAULT;
-    APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
-
-    bool soExist = bundleExtractor.IsDirExist(Constants::LIBS);
-    if (!soExist) {
-        APP_LOGD("so not exist");
-        applicationInfo.nativeLibraryPath = Constants::EMPTY_STRING;
-        std::string targetAbi = Constants::ARM_EABI_V7A;
-        if (!isDefault) {
-            for (const auto &item : Constants::ABI_MAP) {
-                if (abis.find(item.first) == 0) {
-                    targetAbi = item.first;
-                    break;
-                }
-            }
-        }
-        applicationInfo.cpuAbi = targetAbi;
-    } else {
-        APP_LOGD("so exist");
-        std::string targetAbi = bundleExtractor.IsDirExist(Constants::LIBS_ARM_EABI_V7A) ?
-            Constants::ARM_EABI_V7A : Constants::ARM_EABI;
-        std::string targetLibName = Constants::ARM;
-        if (!isDefault) {
-            std::vector<std::string> abiList;
-            SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
-            for (const std::string &abi : abiList) {
-                std::string libsPath;
-                libsPath.append(Constants::LIBS).append(abi).append(Constants::PATH_SEPARATOR);
-                if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && bundleExtractor.IsDirExist(libsPath)) {
-                    targetAbi = abi;
-                    targetLibName = Constants::ABI_MAP.at(abi);
-                    break;
-                }
-            }
-        }
-        applicationInfo.nativeLibraryPath = Constants::LIBS + targetLibName;
-        applicationInfo.cpuAbi = targetAbi;
+    if (!ParserNativeSo(applicationInfo, bundleExtractor)) {
+        APP_LOGE("Parser native so failed.");
+        return false;
     }
     APP_LOGD("nativeLibraryPath : %{private}s, cpuAbi : %{public}s",
         applicationInfo.nativeLibraryPath.c_str(), applicationInfo.cpuAbi.c_str());
@@ -2269,7 +2323,10 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
 
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
-    ToApplicationInfo(configJson, applicationInfo, isPreInstallApp, bundleExtractor);
+    if (!ToApplicationInfo(configJson, applicationInfo, isPreInstallApp, bundleExtractor)) {
+        APP_LOGE("To applicationInfo failed");
+        return false;
+    }
 
     InnerModuleInfo innerModuleInfo;
     ToInnerModuleInfo(configJson, innerModuleInfo);

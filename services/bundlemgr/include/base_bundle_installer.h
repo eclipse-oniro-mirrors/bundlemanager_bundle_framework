@@ -42,6 +42,7 @@ protected:
         INSTALL_PARSED = 20,
         INSTALL_HAP_HASH_PARAM_CHECKED = 25,
         INSTALL_VERSION_AND_BUNDLENAME_CHECKED = 30,
+        INSTALL_NATIVE_SO_CHECKED = 35,
         INSTALL_CREATDIR = 40,
         INSTALL_REMOVE_SANDBOX_APP = 50,
         INSTALL_EXTRACTED = 60,
@@ -358,6 +359,13 @@ private:
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
+     * @brief To check native so in all haps.
+     * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
+     * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
+     */
+    ErrCode CheckMultiNativeSo(
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
+    /**
      * @brief To roll back when the installation is failed.
      * @param infos .Indicates the innerBundleInfo needs to be roll back.
      * @param oldInfo Indicates the original innerBundleInfo of the bundle.
@@ -486,6 +494,8 @@ private:
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
+    ErrCode CheckNativeSoWithOldInfo(
+        const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

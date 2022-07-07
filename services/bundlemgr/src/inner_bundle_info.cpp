@@ -1611,6 +1611,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     }
     baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
+    baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
+    baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)

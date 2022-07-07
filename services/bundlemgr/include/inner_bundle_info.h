@@ -1270,7 +1270,7 @@ public:
      */
     int32_t GetResponseUserId(int32_t requestUserId) const;
 
-    std::vector<std::string> GetModuleNameVec()
+    std::vector<std::string> GetModuleNameVec() const
     {
         std::vector<std::string> moduleVec;
         for (const auto &it : innerModuleInfos_) {
@@ -1473,6 +1473,26 @@ public:
     void SetCertificateFingerprint(const std::string &fingerprint)
     {
         baseApplicationInfo_->fingerprint = fingerprint;
+    }
+
+    const std::string &GetNativeLibraryPath() const
+    {
+        return baseApplicationInfo_->nativeLibraryPath;
+    }
+
+    void SetNativeLibraryPath(const std::string &nativeLibraryPath)
+    {
+        baseApplicationInfo_->nativeLibraryPath = nativeLibraryPath;
+    }
+
+    const std::string &GetCpuAbi() const
+    {
+        return baseApplicationInfo_->cpuAbi;
+    }
+
+    void SetCpuAbi(const std::string &cpuAbi)
+    {
+        baseApplicationInfo_->cpuAbi = cpuAbi;
     }
 
     void SetDisposedStatus(int32_t status);

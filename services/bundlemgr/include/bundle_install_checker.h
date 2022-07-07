@@ -69,7 +69,13 @@ public:
      */
     ErrCode CheckAppLabelInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
-
+    /**
+     * @brief To check native so in all haps.
+     * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
+     * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
+     */
+    ErrCode CheckMultiNativeSo(
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To parse hap files and to obtain innerBundleInfo of each hap.
      * @param bundlePaths Indicates the file paths of all HAP packages.

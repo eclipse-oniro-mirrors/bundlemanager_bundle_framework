@@ -370,6 +370,37 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     return ret;
 }
 
+ErrCode BundleInstallChecker::CheckMultiNativeSo(
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::string nativeLibraryPath = (infos.begin()->second).GetNativeLibraryPath();
+    std::string cpuAbi = (infos.begin()->second).GetCpuAbi();
+    for (const auto &info : infos) {
+        if (info.second.GetNativeLibraryPath().empty()) {
+            continue;
+        }
+        if (nativeLibraryPath.empty()) {
+            nativeLibraryPath = info.second.GetNativeLibraryPath();
+            cpuAbi = info.second.GetCpuAbi();
+            continue;
+        }
+        if (nativeLibraryPath != info.second.GetNativeLibraryPath()
+            || cpuAbi != info.second.GetCpuAbi()) {
+            return ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE;
+        }
+    }
+
+    // Ensure the so is consistent in multiple haps
+    if (!nativeLibraryPath.empty()) {
+        for (auto &info : infos) {
+            info.second.SetNativeLibraryPath(nativeLibraryPath);
+            info.second.SetCpuAbi(cpuAbi);
+        }
+    }
+
+    return ERR_OK;
+}
+
 void BundleInstallChecker::ResetProperties()
 {
     isContainEntry_ = false;
