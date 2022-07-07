@@ -79,9 +79,10 @@ ohos_source_set("rpcid_decode") {
 
   sources = [ "src/rpcid_decode/syscap_tool.c" ]
 
-  deps = [ "//third_party/bounds_checking_function:libsec_static" ]
-
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "utils_base:utils",
+  ]
 
   part_name = "bundle_framework"
 }
