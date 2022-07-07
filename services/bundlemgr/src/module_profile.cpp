@@ -83,9 +83,7 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "backup",
     "window",
     "enterpriseAdmin",
-    "fileAccess",
-    "thumbnail",
-    "preview"
+    "fileAccess"
 };
 
 const std::set<std::string> ENTITY_TYPE_SET = {
