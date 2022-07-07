@@ -556,6 +556,10 @@ bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Ski
 {
     APP_LOGW("begin to match file type, type : %{public}s.", type.c_str());
     for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
         for (const SkillUri& skillUri : skill.uris) {
             if (skill.MatchType(type, skillUri.type)) {
                 APP_LOGW("match file type success.");
