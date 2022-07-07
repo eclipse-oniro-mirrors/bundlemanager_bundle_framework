@@ -62,7 +62,9 @@ ohos_unittest("BmsBundleKitServiceTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+  ]
 
   if (bundle_framework_graphics) {
     include_dirs += [
@@ -138,7 +140,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
   }
 
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 ohos_unittest("BmsBundleGetWindowPropertiesTest") {
@@ -185,7 +187,10 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/sandboxTest:sandboxTest",
+  ]
 
   if (bundle_framework_graphics) {
     include_dirs += [
@@ -259,9 +264,8 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {

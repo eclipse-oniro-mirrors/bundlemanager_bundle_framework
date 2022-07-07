@@ -42,7 +42,9 @@ ohos_unittest("BmsDistributedDataStorageTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+  ]
 
   deps += bundle_install_deps
 
@@ -88,7 +90,7 @@ ohos_unittest("BmsDistributedDataStorageTest") {
   }
 
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {
