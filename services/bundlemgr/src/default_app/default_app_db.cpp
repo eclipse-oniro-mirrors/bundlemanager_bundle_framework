@@ -62,7 +62,9 @@ bool DefaultAppDb::OpenKvDb()
         .createIfMissing = true,
         .encrypt = false,
         .autoSync = false,
-        .kvStoreType = KvStoreType::SINGLE_VERSION
+        .kvStoreType = KvStoreType::SINGLE_VERSION,
+        .area = Constants::EL1,
+        .baseDir = Constants::BMS_KV_BASE_DIR + appId_.appId
     };
     Status status = Status::ERROR;
     int32_t count = 1;
@@ -172,11 +174,7 @@ bool DefaultAppDb::SetDefaultApplicationInfo(int32_t userId, const std::string& 
 {
     APP_LOGD("begin to SetDefaultApplicationInfo, userId : %{public}d, type : %{public}s.", userId, type.c_str());
     std::map<std::string, Element> infos;
-    bool ret = GetDefaultApplicationInfos(userId, infos);
-    if (!ret) {
-        APP_LOGE("GetDefaultApplicationInfos failed.");
-        return false;
-    }
+    GetDefaultApplicationInfos(userId, infos);
     if (infos.find(type) == infos.end()) {
         APP_LOGD("add default app info.");
         infos.emplace(type, element);
@@ -184,7 +182,8 @@ bool DefaultAppDb::SetDefaultApplicationInfo(int32_t userId, const std::string& 
         APP_LOGD("modify default app info.");
         infos[type] = element;
     }
-    ret = SaveDataToDb(userId, infos);
+
+    bool ret = SaveDataToDb(userId, infos);
     if (!ret) {
         APP_LOGE("SaveDataToDb failed.");
         return false;
@@ -212,7 +211,7 @@ bool DefaultAppDb::DeleteDefaultApplicationInfo(int32_t userId, const std::strin
     bool ret = GetDataFromDb(userId, infos);
     if (!ret) {
         APP_LOGE("GetDataFromDb failed.");
-        return false;
+        return true;
     }
     if (infos.find(type) == infos.end()) {
         APP_LOGD("type doesn't exists in db.");

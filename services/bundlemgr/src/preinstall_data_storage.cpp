@@ -46,7 +46,9 @@ Status PreInstallDataStorage::GetKvStore()
         .createIfMissing = true,
         .encrypt = false,
         .autoSync = false,
-        .kvStoreType = KvStoreType::SINGLE_VERSION
+        .kvStoreType = KvStoreType::SINGLE_VERSION,
+        .area = Constants::EL1,
+        .baseDir = Constants::BMS_KV_BASE_DIR + appId_.appId
     };
 
     Status status = dataManager_.GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
