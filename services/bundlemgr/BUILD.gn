@@ -62,7 +62,7 @@ ohos_source_set("parser_common") {
 
   deps = [
     "${common_path}:libappexecfwk_common",
-    "//third_party/zlib:libz",
+    "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
@@ -176,6 +176,7 @@ ohos_shared_library("libbms") {
     ":bundle_parser",
     ":parser_common",
     "${common_path}:libappexecfwk_common",
+    "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
