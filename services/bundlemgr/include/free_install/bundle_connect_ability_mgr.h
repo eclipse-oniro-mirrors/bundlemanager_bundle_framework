@@ -116,7 +116,7 @@ private:
 
     /**
      * @brief Obtains the Calling Info object
-     * @param userId Indicates the userId of the bundle which will be returned.
+     * @param userId Indicates the user ID.
      * @param bundleNames Indicates the obtained bundle names.
      * @param callingAppids Indicates the ids of teh calling app.
      * @return Returns true if get callingInfo successfully; returns false otherwise.
@@ -126,7 +126,7 @@ private:
     /**
      * @brief Obtains the target ability Info object which will be send to service center.
      * @param want Indicates the information of the ability.
-     * @param userId Indicates the userId of the bundle which will be returned.
+     * @param userId Indicates the user ID.
      * @param innerBundleInfo Indicates the innerBundleInfo of the bundle which will be using.
      * @param targetAbilityInfo Indicates the targetAbilityInfo of the bundle which will be returned.
      */
