@@ -34,6 +34,7 @@ const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
 constexpr uint32_t BIT_ONE_FRONT_MODE = 0;
+constexpr uint32_t BIT_ONE_BACKGROUND_MODE = 1;
 constexpr uint32_t BIT_TWO_CUSTOM = 0;
 constexpr uint32_t BIT_FOUR_AZ_DEVICE = 0;
 constexpr uint32_t BIT_SIX_SAME_BUNDLE = 0;
@@ -492,14 +493,19 @@ bool ExistBundleNameInCallingBundles(const std::string &bundleName, const std::v
     return false;
 }
 
-int32_t GetTargetInfoFlag(const std::string deviceId, const std::string &bundleName,
+int32_t GetTargetInfoFlag(const Want &want, const std::string &deviceId, const std::string &bundleName,
     const std::vector<std::string> &callingBundleNames)
 {
     // make int from bits.
     int32_t flagZero = BIT_ZERO_COMPATIBLE;
-    int32_t flagOne = BIT_ONE_FRONT_MODE * BIT_ONE;
+    int32_t flagOne = 0;
+    if ((want.GetFlags() & Want::FLAG_INSTALL_WITH_BACKGROUND_MODE) == 0) {
+        flagOne = BIT_ONE_FRONT_MODE * BIT_ONE;
+    } else {
+        flagOne = BIT_ONE_BACKGROUND_MODE * BIT_ONE;
+    }
     int32_t flagTwo = BIT_TWO_CUSTOM * BIT_TWO;
-    int32_t flagThree = deviceId.empty() * BIT_THREE;
+    int32_t flagThree = !deviceId.empty() * BIT_THREE;
     int32_t flagFour = BIT_FOUR_AZ_DEVICE * BIT_FOUR;
     int32_t flagFive = !ExistBundleNameInCallingBundles(bundleName, callingBundleNames) * BIT_FIVE;
     int32_t flagSix = BIT_SIX_SAME_BUNDLE * BIT_SIX;
@@ -524,6 +530,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(
         std::string value = wantParams.GetStringByType(info, typeId);
         extValues.emplace(it.first, value);
     }
+
     targetAbilityInfo->targetExtSetting.extValues = extValues;
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
     targetAbilityInfo->targetInfo.bundleName = bundleName;
@@ -533,7 +540,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
     this->GetCallingInfo(userId, callingBundleNames, callingAppids);
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
-    targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(deviceId, bundleName, callingBundleNames);
+    targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
     targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
 }
 
