@@ -116,25 +116,22 @@ private:
 
     /**
      * @brief Obtains the Calling Info object
-     * @param innerBundleInfo Indicates the innerBundleInfo of the bundle which will be returned.
+     * @param userId Indicates the userId of the bundle which will be returned.
      * @param bundleNames Indicates the obtained bundle names.
      * @param callingAppids Indicates the ids of teh calling app.
      * @return Returns true if get callingInfo successfully; returns false otherwise.
      */
-    void GetCallingInfo(InnerBundleInfo &innerBundleInfo,
-        std::vector<std::string> &bundleNames, std::vector<std::string>& callingAppIds);
+    void GetCallingInfo(int32_t userId, std::vector<std::string> &bundleNames, std::vector<std::string> &callingAppIds);
 
     /**
      * @brief Obtains the target ability Info object which will be send to service center.
      * @param want Indicates the information of the ability.
+     * @param userId Indicates the userId of the bundle which will be returned.
      * @param innerBundleInfo Indicates the innerBundleInfo of the bundle which will be using.
      * @param targetAbilityInfo Indicates the targetAbilityInfo of the bundle which will be returned.
-     * @param targetInfo Indicates the targetInfo of the bundle which will be returned.
-     * @param targetExtSetting Indicates the targetExtSetting of the bundle which will be returned.
      */
-    void GetTargetAbilityInfo(const Want &want, InnerBundleInfo &innerBundleInfo,
-        sptr<TargetAbilityInfo> &targetAbilityInfo, sptr<TargetInfo> &targetInfo,
-        sptr<TargetExtSetting> &targetExtSetting);
+    void GetTargetAbilityInfo(const Want &want, int32_t userId, InnerBundleInfo &innerBundleInfo,
+        sptr<TargetAbilityInfo> &targetAbilityInfo);
 
     /**
      * @brief Check is need update module.
