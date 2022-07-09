@@ -33,7 +33,6 @@ const std::string TEMP_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/t
 const std::string MODULE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/com.example.l3jsdemo";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
-const std::string ROOT_DIR = "/data/app";
 const std::string BUNDLE_APP_DIR = "/data/app/el1/bundle/public/com.example.l4jsdemo/code";
 const std::string BUNDLE_EL1_BASE_DIR = "/data/app/el1/101/base/com.example.l4jsdemo/files/temp";
 const std::string BUNDLE_EL1_DATABASE_DIR = "/data/app/el1/101/database/com.example.l4jsdemo/temp";
@@ -41,7 +40,6 @@ const std::string BUNDLE_EL2_BASE_DIR = "/data/app/el2/101/base/com.example.l4js
 const std::string BUNDLE_EL3_BASE_DIR = "/data/app/el3/101/base/com.example.l4jsdemo/temp";
 const std::string BUNDLE_EL4_BASE_DIR = "/data/app/el4/101/base/com.example.l4jsdemo/temp";
 const std::string BUNDLE_NAME = "com.example.l4jsdemo";
-const int32_t ROOT_UID = 0;
 const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
@@ -83,16 +81,6 @@ BmsInstallDaemonTest::~BmsInstallDaemonTest()
 
 void BmsInstallDaemonTest::SetUpTestCase()
 {
-    if (access(ROOT_DIR.c_str(), F_OK) != 0) {
-        bool result = OHOS::ForceCreateDirectory(ROOT_DIR);
-        EXPECT_TRUE(result) << "fail to create root dir";
-    }
-    if (chown(ROOT_DIR.c_str(), ROOT_UID, ROOT_UID) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir own ship";
-    }
-    if (chmod(ROOT_DIR.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir mode";
-    }
 }
 
 void BmsInstallDaemonTest::TearDownTestCase()

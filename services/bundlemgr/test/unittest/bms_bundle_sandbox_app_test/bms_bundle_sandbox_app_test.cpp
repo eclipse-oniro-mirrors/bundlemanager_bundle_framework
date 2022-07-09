@@ -40,7 +40,6 @@ const std::string UNINSTALLED_BUNDLE_NAME = "com.example.l3jsdemo1";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
 const std::string RIGHT_BUNDLE_FIRST = "first_right.hap";
 const std::string SANDBOX_TEST = "sandboxTest.hap";
-const std::string ROOT_DIR = "/data/app";
 const std::string BUNDLE_DATA_DIR1 = "/data/app/el1/100/base/";
 const std::string BUNDLE_DATA_DIR2 = "/data/app/el1/100/database/";
 const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
@@ -55,7 +54,6 @@ int32_t APP_INDEX_1 = 1;
 int32_t APP_INDEX_2 = 2;
 const int32_t USERID = 100;
 const int32_t INVALID_USERID = 300;
-const int32_t ROOT_UID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
 } // namespace
 
@@ -95,16 +93,6 @@ BmsSandboxAppTest::~BmsSandboxAppTest()
 
 void BmsSandboxAppTest::SetUpTestCase()
 {
-    if (access(ROOT_DIR.c_str(), F_OK) != 0) {
-        bool result = OHOS::ForceCreateDirectory(ROOT_DIR);
-        EXPECT_TRUE(result) << "fail to create root dir";
-    }
-    if (chown(ROOT_DIR.c_str(), ROOT_UID, ROOT_UID) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir own ship";
-    }
-    if (chmod(ROOT_DIR.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir mode";
-    }
 }
 
 void BmsSandboxAppTest::TearDownTestCase()

@@ -55,8 +55,6 @@ const std::string FORMAT_ERROR_BUNDLE = "format_error_profile.hap";
 const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
-const std::string ROOT_DIR = "/data/app";
-const int32_t ROOT_UID = 0;
 const int32_t USERID = 100;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
@@ -168,16 +166,6 @@ ErrCode BmsBundleInstallerTest::UnInstallBundle(const std::string &bundleName) c
 
 void BmsBundleInstallerTest::SetUpTestCase()
 {
-    if (access(ROOT_DIR.c_str(), F_OK) != 0) {
-        bool result = OHOS::ForceCreateDirectory(ROOT_DIR);
-        EXPECT_TRUE(result) << "fail to create root dir";
-    }
-    if (chown(ROOT_DIR.c_str(), ROOT_UID, ROOT_UID) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir own ship";
-    }
-    if (chmod(ROOT_DIR.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir mode";
-    }
 }
 
 void BmsBundleInstallerTest::TearDownTestCase()
