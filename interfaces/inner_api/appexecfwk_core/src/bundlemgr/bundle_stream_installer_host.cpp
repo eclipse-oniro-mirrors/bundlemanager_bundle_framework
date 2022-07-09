@@ -60,19 +60,7 @@ ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, Messa
 
 ErrCode BundleStreamInstallerHost::HandleInstall(MessageParcel &data, MessageParcel &reply)
 {
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
-    if (object == nullptr) {
-        reply.WriteBool(false);
-        APP_LOGE("read receiver failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
-    if (statusReceiver == nullptr) {
-        reply.WriteBool(false);
-        APP_LOGE("cast remote object to status receiver error");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!Install(statusReceiver)) {
+    if (!Install()) {
         reply.WriteBool(false);
         APP_LOGE("stream install failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

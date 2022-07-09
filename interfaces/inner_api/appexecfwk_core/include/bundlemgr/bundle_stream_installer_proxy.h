@@ -29,7 +29,7 @@ public:
     virtual ~BundleStreamInstallerProxy() override;
 
     virtual int CreateStream(const std::string &hapName, long offset) override;
-    virtual bool Install(const sptr<IStatusReceiver>& receiver) override;
+    virtual bool Install() override;
     virtual uint32_t GetInstallerId() const override;
     virtual void SetInstallerId(uint32_t installerId) override;
     virtual void UnInit() override {};
