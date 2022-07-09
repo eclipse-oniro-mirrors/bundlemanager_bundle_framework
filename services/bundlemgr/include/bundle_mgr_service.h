@@ -115,10 +115,8 @@ public:
     bool Hidump(const std::vector<std::string> &args, std::string& result) const;
 
 protected:
-#ifdef DEVICE_MANAGER_ENABLE
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
-#endif
 
 private:
     /**
