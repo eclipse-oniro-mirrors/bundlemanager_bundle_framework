@@ -485,7 +485,7 @@ void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId,
 
 bool ExistBundleNameInCallingBundles(const std::string &bundleName, const std::vector<std::string> &callingBundleNames)
 {
-    for (auto bundleNameItem : callingBundleNames) {
+    for (auto &bundleNameItem : callingBundleNames) {
         if (bundleNameItem == bundleName) {
             return true;
         }
@@ -734,7 +734,12 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
         APP_LOGE("BundleConnectAbilityMgr::UpgradeAtomicService map emplace error");
         return;
     }
-    this->UpgradeCheck(*targetAbilityInfo, want, nullptr, userId);
+    if (innerBundleInfo.GetEntryInstallationFree()) {
+        APP_LOGI("bundleName:%{public}s is atomic service", bundleName.c_str());
+        this->UpgradeCheck(*targetAbilityInfo, want, nullptr, userId);
+    } else {
+        APP_LOGI("bundleName:%{public}s is atomic application", bundleName.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
