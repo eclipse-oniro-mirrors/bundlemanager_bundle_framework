@@ -29,6 +29,7 @@ struct TargetInfo : public Parcelable {
     std::string moduleName;
     std::string abilityName;
     int32_t flags;
+    int32_t reasonFlag;
     int32_t callingUid;
     int32_t callingAppType;
     std::vector<std::string> callingBundleNames;
