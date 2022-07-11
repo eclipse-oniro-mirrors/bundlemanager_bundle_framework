@@ -541,6 +541,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(
     this->GetCallingInfo(userId, callingBundleNames, callingAppids);
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
+    targetAbilityInfo->targetInfo.reasonFlag = static_cast<int32_t>(innerBundleInfo.GetModuleUpgradeFlag(moduleName));
     targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
 }
 

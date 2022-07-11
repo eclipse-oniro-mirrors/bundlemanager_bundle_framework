@@ -33,6 +33,7 @@ const std::string JSON_KEY_BUNDLENAME = "bundleName";
 const std::string JSON_KEY_MODULENAME = "moduleName";
 const std::string JSON_KEY_ABILITYNAME = "abilityName";
 const std::string JSON_KEY_FLAGS = "flags";
+const std::string JSON_KEY_REASONFLAG = "reasonFlag";
 const std::string JSON_KEY_CALLINGUID = "callingUid";
 const std::string JSON_KEY_CALLINGAPPTYPE = "callingAppType";
 const std::string JSON_KEY_CALLINGBUNDLENAMES = "callingBundleNames";
@@ -104,6 +105,7 @@ void to_json(nlohmann::json &jsonObject, const TargetInfo &targetInfo)
         {JSON_KEY_MODULENAME, targetInfo.moduleName},
         {JSON_KEY_ABILITYNAME, targetInfo.abilityName},
         {JSON_KEY_FLAGS, targetInfo.flags},
+        {JSON_KEY_REASONFLAG, targetInfo.reasonFlag},
         {JSON_KEY_CALLINGUID, targetInfo.callingUid},
         {JSON_KEY_CALLINGAPPTYPE, targetInfo.callingAppType},
         {JSON_KEY_CALLINGBUNDLENAMES, targetInfo.callingBundleNames},
@@ -157,6 +159,14 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::uint32_t>(jsonObject,
         jsonObjectEnd,
+        JSON_KEY_REASONFLAG,
+        targetInfo.reasonFlag,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::uint32_t>(jsonObject,
+        jsonObjectEnd,
         JSON_KEY_CALLINGUID,
         targetInfo.callingUid,
         JsonType::NUMBER,
@@ -199,6 +209,7 @@ bool TargetInfo::ReadFromParcel(Parcel &parcel)
     moduleName = Str16ToStr8(parcel.ReadString16());
     abilityName = Str16ToStr8(parcel.ReadString16());
     flags = parcel.ReadInt32();
+    reasonFlag = parcel.ReadInt32();
     callingUid = parcel.ReadInt32();
     callingAppType = parcel.ReadInt32();
     int32_t callingBundleNamesSize = 0;
@@ -221,6 +232,7 @@ bool TargetInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, flags);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reasonFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, callingUid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, callingAppType);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, callingBundleNames.size());
