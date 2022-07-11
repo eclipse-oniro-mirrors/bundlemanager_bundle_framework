@@ -130,7 +130,7 @@ private:
      * @param innerBundleInfo Indicates the innerBundleInfo of the bundle which will be using.
      * @param targetAbilityInfo Indicates the targetAbilityInfo of the bundle which will be returned.
      */
-    void GetTargetAbilityInfo(const Want &want, int32_t userId, InnerBundleInfo &innerBundleInfo,
+    void GetTargetAbilityInfo(const Want &want, int32_t userId, const InnerBundleInfo &innerBundleInfo,
         sptr<TargetAbilityInfo> &targetAbilityInfo);
 
     /**

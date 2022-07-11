@@ -512,8 +512,8 @@ int32_t GetTargetInfoFlag(const Want &want, const std::string &deviceId, const s
     return flagZero + flagOne + flagTwo + flagThree + flagFour + flagFive + flagSix;
 }
 
-void BundleConnectAbilityMgr::GetTargetAbilityInfo(
-    const Want &want, int32_t userId, InnerBundleInfo &innerBundleInfo, sptr<TargetAbilityInfo> &targetAbilityInfo)
+void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t userId,
+    const InnerBundleInfo &innerBundleInfo, sptr<TargetAbilityInfo> &targetAbilityInfo)
 {
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
@@ -631,6 +631,10 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     }
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
     bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName,
         flags, innerBundleInfo, userId);
     bool abilityInfoResult = bundleDataMgr_->QueryAbilityInfo(want, flags, userId, abilityInfo);
@@ -699,9 +703,18 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     APP_LOGI("UpgradeAtomicService");
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
-    ElementName element = want.GetElement();
-    std::string bundleName = element.GetBundleName();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return;
+    }
+    std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo innerBundleInfo;
+    bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName, want.GetFlags(), innerBundleInfo, userId);
+    if (!innerBundleInfo.GetEntryInstallationFree()) {
+        APP_LOGI("bundleName:%{public}s is atomic application", bundleName.c_str());
+        return;
+    }
+    APP_LOGI("bundleName:%{public}s is atomic service", bundleName.c_str());
     sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
     if (targetAbilityInfo == nullptr) {
         APP_LOGE("targetAbilityInfo is nullptr");
@@ -712,7 +725,6 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
         APP_LOGE("targetInfo is nullptr");
         return;
     }
-    bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName, want.GetFlags(), innerBundleInfo, userId);
     sptr<TargetExtSetting> targetExtSetting = new(std::nothrow) TargetExtSetting();
     if (targetExtSetting == nullptr) {
         APP_LOGE("targetExtSetting is nullptr");
@@ -735,12 +747,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
         APP_LOGE("BundleConnectAbilityMgr::UpgradeAtomicService map emplace error");
         return;
     }
-    if (innerBundleInfo.GetEntryInstallationFree()) {
-        APP_LOGI("bundleName:%{public}s is atomic service", bundleName.c_str());
-        this->UpgradeCheck(*targetAbilityInfo, want, nullptr, userId);
-    } else {
-        APP_LOGI("bundleName:%{public}s is atomic application", bundleName.c_str());
-    }
+    this->UpgradeCheck(*targetAbilityInfo, want, nullptr, userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
