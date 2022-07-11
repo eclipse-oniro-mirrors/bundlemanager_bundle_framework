@@ -35,9 +35,10 @@ BundleStreamInstallerHostImpl::~BundleStreamInstallerHostImpl()
     UnInit();
 }
 
-bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam)
+bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
     installParam_ = installParam;
+    receiver_ = statusReceiver;
     installParam_.streamInstallMode = true;
     std::string tempDir = BundleUtil::CreateInstallTempDir(installerId_);
     if (tempDir.empty()) {
@@ -83,21 +84,22 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName, long
     return fd;
 }
 
-bool BundleStreamInstallerHostImpl::Install(const sptr<IStatusReceiver>& receiver)
+bool BundleStreamInstallerHostImpl::Install()
 {
-    if (receiver == nullptr) {
-        APP_LOGE("receiver is nullptr");
+    if (receiver_ == nullptr) {
+        APP_LOGE("receiver_ is nullptr");
         return false;
     }
-    receiver->SetStreamInstallId(installerId_);
+    receiver_->SetStreamInstallId(installerId_);
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (installer == nullptr) {
         APP_LOGE("get bundle installer failed");
+        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return false;
     }
     std::vector<std::string> pathVec;
     pathVec.emplace_back(tempDir_);
-    auto res = installer->Install(pathVec, installParam_, receiver);
+    auto res = installer->Install(pathVec, installParam_, receiver_);
     if (!res) {
         APP_LOGE("install bundle failed");
         return false;

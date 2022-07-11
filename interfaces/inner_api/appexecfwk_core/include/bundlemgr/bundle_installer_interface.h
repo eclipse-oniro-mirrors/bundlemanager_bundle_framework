@@ -113,7 +113,8 @@ public:
      */
     virtual ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) = 0;
 
-    virtual sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam) = 0;
+    virtual sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver) = 0;
     virtual bool DestoryBundleStreamInstaller(uint32_t streamInstallerId) = 0;
     virtual ErrCode StreamInstall(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) = 0;

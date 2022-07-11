@@ -17,7 +17,6 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STREAM_INSTALLER_INTERFACE_H
 
 #include "iremote_broker.h"
-#include "status_receiver_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -26,7 +25,7 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.BundleStreamInstaller");
 
     virtual int CreateStream(const std::string &hapName, long offset) = 0;
-    virtual bool Install(const sptr<IStatusReceiver>& receiver) = 0;
+    virtual bool Install() = 0;
 
     virtual uint32_t GetInstallerId() const = 0;
     virtual void SetInstallerId(uint32_t installerId) = 0;

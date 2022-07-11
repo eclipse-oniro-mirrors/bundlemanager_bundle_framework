@@ -2942,10 +2942,6 @@ static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFil
         APP_LOGE("install param error");
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
         installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
-    } else if (res == ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR) {
-        APP_LOGE("install internal error");
-        installResult.resultCode = IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
-        installResult.resultMsg = "STATUS_INSTALL_FAILURE";
     } else if (res == ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) {
         APP_LOGE("install invalid path");
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID;

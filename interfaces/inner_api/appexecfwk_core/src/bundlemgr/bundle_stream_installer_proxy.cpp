@@ -74,20 +74,12 @@ int BundleStreamInstallerProxy::CreateStream(const std::string &hapName, long of
     return fd;
 }
 
-bool BundleStreamInstallerProxy::Install(const sptr<IStatusReceiver>& receiver)
+bool BundleStreamInstallerProxy::Install()
 {
     APP_LOGD("bundle stream installer proxy install begin");
     MessageParcel data;
     if (!data.WriteInterfaceToken(BundleStreamInstallerProxy::GetDescriptor())) {
         APP_LOGE("fail to Install due to write interface token fail");
-        return false;
-    }
-    if (receiver == nullptr) {
-        APP_LOGE("fail to install, for receiver is nullptr");
-        return false;
-    }
-    if (!data.WriteObject<IRemoteObject>(receiver->AsObject())) {
-        APP_LOGE("write parcel failed");
         return false;
     }
 
@@ -98,7 +90,7 @@ bool BundleStreamInstallerProxy::Install(const sptr<IStatusReceiver>& receiver)
         return res;
     }
     APP_LOGD("bundle stream installer proxy install end");
-    return reply.ReadBool();
+    return true;
 }
 
 uint32_t BundleStreamInstallerProxy::GetInstallerId() const

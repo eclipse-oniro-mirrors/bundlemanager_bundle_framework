@@ -251,8 +251,20 @@ void BundleInstallerHost::HandleCreateStreamInstaller(Parcel &data, Parcel &repl
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        reply.WriteBool(false);
+        APP_LOGE("read receiver failed");
+        return;
+    }
+    sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        reply.WriteBool(false);
+        APP_LOGE("cast remote object to status receiver error");
+        return;
+    }
 
-    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(*installParam);
+    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(*installParam, statusReceiver);
     if (streamInstaller == nullptr) {
         if (!reply.WriteBool(false)) {
             APP_LOGE("write result failed");
@@ -434,10 +446,12 @@ ErrCode BundleInstallerHost::StreamInstall(const std::vector<std::string> &bundl
     return ERR_OK;
 }
 
-sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const InstallParam &installParam)
+sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const InstallParam &installParam,
+    const sptr<IStatusReceiver> &statusReceiver)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return nullptr;
     }
     auto uid = IPCSkeleton::GetCallingUid();
@@ -445,11 +459,13 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         ++streamInstallerIds_, uid));
     if (streamInstaller == nullptr) {
         APP_LOGE("streamInstaller is nullptr");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
-    bool res = streamInstaller->Init(installParam);
+    bool res = streamInstaller->Init(installParam, statusReceiver);
     if (!res) {
         APP_LOGE("stream installer init failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     return streamInstaller;

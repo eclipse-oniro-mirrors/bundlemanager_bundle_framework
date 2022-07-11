@@ -240,7 +240,8 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
     return reply.ReadInt32();
 }
 
-sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const InstallParam &installParam)
+sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const InstallParam &installParam,
+    const sptr<IStatusReceiver> &statusReceiver)
 {
     APP_LOGD("create stream installer begin");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -248,19 +249,32 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
+    if (statusReceiver == nullptr) {
+        APP_LOGE("fail to install, for receiver is nullptr");
+        return nullptr;
+    }
+
     bool ret = data.WriteInterfaceToken(GetDescriptor());
     if (!ret) {
         APP_LOGE("fail to write interface token into the parcel!");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     ret = data.WriteParcelable(&installParam);
     if (!ret) {
         APP_LOGE("fail to write parameter into the parcel!");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        return nullptr;
+    }
+    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+        APP_LOGE("write parcel failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     bool res = SendInstallRequest(IBundleInstaller::Message::CREATE_STREAM_INSTALLER, data, reply, option);
     if (!res) {
         APP_LOGE("CreateStreamInstaller failed due to send request fail");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     if (!reply.ReadBool()) {
@@ -318,7 +332,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
-    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam);
+    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver);
     if (streamInstaller == nullptr) {
         APP_LOGE("stream install failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -331,10 +345,11 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     // start install haps
-    bool ret = streamInstaller->Install(statusReceiver);
+    bool ret = streamInstaller->Install();
     if (!ret) {
         APP_LOGE("stream install failed");
         DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     APP_LOGD("stream install end");

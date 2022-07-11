@@ -20,6 +20,7 @@
 
 #include "bundle_stream_installer_host.h"
 #include "install_param.h"
+#include "status_receiver_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -28,11 +29,11 @@ public:
     BundleStreamInstallerHostImpl(uint32_t installerId, int32_t installedUid);
     virtual ~BundleStreamInstallerHostImpl() override;
 
-    bool Init(const InstallParam &installParam);
+    bool Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver);
     virtual void UnInit() override;
 
     virtual int CreateStream(const std::string &bundleName, long offset) override;
-    virtual bool Install(const sptr<IStatusReceiver>& receiver) override;
+    virtual bool Install() override;
 
     virtual uint32_t GetInstallerId() const override;
     virtual void SetInstallerId(uint32_t installerId) override;
@@ -44,6 +45,7 @@ private:
     InstallParam installParam_;
     int32_t installedUid_;
     bool isInstallStarted_ = false;
+    sptr<IStatusReceiver> receiver_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS
