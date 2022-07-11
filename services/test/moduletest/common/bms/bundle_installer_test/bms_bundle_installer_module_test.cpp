@@ -451,8 +451,6 @@ std::shared_ptr<SingleKvStore> BmsBundleInstallerModuleTest::GetKvStorePtr(Distr
     options.autoSync = true;
     options.kvStoreType = KvStoreType::SINGLE_VERSION;
     AppId appId{Constants::APP_ID};
-    options.baseDir = Constants::BMS_KV_BASE_DIR + appId.appId;
-    options.area = Constants::EL1;
     StoreId storeId{Constants::STORE_ID};
     std::shared_ptr<SingleKvStore> kvStorePtr = nullptr;
     Status status = dataManager.GetSingleKvStore(options, appId, storeId, kvStorePtr);

@@ -189,8 +189,6 @@ const std::string ABILITY_USAGE_STORE_ID = "ability_usage_datas";
 const std::string PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";
 const std::string DISTRIBUTE_DATA_STORE_ID = "distribute_bundle_datas";
 const std::string DEFAULT_APP_DATA_STORE_ID = "default_app_datas";
-const std::string BMS_KV_BASE_DIR = "/data/service/el1/public/database/";
-constexpr int32_t EL1 = 1;
 
 // single max hap size
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
