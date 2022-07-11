@@ -46,9 +46,7 @@ const std::string THIRD_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string SYSTEM_BUNDLE_NAME = "com.system.hiworld.example";
 const std::string BUNDLE_CODE_PATH = "/data/app/el1/bundle/public/";
 const std::string BUNDLE_DATA_PATH = "/data/app/el2/100/base/";
-const std::string ROOT_DIR = "/data/app";
 const std::string ERROR_SUFFIX = ".rpk";
-const int32_t ROOT_UID = 0;
 }  // namespace
 
 class BmsBundleInstallerModuleTest : public testing::Test {
@@ -515,16 +513,6 @@ void BmsBundleInstallerModuleTest::CheckFileExist(
 
 void BmsBundleInstallerModuleTest::SetUpTestCase()
 {
-    if (access(ROOT_DIR.c_str(), F_OK) != 0) {
-        bool result = OHOS::ForceCreateDirectory(ROOT_DIR);
-        EXPECT_TRUE(result);
-    }
-    if (chown(ROOT_DIR.c_str(), ROOT_UID, ROOT_UID) != 0) {
-        EXPECT_TRUE(false);
-    }
-    if (chmod(ROOT_DIR.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        EXPECT_TRUE(false);
-    }
 }
 
 void BmsBundleInstallerModuleTest::TearDownTestCase()

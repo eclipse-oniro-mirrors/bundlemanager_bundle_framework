@@ -46,11 +46,9 @@ const std::string V3_BUNDLE = "version3.hap";
 const std::string ERROR_FORMART_BUNDLE = "format_error_profile.hap";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
-const std::string ROOT_DIR = "/data/app";
 const std::string PROFILE_FILE = "config.json";
 const std::string SEPARATOR = "/";
 const std::chrono::seconds SLEEP_TIME {2};
-const int32_t ROOT_UID = 0;
 const int32_t USERID = 100;
 const uint32_t VERSION_1 = 1;
 const uint32_t VERSION_2 = 2;
@@ -87,16 +85,6 @@ private:
 
 void BmsBundleUpdaterTest::SetUpTestCase()
 {
-    if (access(ROOT_DIR.c_str(), F_OK) != 0) {
-        bool result = OHOS::ForceCreateDirectory(ROOT_DIR);
-        EXPECT_TRUE(result) << "fail to create root dir";
-    }
-    if (chown(ROOT_DIR.c_str(), ROOT_UID, ROOT_UID) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir own ship";
-    }
-    if (chmod(ROOT_DIR.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        EXPECT_TRUE(false) << "fail to change root dir mode";
-    }
 }
 
 void BmsBundleUpdaterTest::TearDownTestCase()

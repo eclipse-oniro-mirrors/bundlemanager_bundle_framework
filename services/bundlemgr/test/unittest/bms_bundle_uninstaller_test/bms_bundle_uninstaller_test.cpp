@@ -53,11 +53,9 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3j
 const std::string MODULE_CODE_DIR1 = "/data/app/el1/bundle/public/com.example.l3jsdemo/com.example.l3jsdemo";
 const std::string MODULE_CODE_DIR2 = "/data/app/el1/bundle/public/com.example.l3jsdemo/com.example.l2jsdemo";
 const std::string RESOURCE_TEST_PATH = "/data/test/resource/bms/install_bundle/test/";
-const std::string ROOT_DIR = "/data/app";
 const std::string DB_FILE_PATH = "/data/bundlemgr";
 const int32_t INVALID_USERID = 0;
 const int32_t USERID = 100;
-const int32_t ROOT_UID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
 
@@ -101,16 +99,6 @@ BmsBundleUninstallerTest::~BmsBundleUninstallerTest()
 
 void BmsBundleUninstallerTest::SetUpTestCase()
 {
-    if (access(ROOT_DIR.c_str(), F_OK) != 0) {
-        bool result = OHOS::ForceCreateDirectory(ROOT_DIR);
-        EXPECT_TRUE(result);
-    }
-    if (chown(ROOT_DIR.c_str(), ROOT_UID, ROOT_UID) != 0) {
-        EXPECT_TRUE(false);
-    }
-    if (chmod(ROOT_DIR.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-        EXPECT_TRUE(false);
-    }
 }
 
 void BmsBundleUninstallerTest::TearDownTestCase()
