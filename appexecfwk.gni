@@ -27,6 +27,8 @@ declare_args() {
   bundle_framework_graphics = true
   bundle_framework_free_install = true
   bundle_framework_default_app = true
+  bundle_framework_launcher = true
+  bundle_framework_sandbox_app = true
 
   ability_runtime_enable = true
   account_enable = true
@@ -90,6 +92,8 @@ declare_args() {
   print("bundle_framework_graphics = " + "$bundle_framework_graphics")
   print("bundle_framework_free_install = " + "$bundle_framework_free_install")
   print("bundle_framework_default_app = " + "$bundle_framework_default_app")
+  print("bundle_framework_launcher = " + "$bundle_framework_launcher")
+  print("bundle_framework_sandbox_app = " + "$bundle_framework_sandbox_app")
   print("ability_runtime_enable = " + "$ability_runtime_enable")
   print("account_enable = " + "$account_enable")
   print("configpolicy_enable = " + "$configpolicy_enable")

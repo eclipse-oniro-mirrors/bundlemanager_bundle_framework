@@ -31,6 +31,10 @@ ohos_systemtest("BundleMgrSandboxAppSystemTest") {
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
 
+  if (bundle_framework_sandbox_app) {
+    defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
+  }
+
   if (bundle_framework_graphics) {
     public_deps = [
       "//third_party/icu/icu4c:shared_icuuc",
@@ -54,5 +58,7 @@ ohos_systemtest("BundleMgrSandboxAppSystemTest") {
 group("systemtest") {
   testonly = true
 
-  deps = [ ":BundleMgrSandboxAppSystemTest" ]
+  if (bundle_framework_sandbox_app) {
+    deps = [ ":BundleMgrSandboxAppSystemTest" ]
+  }
 }

@@ -198,6 +198,11 @@ ohos_shared_library("libbms") {
     "syscap_codec:syscap_interface_shared",
   ]
 
+  if (bundle_framework_sandbox_app) {
+    sources += sandbox_app
+    defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
+  }
+
   if (ability_runtime_enable) {
     external_deps += [ "ability_runtime:ability_manager" ]
     defines += [ "ABILITY_RUNTIME_ENABLE" ]

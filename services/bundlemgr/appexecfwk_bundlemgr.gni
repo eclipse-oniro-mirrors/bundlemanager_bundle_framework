@@ -42,9 +42,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
   "${services_path}/bundlemgr/src/pre_install_bundle_info.cpp",
-  "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_data_mgr.cpp",
-  "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_exception_handler.cpp",
-  "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_installer.cpp",
+  "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_app_helper.cpp",
   "${services_path}/bundlemgr/src/status_receiver_proxy.cpp",
   "${services_path}/bundlemgr/src/system_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/xcollie_helper.cpp",
@@ -81,6 +79,12 @@ default_app = [
   "${services_path}/bundlemgr/src/default_app/default_app_data.cpp",
   "${services_path}/bundlemgr/src/default_app/default_app_host_impl.cpp",
   "${services_path}/bundlemgr/src/default_app/default_app_mgr.cpp",
+]
+
+sandbox_app = [
+  "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_data_mgr.cpp",
+  "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_exception_handler.cpp",
+  "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_installer.cpp",
 ]
 
 if (bms_rdb_enable) {

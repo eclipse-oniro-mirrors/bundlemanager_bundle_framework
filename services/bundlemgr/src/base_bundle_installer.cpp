@@ -28,7 +28,7 @@
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_mgr_service.h"
-#include "bundle_sandbox_installer.h"
+#include "bundle_sandbox_app_helper.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
@@ -1714,12 +1714,12 @@ ErrCode BaseBundleInstaller::UninstallAllSandboxApps(const std::string &bundleNa
         APP_LOGE("UninstallAllSandboxApps failed due to empty bundle name");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
-    std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
-    if (installer == nullptr) {
-        APP_LOGE("UninstallAllSandboxApps failed due to installer nullptr");
+    auto helper = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
+    if (helper == nullptr) {
+        APP_LOGE("UninstallAllSandboxApps failed due to helper nullptr");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    if (installer->UninstallAllSandboxApps(bundleName, userId) != ERR_OK) {
+    if (helper->UninstallAllSandboxApps(bundleName, userId) != ERR_OK) {
         APP_LOGE("UninstallAllSandboxApps failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }

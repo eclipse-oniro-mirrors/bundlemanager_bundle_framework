@@ -19,7 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_exception_handler.h"
-#include "bundle_sandbox_exception_handler.h"
+#include "bundle_sandbox_app_helper.h"
 
 #include "kvstore_death_recipient_callback.h"
 
@@ -74,8 +74,7 @@ void BundleDataStorageDatabase::SaveEntries(
         bool isBundleValid = true;
         auto handler = std::make_shared<BundleExceptionHandler>(shared_from_this());
         handler->HandleInvalidBundle(innerBundleInfo, isBundleValid);
-        auto sandboxHandler = std::make_shared<BundleSandboxExceptionHandler>(shared_from_this());
-        sandboxHandler->RemoveSandboxApp(innerBundleInfo);
+        DelayedSingleton<BundleSandboxAppHelper>::GetInstance()->RemoveSandboxApp(shared_from_this(), innerBundleInfo);
         if (!isBundleValid) {
             continue;
         }

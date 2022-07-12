@@ -22,6 +22,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
 #include "element_name.h"
@@ -1526,16 +1527,16 @@ ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
-    auto sandboxDataMgr = dataMgr->GetSandboxDataMgr();
-    if (sandboxDataMgr == nullptr) {
-        APP_LOGE("sandDataMgr is nullptr");
+    auto sandboxAppHelper = dataMgr->GetSandboxAppHelper();
+    if (sandboxAppHelper == nullptr) {
+        APP_LOGE("sandboxAppHelper is nullptr");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
     int32_t requestUserId = dataMgr->GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID;
     }
-    return sandboxDataMgr->GetSandboxAppBundleInfo(bundleName, appIndex, requestUserId, info);
+    return sandboxAppHelper->GetSandboxAppBundleInfo(bundleName, appIndex, requestUserId, info);
 }
 
 bool BundleMgrHostImpl::SetDisposedStatus(const std::string &bundleName, int32_t status)
@@ -1641,16 +1642,16 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
-    auto sandboxDataMgr = dataMgr->GetSandboxDataMgr();
-    if (sandboxDataMgr == nullptr) {
-        APP_LOGE("sandDataMgr is nullptr");
+    auto sandboxAppHelper = dataMgr->GetSandboxAppHelper();
+    if (sandboxAppHelper == nullptr) {
+        APP_LOGE("sandboxAppHelper is nullptr");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
     int32_t requestUserId = dataMgr->GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID;
     }
-    return sandboxDataMgr->GetSandboxHapModuleInfo(abilityInfo, appIndex, requestUserId, info);
+    return sandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, requestUserId, info);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
