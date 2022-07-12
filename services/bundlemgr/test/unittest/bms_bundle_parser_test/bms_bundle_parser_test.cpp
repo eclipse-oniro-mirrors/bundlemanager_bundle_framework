@@ -287,7 +287,6 @@ void BmsBundleParserTest::GetProfileTypeErrorProps(nlohmann::json &typeErrorProp
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_ABILITIES] = JsonConstants::NOT_ARRAY_TYPE;
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_JS] = JsonConstants::NOT_OBJECT_TYPE;
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_SHORTCUTS] = JsonConstants::NOT_ARRAY_TYPE;
-    typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS] = JsonConstants::NOT_ARRAY_TYPE;
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_REQ_PERMISSIONS] = JsonConstants::NOT_ARRAY_TYPE;
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_COLOR_MODE] = JsonConstants::NOT_STRING_TYPE;
     // BUNDLE_MODULE_PROFILE_KEY_DISTRO
@@ -525,7 +524,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_0800, Function | SmallTest | Level0)
         BUNDLE_MODULE_PROFILE_KEY_ABILITIES,
         BUNDLE_MODULE_PROFILE_KEY_JS,
         BUNDLE_MODULE_PROFILE_KEY_SHORTCUTS,
-        BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS,
+        BUNDLE_MODULE_PROFILE_KEY_DEFINE_PERMISSIONS,
         BUNDLE_MODULE_PROFILE_KEY_REQ_PERMISSIONS,
         BUNDLE_MODULE_PROFILE_KEY_COLOR_MODE,
         // sub BUNDLE_MODULE_PROFILE_KEY_ABILITIES
@@ -747,7 +746,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_1900, Function | SmallTest | Level1)
 HWTEST_F(BmsBundleParserTest, TestParse_2000, Function | SmallTest | Level1)
 {
     nlohmann::json errorDefPermJson = CONFIG_JSON;
-    errorDefPermJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS] = R"(
+    errorDefPermJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DEFINE_PERMISSIONS] = R"(
         [{
             "name": "~!@#$%^&*(){}[]:;'?<>,.|`/./+_-",
             "reason": "~!@#$%^&*(){}[]:;'?<>,.|`/./+_-",
@@ -784,7 +783,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2100, Function | SmallTest | Level1)
 HWTEST_F(BmsBundleParserTest, TestParse_2200, Function | SmallTest | Level1)
 {
     nlohmann::json errorDefPermJson = CONFIG_JSON;
-    errorDefPermJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS] = R"(
+    errorDefPermJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DEFINE_PERMISSIONS] = R"(
         [{
 
         }]

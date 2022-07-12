@@ -87,7 +87,6 @@ const std::string MODULE_PAGES = "pages";
 const std::string MODULE_META_DATA = "metadata";
 const std::string MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 const std::string MODULE_DEFINE_PERMISSIONS = "definePermissions";
-const std::string MODULE_DEF_PERMS = "defPermissions";
 const std::string MODULE_EXTENSION_KEYS = "extensionKeys";
 const std::string MODULE_EXTENSION_SKILL_KEYS = "extensionSkillKeys";
 const std::string MODULE_IS_MODULE_JSON = "isModuleJson";
@@ -388,7 +387,6 @@ void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermissio
         {Profile::DEFINEPERMISSION_NAME, definePermission.name},
         {Profile::DEFINEPERMISSION_GRANT_MODE, definePermission.grantMode},
         {Profile::DEFINEPERMISSION_AVAILABLE_LEVEL, definePermission.availableLevel},
-        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS_AVAILABLESCOPE, definePermission.availableScope},
         {Profile::DEFINEPERMISSION_PROVISION_ENABLE, definePermission.provisionEnable},
         {Profile::DEFINEPERMISSION_DISTRIBUTED_SCENE_ENABLE, definePermission.distributedSceneEnable},
         {Profile::LABEL, definePermission.label},
@@ -433,7 +431,6 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_META_DATA, info.metadata},
         {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
         {MODULE_DEFINE_PERMISSIONS, info.definePermissions},
-        {MODULE_DEF_PERMS, info.defPermissions},
         {MODULE_EXTENSION_KEYS, info.extensionKeys},
         {MODULE_EXTENSION_SKILL_KEYS, info.extensionSkillKeys},
         {MODULE_IS_MODULE_JSON, info.isModuleJson},
@@ -781,14 +778,6 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<DefinePermission>>(jsonObject,
-        jsonObjectEnd,
-        MODULE_DEF_PERMS,
-        info.defPermissions,
-        JsonType::ARRAY,
-        false,
-        ProfileReader::parseResult,
-        ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_EXTENSION_KEYS,
@@ -1067,14 +1056,6 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DEF_PERMISSIONS_AVAILABLESCOPE,
-        definePermission.availableScope,
-        JsonType::ARRAY,
-        false,
-        ProfileReader::parseResult,
-        ArrayType::STRING);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_PROVISION_ENABLE,
@@ -1790,10 +1771,6 @@ void InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
                 [](const auto &p) { return p.name; });
             std::transform(info.second.definePermissions.begin(),
                 info.second.definePermissions.end(),
-                std::back_inserter(bundleInfo.defPermissions),
-                [](const auto &p) { return p.name; });
-            std::transform(info.second.defPermissions.begin(),
-                info.second.defPermissions.end(),
                 std::back_inserter(bundleInfo.defPermissions),
                 [](const auto &p) { return p.name; });
         }
