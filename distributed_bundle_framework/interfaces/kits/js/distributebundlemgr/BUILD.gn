@@ -29,6 +29,7 @@ ohos_shared_library("distributedbundle") {
 
   deps = [
     "${common_path}:libappexecfwk_common",
+    "${dbms_inner_api_path}:dbms_fwk",
     "${dbms_services_path}:libdbms",
   ]
 

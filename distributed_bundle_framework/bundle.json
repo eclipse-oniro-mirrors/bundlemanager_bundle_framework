@@ -43,8 +43,21 @@
         },
         "build": {
             "sub_component": [
+                "//foundation/bundlemanager/bundle_framework/distributed_bundle_framework:inner_api_target",
                 "//foundation/bundlemanager/bundle_framework/distributed_bundle_framework:jsapi_target",
                 "//foundation/bundlemanager/bundle_framework/distributed_bundle_framework:dbms_target"
+            ],
+            "inner_kits": [
+                {
+                    "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/distributed_bundle_framework/interfaces/inner_api/include",
+                      "header_files": [
+                        "distributed_bms_interface.h",
+                        "distributed_bms_proxy.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/distributed_bundle_framework/interfaces/inner_api:dbms_fwk"
+                  }
             ],
             "test": []
         }
