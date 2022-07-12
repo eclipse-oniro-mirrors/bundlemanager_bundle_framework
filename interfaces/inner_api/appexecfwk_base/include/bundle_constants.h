@@ -150,6 +150,7 @@ const std::string PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_B
 const std::string PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
 const std::string PERMISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE_FILES";
 const std::string PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+const std::string PERMISSION_INSTALLD_OPERATE_DIRECTORY = "ohos.permission.OPERATE_DIRECTORY";
 
 // install list permissions file
 const std::string INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/permission/install_list_permissions.json";
