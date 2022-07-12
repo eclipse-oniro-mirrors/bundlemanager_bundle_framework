@@ -62,7 +62,7 @@ BundleDataMgr::BundleDataMgr()
     preInstallDataStorage_ = std::make_shared<PreInstallDataStorage>();
 #endif
     distributedDataStorage_ = DistributedDataStorage::GetInstance();
-    sandboxDataMgr_ = std::make_shared<BundleSandboxDataMgr>();
+    sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     APP_LOGI("BundleDataMgr instance is created");
 }
@@ -488,11 +488,11 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     }
     // explict query from sandbox manager
     if (appIndex > 0) {
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("sandboxDataMgr_ is nullptr");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
             return false;
         }
-        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
+        auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
@@ -605,11 +605,11 @@ bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags
         return false;
     }
     if (appIndex > 0) {
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("sandboxDataMgr_ is nullptr");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
             return false;
         }
-        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
+        auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
@@ -640,11 +640,11 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
         }
     } else {
         // query from sandbox manager for sandbox bundle
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("sandboxDataMgr_ is nullptr");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
             return;
         }
-        auto sandboxMap = sandboxDataMgr_->GetSandboxAppInfoMap();
+        auto sandboxMap = sandboxAppHelper_->GetSandboxAppInfoMap();
         for (const auto &item : sandboxMap) {
             InnerBundleInfo info;
             size_t pos = item.first.rfind(Constants::FILE_UNDERLINE);
@@ -653,7 +653,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
                 continue;
             }
             std::string innerBundleName = item.first.substr(0, pos);
-            if (sandboxDataMgr_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
+            if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGW("obtain innerBundleInfo of sandbox app failed");
                 continue;
             }
@@ -1128,12 +1128,12 @@ bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) 
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoByUid(uid, innerBundleInfo)) {
         APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("sandboxDataMgr_ is nullptr");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
             return false;
         }
-        if (sandboxDataMgr_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            APP_LOGE("get innerBundleInfo from sandboxDataMgr by uid failed.");
+        if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
+            APP_LOGE("get innerBundleInfo by uid failed.");
             return false;
         }
     }
@@ -1812,9 +1812,9 @@ std::shared_ptr<Media::PixelMap> BundleDataMgr::GetAbilityPixelMapIcon(const std
 }
 #endif
 
-std::shared_ptr<BundleSandboxDataMgr> BundleDataMgr::GetSandboxDataMgr() const
+std::shared_ptr<BundleSandboxAppHelper> BundleDataMgr::GetSandboxAppHelper() const
 {
-    return sandboxDataMgr_;
+    return sandboxAppHelper_;
 }
 bool BundleDataMgr::RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
@@ -2577,11 +2577,11 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
         return false;
     }
     if (appIndex > 0) {
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("sandboxDataMgr_ is nullptr");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
             return false;
         }
-        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
+        auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
@@ -2670,11 +2670,11 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
         return false;
     }
     if (appIndex > 0) {
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("sandboxDataMgr_ is nullptr");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
             return false;
         }
-        auto ret = sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
+        auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
@@ -2704,11 +2704,11 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
         }
     } else {
         // query from sandbox manager for sandbox bundle
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("sandboxDataMgr_ is nullptr");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
             return;
         }
-        auto sandboxMap = sandboxDataMgr_->GetSandboxAppInfoMap();
+        auto sandboxMap = sandboxAppHelper_->GetSandboxAppInfoMap();
         for (const auto &item : sandboxMap) {
             InnerBundleInfo info;
             size_t pos = item.first.rfind(Constants::FILE_UNDERLINE);
@@ -2717,7 +2717,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
                 continue;
             }
             std::string innerBundleName = item.first.substr(0, pos);
-            if (sandboxDataMgr_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
+            if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGW("obtain innerBundleInfo of sandbox app failed");
                 continue;
             }

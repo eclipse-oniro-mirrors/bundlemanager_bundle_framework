@@ -49,6 +49,8 @@ ohos_unittest("BmsSandboxAppTest") {
 
   sources += bundle_install_sources
 
+  sources += sandbox_app
+
   sources += [ "bms_bundle_sandbox_app_test.cpp" ]
 
   configs = [
@@ -88,6 +90,11 @@ ohos_unittest("BmsSandboxAppTest") {
   ]
 
   defines = []
+
+  if (bundle_framework_sandbox_app) {
+    defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
+  }
+
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -135,7 +142,7 @@ ohos_unittest("BmsSandboxAppTest") {
 group("unittest") {
   testonly = true
 
-  if (ability_runtime_enable) {
+  if (ability_runtime_enable && bundle_framework_sandbox_app) {
     deps = [ ":BmsSandboxAppTest" ]
   }
 }

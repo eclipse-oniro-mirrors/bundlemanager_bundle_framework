@@ -30,7 +30,7 @@
 #include "application_info.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_promise.h"
-#include "bundle_sandbox_data_mgr.h"
+#include "bundle_sandbox_app_helper.h"
 #include "bundle_state_storage.h"
 #include "bundle_status_callback_interface.h"
 #include "common_event_manager.h"
@@ -701,7 +701,7 @@ public:
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
-    std::shared_ptr<BundleSandboxDataMgr> GetSandboxDataMgr() const;
+    std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
     void DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
 
@@ -833,7 +833,7 @@ private:
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
     std::vector<PreInstallBundleInfo> preInstallBundleInfos_;
     std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
-    std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_;
+    std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

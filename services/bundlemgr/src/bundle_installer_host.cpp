@@ -23,7 +23,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_sandbox_installer.h"
+#include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
 
 namespace OHOS {
@@ -406,11 +406,11 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
         APP_LOGE("install sandbox failed due to error parameters");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
-    if (installer == nullptr) {
+    auto helper = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
+    if (helper == nullptr) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
-    auto res = installer->InstallSandboxApp(bundleName, dplType, userId, appIndex);
+    auto res = helper->InstallSandboxApp(bundleName, dplType, userId, appIndex);
     if (res != ERR_OK) {
         APP_LOGE("install sandbox failed due to error code : %{public}d", res);
     }
@@ -429,11 +429,11 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
-    if (installer == nullptr) {
+    auto helper = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
+    if (helper == nullptr) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
-    auto res = installer->UninstallSandboxApp(bundleName, appIndex, userId);
+    auto res = helper->UninstallSandboxApp(bundleName, appIndex, userId);
     if (res != ERR_OK) {
         APP_LOGE("uninstall sandbox failed due to error code : %{public}d", res);
     }

@@ -152,7 +152,7 @@ bool BmsSandboxAppTest::GetSandboxDataMgr()
             return false;
         }
 
-        sandboxDataMgr_ = dataMgr_->GetSandboxDataMgr();
+        sandboxDataMgr_ = dataMgr_->GetSandboxAppHelper()->GetSandboxDataMgr();
         if (!sandboxDataMgr_) {
             APP_LOGE("Get sandbox dataMgr shared_ptr nullptr");
             return false;

@@ -362,7 +362,7 @@ ErrCode BundleSandboxInstaller::GetSandboxDataMgr()
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
 
-        sandboxDataMgr_ = dataMgr_->GetSandboxDataMgr();
+        sandboxDataMgr_ = dataMgr_->GetSandboxAppHelper()->GetSandboxDataMgr();
         if (sandboxDataMgr_ == nullptr) {
             APP_LOGE("Get sandbox dataMgr shared_ptr nullptr");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
