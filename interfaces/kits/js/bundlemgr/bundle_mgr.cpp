@@ -6901,7 +6901,7 @@ static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::strin
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &value));
     napi_value napiVersion;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, version.c_str(), NAPI_AUTO_LENGTH, &napiVersion));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "verison", napiVersion));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "version", napiVersion));
     napi_value napiDispatchAPI;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, dispatchAPI.c_str(), NAPI_AUTO_LENGTH, &napiDispatchAPI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "dispatchAPI", napiDispatchAPI));
