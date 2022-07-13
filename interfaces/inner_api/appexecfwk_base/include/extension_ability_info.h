@@ -44,7 +44,9 @@ enum class ExtensionAbilityType {
     WINDOW = 10,
     ENTERPRISE_ADMIN = 11,
     FILEACCESS_EXTENSION = 12,
-    UNSPECIFIED = 20
+    THUMBNAIL = 13,
+    PREVIEW = 14,
+    UNSPECIFIED = 255
 };
 
 struct ExtensionAbilityInfo : public Parcelable {
