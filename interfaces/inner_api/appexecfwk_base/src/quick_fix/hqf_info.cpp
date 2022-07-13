@@ -24,7 +24,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string HQF_INFO_MODULE_NAME = "moduleName";
 const std::string HQF_INFO_HAP_SHA256 = "hapSha256";
 const std::string HQF_INFO_HAP_FILE_PATH = "hapFilePath";
 }
@@ -32,7 +31,7 @@ const std::string HQF_INFO_HAP_FILE_PATH = "hapFilePath";
 void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
 {
     jsonObject = nlohmann::json {
-        {HQF_INFO_MODULE_NAME, hqfInfo.moduleName},
+        {Constants::MODULE_NAME, hqfInfo.moduleName},
         {HQF_INFO_HAP_SHA256, hqfInfo.hapSha256},
         {HQF_INFO_HAP_FILE_PATH, hqfInfo.hapFilePath}
     };
@@ -44,7 +43,7 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        HQF_INFO_MODULE_NAME,
+        Constants::MODULE_NAME,
         hqfInfo.moduleName,
         JsonType::STRING,
         false,

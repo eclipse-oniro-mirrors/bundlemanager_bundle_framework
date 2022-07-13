@@ -16,6 +16,7 @@
 #include "rpc_id_result.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"
@@ -29,9 +30,6 @@ const std::string JSON_KEY_RESULT_TRANSACT_ID = "transactId";
 const std::string JSON_KEY_RESULT_RETCODE = "retCode";
 const std::string JSON_KEY_RESULT_RESULT_MSG = "resultMsg";
 const std::string JSON_KEY_SUMMARY_ABILITY_INFO = "abilityInfo";
-const std::string JSON_KEY_SUMMARY_ABILITY_INFO_BUNDLE_NAME = "bundleName";
-const std::string JSON_KEY_SUMMARY_ABILITY_INFO_MODULE_NAME = "moduleName";
-const std::string JSON_KEY_SUMMARY_ABILITY_INFO_ABILITY_NAME = "abilityName";
 const std::string JSON_KEY_SUMMARY_ABILITY_INFO_LOGO_URL = "logoUrl";
 const std::string JSON_KEY_SUMMARY_ABILITY_INFO_LABEL = "label";
 const std::string JSON_KEY_SUMMARY_ABILITY_INFO_DEVICE_TYPE = "deviceType";
@@ -41,9 +39,9 @@ const std::string JSON_KEY_SUMMARY_ABILITY_INFO_RPC_ID = "rpcId";
 void to_json(nlohmann::json &jsonObject, const SummaryAbilityInfo &summaryAbilityInfo)
 {
     jsonObject = nlohmann::json {
-        {JSON_KEY_SUMMARY_ABILITY_INFO_BUNDLE_NAME, summaryAbilityInfo.bundleName},
-        {JSON_KEY_SUMMARY_ABILITY_INFO_MODULE_NAME, summaryAbilityInfo.moduleName},
-        {JSON_KEY_SUMMARY_ABILITY_INFO_ABILITY_NAME, summaryAbilityInfo.abilityName},
+        {Constants::BUNDLE_NAME, summaryAbilityInfo.bundleName},
+        {Constants::MODULE_NAME, summaryAbilityInfo.moduleName},
+        {Constants::ABILITY_NAME, summaryAbilityInfo.abilityName},
         {JSON_KEY_SUMMARY_ABILITY_INFO_LOGO_URL, summaryAbilityInfo.logoUrl},
         {JSON_KEY_SUMMARY_ABILITY_INFO_LABEL, summaryAbilityInfo.label},
         {JSON_KEY_SUMMARY_ABILITY_INFO_DEVICE_TYPE, summaryAbilityInfo.deviceType},
@@ -57,7 +55,7 @@ void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbil
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_SUMMARY_ABILITY_INFO_BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         summaryAbilityInfo.bundleName,
         JsonType::STRING,
         false,
@@ -65,7 +63,7 @@ void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbil
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_SUMMARY_ABILITY_INFO_MODULE_NAME,
+        Constants::MODULE_NAME,
         summaryAbilityInfo.moduleName,
         JsonType::STRING,
         false,
@@ -73,7 +71,7 @@ void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbil
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_SUMMARY_ABILITY_INFO_ABILITY_NAME,
+        Constants::ABILITY_NAME,
         summaryAbilityInfo.abilityName,
         JsonType::STRING,
         false,

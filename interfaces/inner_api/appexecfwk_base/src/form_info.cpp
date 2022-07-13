@@ -41,9 +41,6 @@ const std::string JSON_KEY_DEEP_LINK = "deepLink";
 const std::string JSON_KEY_JS_COMPONENT_NAME = "jsComponentName";
 const std::string JSON_KEY_VALUE = "value";
 const std::string JSON_KEY_NAME = "name";
-const std::string JSON_KEY_ABILITY_NAME = "abilityName";
-const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
-const std::string JSON_KEY_MODULE_NAME = "moduleName";
 const std::string JSON_KEY_ORIGINAL_BUNDLE_NAME = "originalBundleName";
 const std::string JSON_KEY_CUSTOMIZE_DATA = "customizeData";
 const std::string JSON_KEY_DESCRIPTION = "description";
@@ -262,9 +259,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
     jsonObject = nlohmann::json{
         {JSON_KEY_NAME, formInfo.name},
         {JSON_KEY_PACKAGE, formInfo.package},
-        {JSON_KEY_BUNDLE_NAME, formInfo.bundleName},
-        {JSON_KEY_MODULE_NAME, formInfo.moduleName},
-        {JSON_KEY_ABILITY_NAME, formInfo.abilityName},
+        {Constants::BUNDLE_NAME, formInfo.bundleName},
+        {Constants::MODULE_NAME, formInfo.moduleName},
+        {Constants::ABILITY_NAME, formInfo.abilityName},
         {JSON_KEY_DESCRIPTION, formInfo.description},
         {JSON_KEY_RELATED_BUNDLE_NAME, formInfo.relatedBundleName},
         {JSON_KEY_JS_COMPONENT_NAME, formInfo.jsComponentName},
@@ -304,10 +301,10 @@ void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
 
 void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
 {
-    formInfo.bundleName = jsonObject.at(JSON_KEY_BUNDLE_NAME).get<std::string>();
+    formInfo.bundleName = jsonObject.at(Constants::BUNDLE_NAME).get<std::string>();
     formInfo.package = jsonObject.at(JSON_KEY_PACKAGE).get<std::string>();
-    formInfo.moduleName = jsonObject.at(JSON_KEY_MODULE_NAME).get<std::string>();
-    formInfo.abilityName = jsonObject.at(JSON_KEY_ABILITY_NAME).get<std::string>();
+    formInfo.moduleName = jsonObject.at(Constants::MODULE_NAME).get<std::string>();
+    formInfo.abilityName = jsonObject.at(Constants::ABILITY_NAME).get<std::string>();
     formInfo.name = jsonObject.at(JSON_KEY_NAME).get<std::string>();
     formInfo.description = jsonObject.at(JSON_KEY_DESCRIPTION).get<std::string>();
     formInfo.relatedBundleName = jsonObject.at(JSON_KEY_RELATED_BUNDLE_NAME).get<std::string>();

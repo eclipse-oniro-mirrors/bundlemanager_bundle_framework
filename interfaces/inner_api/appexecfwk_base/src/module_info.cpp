@@ -24,7 +24,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string MODULE_INFO_MODULE_NAME = "moduleName";
 const std::string MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
 }
 
@@ -56,7 +55,7 @@ bool ModuleInfo::Marshalling(Parcel &parcel) const
 void to_json(nlohmann::json &jsonObject, const ModuleInfo &moduleInfo)
 {
     jsonObject = nlohmann::json {
-        {MODULE_INFO_MODULE_NAME, moduleInfo.moduleName},
+        {Constants::MODULE_NAME, moduleInfo.moduleName},
         {MODULE_INFO_MODULE_SOURCE_DIR, moduleInfo.moduleSourceDir}
     };
 }
@@ -67,7 +66,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleInfo &moduleInfo)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_INFO_MODULE_NAME,
+        Constants::MODULE_NAME,
         moduleInfo.moduleName,
         JsonType::STRING,
         false,

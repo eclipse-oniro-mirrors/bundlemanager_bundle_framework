@@ -30,7 +30,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string JSON_KEY_NAME = "name";
-const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
 const std::string JSON_KEY_UID = "uid";
 const std::string JSON_KEY_PERMISSION = "permission";
 const std::string JSON_KEY_DATA = "data";
@@ -99,7 +98,7 @@ void to_json(nlohmann::json &jsonObject, const CommonEventInfo &commonEvent)
 {
     jsonObject = nlohmann::json {
         {JSON_KEY_NAME, commonEvent.name},
-        {JSON_KEY_BUNDLE_NAME, commonEvent.bundleName},
+        {Constants::BUNDLE_NAME, commonEvent.bundleName},
         {JSON_KEY_UID, commonEvent.uid},
         {JSON_KEY_PERMISSION, commonEvent.permission},
         {JSON_KEY_DATA, commonEvent.data},
@@ -111,7 +110,7 @@ void to_json(nlohmann::json &jsonObject, const CommonEventInfo &commonEvent)
 void from_json(const nlohmann::json &jsonObject, CommonEventInfo &commonEvent)
 {
     commonEvent.name = jsonObject.at(JSON_KEY_NAME).get<std::string>();
-    commonEvent.bundleName = jsonObject.at(JSON_KEY_BUNDLE_NAME).get<std::string>();
+    commonEvent.bundleName = jsonObject.at(Constants::BUNDLE_NAME).get<std::string>();
     commonEvent.uid = jsonObject.at(JSON_KEY_UID).get<int>();
     commonEvent.permission = jsonObject.at(JSON_KEY_PERMISSION).get<std::string>();
     commonEvent.data = jsonObject.at(JSON_KEY_DATA).get<std::vector<std::string>>();
