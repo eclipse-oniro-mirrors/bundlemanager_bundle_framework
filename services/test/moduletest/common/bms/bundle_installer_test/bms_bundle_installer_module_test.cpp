@@ -1531,8 +1531,8 @@ HWTEST_F(BmsBundleInstallerModuleTest, BundleDataStorage003, TestSize.Level3)
         }
         DeleteBundleDataToStorage(kvStorePtr, bundleNames[i]);
     }
-    AppId appId{Constants::APP_ID};
-    StoreId storeId{Constants::STORE_ID};
+    AppId appId { Constants::APP_ID };
+    StoreId storeId { Constants::STORE_ID };
     dataManager.CloseKvStore(appId, storeId);
 }
 } // OHOS
