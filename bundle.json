@@ -41,7 +41,7 @@
                 "device_manager",
                 "device_profile_core",
                 "device_usage_statistics",
-                "display_manager_native",
+                "display_manager",
                 "distributeddatamgr",
                 "eventhandler",
                 "hicollie_native",
