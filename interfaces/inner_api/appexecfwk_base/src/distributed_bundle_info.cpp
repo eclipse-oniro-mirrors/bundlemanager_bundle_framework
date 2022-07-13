@@ -94,7 +94,7 @@ std::string DistributedBundleInfo::ToString() const
 {
     nlohmann::json jsonObject;
     jsonObject[JSON_KEY_VERSION] = version;
-    jsonObject[BUNDLE_NAME] = bundleName;
+    jsonObject[Constants::BUNDLE_NAME] = bundleName;
     jsonObject[JSON_KEY_VERSION_CODE] = versionCode;
     jsonObject[JSON_KEY_VERSION_NAME] = versionName;
     jsonObject[JSON_KEY_COMPATIBLE_VERSION_CODE] = compatibleVersionCode;
@@ -125,7 +125,7 @@ bool DistributedBundleInfo::FromJsonString(const std::string &jsonString)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         bundleName,
         JsonType::STRING,
         false,

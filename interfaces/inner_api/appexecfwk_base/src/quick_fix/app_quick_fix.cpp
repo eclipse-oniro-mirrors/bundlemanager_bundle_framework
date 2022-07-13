@@ -34,7 +34,7 @@ const std::string APP_QUICK_FIX_DEPLOYING_APP_QF_INFO = "deployingAppqfInfo";
 void to_json(nlohmann::json &jsonObject, const AppQuickFix &appQuickFix)
 {
     jsonObject = nlohmann::json {
-        {BUNDLE_NAME, appQuickFix.bundleName},
+        {Constants::BUNDLE_NAME, appQuickFix.bundleName},
         {APP_QUICK_FIX_VERSION_CODE, appQuickFix.versionCode},
         {APP_QUICK_FIX_VERSION_NAME, appQuickFix.versionName},
         {APP_QUICK_FIX_DEPLOYED_APP_QF_INFO, appQuickFix.deployedAppqfInfo},
@@ -47,7 +47,7 @@ void from_json(const nlohmann::json &jsonObject, AppQuickFix &appQuickFix)
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
-        BUNDLE_NAME, appQuickFix.bundleName,
+        Constants::BUNDLE_NAME, appQuickFix.bundleName,
         JsonType::STRING, false, parseResult,
         ArrayType::NOT_ARRAY);
 

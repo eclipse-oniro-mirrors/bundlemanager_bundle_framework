@@ -259,9 +259,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
     jsonObject = nlohmann::json{
         {JSON_KEY_NAME, formInfo.name},
         {JSON_KEY_PACKAGE, formInfo.package},
-        {BUNDLE_NAME, formInfo.bundleName},
-        {MODULE_NAME, formInfo.moduleName},
-        {ABILITY_NAME, formInfo.abilityName},
+        {Constants::BUNDLE_NAME, formInfo.bundleName},
+        {Constants::MODULE_NAME, formInfo.moduleName},
+        {Constants::ABILITY_NAME, formInfo.abilityName},
         {JSON_KEY_DESCRIPTION, formInfo.description},
         {JSON_KEY_RELATED_BUNDLE_NAME, formInfo.relatedBundleName},
         {JSON_KEY_JS_COMPONENT_NAME, formInfo.jsComponentName},

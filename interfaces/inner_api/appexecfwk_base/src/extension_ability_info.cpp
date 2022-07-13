@@ -146,8 +146,8 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
 {
     APP_LOGD("ExtensionAbilityInfo to_json begin");
     jsonObject = nlohmann::json {
-        {BUNDLE_NAME, extensionInfo.bundleName},
-        {MODULE_NAME, extensionInfo.moduleName},
+        {Constants::BUNDLE_NAME, extensionInfo.bundleName},
+        {Constants::MODULE_NAME, extensionInfo.moduleName},
         {NAME, extensionInfo.name},
         {SRC_ENTRANCE, extensionInfo.srcEntrance},
         {ICON, extensionInfo.icon},
@@ -178,7 +178,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         extensionInfo.bundleName,
         JsonType::STRING,
         false,
@@ -186,7 +186,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         extensionInfo.moduleName,
         JsonType::STRING,
         false,

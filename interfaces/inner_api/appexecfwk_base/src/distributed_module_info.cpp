@@ -115,7 +115,7 @@ void DistributedModuleInfo::Dump(const std::string &prefix, int fd)
 void to_json(nlohmann::json& jsonObject, const DistributedModuleInfo& distributedModuleInfo)
 {
     jsonObject = nlohmann::json {
-        {MODULE_NAME, distributedModuleInfo.moduleName},
+        {Constants::MODULE_NAME, distributedModuleInfo.moduleName},
         {JSON_KEY_ABILITIES, distributedModuleInfo.abilities},
     };
 }
@@ -126,7 +126,7 @@ void from_json(const nlohmann::json& jsonObject, DistributedModuleInfo& distribu
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         distributedModuleInfo.moduleName,
         JsonType::STRING,
         false,

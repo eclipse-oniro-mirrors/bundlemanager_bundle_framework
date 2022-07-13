@@ -126,8 +126,8 @@ void to_json(nlohmann::json &jsonObject, const ShortcutInfo &shortcutInfo)
 {
     jsonObject = nlohmann::json {
         {JSON_KEY_BUNDLE_ID, shortcutInfo.id},
-        {BUNDLE_NAME, shortcutInfo.bundleName},
-        {MODULE_NAME, shortcutInfo.moduleName},
+        {Constants::BUNDLE_NAME, shortcutInfo.bundleName},
+        {Constants::MODULE_NAME, shortcutInfo.moduleName},
         {JSON_KEY_BUNDLE_HOST_ABILITY, shortcutInfo.hostAbility},
         {JSON_KEY_BUNDLE_ICON, shortcutInfo.icon},
         {JSON_KEY_BUNDLE_LABEL, shortcutInfo.label},
@@ -185,7 +185,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         shortcutInfo.bundleName,
         JsonType::STRING,
         false,
@@ -193,7 +193,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         shortcutInfo.moduleName,
         JsonType::STRING,
         false,
@@ -287,7 +287,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         shortcutWant.bundleName,
         JsonType::STRING,
         false,
@@ -295,7 +295,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         shortcutWant.moduleName,
         JsonType::STRING,
         false,
@@ -303,7 +303,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        ABILITY_NAME,
+        Constants::ABILITY_NAME,
         shortcutWant.abilityName,
         JsonType::STRING,
         false,

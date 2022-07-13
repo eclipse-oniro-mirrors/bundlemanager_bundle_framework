@@ -117,7 +117,7 @@ void DistributedAbilityInfo::Dump(const std::string &prefix, int fd)
 void to_json(nlohmann::json& jsonObject, const DistributedAbilityInfo& distributedAbilityInfo)
 {
     jsonObject = nlohmann::json {
-        {ABILITY_NAME, distributedAbilityInfo.abilityName},
+        {Constants::ABILITY_NAME, distributedAbilityInfo.abilityName},
         {JSON_KEY_PERMISSIONS, distributedAbilityInfo.permissions},
         {JSON_KEY_TYPE, distributedAbilityInfo.type},
         {JSON_KEY_ENABLED, distributedAbilityInfo.enabled},
@@ -130,7 +130,7 @@ void from_json(const nlohmann::json& jsonObject, DistributedAbilityInfo& distrib
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        ABILITY_NAME,
+        Constants::ABILITY_NAME,
         distributedAbilityInfo.abilityName,
         JsonType::STRING,
         false,

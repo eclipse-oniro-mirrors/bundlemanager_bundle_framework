@@ -16,6 +16,7 @@
 #include "target_ability_info.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"
@@ -98,9 +99,9 @@ void to_json(nlohmann::json &jsonObject, const TargetInfo &targetInfo)
 {
     jsonObject = nlohmann::json {
         {JSON_KEY_TRANSACTID, targetInfo.transactId},
-        {BUNDLE_NAME, targetInfo.bundleName},
-        {MODULE_NAME, targetInfo.moduleName},
-        {ABILITY_NAME, targetInfo.abilityName},
+        {Constants::BUNDLE_NAME, targetInfo.bundleName},
+        {Constants::MODULE_NAME, targetInfo.moduleName},
+        {Constants::ABILITY_NAME, targetInfo.abilityName},
         {JSON_KEY_FLAGS, targetInfo.flags},
         {JSON_KEY_REASONFLAG, targetInfo.reasonFlag},
         {JSON_KEY_CALLINGUID, targetInfo.callingUid},
@@ -132,7 +133,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         targetInfo.moduleName,
         JsonType::STRING,
         false,
@@ -140,7 +141,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        ABILITY_NAME,
+        Constants::ABILITY_NAME,
         targetInfo.abilityName,
         JsonType::STRING,
         false,

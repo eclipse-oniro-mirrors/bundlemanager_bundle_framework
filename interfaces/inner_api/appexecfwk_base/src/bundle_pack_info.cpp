@@ -130,7 +130,7 @@ void from_json(const nlohmann::json &jsonObject, Version &version)
 void to_json(nlohmann::json &jsonObject, const PackageApp &app)
 {
     jsonObject = nlohmann::json {
-        {BUNDLE_NAME, app.bundleName},
+        {Constants::BUNDLE_NAME, app.bundleName},
         {PACK_SUMMARY_APP_BUNDLE_VERSION, app.version}
     };
 }
@@ -141,7 +141,7 @@ void from_json(const nlohmann::json &jsonObject, PackageApp &app)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         app.bundleName,
         JsonType::STRING,
         false,
@@ -284,7 +284,7 @@ void to_json(nlohmann::json &jsonObject, const ModuleDistro &distro)
 {
     jsonObject = nlohmann::json {
         {PACK_SUMMARY_MODULE_DISTRO_MODULE_TYPE, distro.moduleType},
-        {MODULE_NAME, distro.moduleName},
+        {Constants::MODULE_NAME, distro.moduleName},
         {PACK_SUMMARY_MODULE_DISTRO_INSTALLATION_FREE, distro.installationFree},
         {PACK_SUMMARY_MODULE_DISTRO_DELIVERY_WITH_INSTALL, distro.deliveryWithInstall}
     };
@@ -304,7 +304,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleDistro &distro)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         distro.moduleName,
         JsonType::STRING,
         false,

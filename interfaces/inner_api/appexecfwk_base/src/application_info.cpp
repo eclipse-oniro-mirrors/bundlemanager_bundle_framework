@@ -493,8 +493,8 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
 void to_json(nlohmann::json &jsonObject, const Resource &resource)
 {
     jsonObject = nlohmann::json {
-        {BUNDLE_NAME, resource.bundleName},
-        {MODULE_NAME, resource.moduleName},
+        {Constants::BUNDLE_NAME, resource.bundleName},
+        {Constants::MODULE_NAME, resource.moduleName},
         {RESOURCE_ID, resource.id}
     };
 }
@@ -505,7 +505,7 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         resource.bundleName,
         JsonType::STRING,
         true,
@@ -513,7 +513,7 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         resource.moduleName,
         JsonType::STRING,
         true,
@@ -536,7 +536,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
 {
     jsonObject = nlohmann::json {
         {APPLICATION_NAME, applicationInfo.name},
-        {BUNDLE_NAME, applicationInfo.bundleName},
+        {Constants::BUNDLE_NAME, applicationInfo.bundleName},
         {APPLICATION_VERSION_CODE, applicationInfo.versionCode},
         {APPLICATION_VERSION_NAME, applicationInfo.versionName},
         {APPLICATION_MIN_COMPATIBLE_VERSION_CODE, applicationInfo.minCompatibleVersionCode},
@@ -611,7 +611,7 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         applicationInfo.bundleName,
         JsonType::STRING,
         false,

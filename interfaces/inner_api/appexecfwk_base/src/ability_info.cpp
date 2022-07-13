@@ -461,8 +461,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_META_DATA, abilityInfo.metaData},
         {JSON_KEY_BACKGROUND_MODES, abilityInfo.backgroundModes},
         {JSON_KEY_PACKAGE, abilityInfo.package},
-        {BUNDLE_NAME, abilityInfo.bundleName},
-        {MODULE_NAME, abilityInfo.moduleName},
+        {Constants::BUNDLE_NAME, abilityInfo.bundleName},
+        {Constants::MODULE_NAME, abilityInfo.moduleName},
         {JSON_KEY_APPLICATION_NAME, abilityInfo.applicationName},
         {JSON_KEY_CODE_PATH, abilityInfo.codePath},
         {JSON_KEY_RESOURCE_PATH, abilityInfo.resourcePath},
@@ -895,7 +895,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         abilityInfo.bundleName,
         JsonType::STRING,
         false,
@@ -903,7 +903,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         abilityInfo.moduleName,
         JsonType::STRING,
         false,

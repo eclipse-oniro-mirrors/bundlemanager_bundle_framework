@@ -98,7 +98,7 @@ void to_json(nlohmann::json &jsonObject, const CommonEventInfo &commonEvent)
 {
     jsonObject = nlohmann::json {
         {JSON_KEY_NAME, commonEvent.name},
-        {BUNDLE_NAME, commonEvent.bundleName},
+        {Constants::BUNDLE_NAME, commonEvent.bundleName},
         {JSON_KEY_UID, commonEvent.uid},
         {JSON_KEY_PERMISSION, commonEvent.permission},
         {JSON_KEY_DATA, commonEvent.data},

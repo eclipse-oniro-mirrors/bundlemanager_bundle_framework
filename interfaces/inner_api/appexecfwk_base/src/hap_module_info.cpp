@@ -244,7 +244,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
 {
     jsonObject = nlohmann::json {
         {HAP_MODULE_INFO_NAME, hapModuleInfo.name},
-        {MODULE_NAME, hapModuleInfo.moduleName},
+        {Constants::MODULE_NAME, hapModuleInfo.moduleName},
         {HAP_MODULE_INFO_DESCRIPTION, hapModuleInfo.description},
         {HAP_MODULE_INFO_DESCRIPTION_ID, hapModuleInfo.descriptionId},
         {HAP_MODULE_INFO_ICON_PATH, hapModuleInfo.iconPath},
@@ -260,7 +260,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_DEVICE_TYPES, hapModuleInfo.deviceTypes},
         {HAP_MODULE_INFO_ABILITY_INFOS, hapModuleInfo.abilityInfos},
         {HAP_MODULE_INFO_COLOR_MODE, hapModuleInfo.colorMode},
-        {BUNDLE_NAME, hapModuleInfo.bundleName},
+        {Constants::BUNDLE_NAME, hapModuleInfo.bundleName},
         {HAP_MODULE_INFO_MAIN_ELEMENTNAME, hapModuleInfo.mainElementName},
         {HAP_MODULE_INFO_PAGES, hapModuleInfo.pages},
         {HAP_MODULE_INFO_PROCESS, hapModuleInfo.process},
@@ -296,7 +296,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        MODULE_NAME,
+        Constants::MODULE_NAME,
         hapModuleInfo.moduleName,
         JsonType::STRING,
         false,
@@ -424,7 +424,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         hapModuleInfo.bundleName,
         JsonType::STRING,
         false,
