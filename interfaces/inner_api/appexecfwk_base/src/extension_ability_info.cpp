@@ -28,8 +28,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string BUNDLE_NAME = "bundleName";
-const std::string MODULE_NAME = "moduleName";
 const std::string NAME = "name";
 const std::string SRC_ENTRANCE = "srcEntrance";
 const std::string ICON = "icon";

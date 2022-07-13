@@ -197,6 +197,8 @@ constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 const std::string UID = "uid";
 const std::string USER_ID = "userId";
 const std::string BUNDLE_NAME = "bundleName";
+const std::string MODULE_NAME = "moduleName";
+const std::string ABILITY_NAME = "abilityName";
 constexpr int32_t MAX_LIMIT_SIZE = 4;
 
 const std::string DATA_ABILITY_URI_PREFIX = "dataability://";

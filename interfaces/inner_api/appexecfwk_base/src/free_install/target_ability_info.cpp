@@ -29,9 +29,6 @@ const std::string JSON_KEY_TARGETINFO = "targetInfo";
 const std::string JSON_KEY_TARGETEXTSETTING = "targetExtSetting";
 const std::string JSON_KEY_EXTINFO = "extInfo";
 const std::string JSON_KEY_TRANSACTID = "transactId";
-const std::string JSON_KEY_BUNDLENAME = "bundleName";
-const std::string JSON_KEY_MODULENAME = "moduleName";
-const std::string JSON_KEY_ABILITYNAME = "abilityName";
 const std::string JSON_KEY_FLAGS = "flags";
 const std::string JSON_KEY_REASONFLAG = "reasonFlag";
 const std::string JSON_KEY_CALLINGUID = "callingUid";
@@ -101,9 +98,9 @@ void to_json(nlohmann::json &jsonObject, const TargetInfo &targetInfo)
 {
     jsonObject = nlohmann::json {
         {JSON_KEY_TRANSACTID, targetInfo.transactId},
-        {JSON_KEY_BUNDLENAME, targetInfo.bundleName},
-        {JSON_KEY_MODULENAME, targetInfo.moduleName},
-        {JSON_KEY_ABILITYNAME, targetInfo.abilityName},
+        {BUNDLE_NAME, targetInfo.bundleName},
+        {MODULE_NAME, targetInfo.moduleName},
+        {ABILITY_NAME, targetInfo.abilityName},
         {JSON_KEY_FLAGS, targetInfo.flags},
         {JSON_KEY_REASONFLAG, targetInfo.reasonFlag},
         {JSON_KEY_CALLINGUID, targetInfo.callingUid},
@@ -127,7 +124,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_BUNDLENAME,
+        BUNDLE_NAME,
         targetInfo.bundleName,
         JsonType::STRING,
         false,
@@ -135,7 +132,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_MODULENAME,
+        MODULE_NAME,
         targetInfo.moduleName,
         JsonType::STRING,
         false,
@@ -143,7 +140,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_ABILITYNAME,
+        ABILITY_NAME,
         targetInfo.abilityName,
         JsonType::STRING,
         false,

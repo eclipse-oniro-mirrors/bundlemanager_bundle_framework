@@ -29,8 +29,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string JSON_KEY_BUNDLE_ID = "id";
-const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
-const std::string JSON_KEY_MODULE_NAME = "moduleName";
 const std::string JSON_KEY_BUNDLE_HOST_ABILITY = "hostAbility";
 const std::string JSON_KEY_BUNDLE_ICON = "icon";
 const std::string JSON_KEY_BUNDLE_LABEL = "label";
@@ -47,9 +45,6 @@ const std::string JSON_KEY_LABEL_ID = "labelId";
 const std::string SHORTCUTS = "shortcuts";
 const std::string SHORTCUT_ID = "shortcutId";
 const std::string SHORTCUT_WANTS = "wants";
-const std::string WANT_BUNDLE_NAME = "bundleName";
-const std::string WANT_MODULE_NAME = "moduleName";
-const std::string WANT_ABILITY_NAME = "abilityName";
 const std::string ICON = "icon";
 const std::string ICON_ID = "iconId";
 const std::string LABEL = "label";
@@ -131,8 +126,8 @@ void to_json(nlohmann::json &jsonObject, const ShortcutInfo &shortcutInfo)
 {
     jsonObject = nlohmann::json {
         {JSON_KEY_BUNDLE_ID, shortcutInfo.id},
-        {JSON_KEY_BUNDLE_NAME, shortcutInfo.bundleName},
-        {JSON_KEY_MODULE_NAME, shortcutInfo.moduleName},
+        {BUNDLE_NAME, shortcutInfo.bundleName},
+        {MODULE_NAME, shortcutInfo.moduleName},
         {JSON_KEY_BUNDLE_HOST_ABILITY, shortcutInfo.hostAbility},
         {JSON_KEY_BUNDLE_ICON, shortcutInfo.icon},
         {JSON_KEY_BUNDLE_LABEL, shortcutInfo.label},
@@ -190,7 +185,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_BUNDLE_NAME,
+        BUNDLE_NAME,
         shortcutInfo.bundleName,
         JsonType::STRING,
         false,
@@ -198,7 +193,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_MODULE_NAME,
+        MODULE_NAME,
         shortcutInfo.moduleName,
         JsonType::STRING,
         false,
@@ -292,7 +287,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        WANT_BUNDLE_NAME,
+        BUNDLE_NAME,
         shortcutWant.bundleName,
         JsonType::STRING,
         false,
@@ -300,7 +295,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        WANT_MODULE_NAME,
+        MODULE_NAME,
         shortcutWant.moduleName,
         JsonType::STRING,
         false,
@@ -308,7 +303,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        WANT_ABILITY_NAME,
+        ABILITY_NAME,
         shortcutWant.abilityName,
         JsonType::STRING,
         false,

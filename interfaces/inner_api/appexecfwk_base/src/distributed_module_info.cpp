@@ -27,7 +27,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string JSON_KEY_MODULE_NAME = "moduleName";
 const std::string JSON_KEY_ABILITIES = "abilities";
 }
 bool DistributedModuleInfo::ReadFromParcel(Parcel &parcel)
@@ -116,7 +115,7 @@ void DistributedModuleInfo::Dump(const std::string &prefix, int fd)
 void to_json(nlohmann::json& jsonObject, const DistributedModuleInfo& distributedModuleInfo)
 {
     jsonObject = nlohmann::json {
-        {JSON_KEY_MODULE_NAME, distributedModuleInfo.moduleName},
+        {MODULE_NAME, distributedModuleInfo.moduleName},
         {JSON_KEY_ABILITIES, distributedModuleInfo.abilities},
     };
 }
@@ -127,7 +126,7 @@ void from_json(const nlohmann::json& jsonObject, DistributedModuleInfo& distribu
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_MODULE_NAME,
+        MODULE_NAME,
         distributedModuleInfo.moduleName,
         JsonType::STRING,
         false,

@@ -31,7 +31,6 @@ namespace AppExecFwk {
 namespace {
 const std::string JSON_KEY_PACKAGE = "package";
 const std::string JSON_KEY_NAME = "name";
-const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
 const std::string JSON_KEY_APPLICATION_NAME = "applicationName";
 const std::string JSON_KEY_LABEL = "label";
 const std::string JSON_KEY_DESCRIPTION = "description";
@@ -50,7 +49,6 @@ const std::string JSON_KEY_PROCESS = "process";
 const std::string JSON_KEY_DEVICE_TYPES = "deviceTypes";
 const std::string JSON_KEY_DEVICE_CAPABILITIES = "deviceCapabilities";
 const std::string JSON_KEY_URI = "uri";
-const std::string JSON_KEY_MODULE_NAME = "moduleName";
 const std::string JSON_KEY_IS_LAUNCHER_ABILITY = "isLauncherAbility";
 const std::string JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE = "removeMissionAfterTerminate";
 const std::string JSON_KEY_IS_NATIVE_ABILITY = "isNativeAbility";
@@ -463,8 +461,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_META_DATA, abilityInfo.metaData},
         {JSON_KEY_BACKGROUND_MODES, abilityInfo.backgroundModes},
         {JSON_KEY_PACKAGE, abilityInfo.package},
-        {JSON_KEY_BUNDLE_NAME, abilityInfo.bundleName},
-        {JSON_KEY_MODULE_NAME, abilityInfo.moduleName},
+        {BUNDLE_NAME, abilityInfo.bundleName},
+        {MODULE_NAME, abilityInfo.moduleName},
         {JSON_KEY_APPLICATION_NAME, abilityInfo.applicationName},
         {JSON_KEY_CODE_PATH, abilityInfo.codePath},
         {JSON_KEY_RESOURCE_PATH, abilityInfo.resourcePath},
@@ -897,7 +895,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_BUNDLE_NAME,
+        BUNDLE_NAME,
         abilityInfo.bundleName,
         JsonType::STRING,
         false,
@@ -905,7 +903,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_MODULE_NAME,
+        MODULE_NAME,
         abilityInfo.moduleName,
         JsonType::STRING,
         false,

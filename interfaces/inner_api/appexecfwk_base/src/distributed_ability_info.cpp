@@ -27,7 +27,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string JSON_KEY_ABILITY_NAME = "abilityName";
 const std::string JSON_KEY_PERMISSIONS = "permissions";
 const std::string JSON_KEY_TYPE = "type";
 const std::string JSON_KEY_ENABLED = "enabled";
@@ -118,7 +117,7 @@ void DistributedAbilityInfo::Dump(const std::string &prefix, int fd)
 void to_json(nlohmann::json& jsonObject, const DistributedAbilityInfo& distributedAbilityInfo)
 {
     jsonObject = nlohmann::json {
-        {JSON_KEY_ABILITY_NAME, distributedAbilityInfo.abilityName},
+        {ABILITY_NAME, distributedAbilityInfo.abilityName},
         {JSON_KEY_PERMISSIONS, distributedAbilityInfo.permissions},
         {JSON_KEY_TYPE, distributedAbilityInfo.type},
         {JSON_KEY_ENABLED, distributedAbilityInfo.enabled},
@@ -131,7 +130,7 @@ void from_json(const nlohmann::json& jsonObject, DistributedAbilityInfo& distrib
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_ABILITY_NAME,
+        ABILITY_NAME,
         distributedAbilityInfo.abilityName,
         JsonType::STRING,
         false,

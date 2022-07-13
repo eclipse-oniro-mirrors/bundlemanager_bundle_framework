@@ -26,7 +26,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string JSON_KEY_VERSION = "version";
-const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
 const std::string JSON_KEY_VERSION_CODE = "versionCode";
 const std::string JSON_KEY_COMPATIBLE_VERSION_CODE = "compatibleVersionCode";
 const std::string JSON_KEY_VERSION_NAME = "versionName";
@@ -94,7 +93,7 @@ std::string DistributedBundleInfo::ToString() const
 {
     nlohmann::json jsonObject;
     jsonObject[JSON_KEY_VERSION] = version;
-    jsonObject[JSON_KEY_BUNDLE_NAME] = bundleName;
+    jsonObject[BUNDLE_NAME] = bundleName;
     jsonObject[JSON_KEY_VERSION_CODE] = versionCode;
     jsonObject[JSON_KEY_VERSION_NAME] = versionName;
     jsonObject[JSON_KEY_COMPATIBLE_VERSION_CODE] = compatibleVersionCode;
@@ -125,7 +124,7 @@ bool DistributedBundleInfo::FromJsonString(const std::string &jsonString)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_BUNDLE_NAME,
+        BUNDLE_NAME,
         bundleName,
         JsonType::STRING,
         false,

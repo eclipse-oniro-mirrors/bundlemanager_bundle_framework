@@ -32,7 +32,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string APPLICATION_NAME = "name";
-const std::string APPLICATION_BUNDLE_NAME = "bundleName";
 const std::string APPLICATION_VERSION_CODE = "versionCode";
 const std::string APPLICATION_VERSION_NAME = "versionName";
 const std::string APPLICATION_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
@@ -90,8 +89,6 @@ const std::string APPLICATION_LABEL_RESOURCE = "labelResource";
 const std::string APPLICATION_DESCRIPTION_RESOURCE = "descriptionResource";
 const std::string APPLICATION_MULTI_PROJECTS = "multiProjects";
 const std::string APPLICATION_CROWDTEST_DEADLINE = "crowdtestDeadline";
-const std::string RESOURCE_BUNDLE_NAME = "bundleName";
-const std::string RESOURCE_MODULE_NAME = "moduleName";
 const std::string RESOURCE_ID = "id";
 }
 
@@ -495,8 +492,8 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
 void to_json(nlohmann::json &jsonObject, const Resource &resource)
 {
     jsonObject = nlohmann::json {
-        {RESOURCE_BUNDLE_NAME, resource.bundleName},
-        {RESOURCE_MODULE_NAME, resource.moduleName},
+        {BUNDLE_NAME, resource.bundleName},
+        {MODULE_NAME, resource.moduleName},
         {RESOURCE_ID, resource.id}
     };
 }
@@ -507,7 +504,7 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        RESOURCE_BUNDLE_NAME,
+        BUNDLE_NAME,
         resource.bundleName,
         JsonType::STRING,
         true,
@@ -515,7 +512,7 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        RESOURCE_MODULE_NAME,
+        MODULE_NAME,
         resource.moduleName,
         JsonType::STRING,
         true,
@@ -538,7 +535,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
 {
     jsonObject = nlohmann::json {
         {APPLICATION_NAME, applicationInfo.name},
-        {APPLICATION_BUNDLE_NAME, applicationInfo.bundleName},
+        {BUNDLE_NAME, applicationInfo.bundleName},
         {APPLICATION_VERSION_CODE, applicationInfo.versionCode},
         {APPLICATION_VERSION_NAME, applicationInfo.versionName},
         {APPLICATION_MIN_COMPATIBLE_VERSION_CODE, applicationInfo.minCompatibleVersionCode},
@@ -613,7 +610,7 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        APPLICATION_BUNDLE_NAME,
+        BUNDLE_NAME,
         applicationInfo.bundleName,
         JsonType::STRING,
         false,

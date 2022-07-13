@@ -25,7 +25,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string HAP_MODULE_INFO_NAME = "name";
-const std::string HAP_MODULE_INFO_MODULE_NAME = "moduleName";
 const std::string HAP_MODULE_INFO_DESCRIPTION = "description";
 const std::string HAP_MODULE_INFO_DESCRIPTION_ID = "descriptionId";
 const std::string HAP_MODULE_INFO_ICON_PATH = "iconPath";
@@ -40,7 +39,6 @@ const std::string HAP_MODULE_INFO_REQ_CAPABILITIES = "reqCapabilities";
 const std::string HAP_MODULE_INFO_DEVICE_TYPES = "deviceTypes";
 const std::string HAP_MODULE_INFO_ABILITY_INFOS = "abilityInfos";
 const std::string HAP_MODULE_INFO_COLOR_MODE = "colorMode";
-const std::string HAP_MODULE_INFO_BUNDLE_NAME = "bundleName";
 const std::string HAP_MODULE_INFO_MAIN_ELEMENTNAME = "mainElementName";
 const std::string HAP_MODULE_INFO_PAGES = "pages";
 const std::string HAP_MODULE_INFO_PROCESS = "process";
@@ -245,7 +243,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
 {
     jsonObject = nlohmann::json {
         {HAP_MODULE_INFO_NAME, hapModuleInfo.name},
-        {HAP_MODULE_INFO_MODULE_NAME, hapModuleInfo.moduleName},
+        {MODULE_NAME, hapModuleInfo.moduleName},
         {HAP_MODULE_INFO_DESCRIPTION, hapModuleInfo.description},
         {HAP_MODULE_INFO_DESCRIPTION_ID, hapModuleInfo.descriptionId},
         {HAP_MODULE_INFO_ICON_PATH, hapModuleInfo.iconPath},
@@ -261,7 +259,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_DEVICE_TYPES, hapModuleInfo.deviceTypes},
         {HAP_MODULE_INFO_ABILITY_INFOS, hapModuleInfo.abilityInfos},
         {HAP_MODULE_INFO_COLOR_MODE, hapModuleInfo.colorMode},
-        {HAP_MODULE_INFO_BUNDLE_NAME, hapModuleInfo.bundleName},
+        {BUNDLE_NAME, hapModuleInfo.bundleName},
         {HAP_MODULE_INFO_MAIN_ELEMENTNAME, hapModuleInfo.mainElementName},
         {HAP_MODULE_INFO_PAGES, hapModuleInfo.pages},
         {HAP_MODULE_INFO_PROCESS, hapModuleInfo.process},
@@ -297,7 +295,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        HAP_MODULE_INFO_MODULE_NAME,
+        MODULE_NAME,
         hapModuleInfo.moduleName,
         JsonType::STRING,
         false,
@@ -425,7 +423,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        HAP_MODULE_INFO_BUNDLE_NAME,
+        BUNDLE_NAME,
         hapModuleInfo.bundleName,
         JsonType::STRING,
         false,

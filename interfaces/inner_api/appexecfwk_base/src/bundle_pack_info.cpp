@@ -28,7 +28,6 @@ const std::string PACK_SUMMARY_APP_VERSION_NAME = "name";
 const std::string PACK_SUMMARY_APP_VERSION_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 
 // app
-const std::string PACK_SUMMARY_APP_BUNDLE_NAME = "bundleName";
 const std::string PACK_SUMMARY_APP_BUNDLE_VERSION = "version";
 
 // module ablities
@@ -52,7 +51,6 @@ const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_DEFAULT_DIMENSION = "default
 
 // module distro
 const std::string PACK_SUMMARY_MODULE_DISTRO_MODULE_TYPE = "moduleType";
-const std::string PACK_SUMMARY_MODULE_DISTRO_MODULE_NAME = "moduleName";
 const std::string PACK_SUMMARY_MODULE_DISTRO_INSTALLATION_FREE = "installationFree";
 const std::string PACK_SUMMARY_MODULE_DISTRO_DELIVERY_WITH_INSTALL = "deliveryWithInstall";
 
@@ -131,7 +129,7 @@ void from_json(const nlohmann::json &jsonObject, Version &version)
 void to_json(nlohmann::json &jsonObject, const PackageApp &app)
 {
     jsonObject = nlohmann::json {
-        {PACK_SUMMARY_APP_BUNDLE_NAME, app.bundleName},
+        {BUNDLE_NAME, app.bundleName},
         {PACK_SUMMARY_APP_BUNDLE_VERSION, app.version}
     };
 }
@@ -142,7 +140,7 @@ void from_json(const nlohmann::json &jsonObject, PackageApp &app)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        PACK_SUMMARY_APP_BUNDLE_NAME,
+        BUNDLE_NAME,
         app.bundleName,
         JsonType::STRING,
         false,
@@ -285,7 +283,7 @@ void to_json(nlohmann::json &jsonObject, const ModuleDistro &distro)
 {
     jsonObject = nlohmann::json {
         {PACK_SUMMARY_MODULE_DISTRO_MODULE_TYPE, distro.moduleType},
-        {PACK_SUMMARY_MODULE_DISTRO_MODULE_NAME, distro.moduleName},
+        {MODULE_NAME, distro.moduleName},
         {PACK_SUMMARY_MODULE_DISTRO_INSTALLATION_FREE, distro.installationFree},
         {PACK_SUMMARY_MODULE_DISTRO_DELIVERY_WITH_INSTALL, distro.deliveryWithInstall}
     };
@@ -305,7 +303,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleDistro &distro)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        PACK_SUMMARY_MODULE_DISTRO_MODULE_NAME,
+        MODULE_NAME,
         distro.moduleName,
         JsonType::STRING,
         false,
