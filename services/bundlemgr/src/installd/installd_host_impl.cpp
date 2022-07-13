@@ -210,8 +210,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveBundleDataDir bundleName:%{public}s", bundleName.c_str());
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
-        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
+    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (bundleName.empty() || userid < 0) {
@@ -236,8 +236,8 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
 ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveModuleDataDir ModuleDir:%{public}s", ModuleDir.c_str());
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
-        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
+    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (ModuleDir.empty() || userid < 0) {
@@ -274,8 +274,8 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     APP_LOGD("InstalldHostImpl::CleanBundleDataDir start");
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
-        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
+    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (dataDir.empty()) {
@@ -387,8 +387,8 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
 ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     APP_LOGD("InstalldHostImpl::GetBundleCachePath start");
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
-        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
+    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (dir.empty()) {
