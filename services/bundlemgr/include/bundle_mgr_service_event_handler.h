@@ -51,6 +51,24 @@ public:
      */
     virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
 
+    /**
+     * @brief Get preInstall root dir list,
+     *        which the catalog of production has higher priority.
+     * @param rootDirList Indicates the root dir list.
+     * @return
+     */
+    static void GetPreInstallRootDirList(std::vector<std::string> &rootDirList);
+    /**
+     * @brief Load all preInstall infos from proFile.
+     * @return
+     */
+    static void LoadPreInstallProFile();
+    /**
+     * @brief Clear all preInstall infos cache.
+     * @return
+     */
+    static void ClearPreInstallCache();
+
     enum {
         BMS_START = 0,
     };
@@ -229,17 +247,10 @@ private:
     void ProcessBootBundleInstallFromPreBundleProFile(int32_t userId);
     /**
      * @brief Process bundle install by scanInfos.
-     * @param scanInfos Indicates the scanInfos contains installed info.
-     * @param uninstallBundleNames Indicates the uninstall bundleNames.
-     * @param preBundleConfigInfos Indicates the preBundleConfigInfos.
      * @param userId Indicates the userId.
      * @return
      */
-    void InnerProcessBootPreBundleProFileInstall(
-        const std::set<PreScanInfo> &scanInfos,
-        const std::set<std::string> &uninstallBundleNames,
-        const std::set<PreBundleConfigInfo> &preBundleConfigInfos,
-        int32_t userId);
+    void InnerProcessBootPreBundleProFileInstall(int32_t userId);
     /**
      * @brief Install bundles by scanDir.
      * @param scanDir Indicates the scanDir.
@@ -249,17 +260,6 @@ private:
      */
     void ProcessSystemBundleInstall(const std::string &scanDir,
         Constants::AppType appType, int32_t userId = Constants::UNSPECIFIED_USERID);
-    /**
-     * @brief Install bundles by preScanInfo.
-     * @param preScanInfo Indicates the preScanInfo.
-     * @param preBundleConfig Indicates the preBundleConfig.
-     * @param userId Indicates userId.
-     * @return
-     */
-    void ProcessSystemBundleInstall(
-        const PreScanInfo &preScanInfo,
-        const PreBundleConfigInfo &preBundleConfig,
-        int32_t userId);
     /**
      * @brief start reboot scan.
      * @return
@@ -287,15 +287,9 @@ private:
     void ProcessRebootBundleInstallFromPreBundleProFile();
     /**
      * @brief Process reboot bundle install by scanInfos.
-     * @param scanInfos Indicates the scanInfos contains installed info.
-     * @param uninstallBundleNames Indicates the uninstall bundleNames.
-     * @param preBundleConfigInfos Indicates the preBundleConfigInfos.
      * @return
      */
-    void ProcessReBootPreBundleProFileInstall(
-        const std::set<PreScanInfo> &scanInfos,
-        const std::set<std::string> &uninstallBundleNames,
-        const std::set<PreBundleConfigInfo> &preBundleConfigInfos);
+    void ProcessReBootPreBundleProFileInstall();
     /**
      * @brief Process reboot bundle install from scan.
      * @return
@@ -328,28 +322,11 @@ private:
      */
     void ProcessScanDir(const std::string &dir, std::list<std::string> &bundleDirs);
     /**
-     * @brief Get bundle dir by pre bundle profile.
-     * @param scanInfos Indicates the scanInfos contains installed info.
-     * @param uninstallBundleNames Indicates the uninstall bundleNames.
-     * @param preBundleConfigInfos Indicates the preBundleConfigInfos.
-     * @return
-     */
-    void GetBundleDirFromPreBundleProFile(
-        std::set<PreScanInfo> &scanInfos,
-        std::set<std::string> &uninstallBundleNames,
-        std::set<PreBundleConfigInfo> &preBundleConfigInfos);
-    /**
      * @brief Process parse pre bundle profile.
-     * @param scanInfos Indicates the scanInfos contains installed info.
-     * @param uninstallBundleNames Indicates the uninstall bundleNames.
-     * @param preBundleConfigInfos Indicates the preBundleConfigInfos.
+     * @param dir Indicates the dir.
      * @return
      */
-    void ParsePreBundleProFile(
-        std::string dir,
-        std::set<PreScanInfo> &scanInfos,
-        std::set<std::string> &uninstallBundleNames,
-        std::set<PreBundleConfigInfo> &preBundleConfigInfos);
+    static void ParsePreBundleProFile(const std::string &dir);
     /**
      * @brief Set the flag indicates that all system and vendor applications installed.
      * @return
@@ -416,6 +393,8 @@ private:
     bool needRebootOta_ = false;
     // Used to notify bundle scan status
     bool needNotifyBundleScanStatus_ = false;
+
+    bool hasLoadAllPreInstallBundleInfosFromDb_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

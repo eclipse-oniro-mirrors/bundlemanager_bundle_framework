@@ -224,7 +224,9 @@ ErrCode BundleParser::ParsePreInstallConfig(
 }
 
 ErrCode BundleParser::ParsePreUnInstallConfig(
-    const std::string &configFile, std::set<std::string> &bundleNames) const
+    const std::string &configFile,
+    std::set<std::string> &uninstallList,
+    std::set<std::string> &recoverList) const
 {
     APP_LOGD("Parse PreUnInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
@@ -234,7 +236,7 @@ ErrCode BundleParser::ParsePreUnInstallConfig(
     }
 
     PreBundleProfile preBundleProfile;
-    return preBundleProfile.TransformTo(jsonBuf, bundleNames);
+    return preBundleProfile.TransformTo(jsonBuf, uninstallList, recoverList);
 }
 
 ErrCode BundleParser::ParsePreInstallAbilityConfig(
@@ -251,14 +253,16 @@ ErrCode BundleParser::ParsePreInstallAbilityConfig(
     return preBundleProfile.TransformTo(jsonBuf, preBundleConfigInfos);
 }
 
-ErrCode BundleParser::ParseDefaultPermission(std::vector<DefaultPermission> &defaultPermissions) const
+ErrCode BundleParser::ParseDefaultPermission(
+    const std::string &permissionFile, std::set<DefaultPermission> &defaultPermissions) const
 {
-    APP_LOGD("Parse DefaultPermission from %{private}s", Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH.c_str());
+    APP_LOGD("Parse DefaultPermission from %{private}s", permissionFile.c_str());
     nlohmann::json jsonBuf;
-    if (!ReadFileIntoJson(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH, jsonBuf)) {
+    if (!ReadFileIntoJson(permissionFile, jsonBuf)) {
         APP_LOGE("Parse default-permissions file failed");
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
+
     DefaultPermissionProfile profile;
     return profile.TransformTo(jsonBuf, defaultPermissions);
 }

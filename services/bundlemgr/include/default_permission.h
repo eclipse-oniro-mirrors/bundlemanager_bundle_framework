@@ -29,6 +29,11 @@ struct PermissionInfo {
 struct DefaultPermission {
     std::string bundleName;
     std::vector<PermissionInfo> grantPermission;
+    std::vector<std::string> appSignature;
+    bool operator < (const DefaultPermission &defaultPermission) const
+    {
+        return bundleName < defaultPermission.bundleName;
+    }
 };
 } // AppExecFwk
 } // OHOS

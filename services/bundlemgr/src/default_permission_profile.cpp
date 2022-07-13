@@ -24,6 +24,7 @@ static const std::string PERMISSIONS_PROFILE_KEY_BUNDLENAME = "bundleName";
 static const std::string PERMISSIONS_PROFILE_KEY_PERMISSIONS = "permissions";
 static const std::string PERMISSIONS_PROFILE_KEY_NAME = "name";
 static const std::string PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE = "userCancellable";
+static const std::string PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "appSignature";
 }
 thread_local int32_t parseResult;
 
@@ -49,7 +50,7 @@ void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
 }
 
 ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
-    std::vector<DefaultPermission> &defaultPermissions) const
+    std::set<DefaultPermission> &defaultPermissions) const
 {
     if (jsonObject.is_array() && !jsonObject.is_discarded()) {
         for (const auto &object : jsonObject) {
@@ -67,6 +68,14 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
                 true,
                 parseResult,
                 ArrayType::NOT_ARRAY);
+            GetValueIfFindKey<std::vector<std::string>>(object,
+                objectEnd,
+                PERMISSIONS_PROFILE_KEY_APP_SIGNATURE,
+                defaultPermission.appSignature,
+                JsonType::ARRAY,
+                false,
+                parseResult,
+                ArrayType::STRING);
             GetValueIfFindKey<std::vector<PermissionInfo>>(object,
                 objectEnd,
                 PERMISSIONS_PROFILE_KEY_PERMISSIONS,
@@ -82,7 +91,7 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
                 parseResult = ERR_OK;
                 return ret;
             }
-            defaultPermissions.push_back(defaultPermission);
+            defaultPermissions.insert(defaultPermission);
         }
     }
     return ERR_OK;

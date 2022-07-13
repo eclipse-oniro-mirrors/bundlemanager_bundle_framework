@@ -27,12 +27,31 @@ std::map<std::string, std::map<std::string, bool>> BundlePermissionMgr::defaultP
 
 bool BundlePermissionMgr::Init()
 {
-    BundleParser bundleParser;
-    std::vector<DefaultPermission> permissions;
-    if (bundleParser.ParseDefaultPermission(permissions) != ERR_OK) {
-        APP_LOGE("BundlePermissionMgr::Init failed");
+    std::vector<std::string> permissionFileList;
+#ifdef USE_PRE_BUNDLE_PROFILE
+    std::vector<std::string> rootDirList;
+    BMSEventHandler::GetPreInstallRootDirList(rootDirList);
+    if (rootDirList.empty()) {
+        APP_LOGE("rootDirList is empty");
         return false;
     }
+
+    for (const auto &rootDir : rootDirList) {
+        permissionFileList.emplace_back(
+            rootDir + Constants::PRODUCT_SUFFIX + Constants::INSTALL_LIST_PERMISSIONS_CONFIG);
+    }
+#else
+    permissionFileList.emplace_back(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);
+#endif
+    BundleParser bundleParser;
+    std::set<DefaultPermission> permissions;
+    for (const auto &permissionFile : permissionFileList) {
+        if (bundleParser.ParseDefaultPermission(permissionFile, permissions) != ERR_OK) {
+            APP_LOGW("BundlePermissionMgr::Init failed");
+            continue;
+        }
+    }
+
     defaultPermissions_.clear();
     for (const auto &permission : permissions) {
         std::map<std::string, bool> permissionInfo;

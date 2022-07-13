@@ -40,9 +40,14 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string APP_SUFFIX = "/app";
-const std::string PRODUCT_SUFFIX = "/etc/bundle";
 
-std::string GetScanBundleName(const std::string &str)
+std::set<PreScanInfo> installList_;
+std::set<std::string> uninstallList_;
+std::set<std::string> recoverList_;
+std::set<PreBundleConfigInfo> installListCapabilities_;
+bool hasLoadPreInstallProFile_ = false;
+
+std::string GetBundleNameFromPathStr(const std::string &str)
 {
     auto index = str.find_last_of('/');
     if (index != std::string::npos) {
@@ -175,6 +180,7 @@ void BMSEventHandler::ClearCache()
 {
     hapParseInfoMap_.clear();
     loadExistData_.clear();
+    hasLoadAllPreInstallBundleInfosFromDb_ = false;
 }
 
 bool BMSEventHandler::LoadInstallInfosFromDb()
@@ -426,14 +432,82 @@ std::vector<std::string> BMSEventHandler::CheckHapPaths(
     return checkHapPaths;
 }
 
+void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDirList)
+{
+#ifdef CONFIG_POLOCY_ENABLE
+    auto cfgDirList = GetCfgDirList();
+    if (cfgDirList != nullptr) {
+        for (const auto &cfgDir : cfgDirList->paths) {
+            if (cfgDir == nullptr) {
+                continue;
+            }
+
+            APP_LOGD("cfgDir: %{public}s ", cfgDir);
+            rootDirList.emplace_back(cfgDir);
+        }
+
+        FreeCfgDirList(cfgDirList);
+    }
+#endif
+    bool ret = std::find(
+        rootDirList.begin(), rootDirList.end(), Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR) != rootDirList.end();
+    if (!ret) {
+        rootDirList.emplace_back(Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR);
+    }
+}
+
+void BMSEventHandler::ClearPreInstallCache()
+{
+    installList_.clear();
+    uninstallList_.clear();
+    recoverList_.clear();
+    installListCapabilities_.clear();
+    hasLoadPreInstallProFile_ = false;
+}
+
+void BMSEventHandler::LoadPreInstallProFile()
+{
+    if (hasLoadPreInstallProFile_) {
+        return;
+    }
+
+    std::vector<std::string> rootDirList;
+    GetPreInstallRootDirList(rootDirList);
+    if (rootDirList.empty()) {
+        APP_LOGE("dirList is empty");
+        return;
+    }
+
+    for (const auto &rootDir : rootDirList) {
+        ParsePreBundleProFile(rootDir + Constants::PRODUCT_SUFFIX);
+    }
+
+    hasLoadPreInstallProFile_ = true;
+}
+
+void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
+{
+    BundleParser bundleParser;
+    bundleParser.ParsePreInstallConfig(
+        dir + Constants::INSTALL_LIST_CONFIG, installList_);
+    bundleParser.ParsePreUnInstallConfig(
+        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_, recoverList_);
+    bundleParser.ParsePreInstallAbilityConfig(
+        dir + Constants::INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
+}
+
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
-    std::set<PreScanInfo> scanInfos;
-    GetBundleDirFromPreBundleProFile(
-        scanInfos, uninstallBundleNames, preBundleConfigInfos);
-    for (const auto &scanInfo : scanInfos) {
-        bundleDirs.emplace_back(scanInfo.bundleDir);
+    LoadPreInstallProFile();
+    for (const auto &installInfo : installList_) {
+        std::string installBundleName = GetBundleNameFromPathStr(installInfo.bundleDir);
+        if (uninstallList_.find(installBundleName) != uninstallList_.end()) {
+            APP_LOGW("bundle(%{public}s) not allowed installed", installBundleName.c_str());
+            continue;
+        }
+
+        bundleDirs.emplace_back(installInfo.bundleDir);
     }
 #else
     std::list<std::string> scanbundleDirs;
@@ -615,26 +689,17 @@ void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
 
 void BMSEventHandler::GetBundleDirFromScan(std::list<std::string> &bundleDirs)
 {
-    ProcessScanDir(Constants::SYSTEM_APP_SCAN_PATH, bundleDirs);
-    ProcessScanDir(Constants::THIRD_SYSTEM_APP_SCAN_PATH, bundleDirs);
-#ifdef CONFIG_POLOCY_ENABLE
-    auto cfgDirList = GetCfgDirList();
-    if (cfgDirList == nullptr) {
-        APP_LOGD("cfgDirList is empty");
+    std::vector<std::string> rootDirList;
+    GetPreInstallRootDirList(rootDirList);
+    if (rootDirList.empty()) {
+        APP_LOGE("rootDirList is empty");
         return;
     }
 
-    for (auto cfgDir : cfgDirList->paths) {
-        if (!cfgDir) {
-            continue;
-        }
-
-        APP_LOGD("cfgDir: %{public}s ", cfgDir);
-        ProcessScanDir(cfgDir + APP_SUFFIX, bundleDirs);
+    for (const auto &rootDir : rootDirList) {
+        ProcessScanDir(rootDir + APP_SUFFIX, bundleDirs);
     }
 
-    FreeCfgDirList(cfgDirList);
-#endif
     auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
     if (iter != bundleDirs.end()) {
         bundleDirs.erase(iter);
@@ -657,100 +722,22 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
 void BMSEventHandler::ProcessBootBundleInstallFromPreBundleProFile(int32_t userId)
 {
     APP_LOGD("Process boot bundle install from pre bundle proFile");
-    std::set<PreScanInfo> scanInfos;
-    std::set<std::string> uninstallBundleNames;
-    std::set<PreBundleConfigInfo> preBundleConfigInfos;
-    GetBundleDirFromPreBundleProFile(scanInfos, uninstallBundleNames, preBundleConfigInfos);
-    InnerProcessBootPreBundleProFileInstall(scanInfos, uninstallBundleNames, preBundleConfigInfos, userId);
+    LoadPreInstallProFile();
+    InnerProcessBootPreBundleProFileInstall(userId);
 }
 
-void BMSEventHandler::GetBundleDirFromPreBundleProFile(
-    std::set<PreScanInfo> &scanInfos,
-    std::set<std::string> &uninstallBundleNames,
-    std::set<PreBundleConfigInfo> &preBundleConfigInfos)
+void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
 {
-    std::set<std::string> preBundleProFileDirs;
-    // Product catalog
-#ifdef CONFIG_POLOCY_ENABLE
-    auto cfgDirList = GetCfgDirList();
-    if (cfgDirList == nullptr) {
-        APP_LOGD("cfgDirList is empty");
-        return;
-    }
-
-    for (auto cfgDir : cfgDirList->paths) {
-        if (!cfgDir) {
+    for (const auto &installInfo : installList_) {
+        APP_LOGD("Inner process boot preBundle proFile install %{public}s", installInfo.ToString().c_str());
+        std::string installBundleName = GetBundleNameFromPathStr(installInfo.bundleDir);
+        if (uninstallList_.find(installBundleName) != uninstallList_.end()) {
+            APP_LOGW("bundle(%{public}s) not allowed installed when boot", installBundleName.c_str());
             continue;
         }
 
-        std::string preBundleProFileDir = cfgDir + PRODUCT_SUFFIX;
-        APP_LOGD("preBundleProFileDir: %{public}s ", preBundleProFileDir.c_str());
-        if (preBundleProFileDirs.find(preBundleProFileDir) != preBundleProFileDirs.end()) {
-            APP_LOGE("preBundleProFileDir(%{public}s) has parsed", preBundleProFileDir.c_str());
-            continue;
-        }
-
-        preBundleProFileDirs.insert(preBundleProFileDir);
-        ParsePreBundleProFile(preBundleProFileDir, scanInfos, uninstallBundleNames, preBundleConfigInfos);
-    }
-
-    FreeCfgDirList(cfgDirList);
-#endif
-    // Default catalog
-    if (preBundleProFileDirs.find(Constants::DEFAULT_PRE_BUNDLE_PROFILE) == preBundleProFileDirs.end()) {
-        ParsePreBundleProFile(
-            Constants::DEFAULT_PRE_BUNDLE_PROFILE, scanInfos, uninstallBundleNames, preBundleConfigInfos);
-    }
-}
-
-void BMSEventHandler::ParsePreBundleProFile(
-    std::string dir,
-    std::set<PreScanInfo> &scanInfos,
-    std::set<std::string> &uninstallBundleNames,
-    std::set<PreBundleConfigInfo> &preBundleConfigInfos)
-{
-    BundleParser bundleParser;
-    bundleParser.ParsePreInstallConfig(
-        dir + Constants::PREINSTALL_CONFIG, scanInfos);
-    bundleParser.ParsePreUnInstallConfig(
-        dir + Constants::PREINSTALL_UNINSTALL_CONFIG, uninstallBundleNames);
-    bundleParser.ParsePreInstallAbilityConfig(
-        dir + Constants::PREINSTALL_ABILITY_CONFIG, preBundleConfigInfos);
-}
-
-void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(
-    const std::set<PreScanInfo> &scanInfos,
-    const std::set<std::string> &uninstallBundleNames,
-    const std::set<PreBundleConfigInfo> &preBundleConfigInfos,
-    int32_t userId)
-{
-    for (auto scanInfo : scanInfos) {
-        APP_LOGD("Inner process boot preBundle proFile install %{public}s", scanInfo.ToString().c_str());
-        std::string scanBundleName = GetScanBundleName(scanInfo.bundleDir);
-        if (uninstallBundleNames.find(scanBundleName) != uninstallBundleNames.end()) {
-            APP_LOGW("bundle(%{public}s) not allowed installed", scanBundleName.c_str());
-            continue;
-        }
-
-        PreBundleConfigInfo preBundleConfigInfo;
-        preBundleConfigInfo.bundleName = scanBundleName;
-        auto iter = preBundleConfigInfos.find(preBundleConfigInfo);
-        if (iter != preBundleConfigInfos.end()) {
-            preBundleConfigInfo = *iter;
-        }
-
-        ProcessSystemBundleInstall(scanInfo, preBundleConfigInfo, userId);
-    }
-}
-
-void BMSEventHandler::ProcessSystemBundleInstall(
-    const PreScanInfo &preScanInfo, const PreBundleConfigInfo &preBundleConfig, int32_t userId)
-{
-    APP_LOGD("Process system bundle install by preScanInfo(%{public}s)", preScanInfo.bundleDir.c_str());
-    SystemBundleInstaller installer;
-    if (!installer.InstallSystemBundle(
-        preScanInfo.bundleDir, Constants::AppType::SYSTEM_APP, userId)) {
-        APP_LOGW("Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
+        ProcessSystemBundleInstall(
+            installInfo.bundleDir, Constants::AppType::SYSTEM_APP, userId);
     }
 }
 
@@ -790,6 +777,11 @@ void BMSEventHandler::ProcessRebootBundle()
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
 {
+    if (hasLoadAllPreInstallBundleInfosFromDb_) {
+        APP_LOGD("Has load all preInstall bundleInfos from db");
+        return true;
+    }
+
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -802,6 +794,7 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
         loadExistData_.emplace(iter.GetBundleName(), iter);
     }
 
+    hasLoadAllPreInstallBundleInfosFromDb_ = true;
     return !preInstallBundleInfos.empty();
 }
 
@@ -818,28 +811,22 @@ void BMSEventHandler::ProcessRebootBundleInstall()
 void BMSEventHandler::ProcessRebootBundleInstallFromPreBundleProFile()
 {
     APP_LOGD("Process reboot bundle install from pre bundle proFile");
-    std::set<PreScanInfo> scanInfos;
-    std::set<std::string> uninstallBundleNames;
-    std::set<PreBundleConfigInfo> preBundleConfigInfos;
-    GetBundleDirFromPreBundleProFile(scanInfos, uninstallBundleNames, preBundleConfigInfos);
-    ProcessReBootPreBundleProFileInstall(scanInfos, uninstallBundleNames, preBundleConfigInfos);
+    LoadPreInstallProFile();
+    ProcessReBootPreBundleProFileInstall();
 }
 
-void BMSEventHandler::ProcessReBootPreBundleProFileInstall(
-    const std::set<PreScanInfo> &scanInfos,
-    const std::set<std::string> &uninstallBundleNames,
-    const std::set<PreBundleConfigInfo> &preBundleConfigInfos)
+void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
 {
     std::list<std::string> bundleDirs;
-    for (auto scanInfo : scanInfos) {
-        APP_LOGD("Process reboot preBundle proFile install %{public}s", scanInfo.ToString().c_str());
-        std::string scanBundleName = GetScanBundleName(scanInfo.bundleDir);
-        if (uninstallBundleNames.find(scanBundleName) != uninstallBundleNames.end()) {
-            APP_LOGW("bundle(%{public}s) not allowed installed", scanBundleName.c_str());
+    for (const auto &installInfo : installList_) {
+        APP_LOGD("Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
+        std::string installBundleName = GetBundleNameFromPathStr(installInfo.bundleDir);
+        if (uninstallList_.find(installBundleName) != uninstallList_.end()) {
+            APP_LOGW("bundle(%{public}s) not allowed installed when reboot", installBundleName.c_str());
             continue;
         }
 
-        bundleDirs.push_back(scanInfo.bundleDir);
+        bundleDirs.emplace_back(installInfo.bundleDir);
     }
 
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);

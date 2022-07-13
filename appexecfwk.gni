@@ -21,8 +21,6 @@ kits_path = "${appexecfwk_path}/interfaces/kits"
 inner_api_path = "${appexecfwk_path}/interfaces/inner_api"
 tools_path = "${appexecfwk_path}/tools"
 
-use_pre_bundle_profile = false
-
 declare_args() {
   bundle_framework_graphics = true
   bundle_framework_free_install = true
@@ -38,6 +36,7 @@ declare_args() {
   hicollie_enable = true
   hisysevent_enable = true
   bms_rdb_enable = false
+  use_pre_bundle_profile = false
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {

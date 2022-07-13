@@ -28,17 +28,13 @@ namespace {
 }
 struct PreBundleConfigInfo {
     std::string bundleName;
-    bool systemapi = false;
     bool keepAlive = false;
     bool singleton = false;
-    bool userDataClearable = false;
-    bool multiProcess = false;
     bool bootable = false;
-    bool notification = false;
-    bool hideDesktopIcon = false;
-    bool queryPriority = false;
-    bool startStaticBroadcast = false;
-    bool startGuiAbilityBackground = false;
+    bool runningResourcesApply = false;
+    bool associatedWakeUp = false;
+    std::vector<std::string> allowCommentEvent;
+    std::vector<std::string> appSignature;
 
     bool operator <(const PreBundleConfigInfo &preBundleConfigInfo) const
     {
@@ -48,29 +44,29 @@ struct PreBundleConfigInfo {
     void Reset()
     {
         bundleName.clear();
-        systemapi = false;
         keepAlive = false;
         singleton = false;
-        userDataClearable = false;
-        multiProcess = false;
         bootable = false;
-        notification = false;
-        hideDesktopIcon = false;
-        queryPriority = false;
-        startStaticBroadcast = false;
-        startGuiAbilityBackground = false;
+        runningResourcesApply = false;
+        associatedWakeUp = false;
+        allowCommentEvent.clear();
+        appSignature.clear();
     }
 
-    std::string ToString()
+    std::string ToString() const
     {
-        return "[ bundleName = " + bundleName + ", systemapi = " + GetBoolStrVal(systemapi)
-            + ", singleton = " + GetBoolStrVal(singleton) + "]";
+        return "[ bundleName = " + bundleName
+            + ", keepAlive = " + GetBoolStrVal(keepAlive)
+            + ", singleton = " + GetBoolStrVal(singleton)
+            + ", bootable = " + GetBoolStrVal(bootable)
+            + ", associatedWakeUp = " + GetBoolStrVal(associatedWakeUp)
+            + ", runningResourcesApply = " + GetBoolStrVal(runningResourcesApply) + "]";
     }
 };
 
 struct PreScanInfo {
     std::string bundleDir;
-    bool removable = false;
+    bool removable = true;
     int32_t priority = 0;
 
     bool operator < (const PreScanInfo &preScanInfo) const
@@ -90,13 +86,14 @@ struct PreScanInfo {
     void Reset()
     {
         bundleDir.clear();
-        removable = false;
+        removable = true;
         priority = 0;
     }
 
-    std::string ToString()
+    std::string ToString() const
     {
-        return "[ bundleDir = " + bundleDir + ", removable = " + GetBoolStrVal(removable)
+        return "[ bundleDir = " + bundleDir
+            + ", removable = " + GetBoolStrVal(removable)
             + ", priority = " + std::to_string(priority) + "]";
     }
 };
