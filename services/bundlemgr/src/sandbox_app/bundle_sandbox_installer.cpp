@@ -67,7 +67,6 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_APP_NOT_EXISTED;
     }
-    InnerBundleInfo oldInfo = info;
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {
@@ -87,10 +86,9 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
         APP_LOGE("the origin application is not installed at current user");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
-    info.CleanInnerBundleUserInfos();
     ScopeGuard sandboxAppGuard([&] { SandboxAppRollBack(info, userId_); });
 
-    // 4. generate the accesstoken id
+    // 4. generate the accesstoken id and inherit original permissions
     if (GetSandboxDataMgr() != ERR_OK) {
         APP_LOGE("get sandbox data mgr failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -102,16 +100,20 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     }
     info.SetAppIndex(newAppIndex);
     info.SetIsSandbox(true);
-    uint32_t newTokenId = BundlePermissionMgr::CreateAccessTokenId(info, info.GetBundleName(), userId_, dlpType);
 
-    // 5. grant permission
-    // to be completed further
-    if (!BundlePermissionMgr::GrantRequestPermissions(info, newTokenId)) {
-        APP_LOGE("InstallSandboxApp grant permission failed");
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    // 4.1 get full permissions
+    std::vector<AccessToken::PermissionStateFull> allPermissions;
+    if (!BundlePermissionMgr::GetAllReqPermissionStateFull(info.GetAccessTokenId(userId_), allPermissions)) {
+        APP_LOGE("InstallSandboxApp get all permission failed");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_GET_PERMISSIONS_FAILED;
     }
+    // 4.2 generate accesstoken id
+    Security::AccessToken::HapPolicyParams hapPolicy = BundlePermissionMgr::CreateHapPolicyParam(info, allPermissions);
+    uint32_t newTokenId =
+        BundlePermissionMgr::CreateAccessTokenId(info, info.GetBundleName(), userId_, dlpType, hapPolicy);
 
     // 6. create data dir and generate uid and gid
+    info.CleanInnerBundleUserInfos();
     userInfo.bundleName = bundleName_ + Constants::FILE_UNDERLINE + std::to_string(newAppIndex);
     userInfo.gids.clear();
     dataMgr_->GenerateUidAndGid(userInfo);
