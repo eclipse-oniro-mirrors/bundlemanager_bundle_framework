@@ -1679,6 +1679,7 @@ bool ToInnerModuleInfo(const Profile::ModuleJson &moduleJson, InnerModuleInfo &i
     bool isSystemApp, bool isPreInstallApp)
 {
     APP_LOGD("transform ModuleJson to InnerModuleInfo");
+    innerModuleInfo.name = moduleJson.module.name;
     innerModuleInfo.modulePackage = moduleJson.module.name;
     innerModuleInfo.moduleName = moduleJson.module.name;
     innerModuleInfo.description = moduleJson.module.description;
@@ -1749,6 +1750,12 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
     for (const Profile::Ability &ability : moduleJson.module.abilities) {
         AbilityInfo abilityInfo;
         ToAbilityInfo(moduleJson, ability, abilityInfo, applicationInfo.isSystemApp, isPreInstallApp);
+        if (innerModuleInfo.mainAbility == abilityInfo.name) {
+            innerModuleInfo.icon = abilityInfo.iconPath;
+            innerModuleInfo.iconId = abilityInfo.iconId;
+            innerModuleInfo.label = abilityInfo.label;
+            innerModuleInfo.labelId = abilityInfo.labelId;
+        }
         std::string key;
         key.append(moduleJson.app.bundleName).append(".")
             .append(moduleJson.module.name).append(".").append(abilityInfo.name);
@@ -1786,6 +1793,12 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
     for (const Profile::Extension &extension : moduleJson.module.extensionAbilities) {
         ExtensionAbilityInfo extensionInfo;
         ToExtensionInfo(moduleJson, extension, extensionInfo, applicationInfo.isSystemApp, isPreInstallApp);
+        if (innerModuleInfo.mainAbility == extensionInfo.name) {
+            innerModuleInfo.icon = extensionInfo.icon;
+            innerModuleInfo.iconId = extensionInfo.iconId;
+            innerModuleInfo.label = extensionInfo.label;
+            innerModuleInfo.labelId = extensionInfo.labelId;
+        }
         std::string key;
         key.append(moduleJson.app.bundleName).append(".")
             .append(moduleJson.module.name).append(".").append(extension.name);
