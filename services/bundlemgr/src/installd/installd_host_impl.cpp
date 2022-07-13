@@ -45,9 +45,17 @@ bool VerifyCallingPermission(const std::string &permissionName)
 {
     APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    APP_LOGD("callerToken : %{private}u", callerToken);
-    int32_t ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
+    AccessToken::AccessTokenID firstCallerToken = IPCSkeleton::GetFirstTokenID();
+    APP_LOGD("callerToken : %{private}u, firstCallerToken : %{private}u", callerToken, firstCallerToken);
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    int32_t ret = AccessToken::PermissionState::PERMISSION_DENIED;
+    if (firstCallerToken == 0) {
+        // hap or native call
+        ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
+    } else {
+        // native call
+        ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, firstCallerToken, permissionName);
+    }
     if ((ret == AccessToken::PermissionState::PERMISSION_GRANTED) ||
         (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE)) {
         APP_LOGD("VerifyCallingPermission success, permission:%{public}s: PERMISSION_GRANTED",
@@ -58,6 +66,7 @@ bool VerifyCallingPermission(const std::string &permissionName)
     return false;
 }
 }
+
 InstalldHostImpl::InstalldHostImpl()
 {
     APP_LOGI("installd service instance is created");
