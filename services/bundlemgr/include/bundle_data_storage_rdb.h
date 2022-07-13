@@ -38,9 +38,9 @@ private:
     void TransformStrToInfo(
         const std::map<std::string, std::string> &datas,
         std::map<std::string, InnerBundleInfo> &infos);
-    void UpdateDataBase(std::map<std::string, InnerBundleInfo>& infos);
+    void UpdateDataBase(std::map<std::string, InnerBundleInfo> &infos);
 
-    std::shared_ptr<RdbDataManager> rdbDataManager_;
+    std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

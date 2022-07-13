@@ -36,9 +36,9 @@ private:
     void TransformStrToInfo(
         const std::map<std::string, std::string> &datas,
         std::vector<PreInstallBundleInfo> &preInstallBundleInfos);
-    void UpdateDataBase(std::map<std::string, PreInstallBundleInfo>& infos);
+    void UpdateDataBase(std::map<std::string, PreInstallBundleInfo> &infos);
 
-    std::shared_ptr<RdbDataManager> rdbDataManager_;
+    std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

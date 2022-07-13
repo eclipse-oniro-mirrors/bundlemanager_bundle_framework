@@ -35,7 +35,7 @@ public:
 
 private:
     BmsRdbConfig bmsRdbConfig_;
-    std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
