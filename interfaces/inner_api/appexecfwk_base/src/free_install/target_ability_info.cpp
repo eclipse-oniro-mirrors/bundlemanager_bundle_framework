@@ -125,7 +125,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        BUNDLE_NAME,
+        Constants::BUNDLE_NAME,
         targetInfo.bundleName,
         JsonType::STRING,
         false,

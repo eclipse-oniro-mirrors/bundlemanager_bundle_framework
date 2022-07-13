@@ -301,10 +301,10 @@ void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
 
 void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
 {
-    formInfo.bundleName = jsonObject.at(BUNDLE_NAME).get<std::string>();
+    formInfo.bundleName = jsonObject.at(Constants::BUNDLE_NAME).get<std::string>();
     formInfo.package = jsonObject.at(JSON_KEY_PACKAGE).get<std::string>();
-    formInfo.moduleName = jsonObject.at(MODULE_NAME).get<std::string>();
-    formInfo.abilityName = jsonObject.at(ABILITY_NAME).get<std::string>();
+    formInfo.moduleName = jsonObject.at(Constants::MODULE_NAME).get<std::string>();
+    formInfo.abilityName = jsonObject.at(Constants::ABILITY_NAME).get<std::string>();
     formInfo.name = jsonObject.at(JSON_KEY_NAME).get<std::string>();
     formInfo.description = jsonObject.at(JSON_KEY_DESCRIPTION).get<std::string>();
     formInfo.relatedBundleName = jsonObject.at(JSON_KEY_RELATED_BUNDLE_NAME).get<std::string>();

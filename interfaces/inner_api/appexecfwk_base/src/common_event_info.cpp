@@ -110,7 +110,7 @@ void to_json(nlohmann::json &jsonObject, const CommonEventInfo &commonEvent)
 void from_json(const nlohmann::json &jsonObject, CommonEventInfo &commonEvent)
 {
     commonEvent.name = jsonObject.at(JSON_KEY_NAME).get<std::string>();
-    commonEvent.bundleName = jsonObject.at(BUNDLE_NAME).get<std::string>();
+    commonEvent.bundleName = jsonObject.at(Constants::BUNDLE_NAME).get<std::string>();
     commonEvent.uid = jsonObject.at(JSON_KEY_UID).get<int>();
     commonEvent.permission = jsonObject.at(JSON_KEY_PERMISSION).get<std::string>();
     commonEvent.data = jsonObject.at(JSON_KEY_DATA).get<std::vector<std::string>>();
