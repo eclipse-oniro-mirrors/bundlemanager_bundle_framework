@@ -15,6 +15,7 @@
 
 #include "bundle_pack_info.h"
 
+#include "bundle_constants.h"
 #include "json_util.h"
 #include "parcel_macro.h"
 #include "string_ex.h"

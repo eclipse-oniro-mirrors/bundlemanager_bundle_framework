@@ -16,6 +16,7 @@
 #include "rpc_id_result.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"

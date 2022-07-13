@@ -15,6 +15,7 @@
 
 #include "hap_module_info.h"
 
+#include "bundle_constants.h"
 #include "json_util.h"
 #include "message_parcel.h"
 #include "nlohmann/json.hpp"

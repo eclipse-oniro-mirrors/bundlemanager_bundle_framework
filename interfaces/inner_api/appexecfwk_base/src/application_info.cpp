@@ -26,6 +26,7 @@
 #include "string_ex.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "json_util.h"
 
 namespace OHOS {
