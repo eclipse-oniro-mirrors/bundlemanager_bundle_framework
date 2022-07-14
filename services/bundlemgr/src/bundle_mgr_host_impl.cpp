@@ -569,12 +569,13 @@ bool BundleMgrHostImpl::CleanBundleCacheFiles(
         return false;
     }
 
-    CleanBundleCacheTask(bundleName, cleanCacheCallback, userId);
+    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId);
     return true;
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     const sptr<ICleanCacheCallback> &cleanCacheCallback,
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
     int32_t userId)
 {
     std::vector<std::string> rootDir;
@@ -584,12 +585,12 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         rootDir.emplace_back(dataDir);
     }
 
-    auto cleanCache = [bundleName, userId, rootDir, cleanCacheCallback]() {
+    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, this]() {
         std::vector<std::string> caches;
         for (const auto &st : rootDir) {
             std::vector<std::string> cache;
             if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
-                APP_LOGE("GetBundleCachePath failed, path: %{public}s", st.c_str());
+                APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
             }
             for (const auto &item : cache) {
                 caches.emplace_back(item);
@@ -605,10 +606,16 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
                 }
             }
         }
-
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, error);
         APP_LOGD("CleanBundleCacheFiles with error %{public}d", error);
         cleanCacheCallback->OnCleanCacheFinished(error);
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
+            APP_LOGW("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
+            return;
+        }
+        dataMgr->NotifyBundleStatus(bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, ERR_OK,
+                                    NotifyType::BUNDLE_CACHE_CLEARED, innerBundleUserInfo.uid);
     };
     handler_->PostTask(cleanCache);
 }
@@ -662,6 +669,13 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
 
     EventReport::SendCleanCacheSysEvent(bundleName, userId, false, false);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return false;
+    }
+    dataMgr->NotifyBundleStatus(bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, ERR_OK,
+                                NotifyType::BUNDLE_DATA_CLEARED, innerBundleUserInfo.uid);
     return true;
 }
 

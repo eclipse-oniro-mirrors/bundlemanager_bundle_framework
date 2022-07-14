@@ -678,7 +678,7 @@ private:
     std::set<int32_t> GetExistsCommonUserIs();
     bool VerifyQueryPermission(const std::string &queryBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
-        int32_t userId);
+        const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
 
     std::shared_ptr<BMSEventHandler> handler_;
 };
