@@ -190,6 +190,9 @@ void BundleConnectAbilityMgr::WaitFromConnected(std::unique_lock<std::mutex> &lo
 {
     APP_LOGI("ConnectAbility await start CONNECTED");
     while (connectState_ != ServiceCenterConnectState::CONNECTED) {
+        if (connectState_ == ServiceCenterConnectState::DISCONNECTED) {
+            break;
+        }
         cv_.wait(lock);
     }
     APP_LOGI("ConnectAbility await end CONNECTED");
@@ -216,8 +219,8 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
         if (result == ERR_OK) {
             if (connectState_ != ServiceCenterConnectState::CONNECTED) {
                 WaitFromConnected(lock);
-                serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
             }
+            serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
         } else {
             APP_LOGE("ConnectAbility fail result = %{public}d", result);
         }
