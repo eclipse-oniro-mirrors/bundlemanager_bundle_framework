@@ -16,18 +16,15 @@
 #include "syscap_tool.h"
 
 #include <arpa/inet.h>
-#include <errno.h>
-#include <libgen.h>
 #include <securec.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
-#include "hilog/log.h"
+#include "errno.h"
+#include "hilog/log_c.h"
+#include "stdio.h"
 
 const int32_t OK = 0;
 const int32_t ERROR = -1;

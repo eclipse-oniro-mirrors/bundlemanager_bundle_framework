@@ -16,7 +16,7 @@
 #ifndef _SYSCAP_TOOL_H
 #define _SYSCAP_TOOL_H
 
-#include "stdint.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 #if __cplusplus
