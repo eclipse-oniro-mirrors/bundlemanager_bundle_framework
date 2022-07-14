@@ -59,7 +59,11 @@ const int32_t USERID = 100;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
+const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
+const std::string BUNDLE_THUMBNAIL_TEST = "thumbnail.hap";
 const std::string BUNDLE_BACKUP_NAME = "com.example.backuptest";
+const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
+const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const size_t NUMBER_ONE = 1;
@@ -641,6 +645,66 @@ HWTEST_F(BmsBundleInstallerTest, BackupExtension_0100, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: PREVIEWExtension_0100
+ * @tc.name: test the preview type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: AR000HDAM7
+ */
+HWTEST_F(BmsBundleInstallerTest, PREVIEWExtension_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_PREVIEW_NAME, "", "");
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_PREVIEW_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::PREVIEW);
+    }
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: THUMBNAILExtension_0100
+ * @tc.name: test the thumbnail type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: AR000HDAM7
+ */
+HWTEST_F(BmsBundleInstallerTest, THUMBNAILExtension_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_THUMBNAIL_NAME, "", "");
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_THUMBNAIL_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::THUMBNAIL);
+    }
+    UnInstallBundle(BUNDLE_THUMBNAIL_NAME);
+}
+
+/**
  * @tc.number: QueryExtensionAbilityInfos_0100
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
@@ -751,6 +815,232 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0400, Function | Sma
         EXPECT_EQ(infos[0].type, ExtensionAbilityType::BACKUP);
     }
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0500
+ * @tc.name: test the preview type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: SR000H0AM6
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0500, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_PREVIEW_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_PREVIEW_NAME);
+        EXPECT_EQ(infos[0].moduleName, MODULE_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::PREVIEW);
+    }
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0600
+ * @tc.name: test the backup type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: SR000H0AM6
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0600, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_PREVIEW_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_FALSE(result);
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0700
+ * @tc.name: test the backup type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: AR000HDAM7
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0700, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_PREVIEW_NAME, EXTENSION_ABILITY_NAME, "");
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_PREVIEW_NAME);
+        EXPECT_EQ(infos[0].name, EXTENSION_ABILITY_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::PREVIEW);
+    }
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0800
+ * @tc.name: test the backup type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: AR000HDAM7
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0800, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_PREVIEW_NAME, EXTENSION_ABILITY_NAME, MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_PREVIEW_NAME);
+        EXPECT_EQ(infos[0].moduleName, MODULE_NAME);
+        EXPECT_EQ(infos[0].name, EXTENSION_ABILITY_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::PREVIEW);
+    }
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0900
+ * @tc.name: test the thumbnail type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: SR000H0AM6
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0900, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_THUMBNAIL_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_THUMBNAIL_NAME);
+        EXPECT_EQ(infos[0].moduleName, MODULE_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::THUMBNAIL);
+    }
+    UnInstallBundle(BUNDLE_THUMBNAIL_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_1000
+ * @tc.name: test the thumbnail type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: SR000H0AM6
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1000, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_THUMBNAIL_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_FALSE(result);
+    UnInstallBundle(BUNDLE_THUMBNAIL_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_1100
+ * @tc.name: test the thumbnail type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: AR000HDAM7
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_THUMBNAIL_NAME, EXTENSION_ABILITY_NAME, "");
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_THUMBNAIL_NAME);
+        EXPECT_EQ(infos[0].name, EXTENSION_ABILITY_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::THUMBNAIL);
+    }
+    UnInstallBundle(BUNDLE_THUMBNAIL_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_1200
+ * @tc.name: test the thumbnail type
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos
+ * @tc.require: AR000HDAM7
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_THUMBNAIL_NAME, EXTENSION_ABILITY_NAME, MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    if (infos.size() > 0) {
+        EXPECT_EQ(infos[0].bundleName, BUNDLE_THUMBNAIL_NAME);
+        EXPECT_EQ(infos[0].moduleName, MODULE_NAME);
+        EXPECT_EQ(infos[0].name, EXTENSION_ABILITY_NAME);
+        EXPECT_EQ(infos[0].type, ExtensionAbilityType::THUMBNAIL);
+    }
+    UnInstallBundle(BUNDLE_THUMBNAIL_NAME);
 }
 
 /**
