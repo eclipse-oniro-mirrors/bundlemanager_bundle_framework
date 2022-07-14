@@ -4587,7 +4587,7 @@ void SetDisposedStatusExecute(napi_env env, void *data)
         asyncCallbackInfo->result = InnerSetDisposedStatus(asyncCallbackInfo->bundleName, asyncCallbackInfo->status);
         if (!asyncCallbackInfo->result) {
             asyncCallbackInfo->errCode = OPERATION_FAILED;
-            asyncCallbackInfo->errMssage = "invalid parameters";
+            asyncCallbackInfo->errMssage = "set failed due to invalid parameters or no permission";
         }
     }
 }
