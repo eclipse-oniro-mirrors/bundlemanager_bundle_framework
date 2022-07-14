@@ -367,6 +367,8 @@ InnerModuleInfo BmsBundleKitServiceTest::MockModuleInfo(const std::string &modul
     RequestPermission reqPermission2;
     reqPermission2.name = "permission2";
     moduleInfo.requestPermissions = {reqPermission1, reqPermission2};
+    moduleInfo.name = MODULE_NAME_TEST;
+    moduleInfo.icon = ICON_PATH;
     moduleInfo.modulePackage = PACKAGE_NAME;
     moduleInfo.moduleName = moduleName;
     moduleInfo.description = BUNDLE_DESCRIPTION;

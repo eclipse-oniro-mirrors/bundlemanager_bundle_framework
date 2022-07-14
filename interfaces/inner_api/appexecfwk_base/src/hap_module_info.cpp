@@ -26,9 +26,11 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string HAP_MODULE_INFO_NAME = "name";
+const std::string HAP_MODULE_INFO_PACKAGE = "package";
 const std::string HAP_MODULE_INFO_DESCRIPTION = "description";
 const std::string HAP_MODULE_INFO_DESCRIPTION_ID = "descriptionId";
 const std::string HAP_MODULE_INFO_ICON_PATH = "iconPath";
+const std::string HAP_MODULE_INFO_ICON_ID = "iconId";
 const std::string HAP_MODULE_INFO_LABEL = "label";
 const std::string HAP_MODULE_INFO_LABEL_ID = "labelId";
 const std::string HAP_MODULE_INFO_BACKGROUND_IMG = "backgroundImg";
@@ -64,10 +66,12 @@ const std::string HAP_MODULE_INFO_COMPILE_MODE = "compileMode";
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 {
     name = Str16ToStr8(parcel.ReadString16());
+    package = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
     description = Str16ToStr8(parcel.ReadString16());
     descriptionId = parcel.ReadInt32();
     iconPath = Str16ToStr8(parcel.ReadString16());
+    iconId = parcel.ReadInt32();
     label = Str16ToStr8(parcel.ReadString16());
     labelId = parcel.ReadInt32();
     backgroundImg = Str16ToStr8(parcel.ReadString16());
@@ -170,10 +174,12 @@ HapModuleInfo *HapModuleInfo::Unmarshalling(Parcel &parcel)
 bool HapModuleInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(package));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(backgroundImg));
@@ -244,10 +250,12 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
 {
     jsonObject = nlohmann::json {
         {HAP_MODULE_INFO_NAME, hapModuleInfo.name},
+        {HAP_MODULE_INFO_PACKAGE, hapModuleInfo.package},
         {Constants::MODULE_NAME, hapModuleInfo.moduleName},
         {HAP_MODULE_INFO_DESCRIPTION, hapModuleInfo.description},
         {HAP_MODULE_INFO_DESCRIPTION_ID, hapModuleInfo.descriptionId},
         {HAP_MODULE_INFO_ICON_PATH, hapModuleInfo.iconPath},
+        {HAP_MODULE_INFO_ICON_ID, hapModuleInfo.iconId},
         {HAP_MODULE_INFO_LABEL, hapModuleInfo.label},
         {HAP_MODULE_INFO_LABEL_ID, hapModuleInfo.labelId},
         {HAP_MODULE_INFO_BACKGROUND_IMG, hapModuleInfo.backgroundImg},
@@ -296,6 +304,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
+        HAP_MODULE_INFO_PACKAGE,
+        hapModuleInfo.package,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
         Constants::MODULE_NAME,
         hapModuleInfo.moduleName,
         JsonType::STRING,
@@ -323,6 +339,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         HAP_MODULE_INFO_ICON_PATH,
         hapModuleInfo.iconPath,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_ICON_ID,
+        hapModuleInfo.iconId,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
