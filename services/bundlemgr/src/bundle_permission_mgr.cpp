@@ -103,33 +103,48 @@ AccessToken::ATokenAplEnum BundlePermissionMgr::GetTokenApl(const std::string &a
     return AccessToken::ATokenAplEnum::APL_NORMAL;
 }
 
-Security::AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(
+AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(
     const InnerBundleInfo &innerBundleInfo)
+{
+    std::vector<AccessToken::PermissionStateFull> permStateFull = GetPermissionStateFullList(innerBundleInfo);
+    return CreateHapPolicyParam(innerBundleInfo, permStateFull);
+}
+
+AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(
+    const InnerBundleInfo &innerBundleInfo, const std::vector<Security::AccessToken::PermissionStateFull> &permissions)
 {
     AccessToken::HapPolicyParams hapPolicy;
     std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
     APP_LOGD("BundlePermissionMgr::CreateHapPolicyParam apl : %{public}s", apl.c_str());
     std::vector<AccessToken::PermissionDef> permDef = GetPermissionDefList(innerBundleInfo);
-    std::vector<AccessToken::PermissionStateFull> permStateFull = GetPermissionStateFullList(innerBundleInfo);
     hapPolicy.apl = GetTokenApl(apl);
     hapPolicy.domain = "domain";
     hapPolicy.permList = permDef;
-    hapPolicy.permStateList = permStateFull;
+    hapPolicy.permStateList = permissions;
     return hapPolicy;
 }
 
 AccessToken::AccessTokenID BundlePermissionMgr::CreateAccessTokenId(
-    const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId, const int32_t dlpType)
+    const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId)
 {
     APP_LOGD("BundlePermissionMgr::CreateAccessTokenId bundleName = %{public}s, userId = %{public}d",
         bundleName.c_str(), userId);
+    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
+    return CreateAccessTokenId(innerBundleInfo, bundleName, userId, 0, hapPolicy);
+}
+
+AccessToken::AccessTokenID BundlePermissionMgr::CreateAccessTokenId(
+    const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId, const int32_t dlpType,
+    const AccessToken::HapPolicyParams &hapPolicy)
+{
+    APP_LOGD("CreateAccessTokenId bundleName = %{public}s, userId = %{public}d, dlpType = %{public}d",
+        bundleName.c_str(), userId, dlpType);
     AccessToken::HapInfoParams hapInfo;
     hapInfo.userID = userId;
     hapInfo.bundleName = bundleName;
     hapInfo.instIndex = innerBundleInfo.GetAppIndex();
     hapInfo.appIDDesc = innerBundleInfo.GetAppId();
     hapInfo.dlpType = dlpType;
-    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
     AccessToken::AccessTokenIDEx accessToken = AccessToken::AccessTokenKit::AllocHapToken(hapInfo, hapPolicy);
     APP_LOGD("BundlePermissionMgr::CreateAccessTokenId accessTokenId = %{public}u",
              accessToken.tokenIdExStruct.tokenID);
@@ -465,7 +480,7 @@ bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessToken::AccessTokenI
         return false;
     }
     newPermissionState = userGrantReqPermList;
-    for (auto &perm : systemGrantReqPermList) {
+    for (const auto &perm : systemGrantReqPermList) {
         newPermissionState.emplace_back(perm);
     }
     return true;

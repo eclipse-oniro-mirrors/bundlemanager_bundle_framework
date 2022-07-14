@@ -60,9 +60,12 @@ public:
         const std::string &bundleName, const std::string &permissionName, const int32_t userId);
 
     static Security::AccessToken::AccessTokenID CreateAccessTokenId(
-        const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId,
-        const int32_t dlpType = 0);
+        const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId);
 
+    static Security::AccessToken::AccessTokenID CreateAccessTokenId(
+        const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId,
+        const int32_t dlpType, const Security::AccessToken::HapPolicyParams &hapPolicy);
+    
     static bool UpdateDefineAndRequestPermissions(const Security::AccessToken::AccessTokenID tokenId,
         const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, std::vector<std::string> &newRequestPermName);
 
@@ -84,6 +87,12 @@ public:
 
     static bool VerifyCallingPermission(const std::string &permissionName);
 
+    static Security::AccessToken::HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
+        const std::vector<Security::AccessToken::PermissionStateFull> &permissions);
+
+    static bool GetAllReqPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
+        std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);
@@ -103,9 +112,6 @@ private:
         const std::vector<Security::AccessToken::PermissionStateFull> &permissionState,
         std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState,
         std::vector<std::string> &newRequestPermName);
-
-    static bool GetAllReqPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
-        std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState);
 
     static bool InnerGrantRequestPermissions(Security::AccessToken::AccessTokenID tokenId,
         const std::vector<RequestPermission> &reqPermissions,
