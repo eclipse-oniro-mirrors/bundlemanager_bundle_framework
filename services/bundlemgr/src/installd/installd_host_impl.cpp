@@ -25,7 +25,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "accesstoken_kit.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "common_profile.h"
@@ -34,39 +33,11 @@
 #include "hap_restorecon.h"
 #endif // WITH_SELINUX
 #include "installd/installd_operator.h"
-#include "ipc_skeleton.h"
+#include "installd/installd_permission_mgr.h"
 #include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-using namespace OHOS::Security;
-bool VerifyCallingPermission(const std::string &permissionName)
-{
-    APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    AccessToken::AccessTokenID firstCallerToken = IPCSkeleton::GetFirstTokenID();
-    APP_LOGD("callerToken : %{private}u, firstCallerToken : %{private}u", callerToken, firstCallerToken);
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    int32_t ret = AccessToken::PermissionState::PERMISSION_DENIED;
-    if (firstCallerToken == 0) {
-        // hap or native call
-        ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
-    } else {
-        // native call
-        ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, firstCallerToken, permissionName);
-    }
-    if ((ret == AccessToken::PermissionState::PERMISSION_GRANTED) ||
-        (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE)) {
-        APP_LOGD("VerifyCallingPermission success, permission:%{public}s: PERMISSION_GRANTED",
-            permissionName.c_str());
-        return true;
-    }
-    APP_LOGE("VerifyCallingPermission failed, permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
-    return false;
-}
-}
-
 InstalldHostImpl::InstalldHostImpl()
 {
     APP_LOGI("installd service instance is created");
@@ -79,7 +50,7 @@ InstalldHostImpl::~InstalldHostImpl()
 
 ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
 {
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -103,7 +74,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
 {
     APP_LOGD("ExtractModuleFiles extract original src %{public}s and target src %{public}s",
         srcModulePath.c_str(), targetPath.c_str());
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -126,7 +97,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     APP_LOGD("rename %{private}s to %{private}s", oldPath.c_str(), newPath.c_str());
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -157,7 +128,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int user
 ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
     const int userid, const int uid, const int gid, const std::string &apl)
 {
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -219,7 +190,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveBundleDataDir bundleName:%{public}s", bundleName.c_str());
-    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -245,7 +216,7 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
 ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveModuleDataDir ModuleDir:%{public}s", ModuleDir.c_str());
-    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -265,7 +236,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
 
 ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 {
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -283,7 +254,7 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     APP_LOGD("InstalldHostImpl::CleanBundleDataDir start");
-    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -311,7 +282,7 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 ErrCode InstalldHostImpl::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
 {
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -370,7 +341,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl)
 {
 #ifdef WITH_SELINUX
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -396,7 +367,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
 ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     APP_LOGD("InstalldHostImpl::GetBundleCachePath start");
-    if (!VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -412,7 +383,7 @@ ErrCode InstalldHostImpl::ScanDir(
     const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
 {
     APP_LOGD("InstalldHostImpl::Scan start %{public}s", dir.c_str());
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -427,7 +398,7 @@ ErrCode InstalldHostImpl::ScanDir(
 
 ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string &newPath)
 {
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -442,7 +413,7 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
 
 ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
 {
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -458,7 +429,7 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
 ErrCode InstalldHostImpl::Mkdir(
     const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
 {
-    if (!VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
         APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
