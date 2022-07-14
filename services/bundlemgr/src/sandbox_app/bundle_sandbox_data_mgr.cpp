@@ -34,7 +34,7 @@ BundleSandboxDataMgr::~BundleSandboxDataMgr()
 
 void BundleSandboxDataMgr::SaveSandboxAppInfo(const InnerBundleInfo &info, const int32_t &appIndex)
 {
-    APP_LOGD("SaveSandboxAppInfo begin");
+    APP_LOGI("SaveSandboxAppInfo begin");
     std::string bundleName = info.GetBundleName();
     if (bundleName.empty()) {
         APP_LOGE("SaveSandboxAppInfo bundleName is empty");
@@ -48,7 +48,7 @@ void BundleSandboxDataMgr::SaveSandboxAppInfo(const InnerBundleInfo &info, const
 
 void BundleSandboxDataMgr::DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex)
 {
-    APP_LOGD("DeleteSandboxAppInfo begin");
+    APP_LOGI("DeleteSandboxAppInfo begin");
     if (bundleName.empty()) {
         APP_LOGE("DeleteSandboxAppInfo bundleName is empty");
         return;
@@ -66,7 +66,7 @@ void BundleSandboxDataMgr::DeleteSandboxAppInfo(const std::string &bundleName, c
 ErrCode BundleSandboxDataMgr::GetSandboxAppInfo(
     const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info) const
 {
-    APP_LOGD("GetSandboxAppInfo begin");
+    APP_LOGI("GetSandboxAppInfo begin");
     if (bundleName.empty()) {
         APP_LOGE("GetSandboxAppInfo bundleName is empty");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
@@ -98,14 +98,14 @@ ErrCode BundleSandboxDataMgr::GetSandboxAppInfo(
         info = it->second;
     }
 
-    APP_LOGD("GetSandboxAppInfo successfully");
+    APP_LOGI("GetSandboxAppInfo successfully");
     return ERR_OK;
 }
 
 ErrCode BundleSandboxDataMgr::GetSandboxAppBundleInfo(
     const std::string &bundleName, const int32_t &appIndex, const int32_t &userId, BundleInfo &info) const
 {
-    APP_LOGD("GetSandboxAppBundleInfo begin");
+    APP_LOGI("GetSandboxAppBundleInfo begin");
     InnerBundleInfo innerBundleInfo;
     int32_t requestUserId = userId;
     ErrCode result = ERR_OK;
@@ -125,13 +125,13 @@ ErrCode BundleSandboxDataMgr::GetSandboxAppBundleInfo(
         BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE, info, requestUserId);
-    APP_LOGD("GetSandboxAppBundleInfo successfully");
+    APP_LOGI("GetSandboxAppBundleInfo successfully");
     return ERR_OK;
 }
 
 int32_t BundleSandboxDataMgr::GenerateSandboxAppIndex(const std::string &bundleName)
 {
-    APP_LOGD("GenerateSandboxAppIndex begin");
+    APP_LOGI("GenerateSandboxAppIndex begin");
     if (bundleName.empty()) {
         APP_LOGE("GenerateSandboxAppIndex bundleName is empty");
         return Constants::INITIAL_APP_INDEX;
@@ -152,9 +152,8 @@ int32_t BundleSandboxDataMgr::GenerateSandboxAppIndex(const std::string &bundleN
     }
 
     int32_t pre = Constants::INITIAL_APP_INDEX;
-    for (auto secondIterator = firstIterator->second.begin(); secondIterator != firstIterator->second.end();
-        ++secondIterator) {
-        if (*secondIterator == pre + 1) {
+    for (const auto &item : firstIterator->second) {
+        if (item == pre + 1) {
             pre++;
             continue;
         }
@@ -173,7 +172,7 @@ int32_t BundleSandboxDataMgr::GenerateSandboxAppIndex(const std::string &bundleN
 
 bool BundleSandboxDataMgr::DeleteSandboxAppIndex(const std::string &bundleName, int32_t appIndex)
 {
-    APP_LOGD("DeleteSandboxAppIndex begin");
+    APP_LOGI("DeleteSandboxAppIndex begin");
     if (bundleName.empty()) {
         APP_LOGE("DeleteSandboxAppIndex bundleName is empty");
         return false;
@@ -194,7 +193,7 @@ bool BundleSandboxDataMgr::DeleteSandboxAppIndex(const std::string &bundleName, 
     if (it->second.empty()) {
         sandboxAppIndexMap_.erase(bundleName);
     }
-    APP_LOGD("DeleteSandboxAppIndex successfully");
+    APP_LOGI("DeleteSandboxAppIndex successfully");
     return true;
 }
 
@@ -234,7 +233,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &ability
 
 ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const
 {
-    APP_LOGD("GetInnerBundleInfoByUid with uid is %{public}d", uid);
+    APP_LOGI("GetInnerBundleInfoByUid with uid is %{public}d", uid);
     int32_t userId = BundleUtil::GetUserIdByUid(uid);
     APP_LOGD("GetInnerBundleInfoByUid with userId is %{public}d", userId);
     if (userId == Constants::UNSPECIFIED_USERID || userId == Constants::INVALID_USERID) {

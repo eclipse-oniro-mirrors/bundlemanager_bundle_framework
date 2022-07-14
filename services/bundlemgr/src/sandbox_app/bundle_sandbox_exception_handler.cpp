@@ -28,12 +28,12 @@ using namespace OHOS::Security;
 BundleSandboxExceptionHandler::BundleSandboxExceptionHandler(
     const std::shared_ptr<IBundleDataStorage> &dataStorage) : dataStorage_(dataStorage)
 {
-    APP_LOGD("create bundle excepetion handler instance");
+    APP_LOGI("create bundle excepetion handler instance");
 }
 
 BundleSandboxExceptionHandler::~BundleSandboxExceptionHandler()
 {
-    APP_LOGD("destroy bundle excepetion handler instance");
+    APP_LOGI("destroy bundle excepetion handler instance");
 }
 
 void BundleSandboxExceptionHandler::RemoveSandboxApp(InnerBundleInfo &info)
@@ -47,8 +47,8 @@ void BundleSandboxExceptionHandler::RemoveSandboxApp(InnerBundleInfo &info)
     info.ClearSandboxPersistentInfo();
     UpdateBundleInfoToStorage(info);
 
-    std::thread t(RemoveSandboxDataDirAndTokenId, bundleName, sandboxPersistentInfo);
-    t.detach();
+    std::thread removeThread(RemoveSandboxDataDirAndTokenId, bundleName, sandboxPersistentInfo);
+    removeThread.detach();
 }
 
 void BundleSandboxExceptionHandler::RemoveSandboxDataDirAndTokenId(const std::string &bundleName,
