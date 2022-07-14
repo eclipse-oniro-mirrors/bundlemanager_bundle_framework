@@ -1075,42 +1075,6 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
     return true;
 }
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-std::shared_ptr<Media::PixelMap> BundleMgrHostImpl::GetAbilityPixelMapIcon(const std::string &bundleName,
-    const std::string &abilityName)
-{
-    APP_LOGD("start GetAbilityPixelMapIcon, bundleName : %{public}s, abilityName : %{public}s",
-        bundleName.c_str(), abilityName.c_str());
-    if (!VerifyQueryPermission(bundleName)) {
-        APP_LOGE("verify permission failed");
-        return nullptr;
-    }
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return nullptr;
-    }
-    return dataMgr->GetAbilityPixelMapIcon(bundleName, Constants::EMPTY_STRING, abilityName);
-}
-
-std::shared_ptr<Media::PixelMap> BundleMgrHostImpl::GetAbilityPixelMapIcon(const std::string &bundleName,
-    const std::string &moduleName, const std::string &abilityName)
-{
-    APP_LOGD("start GetAbilityPixelMapIcon, bundleName : %{public}s, moduleName: %{public}s, abilityName : %{public}s",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
-    if (!VerifyQueryPermission(bundleName)) {
-        APP_LOGE("verify permission failed");
-        return nullptr;
-    }
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return nullptr;
-    }
-    return dataMgr->GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
-}
-#endif
-
 sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
 {
     APP_LOGD("start GetBundleInstaller");
@@ -1666,6 +1630,24 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
         return ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID;
     }
     return sandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, requestUserId, info);
+}
+
+int32_t BundleMgrHostImpl::GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName)
+{
+    APP_LOGI("start to get file fd");
+    int32_t fd = -1;
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return fd;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return fd;
+    }
+    fd = dataMgr->GetMediaFileDescriptor(bundleName, moduleName, abilityName);
+    return fd;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

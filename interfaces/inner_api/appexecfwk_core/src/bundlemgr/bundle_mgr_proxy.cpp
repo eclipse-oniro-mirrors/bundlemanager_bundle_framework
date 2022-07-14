@@ -15,6 +15,8 @@
 
 #include "bundle_mgr_proxy.h"
 
+#include <unistd.h>
+
 #include "ipc_types.h"
 #include "parcel.h"
 #include "string_ex.h"
@@ -1788,94 +1790,6 @@ bool BundleMgrProxy::GetAbilityInfo(
     return true;
 }
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-std::shared_ptr<Media::PixelMap> BundleMgrProxy::GetAbilityPixelMapIcon(const std::string &bundleName,
-    const std::string &abilityName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin to get ability pixelmap icon of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
-    if (bundleName.empty() || abilityName.empty()) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to params empty");
-        return nullptr;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to write InterfaceToken fail");
-        return nullptr;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to write bundleName fail");
-        return nullptr;
-    }
-    if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to write abilityName fail");
-        return nullptr;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ABILITY_PIXELMAP_ICON, data, reply)) {
-        APP_LOGE("SendTransactCmd result false");
-        return nullptr;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return nullptr;
-    }
-    std::shared_ptr<Media::PixelMap> info(reply.ReadParcelable<Media::PixelMap>());
-    if (!info) {
-        APP_LOGE("readParcelableInfo failed");
-        return nullptr;
-    }
-    APP_LOGD("get ability pixelmap icon success");
-    return info;
-}
-
-std::shared_ptr<Media::PixelMap> BundleMgrProxy::GetAbilityPixelMapIcon(const std::string &bundleName,
-    const std::string &moduleName, const std::string &abilityName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin to get ability pixelmap icon of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
-    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to params empty");
-        return nullptr;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to write InterfaceToken fail");
-        return nullptr;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to write bundleName fail");
-        return nullptr;
-    }
-    if (!data.WriteString(moduleName)) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to write moduleName fail");
-        return nullptr;
-    }
-    if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetAbilityPixelMapIcon due to write abilityName fail");
-        return nullptr;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ABILITY_PIXELMAP_ICON_WITH_MODULE_NAME, data, reply)) {
-        APP_LOGE("SendTransactCmd result false");
-        return nullptr;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return nullptr;
-    }
-    std::shared_ptr<Media::PixelMap> info(reply.ReadParcelable<Media::PixelMap>());
-    if (!info) {
-        APP_LOGE("readParcelableInfo failed");
-        return nullptr;
-    }
-    APP_LOGD("get ability pixelmap icon success");
-    return info;
-}
-#endif
-
 sptr<IBundleInstaller> BundleMgrProxy::GetBundleInstaller()
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2738,6 +2652,54 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
     }
 
     return GetParcelableInfoWithErrCode<HapModuleInfo>(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, data, info);
+}
+
+int32_t BundleMgrProxy::GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("begin to get file fd of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
+    int32_t fd = -1;
+    if (bundleName.empty() || abilityName.empty()) {
+        APP_LOGE("fail to GetMediaFileDescriptor due to params empty");
+        return fd;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetMediaFileDescriptor due to write InterfaceToken fail");
+        return fd;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetMediaFileDescriptor due to write bundleName fail");
+        return fd;
+    }
+    if (!data.WriteString(abilityName)) {
+        APP_LOGE("fail to GetMediaFileDescriptor due to write abilityName fail");
+        return fd;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetMediaFileDescriptor due to write abilityName fail");
+        return fd;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_MEDIA_FILE_DESCRIPTOR, data, reply)) {
+        APP_LOGE("SendTransactCmd result false");
+        return fd;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return fd;
+    }
+
+    int sharedFd = reply.ReadFileDescriptor();
+    if (sharedFd < 0) {
+        APP_LOGE("fail to get file fd");
+        return fd;
+    }
+    fd = dup(sharedFd);
+    close(sharedFd);
+    return fd;
 }
 
 template<typename T>
