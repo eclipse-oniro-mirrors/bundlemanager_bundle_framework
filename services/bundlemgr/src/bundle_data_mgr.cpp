@@ -1012,6 +1012,7 @@ bool BundleDataMgr::GetBundlePackInfo(
     }
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_SUMMARY) {
         bundlePackInfo.summary.app = innerBundlePackInfo.summary.app;
+        bundlePackInfo.summary.modules = innerBundlePackInfo.summary.modules;
         return true;
     }
     if (static_cast<uint32_t>(flags) & GET_MODULE_SUMMARY) {
