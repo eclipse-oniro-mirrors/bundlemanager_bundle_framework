@@ -172,6 +172,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_STATS, &BundleMgrHost::HandleGetBundleStats);
     funcMap_.emplace(IBundleMgr::Message::CHECK_ABILITY_ENABLE_INSTALL,
         &BundleMgrHost::HandleCheckAbilityEnableInstall);
+    funcMap_.emplace(IBundleMgr::Message::GET_STRING_BY_ID, &BundleMgrHost::HandleGetStringById);
+    funcMap_.emplace(IBundleMgr::Message::GET_ICON_BY_ID, &BundleMgrHost::HandleGetIconById);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, &BundleMgrHost::HandleGetDefaultAppProxy);
 #endif
@@ -1725,6 +1727,51 @@ ErrCode BundleMgrHost::HandleCheckAbilityEnableInstall(MessageParcel &data, Mess
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetStringById(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    uint32_t resId = data.ReadUint32();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("GetStringById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d",
+        bundleName.c_str(), moduleName.c_str(), resId);
+    std::string label = Constants::EMPTY_STRING;
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGW("fail to GetStringById due to params empty");
+    } else {
+        label = GetStringById(bundleName, moduleName, resId, userId);
+    }
+    if (!reply.WriteString(label)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetIconById(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    uint32_t resId = data.ReadUint32();
+    uint32_t density = data.ReadUint32();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("GetStringById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d, density:%{public}d",
+        bundleName.c_str(), moduleName.c_str(), resId, density);
+    std::string label = Constants::EMPTY_STRING;
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGW("fail to GetStringById due to params empty");
+    } else {
+        label = GetIconById(bundleName, moduleName, resId, density, userId);
+    }
+    if (!reply.WriteString(label)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 

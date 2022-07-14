@@ -34,6 +34,7 @@ declare_args() {
   configpolicy_enable = true
   device_manager_enable = true
   global_resmgr_enable = true
+  global_i18n_enable = true
   hicollie_enable = true
   hisysevent_enable = true
   bms_rdb_enable = false
@@ -64,6 +65,10 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.global_resource_management)) {
     global_resmgr_enable = false
+  }
+
+  if (defined(global_parts_info) && !defined(global_parts_info.global_i18n)) {
+    global_i18n_enable = false
   }
 
   if (defined(global_parts_info) &&

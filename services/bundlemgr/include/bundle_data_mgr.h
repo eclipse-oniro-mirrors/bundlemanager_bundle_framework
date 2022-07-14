@@ -703,6 +703,12 @@ public:
 
     std::vector<sptr<IBundleStatusCallback>> GetCallBackList() const;
 
+    std::string GetStringById(
+        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId);
+
+    std::string GetIconById(
+        const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
+
 private:
     /**
      * @brief Init transferStates.
@@ -762,7 +768,7 @@ private:
         std::vector<ExtensionAbilityInfo> &einfos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(
-        const AppExecFwk::BundleInfo &bundleInfo) const;
+        const std::string &bundleName, const std::string &moduleName, int32_t userId) const;
 #endif
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;

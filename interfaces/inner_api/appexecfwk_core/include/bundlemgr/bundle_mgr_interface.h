@@ -950,6 +950,18 @@ public:
         return nullptr;
     }
 
+    virtual std::string GetStringById(
+        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+    {
+        return Constants::EMPTY_STRING;
+    }
+
+    virtual std::string GetIconById(
+        const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
+    {
+        return Constants::EMPTY_STRING;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1040,6 +1052,8 @@ public:
         GET_SANDBOX_MODULE_INFO,
         GET_MEDIA_FILE_DESCRIPTOR,
         GET_QUICK_FIX_MANAGER_PROXY,
+        GET_STRING_BY_ID,
+        GET_ICON_BY_ID,
     };
 };
 }  // namespace AppExecFwk

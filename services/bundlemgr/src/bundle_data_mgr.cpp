@@ -40,6 +40,9 @@
 #endif
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
+#ifdef GLOBAL_I18_ENABLE
+#include "locale_config.h"
+#endif
 #include "nlohmann/json.hpp"
 #include "free_install_params.h"
 #include "singleton.h"
@@ -1303,14 +1306,13 @@ std::string BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const 
     if ((*ability).labelId == 0) {
         return (*ability).label;
     }
-    std::string abilityLabel;
-    BundleInfo bundleInfo;
-    innerBundleInfo.GetBundleInfo(0, bundleInfo, GetUserIdByCallingUid());
-    std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager = GetResourceManager(bundleInfo);
+    std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
+        GetResourceManager(bundleName, moduleName, GetUserId());
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return Constants::EMPTY_STRING;
     }
+    std::string abilityLabel;
     OHOS::Global::Resource::RState errval =
         resourceManager->GetStringById(static_cast<uint32_t>((*ability).labelId), abilityLabel);
     if (errval != OHOS::Global::Resource::RState::SUCCESS) {
@@ -2768,22 +2770,88 @@ void BundleDataMgr::GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int
     }
 }
 
+std::string BundleDataMgr::GetStringById(
+    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+{
+    APP_LOGD("GetStringById:%{public}s , %{public}s, %{public}d", bundleName.c_str(), moduleName.c_str(), resId);
+#ifdef GLOBAL_RESMGR_ENABLE
+    std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
+        GetResourceManager(bundleName, moduleName, userId);
+    if (resourceManager == nullptr) {
+        APP_LOGE("InitResourceManager failed");
+        return Constants::EMPTY_STRING;
+    }
+    std::string label;
+    OHOS::Global::Resource::RState errValue = resourceManager->GetStringById(resId, label);
+    if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
+        APP_LOGE("GetStringById failed");
+        return Constants::EMPTY_STRING;
+    }
+    return label;
+#else
+    APP_LOGW("GLOBAL_RESMGR_ENABLE is false");
+    return Constants::EMPTY_STRING;
+#endif
+}
+
+std::string BundleDataMgr::GetIconById(
+    const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
+{
+    APP_LOGI("GetIconById bundleName:%{public}s, moduleName:%{public}s, resId:%{public}d, density:%{public}d",
+        bundleName.c_str(), moduleName.c_str(), resId, density);
+#ifdef GLOBAL_RESMGR_ENABLE
+    std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
+        GetResourceManager(bundleName, moduleName, userId);
+    if (resourceManager == nullptr) {
+        APP_LOGE("InitResourceManager failed");
+        return Constants::EMPTY_STRING;
+    }
+    std::string base64;
+    OHOS::Global::Resource::RState errValue = resourceManager->GetMediaBase64ByIdData(resId, density, base64);
+    if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
+        APP_LOGE("GetIconById failed");
+        return Constants::EMPTY_STRING;
+    }
+    return base64;
+#else
+    APP_LOGW("GLOBAL_RESMGR_ENABLE is false");
+    return Constants::EMPTY_STRING;
+#endif
+}
+
 #ifdef GLOBAL_RESMGR_ENABLE
 std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceManager(
-    const AppExecFwk::BundleInfo &bundleInfo) const
+    const std::string &bundleName, const std::string &moduleName, int32_t userId) const
 {
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    if (!GetInnerBundleInfoWithFlags(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId)) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return nullptr;
+    }
+    BundleInfo bundleInfo;
+    innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    for (auto moduleResPath : bundleInfo.moduleResPaths) {
+    for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
+        std::string moduleResPath;
+        if (moduleName.empty() || moduleName == hapModuleInfo.moduleName) {
+            moduleResPath = hapModuleInfo.resourcePath;
+        }
         if (!moduleResPath.empty()) {
             APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{private}s", moduleResPath.c_str());
             if (!resourceManager->AddResource(moduleResPath.c_str())) {
-                APP_LOGE("DistributedBms::InitResourceManager AddResource failed");
+                APP_LOGW("DistributedBms::InitResourceManager AddResource failed");
             }
         }
     }
 
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
-    resConfig->SetLocaleInfo("zh", "Hans", "CN");
+#ifdef GLOBAL_I18_ENABLE
+    std::string language = Global::I18n::LocaleConfig::GetSystemLanguage();
+    std::string locale = Global::I18n::LocaleConfig::GetSystemLocale();
+    std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
+    resConfig->SetLocaleInfo(language.c_str(), locale.c_str(), region.c_str());
+#endif
     resourceManager->UpdateResConfig(*resConfig);
     return resourceManager;
 }
@@ -3072,10 +3140,8 @@ int32_t BundleDataMgr::GetMediaFileDescriptor(const std::string &bundleName, con
         APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
         return fd;
     }
-    BundleInfo bundleInfo;
-    int32_t flags = fd;
-    infoItem->second.GetBundleInfo(flags, bundleInfo, GetUserId());
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager = GetResourceManager(bundleInfo);
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
+        GetResourceManager(bundleName, moduleName, GetUserId());
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return fd;

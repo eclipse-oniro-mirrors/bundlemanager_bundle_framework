@@ -50,6 +50,7 @@
                 "hisysevent_native",
                 "hitrace_native",
                 "hiviewdfx_hilog_native",
+                "i18n",
                 "init",
                 "ipc",
                 "jsoncpp",
