@@ -41,6 +41,7 @@ public:
     /**
      * @brief The main function for sandbox app uninstalling.
      * @param bundleName Indicates the bundleName of the sandbox application to uninstall.
+     * @param appIndex Indicates the sandbox app index.
      * @param userId Indicates the sandbox app will be uninstalled under which user id.
      * @return Returns ERR_OK if the sandbox app uninstall successfully; returns error code otherwise.
      */

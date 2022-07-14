@@ -22,10 +22,10 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_sandbox_data_mgr.h"
 #include "bundle_util.h"
-#include "hitrace_meter.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "datetime_ex.h"
+#include "hitrace_meter.h"
 #include "installd_client.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
@@ -38,12 +38,12 @@ using namespace OHOS::Security;
 
 BundleSandboxInstaller::BundleSandboxInstaller()
 {
-    APP_LOGD("bundle sandbox installer instance is created");
+    APP_LOGI("bundle sandbox installer instance is created");
 }
 
 BundleSandboxInstaller::~BundleSandboxInstaller()
 {
-    APP_LOGD("bundle sandbox installer instance is destroyed");
+    APP_LOGI("bundle sandbox installer instance is destroyed");
 }
 
 ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName, const int32_t &dlpType,
@@ -229,7 +229,7 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
 
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
 
-    APP_LOGD("UninstallSandboxApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
+    APP_LOGI("UninstallSandboxApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return result;
 }
 
@@ -247,7 +247,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
         Constants::DATABASE + innerDataDir;
     info.SetAppDataBaseDir(dataBaseDir);
-    APP_LOGD("CreateSandboxDataDir successfully");
+    APP_LOGI("CreateSandboxDataDir successfully");
     return result;
 }
 
@@ -279,7 +279,7 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
 {
     // when a sandbox is installed failed, some stuff, including uid, gid, appIndex,
     // accessToken Id and the data dir will be removed.
-    APP_LOGD("SandboxAppRollBack begin");
+    APP_LOGI("SandboxAppRollBack begin");
     BundlePermissionMgr::DeleteAccessTokenId(info.GetAccessTokenId(userId));
     auto bundleName = info.GetBundleName();
     auto appIndex = info.GetAppIndex();
@@ -300,13 +300,13 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
     if (InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId) != ERR_OK) {
         APP_LOGW("SandboxAppRollBack cannot remove the data dir");
     }
-    APP_LOGD("SandboxAppRollBack finish");
+    APP_LOGI("SandboxAppRollBack finish");
 }
 
 ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundleName, int32_t userId)
 {
     // All sandbox will be uninstalled when the original application is updated or uninstalled
-    APP_LOGD("UninstallAllSandboxApps begin");
+    APP_LOGI("UninstallAllSandboxApps begin");
     if (bundleName.empty()) {
         APP_LOGE("UninstallAllSandboxApps failed due to empty bundle name");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
@@ -321,7 +321,7 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     auto sandboxAppInfoMap = sandboxDataMgr_->GetSandboxAppInfoMap();
-    for_each(sandboxAppInfoMap.begin(), sandboxAppInfoMap.end(), [&bundleName, &sandboxAppInfoMap, &userId, this](
+    for_each(sandboxAppInfoMap.begin(), sandboxAppInfoMap.end(), [&bundleName, &userId, this](
         std::unordered_map<std::string, InnerBundleInfo>::reference info)->void {
         auto pos = info.first.find(bundleName);
         if (pos != std::string::npos) {
@@ -331,7 +331,7 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
                 APP_LOGE("UninstallAllSandboxApps obtain appIndex failed");
                 return;
             }
-            auto userInfos = sandboxAppInfoMap[info.first].GetInnerBundleUserInfos();
+            auto userInfos = info.second.GetInnerBundleUserInfos();
             auto specifiedUserId = (userInfos.begin()->second).bundleUserInfo.userId;
             if (specifiedUserId == userId || userId == Constants::INVALID_USERID) {
                 if (this->UninstallSandboxApp(bundleName, appIndex, specifiedUserId) != ERR_OK) {
@@ -342,7 +342,7 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
         }
     });
 
-    APP_LOGD("UninstallAllSandboxApps finish");
+    APP_LOGI("UninstallAllSandboxApps finish");
     return ERR_OK;
 }
 

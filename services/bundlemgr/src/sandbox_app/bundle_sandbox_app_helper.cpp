@@ -27,7 +27,7 @@ namespace AppExecFwk {
 void BundleSandboxAppHelper::SaveSandboxAppInfo(const InnerBundleInfo &info, const int32_t &appIndex)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter SaveSandboxAppInfo");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return;
@@ -41,7 +41,7 @@ void BundleSandboxAppHelper::SaveSandboxAppInfo(const InnerBundleInfo &info, con
 void BundleSandboxAppHelper::DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter DeleteSandboxAppInfo");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return;
@@ -56,7 +56,7 @@ ErrCode BundleSandboxAppHelper::GetSandboxAppBundleInfo(
     const std::string &bundleName, const int32_t &appIndex, const int32_t &userId, BundleInfo &info) const
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter GetSandboxAppBundleInfo");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -71,7 +71,7 @@ ErrCode BundleSandboxAppHelper::GetSandboxAppBundleInfo(
 int32_t BundleSandboxAppHelper::GenerateSandboxAppIndex(const std::string &bundleName)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter GenerateSandboxAppIndex");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return Constants::INITIAL_APP_INDEX;
@@ -86,7 +86,7 @@ int32_t BundleSandboxAppHelper::GenerateSandboxAppIndex(const std::string &bundl
 bool BundleSandboxAppHelper::DeleteSandboxAppIndex(const std::string &bundleName, int32_t appIndex)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter DeleteSandboxAppIndex");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return false;
@@ -101,7 +101,7 @@ bool BundleSandboxAppHelper::DeleteSandboxAppIndex(const std::string &bundleName
 std::unordered_map<std::string, InnerBundleInfo> BundleSandboxAppHelper::GetSandboxAppInfoMap() const
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter GetSandboxAppInfoMap");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         std::unordered_map<std::string, InnerBundleInfo> innerBundleInfoMap;
@@ -119,7 +119,7 @@ ErrCode BundleSandboxAppHelper::GetSandboxAppInfo(
     const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info) const
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter GetSandboxAppInfo");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -135,7 +135,7 @@ ErrCode BundleSandboxAppHelper::GetSandboxHapModuleInfo(
     const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId, HapModuleInfo &hapModuleInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter GetSandboxHapModuleInfo");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -150,7 +150,7 @@ ErrCode BundleSandboxAppHelper::GetSandboxHapModuleInfo(
 ErrCode BundleSandboxAppHelper::GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter GetInnerBundleInfoByUid");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -166,7 +166,7 @@ void BundleSandboxAppHelper::RemoveSandboxApp(
     const std::shared_ptr<IBundleDataStorage> &dataStorage, InnerBundleInfo &info)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter RemoveSandboxApp");
     auto sandboxHandler = std::make_shared<BundleSandboxExceptionHandler>(dataStorage);
     if (sandboxHandler == nullptr) {
         APP_LOGE("sandboxHandler is nullptr");
@@ -182,7 +182,7 @@ ErrCode BundleSandboxAppHelper::InstallSandboxApp(const std::string &bundleName,
     const int32_t &userId, int32_t &appIndex)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter InstallSandboxApp");
     std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
     if (installer == nullptr) {
         APP_LOGE("installer is nullptr");
@@ -199,7 +199,7 @@ ErrCode BundleSandboxAppHelper::UninstallSandboxApp(
     const std::string &bundleName, const int32_t &appIndex, const int32_t &userId)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter UninstallSandboxApp");
     std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
     if (installer == nullptr) {
         APP_LOGE("installer is nullptr");
@@ -215,7 +215,7 @@ ErrCode BundleSandboxAppHelper::UninstallSandboxApp(
 ErrCode BundleSandboxAppHelper::UninstallAllSandboxApps(const std::string &bundleName, int32_t userId)
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGI("enter");
+    APP_LOGI("enter UninstallAllSandboxApps");
     std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
     if (installer == nullptr) {
         APP_LOGE("installer is nullptr");
