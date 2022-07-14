@@ -32,12 +32,14 @@ void ServiceCenterConnection::OnAbilityConnectDone(
     if (resultCode != ERR_OK) {
         APP_LOGE("OnAbilityConnectDone resultCode = %{public}d", resultCode);
         cv_.notify_all();
+        connectState_ = ServiceCenterConnectState::DISCONNECTED;
         return;
     }
 
     if (remoteObject == nullptr) {
         APP_LOGE("OnAbilityConnectDone remoteObject is nullptr");
         cv_.notify_all();
+        connectState_ = ServiceCenterConnectState::DISCONNECTED;
         return;
     }
     serviceCenterRemoteObject_ = remoteObject;
