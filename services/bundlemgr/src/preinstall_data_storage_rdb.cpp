@@ -26,6 +26,11 @@ PreInstallDataStorageRdb::PreInstallDataStorageRdb()
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = Constants::PRE_BUNDLE_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return;
+    }
+
     rdbDataManager_->Init();
 }
 
@@ -93,7 +98,7 @@ void PreInstallDataStorageRdb::TransformStrToInfo(
 }
 
 void PreInstallDataStorageRdb::UpdateDataBase(
-    std::map<std::string, PreInstallBundleInfo>& infos)
+    std::map<std::string, PreInstallBundleInfo> &infos)
 {
     APP_LOGD("Begin to update preInstall database");
     if (rdbDataManager_ == nullptr) {
