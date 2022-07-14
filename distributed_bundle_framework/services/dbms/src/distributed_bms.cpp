@@ -22,6 +22,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "distributed_bms_proxy.h"
 #include "event_report.h"
 #include "iservice_registry.h"
 #include "if_system_ability_manager.h"

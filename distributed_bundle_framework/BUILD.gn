@@ -13,6 +13,10 @@
 
 import("//build/ohos.gni")
 
+group("inner_api_target") {
+  deps = [ "interfaces/inner_api:dbms_fwk" ]
+}
+
 group("jsapi_target") {
   deps = [ "interfaces/kits/js/distributebundlemgr:jsapi_target" ]
 }

@@ -14,58 +14,30 @@
 import("//build/ohos.gni")
 import("../../dbms.gni")
 
-group("dbms_target") {
-  if (bundle_framework_graphics) {
-    deps = [ ":libdbms" ]
-  }
-}
-
-config("distributed_bms_config") {
+config("dbms_fwk_config") {
   include_dirs = [ "include" ]
 }
 
-ohos_shared_library("libdbms") {
-  sources = [
-    "src/distributed_bms.cpp",
-    "src/distributed_bms_host.cpp",
-    "src/image_buffer.cpp",
-    "src/image_compress.cpp",
-  ]
+ohos_shared_library("dbms_fwk") {
+  sources = [ "src/distributed_bms_proxy.cpp" ]
 
   defines = [
     "APP_LOG_TAG = \"DistributedBundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
 
-  configs = [ ":distributed_bms_config" ]
+  public_configs = [ ":dbms_fwk_config" ]
 
-  deps = [
-    "${common_path}:libappexecfwk_common",
-    "${dbms_inner_api_path}:dbms_fwk",
-    "//third_party/libjpeg:libjpeg_static",
-    "//third_party/libpng:libpng",
-  ]
+  deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
     "ability_base:want",
-    "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "hiviewdfx_hilog_native:libhilog",
-    "i18n:intl_util",
     "ipc:ipc_core",
-    "os_account:os_account_innerkits",
-    "resource_management:global_resmgr",
-    "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
     "utils_base:utils",
   ]
-
-  if (hisysevent_enable) {
-    sources += [ "src/event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
-    defines += [ "HISYSEVENT_ENABLE" ]
-  }
 
   part_name = "distributed_bundle_framework"
   subsystem_name = "bundlemanager"
