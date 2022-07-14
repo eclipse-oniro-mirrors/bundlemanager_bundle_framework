@@ -2354,10 +2354,7 @@ static void ConvertBundlePackInfo(
     if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_BUNDLE_SUMMARY) {
         napi_value jsSummary;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsSummary));
-        napi_value app;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &app));
-        ConvertSummaryApp(env, app, bundleInPackfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsSummary, "app", app));
+        ConvertPackageSummary(env, jsSummary, bundleInPackfos);
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "summary", jsSummary));
         return;
     }
