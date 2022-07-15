@@ -24,9 +24,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "string"
 #include "string_ex.h"
-#include "vector"
 
 namespace OHOS {
 namespace AppExecFwk {
