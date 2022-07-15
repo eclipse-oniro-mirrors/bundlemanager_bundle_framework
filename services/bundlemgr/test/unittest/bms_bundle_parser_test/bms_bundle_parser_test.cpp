@@ -214,7 +214,7 @@ protected:
     void CheckProfileForms(const nlohmann::json &checkedProfileJson) const;
     void CheckProfileShortcut(const nlohmann::json &checkedProfileJson) const;
     ErrCode CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
-        std::vector<DefaultPermission> &defaultPermissions) const;
+        std::set<DefaultPermission> &defaultPermissions) const;
 protected:
     std::ostringstream pathStream_;
 };
@@ -420,7 +420,7 @@ void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProf
 }
 
 ErrCode BmsBundleParserTest::CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
-    std::vector<DefaultPermission> &defaultPermissions) const
+    std::set<DefaultPermission> &defaultPermissions) const
 {
     DefaultPermissionProfile profile;
     std::ostringstream profileFileBuffer;
@@ -1051,7 +1051,7 @@ HWTEST_F(BmsBundleParserTest, TestExtractByName_0500, Function | SmallTest | Lev
  */
 HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0100, Function | SmallTest | Level1)
 {
-    std::vector<DefaultPermission> defaultPermissions;
+    std::set<DefaultPermission> defaultPermissions;
     nlohmann::json profileJson = R"(
         [
             {
@@ -1072,7 +1072,7 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0100, Function | Smal
  */
 HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0200, Function | SmallTest | Level1)
 {
-    std::vector<DefaultPermission> defaultPermissions;
+    std::set<DefaultPermission> defaultPermissions;
     nlohmann::json profileJson = R"(
         [
             {
@@ -1094,11 +1094,12 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0200, Function | Smal
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(defaultPermissions.size(), ONE);
     if (defaultPermissions.size() == ONE) {
-        EXPECT_EQ(defaultPermissions[0].bundleName, "com.ohos.test1");
-        EXPECT_EQ(defaultPermissions[0].grantPermission[0].name, "ohos.permission.test1");
-        EXPECT_TRUE(defaultPermissions[0].grantPermission[0].userCancellable);
-        EXPECT_EQ(defaultPermissions[0].grantPermission[1].name, "ohos.permission.test2");
-        EXPECT_FALSE(defaultPermissions[0].grantPermission[1].userCancellable);
+        auto defaultPermission = *defaultPermissions.begin();
+        EXPECT_EQ(defaultPermission.bundleName, "com.ohos.test1");
+        EXPECT_EQ(defaultPermission.grantPermission[0].name, "ohos.permission.test1");
+        EXPECT_TRUE(defaultPermission.grantPermission[0].userCancellable);
+        EXPECT_EQ(defaultPermission.grantPermission[1].name, "ohos.permission.test2");
+        EXPECT_FALSE(defaultPermission.grantPermission[1].userCancellable);
     }
 }
 
@@ -1110,7 +1111,7 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0200, Function | Smal
  */
 HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0300, Function | SmallTest | Level1)
 {
-    std::vector<DefaultPermission> defaultPermissions;
+    std::set<DefaultPermission> defaultPermissions;
     nlohmann::json profileJson = R"(
         [
             {
@@ -1145,12 +1146,18 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0300, Function | Smal
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(defaultPermissions.size(), TWO);
     if (defaultPermissions.size() == TWO) {
-        EXPECT_EQ(defaultPermissions[0].bundleName, "com.ohos.test1");
-        EXPECT_EQ(defaultPermissions[0].grantPermission[0].name, "ohos.permission.test1");
-        EXPECT_TRUE(defaultPermissions[0].grantPermission[0].userCancellable);
-        EXPECT_EQ(defaultPermissions[0].grantPermission[1].name, "ohos.permission.test2");
-        EXPECT_FALSE(defaultPermissions[0].grantPermission[1].userCancellable);
-        EXPECT_EQ(defaultPermissions[1].bundleName, "com.ohos.test2");
+        DefaultPermission firstDefaultPermission;
+        firstDefaultPermission.bundleName = "com.ohos.test1";
+        auto firstDefaultPermissionIter = defaultPermissions.find(firstDefaultPermission);
+        EXPECT_TRUE(firstDefaultPermissionIter != defaultPermissions.end());
+        firstDefaultPermission = *firstDefaultPermissionIter;
+        EXPECT_EQ(firstDefaultPermission.grantPermission[0].name, "ohos.permission.test1");
+        EXPECT_TRUE(firstDefaultPermission.grantPermission[0].userCancellable);
+        EXPECT_EQ(firstDefaultPermission.grantPermission[1].name, "ohos.permission.test2");
+        EXPECT_FALSE(firstDefaultPermission.grantPermission[1].userCancellable);
+        DefaultPermission secondDefaultPermission;
+        secondDefaultPermission.bundleName = "com.ohos.test2";
+        EXPECT_TRUE(defaultPermissions.find(secondDefaultPermission) != defaultPermissions.end());
     }
 }
 
@@ -1162,7 +1169,7 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0300, Function | Smal
  */
 HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0400, Function | SmallTest | Level1)
 {
-    std::vector<DefaultPermission> defaultPermissions;
+    std::set<DefaultPermission> defaultPermissions;
     nlohmann::json errorProfileJson = R"(
         [
             {
@@ -1187,7 +1194,7 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0400, Function | Smal
  */
 HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0500, Function | SmallTest | Level1)
 {
-    std::vector<DefaultPermission> defaultPermissions;
+    std::set<DefaultPermission> defaultPermissions;
     nlohmann::json errorProfileJson = R"(
         [
             {

@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DEFAULT_PERMISSION_PROFILE_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DEFAULT_PERMISSION_PROFILE_H
 
+#include <set>
+
 #include "appexecfwk_errors.h"
 #include "default_permission.h"
 #include "json_util.h"
@@ -30,7 +32,7 @@ public:
      * @param defaultPermissions Indicates the defaultPermissions.
      * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
      */
-    ErrCode TransformTo(const nlohmann::json &jsonObject, std::vector<DefaultPermission> &defaultPermissions) const;
+    ErrCode TransformTo(const nlohmann::json &jsonObject, std::set<DefaultPermission> &defaultPermissions) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -21,28 +21,29 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const int32_t COMMON_PRIORITY = 0;
+const int32_t HIGH_PRIORITY = 1;
 const std::string INSTALL_LIST = "install_list";
 const std::string UNINSTALL_LIST = "uninstall_list";
+const std::string RECOVER_LIST = "recover_list";
 const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
 const std::string BUNDLE_DIR = "bundle_dir";
 const std::string REMOVABLE = "removable";
 const std::string PRIORITY = "priority";
 const std::string BUNDLE_NAME = "bundleName";
-const std::string SYSTEMAPI = "systemapi";
 const std::string KEEP_ALIVE = "keepAlive";
 const std::string SINGLETON = "singleton";
-const std::string USER_DATA_CLEARABLE = "userDataClearable";
-const std::string MULTI_PROCESS = "multiProcess";
 const std::string BOOTABLE = "bootable";
-const std::string NOTIFICATION = "notification";
-const std::string HIDE_DESKTOP_ICON = "hideDesktopIcon";
-const std::string QUERY_PRIORITY = "queryPriority";
-const std::string START_STATIC_BROADCAST = "startStaticBroadcast";
-const std::string START_GUI_ABLITY_BACKGROUND = "startGuiAbilityBackground";
+const std::string ALLOW_COMMENT_EVENT = "allowCommentEvent";
+const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
+const std::string APP_SIGNATURE = "appSignature";
+const std::string ASSOCIATED_WAKE_UP = "associatedWakeUp";
+const std::string RESOURCES_PATH = "/app/resources/";
 }
 
 ErrCode PreBundleProfile::TransformTo(
-    const nlohmann::json &jsonBuf, std::set<PreScanInfo> &scanInfos) const
+    const nlohmann::json &jsonBuf,
+    std::set<PreScanInfo> &scanInfos) const
 {
     APP_LOGI("transform jsonBuf to PreScanInfos");
     if (jsonBuf.is_discarded()) {
@@ -86,14 +87,9 @@ ErrCode PreBundleProfile::TransformTo(
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<int32_t>(array,
-            jsonObjectEnd,
-            PRIORITY,
-            preScanInfo.priority,
-            JsonType::NUMBER,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        bool isResourcesPath =
+            (preScanInfo.bundleDir.find(RESOURCES_PATH) != preScanInfo.bundleDir.npos);
+        preScanInfo.priority = isResourcesPath ? HIGH_PRIORITY : COMMON_PRIORITY;
         if (parseResult == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
             APP_LOGE("bundleDir must exist, and it is empty here");
             continue;
@@ -116,7 +112,9 @@ ErrCode PreBundleProfile::TransformTo(
 }
 
 ErrCode PreBundleProfile::TransformTo(
-    const nlohmann::json &jsonBuf, std::set<std::string> &bundleNames) const
+    const nlohmann::json &jsonBuf,
+    std::set<std::string> &uninstallList,
+    std::set<std::string> &recoverList) const
 {
     APP_LOGD("transform jsonBuf to bundleNames");
     if (jsonBuf.is_discarded()) {
@@ -135,16 +133,31 @@ ErrCode PreBundleProfile::TransformTo(
         false,
         parseResult,
         ArrayType::STRING);
-    for (auto name : names) {
-        APP_LOGD("bundleNames %{public}s", name.c_str());
-        bundleNames.insert(name);
+    for (const auto &name : names) {
+        APP_LOGD("uninstall bundleName %{public}s", name.c_str());
+        uninstallList.insert(name);
+    }
+
+    names.clear();
+    GetValueIfFindKey<std::vector<std::string>>(jsonBuf,
+        jsonObjectEnd,
+        RECOVER_LIST,
+        names,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    for (const auto &name : names) {
+        APP_LOGD("recover bundleName %{public}s", name.c_str());
+        recoverList.insert(name);
     }
 
     return parseResult;
 }
 
 ErrCode PreBundleProfile::TransformTo(
-    const nlohmann::json &jsonBuf, std::set<PreBundleConfigInfo> &preBundleConfigInfos) const
+    const nlohmann::json &jsonBuf,
+    std::set<PreBundleConfigInfo> &preBundleConfigInfos) const
 {
     APP_LOGI("transform jsonBuf to preBundleConfigInfos");
     if (jsonBuf.is_discarded()) {
@@ -157,8 +170,14 @@ ErrCode PreBundleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
 
+    auto arrays = jsonBuf.at(INSTALL_LIST);
+    if (!arrays.is_array() || arrays.empty()) {
+        APP_LOGE("value is not array");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+
     PreBundleConfigInfo preBundleConfigInfo;
-    for (const auto &array : jsonBuf) {
+    for (const auto &array : arrays) {
         if (!array.is_object()) {
             APP_LOGE("array is not json object");
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
@@ -173,14 +192,6 @@ ErrCode PreBundleProfile::TransformTo(
             preBundleConfigInfo.bundleName,
             JsonType::STRING,
             true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
-            jsonObjectEnd,
-            SYSTEMAPI,
-            preBundleConfigInfo.systemapi,
-            JsonType::BOOLEAN,
-            false,
             parseResult,
             ArrayType::NOT_ARRAY);
         GetValueIfFindKey<bool>(array,
@@ -201,64 +212,40 @@ ErrCode PreBundleProfile::TransformTo(
             ArrayType::NOT_ARRAY);
         GetValueIfFindKey<bool>(array,
             jsonObjectEnd,
-            USER_DATA_CLEARABLE,
-            preBundleConfigInfo.userDataClearable,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
-            jsonObjectEnd,
-            MULTI_PROCESS,
-            preBundleConfigInfo.multiProcess,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
-            jsonObjectEnd,
             BOOTABLE,
             preBundleConfigInfo.bootable,
             JsonType::BOOLEAN,
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::vector<std::string>>(array,
+            jsonObjectEnd,
+            ALLOW_COMMENT_EVENT,
+            preBundleConfigInfo.allowCommentEvent,
+            JsonType::ARRAY,
+            false,
+            parseResult,
+            ArrayType::STRING);
+        GetValueIfFindKey<std::vector<std::string>>(array,
+            jsonObjectEnd,
+            APP_SIGNATURE,
+            preBundleConfigInfo.appSignature,
+            JsonType::ARRAY,
+            false,
+            parseResult,
+            ArrayType::STRING);
         GetValueIfFindKey<bool>(array,
             jsonObjectEnd,
-            NOTIFICATION,
-            preBundleConfigInfo.notification,
+            RUNNING_RESOURCES_APPLY,
+            preBundleConfigInfo.runningResourcesApply,
             JsonType::BOOLEAN,
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
         GetValueIfFindKey<bool>(array,
             jsonObjectEnd,
-            HIDE_DESKTOP_ICON,
-            preBundleConfigInfo.hideDesktopIcon,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
-            jsonObjectEnd,
-            QUERY_PRIORITY,
-            preBundleConfigInfo.queryPriority,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
-            jsonObjectEnd,
-            START_STATIC_BROADCAST,
-            preBundleConfigInfo.startStaticBroadcast,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
-            jsonObjectEnd,
-            START_GUI_ABLITY_BACKGROUND,
-            preBundleConfigInfo.startGuiAbilityBackground,
+            ASSOCIATED_WAKE_UP,
+            preBundleConfigInfo.associatedWakeUp,
             JsonType::BOOLEAN,
             false,
             parseResult,

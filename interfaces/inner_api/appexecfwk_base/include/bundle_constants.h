@@ -244,10 +244,12 @@ const std::string BUNDLE_ID_FILE = { "bid" };
 const std::string PATH_SEPERATE {"/"};
 
 // pre bundle profile
-const std::string DEFAULT_PRE_BUNDLE_PROFILE = "/system/etc/bundle";
-const std::string PREINSTALL_CONFIG = "/preinstall_config.json";
-const std::string PREINSTALL_UNINSTALL_CONFIG = "/pre_uninstall_config.json";
-const std::string PREINSTALL_ABILITY_CONFIG = "/preinstall_ability_config.json";
+const std::string DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
+const std::string PRODUCT_SUFFIX = "/etc/app";
+const std::string INSTALL_LIST_CONFIG = "/install_list.json";
+const std::string UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
+const std::string INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
+const std::string INSTALL_LIST_PERMISSIONS_CONFIG = "/install_list_permissions.json";
 
 // sandbox application
 const std::string SANDBOX_APP_INDEX = "sandbox_app_index";

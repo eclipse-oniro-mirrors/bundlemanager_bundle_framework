@@ -56,11 +56,14 @@ public:
     /**
      * @brief Parse bundleNames by the configFile.
      * @param configFile Indicates the path of configFile.
-     * @param bundleNames Indicates the bundleNames.
+     * @param uninstallList Indicates the uninstallList.
+     * @param recoverList Indicates the recoverList.
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
     ErrCode ParsePreUnInstallConfig(
-        const std::string &configFile, std::set<std::string> &bundleNames) const;
+        const std::string &configFile,
+        std::set<std::string> &uninstallList,
+        std::set<std::string> &recoverList) const;
     /**
      * @brief Parse PreBundleConfigInfo by the configFile.
      * @param configFile Indicates the path of configFile.
@@ -72,10 +75,12 @@ public:
 
     /**
      * @brief Parse default permission file, then save in DefaultPermission info.
+     * @param permissionFile Indicates the permissionFile.
      * @param defaultPermissions Indicates the obtained DefaultPermission object.
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
-    ErrCode ParseDefaultPermission(std::vector<DefaultPermission> &defaultPermissions) const;
+    ErrCode ParseDefaultPermission(
+        const std::string &permissionFile, std::set<DefaultPermission> &defaultPermissions) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
