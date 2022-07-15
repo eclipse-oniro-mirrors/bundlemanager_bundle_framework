@@ -130,7 +130,17 @@ protected:
                         "versionName": "",
                         "appDistributionType": "none",
                         "appProvisionType": "release",
-                        "crowdtestDeadline": -1
+                        "crowdtestDeadline": -1,
+                        "bootable": false,
+                        "runningResourcesApply": false,
+                        "associatedWakeUp": false,
+                        "multiProcess": false,
+                        "hideDesktopIcon": false,
+                        "queryPriority": false,
+                        "excludeFromMissions": false,
+                        "restartAfterKilled": false,
+                        "usePrivilegeExtension": false,
+                        "formVisibleNotify": false
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -417,7 +427,17 @@ protected:
                 "versionName": "1.0.0",
                 "appDistributionType": "none",
                 "appProvisionType": "release",
-                "crowdtestDeadline": -1
+                "crowdtestDeadline": -1,
+                "bootable": false,
+                "runningResourcesApply": false,
+                "associatedWakeUp": false,
+                "multiProcess": false,
+                "hideDesktopIcon": false,
+                "queryPriority": false,
+                "excludeFromMissions": false,
+                "restartAfterKilled": false,
+                "usePrivilegeExtension": false,
+                "formVisibleNotify": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -500,7 +520,17 @@ protected:
                     "versionName": "",
                     "appDistributionType": "none",
                     "appProvisionType": "release",
-                    "crowdtestDeadline": -1
+                    "crowdtestDeadline": -1,
+                    "bootable": false,
+                    "runningResourcesApply": false,
+                    "associatedWakeUp": false,
+                    "multiProcess": false,
+                    "hideDesktopIcon": false,
+                    "queryPriority": false,
+                    "excludeFromMissions": false,
+                    "restartAfterKilled": false,
+                    "usePrivilegeExtension": false,
+                    "formVisibleNotify": false
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",
