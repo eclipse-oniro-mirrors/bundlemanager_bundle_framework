@@ -26,24 +26,16 @@ bool InstalldPermissionMgr::VerifyCallingPermission(const std::string &permissio
 {
     APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    AccessToken::AccessTokenID firstCallerToken = IPCSkeleton::GetFirstTokenID();
-    APP_LOGD("callerToken : %{private}u, firstCallerToken : %{private}u", callerToken, firstCallerToken);
+    APP_LOGD("callerToken : %{private}u", callerToken);
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    int32_t ret = AccessToken::PermissionState::PERMISSION_DENIED;
-    if (firstCallerToken == 0) {
-        // hap or native call
-        ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
-    } else {
-        // native call
-        ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, firstCallerToken, permissionName);
-    }
+    int32_t ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
     if ((ret == AccessToken::PermissionState::PERMISSION_GRANTED) ||
         (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE)) {
         APP_LOGD("VerifyCallingPermission success, permission:%{public}s: PERMISSION_GRANTED",
             permissionName.c_str());
         return true;
     }
-    APP_LOGE("VerifyCallingPermission failed, permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+    APP_LOGW("VerifyCallingPermission failed, permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
     return false;
 }
 } // AppExecFwk
