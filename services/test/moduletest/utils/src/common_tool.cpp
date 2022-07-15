@@ -15,11 +15,14 @@
 
 #include "common_tool.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
+#include <cstdint>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <cstdlib>
+#include <string>
 
 #include "string_ex.h"
 

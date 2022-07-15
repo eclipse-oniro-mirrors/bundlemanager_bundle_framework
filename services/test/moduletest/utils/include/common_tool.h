@@ -16,8 +16,9 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_TEST_MODULETEST_COMMON_TOOL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_TEST_MODULETEST_COMMON_TOOL_H
 
-#include <string>
 #include <vector>
+
+#include "iosfwd"
 
 namespace OHOS {
 namespace AppExecFwk {

@@ -18,7 +18,9 @@
 
 #include <string>
 #include <vector>
+
 #include "form_info_base.h"
+#include "iosfwd"
 
 namespace OHOS {
 namespace AppExecFwk {
