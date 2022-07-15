@@ -110,7 +110,7 @@ ohos_unittest("BmsBundleInstallerTest") {
       "battery_manager_native:batterysrv_client",
       "device_profile_core:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
-      "display_manager_native:displaymgr",
+      "display_manager:displaymgr",
       "power_manager_native:powermgr_client",
       "syscap_codec:syscap_interface_shared",
     ]
@@ -235,7 +235,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
       "battery_manager_native:batterysrv_client",
       "device_profile_core:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
-      "display_manager_native:displaymgr",
+      "display_manager:displaymgr",
       "power_manager_native:powermgr_client",
       "syscap_codec:syscap_interface_shared",
     ]
