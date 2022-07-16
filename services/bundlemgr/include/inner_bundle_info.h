@@ -1487,6 +1487,76 @@ public:
         baseApplicationInfo_->cpuAbi = cpuAbi;
     }
 
+    void SetRemovable(bool removable)
+    {
+        baseApplicationInfo_->removable = removable;
+    }
+
+    void SetKeepAlive(bool keepAlive)
+    {
+        baseApplicationInfo_->keepAlive = keepAlive;
+    }
+
+    void SetSingleton(bool singleton)
+    {
+        baseApplicationInfo_->singleton = singleton;
+    }
+
+    void SetBootable(bool bootable)
+    {
+        baseApplicationInfo_->bootable = bootable;
+    }
+
+    void SetRunningResourcesApply(bool runningResourcesApply)
+    {
+        baseApplicationInfo_->runningResourcesApply = runningResourcesApply;
+    }
+
+    void SetAssociatedWakeUp(bool associatedWakeUp)
+    {
+        baseApplicationInfo_->associatedWakeUp = associatedWakeUp;
+    }
+
+    void SetUserDataClearable(bool userDataClearable)
+    {
+        baseApplicationInfo_->userDataClearable = userDataClearable;
+    }
+
+    void SetMultiProcess(bool multiProcess)
+    {
+        baseApplicationInfo_->multiProcess = multiProcess;
+    }
+
+    void SetHideDesktopIcon(bool hideDesktopIcon)
+    {
+        baseApplicationInfo_->hideDesktopIcon = hideDesktopIcon;
+    }
+
+    void SetQueryPriority(bool queryPriority)
+    {
+        baseApplicationInfo_->queryPriority = queryPriority;
+    }
+
+    void SetExcludeFromMissions(bool excludeFromMissions)
+    {
+        baseApplicationInfo_->excludeFromMissions = excludeFromMissions;
+    }
+
+    void SetRestartAfterKilled(bool restartAfterKilled)
+    {
+        baseApplicationInfo_->restartAfterKilled = restartAfterKilled;
+    }
+
+    void SetUsePrivilegeExtension(bool usePrivilegeExtension)
+    {
+        baseApplicationInfo_->usePrivilegeExtension = usePrivilegeExtension;
+    }
+
+    void SetFormVisibleNotify(bool formVisibleNotify)
+    {
+        baseApplicationInfo_->formVisibleNotify = formVisibleNotify;
+    }
+
     void SetDisposedStatus(int32_t status);
 
     int32_t GetDisposedStatus() const;

@@ -38,7 +38,7 @@ const std::string ALLOW_COMMENT_EVENT = "allowCommentEvent";
 const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
 const std::string APP_SIGNATURE = "appSignature";
 const std::string ASSOCIATED_WAKE_UP = "associatedWakeUp";
-const std::string RESOURCES_PATH = "/app/resources/";
+const std::string RESOURCES_PATH = "/app/ohos.global.systemres";
 }
 
 ErrCode PreBundleProfile::TransformTo(
@@ -165,8 +165,8 @@ ErrCode PreBundleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
 
-    if (!jsonBuf.is_array() || jsonBuf.empty()) {
-        APP_LOGE("value is not array");
+    if (jsonBuf.find(INSTALL_LIST) == jsonBuf.end()) {
+        APP_LOGE("installList no exist");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
 

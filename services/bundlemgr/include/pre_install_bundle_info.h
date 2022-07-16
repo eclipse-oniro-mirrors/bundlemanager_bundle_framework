@@ -128,6 +128,22 @@ public:
         appType_ = appType;
     }
     /**
+     * @brief Is recoverable or not.
+     * @return Returns the recoverable.
+     */
+    bool IsRecoverable() const
+    {
+        return recoverable_;
+    }
+    /**
+     * @brief Set recover.
+     * @param appType Indicates the recover to be set.
+     */
+    void SetRecoverable(bool recoverable)
+    {
+        recoverable_ = recoverable;
+    }
+    /**
      * @brief operator.
      * @param PreInstallBundleInfo Indicates the PreInstallBundleInfo.
      */
@@ -139,6 +155,7 @@ private:
     std::string bundleName_;
     uint32_t versionCode_;
     std::vector<std::string> bundlePaths_;
+    bool recoverable_ = false;
     Constants::AppType appType_ = Constants::AppType::SYSTEM_APP;
 };
 }  // namespace AppExecFwk
