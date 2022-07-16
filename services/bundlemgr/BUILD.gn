@@ -283,6 +283,7 @@ ohos_shared_library("libbms") {
 
 ohos_executable("installs") {
   sources = [
+    "src/bundle_extractor.cpp",
     "src/installd/installd_main.cpp",
     "src/system_ability_helper.cpp",
   ]
@@ -297,7 +298,6 @@ ohos_executable("installs") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    ":bundle_parser",
     ":parser_common",
     "${common_path}:libappexecfwk_common",
   ]
