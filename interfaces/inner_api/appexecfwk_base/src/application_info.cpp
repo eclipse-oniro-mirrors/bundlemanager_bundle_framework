@@ -51,6 +51,16 @@ const std::string APPLICATION_USER_DATA_CLEARABLE = "userDataClearable";
 const std::string APPLICATION_IS_SYSTEM_APP = "isSystemApp";
 const std::string APPLICATION_IS_LAUNCHER_APP = "isLauncherApp";
 const std::string APPLICATION_IS_FREEINSTALL_APP = "isFreeInstallApp";
+const std::string APPLICATION_BOOTABLE = "bootable";
+const std::string APPLICATION_RUNNING_RESOURCES_APPLY = "runningResourcesApply";
+const std::string APPLICATION_ASSOCIATED_WAKE_UP = "associatedWakeUp";
+const std::string APPLICATION_MULTI_PROCESS = "multiProcess";
+const std::string APPLICATION_HIDE_DESKTOP_ICON = "hideDesktopIcon";
+const std::string APPLICATION_QUERY_PRIORITY = "queryPriority";
+const std::string APPLICATION_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+const std::string APPLICATION_RESTART_AFTER_KILLED = "restartAfterKilled";
+const std::string APPLICATION_USE_PRIVILEGE_EXTENSION = "usePrivilegeExtension";
+const std::string APPLICATION_FORM_VISIBLE_NOTIFY = "formVisibleNotify";
 const std::string APPLICATION_CODE_PATH = "codePath";
 const std::string APPLICATION_DATA_DIR = "dataDir";
 const std::string APPLICATION_DATA_BASE_DIR = "dataBaseDir";
@@ -250,6 +260,16 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     isSystemApp = parcel.ReadBool();
     isLauncherApp = parcel.ReadBool();
     isFreeInstallApp = parcel.ReadBool();
+    bootable = parcel.ReadBool();
+    runningResourcesApply = parcel.ReadBool();
+    associatedWakeUp = parcel.ReadBool();
+    multiProcess = parcel.ReadBool();
+    hideDesktopIcon = parcel.ReadBool();
+    queryPriority = parcel.ReadBool();
+    excludeFromMissions = parcel.ReadBool();
+    restartAfterKilled = parcel.ReadBool();
+    usePrivilegeExtension = parcel.ReadBool();
+    formVisibleNotify = parcel.ReadBool();
     
     codePath = Str16ToStr8(parcel.ReadString16());
     dataDir = Str16ToStr8(parcel.ReadString16());
@@ -387,6 +407,16 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSystemApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLauncherApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isFreeInstallApp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, bootable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, runningResourcesApply);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, associatedWakeUp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, multiProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hideDesktopIcon);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, queryPriority);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, excludeFromMissions);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, restartAfterKilled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, usePrivilegeExtension);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, formVisibleNotify);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(codePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataDir));
@@ -556,6 +586,16 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_IS_SYSTEM_APP, applicationInfo.isSystemApp},
         {APPLICATION_IS_LAUNCHER_APP, applicationInfo.isLauncherApp},
         {APPLICATION_IS_FREEINSTALL_APP, applicationInfo.isFreeInstallApp},
+        {APPLICATION_BOOTABLE, applicationInfo.bootable},
+        {APPLICATION_RUNNING_RESOURCES_APPLY, applicationInfo.runningResourcesApply},
+        {APPLICATION_ASSOCIATED_WAKE_UP, applicationInfo.associatedWakeUp},
+        {APPLICATION_MULTI_PROCESS, applicationInfo.multiProcess},
+        {APPLICATION_HIDE_DESKTOP_ICON, applicationInfo.hideDesktopIcon},
+        {APPLICATION_QUERY_PRIORITY, applicationInfo.queryPriority},
+        {APPLICATION_EXCLUDE_FROM_MISSIONS, applicationInfo.excludeFromMissions},
+        {APPLICATION_RESTART_AFTER_KILLED, applicationInfo.restartAfterKilled},
+        {APPLICATION_USE_PRIVILEGE_EXTENSION, applicationInfo.usePrivilegeExtension},
+        {APPLICATION_FORM_VISIBLE_NOTIFY, applicationInfo.formVisibleNotify},
         {APPLICATION_CODE_PATH, applicationInfo.codePath},
         {APPLICATION_DATA_DIR, applicationInfo.dataDir},
         {APPLICATION_DATA_BASE_DIR, applicationInfo.dataBaseDir},
@@ -765,6 +805,86 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_IS_FREEINSTALL_APP,
         applicationInfo.isFreeInstallApp,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_BOOTABLE,
+        applicationInfo.bootable,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_RUNNING_RESOURCES_APPLY,
+        applicationInfo.runningResourcesApply,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ASSOCIATED_WAKE_UP,
+        applicationInfo.associatedWakeUp,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_MULTI_PROCESS,
+        applicationInfo.multiProcess,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_HIDE_DESKTOP_ICON,
+        applicationInfo.hideDesktopIcon,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_QUERY_PRIORITY,
+        applicationInfo.queryPriority,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_EXCLUDE_FROM_MISSIONS,
+        applicationInfo.excludeFromMissions,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_RESTART_AFTER_KILLED,
+        applicationInfo.restartAfterKilled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_USE_PRIVILEGE_EXTENSION,
+        applicationInfo.usePrivilegeExtension,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_FORM_VISIBLE_NOTIFY,
+        applicationInfo.formVisibleNotify,
         JsonType::BOOLEAN,
         false,
         parseResult,

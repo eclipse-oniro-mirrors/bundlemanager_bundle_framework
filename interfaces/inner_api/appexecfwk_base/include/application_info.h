@@ -140,6 +140,16 @@ struct ApplicationInfo : public Parcelable {
     bool singleton = false;
     bool userDataClearable = true;
     bool accessible = false;
+    bool bootable = false;
+    bool runningResourcesApply = false;
+    bool associatedWakeUp = false;
+    bool multiProcess = false;
+    bool hideDesktopIcon = false;
+    bool queryPriority = false;
+    bool excludeFromMissions = false;
+    bool restartAfterKilled = false;
+    bool usePrivilegeExtension = false;
+    bool formVisibleNotify = false;
 
     bool isSystemApp = false;
     bool isLauncherApp = false;
