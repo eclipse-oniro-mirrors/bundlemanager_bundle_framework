@@ -50,6 +50,7 @@ struct ZlibCallbackInfo {
 struct AsyncZipCallbackInfo {
     napi_async_work asyncWork;
     std::shared_ptr<ZlibCallbackInfo> aceCallback;
+    int executeResult = 0;
 };
 bool UnwrapIntValue(napi_env env, napi_value jsValue, int &result);
 bool IsTypeForNapiValue(napi_env env, napi_value param, napi_valuetype expectType);
