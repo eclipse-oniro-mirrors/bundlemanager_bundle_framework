@@ -814,7 +814,7 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         APP_LOGE("bundleInfos_ data is empty");
         return false;
     }
-    std::string noPpefixUri = abilityUri.substr(Constants::DATA_ABILITY_URI_PREFIX.size());
+    std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
     auto posFirstSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR);
     if (posFirstSeparator == std::string::npos) {
         return false;
@@ -868,7 +868,7 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
         APP_LOGI("bundleInfos_ data is empty");
         return false;
     }
-    std::string noPpefixUri = abilityUri.substr(Constants::DATA_ABILITY_URI_PREFIX.size());
+    std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
     auto posFirstSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR);
     if (posFirstSeparator == std::string::npos) {
         return false;
@@ -2027,7 +2027,7 @@ bool BundleDataMgr::NotifyBundleStatus(const std::string& bundleName, const std:
     want.SetElement(element);
     want.SetParam(Constants::UID, uid);
     want.SetParam(Constants::USER_ID, GetUserIdByUid(uid));
-    want.SetParam(Constants::ABILTY_NAME.data(), abilityName);
+    want.SetParam(Constants::ABILITY_NAME, abilityName);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);
     return true;
