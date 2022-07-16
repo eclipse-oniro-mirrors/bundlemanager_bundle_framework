@@ -38,6 +38,7 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
     "${services_path}/bundlemgr/src/hidump_helper.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
     "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
     "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",

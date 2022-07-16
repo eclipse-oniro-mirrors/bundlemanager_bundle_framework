@@ -303,6 +303,7 @@ ohos_executable("installs") {
   ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
