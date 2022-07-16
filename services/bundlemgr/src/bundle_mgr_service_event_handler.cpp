@@ -392,7 +392,7 @@ void BMSEventHandler::ScanInstallDir(
     APP_LOGD("Scan the installed directory start");
     std::vector<std::string> bundleNameList;
     if (!ScanDir(Constants::BUNDLE_CODE_DIR, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, bundleNameList)) {
-        APP_LOGE("Check the bundle directory(%{public}s) failed", Constants::BUNDLE_CODE_DIR.c_str());
+        APP_LOGE("Check the bundle directory(%{public}s) failed", Constants::BUNDLE_CODE_DIR);
         return;
     }
 

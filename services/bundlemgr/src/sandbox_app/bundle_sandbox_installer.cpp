@@ -268,7 +268,7 @@ ErrCode BundleSandboxInstaller::NotifySandboxAppStatus(const InnerBundleInfo &in
     want.SetElement(element);
     want.SetParam(Constants::UID, uid);
     want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(uid));
-    want.SetParam(Constants::ABILTY_NAME.data(), info.GetMainAbility());
+    want.SetParam(Constants::ABILITY_NAME, info.GetMainAbility());
     want.SetParam(Constants::SANDBOX_APP_INDEX, info.GetAppIndex());
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);
