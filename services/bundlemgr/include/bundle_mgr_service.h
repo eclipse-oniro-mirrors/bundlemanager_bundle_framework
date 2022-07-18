@@ -40,6 +40,9 @@
 #include "bundle_user_mgr_host_impl.h"
 #include "distributed_monitor.h"
 #include "hidump_helper.h"
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+#include "quick_fix_manager_host_impl.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -94,6 +97,9 @@ public:
     const std::shared_ptr<BmsDeviceManager> GetDeviceManager() const;
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    sptr<IDefaultApp> GetQuickFixManagerProxy() const;
+#endif
     /**
      * @brief Check all user.
      */
@@ -160,6 +166,10 @@ private:
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<DefaultAppHostImpl> defaultAppHostImpl_;
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    sptr<QuickFixManagerHostImpl> quickFixManagerHostImpl_;
 #endif
 
     DISALLOW_COPY_AND_MOVE(BundleMgrService);

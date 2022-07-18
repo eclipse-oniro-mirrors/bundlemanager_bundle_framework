@@ -28,6 +28,7 @@
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
 #include "../default_app/default_app_interface.h"
+#include "../quick_fix/quick_fix_manager_interface.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
@@ -944,6 +945,11 @@ public:
         return 0;
     }
 
+    virtual sptr<IQuickFixManager> GetQuickFixManagerProxy()
+    {
+        return nullptr;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1033,6 +1039,7 @@ public:
         GET_SANDBOX_APP_EXTENSION_INFOS,
         GET_SANDBOX_MODULE_INFO,
         GET_MEDIA_FILE_DESCRIPTOR,
+        GET_QUICK_FIX_MANAGER_PROXY,
     };
 };
 }  // namespace AppExecFwk

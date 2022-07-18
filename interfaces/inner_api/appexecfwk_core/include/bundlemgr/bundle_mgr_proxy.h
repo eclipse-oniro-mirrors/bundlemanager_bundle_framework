@@ -658,6 +658,10 @@ public:
     virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &info) override;
 
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
+#endif
+
 private:
     /**
      * @brief Send a command message from the proxy object.

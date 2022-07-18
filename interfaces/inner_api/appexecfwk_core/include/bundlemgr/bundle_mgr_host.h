@@ -543,6 +543,10 @@ private:
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    ErrCode HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply);
+#endif
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

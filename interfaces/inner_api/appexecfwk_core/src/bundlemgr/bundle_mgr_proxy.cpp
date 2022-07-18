@@ -29,6 +29,9 @@
 #endif
 #include "hitrace_meter.h"
 #include "json_util.h"
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+#include "quick_fix_manager_proxy.h"
+#endif
 #include "securec.h"
 
 namespace OHOS {
@@ -2701,6 +2704,34 @@ int32_t BundleMgrProxy::GetMediaFileDescriptor(const std::string &bundleName, co
     close(sharedFd);
     return fd;
 }
+
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
+        return nullptr;
+    }
+    if (!SendTransactCmd(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IQuickFixManager> quickFixManagerProxy = iface_cast<IQuickFixManager>(object);
+    if (quickFixManagerProxy == nullptr) {
+        APP_LOGE("quickFixManagerProxy is nullptr.");
+    }
+
+    return quickFixManagerProxy;
+}
+#endif
 
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
