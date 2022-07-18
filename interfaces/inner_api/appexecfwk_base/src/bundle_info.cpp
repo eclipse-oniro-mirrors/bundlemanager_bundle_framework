@@ -70,6 +70,7 @@ const std::string REQUESTPERMISSION_USEDSCENE = "usedScene";
 const std::string REQUESTPERMISSION_ABILITIES = "abilities";
 const std::string REQUESTPERMISSION_ABILITY = "ability";
 const std::string REQUESTPERMISSION_WHEN = "when";
+const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
 }
 
 bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)
@@ -270,6 +271,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     minSdkVersion = parcel.ReadInt32();
     maxSdkVersion = parcel.ReadInt32();
     isDifferentName = parcel.ReadBool();
+    appIndex = parcel.ReadInt32();
     return true;
 }
 
@@ -372,6 +374,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, minSdkVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxSdkVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDifferentName);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     return true;
 }
 
@@ -521,7 +524,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_MODULE_PUBLIC_DIRS, bundleInfo.modulePublicDirs},
         {BUNDLE_INFO_MODULE_DIRS, bundleInfo.moduleDirs},
         {BUNDLE_INFO_MODULE_RES_PATHS, bundleInfo.moduleResPaths},
-        {BUNDLE_INFO_SINGLETON, bundleInfo.singleton}
+        {BUNDLE_INFO_SINGLETON, bundleInfo.singleton},
+        {BUNDLE_INFO_APP_INDEX, bundleInfo.appIndex}
     };
 }
 
@@ -857,7 +861,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_APP_INDEX,
+        bundleInfo.appIndex,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
-
 }  // namespace AppExecFwk
 }  // namespace OHOS
