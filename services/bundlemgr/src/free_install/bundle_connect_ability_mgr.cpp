@@ -402,7 +402,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         APP_LOGE("callback is nullptr");
         return;
     }
-    if (!data.WriteRemoteObject(serviceCenterCallback)) {
+    if (!data.WriteRemoteObject(callback)) {
         APP_LOGE("%{public}s failed to WriteRemoteObject callbcak", __func__);
         SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
