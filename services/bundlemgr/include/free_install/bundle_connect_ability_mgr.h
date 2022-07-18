@@ -188,13 +188,13 @@ private:
      * @param transactId The key of ability manager service callback.
      * @return Return the Indicates callback to be invoked for return ability manager service the operation result.
      */
-    sptr<IRemoteObject> GetAbilityManagerServiceCallBack(std::string transactId);
+    sptr<IRemoteObject> GetAbilityManagerServiceCallBack(std::string &transactId);
 
     /**
      * @brief Listening service center processing timeout
      * @param transactId The key of ability manager service callback.
      */
-    void OutTimeMonitor(std::string transactId);
+    void OutTimeMonitor(std::string &transactId);
 
     int GetTransactId() const
     {
