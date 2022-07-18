@@ -107,7 +107,7 @@ ErrCode BmsBundleAccessTokenIdTest::InstallBundle(const std::string &bundlePath)
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     InstallParam installParam;
-    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
