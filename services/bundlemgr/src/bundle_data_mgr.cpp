@@ -609,7 +609,7 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     }
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
         innerBundleInfo.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, info.applicationInfo);
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId, info.applicationInfo);
     }
     return true;
 }
@@ -710,7 +710,8 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
                 if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) ==
                     GET_ABILITY_INFO_WITH_APPLICATION) {
                     info.GetApplicationInfo(
-                        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, abilityinfo.applicationInfo);
+                        ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                        abilityinfo.applicationInfo);
                 }
                 if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION) !=
                     GET_ABILITY_INFO_WITH_PERMISSION) {
@@ -745,7 +746,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         for (const Skill& skill : skillsPair->second) {
             if (skill.MatchLauncher(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
-                info.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO,
+                info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
                     responseUserId, abilityinfo.applicationInfo);
                 abilityInfos.emplace_back(abilityinfo);
                 break;
@@ -846,7 +847,8 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
 
         abilityInfo = (*ability);
         info.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, abilityInfo.applicationInfo);
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+            abilityInfo.applicationInfo);
         return true;
     }
 
@@ -2556,7 +2558,9 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         innerBundleInfo.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, extensionInfo.applicationInfo);
+            ApplicationFlag::GET_BASIC_APPLICATION_INFO |
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+            extensionInfo.applicationInfo);
     }
     return true;
 }
@@ -2701,7 +2705,9 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
             if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) ==
                 GET_ABILITY_INFO_WITH_APPLICATION) {
                 info.GetApplicationInfo(
-                    ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, extensionInfo.applicationInfo);
+                    ApplicationFlag::GET_BASIC_APPLICATION_INFO |
+                    ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                    extensionInfo.applicationInfo);
             }
             if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION) !=
                 GET_ABILITY_INFO_WITH_PERMISSION) {
@@ -2736,7 +2742,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
             if (info.second.type == extensionType) {
                 ExtensionAbilityInfo extensionAbilityInfo = info.second;
                 innerBundleInfo.GetApplicationInfo(
-                    ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, extensionAbilityInfo.applicationInfo);
+                    ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+                    extensionAbilityInfo.applicationInfo);
                 extensionInfos.emplace_back(extensionAbilityInfo);
             }
         }
@@ -2818,7 +2825,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
             continue;
         }
         info.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, extensionAbilityInfo.applicationInfo);
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+            extensionAbilityInfo.applicationInfo);
         return true;
     }
     APP_LOGE("QueryExtensionAbilityInfoByUri (%{private}s) failed.", uri.c_str());
