@@ -117,11 +117,13 @@ private:
     /**
      * @brief Obtains the Calling Info object
      * @param userId Indicates the user ID.
+     * @param callingUid Indicates the user's callingUid.
      * @param bundleNames Indicates the obtained bundle names.
      * @param callingAppids Indicates the ids of teh calling app.
      * @return Returns true if get callingInfo successfully; returns false otherwise.
      */
-    void GetCallingInfo(int32_t userId, std::vector<std::string> &bundleNames, std::vector<std::string> &callingAppIds);
+    void GetCallingInfo(int32_t userId, int32_t callingUid, std::vector<std::string> &bundleNames,
+        std::vector<std::string> &callingAppIds);
 
     /**
      * @brief Obtains the target ability Info object which will be send to service center.
