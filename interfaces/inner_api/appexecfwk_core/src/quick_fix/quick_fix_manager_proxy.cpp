@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace namespace AppExecFwk {
-QuickFixManagerProxy::QuickFixManagerProxy(const sptr<IRemoteObject>& object) : IRemoteProxy<IDefaultApp>(object)
+QuickFixManagerProxy::QuickFixManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IDefaultApp>(object)
 {
     APP_LOGD("create QuickFixManagerProxy.");
 }

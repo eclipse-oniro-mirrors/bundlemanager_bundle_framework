@@ -23,7 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixManagerProxy : public IRemoteProxy<IQuickFixManager> {
 public:
-    explicit QuickFixManagerProxy(const sptr<IRemoteObject>& object);
+    explicit QuickFixManagerProxy(const sptr<IRemoteObject> &object);
     virtual ~QuickFixManagerProxy();
 
     virtual bool DeployQuickFix(const std::vector<string> &bundleFilePaths,

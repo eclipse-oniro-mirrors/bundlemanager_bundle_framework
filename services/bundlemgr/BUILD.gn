@@ -236,7 +236,7 @@ ohos_shared_library("libbms") {
   }
 
   if (bundle_framework_quick_fix) {
-    source += quick_fix
+    sources += quick_fix
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
 
