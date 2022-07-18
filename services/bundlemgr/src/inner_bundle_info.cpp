@@ -1795,6 +1795,7 @@ void InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     }
     bundleInfo.installTime = innerBundleUserInfo.installTime;
     bundleInfo.updateTime = innerBundleUserInfo.updateTime;
+    bundleInfo.appIndex = appIndex_;
 
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo);
