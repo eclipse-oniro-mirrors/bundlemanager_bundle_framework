@@ -161,13 +161,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag,
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return false;
     } else {
-        auto ret = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, freeInstallParams);
-        if (!ret.second) {
-            APP_LOGE("freeInstallParamsMap_ emplace error");
-            CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
-            return false;
-        }
-        SendRequest(flag, targetAbilityInfo, want, userId);
+        SendRequest(flag, targetAbilityInfo, want, userId, freeInstallParams);
         return true;
     }
 }
@@ -316,7 +310,7 @@ void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const 
 void BundleConnectAbilityMgr::DeathRecipientSendCallback()
 {
     APP_LOGI("DeathRecipientSendCallback start");
-    APP_LOGD("freeInstallParamsMap_ size = %{public}zu", freeInstallParamsMap_.size());
+    APP_LOGD("freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
     for (auto &it : freeInstallParamsMap_) {
         SendCallBack(it.first, it.second);
     }
@@ -384,8 +378,8 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
     handler_->PostTask(RegisterEventListenerFunc, transactId, OUT_TIME, AppExecFwk::EventQueue::Priority::LOW);
 }
 
-void BundleConnectAbilityMgr::SendRequest(
-    int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want, int32_t userId)
+void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want,
+    int32_t userId, const FreeInstallParams &freeInstallParams)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -425,6 +419,12 @@ void BundleConnectAbilityMgr::SendRequest(
         SendCallBack(
             FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
+        return;
+    }
+    auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, freeInstallParams);
+    if (!emplaceResult.second) {
+        APP_LOGE("freeInstallParamsMap emplace error");
+        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         return;
     }
     int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
