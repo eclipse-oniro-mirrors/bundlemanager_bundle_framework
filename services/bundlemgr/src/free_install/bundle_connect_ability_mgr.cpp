@@ -30,6 +30,8 @@ namespace AppExecFwk {
 namespace {
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
+const std::string FREE_INSTLL_CALLING_APP_ID = "freeInstallCallingAppId";
+const std::string FREE_INSTLL_CALLING_BUNDLENAMES = "freeInstallCallingBundleNames";
 const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
@@ -541,7 +543,14 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.abilityName = abilityName;
     targetAbilityInfo->targetInfo.callingUid = IPCSkeleton::GetCallingUid();
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
-    this->GetCallingInfo(userId, callingBundleNames, callingAppids);
+    std::string callingAppId = want.GetStringParam(FREE_INSTLL_CALLING_APP_ID);
+    if (!callingAppId.empty()) {
+        callingAppids.push_back(callingAppId);
+    }
+    callingBundleNames = want.GetStringArrayParam(FREE_INSTLL_CALLING_BUNDLENAMES);
+    if (callingAppids.empty() && callingBundleNames.empty()) {
+        this->GetCallingInfo(userId, callingBundleNames, callingAppids);
+    }
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
     targetAbilityInfo->targetInfo.reasonFlag = static_cast<int32_t>(innerBundleInfo.GetModuleUpgradeFlag(moduleName));
