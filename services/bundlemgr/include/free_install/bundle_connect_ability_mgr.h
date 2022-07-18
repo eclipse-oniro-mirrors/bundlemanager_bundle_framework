@@ -90,7 +90,7 @@ private:
      * @return Returns true if create async task successfully called; returns false otherwise.
      */
     bool SilentInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        const sptr<IRemoteObject> &callerToken, int32_t userId);
+        const FreeInstallParams &freeInstallParams, int32_t userId);
 
     /**
      * @brief Notify the service center to check for updates.
@@ -101,7 +101,7 @@ private:
      * @return Returns true if create async task successfully called; returns false otherwise.
      */
     bool UpgradeCheck(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        const sptr<IRemoteObject> &callerToken, int32_t userId);
+        const FreeInstallParams &freeInstallParams, int32_t userId);
 
     /**
      * @brief Notify the service center to install new ability.
@@ -112,7 +112,7 @@ private:
      * @return Returns true if create async task successfully called; returns false otherwise.
      */
     bool UpgradeInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        const sptr<IRemoteObject> &callerToken, int32_t userId);
+        const FreeInstallParams &freeInstallParams, int32_t userId);
 
     /**
      * @brief Obtains the Calling Info object
@@ -170,7 +170,7 @@ private:
      * @return Returns true if successfully Send request with RemoteObject
      */
     bool SendRequestToServiceCenter(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        int32_t userId, const sptr<IRemoteObject> &callerToken);
+        int32_t userId, const FreeInstallParams &freeInstallParams);
 
     /**
      * @brief Send request with RemoteObject,this is a asynchronous function.
