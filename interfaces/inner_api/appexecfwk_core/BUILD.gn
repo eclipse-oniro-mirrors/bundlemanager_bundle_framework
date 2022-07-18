@@ -93,7 +93,7 @@ ohos_shared_library("appexecfwk_core") {
   }
 
   if (bundle_framework_quick_fix) {
-    defines += ["BUNDLE_FRAMEWORK_QUICK_FIX"]
+    defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
     sources += [
       "src/quick_fix/quick_fix_manager_host.cpp",
       "src/quick_fix/quick_fix_manager_proxy.cpp",

@@ -98,7 +98,7 @@ public:
 #endif
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    sptr<IDefaultApp> GetQuickFixManagerProxy() const;
+    sptr<QuickFixManagerHostImpl> GetQuickFixManagerProxy() const;
 #endif
     /**
      * @brief Check all user.

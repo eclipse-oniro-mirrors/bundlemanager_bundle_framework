@@ -20,9 +20,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class IQuickFixStatusCallBack : public IRemoteBroker {
+class IQuickFixStatusCallback : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.QuickFixStatusCallBack");
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.QuickFixStatusCallback");
 };
 } // AppExecFwk
 } // OHOS

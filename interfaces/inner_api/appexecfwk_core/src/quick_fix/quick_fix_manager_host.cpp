@@ -21,7 +21,7 @@
 #include "ipc_types.h"
 
 namespace OHOS {
-namespace namespace AppExecFwk {
+namespace AppExecFwk {
 QuickFixManagerHost::QuickFixManagerHost()
 {
     APP_LOGD("create QuickFixManagerHost.");
@@ -51,7 +51,7 @@ int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
         case IQuickFixManager::Message::DELETE_QUICK_FIX:
             return HandleDeleteQuickFix(data, reply);
         default:
-            APP_LOGW("DefaultAppHost receive unknown code, code = %{public}d", code);
+            APP_LOGW("QuickFixManagerHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 }
@@ -67,12 +67,12 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
     }
     sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
     if (object == nullptr) {
-        APP_LOGE("read statusCallBack failed.");
+        APP_LOGE("read statusCallback failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    sptr<IQuickFixStatusCallBack> statusCallBack = iface_cast<IQuickFixStatusCallBack>(object);
+    sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    bool ret = DeployQuickFix(bundleFilePaths, statusCallBack);
+    bool ret = DeployQuickFix(bundleFilePaths, statusCallback);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -87,12 +87,12 @@ ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessagePa
     std::string bundleName = data.ReadString();
     sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
     if (object == nullptr) {
-        APP_LOGE("read statusCallBack failed.");
+        APP_LOGE("read statusCallback failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    sptr<IQuickFixStatusCallBack> statusCallBack = iface_cast<IQuickFixStatusCallBack>(object);
+    sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    bool ret = SwitchQuickFix(bundleName, statusCallBack);
+    bool ret = SwitchQuickFix(bundleName, statusCallback);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -107,12 +107,12 @@ ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessagePa
     std::string bundleName = data.ReadString();
     sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
     if (object == nullptr) {
-        APP_LOGE("read statusCallBack failed.");
+        APP_LOGE("read statusCallback failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    sptr<IQuickFixStatusCallBack> statusCallBack = iface_cast<IQuickFixStatusCallBack>(object);
+    sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    bool ret = DeployQuickFix(bundleFilePaths, statusCallBack);
+    bool ret = DeleteQuickFix(bundleName, statusCallback);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;

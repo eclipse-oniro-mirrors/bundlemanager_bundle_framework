@@ -21,8 +21,8 @@
 #include "ipc_types.h"
 
 namespace OHOS {
-namespace namespace AppExecFwk {
-QuickFixManagerProxy::QuickFixManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IDefaultApp>(object)
+namespace AppExecFwk {
+QuickFixManagerProxy::QuickFixManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IQuickFixManager>(object)
 {
     APP_LOGD("create QuickFixManagerProxy.");
 }
@@ -32,13 +32,13 @@ QuickFixManagerProxy::~QuickFixManagerProxy()
     APP_LOGD("destroy QuickFixManagerProxy.");
 }
 
-bool QuickFixManagerProxy::DeployQuickFix(const std::vector<string> &bundleFilePaths,
-    const sptr<IQuickFixStatusCallBack> &statusCallBack)
+bool QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+    const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("begin to call DeployQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (bundleFilePaths.empty() || !statusCallBack) {
+    if (bundleFilePaths.empty() || !statusCallback) {
         APP_LOGE("DeployQuickFix failed due to params error.");
         return false;
     }
@@ -48,11 +48,11 @@ bool QuickFixManagerProxy::DeployQuickFix(const std::vector<string> &bundleFileP
         APP_LOGE("WriteInterfaceToken failed.");
         return false;
     }
-    if (!data.WriteVectorString(bundleFilePaths)) {
+    if (!data.WriteStringVector(bundleFilePaths)) {
         APP_LOGE("write bundleFilePaths failed.");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusCallBack->AsObject())) {
+    if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
         return false;
     }
@@ -67,12 +67,12 @@ bool QuickFixManagerProxy::DeployQuickFix(const std::vector<string> &bundleFileP
 }
 
 bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName,
-    sptr<IQuickFixStatusCallBack> &statusCallBack)
+    const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("begin to call SwitchQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (bundleName.empty() || !statusCallBack) {
+    if (bundleName.empty() || !statusCallback) {
         APP_LOGE("SwitchQuickFix failed due to params error.");
         return false;
     }
@@ -86,7 +86,7 @@ bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName,
         APP_LOGE("write bundleName failed.");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusCallBack->AsObject())) {
+    if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
         return false;
     }
@@ -101,12 +101,12 @@ bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName,
 }
 
 bool QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
-    const sptr<IQuickFixStatusCallBack> &statusCallBack)
+    const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("begin to call DeleteQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (bundleName.empty() || !statusCallBack) {
+    if (bundleName.empty() || !statusCallback) {
         APP_LOGE("DeleteQuickFix failed due to params error.");
         return false;
     }
@@ -120,7 +120,7 @@ bool QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
         APP_LOGE("write bundleName failed.");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusCallBack->AsObject())) {
+    if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
         return false;
     }
@@ -134,7 +134,7 @@ bool QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
     return reply.ReadBool();
 }
 
-bool QuickFixManagerProxy::SendRequest(IDefaultApp::Message code, MessageParcel &data, MessageParcel &reply)
+bool QuickFixManagerProxy::SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();

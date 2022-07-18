@@ -2710,11 +2710,11 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
-    MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
         return nullptr;
     }
+    MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, data, reply)) {
         return nullptr;
     }

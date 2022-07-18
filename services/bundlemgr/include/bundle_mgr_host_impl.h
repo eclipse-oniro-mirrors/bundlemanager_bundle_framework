@@ -653,7 +653,7 @@ public:
     virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName) override;
 
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
 #endif
 

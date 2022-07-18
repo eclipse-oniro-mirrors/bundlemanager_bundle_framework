@@ -26,17 +26,17 @@ public:
     explicit QuickFixManagerProxy(const sptr<IRemoteObject> &object);
     virtual ~QuickFixManagerProxy();
 
-    virtual bool DeployQuickFix(const std::vector<string> &bundleFilePaths,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) override;
+    virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+        const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
     virtual bool SwitchQuickFix(const std::string &bundleName,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) override;
+        const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
     virtual bool DeleteQuickFix(const std::string &bundleName,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) override;
+        const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
 private:
-    bool SendRequest(IDefaultApp::Message code, MessageParcel &data, MessageParcel &reply);
+    bool SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply);
     static inline BrokerDelegator<QuickFixManagerProxy> delegator_;
 };
 } // AppExecFwk

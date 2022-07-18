@@ -16,7 +16,6 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_MANAGER_INTERFACE_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_MANAGER_INTERFACE_H
 
-#include "app_quick_fix_info.h"
 #include "quick_fix_status_callback_interface.h"
 #include "iremote_broker.h"
 
@@ -29,14 +28,14 @@ class IQuickFixManager : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.QuickFixManager");
 
-    virtual bool DeployQuickFix(const std::vector<string> &bundleFilePaths,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) = 0;
+    virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+        const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
 
     virtual bool SwitchQuickFix(const std::string &bundleName,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) = 0;
+        const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
 
     virtual bool DeleteQuickFix(const std::string &bundleName,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) = 0;
+        const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
 
     enum Message : uint32_t {
         DEPLOY_QUICK_FIX = 0,

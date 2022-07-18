@@ -293,7 +293,7 @@ sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
 #endif
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-sptr<IDefaultApp> BundleMgrService::GetQuickFixManagerProxy() const;
+sptr<QuickFixManagerHostImpl> BundleMgrService::GetQuickFixManagerProxy() const
 {
     return quickFixManagerHostImpl_;
 }

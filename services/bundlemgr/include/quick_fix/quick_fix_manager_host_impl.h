@@ -21,14 +21,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 class QuickFixManagerHostImpl : public QuickFixManagerHost {
-    virtual bool DeployQuickFix(const std::vector<string> &bundleFilePaths,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) override;
+    virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+        const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
     virtual bool SwitchQuickFix(const std::string &bundleName,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) override;
+        const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
     virtual bool DeleteQuickFix(const std::string &bundleName,
-        const sptr<IQuickFixStatusCallBack> &statusCallBack) override;
+        const sptr<IQuickFixStatusCallback> &statusCallback) override;
 };
 } // AppExecFwk
 } // OHOS
