@@ -1696,8 +1696,13 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfos_0001, TestSize.Le
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     std::vector<ExtensionAbilityInfo> infos;
-    bool ret =
-        GetBundleMgrProxy()->QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, DEFAULT_USERID, infos);
+    OHOS::AAFwk::Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName("Form");
+    want.SetElement(element);
+    bool ret = GetBundleMgrProxy()->QueryExtensionAbilityInfos(want, ExtensionAbilityType::FORM,
+        ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT, DEFAULT_USERID, infos);
     EXPECT_TRUE(ret);
     EXPECT_EQ(1, infos.size());
 
