@@ -1,0 +1,391 @@
+{
+    "module": {
+      "name": "module01",
+      "type": "entry",
+      "mainElement": "MainAbility",
+      "srcEntrance": "./ets/Application/AbilityStage.ts",
+      "description": "$string:entry_desc",
+      "deviceTypes": [
+        "phone"
+      ],
+      "deliveryWithInstall": true,
+      "installationFree": false,
+      "pages": "$profile:main_pages",
+      "uiSyntax": "ets",
+      "abilities": [
+        {
+          "name": "BROWSER",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "entities": [
+                "entity.system.browsable"
+              ],
+              "uris": [
+                {
+                  "scheme": "http"
+                },
+                {
+                  "scheme": "https"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "BROWSER-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "scheme": "http"
+                },
+                {
+                  "scheme": "https"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "IMAGE",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "image/*"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "IMAGE-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "uris": [
+                {
+                  "type": "image/*"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "AUDIO",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "audio/*"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "AUDIO-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "abc/*"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "VIDEO",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "video/*"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "VIDEO-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.hello"
+              ],
+              "uris": [
+                {
+                  "type": "video/*"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "PDF",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "application/pdf"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "PDF-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+              ]
+            }
+          ]
+        },
+        {
+          "name": "WORD",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "application/msword"
+                },
+                {
+                  "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "WORD-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "application/hello"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "EXCEL",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "EXCEL-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.hello"
+              ],
+              "uris": [
+                {
+                  "type": "abc/def"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "PPT",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "application/vnd.ms-powerpoint"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "PPT-ERROR",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true
+        },
+        {
+          "name": "ImagePng",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "image/png"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "VideoMp4",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "actions": [
+                "ohos.want.action.viewData"
+              ],
+              "uris": [
+                {
+                  "type": "video/mp4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "MainAbility",
+          "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+          "description": "$string:MainAbility_desc",
+          "icon": "$media:icon",
+          "label": "$string:MainAbility_label",
+          "visible": true,
+          "skills": [
+            {
+              "entities": [
+                "entity.system.home"
+              ],
+              "actions": [
+                "action.system.home",
+                "priority_test"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
