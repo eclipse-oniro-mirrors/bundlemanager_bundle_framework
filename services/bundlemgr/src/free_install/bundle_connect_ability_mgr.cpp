@@ -386,8 +386,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(SERVICE_CENTER_TOKEN)) {
         APP_LOGE("failed to WriteInterfaceToken");
-        SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId,
-            targetAbilityInfo.targetInfo.transactId);
+        SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
@@ -395,29 +394,25 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
     APP_LOGI("TargetAbilityInfo to JsonString : %{public}s", dataString.c_str());
     if (!data.WriteString16(Str8ToStr16(dataString))) {
         APP_LOGE("%{public}s failed to WriteParcelable targetAbilityInfo", __func__);
-        SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId,
-            targetAbilityInfo.targetInfo.transactId);
+        SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
-    sptr<ServiceCenterStatusCallback> serviceCenterCallback =
-        new(std::nothrow) ServiceCenterStatusCallback(weak_from_this());
-    if (serviceCenterCallback == nullptr) {
-        APP_LOGE("serviceCenterCallback is nullptr");
+    sptr<ServiceCenterStatusCallback> callback = new(std::nothrow) ServiceCenterStatusCallback(weak_from_this());
+    if (callback == nullptr) {
+        APP_LOGE("callback is nullptr");
         return;
     }
     if (!data.WriteRemoteObject(serviceCenterCallback)) {
         APP_LOGE("%{public}s failed to WriteRemoteObject callbcak", __func__);
-        SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId,
-            targetAbilityInfo.targetInfo.transactId);
+        SendCallBack(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         APP_LOGE("%{public}s failed to get remote object", __func__);
-        SendCallBack(
-            FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
+        SendCallBack(FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return;
     }
@@ -428,11 +423,9 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         return;
     }
     int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
-    APP_LOGI("SendRequest result = %{public}d", result);
     if (result != ERR_OK) {
         APP_LOGE("Failed to sendRequest, result = %{public}d", result);
-        SendCallBack(
-            FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
+        SendCallBack(FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return;
     }
