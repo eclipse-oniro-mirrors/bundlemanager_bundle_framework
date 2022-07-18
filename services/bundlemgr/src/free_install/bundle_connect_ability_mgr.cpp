@@ -355,7 +355,7 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     APP_LOGI("OnServiceCenterCall end");
 }
 
-void BundleConnectAbilityMgr::OutTimeMonitor(std::string &transactId)
+void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 {
     APP_LOGI("BundleConnectAbilityMgr::OutTimeMonitor");
     FreeInstallParams freeInstallParams;
@@ -449,7 +449,7 @@ bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, Mes
     return true;
 }
 
-sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(std::string &transactId)
+sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(std::string transactId)
 {
     APP_LOGI("GetAbilityManagerServiceCallBack");
     FreeInstallParams freeInstallParams;
