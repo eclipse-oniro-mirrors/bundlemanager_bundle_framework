@@ -607,7 +607,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0300, Function | SmallTest | Level
     std::vector<int64_t> stats;
     bool result = GetBundleStats(BUNDLE_NAME, USERID, stats);
     EXPECT_EQ(result, true);
-    EXPECT_NE(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
     OHOS::ForceRemoveDirectory(BUNDLE_APP_DIR);
 }
 
