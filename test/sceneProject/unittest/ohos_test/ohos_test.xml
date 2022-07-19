@@ -14,6 +14,12 @@
  * limitations under the License.
  -->
 <configuration ver="2.0">
+  <target name="BmsBundleDefaultAppTest">
+  <preparer>
+      <option name="push" value="test_bundle/defaultAppTest.hap -> /data/test/resource/bms/default_app_bundle/"
+        src="res" />
+    </preparer>
+  </target>
   <target name="BmsBundlePermissionGrantTest">
   <preparer>
       <option name="push" value="permission_bundle/bmsGrantPermission1.hap -> /data/test/resource/bms/permission_bundle/"
