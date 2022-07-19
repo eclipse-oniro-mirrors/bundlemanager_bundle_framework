@@ -85,34 +85,34 @@ private:
      * @brief Notify the service center center to start the installation free process.
      * @param targetAbilityInfo Indicates the information which will be send to service center.
      * @param want Indicates the information of the need start ability.
-     * @param callerToken Caller form extension token.
+     * @param freeInstallParams The value of ability manager service callback map.
      * @param userId Designation User ID.
      * @return Returns true if create async task successfully called; returns false otherwise.
      */
     bool SilentInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        const sptr<IRemoteObject> &callerToken, int32_t userId);
+        const FreeInstallParams &freeInstallParams, int32_t userId);
 
     /**
      * @brief Notify the service center to check for updates.
      * @param targetAbilityInfo Indicates the information which will be send to service center.
      * @param want Indicates the information of the need start ability.
-     * @param callerToken Caller form extension token.
+     * @param freeInstallParams The value of ability manager service callback map.
      * @param userId Designation User ID.
      * @return Returns true if create async task successfully called; returns false otherwise.
      */
     bool UpgradeCheck(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        const sptr<IRemoteObject> &callerToken, int32_t userId);
+        const FreeInstallParams &freeInstallParams, int32_t userId);
 
     /**
      * @brief Notify the service center to install new ability.
      * @param targetAbilityInfo Indicates the information which will be send to service center.
      * @param want Indicates the information of the need start ability.
-     * @param callerToken Caller form extension token.
+     * @param freeInstallParams The value of ability manager service callback map.
      * @param userId Designation User ID.
      * @return Returns true if create async task successfully called; returns false otherwise.
      */
     bool UpgradeInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        const sptr<IRemoteObject> &callerToken, int32_t userId);
+        const FreeInstallParams &freeInstallParams, int32_t userId);
 
     /**
      * @brief Obtains the Calling Info object
@@ -149,14 +149,14 @@ private:
      * @param resultCode The result code to ability manager service call back
      * @param want Indicates the information of the need start ability.
      * @param userId Designation User ID.
-     * @param transactId The key of ability manager service Call Back Map
+     * @param transactId The key of ability manager service callback map
      */
     void SendCallBack(int32_t resultCode, const Want &want, int32_t userId, const std::string &transactId);
 
     /**
      * @brief Send atomic service status callback to ability manager service
-     * @param transactId The key of ability manager service Call Back Map
-     * @param freeInstallParams The value of ability manager service Call Back Map
+     * @param transactId The key of ability manager service callback map
+     * @param freeInstallParams The value of ability manager service callback map
      */
     void SendCallBack(const std::string &transactId, const FreeInstallParams &freeInstallParams);
 
@@ -166,11 +166,11 @@ private:
      * @param targetAbilityInfo Indicates the information of the ability.
      * @param want Indicates the information of the need start ability.
      * @param userId Designation User ID.
-     * @param callerToken Caller form extension token.
+     * @param freeInstallParams The value of ability manager service callback map.
      * @return Returns true if successfully Send request with RemoteObject
      */
     bool SendRequestToServiceCenter(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-        int32_t userId, const sptr<IRemoteObject> &callerToken);
+        int32_t userId, const FreeInstallParams &freeInstallParams);
 
     /**
      * @brief Send request with RemoteObject,this is a asynchronous function.
@@ -178,8 +178,10 @@ private:
      * @param targetAbilityInfo Indicates the information of the ability.
      * @param want Indicates the information of the need start ability.
      * @param userId Designation User ID.
+     * @param freeInstallParams The value of ability manager service callback map.
      */
-    void SendRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want, int32_t userId);
+    void SendRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want, int32_t userId,
+        const FreeInstallParams &freeInstallParams);
 
     /**
      * @brief Get the ability manager service Call Back with transactId
