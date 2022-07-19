@@ -17,8 +17,8 @@ group("test_bundle") {
 
   deps += [
     # deps file
+    "defaultAppTest:defaultAppTest",
     "first_right:first_right",
     "sandboxTest:sandboxTest",
-    "defaultAppTest:defaultAppTest",
   ]
 }
