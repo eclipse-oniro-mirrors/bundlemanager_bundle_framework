@@ -13,17 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_QUICK_FIX_STATUS_CALLBACK_INTERFACE_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_QUICK_FIX_STATUS_CALLBACK_INTERFACE_H
+#include "quick_fix_status_callback_proxy.h"
 
-#include "iremote_broker.h"
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "ipc_types.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class IQuickFixStatusCallback : public IRemoteBroker {
-public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.QuickFixStatusCallback");
-};
+QuickFixStatusCallbackProxy::QuickFixStatusCallbackProxy(const sptr<IRemoteObject> &object) :
+    IRemoteProxy<IQuickFixStatusCallback>(object)
+{
+    APP_LOGD("create QuickFixStatusCallbackProxy.");
+}
+
+QuickFixStatusCallbackProxy::~QuickFixStatusCallbackProxy()
+{
+    APP_LOGD("destroy QuickFixStatusCallbackProxy.");
+}
 } // AppExecFwk
 } // OHOS
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_QUICK_FIX_STATUS_CALLBACK_INTERFACE_H

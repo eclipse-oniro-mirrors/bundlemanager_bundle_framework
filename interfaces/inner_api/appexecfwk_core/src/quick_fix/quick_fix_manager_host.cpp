@@ -61,8 +61,8 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
     APP_LOGI("begin to HandleDeployQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::vector<std::string> bundleFilePaths;
-    if (data.ReadStringVector(&bundleFilePaths)) {
-        APP_LOGE("read bundleFilePatchs failed.");
+    if (!data.ReadStringVector(&bundleFilePaths)) {
+        APP_LOGE("read bundleFilePaths failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
