@@ -108,7 +108,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
-      "battery_manager_native:batterysrv_client",
+      "battery_manager:batterysrv_client",
       "device_profile_core:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
@@ -234,7 +234,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
-      "battery_manager_native:batterysrv_client",
+      "battery_manager:batterysrv_client",
       "device_profile_core:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
