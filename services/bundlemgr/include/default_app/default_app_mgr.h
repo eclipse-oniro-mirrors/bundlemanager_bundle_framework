@@ -39,7 +39,6 @@ private:
     ~DefaultAppMgr();
     DISALLOW_COPY_AND_MOVE(DefaultAppMgr);
     void Init();
-    void InitSupportAppTypes();
     bool GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool GetBundleInfo(int32_t userId, const std::string& type, const Element& element, BundleInfo& bundleInfo) const;
@@ -63,7 +62,7 @@ private:
     bool IsPptSkillsValid(const std::vector<Skill>& skills) const;
     
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
-    std::set<std::string> supportAppTypes;
+    static std::set<std::string> supportAppTypes;
 };
 }
 }
