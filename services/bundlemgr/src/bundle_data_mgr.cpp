@@ -1664,7 +1664,6 @@ bool BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool is
         bundleStateStorage_->SaveBundleStateStorage(
             bundleName, requestUserId, innerBundleUserInfo.bundleUserInfo);
     }
-
     return true;
 }
 
@@ -1781,7 +1780,6 @@ bool BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEna
         bundleStateStorage_->SaveBundleStateStorage(
             abilityInfo.bundleName, requestUserId, innerBundleUserInfo.bundleUserInfo);
     }
-    
     return true;
 }
 

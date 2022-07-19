@@ -33,6 +33,7 @@ struct DistributedBundleInfo : public Parcelable {
     uint32_t compatibleVersionCode = 0;
     std::string appId;
     std::vector<DistributedModuleInfo> moduleInfos;
+    bool enabled = true;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

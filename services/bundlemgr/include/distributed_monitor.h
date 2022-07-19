@@ -47,7 +47,10 @@ public:
             int32_t userId = eventData.GetCode();
             APP_LOGI("OnReceiveEvent switched userId:%{public}d", userId);
             std::vector<BundleInfo> bundleInfos;
-            bool ret = bundleDataMgr_->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfos, userId);
+            int32_t flags = BundleFlag::GET_BUNDLE_WITH_ABILITIES |
+                ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE |
+                AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE;
+            bool ret = bundleDataMgr_->GetBundleInfos(flags, bundleInfos, userId);
             if (ret) {
                 DistributedDataStorage::GetInstance()->UpdateDistributedData(bundleInfos);
             } else {
