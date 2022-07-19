@@ -771,7 +771,6 @@ void ZipFileAsyncExecute(napi_env env, void *data)
         zipCallBackInfo->isCallBack = true;
         ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
     };
-
     if (!Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
         FilePath(asyncCallbackInfo->aceCallback->param.dest),
         asyncCallbackInfo->aceCallback->param.options,
@@ -807,7 +806,6 @@ void ZipFilePromiseExecute(napi_env env, void *data)
         zipCallBackInfo->isCallBack = false;
         ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
     };
-
     if (!Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
         FilePath(asyncCallbackInfo->aceCallback->param.dest),
         asyncCallbackInfo->aceCallback->param.options,
