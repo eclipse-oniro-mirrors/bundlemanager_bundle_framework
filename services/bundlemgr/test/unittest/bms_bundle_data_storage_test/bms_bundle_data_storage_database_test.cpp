@@ -578,6 +578,7 @@ protected:
                 "targetVersion": 8,
                 "uid": -1,
                 "updateTime": 0,
+                "appIndex": 0,
                 "vendor": "ohos",
                 "versionCode": 1000000,
                 "versionName": "1.0.0"
