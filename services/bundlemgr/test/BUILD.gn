@@ -45,6 +45,7 @@ group("unittest") {
       "unittest/bms_bundle_accesstokenid_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
       "unittest/bms_bundle_data_storage_test:unittest",
+      "unittest/bms_bundle_default_app_test:unittest",
       "unittest/bms_bundle_dependencies_test:unittest",
       "unittest/bms_bundle_installer_test:unittest",
       "unittest/bms_bundle_kit_service_test:unittest",
@@ -58,7 +59,6 @@ group("unittest") {
       "unittest/bms_rdb_data_manager_test:unittest",
       "unittest/bms_service_bundle_scan_test:unittest",
       "unittest/bms_service_startup_test:unittest",
-      "unittest/bms_bundle_default_app_test:unittest",
     ]
   }
 }
