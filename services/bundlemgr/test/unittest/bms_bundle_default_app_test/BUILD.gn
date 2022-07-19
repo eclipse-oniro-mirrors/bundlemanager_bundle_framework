@@ -52,7 +52,7 @@ ohos_unittest("BmsBundleDefaultAppTest") {
 
   sources += bundle_install_sources
 
-  sources += [ "bms_bundle_default_app.cpp" ]
+  sources += [ "bms_bundle_default_app_test.cpp" ]
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
