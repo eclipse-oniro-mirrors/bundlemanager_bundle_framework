@@ -34,6 +34,7 @@ const std::string JSON_KEY_MIN_COMPATIBLE_VERSION = "minCompatibleVersion";
 const std::string JSON_KEY_TARGET_VERSION_CODE = "targetVersionCode";
 const std::string JSON_KEY_APP_ID = "appId";
 const std::string JSON_KEY_MODULE_INFOS = "moduleInfos";
+const std::string JSON_KEY_ENABLED = "enabled";
 }
 bool DistributedBundleInfo::ReadFromParcel(Parcel &parcel)
 {
@@ -56,7 +57,7 @@ bool DistributedBundleInfo::ReadFromParcel(Parcel &parcel)
         }
         moduleInfos.emplace_back(*distributedModuleInfo);
     }
-
+    enabled = parcel.ReadBool();
     return true;
 }
 
@@ -75,7 +76,7 @@ bool DistributedBundleInfo::Marshalling(Parcel &parcel) const
     for (auto &moduleInfo : moduleInfos) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &moduleInfo);
     }
-
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
     return true;
 }
 
@@ -102,6 +103,7 @@ std::string DistributedBundleInfo::ToString() const
     jsonObject[JSON_KEY_TARGET_VERSION_CODE] = targetVersionCode;
     jsonObject[JSON_KEY_APP_ID] = appId;
     jsonObject[JSON_KEY_MODULE_INFOS] = moduleInfos;
+    jsonObject[JSON_KEY_ENABLED] = enabled;
     return jsonObject.dump();
 }
 
@@ -187,6 +189,14 @@ bool DistributedBundleInfo::FromJsonString(const std::string &jsonString)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ENABLED,
+        enabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     return parseResult == ERR_OK;
 }
 }  // namespace AppExecFwk
