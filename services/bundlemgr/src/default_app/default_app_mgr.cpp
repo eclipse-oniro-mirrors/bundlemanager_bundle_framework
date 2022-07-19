@@ -61,6 +61,8 @@ namespace {
     const std::string PPT = "PPT";
 }
 
+std::set<std::string> DefaultAppMgr::supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT};
+
 DefaultAppMgr& DefaultAppMgr::GetInstance()
 {
     static DefaultAppMgr defaultAppMgr;
@@ -87,19 +89,6 @@ void DefaultAppMgr::Init()
     defaultAppDb_ = std::make_shared<DefaultAppDb>();
 #endif
     defaultAppDb_->RegisterDeathListener();
-    InitSupportAppTypes();
-}
-
-void DefaultAppMgr::InitSupportAppTypes()
-{
-    supportAppTypes.insert(BROWSER);
-    supportAppTypes.insert(IMAGE);
-    supportAppTypes.insert(AUDIO);
-    supportAppTypes.insert(VIDEO);
-    supportAppTypes.insert(PDF);
-    supportAppTypes.insert(WORD);
-    supportAppTypes.insert(EXCEL);
-    supportAppTypes.insert(PPT);
 }
 
 bool DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type) const

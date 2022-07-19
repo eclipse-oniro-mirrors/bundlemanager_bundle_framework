@@ -15,6 +15,7 @@
 
 #include <fstream>
 #include <gtest/gtest.h>
+#include <set>
 #include <sstream>
 #include <string>
 
@@ -50,21 +51,36 @@ const std::string DEFAULT_APP_WORD = "WORD";
 const std::string DEFAULT_APP_EXCEL = "EXCEL";
 const std::string DEFAULT_APP_PPT = "PPT";
 const std::string ABILITY_VIDEO = "VIDEO";
+const std::string ABILITY_VIDEO_ERROR = "VIDEO-ERROR";
 const std::string ABILITY_VIDEO_MP4 = "VideoMp4";
 const std::string ABILITY_IMAGE = "IMAGE";
+const std::string ABILITY_IMAGE_ERROR = "IMAGE-ERROR";
 const std::string ABILITY_BROWSER = "BROWSER";
+const std::string ABILITY_BROWSER_ERROR = "BROWSER-ERROR";
 const std::string ABILITY_AUDIO = "AUDIO";
+const std::string ABILITY_AUDIO_ERROR = "AUDIO-ERROR";
 const std::string ABILITY_PDF = "PDF";
+const std::string ABILITY_PDF_ERROR = "PDF-ERROR";
 const std::string ABILITY_WORD = "WORD";
+const std::string ABILITY_WORD_ERROR = "WORD-ERROR";
 const std::string ABILITY_EXCEL = "EXCEL";
+const std::string ABILITY_EXCEL_ERROR = "EXCEL-ERROR";
 const std::string ABILITY_PPT = "PPT";
+const std::string ABILITY_PPT_ERROR = "PPT-ERROR";
 const std::string LABEL = "$string:MainAbility_label";
 const std::string ICON = "$media:icon";
 const std::string DESCRIPTION = "$string:MainAbility_desc";
+const std::string INVALID_TYPE1 = "abc";
+const std::string INVALID_TYPE2 = "abc/";
+const std::string INVALID_TYPE3 = "/abc";
+const std::string INVALID_TYPE4 = "*/abc";
+const std::string INVALID_TYPE5 = "abc/*";
+const std::string INVALID_TYPE6 = "*/*";
 const int32_t LABEL_ID = 16777218;
 const int32_t ICON_ID = 16777222;
 const int32_t DESCRIPTION_ID = 16777217;
 const int32_t USER_ID = 100;
+const int32_t INVALID_USER_ID = 200;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
 
@@ -83,11 +99,14 @@ public:
     void StartBundleService();
     bool SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
         const std::string& abilityName) const;
-
+    static std::set<std::string> invalidTypeSet;
 private:
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
 };
+
+std::set<std::string> BmsBundleDefaultAppTest::invalidTypeSet = {INVALID_TYPE1, INVALID_TYPE2,
+    INVALID_TYPE3, INVALID_TYPE4, INVALID_TYPE5, INVALID_TYPE6};
 
 BmsBundleDefaultAppTest::BmsBundleDefaultAppTest()
 {}
@@ -519,5 +538,279 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1400, Function | SmallTest
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_PPT);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_1500
+ * @tc.name: test IsDefaultApplication, invalid type
+ * @tc.desc: 1. call IsDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1500, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    for (const std::string& invalidType : invalidTypeSet) {
+        bool result = defaultAppProxy->IsDefaultApplication(invalidType);
+        EXPECT_FALSE(result);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_1600
+ * @tc.name: test SetDefaultApplication, invalid type
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1600, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    for (const std::string& invalidType : invalidTypeSet) {
+        bool result = SetDefaultApplicationWrap(defaultAppProxy, invalidType, ABILITY_VIDEO);
+        EXPECT_FALSE(result);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_1700
+ * @tc.name: test GetDefaultApplication, invalid type
+ * @tc.desc: 1. call GetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1700, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    BundleInfo bundleInfo;
+    for (const std::string& invalidType : invalidTypeSet) {
+        bool result = defaultAppProxy->GetDefaultApplication(USER_ID, invalidType, bundleInfo);
+        EXPECT_FALSE(result);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_1800
+ * @tc.name: test ResetDefaultApplication, invalid type
+ * @tc.desc: 1. call ResetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1800, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    for (const std::string& invalidType : invalidTypeSet) {
+        bool result = defaultAppProxy->ResetDefaultApplication(USER_ID, invalidType);
+        EXPECT_FALSE(result);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_1900
+ * @tc.name: test SetDefaultApplication, invalid userId
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1900, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_VIDEO, MODULE_NAME);
+    want.SetElement(elementName);
+    bool result = defaultAppProxy->SetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2000
+ * @tc.name: test GetDefaultApplication, invalid userId
+ * @tc.desc: 1. call GetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2000, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    BundleInfo bundleInfo;
+    bool result = defaultAppProxy->GetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2100
+ * @tc.name: test ResetDefaultApplication, invalid userId
+ * @tc.desc: 1. call ResetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2100, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = defaultAppProxy->ResetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2200
+ * @tc.name: test SetDefaultApplication, lack bundleName
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2200, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    Want want;
+    ElementName elementName("", "", ABILITY_VIDEO, MODULE_NAME);
+    want.SetElement(elementName);
+    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2300
+ * @tc.name: test SetDefaultApplication, lack moduleName
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2300, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_VIDEO, "");
+    want.SetElement(elementName);
+    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2400
+ * @tc.name: test SetDefaultApplication, lack abilityName
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2400, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2500
+ * @tc.name: test SetDefaultApplication, error browser
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2500, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_BROWSER, ABILITY_BROWSER_ERROR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2600
+ * @tc.name: test SetDefaultApplication, error video
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2600, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO_ERROR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2700
+ * @tc.name: test SetDefaultApplication, error image
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2700, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_IMAGE, ABILITY_IMAGE_ERROR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2800
+ * @tc.name: test SetDefaultApplication, error audio
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2800, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_AUDIO, ABILITY_AUDIO_ERROR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_2900
+ * @tc.name: test SetDefaultApplication, error pdf
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2900, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PDF, ABILITY_PDF_ERROR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3000
+ * @tc.name: test SetDefaultApplication, error word
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3000, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_WORD, ABILITY_WORD_ERROR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3100
+ * @tc.name: test SetDefaultApplication, error excel
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3100, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EXCEL, ABILITY_EXCEL_ERROR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3200
+ * @tc.name: test SetDefaultApplication, error ppt
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3200, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PPT, ABILITY_PPT_ERROR);
+    EXPECT_FALSE(result);
 }
 } // OHOS
