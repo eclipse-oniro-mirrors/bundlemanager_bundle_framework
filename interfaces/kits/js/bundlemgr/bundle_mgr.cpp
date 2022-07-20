@@ -5913,6 +5913,10 @@ static std::shared_ptr<Media::PixelMap> InnerGetAbilityIcon(
     }
     BundleGraphicsClient client;
     if (hasModuleName) {
+        if (moduleName.empty()) {
+            APP_LOGE("moduleName is invalid param");
+            return nullptr;
+        }
         return client.GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
     }
     return client.GetAbilityPixelMapIcon(bundleName, "", abilityName);
