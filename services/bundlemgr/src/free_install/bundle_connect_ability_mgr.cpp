@@ -32,6 +32,7 @@ const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string FREE_INSTLL_CALLING_APP_ID = "freeInstallCallingAppId";
 const std::string FREE_INSTLL_CALLING_BUNDLENAMES = "freeInstallCallingBundleNames";
+const std::string FREE_INSTALL_CALLINGUID = "freeInstallCallingUid";
 const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
@@ -148,9 +149,8 @@ bool BundleConnectAbilityMgr::UpgradeInstall(const TargetAbilityInfo &targetAbil
     return true;
 }
 
-bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag,
-    const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-    int32_t userId, const FreeInstallParams &freeInstallParams)
+bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const TargetAbilityInfo &targetAbilityInfo,
+    const Want &want, int32_t userId, const FreeInstallParams &freeInstallParams)
 {
     APP_LOGI("SendRequestToServiceCenter");
     Want serviceCenterWant;
@@ -158,8 +158,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag,
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         APP_LOGE("Fail to connect ServiceCenter");
-        SendCallBack(FreeInstallErrorCode::CONNECT_ERROR, want,
-            userId, targetAbilityInfo.targetInfo.transactId);
+        SendCallBack(FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return false;
     } else {
@@ -244,7 +243,11 @@ void BundleConnectAbilityMgr::SendCallBack(
     APP_LOGI("SendCallBack");
     sptr<IRemoteObject> amsCallBack = GetAbilityManagerServiceCallBack(transactId);
 
+    mapMutex_.lock();
     freeInstallParamsMap_.erase(transactId);
+    APP_LOGI("erase map size = %{public}zu, transactId = %{public}s",
+        freeInstallParamsMap_.size(), transactId.c_str());
+    mapMutex_.unlock();
     if (freeInstallParamsMap_.size() == 0) {
         if (connectState_ == ServiceCenterConnectState::CONNECTED) {
             APP_LOGI("Disconnect Ability.");
@@ -284,6 +287,11 @@ void BundleConnectAbilityMgr::SendCallBack(
 
 void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const FreeInstallParams &freeInstallParams)
 {
+    if (freeInstallParams.callback == nullptr) {
+        APP_LOGE("freeInstallParams.callback is null");
+        return;
+    }
+
     MessageParcel data;
     if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
         APP_LOGE("Write interface token failed");
@@ -311,11 +319,13 @@ void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const 
 void BundleConnectAbilityMgr::DeathRecipientSendCallback()
 {
     APP_LOGI("DeathRecipientSendCallback start");
-    APP_LOGD("freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
+    mapMutex_.lock();
+    APP_LOGI("freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
     for (auto &it : freeInstallParamsMap_) {
         SendCallBack(it.first, it.second);
     }
     freeInstallParamsMap_.clear();
+    mapMutex_.unlock();
 
     connectState_ = ServiceCenterConnectState::DISCONNECTED;
     serviceCenterRemoteObject_ = nullptr;
@@ -334,7 +344,9 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     }
     APP_LOGI("OnServiceCenterCall, retCode = %{public}d", installResult.result.retCode);
     FreeInstallParams freeInstallParams;
+    mapMutex_.lock();
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
+    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
@@ -361,7 +373,9 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 {
     APP_LOGI("BundleConnectAbilityMgr::OutTimeMonitor");
     FreeInstallParams freeInstallParams;
+    mapMutex_.lock();
     auto node = freeInstallParamsMap_.find(transactId);
+    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
@@ -417,7 +431,11 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return;
     }
+    mapMutex_.lock();
     auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, freeInstallParams);
+    APP_LOGI("emplace map size = %{public}zu, transactId = %{public}s",
+        freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId.c_str());
+    mapMutex_.unlock();
     if (!emplaceResult.second) {
         APP_LOGE("freeInstallParamsMap emplace error");
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
@@ -435,7 +453,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
 
 bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGI("BundleConnectAbilityMgr::SendRequest to fa service manager");
+    APP_LOGI("BundleConnectAbilityMgr::SendRequest to service center");
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         APP_LOGE("failed to get remote object");
@@ -447,7 +465,6 @@ bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, Mes
         APP_LOGE("failed to send request code:%{public}d", code);
         return false;
     }
-    APP_LOGI("send request code:%{public}d success", code);
     return true;
 }
 
@@ -455,16 +472,18 @@ sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(st
 {
     APP_LOGI("GetAbilityManagerServiceCallBack");
     FreeInstallParams freeInstallParams;
+    mapMutex_.lock();
     auto node = freeInstallParamsMap_.find(transactId);
+    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
-        APP_LOGE("Can not find node in %{public}s function", __func__);
+        APP_LOGE("Can not find node transactId = %{public}s", transactId.c_str());
         return nullptr;
     }
     freeInstallParams = node->second;
     return freeInstallParams.callback;
 }
 
-void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId,
+void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId, int32_t callingUid,
     std::vector<std::string> &bundleNames, std::vector<std::string> &callingAppIds)
 {
     APP_LOGI("enter");
@@ -475,7 +494,7 @@ void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId,
         return;
     }
     std::string bundleName;
-    if (bundleDataMgr_->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName)) {
+    if (bundleDataMgr_->GetBundleNameForUid(callingUid, bundleName)) {
         bundleNames.emplace_back(bundleName);
     } else {
         APP_LOGE("GetBundleNameForUid failed");
@@ -549,7 +568,8 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     }
     callingBundleNames = want.GetStringArrayParam(FREE_INSTLL_CALLING_BUNDLENAMES);
     if (callingAppids.empty() && callingBundleNames.empty()) {
-        this->GetCallingInfo(userId, callingBundleNames, callingAppids);
+        int32_t callingUid = want.GetIntParam(FREE_INSTALL_CALLINGUID, IPCSkeleton::GetCallingUid());
+        this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
     }
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
@@ -560,6 +580,10 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
 void BundleConnectAbilityMgr::CallAbilityManager(
     int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
+    if (callBack == nullptr) {
+        APP_LOGE("callBack is nullptr");
+        return;
+    }
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
