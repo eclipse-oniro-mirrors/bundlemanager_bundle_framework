@@ -148,9 +148,8 @@ bool BundleConnectAbilityMgr::UpgradeInstall(const TargetAbilityInfo &targetAbil
     return true;
 }
 
-bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag,
-    const TargetAbilityInfo &targetAbilityInfo, const Want &want,
-    int32_t userId, const FreeInstallParams &freeInstallParams)
+bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const TargetAbilityInfo &targetAbilityInfo,
+    const Want &want, int32_t userId, const FreeInstallParams &freeInstallParams)
 {
     APP_LOGI("SendRequestToServiceCenter");
     Want serviceCenterWant;
@@ -158,8 +157,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag,
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         APP_LOGE("Fail to connect ServiceCenter");
-        SendCallBack(FreeInstallErrorCode::CONNECT_ERROR, want,
-            userId, targetAbilityInfo.targetInfo.transactId);
+        SendCallBack(FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return false;
     } else {
@@ -454,7 +452,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
 
 bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGI("BundleConnectAbilityMgr::SendRequest to fa service manager");
+    APP_LOGI("BundleConnectAbilityMgr::SendRequest to service center");
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         APP_LOGE("failed to get remote object");
@@ -466,7 +464,6 @@ bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, Mes
         APP_LOGE("failed to send request code:%{public}d", code);
         return false;
     }
-    APP_LOGI("send request code:%{public}d success", code);
     return true;
 }
 
@@ -581,6 +578,10 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
 void BundleConnectAbilityMgr::CallAbilityManager(
     int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
+    if (callBack == nullptr) {
+        APP_LOGE("callBack is nullptr");
+        return;
+    }
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
