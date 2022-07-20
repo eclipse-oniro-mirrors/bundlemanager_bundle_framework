@@ -111,8 +111,8 @@ ohos_unittest("BmsBundleUninstallerTest") {
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
-      "battery_manager_native:batterysrv_client",
-      "device_profile_core:distributed_device_profile_client",
+      "battery_manager:batterysrv_client",
+      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
