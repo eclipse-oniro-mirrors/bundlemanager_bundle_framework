@@ -180,9 +180,7 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetSandboxExtAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, &BundleMgrHost::HandleGetSandboxHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_FILE_DESCRIPTOR, &BundleMgrHost::HandleGetMediaFileDescriptor);
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     funcMap_.emplace(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, &BundleMgrHost::HandleGetQuickFixManagerProxy);
-#endif
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1821,7 +1819,6 @@ ErrCode BundleMgrHost::HandleGetSandboxHapModuleInfo(MessageParcel &data, Messag
     return ERR_OK;
 }
 
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1837,7 +1834,6 @@ ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, Messag
     }
     return ERR_OK;
 }
-#endif
 
 template<typename T>
 bool BundleMgrHost::WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply)

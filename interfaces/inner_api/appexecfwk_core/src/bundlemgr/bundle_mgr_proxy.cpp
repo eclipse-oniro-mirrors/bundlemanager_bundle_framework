@@ -29,9 +29,7 @@
 #endif
 #include "hitrace_meter.h"
 #include "json_util.h"
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_proxy.h"
-#endif
 #include "securec.h"
 
 namespace OHOS {
@@ -2705,7 +2703,6 @@ int32_t BundleMgrProxy::GetMediaFileDescriptor(const std::string &bundleName, co
     return fd;
 }
 
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2731,7 +2728,6 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
 
     return quickFixManagerProxy;
 }
-#endif
 
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
