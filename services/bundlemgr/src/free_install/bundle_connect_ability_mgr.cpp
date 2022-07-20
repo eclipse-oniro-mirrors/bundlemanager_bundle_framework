@@ -244,7 +244,10 @@ void BundleConnectAbilityMgr::SendCallBack(
     APP_LOGI("SendCallBack");
     sptr<IRemoteObject> amsCallBack = GetAbilityManagerServiceCallBack(transactId);
 
+    mapMutex_.lock();
     freeInstallParamsMap_.erase(transactId);
+    APP_LOGI("erase map size = %{public}zu, transactId = %{public}s", freeInstallParamsMap_.size(), transactId);
+    mapMutex_.unlock();
     if (freeInstallParamsMap_.size() == 0) {
         if (connectState_ == ServiceCenterConnectState::CONNECTED) {
             APP_LOGI("Disconnect Ability.");
@@ -284,6 +287,11 @@ void BundleConnectAbilityMgr::SendCallBack(
 
 void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const FreeInstallParams &freeInstallParams)
 {
+    if (freeInstallParams.callback == nullptr) {
+        APP_LOGE("freeInstallParams.callback is null");
+        return;
+    }
+
     MessageParcel data;
     if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
         APP_LOGE("Write interface token failed");
@@ -311,11 +319,13 @@ void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const 
 void BundleConnectAbilityMgr::DeathRecipientSendCallback()
 {
     APP_LOGI("DeathRecipientSendCallback start");
-    APP_LOGD("freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
+    mapMutex_.lock();
+    APP_LOGI("freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
     for (auto &it : freeInstallParamsMap_) {
         SendCallBack(it.first, it.second);
     }
     freeInstallParamsMap_.clear();
+    mapMutex_.unlock();
 
     connectState_ = ServiceCenterConnectState::DISCONNECTED;
     serviceCenterRemoteObject_ = nullptr;
@@ -334,7 +344,9 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     }
     APP_LOGI("OnServiceCenterCall, retCode = %{public}d", installResult.result.retCode);
     FreeInstallParams freeInstallParams;
+    mapMutex_.lock();
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
+    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
@@ -361,7 +373,9 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 {
     APP_LOGI("BundleConnectAbilityMgr::OutTimeMonitor");
     FreeInstallParams freeInstallParams;
+    mapMutex_.lock();
     auto node = freeInstallParamsMap_.find(transactId);
+    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
@@ -417,7 +431,11 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return;
     }
+    mapMutex_.lock();
     auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, freeInstallParams);
+    APP_LOGI("freeInstallParamsMap size = %{public}zu, transactId = %{public}s",
+        freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId);
+    mapMutex_.unlock();
     if (!emplaceResult.second) {
         APP_LOGE("freeInstallParamsMap emplace error");
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
@@ -455,7 +473,9 @@ sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(st
 {
     APP_LOGI("GetAbilityManagerServiceCallBack");
     FreeInstallParams freeInstallParams;
+    mapMutex_.lock();
     auto node = freeInstallParamsMap_.find(transactId);
+    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return nullptr;

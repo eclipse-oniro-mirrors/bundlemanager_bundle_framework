@@ -229,6 +229,7 @@ private:
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
+    std::mutex mapMutex_;
     std::mutex mutex_;
     sptr<ServiceCenterConnection> serviceCenterConnection_;
     std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
