@@ -246,7 +246,8 @@ void BundleConnectAbilityMgr::SendCallBack(
 
     mapMutex_.lock();
     freeInstallParamsMap_.erase(transactId);
-    APP_LOGI("erase map size = %{public}zu, transactId = %{public}s", freeInstallParamsMap_.size(), transactId);
+    APP_LOGI("erase map size = %{public}zu, transactId = %{public}s",
+        freeInstallParamsMap_.size(), transactId.c_str());
     mapMutex_.unlock();
     if (freeInstallParamsMap_.size() == 0) {
         if (connectState_ == ServiceCenterConnectState::CONNECTED) {
@@ -433,8 +434,8 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
     }
     mapMutex_.lock();
     auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, freeInstallParams);
-    APP_LOGI("freeInstallParamsMap size = %{public}zu, transactId = %{public}s",
-        freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId);
+    APP_LOGI("emplace map size = %{public}zu, transactId = %{public}s",
+        freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId.c_str());
     mapMutex_.unlock();
     if (!emplaceResult.second) {
         APP_LOGE("freeInstallParamsMap emplace error");
@@ -477,7 +478,7 @@ sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(st
     auto node = freeInstallParamsMap_.find(transactId);
     mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
-        APP_LOGE("Can not find node in %{public}s function", __func__);
+        APP_LOGE("Can not find node transactId = %{public}s", transactId.c_str());
         return nullptr;
     }
     freeInstallParams = node->second;
