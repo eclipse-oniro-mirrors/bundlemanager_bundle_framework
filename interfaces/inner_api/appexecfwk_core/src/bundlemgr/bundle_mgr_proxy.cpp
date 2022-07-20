@@ -29,7 +29,9 @@
 #endif
 #include "hitrace_meter.h"
 #include "json_util.h"
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_proxy.h"
+#endif
 #include "securec.h"
 
 namespace OHOS {
