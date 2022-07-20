@@ -32,6 +32,7 @@ const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string FREE_INSTLL_CALLING_APP_ID = "freeInstallCallingAppId";
 const std::string FREE_INSTLL_CALLING_BUNDLENAMES = "freeInstallCallingBundleNames";
+const std::string FREE_INSTALL_CALLINGUID = "freeInstallCallingUid";
 const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
@@ -464,7 +465,7 @@ sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(st
     return freeInstallParams.callback;
 }
 
-void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId,
+void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId, int32_t callingUid,
     std::vector<std::string> &bundleNames, std::vector<std::string> &callingAppIds)
 {
     APP_LOGI("enter");
@@ -475,7 +476,7 @@ void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId,
         return;
     }
     std::string bundleName;
-    if (bundleDataMgr_->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName)) {
+    if (bundleDataMgr_->GetBundleNameForUid(callingUid, bundleName)) {
         bundleNames.emplace_back(bundleName);
     } else {
         APP_LOGE("GetBundleNameForUid failed");
@@ -549,7 +550,8 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     }
     callingBundleNames = want.GetStringArrayParam(FREE_INSTLL_CALLING_BUNDLENAMES);
     if (callingAppids.empty() && callingBundleNames.empty()) {
-        this->GetCallingInfo(userId, callingBundleNames, callingAppids);
+        int32_t callingUid = want.GetIntParam(FREE_INSTALL_CALLINGUID, IPCSkeleton::GetCallingUid());
+        this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
     }
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
