@@ -19,9 +19,16 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const int32_t MAX_WAITING_TIME = 5;
+namespace {
+const int32_t MINIMUM_WAITTING_TIME = 5;
+} // namespace
 
-StatusReceiverImpl::StatusReceiverImpl()
+StatusReceiverImpl::StatusReceiverImpl(int32_t waittingTime) : waittingTime_(waittingTime)
+{
+    APP_LOGI("create status receiver instance");
+}
+
+StatusReceiverImpl::StatusReceiverImpl() : waittingTime_(MINIMUM_WAITTING_TIME)
 {
     APP_LOGI("create status receiver instance");
 }
@@ -45,7 +52,7 @@ void StatusReceiverImpl::OnStatusNotify(const int progress)
 int32_t StatusReceiverImpl::GetResultCode() const
 {
     auto future = resultMsgSignal_.get_future();
-    if (future.wait_for(std::chrono::seconds(MAX_WAITING_TIME)) == std::future_status::ready) {
+    if (future.wait_for(std::chrono::seconds(waittingTime_)) == std::future_status::ready) {
         int32_t resultCode = future.get();
         return resultCode;
     }
