@@ -86,8 +86,13 @@ bool DistributedDataStorage::SaveStorageDistributeInfo(const std::string &bundle
         return false;
     }
     BundleInfo bundleInfo;
-    bool ret = dataMgr->GetBundleInfo(
-        bundleName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, currentUserId);
+    int32_t flags = BundleFlag::GET_BUNDLE_WITH_ABILITIES |
+                    ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE |
+                    AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE;
+    bool ret = dataMgr->GetBundleInfo(bundleName,
+                                      flags,
+                                      bundleInfo,
+                                      currentUserId);
     if (!ret) {
         APP_LOGW("GetBundleInfo:%{public}s  userid:%{public}d failed", bundleName.c_str(), currentUserId);
         return false;
@@ -315,19 +320,29 @@ DistributedBundleInfo DistributedDataStorage::ConvertToDistributedBundleInfo(con
     distributedBundleInfo.minCompatibleVersion = bundleInfo.minCompatibleVersionCode;
     distributedBundleInfo.targetVersionCode = bundleInfo.targetVersion;
     distributedBundleInfo.appId = bundleInfo.appId;
-    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
-        DistributedModuleInfo distributedModuleInfo;
-        distributedModuleInfo.moduleName = hapModuleInfo.moduleName;
-        for (const auto &abilityInfo : hapModuleInfo.abilityInfos) {
-            DistributedAbilityInfo distributedAbilityInfo;
-            distributedAbilityInfo.abilityName = abilityInfo.name;
-            distributedAbilityInfo.permissions = abilityInfo.permissions;
-            distributedAbilityInfo.type = abilityInfo.type;
-            distributedAbilityInfo.enabled = abilityInfo.enabled;
-            distributedModuleInfo.abilities.emplace_back(distributedAbilityInfo);
+    std::map<std::string, std::vector<DistributedAbilityInfo>> moduleAbilityInfos;
+    for (const auto &abilityInfo : bundleInfo.abilityInfos) {
+        DistributedAbilityInfo distributedAbilityInfo;
+        distributedAbilityInfo.abilityName = abilityInfo.name;
+        distributedAbilityInfo.permissions = abilityInfo.permissions;
+        distributedAbilityInfo.type = abilityInfo.type;
+        distributedAbilityInfo.enabled = abilityInfo.enabled;
+        auto infoItem = moduleAbilityInfos.find(abilityInfo.moduleName);
+        if (infoItem == moduleAbilityInfos.end()) {
+            std::vector<DistributedAbilityInfo> distributedAbilityInfos;
+            distributedAbilityInfos.emplace_back(distributedAbilityInfo);
+            moduleAbilityInfos.emplace(abilityInfo.moduleName, distributedAbilityInfos);
+        } else {
+            moduleAbilityInfos[abilityInfo.moduleName].emplace_back(distributedAbilityInfo);
         }
+    }
+    for (auto& moduleAbilityInfo : moduleAbilityInfos) {
+        DistributedModuleInfo distributedModuleInfo;
+        distributedModuleInfo.moduleName = moduleAbilityInfo.first;
+        distributedModuleInfo.abilities = moduleAbilityInfo.second;
         distributedBundleInfo.moduleInfos.emplace_back(distributedModuleInfo);
     }
+    distributedBundleInfo.enabled = bundleInfo.applicationInfo.enabled;
     return distributedBundleInfo;
 }
 
