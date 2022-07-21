@@ -29,7 +29,7 @@ ohos_benchmarktest("BenchmarkTestForModuleInfo") {
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
-    "utils_base:utils",
+    "c_utils:utils",
   ]
 }
 

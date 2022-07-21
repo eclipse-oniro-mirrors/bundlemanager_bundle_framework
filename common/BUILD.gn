@@ -37,12 +37,12 @@ ohos_shared_library("libappexecfwk_common") {
 
   public_configs = [
     ":appexecfwk_common_config",
-    "//utils/native/base:utils_config",
+    "//commonlibrary/c_utils/base:utils_config",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "utils_base:utils",
   ]
 
   subsystem_name = "bundlemanager"

@@ -30,15 +30,15 @@ ohos_unittest("CommonPerfProfileTest") {
     "${common_path}:appexecfwk_common_config",
     "${common_path}/test:common_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//utils/native/base:utils_config",
+    "//commonlibrary/c_utils/base:utils_config",
   ]
 
-  deps = [
-    "//third_party/googletest:gtest_main",
-    "//utils/native/base:utils",
-  ]
+  deps = [ "//third_party/googletest:gtest_main" ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
 }
 
 group("unittest") {

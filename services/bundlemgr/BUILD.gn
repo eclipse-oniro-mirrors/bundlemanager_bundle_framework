@@ -67,8 +67,8 @@ ohos_source_set("parser_common") {
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "utils_base:utils",
   ]
 
   part_name = "bundle_framework"
@@ -80,8 +80,8 @@ ohos_source_set("rpcid_decode") {
   sources = [ "src/rpcid_decode/syscap_tool.c" ]
 
   external_deps = [
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "utils_base:utils",
   ]
 
   part_name = "bundle_framework"
@@ -117,10 +117,10 @@ ohos_source_set("bundle_parser") {
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "utils_base:utils",
   ]
 
   part_name = "bundle_framework"

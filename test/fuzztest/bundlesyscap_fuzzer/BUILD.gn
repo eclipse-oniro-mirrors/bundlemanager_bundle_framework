@@ -35,7 +35,7 @@ ohos_fuzztest("BundleSysCapFuzzTest") {
   deps = [ "${common_path}:libappexecfwk_common" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
     "init:libbegetutil",
-    "utils_base:utils",
   ]
 }

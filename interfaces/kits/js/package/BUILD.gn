@@ -35,11 +35,11 @@ ohos_shared_library("package") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
 
   relative_install_dir = "module"

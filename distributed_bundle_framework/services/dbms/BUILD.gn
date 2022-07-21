@@ -51,6 +51,7 @@ ohos_shared_library("libdbms") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "i18n:intl_util",
     "ipc:ipc_core",
@@ -58,7 +59,6 @@ ohos_shared_library("libdbms") {
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
 
   if (hisysevent_enable) {
