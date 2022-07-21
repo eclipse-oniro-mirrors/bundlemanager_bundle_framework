@@ -99,7 +99,7 @@ AppqfInfo *AppqfInfo::Unmarshalling(Parcel &parcel)
 {
     AppqfInfo *info = new (std::nothrow) AppqfInfo();
     if (info && !info->ReadFromParcel(parcel)) {
-        APP_LOGW("read from parcel failed");
+        APP_LOGE("read from parcel failed");
         delete info;
         info = nullptr;
     }
