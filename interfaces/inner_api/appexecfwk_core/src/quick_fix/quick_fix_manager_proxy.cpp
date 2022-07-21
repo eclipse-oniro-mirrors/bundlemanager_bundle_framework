@@ -24,12 +24,12 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixManagerProxy::QuickFixManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IQuickFixManager>(object)
 {
-    APP_LOGD("create QuickFixManagerProxy.");
+    APP_LOGI("create QuickFixManagerProxy.");
 }
 
 QuickFixManagerProxy::~QuickFixManagerProxy()
 {
-    APP_LOGD("destroy QuickFixManagerProxy.");
+    APP_LOGI("destroy QuickFixManagerProxy.");
 }
 
 bool QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
@@ -38,7 +38,7 @@ bool QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundle
     APP_LOGI("begin to call DeployQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (bundleFilePaths.empty() || !statusCallback) {
+    if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
         APP_LOGE("DeployQuickFix failed due to params error.");
         return false;
     }
@@ -72,7 +72,7 @@ bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName,
     APP_LOGI("begin to call SwitchQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (bundleName.empty() || !statusCallback) {
+    if (bundleName.empty() || (statusCallback == nullptr)) {
         APP_LOGE("SwitchQuickFix failed due to params error.");
         return false;
     }
@@ -106,7 +106,7 @@ bool QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
     APP_LOGI("begin to call DeleteQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (bundleName.empty() || !statusCallback) {
+    if (bundleName.empty() || (statusCallback == nullptr)) {
         APP_LOGE("DeleteQuickFix failed due to params error.");
         return false;
     }

@@ -24,12 +24,12 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixManagerHost::QuickFixManagerHost()
 {
-    APP_LOGD("create QuickFixManagerHost.");
+    APP_LOGI("create QuickFixManagerHost.");
 }
 
 QuickFixManagerHost::~QuickFixManagerHost()
 {
-    APP_LOGD("destroy QuickFixManagerHost.");
+    APP_LOGI("destroy QuickFixManagerHost.");
 }
 
 int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,

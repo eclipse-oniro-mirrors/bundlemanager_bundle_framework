@@ -24,12 +24,12 @@ namespace AppExecFwk {
 QuickFixStatusCallbackProxy::QuickFixStatusCallbackProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IQuickFixStatusCallback>(object)
 {
-    APP_LOGD("create QuickFixStatusCallbackProxy.");
+    APP_LOGI("create QuickFixStatusCallbackProxy.");
 }
 
 QuickFixStatusCallbackProxy::~QuickFixStatusCallbackProxy()
 {
-    APP_LOGD("destroy QuickFixStatusCallbackProxy.");
+    APP_LOGI("destroy QuickFixStatusCallbackProxy.");
 }
 } // AppExecFwk
 } // OHOS

@@ -23,18 +23,18 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixStatusCallbackHost::QuickFixStatusCallbackHost()
 {
-    APP_LOGD("create QuickFixStatusCallbackHost.");
+    APP_LOGI("create QuickFixStatusCallbackHost.");
 }
 
 QuickFixStatusCallbackHost::~QuickFixStatusCallbackHost()
 {
-    APP_LOGD("destroy QuickFixStatusCallbackHost.");
+    APP_LOGI("destroy QuickFixStatusCallbackHost.");
 }
 
 int QuickFixStatusCallbackHost::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    APP_LOGD("QuickFixStatusCallbackHost onReceived message, the message code is %{public}u", code);
+    APP_LOGI("QuickFixStatusCallbackHost onReceived message, the message code is %{public}u", code);
     std::u16string descripter = QuickFixStatusCallbackHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {

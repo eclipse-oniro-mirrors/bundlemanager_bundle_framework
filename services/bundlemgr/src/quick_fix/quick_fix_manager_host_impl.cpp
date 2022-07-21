@@ -22,21 +22,21 @@ namespace AppExecFwk {
 bool QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    APP_LOGD("QuickFixManagerHostImpl::DeployQuickFix start");
+    APP_LOGI("QuickFixManagerHostImpl::DeployQuickFix start");
     return true;
 }
 
 bool QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    APP_LOGD("QuickFixManagerHostImpl::SwitchQuickFix start");
+    APP_LOGI("QuickFixManagerHostImpl::SwitchQuickFix start");
     return true;
 }
 
 bool QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    APP_LOGD("QuickFixManagerHostImpl::DeleteQuickFix start");
+    APP_LOGI("QuickFixManagerHostImpl::DeleteQuickFix start");
     return true;
 }
 }
