@@ -87,7 +87,7 @@ HqfInfo *HqfInfo::Unmarshalling(Parcel &parcel)
 {
     HqfInfo *info = new (std::nothrow) HqfInfo();
     if (info && !info->ReadFromParcel(parcel)) {
-        APP_LOGW("read from parcel failed");
+        APP_LOGE("read from parcel failed");
         delete info;
         info = nullptr;
     }
