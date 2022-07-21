@@ -41,10 +41,8 @@ const int32_t INDEX_OFFSET = 2;
 const int32_t MAX_WAITING_TIME = 3000;
 const int32_t DEVICE_UDID_LENGTH = 65;
 const int32_t MAX_ARGUEMENTS_NUMBER = 3;
-const int32_t MINIMUM_WAITTING_TIME = 5;
-const int32_t MAXIMUM_WAITTING_TIME = 600;
 
-const std::string SHORT_OPTIONS = "hp:rn:m:a:cduw:";
+const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:";
 const struct option LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-path", required_argument, nullptr, 'p'},
@@ -55,9 +53,7 @@ const struct option LONG_OPTIONS[] = {
     {"bundle-info", no_argument, nullptr, 'i'},
     {"cache", no_argument, nullptr, 'c'},
     {"data", no_argument, nullptr, 'd'},
-    {"is-removable", required_argument, nullptr, 'i'},
     {"user-id", required_argument, nullptr, 'u'},
-    {"waitting-time", required_argument, nullptr, 'w'},
     {"keep-data", no_argument, nullptr, 'k'},
     {nullptr, 0, nullptr, 0},
 };
@@ -139,8 +135,6 @@ ErrCode BundleManagerShellCommand::CreateCommandMap()
         {"enable", std::bind(&BundleManagerShellCommand::RunAsEnableCommand, this)},
         {"disable", std::bind(&BundleManagerShellCommand::RunAsDisableCommand, this)},
         {"get", std::bind(&BundleManagerShellCommand::RunAsGetCommand, this)},
-        {"getrm", std::bind(&BundleManagerShellCommand::RunAsGetRmCommand, this)},
-        {"setrm", std::bind(&BundleManagerShellCommand::RunAsSetRmCommand, this)},
     };
 
     return OHOS::ERR_OK;
@@ -189,7 +183,6 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
     std::vector<std::string> bundlePath;
     int index = 0;
     int32_t userId = Constants::ALL_USERID;
-    int32_t waittingTime = MINIMUM_WAITTING_TIME;
     while (true) {
         counter++;
         option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
@@ -225,14 +218,6 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
                     // 'bm install -u' with no argument: bm install -u
                     // 'bm install --user-id' with no argument: bm install --user-id
                     APP_LOGD("'bm install -u' with no argument.");
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                case 'w': {
-                    // 'bm install -w' with no argument: bm install -w
-                    // 'bm install --waitting-time' with no argument: bm install --waitting-time
-                    APP_LOGD("'bm install -w' with no argument.");
                     resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
                     result = OHOS::ERR_INVALID_VALUE;
                     break;
@@ -289,16 +274,6 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
                 }
                 break;
             }
-            case 'w': {
-                APP_LOGD("'bm install %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
-                if (!OHOS::StrToInt(optarg, waittingTime) || waittingTime < MINIMUM_WAITTING_TIME ||
-                    waittingTime > MAXIMUM_WAITTING_TIME) {
-                    APP_LOGE("bm install with error waittingTime %{private}s", optarg);
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    return OHOS::ERR_INVALID_VALUE;
-                }
-                break;
-            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -309,8 +284,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
     for (; index < argc_ && index >= INDEX_OFFSET; ++index) {
         if (argList_[index - INDEX_OFFSET] == "-r" || argList_[index - INDEX_OFFSET] == "--replace" ||
             argList_[index - INDEX_OFFSET] == "-p" || argList_[index - INDEX_OFFSET] == "--bundle-path" ||
-            argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id" ||
-            argList_[index - INDEX_OFFSET] == "-w" || argList_[index - INDEX_OFFSET] == "--waitting-time") {
+            argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id") {
             break;
         }
         if (GetBundlePath(argList_[index - INDEX_OFFSET], bundlePath) != OHOS::ERR_OK) {
@@ -340,7 +314,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
         InstallParam installParam;
         installParam.installFlag = installFlag;
         installParam.userId = userId;
-        int32_t installResult = InstallOperation(bundlePath, installParam, waittingTime);
+        int32_t installResult = InstallOperation(bundlePath, installParam);
         if (installResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_INSTALL_BUNDLE_OK + "\n";
         } else {
@@ -359,8 +333,7 @@ ErrCode BundleManagerShellCommand::GetBundlePath(const std::string& param,
         return OHOS::ERR_INVALID_VALUE;
     }
     if (param == "-r" || param == "--replace" || param == "-p" ||
-        param == "--bundle-path" || param == "-u" || param == "--user-id" ||
-        param == "-w" || param == "--waitting-time") {
+        param == "--bundle-path" || param == "-u" || param == "--user-id") {
         return OHOS::ERR_INVALID_VALUE;
     }
     bundlePaths.emplace_back(param);
@@ -1262,295 +1235,6 @@ ErrCode BundleManagerShellCommand::RunAsGetCommand()
     return result;
 }
 
-ErrCode BundleManagerShellCommand::RunAsSetRmCommand()
-{
-    int result = OHOS::ERR_OK;
-    int option = -1;
-    int counter = 0;
-    int isRemovable = 0;
-    bool enable = false;
-    bool setRemovable = false;
-    std::string bundleName = "";
-    std::string moduleName = "";
-    APP_LOGD("RunAsSetCommand is start");
-    while (true) {
-        counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
-        if (optind < 0 || optind > argc_) {
-            return OHOS::ERR_INVALID_VALUE;
-        }
-        APP_LOGD("option: %{public}c, optopt: %{public}d, optind: %{public}d, argv_[optind - 1]:%{public}s", option,
-            optopt, optind, argv_[optind - 1]);
-
-        if (option == -1) {
-            if (counter == 1) {
-                // When scanning the first argument
-                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
-                    // 'bm setrmrm' with no option: bm setrm
-                    // 'bm setrm' with a wrong argument: bm setrm xxx
-                    APP_LOGD("'bm setrm' with no option.");
-                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                }
-            }
-            break;
-        }
-
-        if (option == '?') {
-            switch (optopt) {
-                case 'i': {
-                    // 'bm setrm -i' with no argument: bm setrm -i
-                    // 'bm setrm --is-removable' with no argument: bm setrm --is-removable
-                    APP_LOGD("'bm setrm -i' with no argument.");
-                    resultReceiver_.append("error: -i option ");
-                    resultReceiver_.append("requires a value.\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                case 'm': {
-                    // 'bm setrm -m' with no argument: bm setrm -m
-                    // 'bm setrm --module-name' with no argument: bm setrm --module-name
-                    APP_LOGD("'bm setrm -m' with no argument.");
-                    resultReceiver_.append("error: -m option ");
-                    resultReceiver_.append("requires a value.\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                case 'n': {
-                    // 'bm setrm -n' with no argument: bm setrm -n
-                    // 'bm setrm --bundle-name' with no argument: bm setrm --bundle-name
-                    APP_LOGD("'bm setrm -n' with no argument.");
-                    resultReceiver_.append("error: -n option ");
-                    resultReceiver_.append("requires a value.\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                default: {
-                    // 'bm setrm' with an unknown option: bm setrm -x
-                    // 'bm setrm' with an unknown option: bm setrm -xxx
-                    std::string unknownOption = "";
-                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
-                    APP_LOGD("'bm setrm' with an unknown option.");
-                    resultReceiver_.append(unknownOptionMsg);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-            }
-            break;
-        }
-
-        switch (option) {
-            case 'h': {
-                // 'bm setrm -h'
-                // 'bm setrm --help'
-                APP_LOGD("'bm setrm %{public}s'", argv_[optind - 1]);
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-            case 'n': {
-                // 'bm setrm -n <bundle-name>'
-                // 'bm setrm --bundle-name <bundle-name>'
-                bundleName = optarg;
-                APP_LOGD("'bm setrm -n %{public}s'", argv_[optind - 1]);
-                break;
-            }
-            case 'i': {
-                // 'bm setrm -i <1/0>'
-                // 'bm setrm --is-removable <1/0>'
-                isRemovable = std::stoi(optarg);
-                APP_LOGD("'bm setrm -i isRemovable:%{public}d, %{public}s'", isRemovable, argv_[optind - 1]);
-                if (isRemovable == 1) {
-                    enable = true;
-                } else if (isRemovable == 0) {
-                    enable = false;
-                }
-                setRemovable = true;
-                break;
-            }
-            case 'm': {
-                // 'bm setrm -m <module-name>'
-                // 'bm setrm --module-name <module-name>'
-                moduleName = optarg;
-                APP_LOGD("'bm setrm -m module-name:%{public}s, %{public}s'", moduleName.c_str(), argv_[optind - 1]);
-                break;
-            }
-            default: {
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-        }
-    }
-
-    if (result == OHOS::ERR_OK) {
-        if (resultReceiver_ == "" && (bundleName.size() == 0 || moduleName.size() == 0)) {
-            // 'bm setrm ...' with no  option
-            APP_LOGD("'bm setrm' with no option.");
-            resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION + "\n");
-            result = OHOS::ERR_INVALID_VALUE;
-        }
-    }
-
-    if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_SET);
-    } else {
-        bool setResult = false;
-        if (setRemovable) {
-            setResult = SetIsRemovableOperation(bundleName, moduleName, enable);
-            APP_LOGD("'bm setrm' isRemovable is %{public}d", isRemovable);
-        }
-
-        if (setResult == true) {
-            resultReceiver_ = STRING_SET_REMOVABLE_OK + "\n";
-        } else {
-            resultReceiver_ = STRING_SET_REMOVABLE_NG + "\n";
-        }
-    }
-    return result;
-}
-
-ErrCode BundleManagerShellCommand::RunAsGetRmCommand()
-{
-    int result = OHOS::ERR_OK;
-    int option = -1;
-    int counter = 0;
-    std::string bundleName = "";
-    std::string moduleName = "";
-    std::string getResults = "";
-    APP_LOGD("RunAsGetRmCommand is start");
-    while (true) {
-        counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
-        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
-        if (optind < 0 || optind > argc_) {
-            return OHOS::ERR_INVALID_VALUE;
-        }
-
-        if (option == -1) {
-            if (counter == 1) {
-                // When scanning the first argument
-                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
-                    // 'bm getrm' with no option: bm getrm
-                    // 'bm getrm' with a wrong argument: bm getrm xxx
-                    APP_LOGD("'bm getrm' with no option.");
-                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                }
-            }
-            break;
-        }
-
-        if (option == '?') {
-            switch (optopt) {
-                case 'n': {
-                    // 'bm getrm -n' with no argument: bm getrm -n
-                    // 'bm getrm --bundle-name' with no argument: bm getrm --bundle-name
-                    APP_LOGD("'bm getrm -n' with no argument.");
-                    resultReceiver_.append("error: option ");
-                    resultReceiver_.append("requires a value.\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                case 'm': {
-                    // 'bm getrm -m' with no argument: bm getrm -m
-                    // 'bm getrm --module-name' with no argument: bm getrm --module-name
-                    APP_LOGD("'bm getrm -m' with no argument.");
-                    resultReceiver_.append("error: option ");
-                    resultReceiver_.append("requires a value.\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                default: {
-                    // 'bm getrm' with an unknown option: bm getrm -x
-                    // 'bm getrm' with an unknown option: bm getrm -xxx
-                    std::string unknownOption = "";
-                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
-                    APP_LOGD("'bm getrm' with an unknown option.");
-                    resultReceiver_.append(unknownOptionMsg);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-            }
-            break;
-        }
-
-        switch (option) {
-            case 'h': {
-                // 'bm getrm -h'
-                // 'bm getrm --help'
-                APP_LOGD("'bm getrm %{public}s'", argv_[optind - 1]);
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-            case 'n': {
-                // 'bm getrm -n <bundle-name>'
-                // 'bm getrm --bundle-name <bundle-name>'
-                bundleName = optarg;
-                break;
-            }
-            case 'm': {
-                // 'bm getrm -m <module-name>'
-                // 'bm getrm --module-name <module-name>'
-                moduleName = optarg;
-                APP_LOGD("'bm getrm -m module-name:%{public}s, %{public}s'", moduleName.c_str(), argv_[optind - 1]);
-                break;
-            }
-            default: {
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-        }
-    }
-
-    if (result == OHOS::ERR_OK) {
-        if (resultReceiver_ == "" && (bundleName.size() == 0 || moduleName.size() == 0)) {
-            // 'bm getrm ...' with no  option
-            APP_LOGD("'bm getrm' with no option.");
-            resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION + "\n");
-            result = OHOS::ERR_INVALID_VALUE;
-        }
-    }
-
-    if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_GET_REMOVABLE);
-        return result;
-    } else {
-        std::string results = "";
-        GetIsRemovableOperation(bundleName, moduleName, results);
-        if (results.empty()) {
-            resultReceiver_.append(STRING_GET_REMOVABLE_NG);
-            return result;
-        }
-        resultReceiver_.append(results);
-        return result;
-    }
-}
-
-bool BundleManagerShellCommand::SetIsRemovableOperation(
-    const std::string &bundleName, const std::string &moduleName, bool enable) const
-{
-    APP_LOGD("bundleName: %{public}s, moduleName:%{public}s, enable:%{public}d", bundleName.c_str(), moduleName.c_str(),
-        enable);
-    auto ret = bundleMgrProxy_->SetModuleRemovable(bundleName, moduleName, enable);
-    APP_LOGD("SetModuleRemovable end bundleName: %{public}d", ret);
-    if (!ret) {
-        APP_LOGE("SetIsRemovableOperation failed");
-        return false;
-    }
-    return ret;
-}
-
-bool BundleManagerShellCommand::GetIsRemovableOperation(
-    const std::string &bundleName, const std::string &moduleName, std::string &result) const
-{
-    APP_LOGD("bundleName: %{public}s, moduleName:%{public}s", bundleName.c_str(), moduleName.c_str());
-    auto ret = bundleMgrProxy_->IsModuleRemovable(bundleName, moduleName);
-    APP_LOGD("IsModuleRemovable end bundleName: %{public}s, ret:%{public}d", bundleName.c_str(), ret);
-    result.append("isRemovable: ");
-    result.append(std::to_string(ret));
-    result.append("\n");
-    return ret;
-}
-
 std::string BundleManagerShellCommand::GetUdid() const
 {
     char innerUdid[DEVICE_UDID_LENGTH] = { 0 };
@@ -1647,7 +1331,7 @@ std::string BundleManagerShellCommand::DumpDependentModuleNames(
 }
 
 int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::string> &bundlePaths,
-    InstallParam &installParam, int32_t waittingTime) const
+    InstallParam &installParam) const
 {
     std::vector<std::string> realPathVec;
     for (auto &bundlePath : bundlePaths) {
@@ -1678,7 +1362,7 @@ int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::strin
             pathVec.emplace_back(path);
         }
     }
-    sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl(waittingTime));
+    sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     if (statusReceiver == nullptr) {
         APP_LOGE("statusReceiver is null");
         return IStatusReceiver::ERR_UNKNOWN;
