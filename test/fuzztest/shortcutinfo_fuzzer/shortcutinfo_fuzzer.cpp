@@ -25,17 +25,23 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
     bool fuzzelShortcutInfo(const uint8_t* data, size_t size)
     {
-        if (size <= 4) {
+        if (size <= 0) {
             return false;
         }
         Parcel dataMessageParcel;
-        ShortcutInfo shortcutInfo;
-        shortcutInfo.bundleName = reinterpret_cast<const char*>(data);
-        if (!shortcutInfo.Marshalling(dataMessageParcel)) {
+        ShortcutInfo oldShortcutInfo;
+        oldShortcutInfo.bundleName = reinterpret_cast<const char*>(data);
+        if (!oldShortcutInfo.Marshalling(dataMessageParcel)) {
             return false;
-        };
-        auto shortCut = ShortcutInfo::Unmarshalling(dataMessageParcel);
-        return shortCut != nullptr;
+        }
+        ShortcutInfo *info = new (std::nothrow) ShortcutInfo();
+        if (info == nullptr) {
+            return false;
+        }
+        bool ret = info->ReadFromParcel(dataMessageParcel);
+        delete info;
+        info = nullptr;
+        return ret;
     }
 }
 
