@@ -53,16 +53,8 @@ public:
      */
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
 
-protected:
-    enum class SandboxInstallType : uint32_t {
-        INSTALL = 0,
-        UNINSTALL,
-    };
-
 private:
     ErrCode CreateSandboxDataDir(InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex) const;
-    ErrCode NotifySandboxAppStatus(const InnerBundleInfo &info, const int32_t &uid,
-        const SandboxInstallType &type) const;
     void SandboxAppRollBack(InnerBundleInfo &info, const int32_t &userId);
     bool GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
     ErrCode GetDataMgr();

@@ -614,8 +614,14 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             APP_LOGW("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
             return;
         }
-        dataMgr->NotifyBundleStatus(bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, ERR_OK,
-                                    NotifyType::BUNDLE_CACHE_CLEARED, innerBundleUserInfo.uid);
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName,
+            .resultCode = ERR_OK,
+            .type = NotifyType::BUNDLE_CACHE_CLEARED,
+            .uid = innerBundleUserInfo.uid,
+            .accessTokenId = innerBundleUserInfo.accessTokenId
+        };
+        NotifyBundleStatus(installRes);
     };
     handler_->PostTask(cleanCache);
 }
@@ -674,8 +680,14 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
         return false;
     }
-    dataMgr->NotifyBundleStatus(bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, ERR_OK,
-                                NotifyType::BUNDLE_DATA_CLEARED, innerBundleUserInfo.uid);
+    NotifyBundleEvents installRes = {
+        .bundleName = bundleName,
+        .resultCode = ERR_OK,
+        .type = NotifyType::BUNDLE_DATA_CLEARED,
+        .uid = innerBundleUserInfo.uid,
+        .accessTokenId = innerBundleUserInfo.accessTokenId
+    };
+    NotifyBundleStatus(installRes);
     return true;
 }
 
@@ -1007,12 +1019,14 @@ bool BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, boo
         return false;
     }
 
-    dataMgr->NotifyBundleStatus(bundleName,
-                                Constants::EMPTY_STRING,
-                                Constants::EMPTY_STRING,
-                                ERR_OK,
-                                NotifyType::APPLICATION_ENABLE,
-                                innerBundleUserInfo.uid);
+    NotifyBundleEvents installRes = {
+        .bundleName = bundleName,
+        .resultCode = ERR_OK,
+        .type = NotifyType::APPLICATION_ENABLE,
+        .uid = innerBundleUserInfo.uid,
+        .accessTokenId = innerBundleUserInfo.accessTokenId
+    };
+    NotifyBundleStatus(installRes);
     APP_LOGD("SetApplicationEnabled finish");
     return true;
 }
@@ -1066,12 +1080,15 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
         return false;
     }
 
-    dataMgr->NotifyBundleStatus(abilityInfo.bundleName,
-                                Constants::EMPTY_STRING,
-                                abilityInfo.name,
-                                ERR_OK,
-                                NotifyType::APPLICATION_ENABLE,
-                                innerBundleUserInfo.uid);
+    NotifyBundleEvents installRes = {
+        .bundleName = abilityInfo.bundleName,
+        .abilityName = abilityInfo.name,
+        .resultCode = ERR_OK,
+        .type = NotifyType::APPLICATION_ENABLE,
+        .uid = innerBundleUserInfo.uid,
+        .accessTokenId = innerBundleUserInfo.accessTokenId,
+    };
+    NotifyBundleStatus(installRes);
     return true;
 }
 
@@ -1648,6 +1665,16 @@ int32_t BundleMgrHostImpl::GetMediaFileDescriptor(const std::string &bundleName,
     }
     fd = dataMgr->GetMediaFileDescriptor(bundleName, moduleName, abilityName);
     return fd;
+}
+
+void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)
+{
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    if (commonEventMgr == nullptr) {
+        APP_LOGE("commonEventMgr is nullptr");
+        return;
+    }
+    commonEventMgr->NotifyBundleStatus(installRes, nullptr);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

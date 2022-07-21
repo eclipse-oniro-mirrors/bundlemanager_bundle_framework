@@ -251,6 +251,8 @@ public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
     std::shared_ptr<LauncherService> launcherService_ = std::make_shared<LauncherService>();
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
+    NotifyBundleEvents installRes_;
 };
 
 void BmsBundleKitServiceTest::SetUpTestCase()
@@ -261,6 +263,14 @@ void BmsBundleKitServiceTest::TearDownTestCase()
 
 void BmsBundleKitServiceTest::SetUp()
 {
+    installRes_ = {
+        .bundleName = HAP_FILE_PATH,
+        .modulePackage = HAP_FILE_PATH,
+        .abilityName = ABILITY_NAME_DEMO,
+        .resultCode = ERR_OK,
+        .type = NotifyType::INSTALL,
+        .uid = Constants::INVALID_UID,
+    };
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
@@ -2886,10 +2896,9 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0100, Function | SmallTes
     bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
     bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
     EXPECT_TRUE(result);
+    EXPECT_NE(commonEventMgr_, nullptr);
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
 
-    bool resultNotify = GetBundleDataMgr()->NotifyBundleStatus(
-        HAP_FILE_PATH, HAP_FILE_PATH, ABILITY_NAME_DEMO, ERR_OK, NotifyType::INSTALL, Constants::INVALID_UID);
-    EXPECT_TRUE(resultNotify);
     int32_t callbackResult = bundleStatusCallback->GetResultCode();
     EXPECT_EQ(callbackResult, ERR_OK);
 }
@@ -2906,10 +2915,9 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0200, Function | SmallTes
     bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
     bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
     EXPECT_TRUE(result);
-
-    bool resultNotify = GetBundleDataMgr()->NotifyBundleStatus(
-        "", HAP_FILE_PATH, ABILITY_NAME_DEMO, ERR_OK, NotifyType::INSTALL, Constants::INVALID_UID);
-    EXPECT_TRUE(resultNotify);
+    installRes_.bundleName = "";
+    EXPECT_NE(commonEventMgr_, nullptr);
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
 
     int32_t callbackResult = bundleStatusCallback->GetResultCode();
     EXPECT_EQ(callbackResult, ERR_TIMED_OUT);
@@ -2927,10 +2935,9 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0300, Function | SmallTes
     bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
     bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
     EXPECT_TRUE(result);
-
-    bool resultNotify = GetBundleDataMgr()->NotifyBundleStatus(
-        ERROR_HAP_FILE_PATH, HAP_FILE_PATH, ABILITY_NAME_DEMO, ERR_OK, NotifyType::INSTALL, Constants::INVALID_UID);
-    EXPECT_TRUE(resultNotify);
+    installRes_.bundleName = ERROR_HAP_FILE_PATH;
+    EXPECT_NE(commonEventMgr_, nullptr);
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
 
     int32_t callbackResult = bundleStatusCallback->GetResultCode();
     EXPECT_EQ(callbackResult, ERR_TIMED_OUT);
@@ -2956,17 +2963,15 @@ HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0100, Function | SmallTest |
     bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
     bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
     EXPECT_TRUE(result);
-
-    bool resultNotify = GetBundleDataMgr()->NotifyBundleStatus(
-        HAP_FILE_PATH, HAP_FILE_PATH, ABILITY_NAME_DEMO, ERR_OK, NotifyType::INSTALL, Constants::INVALID_UID);
-    EXPECT_TRUE(resultNotify);
+    installRes_.bundleName = HAP_FILE_PATH;
+    EXPECT_NE(commonEventMgr_, nullptr);
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
 
     int32_t callbackResult = bundleStatusCallback->GetResultCode();
     EXPECT_EQ(callbackResult, ERR_OK);
 
-    bool resultNotify1 = GetBundleDataMgr()->NotifyBundleStatus(
-        HAP_FILE_PATH1, HAP_FILE_PATH, ABILITY_NAME_DEMO, ERR_OK, NotifyType::INSTALL, Constants::INVALID_UID);
-    EXPECT_TRUE(resultNotify1);
+    installRes_.bundleName = HAP_FILE_PATH1;
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
 
     int32_t callbackResult1 = bundleStatusCallback1->GetResultCode();
     EXPECT_EQ(callbackResult1, ERR_TIMED_OUT);
@@ -2992,17 +2997,15 @@ HWTEST_F(BmsBundleKitServiceTest, UnregisterBundleStatus_0100, Function | SmallT
 
     bool result2 = GetBundleDataMgr()->UnregisterBundleStatusCallback();
     EXPECT_TRUE(result2);
-
-    bool resultNotify = GetBundleDataMgr()->NotifyBundleStatus(
-        HAP_FILE_PATH, HAP_FILE_PATH, ABILITY_NAME_DEMO, ERR_OK, NotifyType::INSTALL, Constants::INVALID_UID);
-    EXPECT_TRUE(resultNotify);
+    installRes_.bundleName = HAP_FILE_PATH;
+    EXPECT_NE(commonEventMgr_, nullptr);
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
 
     int32_t callbackResult = bundleStatusCallback->GetResultCode();
     EXPECT_EQ(callbackResult, ERR_TIMED_OUT);
 
-    bool resultNotify1 = GetBundleDataMgr()->NotifyBundleStatus(
-        HAP_FILE_PATH1, HAP_FILE_PATH, ABILITY_NAME_DEMO, ERR_OK, NotifyType::INSTALL, Constants::INVALID_UID);
-    EXPECT_TRUE(resultNotify1);
+    installRes_.bundleName = HAP_FILE_PATH1;
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
 
     int32_t callbackResult1 = bundleStatusCallback1->GetResultCode();
     EXPECT_EQ(callbackResult1, ERR_TIMED_OUT);
