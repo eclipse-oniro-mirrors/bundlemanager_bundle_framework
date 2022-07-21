@@ -68,7 +68,7 @@ const std::string STRING_SET_REMOVABLE_OK = "set removable is ok";
 const std::string STRING_SET_REMOVABLE_NG = "error: failed to set removable";
 const std::string STRING_GET_REMOVABLE_OK = "get removable is ok";
 const std::string STRING_GET_REMOVABLE_NG = "error: failed to get removable";
-const std::string STRING_REQUIRE_CORRECT_VALUE = 
+const std::string STRING_REQUIRE_CORRECT_VALUE =
     "error: option requires a correct value or\n"
     "note that the difference in expressions between short option and long option.";
 
@@ -218,7 +218,7 @@ bool BundleTestTool::SetIsRemovableOperation(
     bool enable = true;
     if (isRemovable == 0) {
         enable = false;
-    } 
+    }
     APP_LOGD("bundleName: %{public}s, moduleName:%{public}s, enable:%{public}d", bundleName.c_str(), moduleName.c_str(),
         enable);
     auto ret = bundleMgrProxy_->SetModuleRemovable(bundleName, moduleName, enable);
@@ -353,7 +353,8 @@ ErrCode BundleTestTool::RunAsSetRmCommand()
             result = !CheckRmErrorOption(option, counter, commandName)? OHOS::ERR_INVALID_VALUE : result;
             break;
         }
-        result = !CheckRmCorrectOption(option, commandName, isRemovable, setRemovable, name) ? OHOS::ERR_INVALID_VALUE : result;
+        result = !CheckRmCorrectOption(option, commandName, isRemovable, setRemovable, name)
+            ? OHOS::ERR_INVALID_VALUE : result;
         moduleName = option == 'm' ? name : moduleName;
         bundleName = option == 'n' ? name : bundleName;
     }
@@ -400,7 +401,8 @@ ErrCode BundleTestTool::RunAsGetRmCommand()
         }
         int tempIsRem = 0;
         bool tempSetRem = false;
-        result = !CheckRmCorrectOption(option, commandName, tempIsRem, tempSetRem, name) ? OHOS::ERR_INVALID_VALUE : result;
+        result = !CheckRmCorrectOption(option, commandName, tempIsRem, tempSetRem, name)
+            ? OHOS::ERR_INVALID_VALUE : result;
         moduleName = option == 'm' ? name : moduleName;
         bundleName = option == 'n' ? name : bundleName;
     }
@@ -408,7 +410,7 @@ ErrCode BundleTestTool::RunAsGetRmCommand()
     if (result == OHOS::ERR_OK) {
         if (resultReceiver_ == "" && (bundleName.size() == 0 || moduleName.size() == 0)) {
             APP_LOGD("'bundle_test_tool getrm' with no option.");
-            resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION );
+            resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
             result = OHOS::ERR_INVALID_VALUE;
         }
     }
