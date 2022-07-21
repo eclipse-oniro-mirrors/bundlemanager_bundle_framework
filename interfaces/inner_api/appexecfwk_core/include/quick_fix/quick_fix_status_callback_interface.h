@@ -22,7 +22,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class IQuickFixStatusCallback : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.QuickFixStatusCallback");
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.QuickFixStatusCallback");
 };
 } // AppExecFwk
 } // OHOS

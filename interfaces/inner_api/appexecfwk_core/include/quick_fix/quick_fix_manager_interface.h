@@ -26,7 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class IQuickFixManager : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.QuickFixManager");
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.QuickFixManager");
 
     virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
