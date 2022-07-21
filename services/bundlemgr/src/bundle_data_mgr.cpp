@@ -386,10 +386,11 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         || statusItem->second == InstallState::USER_CHANGE) {
         APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
+        bool isOldInfoHasEntry = oldInfo.HasEntry();
         oldInfo.UpdateModuleInfo(newInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
-        if (newInfo.HasEntry() || !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree()) {
+        if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppType(newInfo.GetAppType());
