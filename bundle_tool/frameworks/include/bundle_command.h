@@ -35,9 +35,7 @@ const std::string HELP_MSG = "usage: bm <command> <options>\n"
                              "  clean        clean the bundle data\n"
                              "  enable       enable the bundle\n"
                              "  disable      disable the bundle\n"
-                             "  get          obtain device udid\n"
-                             "  getrm        obtain the value of isRemovable by given bundle name and module name\n";
-                            
+                             "  get          obtain device udid\n";
 
 const std::string HELP_MSG_INSTALL =
     "usage: bm install <options>\n"
@@ -49,7 +47,10 @@ const std::string HELP_MSG_INSTALL =
     "                                                                     under which are some hap files\n"
     "  -r -p <bundle-file-path>                                   replace an existing bundle\n"
     "  -r --bundle-path <bundle-file-path>                        replace an existing bundle\n"
-    "  -u, --user-id <user-id>                                    specify a user id\n";
+    "  -u, --user-id <user-id>                                    specify a user id\n"
+    "  -w, --waitting-time <waitting-time>                        specify waitting time for installation, the minimum\n"
+    "                                                                     waitting time is 5s, the maximum waitting\n"
+    "                                                                     time is 600s\n";
 
 const std::string HELP_MSG_UNINSTALL =
     "usage: bm uninstall <options>\n"
@@ -175,7 +176,8 @@ private:
     std::string DumpDistributedBundleInfo(const std::string &deviceId, const std::string &bundleName);
     std::string DumpDependentModuleNames(const std::string &bundleName, const std::string &moduleName) const;
 
-    int32_t InstallOperation(const std::vector<std::string> &bundlePaths, InstallParam &installParam) const;
+    int32_t InstallOperation(const std::vector<std::string> &bundlePaths, InstallParam &installParam,
+        int32_t waittingTime) const;
     int32_t UninstallOperation(const std::string &bundleName, const std::string &moduleName,
                                InstallParam &installParam) const;
     std::string GetUdid() const;

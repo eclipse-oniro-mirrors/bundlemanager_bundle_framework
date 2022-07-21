@@ -41,8 +41,10 @@ const int32_t INDEX_OFFSET = 2;
 const int32_t MAX_WAITING_TIME = 3000;
 const int32_t DEVICE_UDID_LENGTH = 65;
 const int32_t MAX_ARGUEMENTS_NUMBER = 3;
+const int32_t MINIMUM_WAITTING_TIME = 5;
+const int32_t MAXIMUM_WAITTING_TIME = 600;
 
-const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:";
+const std::string SHORT_OPTIONS = "hp:rn:m:a:cduw:";
 const struct option LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-path", required_argument, nullptr, 'p'},
@@ -53,7 +55,9 @@ const struct option LONG_OPTIONS[] = {
     {"bundle-info", no_argument, nullptr, 'i'},
     {"cache", no_argument, nullptr, 'c'},
     {"data", no_argument, nullptr, 'd'},
+    {"is-removable", required_argument, nullptr, 'i'},
     {"user-id", required_argument, nullptr, 'u'},
+    {"waitting-time", required_argument, nullptr, 'w'},
     {"keep-data", no_argument, nullptr, 'k'},
     {nullptr, 0, nullptr, 0},
 };
@@ -183,6 +187,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
     std::vector<std::string> bundlePath;
     int index = 0;
     int32_t userId = Constants::ALL_USERID;
+    int32_t waittingTime = MINIMUM_WAITTING_TIME;
     while (true) {
         counter++;
         option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
@@ -218,6 +223,14 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
                     // 'bm install -u' with no argument: bm install -u
                     // 'bm install --user-id' with no argument: bm install --user-id
                     APP_LOGD("'bm install -u' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                case 'w': {
+                    // 'bm install -w' with no argument: bm install -w
+                    // 'bm install --waitting-time' with no argument: bm install --waitting-time
+                    APP_LOGD("'bm install -w' with no argument.");
                     resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
                     result = OHOS::ERR_INVALID_VALUE;
                     break;
@@ -274,6 +287,16 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
                 }
                 break;
             }
+            case 'w': {
+                APP_LOGD("'bm install %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+                if (!OHOS::StrToInt(optarg, waittingTime) || waittingTime < MINIMUM_WAITTING_TIME ||
+                    waittingTime > MAXIMUM_WAITTING_TIME) {
+                    APP_LOGE("bm install with error waittingTime %{private}s", optarg);
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    return OHOS::ERR_INVALID_VALUE;
+                }
+                break;
+            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -284,7 +307,8 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
     for (; index < argc_ && index >= INDEX_OFFSET; ++index) {
         if (argList_[index - INDEX_OFFSET] == "-r" || argList_[index - INDEX_OFFSET] == "--replace" ||
             argList_[index - INDEX_OFFSET] == "-p" || argList_[index - INDEX_OFFSET] == "--bundle-path" ||
-            argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id") {
+            argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id" ||
+            argList_[index - INDEX_OFFSET] == "-w" || argList_[index - INDEX_OFFSET] == "--waitting-time") {
             break;
         }
         if (GetBundlePath(argList_[index - INDEX_OFFSET], bundlePath) != OHOS::ERR_OK) {
@@ -314,7 +338,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
         InstallParam installParam;
         installParam.installFlag = installFlag;
         installParam.userId = userId;
-        int32_t installResult = InstallOperation(bundlePath, installParam);
+        int32_t installResult = InstallOperation(bundlePath, installParam, waittingTime);
         if (installResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_INSTALL_BUNDLE_OK + "\n";
         } else {
@@ -333,7 +357,8 @@ ErrCode BundleManagerShellCommand::GetBundlePath(const std::string& param,
         return OHOS::ERR_INVALID_VALUE;
     }
     if (param == "-r" || param == "--replace" || param == "-p" ||
-        param == "--bundle-path" || param == "-u" || param == "--user-id") {
+        param == "--bundle-path" || param == "-u" || param == "--user-id" ||
+        param == "-w" || param == "--waitting-time") {
         return OHOS::ERR_INVALID_VALUE;
     }
     bundlePaths.emplace_back(param);
@@ -1331,7 +1356,7 @@ std::string BundleManagerShellCommand::DumpDependentModuleNames(
 }
 
 int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::string> &bundlePaths,
-    InstallParam &installParam) const
+    InstallParam &installParam, int32_t waittingTime) const
 {
     std::vector<std::string> realPathVec;
     for (auto &bundlePath : bundlePaths) {
@@ -1362,7 +1387,7 @@ int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::strin
             pathVec.emplace_back(path);
         }
     }
-    sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
+    sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl(waittingTime));
     if (statusReceiver == nullptr) {
         APP_LOGE("statusReceiver is null");
         return IStatusReceiver::ERR_UNKNOWN;
