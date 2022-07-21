@@ -22,6 +22,7 @@
 #include "napi/native_node_api.h"
 
 #include "application_info.h"
+#include "bundle_death_recipient.h"
 #include "bundle_mgr_interface.h"
 #include "cleancache_callback.h"
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -313,6 +314,10 @@ struct AsyncGetProfileInfo : public AsyncWorkData {
     ProfileType type = ProfileType::UNKNOWN_PROFILE;
     bool ret = false;
     int32_t errCode = 0;
+};
+
+class BundleMgrDeathRecipient : public IRemoteObject::DeathRecipient {
+    virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
 };
 
 extern thread_local napi_ref g_classBundleInstaller;
