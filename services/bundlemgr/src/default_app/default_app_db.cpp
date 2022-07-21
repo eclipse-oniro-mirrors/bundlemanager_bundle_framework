@@ -30,7 +30,7 @@ namespace {
     constexpr int32_t TRY_TIMES = 10;
     constexpr int32_t SLEEP_INTERVAL = 100 * 1000;  // 100ms
     constexpr int32_t INITIAL_USER_ID = -1;
-    const std::string DEFAULT_APP_JSON_PATH = "/system/etc/app/default_app.json";
+    const char* DEFAULT_APP_JSON_PATH = "/system/etc/app/default_app.json";
 }
 
 DefaultAppDb::DefaultAppDb()

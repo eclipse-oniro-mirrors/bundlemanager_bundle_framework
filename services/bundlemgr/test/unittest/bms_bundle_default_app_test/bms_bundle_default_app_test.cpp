@@ -204,7 +204,7 @@ sptr<IDefaultApp> BmsBundleDefaultAppTest::GetDefaultAppProxy()
 bool BmsBundleDefaultAppTest::SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
     const std::string& abilityName) const
 {
-    Want want;
+    AAFwk::Want want;
     ElementName elementName("", BUNDLE_NAME, abilityName, MODULE_NAME);
     want.SetElement(elementName);
     return defaultAppProxy->SetDefaultApplication(USER_ID, type, want);
@@ -273,7 +273,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0300, Function | SmallTest
     EXPECT_TRUE(result);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
 
-    Want want;
+    AAFwk::Want want;
     result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
     EXPECT_TRUE(result);
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
@@ -318,7 +318,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0500, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    Want want;
+    AAFwk::Want want;
     bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
     EXPECT_TRUE(result);
     result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_FILE_TYPE_VIDEO_MP4, ABILITY_VIDEO_MP4);
@@ -370,7 +370,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0700, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    Want want;
+    AAFwk::Want want;
     bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
     EXPECT_TRUE(result);
     result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_FILE_TYPE_VIDEO_MP4, ABILITY_VIDEO_MP4);
@@ -615,7 +615,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1900, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    Want want;
+    AAFwk::Want want;
     ElementName elementName("", BUNDLE_NAME, ABILITY_VIDEO, MODULE_NAME);
     want.SetElement(elementName);
     bool result = defaultAppProxy->SetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, want);
@@ -661,7 +661,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2200, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    Want want;
+    AAFwk::Want want;
     ElementName elementName("", "", ABILITY_VIDEO, MODULE_NAME);
     want.SetElement(elementName);
     bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
@@ -678,7 +678,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2300, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    Want want;
+    AAFwk::Want want;
     ElementName elementName("", BUNDLE_NAME, ABILITY_VIDEO, "");
     want.SetElement(elementName);
     bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
@@ -695,7 +695,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2400, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    Want want;
+    AAFwk::Want want;
     ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
     want.SetElement(elementName);
     bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
