@@ -18,6 +18,9 @@
 
 #include "gmock/gmock.h"
 
+#include "iremote_stub.h"
+#include "bundle_installer_interface.h"
+
 #include "app_log_wrapper.h"
 #include "bundle_installer_host.h"
 
@@ -35,8 +38,10 @@ const std::string STRING_ABILITY_NAME = "ability";
 const std::string DEFAULT_USER_ID = "100";
 }  // namespace
 
-class MockBundleInstallerHost : public BundleInstallerHost {
+class MockBundleInstallerHost : public IRemoteStub<IBundleInstaller> {
 public:
+    MockBundleInstallerHost();
+    virtual ~MockBundleInstallerHost() override;
     bool Install(const std::string &bundleFilePath, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver);
     bool Install(const std::vector<std::string> &bundleFilePath, const InstallParam &installParam,
@@ -52,6 +57,18 @@ public:
 
     ErrCode StreamInstall(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver);
+
+    ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
+        int32_t &appIndex);
+
+    ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId);
+
+    sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver);
+
+    bool DestoryBundleStreamInstaller(uint32_t streamInstallerId);
+private:
+    DISALLOW_COPY_AND_MOVE(MockBundleInstallerHost);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
