@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace{
+namespace {
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
