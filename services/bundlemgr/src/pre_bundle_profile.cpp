@@ -27,7 +27,7 @@ const std::string INSTALL_LIST = "install_list";
 const std::string UNINSTALL_LIST = "uninstall_list";
 const std::string RECOVER_LIST = "recover_list";
 const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
-const std::string BUNDLE_DIR = "bundle_dir";
+const std::string APP_DIR = "app_dir";
 const std::string REMOVABLE = "removable";
 const std::string PRIORITY = "priority";
 const std::string BUNDLE_NAME = "bundleName";
@@ -73,7 +73,7 @@ ErrCode PreBundleProfile::TransformTo(
         int32_t parseResult = ERR_OK;
         GetValueIfFindKey<std::string>(array,
             jsonObjectEnd,
-            BUNDLE_DIR,
+            APP_DIR,
             preScanInfo.bundleDir,
             JsonType::STRING,
             true,
