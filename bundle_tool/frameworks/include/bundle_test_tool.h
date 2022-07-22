@@ -36,18 +36,17 @@ private:
     ErrCode RunAsCheckCommand();
     ErrCode CheckOperation(int userId, std::string deviceId, std::string bundleName,
         std::string moduleName, std::string abilityName);
-    ErrCode RunAsSetRmCommand();
-    ErrCode RunAsGetRmCommand();
-
+    ErrCode RunAsSetRemovableCommand();
+    ErrCode RunAsGetRemovableCommand();
+    
     std::condition_variable cv_;
     std::mutex mutex_;
 
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;
 
-    bool CheckRmErrorOption(int option, int counter, std::string &name);
-    bool CheckRmCorrectOption(
-        int option, std::string &commandName, int &isRemovable, bool &setRemovable, std::string &name);
+    bool CheckRemovableErrorOption(int option, int counter, const std::string &commandName);
+    bool CheckRemovableCorrectOption(int option, const std::string &commandName, int &isRemovable, std::string &name);
     bool SetIsRemovableOperation(const std::string &bundleName, const std::string &moduleName, int isRemovable) const;
     bool GetIsRemovableOperation(
         const std::string &bundleName, const std::string &moduleName, std::string &result) const;

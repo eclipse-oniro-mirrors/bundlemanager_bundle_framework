@@ -21,6 +21,7 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <vector>
+#include <iostream>
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
@@ -44,12 +45,12 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "  getrm        obtain the value of isRemovable by given bundle name and module name\n";
 
 const std::string HELP_MSG_GET_REMOVABLE =
-"usage: bundle_test_tool getrm <options>\n"
-"eg:bundle_test_tool getrm -m <module-name> -n <bundle-name> \n"
-"options list:\n"
-"  -h, --help                             list available commands\n"
-"  -n, --bundle-name  <bundle-name>       get isRemovable by moduleNmae and bundleName\n"
-"  -m, --module-name <module-name>        get isRemovable by moduleNmae and bundleName\n";
+    "usage: bundle_test_tool getrm <options>\n"
+    "eg:bundle_test_tool getrm -m <module-name> -n <bundle-name> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       get isRemovable by moduleNmae and bundleName\n"
+    "  -m, --module-name <module-name>        get isRemovable by moduleNmae and bundleName\n";
 
 const std::string HELP_MSG_NO_REMOVABLE_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n"
@@ -64,15 +65,18 @@ const std::string HELP_MSG_SET =
     "  -i, --is-removable <is-removable>        set isRemovable  0 or 1\n"
     "  -m, --module-name <module-name>          set isRemovable by moduleNmae and bundleName\n";
 
-const std::string STRING_SET_REMOVABLE_OK = "set removable is ok";
-const std::string STRING_SET_REMOVABLE_NG = "error: failed to set removable";
-const std::string STRING_GET_REMOVABLE_OK = "get removable is ok";
-const std::string STRING_GET_REMOVABLE_NG = "error: failed to get removable";
-const std::string STRING_REQUIRE_CORRECT_VALUE =
-    "error: option requires a correct value or\n"
-    "note that the difference in expressions between short option and long option.";
+const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
+    "error: you must specify a bundle name with '-n' or '--bundle-name' \n";
 
-const std::string SHORT_OPTIONS = "hn:m:a:d:ui:";
+const std::string STRING_SET_REMOVABLE_OK = "set removable is ok \n";
+const std::string STRING_SET_REMOVABLE_NG = "error: failed to set removable \n";
+const std::string STRING_GET_REMOVABLE_OK = "get removable is ok \n";
+const std::string STRING_GET_REMOVABLE_NG = "error: failed to get removable \n";
+const std::string STRING_REQUIRE_CORRECT_VALUE =
+    "error: option requires a correct value or note that\n"
+    "the difference in expressions between short option and long option. \n";
+
+const std::string SHORT_OPTIONS = "hn:m:a:d:u:i:";
 const struct option LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-name", required_argument, nullptr, 'n'},
@@ -96,8 +100,8 @@ ErrCode BundleTestTool::CreateCommandMap()
     commandMap_ = {
         {"help", std::bind(&BundleTestTool::RunAsHelpCommand, this)},
         {"check", std::bind(&BundleTestTool::RunAsCheckCommand, this)},
-        {"setrm", std::bind(&BundleTestTool::RunAsSetRmCommand, this)},
-        {"getrm", std::bind(&BundleTestTool::RunAsGetRmCommand, this)},
+        {"setrm", std::bind(&BundleTestTool::RunAsSetRemovableCommand, this)},
+        {"getrm", std::bind(&BundleTestTool::RunAsGetRemovableCommand, this)},
     };
 
     return OHOS::ERR_OK;
@@ -240,7 +244,7 @@ bool BundleTestTool::GetIsRemovableOperation(
     return ret;
 }
 
-bool BundleTestTool::CheckRmErrorOption(int option, int counter, std::string &commandName)
+bool BundleTestTool::CheckRemovableErrorOption(int option, int counter, const std::string &commandName)
 {
     if (option == -1) {
         if (counter == 1) {
@@ -254,11 +258,17 @@ bool BundleTestTool::CheckRmErrorOption(int option, int counter, std::string &co
         }
         return true;
     } else if (option == '?') {
-        optopt = (commandName == "getrm" && optopt == 'i') ? 0 : optopt;
         switch (optopt) {
             case 'i': {
-                APP_LOGD("'bundle_test_tool %{public}s -i' with no argument.", commandName.c_str());
-                resultReceiver_.append("error: -i option requires a value.\n");
+                if (commandName == "getrm") {
+                    std::string unknownOption = "";
+                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+                    APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
+                    resultReceiver_.append(unknownOptionMsg);
+                } else {
+                    APP_LOGD("'bundle_test_tool %{public}s -i' with no argument.", commandName.c_str());
+                    resultReceiver_.append("error: -i option requires a value.\n");
+                }
                 break;
             }
             case 'm': {
@@ -283,11 +293,10 @@ bool BundleTestTool::CheckRmErrorOption(int option, int counter, std::string &co
     return false;
 }
 
-bool BundleTestTool::CheckRmCorrectOption(
-    int option, std::string &commandName, int &isRemovable, bool &setRemovable, std::string &name)
+bool BundleTestTool::CheckRemovableCorrectOption(
+    int option, const std::string &commandName, int &isRemovable, std::string &name)
 {
     bool ret = true;
-    option = (commandName == "getrm" && option == 'i') ? 0 : option;
     switch (option) {
         case 'h': {
             APP_LOGD("'bundle_test_tool %{public}s %{public}s'", commandName.c_str(), argv_[optind - 1]);
@@ -300,10 +309,15 @@ bool BundleTestTool::CheckRmCorrectOption(
             break;
         }
         case 'i': {
-            if (OHOS::StrToInt(optarg, isRemovable)) {
+            if (commandName == "getrm") {
+                std::string unknownOption = "";
+                std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+                APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
+                resultReceiver_.append(unknownOptionMsg);
+                ret = false;
+            } else if (OHOS::StrToInt(optarg, isRemovable)) {
                 APP_LOGD("'bundle_test_tool %{public}s -i isRemovable:%{public}d, %{public}s'",
                     commandName.c_str(), isRemovable, argv_[optind - 1]);
-                setRemovable = true;
             } else {
                 APP_LOGE("bundle_test_tool setrm with error %{private}s", optarg);
                 resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
@@ -322,20 +336,19 @@ bool BundleTestTool::CheckRmCorrectOption(
             std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
             APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
             resultReceiver_.append(unknownOptionMsg);
-            ret=false;
+            ret = false;
             break;
         }
     }
     return ret;
 }
 
-ErrCode BundleTestTool::RunAsSetRmCommand()
+ErrCode BundleTestTool::RunAsSetRemovableCommand()
 {
     int result = OHOS::ERR_OK;
     int option = -1;
     int counter = 0;
     int isRemovable = 0;
-    bool setRemovable = false;
     std::string commandName = "setrm";
     std::string name = "";
     std::string bundleName = "";
@@ -350,17 +363,17 @@ ErrCode BundleTestTool::RunAsSetRmCommand()
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d, argv_[optind - 1]:%{public}s", option,
             optopt, optind, argv_[optind - 1]);
         if (option == -1 || option == '?') {
-            result = !CheckRmErrorOption(option, counter, commandName)? OHOS::ERR_INVALID_VALUE : result;
+            result = !CheckRemovableErrorOption(option, counter, commandName)? OHOS::ERR_INVALID_VALUE : result;
             break;
         }
-        result = !CheckRmCorrectOption(option, commandName, isRemovable, setRemovable, name)
+        result = !CheckRemovableCorrectOption(option, commandName, isRemovable, name)
             ? OHOS::ERR_INVALID_VALUE : result;
         moduleName = option == 'm' ? name : moduleName;
         bundleName = option == 'n' ? name : bundleName;
     }
     if (result == OHOS::ERR_OK) {
         if (resultReceiver_ == "" && (bundleName.size() == 0 || moduleName.size() == 0)) {
-            APP_LOGD("'bundle_test_tool setrm' with no option.");
+            APP_LOGD("'bundle_test_tool setrm' with not enough option.");
             resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
             result = OHOS::ERR_INVALID_VALUE;
         }
@@ -369,16 +382,14 @@ ErrCode BundleTestTool::RunAsSetRmCommand()
         resultReceiver_.append(HELP_MSG_SET);
     } else {
         bool setResult = false;
-        if (setRemovable) {
-            setResult = SetIsRemovableOperation(bundleName, moduleName, isRemovable);
-            APP_LOGD("'bundle_test_tool setrm' isRemovable is %{public}d", isRemovable);
-        }
-        resultReceiver_ = setResult ? STRING_SET_REMOVABLE_OK + "\n" : STRING_SET_REMOVABLE_NG + "\n";
+        setResult = SetIsRemovableOperation(bundleName, moduleName, isRemovable);
+        APP_LOGD("'bundle_test_tool setrm' isRemovable is %{public}d", isRemovable);
+        resultReceiver_ = setResult ? STRING_SET_REMOVABLE_OK : STRING_SET_REMOVABLE_NG;
     }
     return result;
 }
 
-ErrCode BundleTestTool::RunAsGetRmCommand()
+ErrCode BundleTestTool::RunAsGetRemovableCommand()
 {
     int result = OHOS::ERR_OK;
     int option = -1;
@@ -387,7 +398,7 @@ ErrCode BundleTestTool::RunAsGetRmCommand()
     std::string name = "";
     std::string bundleName = "";
     std::string moduleName = "";
-    APP_LOGD("RunAsGetRmCommand is start");
+    APP_LOGD("RunAsGetRemovableCommand is start");
     while (true) {
         counter++;
         option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
@@ -396,12 +407,11 @@ ErrCode BundleTestTool::RunAsGetRmCommand()
             return OHOS::ERR_INVALID_VALUE;
         }
         if (option == -1 || option == '?') {
-            result = !CheckRmErrorOption(option, counter, commandName) ? OHOS::ERR_INVALID_VALUE : result;
+            result = !CheckRemovableErrorOption(option, counter, commandName) ? OHOS::ERR_INVALID_VALUE : result;
             break;
         }
         int tempIsRem = 0;
-        bool tempSetRem = false;
-        result = !CheckRmCorrectOption(option, commandName, tempIsRem, tempSetRem, name)
+        result = !CheckRemovableCorrectOption(option, commandName, tempIsRem, name)
             ? OHOS::ERR_INVALID_VALUE : result;
         moduleName = option == 'm' ? name : moduleName;
         bundleName = option == 'n' ? name : bundleName;
