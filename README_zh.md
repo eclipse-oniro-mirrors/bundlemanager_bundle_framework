@@ -72,6 +72,7 @@ bm help
 | bm install -p <hap-file-path> -u <user-id>   |给指定用户安装一个hap包 |
 | bm install -r -p <hap-file-path> | 覆盖安装一个hap包 |
 | bm install -r -p <hap-file-path> -u <user-id> | 给指定用户覆盖安装一个hap包 |
+| bm install -r -p <hap-file-path> -u <user-id> -w <waitting-time> | 安装hap包时指定bm工具等待时间，最小的等待时长为5s，最大的等待时长为600s, 默认缺省为5s |
 
 * 示例
 ```Bash

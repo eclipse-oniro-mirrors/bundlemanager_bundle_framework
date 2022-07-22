@@ -1447,8 +1447,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
                 first = true;
             }
             auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
-            GetApplicationInfo(
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, abilityInfo.applicationInfo);
+            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+                ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                abilityInfo.applicationInfo);
         }
     }
     hapInfo.dependencies = it->second.dependencies;
@@ -1464,8 +1465,9 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
         auto abilityInfo = ability.second;
         if ((abilityInfo.bundleName == bundleName) && (abilityInfo.name == abilityName) &&
             (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
-            GetApplicationInfo(
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, abilityInfo.applicationInfo);
+            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+                ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                abilityInfo.applicationInfo);
             return abilityInfo;
         }
     }
@@ -1484,8 +1486,9 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(
     for (const auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;
         if ((abilityInfo.bundleName == bundleName)) {
-            GetApplicationInfo(
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, abilityInfo.applicationInfo);
+            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+                ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                abilityInfo.applicationInfo);
             abilitys.emplace_back(abilityInfo);
         }
     }
@@ -1802,8 +1805,10 @@ void InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     }
     bundleInfo.installTime = innerBundleUserInfo.installTime;
     bundleInfo.updateTime = innerBundleUserInfo.updateTime;
+    bundleInfo.appIndex = appIndex_;
 
-    GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, bundleInfo.applicationInfo);
+    GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+        bundleInfo.applicationInfo);
     for (const auto &info : innerModuleInfos_) {
         if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
             == GET_BUNDLE_WITH_REQUESTED_PERMISSION) {

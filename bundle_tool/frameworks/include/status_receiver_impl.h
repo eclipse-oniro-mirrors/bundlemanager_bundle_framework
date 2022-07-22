@@ -23,6 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class StatusReceiverImpl : public StatusReceiverHost {
 public:
+    StatusReceiverImpl(int32_t waittingTime);
     StatusReceiverImpl();
     virtual ~StatusReceiverImpl() override;
 
@@ -32,7 +33,7 @@ public:
 
 private:
     mutable std::promise<int32_t> resultMsgSignal_;
-
+    int32_t waittingTime_;
     DISALLOW_COPY_AND_MOVE(StatusReceiverImpl);
 };
 }  // namespace AppExecFwk

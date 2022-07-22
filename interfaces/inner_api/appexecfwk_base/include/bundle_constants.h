@@ -24,52 +24,44 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
 const std::string EMPTY_STRING = "";
-const std::string BUNDLE_PROFILE_NAME = "config.json";
-const std::string MODULE_PROFILE_NAME = "module.json";
-const std::string BUNDLE_PACKFILE_NAME = "pack.info";
-const std::string SYSCAP_NAME = "rpcid.sc";
-const std::string INSTALL_FILE_SUFFIX = ".hap";
-const std::string PROFILE_FILE_SUFFIX = ".json";
-const std::string PROFILE_FILE_PREFIX = "$profile:";
+constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
+constexpr const char* MODULE_PROFILE_NAME = "module.json";
+constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
+constexpr const char* SYSCAP_NAME = "rpcid.sc";
+constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
+constexpr const char* PROFILE_FILE_SUFFIX = ".json";
+constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
-const std::string FILE_UNDERLINE = "_";
-const std::string ILLEGAL_PATH_FIELD = "../";
+constexpr const char* FILE_UNDERLINE = "_";
+constexpr const char* ILLEGAL_PATH_FIELD = "../";
 const char DOT_SUFFIX = '.';
 const char FILE_SEPARATOR_CHAR = '/';
-const std::string CURRENT_DEVICE_ID = "PHONE-001";
-const std::string BUNDLE_DATA_BASE_DIR = "/data/bundlemgr";
-const std::string BUNDLE_DATA_BASE_FILE = BUNDLE_DATA_BASE_DIR + "/bmsdb.json";
-const std::string SYSTEM_APP_SCAN_PATH = "/system/app";
-const std::string SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
-const std::string SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
-const std::string THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
-const std::string THIRD_SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
-const std::string THIRD_PARTY_APP_INSTALL_PATH = "/data/app/el1/bundle";
-const std::string HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-const std::string USER_ACCOUNT_DIR = "account";
-const std::string APP_CODE_DIR = "applications";
-const std::string APP_DATA_DIR = "appdata";
-const std::string DATA_BASE_DIR = "database";
-const std::string DATA_DIR = "files";
-const std::string CACHE_DIR = "cache";
-const std::string CACHES_DIR = "caches";
-const std::string SHARED_DIR = "shared";
-const std::string SHARED_PREFERENCE_DIR = "sharedPreference";
-const std::string TMP_SUFFIX = "_tmp";
-const std::string ASSETS_DIR = "assets";
-const std::string RESOURCES_INDEX = "resources.index";
-const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
-const std::string BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
-const std::string BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
-const std::string BASE = "/base/";
-const std::string DATABASE = "/database/";
-const std::string HAPS = "/haps/";
-const std::string BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-const std::string BUNDLE_USER_INFO_PATH = BUNDLE_MANAGER_SERVICE_PATH + "/bundle_user_info.json";
-const std::string BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
-const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
-const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
-const std::string DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
+constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
+constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
+constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
+constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
+constexpr const char* SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
+constexpr const char* THIRD_SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* THIRD_PARTY_APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* CACHE_DIR = "cache";
+constexpr const char* TMP_SUFFIX = "_tmp";
+constexpr const char* ASSETS_DIR = "assets";
+constexpr const char* RESOURCES_INDEX = "resources.index";
+constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
+constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
+constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
+constexpr const char* BASE = "/base/";
+constexpr const char* DATABASE = "/database/";
+constexpr const char* HAPS = "/haps/";
+constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* BUNDLE_USER_INFO_PATH =
+    "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
+constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
+constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
@@ -79,10 +71,10 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/haps"
 };
 
-const std::string BMS_SERVICE_NAME = "BundleMgrService";
-const std::string INSTALLD_SERVICE_NAME = "installd";
-const std::string SYSTEM_APP = "system";
-const std::string THIRD_PARTY_APP = "third-party";
+constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
+constexpr const char* INSTALLD_SERVICE_NAME = "installd";
+constexpr const char* SYSTEM_APP = "system";
+constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -100,16 +92,16 @@ constexpr int DUMP_INDENT = 4;
 constexpr unsigned int INSTALLD_UMASK = 0000;
 
 // native so
-const std::string ABI_DEFAULT = "default";
-const std::string ABI_SEPARATOR = ",";
-const std::string ARM_EABI = "armeabi";
-const std::string ARM_EABI_V7A = "armeabi-v7a";
-const std::string ARM64_V8A = "arm64-v8a";
-const std::string X86 = "x86";
-const std::string X86_64 = "x86_64";
+constexpr const char* ABI_DEFAULT = "default";
+constexpr const char* ABI_SEPARATOR = ",";
+constexpr const char* ARM_EABI = "armeabi";
+constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
+constexpr const char* ARM64_V8A = "arm64-v8a";
+constexpr const char* X86 = "x86";
+constexpr const char* X86_64 = "x86_64";
 const std::string LIBS = "libs/";
-const std::string LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
-const std::string ARM = "arm";
+constexpr const char* LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
+constexpr const char* ARM = "arm";
 const std::map<std::string, std::string> ABI_MAP = {
     {ARM_EABI, "arm"},
     {ARM_EABI_V7A, "arm"},
@@ -117,8 +109,8 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86, "x86"},
     {X86_64, "x86_64"},
 };
-const std::string SO_SUFFIX = ".so";
-const std::string SYSTEM_LIB64 = "/system/lib64";
+constexpr const char* SO_SUFFIX = ".so";
+constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -140,19 +132,20 @@ constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t U_VALUE = 100000;
 constexpr int32_t DATABASE_DIR_GID = 3012;
 constexpr int32_t DFS_GID = 1009;
-const std::string PROFILE_KEY_UID_SIZE = "size";
-const std::string PROFILE_KEY_UID_AND_GID = "uid_and_gid";
+constexpr const char* PROFILE_KEY_UID_SIZE = "size";
+constexpr const char* PROFILE_KEY_UID_AND_GID = "uid_and_gid";
 
 // permissions
-const std::string PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
-const std::string PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
-const std::string PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
-const std::string PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
-const std::string PERMISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE_FILES";
-const std::string PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
+constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
+constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+constexpr const char* PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
+constexpr const char* PERMISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE_FILES";
+constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+constexpr const char* PERMISSION_INSTALLD_OPERATE_DIRECTORY = "ohos.permission.OPERATE_DIRECTORY";
 
 // install list permissions file
-const std::string INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/permission/install_list_permissions.json";
+constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/permission/install_list_permissions.json";
 
 enum class AppType {
     SYSTEM_APP = 0,
@@ -160,13 +153,13 @@ enum class AppType {
     THIRD_PARTY_APP,
 };
 
-const std::string INTENT_ACTION_HOME = "action.system.home";
-const std::string INTENT_ENTITY_HOME = "entity.system.home";
-const std::string FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
+constexpr const char* INTENT_ACTION_HOME = "action.system.home";
+constexpr const char* INTENT_ENTITY_HOME = "entity.system.home";
+constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 
 // the ability file folder name.
-const std::string LIB_FOLDER_NAME = "libs";
-const std::string RES_FOLDER_NAME = "resources";
+constexpr const char* LIB_FOLDER_NAME = "libs";
+constexpr const char* RES_FOLDER_NAME = "resources";
 
 constexpr uint8_t MAX_LABLE_LEN = 30;
 constexpr uint8_t MAX_BUNDLE_NAME = 255;
@@ -183,48 +176,48 @@ constexpr uint8_t MAX_MODULE_LABEL = 63;
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 
 // distributed database
-const std::string APP_ID = "bundle_manager_service";
-const std::string STORE_ID = "installed_bundle_datas";
-const std::string ABILITY_USAGE_STORE_ID = "ability_usage_datas";
-const std::string PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";
-const std::string DISTRIBUTE_DATA_STORE_ID = "distribute_bundle_datas";
-const std::string DEFAULT_APP_DATA_STORE_ID = "default_app_datas";
+constexpr const char* APP_ID = "bundle_manager_service";
+constexpr const char* STORE_ID = "installed_bundle_datas";
+constexpr const char* ABILITY_USAGE_STORE_ID = "ability_usage_datas";
+constexpr const char* PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";
+constexpr const char* DISTRIBUTE_DATA_STORE_ID = "distribute_bundle_datas";
+constexpr const char* DEFAULT_APP_DATA_STORE_ID = "default_app_datas";
 
 // single max hap size
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 
-const std::string UID = "uid";
-const std::string USER_ID = "userId";
-const std::string BUNDLE_NAME = "bundleName";
-const std::string MODULE_NAME = "moduleName";
-const std::string ABILITY_NAME = "abilityName";
+constexpr const char* UID = "uid";
+constexpr const char* USER_ID = "userId";
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* MODULE_NAME = "moduleName";
+constexpr const char* ABILITY_NAME = "abilityName";
 constexpr int32_t MAX_LIMIT_SIZE = 4;
 
-const std::string DATA_ABILITY_URI_PREFIX = "dataability://";
+constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";
 const char DATA_ABILITY_URI_SEPARATOR = '/';
 
-const std::string PARAM_URI_SEPARATOR = ":///";
+constexpr const char* PARAM_URI_SEPARATOR = ":///";
 constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
-const std::string URI_SEPARATOR = "://";
+constexpr const char* URI_SEPARATOR = "://";
 constexpr uint32_t URI_SEPARATOR_LEN = 3;
-const std::string SEPARATOR = "/";
+constexpr const char* SEPARATOR = "/";
 
 constexpr int MAX_DIMENSION_SIZE = 10;
 constexpr int MAX_DEVICETYPE_SIZE = 50;
 
 // appFeature
-const std::string HOS_NORMAL_APP = "hos_normal_app";
-const std::string HOS_SYSTEM_APP = "hos_system_app";
-const std::string OHOS_SYSTEM_APP = "ohos_system_app";
+constexpr const char* HOS_NORMAL_APP = "hos_normal_app";
+constexpr const char* HOS_SYSTEM_APP = "hos_system_app";
+constexpr const char* OHOS_SYSTEM_APP = "ohos_system_app";
 
 // rdb
-const std::string BUNDLE_RDB_NAME = "/bmsdb.db";
-const std::string BUNDLE_RDB_TABLE_NAME = "installed_bundle";
-const std::string PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
-const std::string DEFAULT_APP_RDB_TABLE_NAME = "default_app";
-const std::string JOURNAL_MODE = "DELETE";
-const std::string SYNC_MODE = "MODE_OFF";
+constexpr const char* BUNDLE_RDB_NAME = "/bmsdb.db";
+constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
+constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
+constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
+constexpr const char* JOURNAL_MODE = "DELETE";
+constexpr const char* SYNC_MODE = "MODE_OFF";
 const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
@@ -235,24 +228,22 @@ constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int32_t INVALID_FILE_SIZE = -1;
 
 // permission
-const std::string LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
+constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
 
 // hmdfs config
-constexpr std::string_view ABILTY_NAME = "abilityName";
-const std::string HMDFS_CONFIG_PATH {"/config/hmdfs/"};
-const std::string BUNDLE_ID_FILE = { "bid" };
-const std::string PATH_SEPERATE {"/"};
+constexpr const char* HMDFS_CONFIG_PATH {"/config/hmdfs/"};
+constexpr const char* BUNDLE_ID_FILE = { "bid" };
 
 // pre bundle profile
-const std::string DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
-const std::string PRODUCT_SUFFIX = "/etc/app";
-const std::string INSTALL_LIST_CONFIG = "/install_list.json";
-const std::string UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
-const std::string INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
-const std::string INSTALL_LIST_PERMISSIONS_CONFIG = "/install_list_permissions.json";
+constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
+constexpr const char* PRODUCT_SUFFIX = "/etc/app";
+constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
+constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
+constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
+constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/install_list_permissions.json";
 
 // sandbox application
-const std::string SANDBOX_APP_INDEX = "sandbox_app_index";
+constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
 constexpr int32_t MAX_APP_INDEX = 100;
 
@@ -260,23 +251,23 @@ constexpr int32_t MAX_APP_INDEX = 100;
 constexpr int32_t DEFAULT_DISPOSED_STATUS = 0;
 
 // app-distribution-type
-const std::string APP_DISTRIBUTION_TYPE_NONE = "none";
-const std::string APP_DISTRIBUTION_TYPE_APP_GALLERY = "app_gallery";
-const std::string APP_DISTRIBUTION_TYPE_ENTERPRISE = "enterprise";
-const std::string APP_DISTRIBUTION_TYPE_OS_INTEGRATION = "os_integration";
-const std::string APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
+constexpr const char* APP_DISTRIBUTION_TYPE_NONE = "none";
+constexpr const char* APP_DISTRIBUTION_TYPE_APP_GALLERY = "app_gallery";
+constexpr const char* APP_DISTRIBUTION_TYPE_ENTERPRISE = "enterprise";
+constexpr const char* APP_DISTRIBUTION_TYPE_OS_INTEGRATION = "os_integration";
+constexpr const char* APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
 // app provision type
-const std::string APP_PROVISION_TYPE_DEBUG = "debug";
-const std::string APP_PROVISION_TYPE_RELEASE = "release";
+constexpr const char* APP_PROVISION_TYPE_DEBUG = "debug";
+constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";
 
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
 
 // syscap
-const std::string SYSCAP_SERVICE_ID = "syscap";
-const std::string SYSCAP_SERVICE_TYPE = "syscap";
-const std::string CHARACTER_OS_SYSCAP = "ossyscap";
-const std::string CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
+constexpr const char* SYSCAP_SERVICE_ID = "syscap";
+constexpr const char* SYSCAP_SERVICE_TYPE = "syscap";
+constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
+constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

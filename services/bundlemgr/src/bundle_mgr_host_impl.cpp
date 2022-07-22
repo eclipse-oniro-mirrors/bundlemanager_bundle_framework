@@ -999,7 +999,7 @@ bool BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, boo
         EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, true);
         return false;
     }
-
+    DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(bundleName, userId);
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, false);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
@@ -1057,7 +1057,7 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
             abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
         return false;
     }
-
+    DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(abilityInfo.bundleName, userId);
     EventReport::SendComponentStateSysEvent(
         abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, false);
     InnerBundleUserInfo innerBundleUserInfo;

@@ -33,6 +33,12 @@ private:
     ErrCode Init() override;
 
     ErrCode RunAsHelpCommand();
+    ErrCode RunAsCheckCommand();
+    ErrCode CheckOperation(int userId, std::string deviceId, std::string bundleName,
+        std::string moduleName, std::string abilityName);
+
+    std::condition_variable cv_;
+    std::mutex mutex_;
 
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;

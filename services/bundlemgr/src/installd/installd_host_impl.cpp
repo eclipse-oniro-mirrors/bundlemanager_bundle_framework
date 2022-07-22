@@ -33,6 +33,7 @@
 #include "hap_restorecon.h"
 #endif // WITH_SELINUX
 #include "installd/installd_operator.h"
+#include "installd/installd_permission_mgr.h"
 #include "parameters.h"
 
 namespace OHOS {
@@ -49,6 +50,10 @@ InstalldHostImpl::~InstalldHostImpl()
 
 ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (bundleDir.empty()) {
         APP_LOGE("Calling the function CreateBundleDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -69,6 +74,10 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
 {
     APP_LOGD("ExtractModuleFiles extract original src %{public}s and target src %{public}s",
         srcModulePath.c_str(), targetPath.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (srcModulePath.empty() || targetPath.empty()) {
         APP_LOGE("Calling the function ExtractModuleFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -88,6 +97,10 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     APP_LOGD("rename %{private}s to %{private}s", oldPath.c_str(), newPath.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (oldPath.empty() || newPath.empty()) {
         APP_LOGE("Calling the function RenameModuleDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -115,6 +128,10 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int user
 ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
     const int userid, const int uid, const int gid, const std::string &apl)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (bundleName.empty() || userid < 0 || uid < 0 || gid < 0) {
         APP_LOGE("Calling the function CreateBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -173,6 +190,10 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveBundleDataDir bundleName:%{public}s", bundleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (bundleName.empty() || userid < 0) {
         APP_LOGE("Calling the function CreateBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -195,6 +216,10 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
 ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveModuleDataDir ModuleDir:%{public}s", ModuleDir.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (ModuleDir.empty() || userid < 0) {
         APP_LOGE("Calling the function CreateModuleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -211,6 +236,10 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
 
 ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (dir.empty()) {
         APP_LOGE("Calling the function RemoveDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -225,6 +254,10 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     APP_LOGD("InstalldHostImpl::CleanBundleDataDir start");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (dataDir.empty()) {
         APP_LOGE("Calling the function CleanBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -249,6 +282,10 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 ErrCode InstalldHostImpl::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (bundleName.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -304,6 +341,10 @@ ErrCode InstalldHostImpl::GetBundleStats(
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl)
 {
 #ifdef WITH_SELINUX
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (dir.empty() || bundleName.empty()) {
         APP_LOGE("Calling the function SetDirApl with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -326,6 +367,10 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
 ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     APP_LOGD("InstalldHostImpl::GetBundleCachePath start");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_REMOVECACHEFILE);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (dir.empty()) {
         APP_LOGE("Calling the function GetBundleCachePath with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -338,6 +383,10 @@ ErrCode InstalldHostImpl::ScanDir(
     const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
 {
     APP_LOGD("InstalldHostImpl::Scan start %{public}s", dir.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (dir.empty()) {
         APP_LOGE("Calling the function Scan with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -349,6 +398,10 @@ ErrCode InstalldHostImpl::ScanDir(
 
 ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string &newPath)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (!InstalldOperator::RenameFile(oldPath, newPath)) {
         APP_LOGE("Move file %{public}s to %{public}s failed",
             oldPath.c_str(), newPath.c_str());
@@ -360,6 +413,10 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
 
 ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (!InstalldOperator::CopyFile(oldPath, newPath)) {
         APP_LOGE("Copy file %{public}s to %{public}s failed",
             oldPath.c_str(), newPath.c_str());
@@ -372,6 +429,10 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
 ErrCode InstalldHostImpl::Mkdir(
     const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY)) {
+        APP_LOGE("installd permission %{public}s failed", Constants::PERMISSION_INSTALLD_OPERATE_DIRECTORY);
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     APP_LOGD("Mkdir start %{public}s", dir.c_str());
     if (dir.empty()) {
         APP_LOGE("Calling the function Mkdir with invalid param");

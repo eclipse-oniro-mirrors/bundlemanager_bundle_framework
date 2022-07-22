@@ -168,7 +168,19 @@ ohos_shared_library("libbms") {
   ]
 
   configs = [ ":bundlemgr_common_config" ]
-  cflags = []
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Wno-non-c-typedef-for-linkage",
+    "-Os",
+  ]
+
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Wno-non-c-typedef-for-linkage",
+    "-Os",
+  ]
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
@@ -221,10 +233,10 @@ ohos_shared_library("libbms") {
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
-      "battery_manager_native:batterysrv_client",
+      "battery_manager:batterysrv_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
-      "power_manager_native:powermgr_client",
+      "power_manager:powermgr_client",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
@@ -283,6 +295,7 @@ ohos_shared_library("libbms") {
 
 ohos_executable("installs") {
   sources = [
+    "src/bundle_extractor.cpp",
     "src/installd/installd_main.cpp",
     "src/system_ability_helper.cpp",
   ]
@@ -297,12 +310,12 @@ ohos_executable("installs") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    ":bundle_parser",
     ":parser_common",
     "${common_path}:libappexecfwk_common",
   ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",

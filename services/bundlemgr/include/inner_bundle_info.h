@@ -536,11 +536,11 @@ public:
         APP_LOGI("Uri is %{public}s", abilityUri.c_str());
         for (const auto &ability : baseAbilityInfos_) {
             auto abilityInfo = ability.second;
-            if (abilityInfo.uri.size() < Constants::DATA_ABILITY_URI_PREFIX.size()) {
+            if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
                 continue;
             }
 
-            auto configUri = abilityInfo.uri.substr(Constants::DATA_ABILITY_URI_PREFIX.size());
+            auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
             APP_LOGI("configUri is %{public}s", configUri.c_str());
             if (configUri == abilityUri) {
                 return abilityInfo;
@@ -575,11 +575,11 @@ public:
         APP_LOGI("Uri is %{public}s", abilityUri.c_str());
         for (auto &ability : baseAbilityInfos_) {
             auto abilityInfo = ability.second;
-            if (abilityInfo.uri.size() < Constants::DATA_ABILITY_URI_PREFIX.size()) {
+            if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
                 continue;
             }
 
-            auto configUri = abilityInfo.uri.substr(Constants::DATA_ABILITY_URI_PREFIX.size());
+            auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
             APP_LOGI("configUri is %{public}s", configUri.c_str());
             if (configUri == abilityUri) {
                 GetApplicationInfo(

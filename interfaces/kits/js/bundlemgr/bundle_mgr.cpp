@@ -19,7 +19,6 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
-#include "bundle_death_recipient.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -124,9 +123,16 @@ struct PermissionsKey {
 };
 
 static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
-std::mutex bundleMgrMutex_;
-
+static std::mutex bundleMgrMutex_;
+static sptr<BundleMgrDeathRecipient> bundleMgrDeathRecipient(new (std::nothrow) BundleMgrDeathRecipient());
 }  // namespace
+
+void BundleMgrDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
+};
 
 AsyncWorkData::AsyncWorkData(napi_env napiEnv)
 {
@@ -169,6 +175,7 @@ static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr()
                 APP_LOGE("GetBundleMgr iface_cast get null");
             }
             bundleMgr_ = bundleMgr;
+            bundleMgr_->AsObject()->AddDeathRecipient(bundleMgrDeathRecipient);
         }
     }
     return bundleMgr_;
@@ -813,7 +820,7 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     APP_LOGI("ConvertHapModuleInfo mainAbilityName=%{public}s.", hapModuleInfo.mainAbility.c_str());
 
     napi_value nInstallationFree;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, false, &nInstallationFree));
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, hapModuleInfo.installationFree, &nInstallationFree));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "installationFree", nInstallationFree));
 
     napi_value nMainElementName;
@@ -5914,6 +5921,10 @@ static std::shared_ptr<Media::PixelMap> InnerGetAbilityIcon(
     }
     BundleGraphicsClient client;
     if (hasModuleName) {
+        if (moduleName.empty()) {
+            APP_LOGE("moduleName is invalid param");
+            return nullptr;
+        }
         return client.GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
     }
     return client.GetAbilityPixelMapIcon(bundleName, "", abilityName);

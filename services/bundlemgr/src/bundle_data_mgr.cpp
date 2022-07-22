@@ -386,9 +386,11 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         || statusItem->second == InstallState::USER_CHANGE) {
         APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
+        bool isOldInfoHasEntry = oldInfo.HasEntry();
+        oldInfo.UpdateModuleInfo(newInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
-        if (newInfo.HasEntry() || !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree()) {
+        if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppType(newInfo.GetAppType());
@@ -398,7 +400,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         }
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
-        oldInfo.UpdateModuleInfo(newInfo);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         if (!dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
@@ -609,7 +610,7 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     }
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
         innerBundleInfo.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, info.applicationInfo);
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId, info.applicationInfo);
     }
     return true;
 }
@@ -710,7 +711,8 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
                 if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) ==
                     GET_ABILITY_INFO_WITH_APPLICATION) {
                     info.GetApplicationInfo(
-                        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, abilityinfo.applicationInfo);
+                        ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                        abilityinfo.applicationInfo);
                 }
                 if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION) !=
                     GET_ABILITY_INFO_WITH_PERMISSION) {
@@ -745,7 +747,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         for (const Skill& skill : skillsPair->second) {
             if (skill.MatchLauncher(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
-                info.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO,
+                info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
                     responseUserId, abilityinfo.applicationInfo);
                 abilityInfos.emplace_back(abilityinfo);
                 break;
@@ -814,7 +816,7 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         APP_LOGE("bundleInfos_ data is empty");
         return false;
     }
-    std::string noPpefixUri = abilityUri.substr(Constants::DATA_ABILITY_URI_PREFIX.size());
+    std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
     auto posFirstSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR);
     if (posFirstSeparator == std::string::npos) {
         return false;
@@ -846,7 +848,8 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
 
         abilityInfo = (*ability);
         info.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, abilityInfo.applicationInfo);
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+            abilityInfo.applicationInfo);
         return true;
     }
 
@@ -868,7 +871,7 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
         APP_LOGI("bundleInfos_ data is empty");
         return false;
     }
-    std::string noPpefixUri = abilityUri.substr(Constants::DATA_ABILITY_URI_PREFIX.size());
+    std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
     auto posFirstSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR);
     if (posFirstSeparator == std::string::npos) {
         return false;
@@ -1662,7 +1665,6 @@ bool BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool is
         bundleStateStorage_->SaveBundleStateStorage(
             bundleName, requestUserId, innerBundleUserInfo.bundleUserInfo);
     }
-
     return true;
 }
 
@@ -1779,7 +1781,6 @@ bool BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEna
         bundleStateStorage_->SaveBundleStateStorage(
             abilityInfo.bundleName, requestUserId, innerBundleUserInfo.bundleUserInfo);
     }
-    
     return true;
 }
 
@@ -2027,7 +2028,7 @@ bool BundleDataMgr::NotifyBundleStatus(const std::string& bundleName, const std:
     want.SetElement(element);
     want.SetParam(Constants::UID, uid);
     want.SetParam(Constants::USER_ID, GetUserIdByUid(uid));
-    want.SetParam(Constants::ABILTY_NAME.data(), abilityName);
+    want.SetParam(Constants::ABILITY_NAME, abilityName);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);
     return true;
@@ -2556,7 +2557,9 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         innerBundleInfo.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, extensionInfo.applicationInfo);
+            ApplicationFlag::GET_BASIC_APPLICATION_INFO |
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+            extensionInfo.applicationInfo);
     }
     return true;
 }
@@ -2701,7 +2704,9 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
             if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) ==
                 GET_ABILITY_INFO_WITH_APPLICATION) {
                 info.GetApplicationInfo(
-                    ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, extensionInfo.applicationInfo);
+                    ApplicationFlag::GET_BASIC_APPLICATION_INFO |
+                    ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                    extensionInfo.applicationInfo);
             }
             if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION) !=
                 GET_ABILITY_INFO_WITH_PERMISSION) {
@@ -2736,7 +2741,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
             if (info.second.type == extensionType) {
                 ExtensionAbilityInfo extensionAbilityInfo = info.second;
                 innerBundleInfo.GetApplicationInfo(
-                    ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, extensionAbilityInfo.applicationInfo);
+                    ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+                    extensionAbilityInfo.applicationInfo);
                 extensionInfos.emplace_back(extensionAbilityInfo);
             }
         }
@@ -2818,7 +2824,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
             continue;
         }
         info.GetApplicationInfo(
-            ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, extensionAbilityInfo.applicationInfo);
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+            extensionAbilityInfo.applicationInfo);
         return true;
     }
     APP_LOGE("QueryExtensionAbilityInfoByUri (%{private}s) failed.", uri.c_str());

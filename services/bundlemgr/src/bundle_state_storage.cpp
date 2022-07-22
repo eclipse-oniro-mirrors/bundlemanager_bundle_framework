@@ -76,7 +76,7 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
         }
     }
 
-    auto file = fopen(Constants::BUNDLE_USER_INFO_PATH.c_str(), "at++");
+    auto file = fopen(Constants::BUNDLE_USER_INFO_PATH, "at++");
     if (file == nullptr) {
         APP_LOGE("create json db failed");
         return false;

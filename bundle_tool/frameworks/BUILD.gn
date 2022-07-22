@@ -17,6 +17,7 @@ import("../bundletool.gni")
 config("tools_bm_config") {
   include_dirs = [
     "include",
+    "include/bundle_tool_callback",
     "${common_path}/log/include",
     "${kits_path}/js/bundlemgr",
     "//utils/system/safwk/native/include",
@@ -77,6 +78,7 @@ ohos_source_set("tools_test_bm_source_set") {
     "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
     "src/bundle_command_common.cpp",
     "src/bundle_test_tool.cpp",
+    "src/bundle_tool_callback/bundle_tool_callback_stub.cpp",
     "src/main_test_tool.cpp",
     "src/shell_command.cpp",
     "src/status_receiver_impl.cpp",

@@ -91,6 +91,7 @@ struct BundleInfo : public Parcelable {
     int gid = -1;
     int64_t installTime = 0;
     int64_t updateTime = 0;
+    int32_t appIndex = 0; // index for sandbox app
 
     ApplicationInfo applicationInfo;
     std::vector<AbilityInfo> abilityInfos;
