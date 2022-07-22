@@ -68,6 +68,24 @@ public:
      * @return
      */
     static void ClearPreInstallCache();
+    /**
+     * @brief Judge whether the preInstall app can be recovered.
+     * @param bundleName Indicates the bundleName.
+     * @return Returns true if the preInstall is recovable; returns false otherwise.
+     */
+    static bool IsPreInstallRecoverable(const std::string &bundleName);
+    /**
+     * @brief Judge whether the preInstall app can be removable.
+     * @param bundleName Indicates the bundleName.
+     * @return Returns true if the preInstall is removable; returns false otherwise.
+     */
+    static bool IsPreInstallRemovable(const std::string &bundleName);
+    /**
+     * @brief Get the preInstall capability.
+     * @param preBundleConfigInfo Indicates the preBundleConfigInfo.
+     * @return Returns true if get the preInstall capability successfully; returns false otherwise.
+     */
+    static bool GetPreInstallCapability(PreBundleConfigInfo &preBundleConfigInfo);
 
     enum {
         BMS_START = 0,

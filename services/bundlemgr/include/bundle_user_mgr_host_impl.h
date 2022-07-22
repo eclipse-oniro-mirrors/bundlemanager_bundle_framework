@@ -41,6 +41,9 @@ private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
     const sptr<IBundleInstaller> GetBundleInstaller();
     void CheckInitialUser();
+    void BeforeCreateNewUser(int32_t userId);
+    void OnCreateNewUser(int32_t userId);
+    void AfterCreateNewUser(int32_t userId);
 
     std::mutex bundleUserMgrMutex_;
 };
