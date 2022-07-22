@@ -1629,6 +1629,16 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
     baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
+    baseApplicationInfo_->bootable = applicationInfo.bootable;
+    baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
+    baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
+    baseApplicationInfo_->multiProcess = applicationInfo.multiProcess;
+    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
+    baseApplicationInfo_->queryPriority = applicationInfo.queryPriority;
+    baseApplicationInfo_->excludeFromMissions = applicationInfo.excludeFromMissions;
+    baseApplicationInfo_->restartAfterKilled = applicationInfo.restartAfterKilled;
+    baseApplicationInfo_->usePrivilegeExtension = applicationInfo.usePrivilegeExtension;
+    baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)

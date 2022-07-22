@@ -15,6 +15,7 @@
 
 #include "bundle_install_checker.h"
 
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_parser.h"
 #include "bundle_util.h"
 #include "parameter.h"
@@ -176,13 +177,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         }
 
         SetEntryInstallationFree(packInfo, newInfo);
-        newInfo.SetProvisionId(provisionInfo.appId);
-        newInfo.SetAppFeature(provisionInfo.bundleInfo.appFeature);
-        newInfo.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
-        newInfo.SetAllowedAcls(provisionInfo.acls.allowedAcls);
-        newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
-        newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
-        newInfo.SetAppProvisionType(GetAppProvisionType(provisionInfo.type));
+        CollectProvisionInfo(provisionInfo, newInfo);
+#ifdef USE_PRE_BUNDLE_PROFILE
+        CollectPreBundleInfo(newInfo);
+#endif
         if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
         } else {
@@ -198,6 +196,58 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 
     APP_LOGD("finish parse hap file");
     return result;
+}
+
+void BundleInstallChecker::CollectProvisionInfo(
+    const Security::Verify::ProvisionInfo &provisionInfo, InnerBundleInfo &newInfo)
+{
+    newInfo.SetProvisionId(provisionInfo.appId);
+    newInfo.SetAppFeature(provisionInfo.bundleInfo.appFeature);
+    newInfo.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
+    newInfo.SetAllowedAcls(provisionInfo.acls.allowedAcls);
+    newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
+    newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
+    newInfo.SetAppProvisionType(GetAppProvisionType(provisionInfo.type));
+
+    newInfo.SetUserDataClearable(provisionInfo.bundleInfo.userDataClearable);
+    newInfo.SetMultiProcess(provisionInfo.bundleInfo.multiProcess);
+    newInfo.SetHideDesktopIcon(provisionInfo.bundleInfo.hideDesktopIcon);
+    newInfo.SetQueryPriority(provisionInfo.bundleInfo.queryPriority);
+    newInfo.SetExcludeFromMissions(provisionInfo.bundleInfo.excludeFromMissions);
+    newInfo.SetRestartAfterKilled(provisionInfo.bundleInfo.restartAfterKilled);
+    newInfo.SetUsePrivilegeExtension(provisionInfo.bundleInfo.usePrivilegeExtension);
+    newInfo.SetFormVisibleNotify(provisionInfo.bundleInfo.formVisibleNotify);
+}
+
+void BundleInstallChecker::CollectPreBundleInfo(InnerBundleInfo &newInfo)
+{
+    if (!newInfo.IsPreInstallApp()) {
+        return;
+    }
+
+    newInfo.SetRemovable(BMSEventHandler::IsPreInstallRemovable(newInfo.GetBundleName()));
+    PreBundleConfigInfo preBundleConfigInfo;
+    preBundleConfigInfo.bundleName = newInfo.GetBundleName();
+    BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
+    bool ret = true;
+    if (!preBundleConfigInfo.appSignature.empty() && !newInfo.GetCertificateFingerprint().empty()) {
+        ret = std::find(
+            preBundleConfigInfo.appSignature.begin(),
+            preBundleConfigInfo.appSignature.end(),
+            newInfo.GetCertificateFingerprint()) !=
+            preBundleConfigInfo.appSignature.end();
+    }
+
+    if (!ret) {
+        APP_LOGW("appSignature is incompatible");
+        return;
+    }
+
+    newInfo.SetKeepAlive(preBundleConfigInfo.keepAlive);
+    newInfo.SetSingleton(preBundleConfigInfo.singleton);
+    newInfo.SetBootable(preBundleConfigInfo.bootable);
+    newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
+    newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
 }
 
 ErrCode BundleInstallChecker::ParseBundleInfo(

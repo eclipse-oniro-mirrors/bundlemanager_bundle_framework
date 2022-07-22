@@ -1577,6 +1577,15 @@ sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 }
 #endif
 
+sptr<IQuickFixManager> BundleMgrHostImpl::GetQuickFixManagerProxy()
+{
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
+#else
+    return nullptr;
+#endif
+}
+
 ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
     AbilityInfo &info)
 {

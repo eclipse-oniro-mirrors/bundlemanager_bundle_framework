@@ -66,6 +66,24 @@ void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
     APP_LOGD("CreateNewUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     CheckInitialUser();
+    BeforeCreateNewUser(userId);
+    OnCreateNewUser(userId);
+    AfterCreateNewUser(userId);
+    APP_LOGD("CreateNewUser end userId: (%{public}d)", userId);
+}
+
+void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    BMSEventHandler::LoadPreInstallProFile();
+#endif
+    if (!BundlePermissionMgr::Init()) {
+        APP_LOGW("BundlePermissionMgr::Init failed");
+    }
+}
+
+void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
+{
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -89,9 +107,7 @@ void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());
-    if (!BundlePermissionMgr::Init()) {
-        APP_LOGW("BundlePermissionMgr::Init failed");
-    }
+
     // Read apps installed by other users that are visible to all users
     for (const auto &info : preInstallBundleInfos) {
         InstallParam installParam;
@@ -107,14 +123,21 @@ void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
     if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
         bundlePromise->WaitForAllTasksExecute();
     }
+}
+
+void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
+{
     if (userId == Constants::START_USERID) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
+
     BundlePermissionMgr::UnInit();
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
 #endif
-    APP_LOGD("CreateNewUser end userId: (%{public}d)", userId);
+#ifdef USE_PRE_BUNDLE_PROFILE
+    BMSEventHandler::ClearPreInstallCache();
+#endif
 }
 
 void BundleUserMgrHostImpl::RemoveUser(int32_t userId)

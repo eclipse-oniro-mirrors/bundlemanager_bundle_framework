@@ -3408,6 +3408,7 @@ static void ConvertInstallResult(InstallResult &installResult)
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_GET_BUNDLEPATH_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_NOT_ALLOWED):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID);
             installResult.resultMsg = "STATUS_RECOVER_FAILURE_INVALID";
             break;

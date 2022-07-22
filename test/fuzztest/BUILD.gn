@@ -32,7 +32,6 @@ group("fuzztest") {
     "getapplicationinfos_fuzzer:GetApplicationInfosFuzzTest",
     "getbundleinfos_fuzzer:GetBundleInfosFuzzTest",
     "installparamunmarshalling_fuzzer:InstallParamUnmarshallingFuzzTest",
-    "parse_fuzzer:ParseFuzzTest",
     "parsesyscap_fuzzer:ParseSysCapFuzzTest",
     "shortcutinfo_fuzzer:ShortcutInfoFuzzTest",
     "verifycallingpermission_fuzzer:VerifyCallingPermissionFuzzTest",

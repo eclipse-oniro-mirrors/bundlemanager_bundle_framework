@@ -308,6 +308,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         for (const auto &item : newInfos) {
             preInstallBundleInfo.AddBundlePath(item.first);
         }
+#ifdef USE_PRE_BUNDLE_PROFILE
+    preInstallBundleInfo.SetRecoverable(BMSEventHandler::IsPreInstallRecoverable(bundleName_));
+#else
+    preInstallBundleInfo.SetRecoverable(true);
+#endif
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
 
@@ -863,7 +868,14 @@ ErrCode BaseBundleInstaller::ProcessRecover(
     const std::string &bundleName, const InstallParam &installParam, int32_t &uid)
 {
     APP_LOGD("Process Recover Bundle(%{public}s) start", bundleName.c_str());
-    return InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid, true);
+#ifdef USE_PRE_BUNDLE_PROFILE
+    BMSEventHandler::LoadPreInstallProFile();
+#endif
+    ErrCode result = InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid, true);
+#ifdef USE_PRE_BUNDLE_PROFILE
+    BMSEventHandler::ClearPreInstallCache();
+#endif
+    return result;
 }
 
 ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
@@ -937,9 +949,16 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
     }
 
-    if (recoverMode && preInstallBundleInfo.GetAppType() != Constants::AppType::SYSTEM_APP) {
-        APP_LOGE("recover failed due to not system app");
-        return ERR_APPEXECFWK_RECOVER_GET_BUNDLEPATH_ERROR;
+    if (recoverMode) {
+        if (preInstallBundleInfo.GetAppType() != Constants::AppType::SYSTEM_APP) {
+            APP_LOGE("recover failed due to not system app");
+            return ERR_APPEXECFWK_RECOVER_GET_BUNDLEPATH_ERROR;
+        }
+
+        if (!preInstallBundleInfo.IsRecoverable()) {
+            APP_LOGE("recover failed due to recover is not allowed.");
+            return ERR_APPEXECFWK_RECOVER_NOT_ALLOWED;
+        }
     }
 
     APP_LOGD("Get preInstall bundlePath success.");

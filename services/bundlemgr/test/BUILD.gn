@@ -16,6 +16,8 @@ import("../../../appexecfwk.gni")
 config("bundlemgr_test_config") {
   include_dirs = [
     "${inner_api_path}/appexecfwk_base/include",
+    "${inner_api_path}/appexecfwk_base/include/distributed_manager",
+    "${inner_api_path}/appexecfwk_base/include/free_install",
     "${inner_api_path}/appexecfwk_core/include/bundlemgr",
     "${inner_api_path}/appexecfwk_core/include/distributed_manager",
     "${inner_api_path}/appexecfwk_core/include/free_install",

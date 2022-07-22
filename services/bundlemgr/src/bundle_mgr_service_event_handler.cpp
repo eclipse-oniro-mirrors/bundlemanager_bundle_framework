@@ -173,6 +173,7 @@ void BMSEventHandler::AfterBmsStart()
     ClearCache();
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+        ClearPreInstallCache();
     }
 }
 
@@ -458,6 +459,10 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
 
 void BMSEventHandler::ClearPreInstallCache()
 {
+    if (!hasLoadPreInstallProFile_) {
+        return;
+    }
+
     installList_.clear();
     uninstallList_.clear();
     recoverList_.clear();
@@ -1159,6 +1164,65 @@ bool BMSEventHandler::ParseHapFiles(
         return false;
     }
 
+    return true;
+}
+
+bool BMSEventHandler::IsPreInstallRecoverable(const std::string &bundleName)
+{
+    if (!hasLoadPreInstallProFile_) {
+        APP_LOGE("Not load preInstall proFile or release.");
+        return false;
+    }
+
+    if (bundleName.empty() || recoverList_.empty()) {
+        APP_LOGE("BundleName or recoverList is empty.");
+        return false;
+    }
+
+    return recoverList_.find(bundleName) != recoverList_.end();
+}
+
+bool BMSEventHandler::IsPreInstallRemovable(const std::string &bundleName)
+{
+    if (!hasLoadPreInstallProFile_) {
+        APP_LOGE("Not load preInstall proFile or release.");
+        return false;
+    }
+
+    if (bundleName.empty() || installList_.empty()) {
+        APP_LOGE("BundleName or installList is empty.");
+        return false;
+    }
+
+    for (const auto &installInfo : installList_) {
+        if (GetBundleNameFromPathStr(installInfo.bundleDir) == bundleName) {
+            return installInfo.removable;
+        }
+    }
+
+    return true;
+}
+
+bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConfigInfo)
+{
+    if (!hasLoadPreInstallProFile_) {
+        APP_LOGE("Not load preInstall proFile or release.");
+        return false;
+    }
+
+    if (preBundleConfigInfo.bundleName.empty() || installListCapabilities_.empty()) {
+        APP_LOGE("BundleName or installListCapabilities is empty.");
+        return false;
+    }
+
+    auto iter = installListCapabilities_.find(preBundleConfigInfo);
+    if (iter == installListCapabilities_.end()) {
+        APP_LOGE("BundleName(%{public}s) no has preinstall capability.",
+            preBundleConfigInfo.bundleName.c_str());
+        return false;
+    }
+
+    preBundleConfigInfo = *iter;
     return true;
 }
 }  // namespace AppExecFwk

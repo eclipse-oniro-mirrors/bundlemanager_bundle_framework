@@ -112,6 +112,12 @@ private:
         const BundlePackInfo &bundlePackInfo,
         InnerBundleInfo &innerBundleInfo);
 
+    void CollectProvisionInfo(
+        const Security::Verify::ProvisionInfo &provisionInfo,
+        InnerBundleInfo &newInfo);
+
+    void CollectPreBundleInfo(InnerBundleInfo &newInfo);
+
     bool isContainEntry_ = false;
 };
 }  // namespace AppExecFwk

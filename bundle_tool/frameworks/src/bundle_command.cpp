@@ -44,7 +44,7 @@ const int32_t MAX_ARGUEMENTS_NUMBER = 3;
 const int32_t MINIMUM_WAITTING_TIME = 5;
 const int32_t MAXIMUM_WAITTING_TIME = 600;
 
-const std::string SHORT_OPTIONS = "hp:rn:m:a:cduw:";
+const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:w:";
 const struct option LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-path", required_argument, nullptr, 'p'},

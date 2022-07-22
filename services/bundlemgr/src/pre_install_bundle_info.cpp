@@ -24,6 +24,7 @@ const std::string BUNDLE_NAME = "bundleName";
 const std::string VERSION_CODE = "versionCode";
 const std::string BUNDLE_PATHS = "bundlePaths";
 const std::string APP_TYPE = "appType";
+const std::string RECOVERABLE = "recoverable";
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
@@ -32,6 +33,7 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[VERSION_CODE] = versionCode_;
     jsonObject[BUNDLE_PATHS] = bundlePaths_;
     jsonObject[APP_TYPE] = appType_;
+    jsonObject[RECOVERABLE] = recoverable_;
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -69,6 +71,14 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        RECOVERABLE,
+        recoverable_,
+        JsonType::BOOLEAN,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
     int32_t ret = ProfileReader::parseResult;
     // need recover parse result to ERR_OK
     ProfileReader::parseResult = ERR_OK;
@@ -82,6 +92,7 @@ std::string PreInstallBundleInfo::ToString() const
     j[VERSION_CODE] = versionCode_;
     j[BUNDLE_PATHS] = bundlePaths_;
     j[APP_TYPE] = appType_;
+    j[RECOVERABLE] = recoverable_;
     return j.dump();
 }
 }  // namespace AppExecFwk

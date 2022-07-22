@@ -18,6 +18,7 @@ config("bundlemgr_sdk_config") {
   include_dirs = [
     "include/bundlemgr",
     "include/default_app",
+    "include/quick_fix",
   ]
 }
 
@@ -88,6 +89,16 @@ ohos_shared_library("appexecfwk_core") {
     sources += [
       "src/default_app/default_app_host.cpp",
       "src/default_app/default_app_proxy.cpp",
+    ]
+  }
+
+  if (bundle_framework_quick_fix) {
+    defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
+    sources += [
+      "src/quick_fix/quick_fix_manager_host.cpp",
+      "src/quick_fix/quick_fix_manager_proxy.cpp",
+      "src/quick_fix/quick_fix_status_callback_host.cpp",
+      "src/quick_fix/quick_fix_status_callback_proxy.cpp",
     ]
   }
 
