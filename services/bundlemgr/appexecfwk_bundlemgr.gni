@@ -88,6 +88,10 @@ sandbox_app = [
   "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_installer.cpp",
 ]
 
+quick_fix = [
+  "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_host_impl.cpp",
+]
+
 if (bms_rdb_enable) {
   default_app +=
       [ "${services_path}/bundlemgr/src/default_app/default_app_rdb.cpp" ]

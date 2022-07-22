@@ -21,6 +21,7 @@ config("bundlemgr_common_config") {
     "include/default_app",
     "include/free_install",
     "include/distributed_manager",
+    "include/quick_fix",
     "include/sandbox_app",
     "//utils/system/safwk/native/include",
   ]
@@ -244,6 +245,11 @@ ohos_shared_library("libbms") {
   if (bundle_framework_default_app) {
     sources += default_app
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+  }
+
+  if (bundle_framework_quick_fix) {
+    sources += quick_fix
+    defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
 
   if (configpolicy_enable) {

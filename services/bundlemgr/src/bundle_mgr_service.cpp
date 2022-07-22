@@ -216,6 +216,16 @@ bool BundleMgrService::Init()
     }
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    if (quickFixManagerHostImpl_ == nullptr) {
+        quickFixManagerHostImpl_ = new (std::nothrow) QuickFixManagerHostImpl();
+        if (quickFixManagerHostImpl_ == nullptr) {
+            APP_LOGE("create QuickFixManagerHostImpl failed.");
+            return false;
+        }
+    }
+#endif
+
     ready_ = true;
     APP_LOGI("init end success");
     return true;
@@ -279,6 +289,13 @@ sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
 sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
 {
     return defaultAppHostImpl_;
+}
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+sptr<QuickFixManagerHostImpl> BundleMgrService::GetQuickFixManagerProxy() const
+{
+    return quickFixManagerHostImpl_;
 }
 #endif
 

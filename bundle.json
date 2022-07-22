@@ -18,7 +18,8 @@
             "bundle_framework_free_install",
             "bundle_framework_default_app",
             "bundle_framework_launcher",
-            "bundle_framework_sandbox_app"
+            "bundle_framework_sandbox_app",
+            "bundle_framework_quick_fix"
         ],
         "hisysevent_config": [
             "//foundation/bundlemanager/bundle_framework/hisysevent.yaml"

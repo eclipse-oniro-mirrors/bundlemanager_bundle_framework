@@ -653,6 +653,8 @@ public:
     virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName) override;
 
+    virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
