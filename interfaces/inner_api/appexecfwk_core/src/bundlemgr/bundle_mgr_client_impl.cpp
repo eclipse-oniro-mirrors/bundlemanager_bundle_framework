@@ -297,11 +297,11 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
     }
 
     size_t pos = resName.rfind(Constants::PROFILE_FILE_PREFIX);
-    if ((pos == std::string::npos) || (pos == resName.length() - Constants::PROFILE_FILE_PREFIX.length())) {
+    if ((pos == std::string::npos) || (pos == resName.length() - strlen(Constants::PROFILE_FILE_PREFIX))) {
         APP_LOGE("GetResFromResMgr res name is invalid");
         return false;
     }
-    std::string profileName = resName.substr(pos + Constants::PROFILE_FILE_PREFIX.length());
+    std::string profileName = resName.substr(pos + strlen(Constants::PROFILE_FILE_PREFIX));
     std::string resPath;
     if (resMgr->GetProfileByName(profileName.c_str(), resPath) != SUCCESS) {
         APP_LOGE("GetResFromResMgr profileName cannot be found");

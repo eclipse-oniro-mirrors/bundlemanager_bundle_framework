@@ -263,7 +263,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
 
         dataMgr->AddUserId(userIdInt);
         std::vector<std::string> userDataBundleNames;
-        std::string userDataDir = baseDataDir + Constants::FILE_SEPARATOR_CHAR + userId + Constants::BASE;
+        std::string userDataDir = baseDataDir + Constants::PATH_SEPARATOR + userId + Constants::BASE;
         if (!ScanDir(userDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userDataBundleNames)) {
             APP_LOGD("Check the user installation directory(%{public}s) failed", userDataDir.c_str());
             continue;
@@ -386,7 +386,7 @@ void BMSEventHandler::ScanInstallDir(
     APP_LOGD("Scan the installed directory start");
     std::vector<std::string> bundleNameList;
     if (!ScanDir(Constants::BUNDLE_CODE_DIR, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, bundleNameList)) {
-        APP_LOGE("Check the bundle directory(%{public}s) failed", Constants::BUNDLE_CODE_DIR.c_str());
+        APP_LOGE("Check the bundle directory(%{public}s) failed", Constants::BUNDLE_CODE_DIR);
         return;
     }
 

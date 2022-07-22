@@ -1255,7 +1255,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
     for (const auto &el : Constants::BUNDLE_EL) {
         std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR +
                                         el +
-                                        Constants::FILE_SEPARATOR_CHAR +
+                                        Constants::PATH_SEPARATOR +
                                         std::to_string(userId_);
         std::string baseDataDir = baseBundleDataDir + Constants::BASE + info.GetBundleName();
         ErrCode result = InstalldClient::GetInstance()->SetDirApl(

@@ -253,7 +253,7 @@ ErrCode BundleParser::ParsePreInstallAbilityConfig(
 
 ErrCode BundleParser::ParseDefaultPermission(std::vector<DefaultPermission> &defaultPermissions) const
 {
-    APP_LOGD("Parse DefaultPermission from %{private}s", Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH.c_str());
+    APP_LOGD("Parse DefaultPermission from %{private}s", Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH, jsonBuf)) {
         APP_LOGE("Parse default-permissions file failed");
