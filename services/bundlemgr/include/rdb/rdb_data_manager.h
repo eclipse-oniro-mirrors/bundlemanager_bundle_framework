@@ -26,7 +26,7 @@ public:
     RdbDataManager(const BmsRdbConfig &bmsRdbConfig);
     ~RdbDataManager();
 
-    bool Init();
+    static void ClearCache();
     bool InsertData(const std::string &key, const std::string &value);
     bool UpdateData(const std::string &key, const std::string &value);
     bool DeleteData(const std::string &key);
@@ -34,8 +34,9 @@ public:
     bool QueryAllData(std::map<std::string, std::string> &datas);
 
 private:
+    std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
+
     BmsRdbConfig bmsRdbConfig_;
-    std::shared_ptr<NativeRdb::RdbStore> rdbStore_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

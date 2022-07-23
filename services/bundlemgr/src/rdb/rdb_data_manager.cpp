@@ -32,34 +32,35 @@ RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
 
 RdbDataManager::~RdbDataManager() {}
 
-bool RdbDataManager::Init()
+void RdbDataManager::ClearCache()
 {
-    if (rdbStore_ == nullptr) {
-        APP_LOGD("Create rdbStore");
-        NativeRdb::RdbStoreConfig rdbStoreConfig(
-            bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName,
-            NativeRdb::StorageMode::MODE_DISK,
-            false,
-            std::vector<uint8_t>(),
-            bmsRdbConfig_.journalMode,
-            bmsRdbConfig_.syncMode);
+    NativeRdb::RdbHelper::ClearCache();
+}
 
-        int32_t errCode = NativeRdb::E_OK;
-        BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
-        rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
-            rdbStoreConfig,
-            bmsRdbConfig_.version,
-            bmsRdbOpenCallback,
-            errCode);
-    }
+std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
+{
+    NativeRdb::RdbStoreConfig rdbStoreConfig(
+        bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName,
+        NativeRdb::StorageMode::MODE_DISK,
+        false,
+        std::vector<uint8_t>(),
+        bmsRdbConfig_.journalMode,
+        bmsRdbConfig_.syncMode);
 
-    return rdbStore_ != nullptr;
+    int32_t errCode = NativeRdb::E_OK;
+    BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
+    return NativeRdb::RdbHelper::GetRdbStore(
+        rdbStoreConfig,
+        bmsRdbConfig_.version,
+        bmsRdbOpenCallback,
+        errCode);
 }
 
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
 {
     APP_LOGD("InsertData start");
-    if (rdbStore_ == nullptr) {
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
@@ -68,7 +69,7 @@ bool RdbDataManager::InsertData(const std::string &key, const std::string &value
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BMS_KEY, key);
     valuesBucket.PutString(BMS_VALUE, value);
-    auto ret = rdbStore_->InsertWithConflictResolution(
+    auto ret = rdbStore->InsertWithConflictResolution(
         rowId, bmsRdbConfig_.tableName, valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
     return ret == NativeRdb::E_OK;
 }
@@ -76,7 +77,8 @@ bool RdbDataManager::InsertData(const std::string &key, const std::string &value
 bool RdbDataManager::UpdateData(const std::string &key, const std::string &value)
 {
     APP_LOGD("UpdateData start");
-    if (rdbStore_ == nullptr) {
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
@@ -87,14 +89,15 @@ bool RdbDataManager::UpdateData(const std::string &key, const std::string &value
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BMS_KEY, key);
     valuesBucket.PutString(BMS_VALUE, value);
-    auto ret = rdbStore_->Update(rowId, valuesBucket, absRdbPredicates);
+    auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
 
 bool RdbDataManager::DeleteData(const std::string &key)
 {
     APP_LOGD("DeleteData start");
-    if (rdbStore_ == nullptr) {
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
@@ -102,21 +105,22 @@ bool RdbDataManager::DeleteData(const std::string &key)
     int32_t rowId = -1;
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
     absRdbPredicates.EqualTo(BMS_KEY, key);
-    auto ret = rdbStore_->Delete(rowId, absRdbPredicates);
+    auto ret = rdbStore->Delete(rowId, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
 
 bool RdbDataManager::QueryData(const std::string &key, std::string &value)
 {
     APP_LOGD("QueryData start");
-    if (rdbStore_ == nullptr) {
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
     absRdbPredicates.EqualTo(BMS_KEY, key);
-    auto absSharedResultSet = rdbStore_->Query(absRdbPredicates, std::vector<std::string>());
+    auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
     if (absSharedResultSet == nullptr || !absSharedResultSet->HasBlock()) {
         APP_LOGE("absSharedResultSet failed");
         return false;
@@ -140,13 +144,14 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
 bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
 {
     APP_LOGD("QueryAllData start");
-    if (rdbStore_ == nullptr) {
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
-    auto absSharedResultSet = rdbStore_->Query(absRdbPredicates, std::vector<std::string>());
+    auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
     if (absSharedResultSet == nullptr || !absSharedResultSet->HasBlock()) {
         APP_LOGE("absSharedResultSet failed");
         return false;

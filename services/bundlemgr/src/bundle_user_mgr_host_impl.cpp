@@ -21,6 +21,9 @@
 #include "bundle_promise.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
+#ifdef BMS_RDB_ENABLE
+#include "rdb_data_manager.h"
+#endif
 #include "status_receiver_host.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
@@ -137,6 +140,9 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 #endif
 #ifdef USE_PRE_BUNDLE_PROFILE
     BMSEventHandler::ClearPreInstallCache();
+#endif
+#ifdef BMS_RDB_ENABLE
+        RdbDataManager::ClearCache();
 #endif
 }
 
