@@ -34,7 +34,6 @@ constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
-const char DOT_SUFFIX = '.';
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
