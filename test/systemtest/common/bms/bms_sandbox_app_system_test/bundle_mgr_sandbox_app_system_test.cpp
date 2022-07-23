@@ -261,11 +261,7 @@ void BundleMgrSandboxAppSystemTest::CheckPathAreExisted(const std::string &bundl
     ret = access(dataPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
 
-    dataPath = BUNDLE_DATA_DIR3 + innerBundleName + "/el3";
-    ret = access(dataPath.c_str(), F_OK);
-    EXPECT_EQ(ret, 0);
-
-    dataPath = BUNDLE_DATA_DIR3 + innerBundleName + "/el4";
+    dataPath = BUNDLE_DATA_DIR3 + innerBundleName + "/files";
     ret = access(dataPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
 

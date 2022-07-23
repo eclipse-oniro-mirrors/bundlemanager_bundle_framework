@@ -368,7 +368,6 @@ void ActsBmsKitSystemTest::CheckBundleInfo(const uint32_t index, BundleInfo &bun
     }
     ApplicationInfo applicationInfo = bundleInfo.applicationInfo;
     EXPECT_EQ(applicationInfo.name, (BASE_BUNDLE_NAME + std::to_string(index)));
-    EXPECT_FALSE(applicationInfo.isSystemApp);
     EXPECT_EQ(applicationInfo.supportedModes, 0);
     for (auto appModuleInfo : applicationInfo.moduleInfos) {
         std::cout << "applicationInfo-moduleName:" << appModuleInfo.moduleName << std::endl;
@@ -2240,10 +2239,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0100, Function | MediumTest | Le
         bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
         EXPECT_TRUE(queryResult);
 
-        EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
+        EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle1");
         EXPECT_EQ(hapModuleInfo.moduleName, "testability");
         EXPECT_EQ(hapModuleInfo.description, "");
-        EXPECT_EQ(hapModuleInfo.label, "bmsThirdBundle_A1 Ability");
         EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "tvcar");
 
         resvec.clear();
@@ -2294,7 +2292,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0200, Function | MediumTest | Le
         }
         bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
         EXPECT_TRUE(queryResult);
-        EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
+        EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle2");
         EXPECT_EQ(hapModuleInfo.moduleName, "testability");
         EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "tvcar");
         bool isSubStrExist = false;
@@ -2357,7 +2355,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0300, Function | MediumTest | Le
         }
         bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
         EXPECT_TRUE(queryResult);
-        EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
+        EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle3");
         EXPECT_EQ(hapModuleInfo.moduleName, "testability");
         resvec.clear();
 
@@ -2434,56 +2432,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0400, Function | MediumTest | Le
 /**
  * @tc.number: GetHapModuleInfo_0500
  * @tc.name: test GetHapModuleInfo interface
- * @tc.desc: 1.under '/system/app',there is a hap
- *           2.install the hap
- *           3.call GetHapModuleInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0500, Function | MediumTest | Level1)
-{
-    std::cout << "START GetHapModuleInfo_0500" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
-        AbilityInfo abilityInfo;
-        abilityInfo.bundleName = appName;
-        abilityInfo.package = "com.ohos.settings";
-        HapModuleInfo hapModuleInfo;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
-        EXPECT_TRUE(queryResult);
-        EXPECT_EQ(hapModuleInfo.name, "com.ohos.settings");
-        EXPECT_EQ(hapModuleInfo.moduleName, "phone");
-        CommonTool commonTool;
-        EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "phonetablet");
-
-        if (!queryResult) {
-            APP_LOGI("GetHapModuleInfo_0500 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetHapModuleInfo_0500 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetHapModuleInfo_0500" << std::endl;
-}
-
-/**
- * @tc.number: GetHapModuleInfo_0600
- * @tc.name: test GetHapModuleInfo interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap without config.json file
  *           2.install the hap
  *           3.call GetHapModuleInfo
  */
-HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0600, Function | MediumTest | Level2)
+HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0500, Function | MediumTest | Level2)
 {
-    std::cout << "START GetHapModuleInfo_0600" << std::endl;
+    std::cout << "START GetHapModuleInfo_0500" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         std::vector<std::string> resvec;
@@ -2515,14 +2470,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0600, Function | MediumTest | Le
     }
 
     if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetHapModuleInfo_0600 success - cycle count: %{public}d", stLevel_.BMSLevel);
+        APP_LOGI("GetHapModuleInfo_0500 success - cycle count: %{public}d", stLevel_.BMSLevel);
     }
     EXPECT_TRUE(result);
-    std::cout << "END GetHapModuleInfo_0600" << std::endl;
+    std::cout << "END GetHapModuleInfo_0500" << std::endl;
 }
 
 /**
- * @tc.number: GetHapModuleInfo_0700
+ * @tc.number: GetHapModuleInfo_0600
  * @tc.name: test GetHapModuleInfo interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap with invalid suffix
  *           2.install the hap
@@ -2530,7 +2485,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0600, Function | MediumTest | Le
  */
 HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0700, Function | MediumTest | Level2)
 {
-    std::cout << "START GetHapModuleInfo_0700" << std::endl;
+    std::cout << "START GetHapModuleInfo_0600" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         std::vector<std::string> resvec;
@@ -2555,17 +2510,17 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0700, Function | MediumTest | Le
         EXPECT_FALSE(queryResult);
 
         if (queryResult) {
-            APP_LOGI("GetHapModuleInfo_0700 failed - cycle count: %{public}d", i);
+            APP_LOGI("GetHapModuleInfo_0600 failed - cycle count: %{public}d", i);
             break;
         }
         result = true;
     }
 
     if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetHapModuleInfo_0700 success - cycle count: %{public}d", stLevel_.BMSLevel);
+        APP_LOGI("GetHapModuleInfo_0600 success - cycle count: %{public}d", stLevel_.BMSLevel);
     }
     EXPECT_TRUE(result);
-    std::cout << "END GetHapModuleInfo_0700" << std::endl;
+    std::cout << "END GetHapModuleInfo_0600" << std::endl;
 }
 
 /**
@@ -3107,6 +3062,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetLaunchWantForBundle_0100, Function | MediumTes
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string abilityName = "bmsThirdBundle_A1";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
 
     CommonTool commonTool;
@@ -3114,6 +3070,10 @@ HWTEST_F(ActsBmsKitSystemTest, GetLaunchWantForBundle_0100, Function | MediumTes
     EXPECT_EQ(installResult, "Success") << "install fail!";
 
     Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName(appName);
+    want.SetElement(name);
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -4657,181 +4617,6 @@ HWTEST_F(ActsBmsKitSystemTest, SetAbilityEnabled_0200, Function | MediumTest | L
 }
 
 /**
- * @tc.number: SetAbilityEnabled_0300
- * @tc.name: test SetAbilityEnabled interface
- * @tc.desc: 1.call SetAbilityEnabled by com.ohos.settings abilityInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, SetAbilityEnabled_0300, Function | MediumTest | Level1)
-{
-    std::cout << "START SetAbilityEnabled_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        AbilityInfo abilityInfo;
-        abilityInfo.bundleName = appName;
-        abilityInfo.name = "com.ohos.settings.MainAbility";
-        abilityInfo.package = "com.ohos.settings";
-        bool ret = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
-        EXPECT_TRUE(ret);
-        EXPECT_FALSE(bundleMgrProxy->IsAbilityEnabled(abilityInfo));
-        ret = bundleMgrProxy->SetAbilityEnabled(abilityInfo, true, USERID);
-        EXPECT_TRUE(ret);
-        EXPECT_TRUE(bundleMgrProxy->IsAbilityEnabled(abilityInfo));
-        if (!ret) {
-            APP_LOGI("SetAbilityEnabled_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("SetAbilityEnabled_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END SetAbilityEnabled_0300" << std::endl;
-}
-
-/**
- * @tc.number: IsAbilityEnabled_0100
- * @tc.name: test IsAbilityEnabled interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
- *           2.install the hap
- *           3.call IsAbilityEnabled by a hap's abilityInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, IsAbilityEnabled_0100, Function | MediumTest | Level1)
-{
-    std::cout << "START IsAbilityEnabled_0100" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-        std::string appName = BASE_BUNDLE_NAME + "1";
-        std::string abilityName = "bmsThirdBundle_A1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Success") << "install fail!";
-        BundleInfo bundleInfo;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool ret = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
-        EXPECT_TRUE(ret);
-        for (auto abilityInfo : bundleInfo.abilityInfos) {
-            ret = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
-            EXPECT_TRUE(ret);
-        }
-        resvec.clear();
-        Uninstall(appName, resvec);
-        std::string uninstallResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-        if (!ret) {
-            APP_LOGI("IsAbilityEnabled_0100 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("IsAbilityEnabled_0100 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END IsAbilityEnabled_0100" << std::endl;
-}
-
-/**
- * @tc.number: IsAbilityEnabled_0200
- * @tc.name: test IsAbilityEnabled interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
- *           2.install the hap
- *           3.call IsAbilityEnabled by wrong abilityInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, IsAbilityEnabled_0200, Function | MediumTest | Level2)
-{
-    std::cout << "START IsAbilityEnabled_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-        std::string appName = BASE_BUNDLE_NAME + "1";
-        std::string abilityName = "bmsThirdBundle_A1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Success") << "install fail!";
-        AbilityInfo abilityInfo;
-        abilityInfo.bundleName = BASE_BUNDLE_NAME + "1";
-        abilityInfo.name = "bmsThirdBundle_A3";
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool ret = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
-        EXPECT_FALSE(ret);
-        resvec.clear();
-        Uninstall(appName, resvec);
-        std::string uninstallResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-
-        if (ret) {
-            APP_LOGI("IsAbilityEnabled_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("IsAbilityEnabled_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END IsAbilityEnabled_0200" << std::endl;
-}
-
-/**
- * @tc.number: IsAbilityEnabled_0300
- * @tc.name: test IsAbilityEnabled interface
- * @tc.desc: 1.call IsAbilityEnabled
- */
-HWTEST_F(ActsBmsKitSystemTest, IsAbilityEnabled_0300, Function | MediumTest | Level1)
-{
-    std::cout << "START IsAbilityEnabled_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
-        std::string abilityName = "com.ohos.settings.MainAbility";
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        AbilityInfo abilityInfo;
-        abilityInfo.bundleName = appName;
-        abilityInfo.name = abilityName;
-        abilityInfo.package = "com.ohos.settings";
-        bool ret = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
-        EXPECT_TRUE(ret);
-        if (!ret) {
-            APP_LOGI("IsAbilityEnabled_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("IsAbilityEnabled_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END IsAbilityEnabled_0300" << std::endl;
-}
-
-/**
  * @tc.number: SetApplicationEnabled_0100
  * @tc.name: test SetApplicationEnabled interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there are two haps
@@ -4932,41 +4717,6 @@ HWTEST_F(ActsBmsKitSystemTest, SetApplicationEnabled_0200, Function | MediumTest
 }
 
 /**
- * @tc.number: SetApplicationEnabled_0300
- * @tc.name: test SetApplicationEnabled interface
- * @tc.desc: 1.call SetApplicationEnabled
- */
-HWTEST_F(ActsBmsKitSystemTest, SetApplicationEnabled_0300, Function | MediumTest | Level1)
-{
-    std::cout << "START SetApplicationEnabled_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool ret = bundleMgrProxy->SetApplicationEnabled(SYSTEM_SETTINGS_BUNDLE_NAME, false, USERID);
-        EXPECT_TRUE(ret);
-        EXPECT_FALSE(bundleMgrProxy->IsApplicationEnabled(SYSTEM_SETTINGS_BUNDLE_NAME));
-        ret = bundleMgrProxy->SetApplicationEnabled(SYSTEM_SETTINGS_BUNDLE_NAME, true, USERID);
-        EXPECT_TRUE(ret);
-        EXPECT_TRUE(bundleMgrProxy->IsApplicationEnabled(SYSTEM_SETTINGS_BUNDLE_NAME));
-        if (!ret) {
-            APP_LOGI("SetApplicationEnabled_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("SetApplicationEnabled_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END SetApplicationEnabled_0300" << std::endl;
-}
-
-/**
  * @tc.number: IsApplicationEnabled_0100
  * @tc.name: test IsApplicationEnabled interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -5053,37 +4803,6 @@ HWTEST_F(ActsBmsKitSystemTest, IsApplicationEnabled_0200, Function | MediumTest 
     }
     EXPECT_TRUE(result);
     std::cout << "END IsApplicationEnabled_0200" << std::endl;
-}
-
-/**
- * @tc.number: IsApplicationEnabled_0300
- * @tc.name: test IsApplicationEnabled interface
- * @tc.desc: 1.call IsApplicationEnabled
- */
-HWTEST_F(ActsBmsKitSystemTest, IsApplicationEnabled_0300, Function | MediumTest | Level1)
-{
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::cout << "START IsApplicationEnabled_0300" << std::endl;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool ret = bundleMgrProxy->IsApplicationEnabled(SYSTEM_SETTINGS_BUNDLE_NAME);
-        EXPECT_TRUE(ret);
-        if (!ret) {
-            APP_LOGI("IsApplicationEnabled_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("IsApplicationEnabled_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END IsApplicationEnabled_0300" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
