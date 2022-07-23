@@ -22,6 +22,7 @@
 #include "bundle_constants.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "bundle_mgr_service_death_recipient.h"
 #include "iservice_registry.h"
 #include "nlohmann/json.hpp"
 #include "system_ability_definition.h"
@@ -38,12 +39,15 @@ const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
 
 BundleMgrClientImpl::BundleMgrClientImpl()
 {
-    APP_LOGI("create bundleMgrClientImpl");
+    APP_LOGD("create bundleMgrClientImpl");
 }
 
 BundleMgrClientImpl::~BundleMgrClientImpl()
 {
-    APP_LOGI("destory bundleMgrClientImpl");
+    APP_LOGD("destroy bundleMgrClientImpl");
+    if (bundleMgr_ != nullptr && deathRecipient_ != nullptr) {
+        bundleMgr_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+    }
 }
 
 bool BundleMgrClientImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
@@ -495,6 +499,15 @@ ErrCode BundleMgrClientImpl::Connect()
             APP_LOGE("failed to get bundle mgr service remote object");
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
+        std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
+        auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
+            auto sharedPtr = weakPtr.lock();
+            if (sharedPtr != nullptr) {
+                sharedPtr->OnDeath();
+            }
+        };
+        deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
+        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
     }
 
     if (bundleInstaller_ == nullptr) {
@@ -506,6 +519,14 @@ ErrCode BundleMgrClientImpl::Connect()
     }
     APP_LOGI("connect end");
     return ERR_OK;
+}
+
+void BundleMgrClientImpl::OnDeath()
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(mutex_);
+    bundleMgr_ = nullptr;
+    bundleInstaller_ = nullptr;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

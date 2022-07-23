@@ -31,7 +31,7 @@ namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
 
-class BundleMgrClientImpl {
+class BundleMgrClientImpl : public std::enable_shared_from_this<BundleMgrClientImpl> {
 public:
     BundleMgrClientImpl();
     virtual ~BundleMgrClientImpl();
@@ -66,6 +66,7 @@ public:
 
 private:
     ErrCode Connect();
+    void OnDeath();
     bool ConvertResourcePath(const std::string &bundleName, std::string &resPath) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,
         const std ::string &resourcePath, std::vector<std::string> &profileInfos) const;
@@ -81,6 +82,7 @@ private:
     std::mutex mutex_;
     sptr<IBundleMgr> bundleMgr_;
     sptr<IBundleInstaller> bundleInstaller_;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

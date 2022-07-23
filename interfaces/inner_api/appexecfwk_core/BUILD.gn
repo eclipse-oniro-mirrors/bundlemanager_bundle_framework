@@ -36,6 +36,7 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr/bundle_mgr_client_impl.cpp",
     "src/bundlemgr/bundle_mgr_host.cpp",
     "src/bundlemgr/bundle_mgr_proxy.cpp",
+    "src/bundlemgr/bundle_mgr_service_death_recipient.cpp",
     "src/bundlemgr/bundle_monitor.cpp",
     "src/bundlemgr/bundle_status_callback_host.cpp",
     "src/bundlemgr/bundle_status_callback_proxy.cpp",
