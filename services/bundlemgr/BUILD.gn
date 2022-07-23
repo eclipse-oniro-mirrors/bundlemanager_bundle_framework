@@ -199,7 +199,7 @@ ohos_shared_library("libbms") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
-    "device_profile_core:distributed_device_profile_client",
+    "device_info_manager:distributed_device_profile_client",
     "distributeddatamgr:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
