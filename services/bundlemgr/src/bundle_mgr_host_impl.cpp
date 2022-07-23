@@ -579,7 +579,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     std::vector<std::string> rootDir;
     for (const auto &el : Constants::BUNDLE_EL) {
         std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el +
-            Constants::FILE_SEPARATOR_CHAR + std::to_string(userId) + Constants::BASE + bundleName;
+            Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleName;
         rootDir.emplace_back(dataDir);
     }
 

@@ -2112,7 +2112,7 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
         applicationInfo.targetBundleList.emplace_back(targetBundle);
     }
 
-    if (ProfileReader::MODULE_DISTRO_MODULE_TYPE_VALUE_ENTRY.compare(configJson.module.distro.moduleType) == 0) {
+    if (configJson.module.distro.moduleType.compare(ProfileReader::MODULE_DISTRO_MODULE_TYPE_VALUE_ENTRY) == 0) {
         applicationInfo.description = configJson.module.description;
         applicationInfo.descriptionId = configJson.module.descriptionId;
     }
