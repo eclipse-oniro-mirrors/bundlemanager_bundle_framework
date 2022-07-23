@@ -274,7 +274,7 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 {
     std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR +
                           el +
-                          Constants::FILE_SEPARATOR_CHAR +
+                          Constants::PATH_SEPARATOR +
                           std::to_string(userid);
     return dataDir;
 }
@@ -289,13 +289,13 @@ ErrCode InstalldHostImpl::GetBundleStats(
     if (bundleName.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    std::string path = Constants::BUNDLE_CODE_DIR + Constants::FILE_SEPARATOR_CHAR + bundleName;
+    std::string path = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
     int64_t fileSize = InstalldOperator::GetDiskUsage(path);
     std::vector<std::string> bundlePath;
     std::vector<std::string> cachePath;
     int64_t allBundleLocalSize = 0;
     for (const auto &el : Constants::BUNDLE_EL) {
-        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::FILE_SEPARATOR_CHAR +
+        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
             std::to_string(userId) + Constants::BASE + bundleName;
         allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
         if (el == Constants::BUNDLE_EL[1]) {
@@ -326,7 +326,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
     // index 3 : database size
     std::vector<std::string> dataBasePath;
     for (auto &el : Constants::BUNDLE_EL) {
-        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::FILE_SEPARATOR_CHAR +
+        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
             std::to_string(userId) + Constants::DATABASE + bundleName;
         dataBasePath.push_back(filePath);
     }
