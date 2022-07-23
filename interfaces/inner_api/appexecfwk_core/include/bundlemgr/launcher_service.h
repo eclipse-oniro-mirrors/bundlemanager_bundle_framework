@@ -35,12 +35,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class LauncherService : public virtual RefBase {
+class LauncherService : public std::enable_shared_from_this<LauncherService>, public virtual RefBase {
 public:
     using Want = OHOS::AAFwk::Want;
 
     LauncherService();
-    virtual ~LauncherService() = default;
+    virtual ~LauncherService();
 
     /**
      * @brief Registers a callback method for monitoring bundle installation, uninstallation, and update events.
@@ -110,11 +110,13 @@ public:
 
 private:
     void init();
-    static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
+    void OnDeath();
+    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 
     std::shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
-    static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_;
-    static std::mutex bundleMgrMutex_;
+    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
+    std::mutex bundleMgrMutex_;
     DISALLOW_COPY_AND_MOVE(LauncherService);
 };
 }  // namespace AppExecFwk
