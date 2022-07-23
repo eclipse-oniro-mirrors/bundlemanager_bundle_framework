@@ -111,10 +111,10 @@ public:
 private:
     void init();
     void OnDeath();
-    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
+    sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 
     std::shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
-    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
+    sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
     std::mutex bundleMgrMutex_;
     DISALLOW_COPY_AND_MOVE(LauncherService);

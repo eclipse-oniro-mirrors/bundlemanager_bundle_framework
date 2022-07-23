@@ -39,12 +39,12 @@ const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
 
 BundleMgrClientImpl::BundleMgrClientImpl()
 {
-    APP_LOGI("create bundleMgrClientImpl");
+    APP_LOGD("create bundleMgrClientImpl");
 }
 
 BundleMgrClientImpl::~BundleMgrClientImpl()
 {
-    APP_LOGI("destroy bundleMgrClientImpl");
+    APP_LOGD("destroy bundleMgrClientImpl");
     if (bundleMgr_ != nullptr && deathRecipient_ != nullptr) {
         bundleMgr_->AsObject()->RemoveDeathRecipient(deathRecipient_);
     }
