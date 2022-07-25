@@ -28,9 +28,11 @@ const std::string HAP_MODULE_INFO_NAME = "name";
 const std::string HAP_MODULE_INFO_PACKAGE = "package";
 const std::string HAP_MODULE_INFO_MODULE_NAME = "moduleName";
 const std::string HAP_MODULE_INFO_DESCRIPTION = "description";
+const std::string HAP_MODULE_INFO_DESCRIPTION_ID = "descriptionId";
 const std::string HAP_MODULE_INFO_ICON_PATH = "iconPath";
 const std::string HAP_MODULE_INFO_ICON_ID = "iconId";
 const std::string HAP_MODULE_INFO_LABEL = "label";
+const std::string HAP_MODULE_INFO_LABEL_ID = "labelId";
 const std::string HAP_MODULE_INFO_BACKGROUND_IMG = "backgroundImg";
 const std::string HAP_MODULE_INFO_MAIN_ABILITY = "mainAbility";
 const std::string HAP_MODULE_INFO_SRC_PATH = "srcPath";
@@ -120,9 +122,11 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_PACKAGE, hapModuleInfo.package},
         {HAP_MODULE_INFO_MODULE_NAME, hapModuleInfo.moduleName},
         {HAP_MODULE_INFO_DESCRIPTION, hapModuleInfo.description},
+        {HAP_MODULE_INFO_DESCRIPTION_ID, hapModuleInfo.descriptionId},
         {HAP_MODULE_INFO_ICON_PATH, hapModuleInfo.iconPath},
         {HAP_MODULE_INFO_ICON_ID, hapModuleInfo.iconId},
         {HAP_MODULE_INFO_LABEL, hapModuleInfo.label},
+        {HAP_MODULE_INFO_LABEL_ID, hapModuleInfo.labelId},
         {HAP_MODULE_INFO_BACKGROUND_IMG, hapModuleInfo.backgroundImg},
         {HAP_MODULE_INFO_MAIN_ABILITY, hapModuleInfo.mainAbility},
         {HAP_MODULE_INFO_SRC_PATH, hapModuleInfo.srcPath},
@@ -185,6 +189,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_DESCRIPTION_ID,
+        hapModuleInfo.descriptionId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ICON_PATH,
@@ -206,6 +218,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         HAP_MODULE_INFO_LABEL,
         hapModuleInfo.label,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_LABEL_ID,
+        hapModuleInfo.labelId,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
