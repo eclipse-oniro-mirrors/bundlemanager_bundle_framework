@@ -35,9 +35,7 @@ const std::string HELP_MSG = "usage: bm <command> <options>\n"
                              "  clean        clean the bundle data\n"
                              "  enable       enable the bundle\n"
                              "  disable      disable the bundle\n"
-                             "  get          obtain device udid\n"
-                             "  getrm        obtain the value of isRemovable by given bundle name and module name\n"
-                             "  setrm        set module isRemovable by given bundle name and module name\n";
+                             "  get          obtain device udid\n";
 
 const std::string HELP_MSG_INSTALL =
     "usage: bm install <options>\n"
@@ -104,23 +102,6 @@ const std::string HELP_MSG_GET =
     "options list:\n"
     "  -u, --udid                             obtain udid of the current device\n";
 
-const std::string HELP_MSG_SET =
-    "usage: bm setrm <options>\n"
-    "eg:bm setrm -m <module-name> -n <bundle-name> -i 1\n"
-    "options list:\n"
-    "  -h, --help                               list available commands\n"
-    "  -n, --bundle-name  <bundle-name>         set isRemovable by moduleNmae and bundleName\n"
-    "  -i, --is-removable <is-removable>        set isRemovable  0 or 1\n"
-    "  -m, --module-name <module-name>          set isRemovable by moduleNmae and bundleName\n";
-
-const std::string HELP_MSG_GET_REMOVABLE =
-    "usage: bm getrm <options>\n"
-    "eg:bm getrm -m <module-name> -n <bundle-name> \n"
-    "options list:\n"
-    "  -h, --help                             list available commands\n"
-    "  -n, --bundle-name  <bundle-name>       get isRemovable by moduleNmae and bundleName\n"
-    "  -m, --module-name <module-name>        get isRemovable by moduleNmae and bundleName\n";
-
 const std::string HELP_MSG_DUMP_DEPENDENCIES =
     "usage: bm dump-dependencies <options>\n"
     "eg:bm dump-dependencies -n <bundle-name> -m <module-name> \n"
@@ -159,12 +140,6 @@ const std::string STRING_DISABLE_BUNDLE_NG = "error: failed to disable bundle.";
 const std::string STRING_GET_UDID_OK = "udid of current device is :";
 const std::string STRING_GET_UDID_NG = "error: failed to get udid";
 
-const std::string STRING_GET_REMOVABLE_OK = "get removable is ok";
-const std::string STRING_GET_REMOVABLE_NG = "error: failed to get removable";
-
-const std::string STRING_SET_REMOVABLE_OK = "set removable is ok";
-const std::string STRING_SET_REMOVABLE_NG = "error: failed to set removable";
-
 const std::string HELP_MSG_NO_REMOVABLE_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n"
     "and a module name with '-m' or '--module-name' \n";
@@ -193,8 +168,6 @@ private:
     ErrCode RunAsEnableCommand();
     ErrCode RunAsDisableCommand();
     ErrCode RunAsGetCommand();
-    ErrCode RunAsSetRmCommand();
-    ErrCode RunAsGetRmCommand();
 
     std::string DumpBundleList(int32_t userId) const;
     std::string DumpBundleInfo(const std::string &bundleName, int32_t userId) const;
@@ -215,10 +188,6 @@ private:
     bool CleanBundleDataFilesOperation(const std::string &bundleName, int32_t userId) const;
 
     bool SetApplicationEnabledOperation(const AbilityInfo &abilityInfo, bool isEnable, int32_t userId) const;
-    bool SetIsRemovableOperation(const std::string &bundleName, const std::string &moduleName, bool enable) const;
-
-    bool GetIsRemovableOperation(
-        const std::string &bundleName, const std::string &moduleName, std::string &result) const;
 
     ErrCode ParseDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
     sptr<IBundleMgr> bundleMgrProxy_;
