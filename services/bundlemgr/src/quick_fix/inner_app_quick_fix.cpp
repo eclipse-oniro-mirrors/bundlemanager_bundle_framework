@@ -16,13 +16,13 @@
 #include "inner_app_quick_fix.h"
 
 #include <algorithm>
+
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "common_profile.h"
 #include "json_serializer.h"
 #include "json_util.h"
-#include <string>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -80,9 +80,11 @@ bool InnerAppQuickFix::RemoveHqfInfo(const std::string &moduleName)
     return true;
 }
 
-bool InnerAppQuickFix::SwitchQuickFix()
+void InnerAppQuickFix::SwitchQuickFix()
 {
-    return true;
+    AppqfInfo deployed = appQuickFix_.deployedAppqfInfo;
+    appQuickFix_.deployedAppqfInfo = appQuickFix_.deployingAppqfInfo;
+    appQuickFix_.deployingAppqfInfo = deployed;
 }
 
 void InnerAppQuickFix::SetQuickFixMark(const QuickFixMark &mark)
@@ -97,9 +99,9 @@ QuickFixMark InnerAppQuickFix::GetQuickFixMark() const
 
 std::string InnerAppQuickFix::ToString() const
 {
-    nlohmann::json j;
-    ToJson(j);
-    return j.dump();
+    nlohmann::json object;
+    ToJson(object);
+    return object.dump();
 }
 
 void InnerAppQuickFix::ToJson(nlohmann::json &jsonObject) const

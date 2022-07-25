@@ -34,29 +34,16 @@ QuickFixMgr::QuickFixMgr()
         APP_LOGE("create QuickFixMgr failed.");
         return;
     }
-    quickFixManagerDb_->RegisterDeathListener();
 }
 
 QuickFixMgr::~QuickFixMgr()
 {
     APP_LOGD("destroy QuickFixMgr.");
-    if (quickFixManagerDb_ != nullptr) {
-        quickFixManagerDb_->UnRegisterDeathListener();
-    }
-}
-
-QuickFixMgr& QuickFixMgr::GetInstance()
-{
-    static QuickFixMgr quickFixMgr;
-    return quickFixMgr;
 }
 
 bool QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    // 1.parse patch.json
-    //InnerAppQuickFix appQuickFix;
-    // 2.
     return true;
 }
 
@@ -75,6 +62,7 @@ bool QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
 
 bool QuickFixMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
         APP_LOGE("error quickFixManagerDb_ is nullptr.");
         return false;
@@ -84,6 +72,7 @@ bool QuickFixMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFi
 
 bool QuickFixMgr::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
         APP_LOGE("error quickFixManagerDb_ is nullptr.");
         return false;
@@ -93,6 +82,7 @@ bool QuickFixMgr::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQ
 
 bool QuickFixMgr::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
         APP_LOGE("error quickFixManagerDb_ is nullptr.");
         return false;
@@ -102,6 +92,7 @@ bool QuickFixMgr::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 
 bool QuickFixMgr::DeleteInnerAppQuickFix(const std::string &bundleName)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
         APP_LOGE("error quickFixManagerDb_ is nullptr.");
         return false;

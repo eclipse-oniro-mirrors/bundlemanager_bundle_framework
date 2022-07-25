@@ -32,13 +32,11 @@ public:
     bool QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix) override;
     bool SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix) override;
     bool DeleteInnerAppQuickFix(const std::string &bundleName) override;
-    void RegisterDeathListener() override;
-    void UnRegisterDeathListener() override;
 
 private:
     bool GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs);
     bool GetDataFromDb(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix);
-    bool SaveDataToDb(const InnerAppQuickFix &onnerAppQuickFix);
+    bool SaveDataToDb(const InnerAppQuickFix &innerAppQuickFix);
     bool DeleteDataFromDb(const std::string &bundleName);
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;

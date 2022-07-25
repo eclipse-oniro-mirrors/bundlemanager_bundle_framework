@@ -83,16 +83,6 @@ bool QuickFixManagerRdb::DeleteInnerAppQuickFix(const std::string &bundleName)
     return true;
 }
 
-void QuickFixManagerRdb::RegisterDeathListener()
-{
-    APP_LOGI("QuickFixManagerRdb::RegisterDeathListener.");
-}
-
-void QuickFixManagerRdb::UnRegisterDeathListener()
-{
-    APP_LOGI("QuickFixManagerRdb::UnRegisterDeathListener.");
-}
-
 bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
 {
     if (rdbDataManager_ == nullptr) {

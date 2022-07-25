@@ -16,13 +16,14 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_INNER_APP_QUICK_FIX_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_INNER_APP_QUICK_FIX_H
 
-#include "app_quick_fix.h"
-#include "appqf_info.h"
-#include "hqf_info.h"
+#include <string>
 
 #include "nlohmann/json.hpp"
 #include "nocopyable.h"
-#include <string>
+
+#include "app_quick_fix.h"
+#include "appqf_info.h"
+#include "hqf_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -53,9 +54,9 @@ public:
 
     bool AddHqfInfo(const AppQuickFix &newInfo);
 
-    bool RemoveHqfInfo(const std::string &bundleName);
+    bool RemoveHqfInfo(const std::string &moduleName);
 
-    bool SwitchQuickFix();
+    void SwitchQuickFix();
 
     void SetQuickFixMark(const QuickFixMark &mark);
 

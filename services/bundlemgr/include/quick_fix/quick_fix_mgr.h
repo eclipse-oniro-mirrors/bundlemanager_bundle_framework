@@ -18,14 +18,16 @@
 
 #include "quick_fix_manager_db_interface.h"
 
-#include "nocopyable.h"
+#include <mutex>
 #include "quick_fix_status_callback_interface.h"
+#include "singleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class QuickFixMgr {
+class QuickFixMgr : public DelayedSingleton<QuickFixMgr> {
 public:
-    static QuickFixMgr& GetInstance();
+    QuickFixMgr();
+    ~QuickFixMgr();
 
     bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback);
@@ -45,9 +47,7 @@ public:
     bool DeleteInnerAppQuickFix(const std::string &bundleName);
 
 private:
-    QuickFixMgr();
-    ~QuickFixMgr();
-    DISALLOW_COPY_AND_MOVE(QuickFixMgr);
+    mutable std::mutex mutex_;
     std::shared_ptr<IQuickFixManagerDb> quickFixManagerDb_ = nullptr;
 };
 } // OHOS

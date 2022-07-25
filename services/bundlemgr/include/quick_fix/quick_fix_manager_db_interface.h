@@ -34,10 +34,6 @@ public:
     virtual bool SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix) = 0;
 
     virtual bool DeleteInnerAppQuickFix(const std::string &bundleName) = 0;
-
-    virtual void RegisterDeathListener() = 0;
-
-    virtual void UnRegisterDeathListener() = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS
