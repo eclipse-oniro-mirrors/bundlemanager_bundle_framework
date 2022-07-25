@@ -24,6 +24,7 @@ ohos_unittest("BmsRdbDataManagerTest") {
 
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",

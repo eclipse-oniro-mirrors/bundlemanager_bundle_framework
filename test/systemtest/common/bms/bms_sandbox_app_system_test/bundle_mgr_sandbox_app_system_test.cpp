@@ -51,6 +51,7 @@ const std::string BUNDLE_DATA_DIR1 = "/data/app/el1/100/base/";
 const std::string BUNDLE_DATA_DIR2 = "/data/app/el1/100/database/";
 const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/";
+const std::string ACCESS_TOKEN_ID = "accessTokenId";
 const time_t TIME_OUT_SECONDS_FIVE = 5;
 const int32_t TIMEOUT = 10;
 const int32_t DEFAULT_USERID = 100;
@@ -133,6 +134,8 @@ void CommonEventSubscriberTest::OnReceiveEvent(const CommonEventData &data)
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_REMOVED) {
         g_RceivedUninstallSandbox = true;
     }
+    auto accessTokenId = data.GetWant().GetParams().GetIntParam(ACCESS_TOKEN_ID, 0);
+    EXPECT_GT(accessTokenId, 0);
     mtx_.unlock();
 }
 

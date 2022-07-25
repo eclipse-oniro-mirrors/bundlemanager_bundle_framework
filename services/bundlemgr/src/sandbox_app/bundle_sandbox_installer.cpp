@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -138,7 +139,8 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     StoreSandboxPersitentInfo(bundleName, newTokenId, newAppIndex, userId_);
 
     // 9. publish common event
-    result = NotifySandboxAppStatus(info, userInfo.uid, SandboxInstallType::INSTALL);
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    result = commonEventMgr->NotifySandboxAppStatus(info, userInfo.uid, userId_, SandboxInstallType::INSTALL);
     if (result != ERR_OK) {
         APP_LOGE("NotifySandboxAppStatus failed due to error : %{public}d", result);
     }
@@ -222,7 +224,8 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
     DeleteSandboxPersitentInfo(bundleName, accessTokenId, appIndex, userId);
 
     // 8. publish common event
-    result = NotifySandboxAppStatus(info, userInfo.uid, SandboxInstallType::UNINSTALL);
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    result = commonEventMgr->NotifySandboxAppStatus(info, userInfo.uid, userId_, SandboxInstallType::UNINSTALL);
     if (result != ERR_OK) {
         APP_LOGE("NotifySandboxAppStatus failed due to error : %{public}d", result);
     }
@@ -249,30 +252,6 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     info.SetAppDataBaseDir(dataBaseDir);
     APP_LOGI("CreateSandboxDataDir successfully");
     return result;
-}
-
-ErrCode BundleSandboxInstaller::NotifySandboxAppStatus(const InnerBundleInfo &info, const int32_t &uid,
-    const SandboxInstallType &type) const
-{
-    OHOS::AAFwk::Want want;
-    if (type == SandboxInstallType::INSTALL) {
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_ADDED);
-    } else if (type == SandboxInstallType::UNINSTALL) {
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_REMOVED);
-    } else {
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_UNKNOWN_INSTALL_TYPE;
-    }
-    ElementName element;
-    element.SetBundleName(info.GetBundleName());
-    element.SetAbilityName(info.GetMainAbility());
-    want.SetElement(element);
-    want.SetParam(Constants::UID, uid);
-    want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(uid));
-    want.SetParam(Constants::ABILITY_NAME, info.GetMainAbility());
-    want.SetParam(Constants::SANDBOX_APP_INDEX, info.GetAppIndex());
-    EventFwk::CommonEventData commonData { want };
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
-    return ERR_OK;
 }
 
 void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int32_t &userId)

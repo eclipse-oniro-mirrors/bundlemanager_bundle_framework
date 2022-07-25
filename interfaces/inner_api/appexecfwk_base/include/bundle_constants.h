@@ -74,6 +74,7 @@ constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
 constexpr const char* INSTALLD_SERVICE_NAME = "installd";
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
+constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;

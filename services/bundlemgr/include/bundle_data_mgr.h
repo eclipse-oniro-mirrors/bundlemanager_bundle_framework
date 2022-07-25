@@ -33,7 +33,6 @@
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_state_storage.h"
 #include "bundle_status_callback_interface.h"
-#include "common_event_manager.h"
 #include "distributed_data_storage.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
@@ -48,17 +47,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class NotifyType {
-    INSTALL = 1,
-    UPDATE,
-    UNINSTALL_BUNDLE,
-    UNINSTALL_MODULE,
-    ABILITY_ENABLE,
-    APPLICATION_ENABLE,
-    BUNDLE_DATA_CLEARED,
-    BUNDLE_CACHE_CLEARED,
-};
-
 enum class InstallState {
     INSTALL_START = 1,
     INSTALL_SUCCESS,
@@ -397,18 +385,6 @@ public:
      */
     bool UnregisterBundleStatusCallback();
     /**
-     * @brief Notify when the installation, update, or uninstall state of an application changes.
-     * @param bundleName Indicates the name of the bundle whose state has changed.
-     * @param modulePackage Indicates the modulePackage name of the bundle whose state has changed.
-     * @param resultCode Indicates the status code returned for the application installation, update, or uninstall
-     *  result.
-     * @param type Indicates the NotifyType object.
-     * @param uid Indicates the uid of the application.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool NotifyBundleStatus(const std::string &bundleName, const std::string &modulePackage,
-        const std::string &mainAbility, const ErrCode resultCode, const NotifyType type, const int32_t &uid);
-    /**
      * @brief Get a mutex for locking by bundle name.
      * @param bundleName Indicates the bundle name.
      * @return Returns a reference of mutex that for locing by bundle name.
@@ -723,6 +699,10 @@ public:
     int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName) const;
 
+    std::shared_mutex &GetStatusCallbackMutex();
+
+    std::vector<sptr<IBundleStatusCallback>> GetCallBackList() const;
+
 private:
     /**
      * @brief Init transferStates.
@@ -806,7 +786,7 @@ private:
     mutable std::mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
-    mutable std::mutex callbackMutex_;
+    mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;

@@ -83,12 +83,17 @@ ErrCode BaseBundleInstaller::InstallBundle(
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid);
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty()) {
-        dataMgr_->NotifyBundleStatus(bundleName_,
-            Constants::EMPTY_STRING,
-            mainAbility_,
-            result,
-            (isAppExist_ && hasInstalledInUser_) ? NotifyType::UPDATE : NotifyType::INSTALL,
-            uid);
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName_,
+            .abilityName = mainAbility_,
+            .resultCode = result,
+            .type = (isAppExist_ && hasInstalledInUser_) ? NotifyType::UPDATE : NotifyType::INSTALL,
+            .uid = uid,
+            .accessTokenId = accessTokenId_
+        };
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            APP_LOGW("notify status failed for installation");
+        }
     }
 
     if (result == ERR_OK) {
@@ -115,8 +120,16 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessInstallBundleByBundleName(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_ && !bundleName.empty()) {
-        dataMgr_->NotifyBundleStatus(
-            bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, result, NotifyType::INSTALL, uid);
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName,
+            .resultCode = result,
+            .type = NotifyType::INSTALL,
+            .uid = uid,
+            .accessTokenId = accessTokenId_
+        };
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            APP_LOGW("notify status failed for installation");
+        }
     }
 
     if (result == ERR_OK) {
@@ -145,8 +158,16 @@ ErrCode BaseBundleInstaller::Recover(
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty() && !modulePackage_.empty()) {
-        dataMgr_->NotifyBundleStatus(
-            bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, result, NotifyType::INSTALL, uid);
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName,
+            .resultCode = result,
+            .type = NotifyType::INSTALL,
+            .uid = uid,
+            .accessTokenId = accessTokenId_
+        };
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            APP_LOGW("notify status failed for installation");
+        }
     }
 
     if (result == ERR_OK) {
@@ -178,8 +199,16 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleUninstall(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_) {
-        dataMgr_->NotifyBundleStatus(
-            bundleName, Constants::EMPTY_STRING, Constants::EMPTY_STRING, result, NotifyType::UNINSTALL_BUNDLE, uid);
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName,
+            .resultCode = result,
+            .type = NotifyType::UNINSTALL_BUNDLE,
+            .uid = uid,
+            .accessTokenId = accessTokenId_
+        };
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            APP_LOGW("notify status failed for installation");
+        }
     }
 
     if (result == ERR_OK) {
@@ -212,8 +241,17 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleUninstall(bundleName, modulePackage, installParam, uid);
     if (installParam.needSendEvent && dataMgr_) {
-        dataMgr_->NotifyBundleStatus(
-            bundleName, modulePackage, Constants::EMPTY_STRING, result, NotifyType::UNINSTALL_MODULE, uid);
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName,
+            .modulePackage = modulePackage,
+            .resultCode = result,
+            .type = NotifyType::UNINSTALL_MODULE,
+            .uid = uid,
+            .accessTokenId = accessTokenId_
+        };
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            APP_LOGW("notify status failed for installation");
+        }
     }
 
     if (result == ERR_OK) {
@@ -355,9 +393,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             newInnerBundleUserInfo.bundleName = bundleName_;
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
-            uint32_t tokenId = CreateAccessTokenId(oldInfo);
-            oldInfo.SetAccessTokenId(tokenId, userId_);
-            result = GrantRequestPermissions(oldInfo, tokenId);
+            accessTokenId_ = CreateAccessTokenId(oldInfo);
+            oldInfo.SetAccessTokenId(accessTokenId_, userId_);
+            result = GrantRequestPermissions(oldInfo, accessTokenId_);
             CHECK_RESULT(result, "GrantRequestPermissions failed %{public}d");
 
             result = CreateBundleUserData(oldInfo);
@@ -923,9 +961,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             curInnerBundleUserInfo.bundleName = bundleName;
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
-            uint32_t tokenId = CreateAccessTokenId(oldInfo);
-            oldInfo.SetAccessTokenId(tokenId, userId_);
-            ErrCode result = GrantRequestPermissions(oldInfo, tokenId);
+            accessTokenId_ = CreateAccessTokenId(oldInfo);
+            oldInfo.SetAccessTokenId(accessTokenId_, userId_);
+            ErrCode result = GrantRequestPermissions(oldInfo, accessTokenId_);
             if (result != ERR_OK) {
                 return result;
             }
@@ -981,8 +1019,8 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
         APP_LOGE("delete inner info failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
-    if (BundlePermissionMgr::DeleteAccessTokenId(info.GetAccessTokenId(userId_)) !=
+    accessTokenId_ = info.GetAccessTokenId(userId_);
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
@@ -1025,9 +1063,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     uid = info.GetUid(userId_);
     info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
-    uint32_t tokenId = CreateAccessTokenId(info);
-    info.SetAccessTokenId(tokenId, userId_);
-    result = GrantRequestPermissions(info, tokenId);
+    accessTokenId_ = CreateAccessTokenId(info);
+    info.SetAccessTokenId(accessTokenId_, userId_);
+    result = GrantRequestPermissions(info, accessTokenId_);
     if (result != ERR_OK) {
         return result;
     }
@@ -1839,7 +1877,8 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     }
 
     // delete accessTokenId
-    if (BundlePermissionMgr::DeleteAccessTokenId(innerBundleInfo.GetAccessTokenId(userId_)) !=
+    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
@@ -1968,6 +2007,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     installedModules_.clear();
     state_ = InstallerState::INSTALL_START;
     singletonState_ = SingletonState::DEFAULT;
+    accessTokenId_ = 0;
     sysEventInfo_.Reset();
 }
 
@@ -2020,6 +2060,17 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.versionCode = versionCode_;
     sysEventInfo_.preBundleScene = preBundleScene;
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
+}
+
+ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
+{
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    if (commonEventMgr == nullptr) {
+        APP_LOGE("commonEventMgr is nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
