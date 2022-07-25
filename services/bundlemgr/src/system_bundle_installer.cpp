@@ -31,18 +31,10 @@ SystemBundleInstaller::~SystemBundleInstaller()
 }
 
 bool SystemBundleInstaller::InstallSystemBundle(
-    const std::string &filePath, Constants::AppType appType, int32_t userId)
+    const std::string &filePath,
+    InstallParam &installParam,
+    Constants::AppType appType)
 {
-    InstallParam installParam;
-    installParam.userId = userId;
-    installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
-    installParam.needSendEvent = false;
-    if (appType == Constants::AppType::SYSTEM_APP
-        || appType == Constants::AppType::THIRD_SYSTEM_APP) {
-        installParam.needSavePreInstallInfo = true;
-    }
-
     MarkPreBundleSyeEventBootTag(true);
     ErrCode result = InstallBundle(filePath, installParam, appType);
     if (result != ERR_OK) {
@@ -53,22 +45,14 @@ bool SystemBundleInstaller::InstallSystemBundle(
 }
 
 bool SystemBundleInstaller::OTAInstallSystemBundle(
-    const std::vector<std::string> &filePaths, Constants::AppType appType)
+    const std::vector<std::string> &filePaths,
+    InstallParam &installParam,
+    Constants::AppType appType)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return false;
-    }
-
-    InstallParam installParam;
-    installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
-    installParam.needSendEvent = false;
-    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-    if (appType == Constants::AppType::SYSTEM_APP
-    || appType == Constants::AppType::THIRD_SYSTEM_APP) {
-        installParam.needSavePreInstallInfo = true;
     }
 
     for (auto allUserId : dataMgr->GetAllUser()) {

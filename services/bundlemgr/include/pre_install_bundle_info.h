@@ -144,6 +144,22 @@ public:
         recoverable_ = recoverable;
     }
     /**
+     * @brief Is removable or not.
+     * @return Returns the removable.
+     */
+    bool IsRemovable() const
+    {
+        return removable_;
+    }
+    /**
+     * @brief Set removable.
+     * @param appType Indicates the removable to be set.
+     */
+    void SetRemovable(bool removable)
+    {
+        removable_ = removable;
+    }
+    /**
      * @brief operator.
      * @param PreInstallBundleInfo Indicates the PreInstallBundleInfo.
      */
@@ -156,6 +172,7 @@ private:
     uint32_t versionCode_;
     std::vector<std::string> bundlePaths_;
     bool recoverable_ = false;
+    bool removable_ = true;
     Constants::AppType appType_ = Constants::AppType::SYSTEM_APP;
 };
 }  // namespace AppExecFwk

@@ -47,16 +47,6 @@ std::set<std::string> recoverList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 bool hasLoadPreInstallProFile_ = false;
 
-std::string GetBundleNameFromPathStr(const std::string &str)
-{
-    auto index = str.find_last_of('/');
-    if (index != std::string::npos) {
-        return str.substr(index + 1);
-    }
-    
-    return "";
-}
-
 class InnerReceiverImpl : public StatusReceiverHost {
 public:
     InnerReceiverImpl() = default;
@@ -346,7 +336,10 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
     GetPreInstallDir(preInstallDirs);
     for (const auto &preInstallDir : preInstallDirs) {
         std::vector<std::string> filePaths { preInstallDir };
-        if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP)) {
+        bool recoverable = IsPreInstallRecoverable(preInstallDir);
+        bool removable = IsPreInstallRemovable(preInstallDir);
+        if (!OTAInstallSystemBundle(
+            filePaths, Constants::AppType::SYSTEM_APP, recoverable, removable)) {
             APP_LOGE("Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
             continue;
         }
@@ -506,9 +499,8 @@ void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
 #ifdef USE_PRE_BUNDLE_PROFILE
     LoadPreInstallProFile();
     for (const auto &installInfo : installList_) {
-        std::string installBundleName = GetBundleNameFromPathStr(installInfo.bundleDir);
-        if (uninstallList_.find(installBundleName) != uninstallList_.end()) {
-            APP_LOGW("bundle(%{public}s) not allowed installed", installBundleName.c_str());
+        if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
+            APP_LOGW("bundle(%{public}s) not allowed installed", installInfo.bundleDir.c_str());
             continue;
         }
 
@@ -735,14 +727,31 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
 {
     for (const auto &installInfo : installList_) {
         APP_LOGD("Inner process boot preBundle proFile install %{public}s", installInfo.ToString().c_str());
-        std::string installBundleName = GetBundleNameFromPathStr(installInfo.bundleDir);
-        if (uninstallList_.find(installBundleName) != uninstallList_.end()) {
-            APP_LOGW("bundle(%{public}s) not allowed installed when boot", installBundleName.c_str());
+        if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
+            APP_LOGW("bundle(%{public}s) not allowed installed when boot", installInfo.bundleDir.c_str());
             continue;
         }
 
         ProcessSystemBundleInstall(
-            installInfo.bundleDir, Constants::AppType::SYSTEM_APP, userId);
+            installInfo, Constants::AppType::SYSTEM_APP, userId);
+    }
+}
+
+void BMSEventHandler::ProcessSystemBundleInstall(
+    const PreScanInfo &preScanInfo, Constants::AppType appType, int32_t userId)
+{
+    APP_LOGD("Process system bundle install by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
+    InstallParam installParam;
+    installParam.userId = userId;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.recoverable = IsPreInstallRecoverable(preScanInfo.bundleDir);
+    installParam.removable = preScanInfo.removable;
+    installParam.needSavePreInstallInfo = true;
+    SystemBundleInstaller installer;
+    if (!installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType)) {
+        APP_LOGW("Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
     }
 }
 
@@ -750,8 +759,16 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     const std::string &bundleDir, Constants::AppType appType, int32_t userId)
 {
     APP_LOGD("Process system bundle install by bundleDir(%{public}s)", bundleDir.c_str());
+    InstallParam installParam;
+    installParam.userId = userId;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.recoverable = true;
+    installParam.removable = false;
+    installParam.needSavePreInstallInfo = true;
     SystemBundleInstaller installer;
-    if (!installer.InstallSystemBundle(bundleDir, appType, userId)) {
+    if (!installer.InstallSystemBundle(bundleDir, installParam, appType)) {
         APP_LOGW("Install System app:%{public}s error", bundleDir.c_str());
     }
 }
@@ -825,9 +842,8 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
     std::list<std::string> bundleDirs;
     for (const auto &installInfo : installList_) {
         APP_LOGD("Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
-        std::string installBundleName = GetBundleNameFromPathStr(installInfo.bundleDir);
-        if (uninstallList_.find(installBundleName) != uninstallList_.end()) {
-            APP_LOGW("bundle(%{public}s) not allowed installed when reboot", installBundleName.c_str());
+        if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
+            APP_LOGW("bundle(%{public}s) not allowed installed when reboot", installInfo.bundleDir.c_str());
             continue;
         }
 
@@ -856,6 +872,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
     for (auto &scanPathIter : scanPathList) {
         APP_LOGD("reboot scan bundle path: %{public}s ", scanPathIter.c_str());
+        bool recoverable = IsPreInstallRecoverable(scanPathIter);
+        bool removable = IsPreInstallRemovable(scanPathIter);
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
             APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
@@ -870,7 +888,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             APP_LOGD("OTA Install new bundle(%{public}s) by path(%{private}s).",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
-            if (!OTAInstallSystemBundle(filePaths, appType)) {
+            if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
                 APP_LOGE("OTA Install new bundle(%{public}s) error.", bundleName.c_str());
             }
 
@@ -933,7 +951,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        if (!OTAInstallSystemBundle(filePaths, appType)) {
+        if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
         }
     }
@@ -1074,15 +1092,26 @@ bool BMSEventHandler::HasModuleSavedInPreInstalledDb(
 }
 
 bool BMSEventHandler::OTAInstallSystemBundle(
-    const std::vector<std::string> &filePaths, Constants::AppType appType)
+    const std::vector<std::string> &filePaths,
+    Constants::AppType appType,
+    bool recoverable,
+    bool removable)
 {
     if (filePaths.empty()) {
         APP_LOGE("File path is empty");
         return false;
     }
 
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.recoverable = recoverable;
+    installParam.removable = removable;
+    installParam.needSavePreInstallInfo = true;
     SystemBundleInstaller installer;
-    return installer.OTAInstallSystemBundle(filePaths, appType);
+    return installer.OTAInstallSystemBundle(filePaths, installParam, appType);
 }
 
 bool BMSEventHandler::CheckAndParseHapFiles(
@@ -1167,40 +1196,48 @@ bool BMSEventHandler::ParseHapFiles(
     return true;
 }
 
-bool BMSEventHandler::IsPreInstallRecoverable(const std::string &bundleName)
+bool BMSEventHandler::IsPreInstallRecoverable(const std::string &path)
 {
+#ifdef USE_PRE_BUNDLE_PROFILE
     if (!hasLoadPreInstallProFile_) {
         APP_LOGE("Not load preInstall proFile or release.");
         return false;
     }
 
-    if (bundleName.empty() || recoverList_.empty()) {
-        APP_LOGE("BundleName or recoverList is empty.");
+    if (path.empty() || recoverList_.empty()) {
+        APP_LOGE("path or recoverList is empty.");
         return false;
     }
 
-    return recoverList_.find(bundleName) != recoverList_.end();
+    return recoverList_.find(path) != recoverList_.end();
+#else
+    return true;
+#endif
 }
 
-bool BMSEventHandler::IsPreInstallRemovable(const std::string &bundleName)
+bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
 {
+#ifdef USE_PRE_BUNDLE_PROFILE
     if (!hasLoadPreInstallProFile_) {
         APP_LOGE("Not load preInstall proFile or release.");
         return false;
     }
 
-    if (bundleName.empty() || installList_.empty()) {
-        APP_LOGE("BundleName or installList is empty.");
+    if (path.empty() || installList_.empty()) {
+        APP_LOGE("path or installList is empty.");
         return false;
     }
 
     for (const auto &installInfo : installList_) {
-        if (GetBundleNameFromPathStr(installInfo.bundleDir) == bundleName) {
+        if (installInfo.bundleDir == path) {
             return installInfo.removable;
         }
     }
 
     return true;
+#else
+    return false;
+#endif
 }
 
 bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConfigInfo)

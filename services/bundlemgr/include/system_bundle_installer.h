@@ -25,29 +25,35 @@ public:
     SystemBundleInstaller();
     virtual ~SystemBundleInstaller() override;
     /**
-     * @brief Install system and system vendor bundles.
+     * @brief Install preinstall app.
      * @param filePath Indicates the filePath.
+     * @param installParam Indicates the installParam.
      * @param appType Indicates the bundle type.
-     * @param userId Indicates the user ID.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
-    bool InstallSystemBundle(const std::string &filePath,
-        Constants::AppType appType, int32_t userId = Constants::UNSPECIFIED_USERID);
+    bool InstallSystemBundle(
+        const std::string &filePath,
+        InstallParam &installParam,
+        Constants::AppType appType);
     /**
-     * @brief OTA Install system and system vendor bundles.
+     * @brief OTA Install preinstall app.
      * @param filePath Indicates the filePaths.
+     * @param installParam Indicates the installParam.
      * @param appType Indicates the bundle type.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
-    bool OTAInstallSystemBundle(const std::vector<std::string> &filePaths, Constants::AppType appType);
+    bool OTAInstallSystemBundle(
+        const std::vector<std::string> &filePaths,
+        InstallParam &installParam,
+        Constants::AppType appType);
     /**
-     * @brief Uninstall system and system vendor bundles.
+     * @brief Uninstall preinstall app.
      * @param bundleName Indicates the bundle name.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     bool UninstallSystemBundle(const std::string &bundleName);
     /**
-     * @brief Uninstall system and system vendor bundles.
+     * @brief Uninstall preinstall app by modulePackage.
      * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @return Returns true if this function called successfully; returns false otherwise.

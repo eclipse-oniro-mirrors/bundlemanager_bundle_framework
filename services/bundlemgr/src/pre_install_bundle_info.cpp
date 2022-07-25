@@ -25,6 +25,7 @@ const std::string VERSION_CODE = "versionCode";
 const std::string BUNDLE_PATHS = "bundlePaths";
 const std::string APP_TYPE = "appType";
 const std::string RECOVERABLE = "recoverable";
+const std::string REMOVABLE = "removable";
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
@@ -34,6 +35,7 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_PATHS] = bundlePaths_;
     jsonObject[APP_TYPE] = appType_;
     jsonObject[RECOVERABLE] = recoverable_;
+    jsonObject[REMOVABLE] = removable_;
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -79,6 +81,14 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        REMOVABLE,
+        removable_,
+        JsonType::BOOLEAN,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
     int32_t ret = ProfileReader::parseResult;
     // need recover parse result to ERR_OK
     ProfileReader::parseResult = ERR_OK;
@@ -93,6 +103,7 @@ std::string PreInstallBundleInfo::ToString() const
     j[BUNDLE_PATHS] = bundlePaths_;
     j[APP_TYPE] = appType_;
     j[RECOVERABLE] = recoverable_;
+    j[REMOVABLE] = removable_;
     return j.dump();
 }
 }  // namespace AppExecFwk
