@@ -168,7 +168,19 @@ ohos_shared_library("libbms") {
   ]
 
   configs = [ ":bundlemgr_common_config" ]
-  cflags = []
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Wno-non-c-typedef-for-linkage",
+    "-Os",
+  ]
+
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Wno-non-c-typedef-for-linkage",
+    "-Os",
+  ]
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }

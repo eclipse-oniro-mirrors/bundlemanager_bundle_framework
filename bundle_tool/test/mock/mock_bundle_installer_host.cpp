@@ -18,6 +18,16 @@
 using namespace OHOS::AAFwk;
 namespace OHOS {
 namespace AppExecFwk {
+MockBundleInstallerHost::MockBundleInstallerHost()
+{
+    APP_LOGI("create mock bundle installer host instance");
+}
+
+MockBundleInstallerHost::~MockBundleInstallerHost()
+{
+    APP_LOGI("destroy mock bundle installer host instance");
+}
+
 bool MockBundleInstallerHost::Install(
     const std::string &bundleFilePath, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
@@ -89,6 +99,28 @@ ErrCode MockBundleInstallerHost::StreamInstall(const std::vector<std::string> &b
     APP_LOGD("enter");
     statusReceiver->OnFinished(OHOS::ERR_OK, MSG_SUCCESS);
     return OHOS::ERR_OK;
+}
+
+ErrCode MockBundleInstallerHost::InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
+    int32_t &appIndex)
+{
+    return OHOS::ERR_OK;
+}
+
+ErrCode MockBundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId)
+{
+    return OHOS::ERR_OK;
+}
+
+sptr<IBundleStreamInstaller> MockBundleInstallerHost::CreateStreamInstaller(const InstallParam &installParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    return nullptr;
+}
+
+bool MockBundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
+{
+    return true;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

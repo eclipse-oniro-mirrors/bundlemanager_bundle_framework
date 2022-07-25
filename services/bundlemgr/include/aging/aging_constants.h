@@ -21,10 +21,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace AgingConstants {
-const std::string SYSTEM_PARAM_DATA_SIZE_THRESHOLD = "persist.sys.bms.aging.policy.data.size.threshold";
-const std::string SYSTEM_PARAM_RECENILY_USED_THRESHOLD = "persist.sys.bms.aging.policy.recently.used.threshold";
-const std::string SYSTEM_PARAM_AGING_TIMER_INTERVAL = "persist.sys.bms.aging.policy.timer.interval";
-const std::string SYSTEM_PARAM_AGING_BATTER_THRESHOLD = "persist.sys.bms.aging.policy.battery.threshold";
+constexpr const char* SYSTEM_PARAM_DATA_SIZE_THRESHOLD = "persist.sys.bms.aging.policy.data.size.threshold";
+constexpr const char* SYSTEM_PARAM_RECENILY_USED_THRESHOLD = "persist.sys.bms.aging.policy.recently.used.threshold";
+constexpr const char* SYSTEM_PARAM_AGING_TIMER_INTERVAL = "persist.sys.bms.aging.policy.timer.interval";
+constexpr const char* SYSTEM_PARAM_AGING_BATTER_THRESHOLD = "persist.sys.bms.aging.policy.battery.threshold";
 const int64_t ONE_SECOND_MS = 1000;
 const float AGING_SIZE_RATIO = 0.8F;
 const int64_t ONE_HOUR_MS = (int64_t)60 * 60 * ONE_SECOND_MS;
@@ -42,10 +42,10 @@ const int32_t COUNT_MODULE_RECODES_GET = 1000;
 
 const std::string AGING_THREAD = "aging_thread";
 
-const std::string UNUSED_FOR_30_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor30DaysBundleAgingHandler";
-const std::string UNUSED_FOR_20_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor20DaysBundleAgingHandler";
-const std::string UNUSED_FOR_10_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor10DaysBundleAgingHandler";
-const std::string BUNDLE_DATA_SIZE_AGING_HANDLER = "BundleDataSizeAgingHandler";
+constexpr const char* UNUSED_FOR_30_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor30DaysBundleAgingHandler";
+constexpr const char* UNUSED_FOR_20_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor20DaysBundleAgingHandler";
+constexpr const char* UNUSED_FOR_10_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor10DaysBundleAgingHandler";
+constexpr const char* BUNDLE_DATA_SIZE_AGING_HANDLER = "BundleDataSizeAgingHandler";
 }  // namespace AgingConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
