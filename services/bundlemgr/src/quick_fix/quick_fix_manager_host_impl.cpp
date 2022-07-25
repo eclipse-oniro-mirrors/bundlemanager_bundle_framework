@@ -16,6 +16,7 @@
 #include "quick_fix_manager_host_impl.h"
 
 #include "app_log_wrapper.h"
+#include "quick_fix_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -23,6 +24,11 @@ bool QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bun
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("QuickFixManagerHostImpl::DeployQuickFix start");
+    if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
+        APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix wrong parms");
+        return false;
+    }
+    // 1. parse patch.json
     return true;
 }
 

@@ -16,6 +16,7 @@
 #include "quick_fix_manager_rdb.h"
 
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
 #include "json_serializer.h"
 
 namespace OHOS {
@@ -31,8 +32,6 @@ QuickFixManagerRdb::QuickFixManagerRdb()
         APP_LOGE("rdbDataManager is null");
         return;
     }
-
-    rdbDataManager_->Init();
 }
 
 QuickFixManagerRdb::~QuickFixManagerRdb()
@@ -65,7 +64,7 @@ bool QuickFixManagerRdb::QueryInnerAppQuickFix(const std::string &bundleName, In
 bool QuickFixManagerRdb::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
     APP_LOGI("begin to SaveInnerAppQuickFix");
-    bool ret = SaveDataToDb(appQuickFix);
+    bool ret = SaveDataToDb(innerAppQuickFix);
     if (!ret) {
         APP_LOGE("SaveDataToDb failed.");
         return false;
@@ -120,7 +119,7 @@ bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix
     return true;
 }
 
-bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, AppQuickFix &appQuickFix)
+bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
 {
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
@@ -130,14 +129,14 @@ bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, AppQuickFi
     std::string value;
     bool result = rdbDataManager_->QueryData(bundleName, value);
     if (!result) {
-        APP_LOGE("QueryData failed by key %{public}d", userId);
+        APP_LOGE("QueryData failed by bundleName %{public}s", bundleName.c_str());
         return false;
     }
 
     nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
-    if (jsonObject.is_discarded() || (appQuickFix.FromJson(jsonObject) != ERR_OK)) {
-        APP_LOGE("error key : %{public}s", key.c_str());
-        rdbDataManager_->DeleteData(key);
+    if (jsonObject.is_discarded() || (innerAppQuickFix.FromJson(jsonObject) != ERR_OK)) {
+        APP_LOGE("error key : %{public}s", bundleName.c_str());
+        rdbDataManager_->DeleteData(bundleName);
         return false;
     }
     return true;
@@ -150,7 +149,7 @@ bool QuickFixManagerRdb::SaveDataToDb(const InnerAppQuickFix &innerAppQuickFix)
         return false;
     }
 
-    return rdbDataManager_->InsertData(innerAppQuickFix.bundleName, innerAppQuickFix.ToString());
+    return rdbDataManager_->InsertData(innerAppQuickFix.GetAppQuickFix().bundleName, innerAppQuickFix.ToString());
 }
 
 bool QuickFixManagerRdb::DeleteDataFromDb(const std::string &bundleName)

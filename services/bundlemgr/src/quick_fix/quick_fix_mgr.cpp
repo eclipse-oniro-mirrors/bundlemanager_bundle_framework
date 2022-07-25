@@ -15,9 +15,12 @@
 
 #include "quick_fix_mgr.h"
 
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
 #ifdef BMS_RDB_ENABLE
 #include "quick_fix_manager_rdb.h"
 #endif
+#include "inner_app_quick_fix.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -25,7 +28,7 @@ QuickFixMgr::QuickFixMgr()
 {
     APP_LOGD("create QuickFixMgr start.");
 #ifdef BMS_RDB_ENABLE
-    quickFixManagerDb_ = std::make_share<QuickFixManagerRdb>();
+    quickFixManagerDb_ = std::make_shared<QuickFixManagerRdb>();
 #endif
     if (quickFixManagerDb_ == nullptr) {
         APP_LOGE("create QuickFixMgr failed.");
@@ -42,11 +45,33 @@ QuickFixMgr::~QuickFixMgr()
     }
 }
 
-QuickFixMgr& QuickFixMgr::QuickFixMgrGetInstance()
+QuickFixMgr& QuickFixMgr::GetInstance()
 {
     static QuickFixMgr quickFixMgr;
     return quickFixMgr;
 }
+
+bool QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+    const sptr<IQuickFixStatusCallback> &statusCallback)
+{
+    // 1.parse patch.json
+    //InnerAppQuickFix appQuickFix;
+    // 2.
+    return true;
+}
+
+bool QuickFixMgr::SwitchQuickFix(const std::string &bundleName,
+    const sptr<IQuickFixStatusCallback> &statusCallback)
+{
+    return true;
+}
+
+bool QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
+    const sptr<IQuickFixStatusCallback> &statusCallback)
+{
+    return true;
+}
+
 
 bool QuickFixMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
 {

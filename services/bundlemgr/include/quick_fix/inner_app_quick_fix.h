@@ -51,14 +51,14 @@ public:
 
     AppQuickFix GetAppQuickFix() const;
 
-    bool AddHqfInfo(const InnerAppQuickFix &newInfo);
+    bool AddHqfInfo(const AppQuickFix &newInfo);
 
     bool RemoveHqfInfo(const std::string &bundleName);
 
     bool SwitchQuickFix();
 
-    bool SetQuickFixMark(const QuickFixMark &mark);
-    
+    void SetQuickFixMark(const QuickFixMark &mark);
+
     QuickFixMark GetQuickFixMark() const;
 
     std::string ToString() const;
@@ -71,6 +71,8 @@ private:
     AppQuickFix appQuickFix_;
     QuickFixMark quickFixMark_;
 };
+void to_json(nlohmann::json &jsonObject, const QuickFixMark &quickFixMark);
+void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_INNER_APP_QUICK_FIX_H

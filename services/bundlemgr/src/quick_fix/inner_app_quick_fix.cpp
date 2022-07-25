@@ -17,7 +17,11 @@
 
 #include <algorithm>
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "common_profile.h"
+#include "json_serializer.h"
+#include "json_util.h"
 #include <string>
 
 namespace OHOS {
@@ -46,18 +50,19 @@ AppQuickFix InnerAppQuickFix::GetAppQuickFix() const
     return appQuickFix_;
 }
 
-bool InnerAppQuickFix::AddHqfInfo(const InnerAppQuickFix &newInfo)
-{
+bool InnerAppQuickFix::AddHqfInfo(const AppQuickFix &newInfo)
+{ 
     if (newInfo.deployingAppqfInfo.hqfInfos.empty()) {
         APP_LOGE("InnerAppQuickFix::AddHqfInfo failed due to hqfInfos empty");
         return false;
     }
-    for (const auto item : newInfo.deployingAppqfInfo.hqfInfos) {
+    for (const auto &item : newInfo.deployingAppqfInfo.hqfInfos) {
         if (!RemoveHqfInfo(item.moduleName)) {
             APP_LOGD("moduleName %{public}s does not exist", item.moduleName.c_str());
         }
         appQuickFix_.deployingAppqfInfo.hqfInfos.emplace_back(item);
     }
+    return true;
 }
 
 bool InnerAppQuickFix::RemoveHqfInfo(const std::string &moduleName)
@@ -80,7 +85,7 @@ bool InnerAppQuickFix::SwitchQuickFix()
     return true;
 }
 
-bool InnerAppQuickFix::SetQuickFixMark(const QuickFixMark &mark)
+void InnerAppQuickFix::SetQuickFixMark(const QuickFixMark &mark)
 {
     quickFixMark_ = mark;
 }
@@ -106,13 +111,14 @@ void InnerAppQuickFix::ToJson(nlohmann::json &jsonObject) const
 int32_t InnerAppQuickFix::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
     GetValueIfFindKey<AppQuickFix>(jsonObject,
         jsonObjectEnd,
         APP_QUICK_FIX,
         appQuickFix_,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<QuickFixMark>(jsonObject,
         jsonObjectEnd,
@@ -124,9 +130,8 @@ int32_t InnerAppQuickFix::FromJson(const nlohmann::json &jsonObject)
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerAppQuickFix from database error, error code : %{public}d", parseResult);
-        return parseResult;
     }
-    return ret;
+    return parseResult;
 }
 
 void to_json(nlohmann::json &jsonObject, const QuickFixMark &quickFixMark)
@@ -152,7 +157,7 @@ void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark)
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
-        quickFixMark.packageName,
+        quickFixMark.moduleName,
         JsonType::STRING,
         false,
         ProfileReader::parseResult,

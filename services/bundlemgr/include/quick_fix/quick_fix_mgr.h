@@ -17,13 +17,24 @@
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_QUICK_FIX_MGR_H
 
 #include "quick_fix_manager_db_interface.h"
+
 #include "nocopyable.h"
+#include "quick_fix_status_callback_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class QuickFixMgr {
 public:
     static QuickFixMgr& GetInstance();
+
+    bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+        const sptr<IQuickFixStatusCallback> &statusCallback);
+
+    bool SwitchQuickFix(const std::string &bundleName,
+        const sptr<IQuickFixStatusCallback> &statusCallback);
+
+    bool DeleteQuickFix(const std::string &bundleName,
+        const sptr<IQuickFixStatusCallback> &statusCallback);
 
     bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs);
 
