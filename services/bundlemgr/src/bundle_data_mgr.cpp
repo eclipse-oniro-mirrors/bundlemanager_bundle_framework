@@ -19,7 +19,7 @@
 #include <cinttypes>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd/installd_operator.h"
+#include "installd_client.h"
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
@@ -1200,24 +1200,19 @@ bool BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &inne
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    int64_t curSize = 0;
     int64_t spaceSize = 0;
-    BundleInfo bundleInfo;
-
-    if (userId != Constants::INVALID_USERID
-        && GetBundleInfo(bundleName, GET_ALL_APPLICATION_INFO, bundleInfo, userId) == true) {
-        if (!bundleInfo.applicationInfo.codePath.empty()) {
-            curSize = InstalldOperator::GetDiskUsage(bundleInfo.applicationInfo.codePath);
-            spaceSize += curSize;
-            APP_LOGI("Code %{public}s:%{public}" PRId64, bundleInfo.applicationInfo.codePath.c_str(), curSize);
-        }
-        if (!bundleInfo.applicationInfo.dataDir.empty()) {
-            curSize = InstalldOperator::GetDiskUsage(bundleInfo.applicationInfo.dataDir);
-            spaceSize += curSize;
-            APP_LOGI("Data %{public}s:%{public}" PRId64, bundleInfo.applicationInfo.dataDir.c_str(), curSize);
-        }
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("userId is invalid");
+        return spaceSize;
     }
-
+    std::vector<int64_t> bundleStats;
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
+        APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
+        return spaceSize;
+    }
+    for (const auto &size : bundleStats) {
+        spaceSize += size;
+    }
     APP_LOGI("%{public}s spaceSize:%{public}" PRId64, bundleName.c_str(), spaceSize);
     return spaceSize;
 }
@@ -1226,29 +1221,18 @@ int64_t BundleDataMgr::GetAllFreeInstallBundleSpaceSize() const
 {
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
     int64_t allSize = 0;
-    int64_t curSize = 0;
     std::vector<BundleInfo> bundleInfos;
 
-    if (userId != Constants::INVALID_USERID
-        && GetBundleInfos(GET_ALL_APPLICATION_INFO, bundleInfos, userId) == true) {
+    if (userId != Constants::INVALID_USERID && GetBundleInfos(GET_ALL_APPLICATION_INFO, bundleInfos, userId) == true) {
         for (const auto &item : bundleInfos) {
-            APP_LOGI("%{public}s freeInstall:%{public}d", item.name.c_str(), item.applicationInfo.isFreeInstallApp);
+            APP_LOGD("%{public}s freeInstall:%{public}d", item.name.c_str(), item.applicationInfo.isFreeInstallApp);
             if (item.applicationInfo.isFreeInstallApp) {
-                if (!item.applicationInfo.codePath.empty()) {
-                    curSize = InstalldOperator::GetDiskUsage(item.applicationInfo.codePath);
-                    allSize += curSize;
-                    APP_LOGI("Code %{public}s:%{public}" PRId64, item.applicationInfo.codePath.c_str(), curSize);
-                }
-                if (!item.applicationInfo.dataDir.empty()) {
-                    curSize = InstalldOperator::GetDiskUsage(item.applicationInfo.dataDir);
-                    allSize += curSize;
-                    APP_LOGI("Data %{public}s:%{public}" PRId64, item.applicationInfo.dataDir.c_str(), curSize);
-                }
+                allSize += GetBundleSpaceSize(item.name);
             }
         }
     }
 
-    APP_LOGI("All sfreeInstall:%{public}" PRId64, allSize);
+    APP_LOGI("All freeInstall app size:%{public}" PRId64, allSize);
     return allSize;
 }
 #endif
