@@ -74,6 +74,16 @@ typedef enum TypePermissionFlag {
     PERMISSION_GRANTED_BY_POLICY = 1 << 3,
 } PermissionFlag;
 
+class NativeTokenInfo final {
+public:
+    ATokenTypeEnum apl;
+    std::string processName;
+    std::vector<std::string> dcap;
+    AccessTokenID tokenID;
+    AccessTokenAttr tokenAttr;
+    std::vector<std::string> nativeAcls;
+};
+
 class PermissionDef final {
 public:
     std::string permissionName;

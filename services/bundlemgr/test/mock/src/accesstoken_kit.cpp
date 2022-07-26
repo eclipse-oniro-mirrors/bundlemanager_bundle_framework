@@ -83,6 +83,12 @@ AccessTokenID AccessTokenKit::GetHapTokenID(int userID, const std::string& bundl
 {
     return 0;
 }
+
+int AccessTokenKit::GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &nativeTokenInfo)
+{
+    nativeTokenInfo.processName = "foundation";
+    return 0;
+}
 }
 }
 }

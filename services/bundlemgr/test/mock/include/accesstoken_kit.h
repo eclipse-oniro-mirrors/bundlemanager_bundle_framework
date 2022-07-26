@@ -43,6 +43,7 @@ public:
     static int GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag);
     static int ClearUserGrantedPermissionState(AccessTokenID tokenID);
     static AccessTokenID GetHapTokenID(int userID, const std::string& bundleName, int instIndex);
+    static int GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &nativeTokenInfo);
 };
 } // namespace AccessToken
 } // namespace Security
