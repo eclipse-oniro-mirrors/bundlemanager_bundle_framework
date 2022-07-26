@@ -16,7 +16,7 @@
 #include "quick_fix_manager_host_impl.h"
 
 #include "app_log_wrapper.h"
-#include "quick_fix_mgr.h"
+#include "quick_fix_data_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -28,22 +28,29 @@ bool QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bun
         APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix wrong parms");
         return false;
     }
-    // 1. parse patch.json
-    return true;
+    return DelayedSingleton<QuickFixDataMgr>::GetInstance()->DeployQuickFix(bundleFilePaths, statusCallback);
 }
 
 bool QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("QuickFixManagerHostImpl::SwitchQuickFix start");
-    return true;
+    if (bundleName.empty() || (statusCallback == nullptr)) {
+        APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix wrong parms");
+        return false;
+    }
+    return DelayedSingleton<QuickFixDataMgr>::GetInstance()->SwitchQuickFix(bundleName, statusCallback);
 }
 
 bool QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("QuickFixManagerHostImpl::DeleteQuickFix start");
-    return true;
+    if (bundleName.empty() || (statusCallback == nullptr)) {
+        APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix wrong parms");
+        return false;
+    }
+    return DelayedSingleton<QuickFixDataMgr>::GetInstance()->DeleteQuickFix(bundleName, statusCallback);
 }
 }
 } // namespace OHOS

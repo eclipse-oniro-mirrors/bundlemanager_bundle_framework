@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_QUICK_FIX_MGR_H
-#define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_QUICK_FIX_MGR_H
+#ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_QUICK_FIX_DATA_MGR_H
+#define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_QUICK_FIX_DATA_MGR_H
 
 #include "quick_fix_manager_db_interface.h"
 
@@ -24,10 +24,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class QuickFixMgr : public DelayedSingleton<QuickFixMgr> {
+class QuickFixDataMgr : public DelayedSingleton<QuickFixDataMgr> {
 public:
-    QuickFixMgr();
-    ~QuickFixMgr();
+    QuickFixDataMgr();
+    ~QuickFixDataMgr();
 
     bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback);
@@ -52,4 +52,4 @@ private:
 };
 } // OHOS
 } // AppExecFwk
-#endif // FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_QUICK_FIX_MGR_H
+#endif // FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_QUICK_FIX_DATA_MGR_H

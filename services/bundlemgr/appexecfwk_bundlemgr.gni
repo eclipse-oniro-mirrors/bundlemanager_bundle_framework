@@ -90,8 +90,8 @@ sandbox_app = [
 
 quick_fix = [
   "${services_path}/bundlemgr/src/quick_fix/inner_app_quick_fix.cpp",
+  "${services_path}/bundlemgr/src/quick_fix/quick_fix_data_mgr.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_host_impl.cpp",
-  "${services_path}/bundlemgr/src/quick_fix/quick_fix_mgr.cpp",
 ]
 
 if (bms_rdb_enable) {

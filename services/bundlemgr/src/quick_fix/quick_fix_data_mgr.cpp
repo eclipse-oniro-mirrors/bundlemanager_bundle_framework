@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "quick_fix_mgr.h"
+#include "quick_fix_data_mgr.h"
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
@@ -24,43 +24,54 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-QuickFixMgr::QuickFixMgr()
+QuickFixDataMgr::QuickFixDataMgr()
 {
-    APP_LOGD("create QuickFixMgr start.");
+    APP_LOGD("create QuickFixDataMgr start.");
 #ifdef BMS_RDB_ENABLE
     quickFixManagerDb_ = std::make_shared<QuickFixManagerRdb>();
 #endif
     if (quickFixManagerDb_ == nullptr) {
-        APP_LOGE("create QuickFixMgr failed.");
+        APP_LOGE("create QuickFixDataMgr failed.");
         return;
     }
 }
 
-QuickFixMgr::~QuickFixMgr()
+QuickFixDataMgr::~QuickFixDataMgr()
 {
-    APP_LOGD("destroy QuickFixMgr.");
+    APP_LOGD("destroy QuickFixDataMgr.");
 }
 
-bool QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+bool QuickFixDataMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
+    if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
+        APP_LOGE("QuickFixDataMgr::DeployQuickFix wrong parms");
+        return false;
+    }
     return true;
 }
 
-bool QuickFixMgr::SwitchQuickFix(const std::string &bundleName,
+bool QuickFixDataMgr::SwitchQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
+    if (bundleName.empty() || (statusCallback == nullptr)) {
+        APP_LOGE("QuickFixDataMgr::SwitchQuickFix wrong parms");
+        return false;
+    }
     return true;
 }
 
-bool QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
+bool QuickFixDataMgr::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
+    if (bundleName.empty() || (statusCallback == nullptr)) {
+        APP_LOGE("QuickFixDataMgr::DeleteQuickFix wrong parms");
+        return false;
+    }
     return true;
 }
 
-
-bool QuickFixMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
+bool QuickFixDataMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
@@ -70,7 +81,7 @@ bool QuickFixMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFi
     return quickFixManagerDb_->QueryAllInnerAppQuickFix(innerAppQuickFixs);
 }
 
-bool QuickFixMgr::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
+bool QuickFixDataMgr::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
@@ -80,7 +91,7 @@ bool QuickFixMgr::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQ
     return quickFixManagerDb_->QueryInnerAppQuickFix(bundleName, innerAppQuickFix);
 }
 
-bool QuickFixMgr::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
+bool QuickFixDataMgr::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
@@ -90,7 +101,7 @@ bool QuickFixMgr::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
     return quickFixManagerDb_->SaveInnerAppQuickFix(innerAppQuickFix);
 }
 
-bool QuickFixMgr::DeleteInnerAppQuickFix(const std::string &bundleName)
+bool QuickFixDataMgr::DeleteInnerAppQuickFix(const std::string &bundleName)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
