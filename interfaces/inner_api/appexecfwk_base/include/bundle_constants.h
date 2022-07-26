@@ -134,6 +134,7 @@ constexpr int32_t DATABASE_DIR_GID = 3012;
 constexpr int32_t DFS_GID = 1009;
 constexpr const char* PROFILE_KEY_UID_SIZE = "size";
 constexpr const char* PROFILE_KEY_UID_AND_GID = "uid_and_gid";
+constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 
 // permissions
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
@@ -142,7 +143,6 @@ constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.G
 constexpr const char* PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
 constexpr const char* PERMISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE_FILES";
 constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
-constexpr const char* PERMISSION_INSTALLD_OPERATE_DIRECTORY = "ohos.permission.OPERATE_DIRECTORY";
 
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/permission/install_list_permissions.json";

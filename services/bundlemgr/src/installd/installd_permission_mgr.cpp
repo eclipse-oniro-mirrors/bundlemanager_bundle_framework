@@ -22,20 +22,20 @@
 using namespace OHOS::Security;
 namespace OHOS {
 namespace AppExecFwk {
-bool InstalldPermissionMgr::VerifyCallingPermission(const std::string &permissionName)
+bool InstalldPermissionMgr::VerifyCallingPermission(const std::string &name)
 {
-    APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
+    APP_LOGD("VerifyCallingPermission name %{public}s", name.c_str());
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     APP_LOGD("callerToken : %{private}u", callerToken);
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    int32_t ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
-    if ((ret == AccessToken::PermissionState::PERMISSION_GRANTED) ||
-        (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE)) {
-        APP_LOGD("VerifyCallingPermission success, permission:%{public}s: PERMISSION_GRANTED",
-            permissionName.c_str());
+    AccessToken::NativeTokenInfo tokenInfo;
+    int32_t ret = AccessToken::AccessTokenKit::GetNativeTokenInfo(callerToken, tokenInfo);
+    if ((ret == AccessToken::AccessTokenKitRet::RET_SUCCESS) && (tokenInfo.processName == name)) {
+        APP_LOGD("VerifyCallingPermission succeed, name:%{public}s, processName: %{public}s", name.c_str(),
+            tokenInfo.processName.c_str());
         return true;
     }
-    APP_LOGW("VerifyCallingPermission failed, permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+    APP_LOGE("VerifyCallingPermission failed, name:%{public}s, processName: %{public}s", name.c_str(),
+        tokenInfo.processName.c_str());
     return false;
 }
 } // AppExecFwk
