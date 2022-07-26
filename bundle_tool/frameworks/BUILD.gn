@@ -20,6 +20,7 @@ config("tools_bm_config") {
     "include/bundle_tool_callback",
     "${common_path}/log/include",
     "${kits_path}/js/bundlemgr",
+    "//third_party/json/include",
     "//utils/system/safwk/native/include",
   ]
 
@@ -90,6 +91,10 @@ ohos_source_set("tools_test_bm_source_set") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+
+  deps = [
+    "//third_party/jsoncpp:jsoncpp",
+  ]
 
   external_deps = [
     "ability_base:want",
