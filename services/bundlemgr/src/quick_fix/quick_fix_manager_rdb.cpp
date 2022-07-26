@@ -28,10 +28,6 @@ QuickFixManagerRdb::QuickFixManagerRdb()
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = Constants::QUICK_FIX_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
-    if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return;
-    }
 }
 
 QuickFixManagerRdb::~QuickFixManagerRdb()

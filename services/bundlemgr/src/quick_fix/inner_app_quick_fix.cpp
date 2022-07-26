@@ -51,7 +51,7 @@ AppQuickFix InnerAppQuickFix::GetAppQuickFix() const
 }
 
 bool InnerAppQuickFix::AddHqfInfo(const AppQuickFix &newInfo)
-{ 
+{
     if (newInfo.deployingAppqfInfo.hqfInfos.empty()) {
         APP_LOGE("InnerAppQuickFix::AddHqfInfo failed due to hqfInfos empty");
         return false;
@@ -67,11 +67,10 @@ bool InnerAppQuickFix::AddHqfInfo(const AppQuickFix &newInfo)
 
 bool InnerAppQuickFix::RemoveHqfInfo(const std::string &moduleName)
 {
-    auto iter = std::find_if(std::begin(appQuickFix_.deployingAppqfInfo.hqfInfos),
-            std::end(appQuickFix_.deployingAppqfInfo.hqfInfos),
-            [moduleName](const auto &item) {
-                return item.moduleName == moduleName;
-            });
+    auto iter = std::find_if(
+        std::begin(appQuickFix_.deployingAppqfInfo.hqfInfos),
+        std::end(appQuickFix_.deployingAppqfInfo.hqfInfos),
+        [moduleName] (const auto &item) { return item.moduleName == moduleName;});
     if (iter == appQuickFix_.deployingAppqfInfo.hqfInfos.end()) {
         APP_LOGE("InnerAppQuickFix::RemoveHqfInfo failed due to find %{public}s", moduleName.c_str());
         return false;
