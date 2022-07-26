@@ -105,7 +105,13 @@ BmsBundleInstallerTest::~BmsBundleInstallerTest()
 bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) const
 {
     auto installer = std::make_unique<SystemBundleInstaller>();
-    return installer->InstallSystemBundle(filePath, Constants::AppType::SYSTEM_APP, USERID);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.needSavePreInstallInfo = true;
+    return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
 }
 
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const

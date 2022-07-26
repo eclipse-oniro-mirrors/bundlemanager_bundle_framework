@@ -29,6 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct InstallCheckParam {
     bool isPreInstallApp = false;
+    bool removable = true;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
 };
@@ -116,7 +117,8 @@ private:
         const Security::Verify::ProvisionInfo &provisionInfo,
         InnerBundleInfo &newInfo);
 
-    void CollectPreBundleInfo(InnerBundleInfo &newInfo);
+    void CollectPreBundleInfo(
+        const InstallCheckParam &checkParam, InnerBundleInfo &newInfo);
 
     bool isContainEntry_ = false;
 };

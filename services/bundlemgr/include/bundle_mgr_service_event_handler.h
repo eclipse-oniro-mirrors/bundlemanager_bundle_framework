@@ -69,18 +69,6 @@ public:
      */
     static void ClearPreInstallCache();
     /**
-     * @brief Judge whether the preInstall app can be recovered.
-     * @param bundleName Indicates the bundleName.
-     * @return Returns true if the preInstall is recovable; returns false otherwise.
-     */
-    static bool IsPreInstallRecoverable(const std::string &bundleName);
-    /**
-     * @brief Judge whether the preInstall app can be removable.
-     * @param bundleName Indicates the bundleName.
-     * @return Returns true if the preInstall is removable; returns false otherwise.
-     */
-    static bool IsPreInstallRemovable(const std::string &bundleName);
-    /**
      * @brief Get the preInstall capability.
      * @param preBundleConfigInfo Indicates the preBundleConfigInfo.
      * @return Returns true if get the preInstall capability successfully; returns false otherwise.
@@ -276,8 +264,21 @@ private:
      * @param userId Indicates userId.
      * @return
      */
-    void ProcessSystemBundleInstall(const std::string &scanDir,
-        Constants::AppType appType, int32_t userId = Constants::UNSPECIFIED_USERID);
+    void ProcessSystemBundleInstall(
+        const std::string &scanDir,
+        Constants::AppType appType,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
+    /**
+     * @brief Install bundles by preScanInfo.
+     * @param preScanInfo Indicates the preScanInfo.
+     * @param appType Indicates the bundle type.
+     * @param userId Indicates userId.
+     * @return
+     */
+    void ProcessSystemBundleInstall(
+        const PreScanInfo &preScanInfo,
+        Constants::AppType appType,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief start reboot scan.
      * @return
@@ -372,9 +373,15 @@ private:
      * @brief OTA Install system app and system vendor bundles.
      * @param filePaths Indicates the filePaths.
      * @param appType Indicates the bundle type.
+     * @param recoverable Indicates the bundle type.
+     * @param removable Indicates the bundle type.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
-    bool OTAInstallSystemBundle(const std::vector<std::string> &filePaths, Constants::AppType appType);
+    bool OTAInstallSystemBundle(
+        const std::vector<std::string> &filePaths,
+        Constants::AppType appType,
+        bool recoverable,
+        bool removable);
     /**
      * @brief Used to determine whether the module has been installed. If the installation has
      *        been uninstalled, OTA install and upgrade will not be allowed.
@@ -402,6 +409,18 @@ private:
      * @brief Clear cache.
      */
     void ClearCache();
+    /**
+     * @brief Judge whether the preInstall app can be recovered.
+     * @param path Indicates the path.
+     * @return Returns true if the preInstall is recovable; returns false otherwise.
+     */
+    bool IsPreInstallRecoverable(const std::string &path);
+    /**
+     * @brief Judge whether the preInstall app can be removable.
+     * @param path Indicates the path.
+     * @return Returns true if the preInstall is removable; returns false otherwise.
+     */
+    bool IsPreInstallRemovable(const std::string &path);
 
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;

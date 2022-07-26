@@ -347,9 +347,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             preInstallBundleInfo.AddBundlePath(item.first);
         }
 #ifdef USE_PRE_BUNDLE_PROFILE
-    preInstallBundleInfo.SetRecoverable(BMSEventHandler::IsPreInstallRecoverable(bundleName_));
+    preInstallBundleInfo.SetRecoverable(installParam.recoverable);
+    preInstallBundleInfo.SetRemovable(installParam.removable);
 #else
     preInstallBundleInfo.SetRecoverable(true);
+    preInstallBundleInfo.SetRemovable(newInfos.begin()->second.IsRemovable());
 #endif
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
@@ -906,13 +908,7 @@ ErrCode BaseBundleInstaller::ProcessRecover(
     const std::string &bundleName, const InstallParam &installParam, int32_t &uid)
 {
     APP_LOGD("Process Recover Bundle(%{public}s) start", bundleName.c_str());
-#ifdef USE_PRE_BUNDLE_PROFILE
-    BMSEventHandler::LoadPreInstallProFile();
-#endif
     ErrCode result = InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid, true);
-#ifdef USE_PRE_BUNDLE_PROFILE
-    BMSEventHandler::ClearPreInstallCache();
-#endif
     return result;
 }
 
@@ -1003,6 +999,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     std::vector<std::string> pathVec { preInstallBundleInfo.GetBundlePaths() };
     auto innerInstallParam = installParam;
     innerInstallParam.isPreInstallApp = true;
+    innerInstallParam.recoverable = preInstallBundleInfo.IsRecoverable();
+    innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
     return ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
 }
 
@@ -1574,6 +1572,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     checkParam.isPreInstallApp = installParam.isPreInstallApp;
     checkParam.crowdtestDeadline = installParam.crowdtestDeadline;
     checkParam.appType = appType;
+    checkParam.removable = installParam.removable;
     ErrCode ret = bundleInstallChecker_->ParseHapFiles(
         bundlePaths, checkParam, hapVerifyRes, infos);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
