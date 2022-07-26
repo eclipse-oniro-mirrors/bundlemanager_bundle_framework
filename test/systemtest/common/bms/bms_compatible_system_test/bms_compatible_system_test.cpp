@@ -31,21 +31,19 @@
 
 namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
-const std::string SYSTEM_BUNDLE_PATH = "/system/app/";
 const std::string THIRD_BASE_BUNDLE_NAME = "com.example.third";
-const std::string SYSTEM_BASE_BUNDLE_NAME = "com.example.system";
-const std::string SYSTEM_BASE_BUNDLE_NAME2 = "com.example.system2";
 const std::string CAMERA = "ohos.permission.CAMERA";
 const std::string RESOURCE_ROOT_PATH = "/data/test/";
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
+const std::string TEST_BUNDLE_NAME_ONE = "com.example.third1";
+const std::string TEST_ABILITY_NAME_ONE = "com.example.third1.MainAbility";
 const int MIN_HEIGHT = 50;
 const int MIN_WIDTH = 100;
 const int DEFAULT_HEIGHT = 100;
 const int DEFAULT_WIDTH = 200;
 const uint32_t FORM_NUM = 3;
-const size_t CESINFO_LEN = 2;
 const int32_t USERID = 100;
 }  // namespace
 using OHOS::AAFwk::Want;
@@ -244,7 +242,6 @@ static void CheckCompatibleApplicationInfo(
 {
     EXPECT_EQ(compatibleApplicationInfo.name, bundleName);
     EXPECT_EQ(compatibleApplicationInfo.label, "$string:app_name");
-    EXPECT_EQ(compatibleApplicationInfo.description, "$string:mainability_description");
     if (!compatibleApplicationInfo.moduleInfos.empty()) {
         EXPECT_EQ(compatibleApplicationInfo.moduleInfos[0].moduleName, "entry");
         EXPECT_EQ(compatibleApplicationInfo.moduleInfos[0].moduleSourceDir,
@@ -264,8 +261,8 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0100, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0100";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleName = TEST_BUNDLE_NAME_ONE;
+    std::string abilityName = TEST_ABILITY_NAME_ONE;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -345,7 +342,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0300, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0300";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle5.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME_ONE;
     std::vector<std::string> abilityNames = {"com.example.third1.MainAbility", "com.example.third1.BMainAbility"};
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
@@ -386,7 +383,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0400, Function | Mediu
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
     std::vector<std::string> abilityNames = {"com.example.third1.MainAbility", "com.example.third3.MainAbility"};
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME_ONE;
     std::string message;
 
     Install(bundleFilePath1, InstallFlag::NORMAL, message);
@@ -427,8 +424,8 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0500, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0500";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleName = TEST_BUNDLE_NAME_ONE;
+    std::string abilityName = TEST_ABILITY_NAME_ONE;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -493,8 +490,8 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0700, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0700";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleName = TEST_BUNDLE_NAME_ONE;
+    std::string abilityName = TEST_ABILITY_NAME_ONE;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -527,7 +524,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | Mediu
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0800";
     std::string message;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "6";
+    std::string bundleName = "com.third.hiworld.example1";
     std::string CAMERA = "ohos.permission.CAMERA";
 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
@@ -552,48 +549,17 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | Mediu
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_0800";
 }
+
 /**
  * @tc.number: BMS_ConvertToCompatible_0900
- * @tc.name: test the interface of ConvertToCompatibleApplicationInfo
- * @tc.desc: get the compatible application info of the system hap by ConvertToCompatibleApplicationInfo
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0900, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0900";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "com.example.system1.MainAbility";
-    std::string message;
-
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    ApplicationInfo appInfo;
-    CompatibleApplicationInfo compatibleApplicationInfo;
-    bool result =
-        bundleMgrProxy->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
-    EXPECT_TRUE(result);
-    appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
-    EXPECT_EQ(compatibleApplicationInfo.name, bundleName);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_0900";
-}
-/**
- * @tc.number: BMS_ConvertToCompatible_1000
  * @tc.name: test the interface of ConvertToCompatibleApplicationInfo
  * @tc.desc: 1.install a low version hap
  *           2.install a high version hap
  *           3.get the compatible application info by ConvertToCompatibleApplicationInfo
  */
-HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1000, Function | MediumTest | Level1)
+HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0900, Function | MediumTest | Level1)
 {
-    GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_1000";
+    GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0900";
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
@@ -619,19 +585,19 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1000, Function | Mediu
     CheckCompatibleApplicationInfo(compatibleApplicationInfo, bundleName);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_1000";
+    GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_0900";
 }
 /**
- * @tc.number: BMS_ConvertToCompatible_1100
+ * @tc.number: BMS_ConvertToCompatible_1000
  * @tc.name: test the interface of ConvertToCompatibleApplicationInfo
  * @tc.desc: 1.install a normal hap with an ability
  *           2.get compatible application info after uninstalling the hap
  */
-HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1100, Function | MediumTest | Level2)
+HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1000, Function | MediumTest | Level2)
 {
-    GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_1100";
+    GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_1000";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME_ONE;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -650,16 +616,16 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1100, Function | Mediu
     EXPECT_FALSE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, "");
-    GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_1100";
+    GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_1000";
 }
 /**
- * @tc.number: BMS_ConvertToCompatible_1200
+ * @tc.number: BMS_ConvertToCompatible_1100
  * @tc.name: test the interface of ConvertToCompatibleApplicationInfo
  * @tc.desc: get compatible application info of invalid bundleName
  */
-HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1200, Function | MediumTest | Level2)
+HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1100, Function | MediumTest | Level2)
 {
-    GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_1200";
+    GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_1100";
     std::string bundleName = "";
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
@@ -673,7 +639,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1200, Function | Mediu
     EXPECT_FALSE(result);
     appInfo.ConvertToCompatibleApplicationInfo(compatibleApplicationInfo);
     EXPECT_EQ(compatibleApplicationInfo.name, "");
-    GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_1200";
+    GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_1100";
 }
 /**
  * @tc.number: BMS_QueryAbilityInfoByUri_0100
@@ -755,209 +721,12 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0300, Function | Med
 /**
  * @tc.number: BMS_GetAllCommonEventInfo_0100
  * @tc.name: test the interface of GetAllCommonEventInfo
- * @tc.desc: 1. install a system app
- *           2. get the commonEventInfos by the eventKey
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0100, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetAllCommonEventInfo_0100";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    std::vector<CommonEventInfo> commonEventInfos;
-    std::string eventKey = "BMS_TESTCOMMONEVNET_SYSTEM1A";
-
-    BundleInfo bundleInfo;
-    bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-    for (size_t i = 0, len = commonEventInfos.size(); i < len; i++) {
-        EXPECT_EQ(commonEventInfos[i].name, ".MainAbility");
-        EXPECT_EQ(commonEventInfos[i].bundleName, bundleName);
-        EXPECT_EQ(commonEventInfos[i].uid, bundleInfo.uid);
-        EXPECT_EQ(commonEventInfos[i].permission, "BMS_COMMEVENT_PERMISSIONA");
-        for (size_t j = 0, lenth = commonEventInfos[i].data.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[i].data[j], "data_system2" + std::string(1, 'A' + j));
-        }
-        for (size_t j = 0, lenth = commonEventInfos[i].type.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[i].type[j], "type_system2" + std::string(1, 'A' + j));
-        }
-        for (size_t j = 0, lenth = commonEventInfos[i].events.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[i].events[j], "BMS_TESTCOMMONEVNET_SYSTEM2" + std::string(1, 'A' + j));
-        }
-    }
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0100";
-}
-
-/**
- * @tc.number: BMS_GetAllCommonEventInfo_0200
- * @tc.name: test the interface of GetAllCommonEventInfo
- * @tc.desc: get the commonEventInfos by the empty eventKey
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0200, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetAllCommonEventInfo_0200";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    std::vector<CommonEventInfo> commonEventInfos;
-    EXPECT_FALSE(bundleMgrProxy->GetAllCommonEventInfo("", commonEventInfos));
-    EXPECT_TRUE(commonEventInfos.size() == 0);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0200";
-}
-
-/**
- * @tc.number: BMS_GetAllCommonEventInfo_0300
- * @tc.name: test the interface of GetAllCommonEventInfo
- * @tc.desc: 1. install two system app, both configs have the same events
- *           2. get the commonEventInfos by the eventKey
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0300, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetAllCommonEventInfo_0300";
-        std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    std::vector<CommonEventInfo> commonEventInfos;
-    std::string eventKey = " ";
-    EXPECT_TRUE(bundleMgrProxy->GetAllCommonEventInfo(eventKey, commonEventInfos));
-    EXPECT_EQ(commonEventInfos.size(), CESINFO_LEN);
-    for (size_t i = 0, len = commonEventInfos.size(); i < len; i++) {
-        EXPECT_EQ(commonEventInfos[i].bundleName, SYSTEM_BASE_BUNDLE_NAME + std::to_string(i + 2));
-        EXPECT_EQ(commonEventInfos[i].permission, "BMS_COMMEVENT_PERMISSIONA");
-        for (size_t j = 0, lenth = commonEventInfos[i].data.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[i].data[j], "data_system" + std::to_string(i + 2) + std::string(1, 'C' + j));
-        }
-        for (size_t j = 0, lenth = commonEventInfos[i].type.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[i].type[j], "type_system" + std::to_string(i + 2) + std::string(1, 'C' + j));
-        }
-        EXPECT_EQ(commonEventInfos[i].events[0], " ");
-        EXPECT_EQ(commonEventInfos[i].events[1], "6666666");
-    }
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0300";
-}
-
-/**
- * @tc.number: BMS_GetAllCommonEventInfo_0400
- * @tc.name: test the interface of GetAllCommonEventInfo
- * @tc.desc: 1. install a system app, then update it by a new hap which config has different events from it
- *           2. get the commonEventInfos by the eventKey
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0400, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetAllCommonEventInfo_0400";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    std::vector<CommonEventInfo> commonEventInfos;
-    std::string eventKey = "BMS_TESTCOMMONEVNET_SYSTEM1A";
-    commonEventInfos.clear();
-    EXPECT_FALSE(bundleMgrProxy->GetAllCommonEventInfo(eventKey, commonEventInfos));
-    EXPECT_TRUE(commonEventInfos.size() == 0);
-
-    BundleInfo bundleInfo;
-    bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-    if (!commonEventInfos.empty()) {
-        EXPECT_EQ(commonEventInfos[0].bundleName, bundleName);
-        EXPECT_EQ(commonEventInfos[0].uid, bundleInfo.uid);
-        EXPECT_EQ(commonEventInfos[0].permission, "BMS_COMMEVENT_UPDATE_PERMISSIONA");
-        for (size_t j = 0, lenth = commonEventInfos[0].data.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[0].data[j], "data_system2U" + std::string(1, 'A' + j));
-        }
-        for (size_t j = 0, lenth = commonEventInfos[0].type.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[0].type[j], "type_system2U" + std::string(1, 'A' + j));
-        }
-        EXPECT_EQ(commonEventInfos[0].events[0], "BMS_TESTCOMMONEVNET_SYSTEM2UPDATE_A");
-    }
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0400";
-}
-
-/**
- * @tc.number: BMS_GetAllCommonEventInfo_0600
- * @tc.name: test the interface of GetAllCommonEventInfo
- * @tc.desc: 1. install a system app includs two haps, both configs have the same events
- *           2. get the commonEventInfos by the eventKey
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0600, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetAllCommonEventInfo_0600";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    std::vector<CommonEventInfo> commonEventInfos;
-    std::string eventKey = "BMS_TESTCOMMONEVNET_SYSTEM1A";
-    commonEventInfos.clear();
-    EXPECT_FALSE(bundleMgrProxy->GetAllCommonEventInfo(eventKey, commonEventInfos));
-    EXPECT_TRUE(commonEventInfos.size() == 0);
-    BundleInfo bundleInfo;
-    bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-    for (size_t i = 0, len = commonEventInfos.size(); i < len; i++) {
-        EXPECT_EQ(commonEventInfos[i].bundleName, bundleName);
-        EXPECT_EQ(commonEventInfos[i].uid, bundleInfo.uid);
-        for (size_t j = 0, lenth = commonEventInfos[i].data.size(); j < lenth; j++) {
-            EXPECT_EQ(commonEventInfos[i].data[j], "data_system" + std::to_string(i + 2) + std::string(1, 'A' + j));
-        }
-        EXPECT_EQ(commonEventInfos[i].events.size(), CESINFO_LEN);
-        if (commonEventInfos[i].events.size() == CESINFO_LEN) {
-            EXPECT_EQ(commonEventInfos[0].events[0], "BMS_TESTCOMMONEVNET_SYSTEM2A");
-            EXPECT_EQ(commonEventInfos[0].events[1], "BMS_TESTCOMMONEVNET_SYSTEM2B");
-        }
-    }
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0600";
-}
-
-/**
- * @tc.number: BMS_GetAllCommonEventInfo_0700
- * @tc.name: test the interface of GetAllCommonEventInfo
  * @tc.desc: 1. install a third-party app
  *           2. get the commonEventInfos by the eventKey
  */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0700, Function | MediumTest | Level2)
+HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0100, Function | MediumTest | Level2)
 {
-    GTEST_LOG_(INFO) << "START BMS_GetAllCommonEventInfo_0700";
+    GTEST_LOG_(INFO) << "START BMS_GetAllCommonEventInfo_0100";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + '2';
     std::string message;
@@ -973,7 +742,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0700, Function | Med
     EXPECT_TRUE(commonEventInfos.size() == 0);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0700";
+    GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0100";
 }
 
 /**
@@ -1064,117 +833,6 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetDebug_0300, Function | MediumTest | Lev
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_GetDebug_0300";
-}
-
-/**
- * @tc.number: BMS_GetIsKeepAliveAndSingleton_0100
- * @tc.name: Get the isKeepAlive and singleton information of the system application
- * @tc.desc: Get the isKeepAlive and singleton information of the system application, KeepAlive is configured to true,
- *              Singleton is configured to false
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetIsKeepAliveAndSingleton_0100, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetIsKeepAliveAndSingleton_0100";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    BundleInfo bundleInfo;
-    EXPECT_TRUE(bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID));
-    EXPECT_FALSE(bundleInfo.isKeepAlive);
-    EXPECT_FALSE(bundleInfo.singleton);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetIsKeepAliveAndSingleton_0100";
-}
-
-/**
- * @tc.number: BMS_GetIsKeepAliveAndSingleton_0200
- * @tc.name: Get the isKeepAlive and singleton information of the third-party application
- * @tc.desc: Get the isKeepAlive and singleton information of the third-party application by getBundleInfo
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetIsKeepAliveAndSingleton_0200, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetIsKeepAliveAndSingleton_0100";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    BundleInfo bundleInfo;
-    EXPECT_TRUE(bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID));
-    EXPECT_FALSE(bundleInfo.isKeepAlive);
-    EXPECT_FALSE(bundleInfo.singleton);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetIsKeepAliveAndSingleton_0200";
-}
-
-/**
- * @tc.number: BMS_GetIsKeepAliveAndSingleton_0300
- * @tc.name: Get the isKeepAlive and singleton information of the application which doesn't config those fields
- * @tc.desc: Get the isKeepAlive and singleton information of the application which doesn't config those fields
- *               by getBundleInfo(application is system)
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetIsKeepAliveAndSingleton_0300, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetIsKeepAliveAndSingleton_0300";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    BundleInfo bundleInfo;
-    EXPECT_TRUE(bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID));
-    EXPECT_FALSE(bundleInfo.isKeepAlive);
-    EXPECT_FALSE(bundleInfo.singleton);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetIsKeepAliveAndSingleton_0300";
-}
-
-/**
- * @tc.number: BMS_GetIsKeepAliveAndSingleton_0400
- * @tc.name: Get the isKeepAlive and singleton information of the application includes two haps
- * @tc.desc: Install two hap packages of the application at the different time, and the configuration properties in the
- *              two haps are different (application is system)
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_GetIsKeepAliveAndSingleton_0400, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetIsKeepAliveAndSingleton_0400";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (bundleMgrProxy == nullptr) {
-        GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    }
-    BundleInfo bundleInfo;
-    EXPECT_TRUE(bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID));
-    EXPECT_FALSE(bundleInfo.isKeepAlive);
-    EXPECT_FALSE(bundleInfo.singleton);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetIsKeepAliveAndSingleton_0400";
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

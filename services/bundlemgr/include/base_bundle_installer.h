@@ -21,6 +21,7 @@
 
 #include "nocopyable.h"
 
+#include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "event_report.h"
@@ -496,6 +497,7 @@ private:
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -510,6 +512,7 @@ private:
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
     uint32_t versionCode_ = 0;
+    uint32_t accessTokenId_ = 0;
     // value is packageName for uninstalling
     bool isFeatureNeedUninstall_ = false;
     std::vector<std::string> uninstallModuleVec_;

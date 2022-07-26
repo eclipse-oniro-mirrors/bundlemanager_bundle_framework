@@ -13,21 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CONSTANTS_H
-#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CONSTANTS_H
+#include "bundle_mgr_service_death_recipient.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class ScanMode {
-    SUB_FILE_ALL = 0,
-    SUB_FILE_DIR,
-    SUB_FILE_FILE,
-};
+BundleMgrServiceDeathRecipient::BundleMgrServiceDeathRecipient(
+    const std::function<void(const wptr<IRemoteObject>& object)>& deathCallback)
+    : deathCallback_(deathCallback) {}
 
-enum class ResultMode {
-    ABSOLUTE_PATH = 0,
-    RELATIVE_PATH,
-};
-}  // namespace AppExecFwk
-}  // namespace OHOS
-#endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CONSTANTS_H
+void BundleMgrServiceDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& object)
+{
+    if (deathCallback_ != nullptr) {
+        deathCallback_(object);
+    }
+}
+}
+}

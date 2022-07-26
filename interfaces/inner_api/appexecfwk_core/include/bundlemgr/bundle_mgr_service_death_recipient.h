@@ -13,21 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CONSTANTS_H
-#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CONSTANTS_H
+#ifndef BUNDLE_MGR_SERVICE_DEATH_RECIPIENT_H
+#define BUNDLE_MGR_SERVICE_DEATH_RECIPIENT_H
+
+#include "iremote_broker.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class ScanMode {
-    SUB_FILE_ALL = 0,
-    SUB_FILE_DIR,
-    SUB_FILE_FILE,
-};
+class BundleMgrServiceDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    explicit BundleMgrServiceDeathRecipient(
+        const std::function<void(const wptr<IRemoteObject>& object)>& deathCallback);
+    DISALLOW_COPY_AND_MOVE(BundleMgrServiceDeathRecipient);
+    virtual ~BundleMgrServiceDeathRecipient() = default;
+    void OnRemoteDied(const wptr<IRemoteObject>& object) override;
 
-enum class ResultMode {
-    ABSOLUTE_PATH = 0,
-    RELATIVE_PATH,
+private:
+    std::function<void(const wptr<IRemoteObject>& object)> deathCallback_;
 };
-}  // namespace AppExecFwk
-}  // namespace OHOS
-#endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CONSTANTS_H
+}
+}
+#endif

@@ -33,8 +33,8 @@
 
 namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
-const std::string SYSTEM_BUNDLE_PATH = "/system/app/";
 const std::string TEST_BUNDLE_NAME = "com.example.third1";
+const std::string TEST_ABILITY_NAME = "com.example.third1.MainAbility";
 const std::string THIRD_BASE_BUNDLE_NAME = "com.example.third";
 const std::string SYSTEM_BASE_BUNDLE_NAME = "com.example.system";
 const std::string CAMERA = "ohos.permission.CAMERA";
@@ -50,7 +50,6 @@ constexpr uint32_t USERID = 100;
 const unsigned int LIST_SIZE = 2;
 static const int APP_LABELID = 16777216;
 static const int APP_ICONID = 16777218;
-static const int APP_DESCRIPTIONID = 16777217;
 }  // namespace
 using OHOS::AAFwk::Want;
 using namespace testing::ext;
@@ -241,18 +240,15 @@ void BmsLauncherServiceSystemTest::CheckApplicationInfo(const std::string &bundl
 {
     CommonTool commonTool;
     EXPECT_EQ(applicationInfo.bundleName, bundleName);
-    EXPECT_EQ(applicationInfo.description, "$string:mainability_description");
     EXPECT_EQ(applicationInfo.iconPath, "$media:icon");
     EXPECT_EQ(applicationInfo.label, "$string:app_name");
     EXPECT_EQ(applicationInfo.labelId, APP_LABELID);
     EXPECT_EQ(applicationInfo.iconId, APP_ICONID);
-    EXPECT_EQ(applicationInfo.descriptionId, APP_DESCRIPTIONID);
     EXPECT_EQ(applicationInfo.deviceId, "PHONE-001");
     EXPECT_EQ(applicationInfo.signatureKey, "");
     EXPECT_GE(applicationInfo.isSystemApp, 0);
     EXPECT_GE(applicationInfo.isLauncherApp, 0);
     EXPECT_GE(applicationInfo.supportedModes, 0);
-    EXPECT_EQ(applicationInfo.process, "");
     EXPECT_EQ(commonTool.VectorToStr(applicationInfo.permissions), "");
     EXPECT_EQ(commonTool.VectorToStr(applicationInfo.moduleSourceDirs),
         "/data/app/el1/bundle/public/com.example.third1/com.example.third1");
@@ -271,7 +267,7 @@ void BmsLauncherServiceSystemTest::CheckShortcutInfos(
         EXPECT_EQ(shortcutinfo.id, "id.third1");
         EXPECT_EQ(shortcutinfo.label, "$string:app_name");
         for (auto want : shortcutinfo.intents) {
-            EXPECT_EQ(want.targetBundle, "com.example.third1");
+            EXPECT_EQ(want.targetBundle, TEST_BUNDLE_NAME);
             EXPECT_EQ(want.targetClass, "com.example.third1.MainAbility");
         }
     }
@@ -372,7 +368,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0100, Function | MediumTest 
 {
     GTEST_LOG_(INFO) << "START BMS_Register_0100";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     LauncherService launcherservice;
     sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
@@ -396,7 +392,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0200, Function | MediumTest 
 {
     GTEST_LOG_(INFO) << "START BMS_Register_0200";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     LauncherService launcherservice;
     sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
@@ -473,7 +469,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0500, Function | MediumTest 
 {
     GTEST_LOG_(INFO) << "START BMS_Register_0500";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     LauncherService launcherservice;
     sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
@@ -502,7 +498,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0600, Function | MediumTest 
 {
     GTEST_LOG_(INFO) << "START BMS_Register_0600";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     LauncherService launcherservice1;
     LauncherService launcherservice2;
@@ -548,7 +544,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0800, Function | MediumTest 
     GTEST_LOG_(INFO) << "START BMS_Register_0800";
     LauncherService launcherservice;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     EXPECT_TRUE(launcherservice.RegisterCallback(nullptr));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
@@ -570,8 +566,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0100, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_GetAbilityList_0100";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -600,7 +596,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0100, Function | Mediu
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0200, Function | MediumTest | Level1)
 {
     GTEST_LOG_(INFO) << "START BMS_GetAbilityList_0200";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
     std::string abilityName = "com.example.third1.AMainAbility";
@@ -634,7 +630,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0300, Function | Mediu
     GTEST_LOG_(INFO) << "START BMS_GetAbilityList_0300";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle5.hap";
     std::string bundleName = TEST_BUNDLE_NAME;
-    std::string abilityName1 = "com.example.third1.MainAbility";
+    std::string abilityName1 = TEST_ABILITY_NAME;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -665,7 +661,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0400, Function | Mediu
     GTEST_LOG_(INFO) << "START BMS_GetAbilityList_0400";
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
-    std::string abilityName1 = "com.example.third1.MainAbility";
+    std::string abilityName1 = TEST_ABILITY_NAME;
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
 
@@ -715,8 +711,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0600, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_GetAbilityList_0600";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -737,34 +733,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0600, Function | Mediu
     EXPECT_FALSE(result2);
     GTEST_LOG_(INFO) << "END BMS_GetAbilityList_0600";
 }
-/**
- * @tc.number: BMS_GetAbilityList_0700
- * @tc.name: test GetAbilityList by LauncherService
- * @tc.desc: 1.get the ability info of system app
- */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0700, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_GetAbilityList_0700";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = "com.example.system1";
-    std::string abilityName = "com.example.system1.MainAbility";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
 
-    std::vector<LauncherAbilityInfo> launcherAbilityInfos;
-    LauncherService launcherservice;
-    bool result = launcherservice.GetAbilityList(bundleName, USERID, launcherAbilityInfos);
-    EXPECT_TRUE(result);
-    EXPECT_FALSE(launcherAbilityInfos.empty()) << "Launcher ability infos is empty";
-    if (!launcherAbilityInfos.empty()) {
-        EXPECT_EQ(launcherAbilityInfos[0].elementName.GetAbilityName(), abilityName);
-    }
-
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetAbilityList_0700";
-}
 /**
  * @tc.number: BMS_GetAbilityInfo_0100
  * @tc.name: test GetAbilityInfo by LauncherService
@@ -776,8 +745,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0100, Function | Mediu
     GTEST_LOG_(INFO) << "START GetAbilityInfo_0100";
     std::string message;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -808,9 +777,9 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0100, Function | Mediu
  */
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0200, Function | MediumTest | Level2)
 {
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle5.hap";
-    std::string bundleName = "com.example.third1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -841,8 +810,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0300, Function | Mediu
     GTEST_LOG_(INFO) << "START GetAbilityInfo_0300";
     std::string message;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -862,54 +831,22 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0300, Function | Mediu
     EXPECT_FALSE(result);
     GTEST_LOG_(INFO) << "END GetAbilityInfo_0300";
 }
+
 /**
  * @tc.number: BMS_GetAbilityInfo_0400
- * @tc.name: test GetAbilityInfo by LauncherService
- * @tc.desc: 1.get the ability info of system app by want
- * @tc.require: AR000GHQ9N
- */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0400, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START GetAbilityInfo_0400";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "com.example.system1.MainAbility";
-    std::string message;
-
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    
-    Want want;
-    ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
-    want.SetElement(name);
-
-    LauncherAbilityInfo launcherAbilityInfo;
-    LauncherService launcherservice;
-    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfo);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(launcherAbilityInfo.elementName.GetAbilityName(), abilityName);
-
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END GetAbilityInfo_0400";
-}
-/**
- * @tc.number: BMS_GetAbilityInfo_0500
  * @tc.name: test GetAbilityInfo by LauncherService
  * @tc.desc: 1.install a low version hap
  *           2.install a high version hap
  *           3.get the ability info of the high version hap by want
  * @tc.require: AR000GHQ9N
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0500, Function | MediumTest | Level1)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0400, Function | MediumTest | Level1)
 {
     GTEST_LOG_(INFO) << "START GetAbilityInfo_0500";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
-    std::string abilityName = "com.example.third1.AMainAbility";
+    std::string abilityName = TEST_ABILITY_NAME;
     std::string message;
 
     Install(bundleFilePath1, InstallFlag::NORMAL, message);
@@ -919,9 +856,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0500, Function | Mediu
 
     Want want;
     ElementName name;
-    name.SetAbilityName(abilityName);
-    name.SetBundleName(bundleName);
-    want.SetElement(name);
+
 
     LauncherAbilityInfo launcherAbilityInfos;
     LauncherService launcherservice;
@@ -930,7 +865,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0500, Function | Mediu
     EXPECT_EQ(launcherAbilityInfos.elementName.GetAbilityName(), abilityName);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END GetAbilityInfo_0500";
+    GTEST_LOG_(INFO) << "END BMS_GetAbilityInfo_0400";
 }
 /**
  * @tc.number: BMS_GetApplicationInfo_0100
@@ -940,19 +875,20 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityInfo_0500, Function | Mediu
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0100, Function | MediumTest | Level1)
 {
     GTEST_LOG_(INFO) << "START BMS_GetApplicationInfo_0100";
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    LauncherService launcherservice;
 
-    ApplicationInfo appInfo;
-    ApplicationFlag flag = ApplicationFlag::GET_BASIC_APPLICATION_INFO;
-    bool result = launcherservice.GetApplicationInfo(bundleName, flag, USERID, appInfo);
+    Install(bundleFilePath1, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+
+    LauncherService launcherservice;
+    ApplicationInfo applicationInfo;
+    bool result = launcherservice.GetApplicationInfo(
+        bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    CheckApplicationInfo(bundleName, appInfo);
-    EXPECT_EQ(appInfo.name, bundleName);
+    CheckApplicationInfo(bundleName, applicationInfo);
+    EXPECT_EQ(applicationInfo.name, bundleName);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0100";
@@ -967,7 +903,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0200, Function | M
     GTEST_LOG_(INFO) << "START GetApplicationInfo_0200";
     std::string message;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "6";
 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -987,41 +923,17 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0200, Function | M
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END GetApplicationInfo_0200";
 }
+
 /**
  * @tc.number: BMS_GetApplicationInfo_0300
- * @tc.name: test GetApplicationInfo by LauncherService
- * @tc.desc: get the application info of system app by bundleName
- */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0300, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START GetApplicationInfo_0300";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-
-    LauncherService launcherservice;
-
-    ApplicationInfo applicationInfo;
-    bool result = launcherservice.GetApplicationInfo(
-        bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, applicationInfo);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(applicationInfo.name, bundleName);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END GetApplicationInfo_0300";
-}
-/**
- * @tc.number: BMS_GetApplicationInfo_0400
  * @tc.name: test GetAbilityInfo by LauncherService
  * @tc.desc: 1.install a low version hap
  *           2.install a high version hap
  *           3.get the application info of the high version hap by bundleName
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0400, Function | MediumTest | Level1)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0300, Function | MediumTest | Level1)
 {
-    GTEST_LOG_(INFO) << "START BMS_GetApplicationInfo_0400";
+    GTEST_LOG_(INFO) << "START BMS_GetApplicationInfo_0300";
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
@@ -1040,18 +952,18 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0400, Function | M
     EXPECT_EQ(applicationInfo.name, bundleName);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0400";
+    GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0300";
 }
 /**
- * @tc.number: BMS_GetApplicationInfo_0500
+ * @tc.number: BMS_GetApplicationInfo_0400
  * @tc.name: test GetApplicationInfo by LauncherService
  * @tc.desc: get the application info after uninstalling the hap
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0500, Function | MediumTest | Level2)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0400, Function | MediumTest | Level2)
 {
-    GTEST_LOG_(INFO) << "START BMS_GetApplicationInfo_0500";
+    GTEST_LOG_(INFO) << "START BMS_GetApplicationInfo_0400";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = "com.example.third1";
+    std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -1064,16 +976,16 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0500, Function | M
     bool result =
         launcherservice.GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_FALSE(result);
-    GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0500";
+    GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0400";
 }
 /**
  * @tc.number: BMS_GetApplicationInfo_0600
  * @tc.name: test GetApplicationInfo by LauncherService
  * @tc.desc: get the application info by invalid bundleName
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0600, Function | MediumTest | Level2)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0500, Function | MediumTest | Level2)
 {
-    GTEST_LOG_(INFO) << "START BMS_GetApplicationInfo_0600";
+    GTEST_LOG_(INFO) << "START BMS_GetApplicationInfo_0500";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleName = "";
 
@@ -1083,7 +995,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0600, Function | M
     bool result =
         launcherservice.GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
     EXPECT_FALSE(result);
-    GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0600";
+    GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0500";
 }
 /**
  * @tc.number: BMS_IsAbilityEnabled_0100
@@ -1094,9 +1006,9 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0100, Function | Med
 {
     GTEST_LOG_(INFO) << "START BMS_IsAbilityEnabled_0100";
     std::string message;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
     AbilityInfo abilityInfo;
@@ -1111,43 +1023,13 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0100, Function | Med
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_IsAbilityEnabled_0100";
 }
+
 /**
  * @tc.number: BMS_IsAbilityEnabled_0200
  * @tc.name: test IsAbilityEnabled by LauncherService
- * @tc.desc: check weather the ability of system hap can be enabled by abilityinfo
- */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0200, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_IsAbilityEnabled_0200";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "com.example.system1.MainAbility";
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    AbilityInfo abilityInfo;
-    abilityInfo.bundleName = bundleName;
-    abilityInfo.name = abilityName;
-    abilityInfo.package = "bmsThirdBundle1";
-
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    LauncherService launcherservice;
-    bool result = launcherservice.IsAbilityEnabled(abilityInfo);
-    EXPECT_TRUE(result);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_IsAbilityEnabled_0200";
-}
-/**
- * @tc.number: BMS_IsAbilityEnabled_0300
- * @tc.name: test IsAbilityEnabled by LauncherService
  * @tc.desc: check weather the ability of hap can be enabled by invalid abilityName
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0300, Function | MediumTest | Level2)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0200, Function | MediumTest | Level2)
 {
     GTEST_LOG_(INFO) << "START BMS_IsAbilityEnabled_0300";
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
@@ -1159,21 +1041,21 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0300, Function | Med
 
     bool result = launcherservice.IsAbilityEnabled(abilityInfo);
     EXPECT_FALSE(result);
-    GTEST_LOG_(INFO) << "END BMS_IsAbilityEnabled_0300";
+    GTEST_LOG_(INFO) << "END BMS_IsAbilityEnabled_0200";
 }
 /**
- * @tc.number: BMS_IsAbilityEnabled_0400
+ * @tc.number: BMS_IsAbilityEnabled_0300
  * @tc.name: test IsAbilityEnabled by LauncherService
  * @tc.desc: 1.set ability enabled true
  *           2.check weather the ability enabled is true by abilityinfo
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0400, Function | MediumTest | Level1)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0300, Function | MediumTest | Level1)
 {
-    GTEST_LOG_(INFO) << "START BMS_IsAbilityEnabled_0400";
+    GTEST_LOG_(INFO) << "START BMS_IsAbilityEnabled_0300";
     std::string message;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "com.example.third1.MainAbility";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
     AbilityInfo abilityInfo;
@@ -1194,7 +1076,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsAbilityEnabled_0400, Function | Med
     EXPECT_TRUE(result);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_IsAbilityEnabled_0400";
+    GTEST_LOG_(INFO) << "END BMS_IsAbilityEnabled_0300";
 }
 /**
  * @tc.number: BMS_IsBundleEnabled_0100
@@ -1242,27 +1124,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsBundleEnabled_0200, Function | Medi
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_IsBundleEnabled_0200";
 }
-/**
- * @tc.number: BMS_IsBundleEnabled_0300
- * @tc.name: test IsBundleEnabled by LauncherService
- * @tc.desc: check weather the application of system hap can be enabled by bundleName
- */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_IsBundleEnabled_0300, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_IsBundleEnabled_0300";
-    std::string message;
-    std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
-    std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    LauncherService launcherservice;
 
-    bool result = launcherservice.IsBundleEnabled(bundleName);
-    EXPECT_TRUE(result);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_IsBundleEnabled_0300";
-}
 /**
  * @tc.number: BMS_IsBundleEnabled_0400
  * @tc.name: test IsBundleEnabled by LauncherService

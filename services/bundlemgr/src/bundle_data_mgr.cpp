@@ -19,7 +19,7 @@
 #include <cinttypes>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd/installd_operator.h"
+#include "installd_client.h"
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
@@ -35,8 +35,6 @@
 #include "bundle_mgr_service.h"
 #include "bundle_status_callback_death_recipient.h"
 #include "bundle_util.h"
-#include "common_event_manager.h"
-#include "common_event_support.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -48,29 +46,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-static const std::unordered_map<NotifyType, std::string> COMMON_EVENT_MAP = {
-    { NotifyType::INSTALL, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED },
-    { NotifyType::UNINSTALL_BUNDLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED },
-    { NotifyType::UNINSTALL_MODULE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED },
-    { NotifyType::UPDATE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
-    { NotifyType::ABILITY_ENABLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
-    { NotifyType::APPLICATION_ENABLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
-    { NotifyType::BUNDLE_DATA_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_DATA_CLEARED },
-    { NotifyType::BUNDLE_CACHE_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CACHE_CLEARED },
-};
-
-const std::string GetCommonEventData(const NotifyType type)
-{
-    auto iter = COMMON_EVENT_MAP.find(type);
-    if (iter == COMMON_EVENT_MAP.end()) {
-        APP_LOGW("event type error");
-        return EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED;
-    }
-    return iter->second;
-}
-}
-
 BundleDataMgr::BundleDataMgr()
 {
     InitStateTransferMap();
@@ -592,6 +567,7 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     APP_LOGD("begin to QueryAbilityInfoWithFlags.");
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_SYSTEMAPP_ONLY) == GET_ABILITY_INFO_SYSTEMAPP_ONLY &&
         !innerBundleInfo.IsSystemApp()) {
+        APP_LOGE("no system app ability info for this calling");
         return false;
     }
     if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)) {
@@ -1200,24 +1176,19 @@ bool BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &inne
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    int64_t curSize = 0;
     int64_t spaceSize = 0;
-    BundleInfo bundleInfo;
-
-    if (userId != Constants::INVALID_USERID
-        && GetBundleInfo(bundleName, GET_ALL_APPLICATION_INFO, bundleInfo, userId) == true) {
-        if (!bundleInfo.applicationInfo.codePath.empty()) {
-            curSize = InstalldOperator::GetDiskUsage(bundleInfo.applicationInfo.codePath);
-            spaceSize += curSize;
-            APP_LOGI("Code %{public}s:%{public}" PRId64, bundleInfo.applicationInfo.codePath.c_str(), curSize);
-        }
-        if (!bundleInfo.applicationInfo.dataDir.empty()) {
-            curSize = InstalldOperator::GetDiskUsage(bundleInfo.applicationInfo.dataDir);
-            spaceSize += curSize;
-            APP_LOGI("Data %{public}s:%{public}" PRId64, bundleInfo.applicationInfo.dataDir.c_str(), curSize);
-        }
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("userId is invalid");
+        return spaceSize;
     }
-
+    std::vector<int64_t> bundleStats;
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
+        APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
+        return spaceSize;
+    }
+    for (const auto &size : bundleStats) {
+        spaceSize += size;
+    }
     APP_LOGI("%{public}s spaceSize:%{public}" PRId64, bundleName.c_str(), spaceSize);
     return spaceSize;
 }
@@ -1226,29 +1197,18 @@ int64_t BundleDataMgr::GetAllFreeInstallBundleSpaceSize() const
 {
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
     int64_t allSize = 0;
-    int64_t curSize = 0;
     std::vector<BundleInfo> bundleInfos;
 
-    if (userId != Constants::INVALID_USERID
-        && GetBundleInfos(GET_ALL_APPLICATION_INFO, bundleInfos, userId) == true) {
+    if (userId != Constants::INVALID_USERID && GetBundleInfos(GET_ALL_APPLICATION_INFO, bundleInfos, userId) == true) {
         for (const auto &item : bundleInfos) {
-            APP_LOGI("%{public}s freeInstall:%{public}d", item.name.c_str(), item.applicationInfo.isFreeInstallApp);
+            APP_LOGD("%{public}s freeInstall:%{public}d", item.name.c_str(), item.applicationInfo.isFreeInstallApp);
             if (item.applicationInfo.isFreeInstallApp) {
-                if (!item.applicationInfo.codePath.empty()) {
-                    curSize = InstalldOperator::GetDiskUsage(item.applicationInfo.codePath);
-                    allSize += curSize;
-                    APP_LOGI("Code %{public}s:%{public}" PRId64, item.applicationInfo.codePath.c_str(), curSize);
-                }
-                if (!item.applicationInfo.dataDir.empty()) {
-                    curSize = InstalldOperator::GetDiskUsage(item.applicationInfo.dataDir);
-                    allSize += curSize;
-                    APP_LOGI("Data %{public}s:%{public}" PRId64, item.applicationInfo.dataDir.c_str(), curSize);
-                }
+                allSize += GetBundleSpaceSize(item.name);
             }
         }
     }
 
-    APP_LOGI("All sfreeInstall:%{public}" PRId64, allSize);
+    APP_LOGI("All freeInstall app size:%{public}" PRId64, allSize);
     return allSize;
 }
 #endif
@@ -1792,7 +1752,7 @@ std::shared_ptr<BundleSandboxAppHelper> BundleDataMgr::GetSandboxAppHelper() con
 bool BundleDataMgr::RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("RegisterBundleStatusCallback %{public}s", bundleStatusCallback->GetBundleName().c_str());
-    std::lock_guard<std::mutex> lock(callbackMutex_);
+    std::unique_lock<std::shared_mutex> lock(callbackMutex_);
     callbackList_.emplace_back(bundleStatusCallback);
     if (bundleStatusCallback->AsObject() != nullptr) {
         sptr<BundleStatusCallbackDeathRecipient> deathRecipient =
@@ -1809,7 +1769,7 @@ bool BundleDataMgr::RegisterBundleStatusCallback(const sptr<IBundleStatusCallbac
 bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("ClearBundleStatusCallback %{public}s", bundleStatusCallback->GetBundleName().c_str());
-    std::lock_guard<std::mutex> lock(callbackMutex_);
+    std::unique_lock<std::shared_mutex> lock(callbackMutex_);
     callbackList_.erase(std::remove_if(callbackList_.begin(),
         callbackList_.end(),
         [&](const sptr<IBundleStatusCallback> &callback) {
@@ -1821,7 +1781,7 @@ bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> 
 
 bool BundleDataMgr::UnregisterBundleStatusCallback()
 {
-    std::lock_guard<std::mutex> lock(callbackMutex_);
+    std::unique_lock<std::shared_mutex> lock(callbackMutex_);
     callbackList_.clear();
     return true;
 }
@@ -1991,46 +1951,6 @@ bool BundleDataMgr::RestoreUidAndGid()
             }
         }
     }
-    return true;
-}
-
-bool BundleDataMgr::NotifyBundleStatus(const std::string& bundleName, const std::string& modulePackage,
-    const std::string& abilityName, const ErrCode resultCode, const NotifyType type, const int32_t& uid)
-{
-    APP_LOGD("notify type %{public}d with %{public}d for %{public}s-%{public}s in %{public}s", type, resultCode,
-        modulePackage.c_str(), abilityName.c_str(), bundleName.c_str());
-    uint8_t installType = [&]() -> uint8_t {
-        if ((type == NotifyType::UNINSTALL_BUNDLE) || (type == NotifyType::UNINSTALL_MODULE)) {
-            return static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK);
-        }
-        return static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
-    }();
-    {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
-        for (const auto& callback : callbackList_) {
-            if (callback->GetBundleName() == bundleName) {
-                // if the msg needed, it could convert in the proxy node
-                callback->OnBundleStateChanged(installType, resultCode, Constants::EMPTY_STRING, bundleName);
-            }
-        }
-    }
-
-    if (resultCode != ERR_OK) {
-        return true;
-    }
-    std::string eventData = GetCommonEventData(type);
-    APP_LOGD("will send event data %{public}s", eventData.c_str());
-    Want want;
-    want.SetAction(eventData);
-    ElementName element;
-    element.SetBundleName(bundleName);
-    element.SetAbilityName(abilityName);
-    want.SetElement(element);
-    want.SetParam(Constants::UID, uid);
-    want.SetParam(Constants::USER_ID, GetUserIdByUid(uid));
-    want.SetParam(Constants::ABILITY_NAME, abilityName);
-    EventFwk::CommonEventData commonData { want };
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
     return true;
 }
 
@@ -3173,6 +3093,16 @@ int32_t BundleDataMgr::GetMediaFileDescriptor(const std::string &bundleName, con
         APP_LOGE("create file descriptor failed");
     }
     return fd;
+}
+
+std::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()
+{
+    return callbackMutex_;
+}
+
+std::vector<sptr<IBundleStatusCallback>> BundleDataMgr::GetCallBackList() const
+{
+    return callbackList_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

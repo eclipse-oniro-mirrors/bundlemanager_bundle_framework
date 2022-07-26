@@ -19,6 +19,7 @@
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
 #endif
+#include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_service_event_handler.h"
@@ -675,7 +676,7 @@ private:
     bool VerifyQueryPermission(const std::string &queryBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
-
+    void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     std::shared_ptr<BMSEventHandler> handler_;
 };
 }  // namespace AppExecFwk
