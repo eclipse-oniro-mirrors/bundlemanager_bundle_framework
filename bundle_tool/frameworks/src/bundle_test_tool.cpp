@@ -86,7 +86,7 @@ const std::string HELP_MSG_UNINSTALL_SANDBOX =
     "  -n, --bundle-nam e <bundle-name>        install a sandbox of a bundle\n";
 
 const std::string HELP_MSG_DUMP_SANDBOX =
-    "usage: bundle_test_tool dump sandbox <options>\n"
+    "usage: bundle_test_tool dumpSandbox <options>\n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
     "  -u, --user-id <user-id>                specify a user id\n"
@@ -111,6 +111,12 @@ const std::string STRING_UNINSTALL_SANDBOX_SUCCESSFULLY = "uninstall sandbox app
 const std::string STRING_UNINSTALL_SANDBOX_FAILED = "uninstall sandbox app failed\n";
 
 const std::string STRING_DUMP_SANDBOX_FAILED = "dump sandbox app info failed\n";
+
+const std::string GET_RM = "getrm";
+const std::string SET_RM = "setrm";
+const std::string INSTALL_SANDBOX = "installSandbox";
+const std::string UNINSTALL_SANDBOX = "uninstallSandbox";
+const std::string DUMP_SANDBOX = "dumpSandbox";
 
 const std::string SHORT_OPTIONS = "hn:m:a:d:u:i:";
 const struct option LONG_OPTIONS[] = {
@@ -309,7 +315,7 @@ bool BundleTestTool::CheckRemovableErrorOption(int option, int counter, const st
     } else if (option == '?') {
         switch (optopt) {
             case 'i': {
-                if (commandName == "getrm") {
+                if (commandName == GET_RM) {
                     std::string unknownOption = "";
                     std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
                     APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
@@ -358,7 +364,7 @@ bool BundleTestTool::CheckRemovableCorrectOption(
             break;
         }
         case 'i': {
-            if (commandName == "getrm") {
+            if (commandName == GET_RM) {
                 std::string unknownOption = "";
                 std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
                 APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
@@ -398,7 +404,7 @@ ErrCode BundleTestTool::RunAsSetRemovableCommand()
     int option = -1;
     int counter = 0;
     int isRemovable = 0;
-    std::string commandName = "setrm";
+    std::string commandName = SET_RM;
     std::string name = "";
     std::string bundleName = "";
     std::string moduleName = "";
@@ -443,7 +449,7 @@ ErrCode BundleTestTool::RunAsGetRemovableCommand()
     int result = OHOS::ERR_OK;
     int option = -1;
     int counter = 0;
-    std::string commandName = "getrm";
+    std::string commandName = GET_RM;
     std::string name = "";
     std::string bundleName = "";
     std::string moduleName = "";
@@ -499,20 +505,14 @@ bool BundleTestTool::CheckSandboxErrorOption(int option, int counter, const std:
             }
         }
         return true;
-    }
-    else if (option == '?') {
+    } else if (option == '?') {
         switch (optopt) {
-            case 'n': case 'u': case 'd': {
-                if (commandName != "installSandbox" && optopt == 'd') {
-                    std::string unknownOption = "";
-                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
-                    APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
-                    resultReceiver_.append(unknownOptionMsg);
-                    break;
-                }
-            }
+            case 'n':
+            case 'u':
+            case 'd':
             case 'a': {
-                if (commandName == "installSandbox" && optopt == 'a') {
+                if ((commandName != INSTALL_SANDBOX && optopt == 'd') ||
+                    (commandName == INSTALL_SANDBOX && optopt == 'a')) {
                     std::string unknownOption = "";
                     std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
                     APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
@@ -539,7 +539,6 @@ bool BundleTestTool::CheckSandboxCorrectOption(
     int option, const std::string &commandName, int &data, std::string &bundleName)
 {
     bool ret = true;
-    std::string log = "";
     switch (option) {
         case 'h': {
             APP_LOGD("'bundle_test_tool %{public}s %{public}s'", commandName.c_str(), argv_[optind - 1]);
@@ -551,22 +550,11 @@ bool BundleTestTool::CheckSandboxCorrectOption(
             bundleName = optarg;
             break;
         }
-        case 'u': {
-            log = log == "" ? "userId" : log;
-        }
-        case 'a': {
-            if (commandName == "installSandbox" && option == 'a') {
-                std::string unknownOption = "";
-                std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
-                APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
-                resultReceiver_.append(unknownOptionMsg);
-                ret = false;
-                break;
-            }
-            log = log == "" ? "appIndex" : log;
-        }
+        case 'u':
+        case 'a':
         case 'd': {
-            if (commandName != "installSandbox" && option == 'd') {
+            if ((commandName != INSTALL_SANDBOX && option == 'd') ||
+                (commandName == INSTALL_SANDBOX && option == 'a')) {
                 std::string unknownOption = "";
                 std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
                 APP_LOGD("'bundle_test_tool %{public}s' with an unknown option.", commandName.c_str());
@@ -574,12 +562,18 @@ bool BundleTestTool::CheckSandboxCorrectOption(
                 ret = false;
                 break;
             }
-            log = log == "" ? "dlpType" : log;
-            APP_LOGD("'bundle_test_tool %{public}s %{public}s %{public}s'", commandName.c_str(), 
+
+            APP_LOGD("'bundle_test_tool %{public}s %{public}s %{public}s'", commandName.c_str(),
                 argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+
             if (!OHOS::StrToInt(optarg, data)) {
-                APP_LOGE("bundle_test_tool %{public}s with error %{public}s %{private}s", 
-                    commandName.c_str(), log.c_str(), optarg);
+                if (option == 'u') {
+                    APP_LOGE("bundle_test_tool %{public}s with error -u %{private}s", commandName.c_str(), optarg);
+                } else if (option == 'a') {
+                    APP_LOGE("bundle_test_tool %{public}s with error -a %{private}s", commandName.c_str(), optarg);
+                } else {
+                    APP_LOGE("bundle_test_tool %{public}s with error -d %{private}s", commandName.c_str(), optarg);
+                }
                 resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
                 ret = false;
             }
@@ -590,7 +584,7 @@ bool BundleTestTool::CheckSandboxCorrectOption(
             break;
         }
     }
-    return ret; 
+    return ret;
 }
 
 ErrCode BundleTestTool::InstallSandboxOperation(
@@ -605,7 +599,7 @@ ErrCode BundleTestTool::RunAsInstallSandboxCommand()
     int result = OHOS::ERR_OK;
     int option = -1;
     int counter = 0;
-    std::string commandName = "installSandbox";
+    std::string commandName = INSTALL_SANDBOX;
     std::string bundleName = "";
     int32_t userId = 100;
     int32_t dlpType = 0;
@@ -620,9 +614,11 @@ ErrCode BundleTestTool::RunAsInstallSandboxCommand()
             result = !CheckSandboxErrorOption(option, counter, commandName) ? OHOS::ERR_INVALID_VALUE : result;
             break;
         } else if (option == 'u') {
-            result = !CheckSandboxCorrectOption(option, commandName, userId, bundleName) ? OHOS::ERR_INVALID_VALUE : result;
+            result = !CheckSandboxCorrectOption(option, commandName, userId, bundleName) ?
+                OHOS::ERR_INVALID_VALUE : result;
         } else {
-            result = !CheckSandboxCorrectOption(option, commandName, dlpType, bundleName) ? OHOS::ERR_INVALID_VALUE : result;
+            result = !CheckSandboxCorrectOption(option, commandName, dlpType, bundleName) ?
+                OHOS::ERR_INVALID_VALUE : result;
         }
     }
 
@@ -636,7 +632,7 @@ ErrCode BundleTestTool::RunAsInstallSandboxCommand()
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_INSTALL_SANDBOX);
         return result;
-    } 
+    }
 
     int32_t appIndex = 0;
     auto ret = InstallSandboxOperation(bundleName, userId, dlpType, appIndex);
@@ -661,7 +657,7 @@ ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
     int option = -1;
     int counter = 0;
     std::string bundleName = "";
-    std::string commandName = "uninstallSandbox";
+    std::string commandName = UNINSTALL_SANDBOX;
     int32_t userId = 100;
     int32_t appIndex = -1;
     while (true) {
@@ -676,10 +672,12 @@ ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
             result = !CheckSandboxErrorOption(option, counter, commandName) ? OHOS::ERR_INVALID_VALUE : result;
             break;
         } else if (option == 'u') {
-            result = !CheckSandboxCorrectOption(option, commandName, userId, bundleName) ? OHOS::ERR_INVALID_VALUE : result;
+            result = !CheckSandboxCorrectOption(option, commandName, userId, bundleName) ?
+                OHOS::ERR_INVALID_VALUE : result;
         } else {
-            result = !CheckSandboxCorrectOption(option, commandName, appIndex, bundleName) ? OHOS::ERR_INVALID_VALUE : result;
-        }     
+            result = !CheckSandboxCorrectOption(option, commandName, appIndex, bundleName) ?
+                OHOS::ERR_INVALID_VALUE : result;
+        }
     }
 
     if (result == OHOS::ERR_OK && bundleName == "") {
@@ -687,7 +685,7 @@ ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
         result = OHOS::ERR_INVALID_VALUE;
     } else {
         APP_LOGD("uninstallSandbox app bundleName is %{private}s", bundleName.c_str());
-    } 
+    }
     
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_UNINSTALL_SANDBOX);
@@ -696,7 +694,7 @@ ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
 
     auto ret = UninstallSandboxOperation(bundleName, appIndex, userId);
     if (ret == ERR_OK) {
-        resultReceiver_.append(STRING_UNINSTALL_SANDBOX_SUCCESSFULLY );
+        resultReceiver_.append(STRING_UNINSTALL_SANDBOX_SUCCESSFULLY);
     } else {
         resultReceiver_.append(STRING_UNINSTALL_SANDBOX_FAILED + "errCode is " + std::to_string(ret) + "\n");
     }
@@ -723,7 +721,7 @@ ErrCode BundleTestTool::RunAsDumpSandboxCommand()
     int option = -1;
     int counter = 0;
     std::string bundleName = "";
-    std::string commandName = "dumpSandbox";
+    std::string commandName = DUMP_SANDBOX;
     int32_t userId = 100;
     int32_t appIndex = -1;
     while (true) {
@@ -737,10 +735,12 @@ ErrCode BundleTestTool::RunAsDumpSandboxCommand()
             result = !CheckSandboxErrorOption(option, counter, commandName) ? OHOS::ERR_INVALID_VALUE : result;
             break;
         } else if (option == 'u') {
-            result = !CheckSandboxCorrectOption(option, commandName, userId, bundleName) ? OHOS::ERR_INVALID_VALUE : result;
+            result = !CheckSandboxCorrectOption(option, commandName, userId, bundleName) ?
+                OHOS::ERR_INVALID_VALUE : result;
         } else {
-            result = !CheckSandboxCorrectOption(option, commandName, appIndex, bundleName) ? OHOS::ERR_INVALID_VALUE : result;
-        }     
+            result = !CheckSandboxCorrectOption(option, commandName, appIndex, bundleName) ?
+                OHOS::ERR_INVALID_VALUE : result;
+        }
     }
 
     if (result == OHOS::ERR_OK && bundleName == "") {
@@ -748,7 +748,7 @@ ErrCode BundleTestTool::RunAsDumpSandboxCommand()
         result = OHOS::ERR_INVALID_VALUE;
     } else {
         APP_LOGD("dumpSandbox app bundleName is %{public}s", bundleName.c_str());
-    } 
+    }
     
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_DUMP_SANDBOX);
