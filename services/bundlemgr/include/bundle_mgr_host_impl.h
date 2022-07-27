@@ -651,10 +651,15 @@ public:
         std::vector<ExtensionAbilityInfo> &infos) override;
     virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &info) override;
+
     virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName) override;
 
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
+    virtual std::string GetStringById(
+        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId) override;
+    virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
+        uint32_t resId, uint32_t density, int32_t userId) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

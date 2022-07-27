@@ -539,6 +539,10 @@ private:
 
     ErrCode HandleGetMediaFileDescriptor(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetStringById(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetIconById(MessageParcel &data, MessageParcel &reply);
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif

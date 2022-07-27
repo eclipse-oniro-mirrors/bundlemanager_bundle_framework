@@ -1587,6 +1587,28 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
     return true;
 }
 
+std::string BundleMgrHostImpl::GetStringById(
+    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::EMPTY_STRING;
+    }
+    return dataMgr->GetStringById(bundleName, moduleName, resId, userId);
+}
+
+std::string BundleMgrHostImpl::GetIconById(
+    const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::EMPTY_STRING;
+    }
+    return dataMgr->GetIconById(bundleName, moduleName, resId, density, userId);
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 {

@@ -14,6 +14,12 @@
  * limitations under the License.
  -->
 <configuration ver="2.0">
+  <target name="BmsBundleResourceManagerTest">
+  <preparer>
+      <option name="push" value="test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/resource_manager/"
+        src="res" />
+    </preparer>
+  </target>
   <target name="BmsBundleDefaultAppTest">
   <preparer>
       <option name="push" value="test_bundle/defaultAppTest.hap -> /data/test/resource/bms/default_app_bundle/"

@@ -2530,6 +2530,92 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
     return reply.ReadBool();
 }
 
+std::string BundleMgrProxy::GetStringById(
+    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+{
+    APP_LOGI("begin to GetStringById.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("fail to GetStringById due to params empty");
+        return Constants::EMPTY_STRING;
+    }
+    APP_LOGD("GetStringById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d",
+        bundleName.c_str(), moduleName.c_str(), resId);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetStringById due to write InterfaceToken fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetStringById due to write bundleName fail");
+        return Constants::EMPTY_STRING;
+    }
+
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetStringById due to write moduleName fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteUint32(resId)) {
+        APP_LOGE("fail to GetStringById due to write resId fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetStringById due to write userId fail");
+        return Constants::EMPTY_STRING;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_STRING_BY_ID, data, reply)) {
+        APP_LOGE("fail to GetStringById from server");
+        return Constants::EMPTY_STRING;
+    }
+    return reply.ReadString();
+}
+
+std::string BundleMgrProxy::GetIconById(
+    const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
+{
+    APP_LOGI("begin to GetIconById.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("fail to GetIconById due to params empty");
+        return Constants::EMPTY_STRING;
+    }
+    APP_LOGD("GetIconById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d",
+        bundleName.c_str(), moduleName.c_str(), resId);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetIconById due to write InterfaceToken fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetIconById due to write bundleName fail");
+        return Constants::EMPTY_STRING;
+    }
+
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetIconById due to write moduleName fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteUint32(resId)) {
+        APP_LOGE("fail to GetIconById due to write resId fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteUint32(density)) {
+        APP_LOGE("fail to GetIconById due to write density fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetIconById due to write userId fail");
+        return Constants::EMPTY_STRING;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_ICON_BY_ID, data, reply)) {
+        APP_LOGE("fail to GetIconById from server");
+        return Constants::EMPTY_STRING;
+    }
+    return reply.ReadString();
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 {
