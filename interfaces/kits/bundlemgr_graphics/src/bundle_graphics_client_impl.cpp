@@ -1,0 +1,100 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "bundle_graphics_client_impl.h"
+
+#include <unistd.h>
+
+#include "app_log_wrapper.h"
+#include "bundle_constants.h"
+#include "bundle_file_util.h"
+#include "bundle_mgr_interface.h"
+#include "bundle_mgr_proxy.h"
+#include "image_source.h"
+#include "if_system_ability_manager.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+
+namespace OHOS {
+namespace AppExecFwk {
+sptr<IBundleMgr> BundleGraphicsClientImpl::GetBundleMgr()
+{
+    if (bundleMgr_ == nullptr) {
+        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            APP_LOGE("GetBundleMgr GetSystemAbilityManager is null");
+            return nullptr;
+        }
+        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (bundleMgrSa == nullptr) {
+            APP_LOGE("GetBundleMgr GetSystemAbility is null");
+            return nullptr;
+        }
+        auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+        if (bundleMgr == nullptr) {
+            APP_LOGE("GetBundleMgr iface_cast get null");
+        }
+        bundleMgr_ = bundleMgr;
+    }
+
+    return bundleMgr_;
+}
+
+std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::LoadImageFile(int32_t fd)
+{
+    APP_LOGI("begin LoadImageFile");
+    uint32_t errorCode = 0;
+    Media::SourceOptions opts;
+    std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(fd, opts, errorCode);
+    if (errorCode != 0) {
+        APP_LOGE("failed to create image source err is %{public}d", errorCode);
+        return nullptr;
+    }
+
+    Media::DecodeOptions decodeOpts;
+    auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
+    if (errorCode != 0) {
+        APP_LOGE("failed to create pixelmap err %{public}d", errorCode);
+        return nullptr;
+    }
+    APP_LOGI("LoadImageFile finish");
+    return std::shared_ptr<Media::PixelMap>(std::move(pixelMapPtr));
+}
+
+std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::GetAbilityPixelMapIcon(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName)
+{
+    APP_LOGI("begin GetAbilityPixelMapIcon");
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+
+    auto fd = iBundleMgr->GetMediaFileDescriptor(bundleName, moduleName, abilityName);
+    if (fd < 0) {
+        return nullptr;
+    }
+    auto pixelMapPtr = LoadImageFile(fd);
+    if (pixelMapPtr == nullptr) {
+        APP_LOGE("loadImageFile failed");
+        close(fd);
+        return nullptr;
+    }
+    close(fd);
+    return pixelMapPtr;
+}
+}  // AppExecFwk
+}  // OHOS

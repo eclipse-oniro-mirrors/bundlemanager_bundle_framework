@@ -40,9 +40,6 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-#include "image_source.h"
-#endif
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #include "nlohmann/json.hpp"
@@ -1761,56 +1758,6 @@ bool BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEna
     return true;
 }
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-std::shared_ptr<Media::PixelMap> BundleDataMgr::GetAbilityPixelMapIcon(const std::string &bundleName,
-    const std::string &moduleName, const std::string &abilityName) const
-{
-#ifdef GLOBAL_RESMGR_ENABLE
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGW("bundleInfos_ data is empty");
-        return nullptr;
-    }
-    APP_LOGD("GetAbilityPixelMapIcon %{public}s", bundleName.c_str());
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-        return nullptr;
-    }
-    auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId());
-    if (!ability) {
-        APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
-        return nullptr;
-    }
-    BundleInfo bundleInfo;
-    int32_t flags = 0;
-    infoItem->second.GetBundleInfo(flags, bundleInfo, GetUserId());
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager = GetResourceManager(bundleInfo);
-    if (resourceManager == nullptr) {
-        APP_LOGE("InitResourceManager failed");
-        return nullptr;
-    }
-    std::string iconPath;
-    OHOS::Global::Resource::RState iconPathErrval =
-        resourceManager->GetMediaById(static_cast<uint32_t>((*ability).iconId), iconPath);
-    if (iconPathErrval != OHOS::Global::Resource::RState::SUCCESS) {
-        APP_LOGE("GetMediaById iconPath failed");
-        return nullptr;
-    }
-    APP_LOGD("GetMediaById iconPath: %{private}s", iconPath.c_str());
-    auto pixelMapPtr = LoadImageFile(iconPath);
-    if (!pixelMapPtr) {
-        APP_LOGE("LoadImageFile failed");
-        return nullptr;
-    }
-    return pixelMapPtr;
-#else
-    APP_LOGW("GLOBAL_RESMGR_ENABLE is false");
-    return nullptr;
-#endif
-}
-#endif
-
 std::shared_ptr<BundleSandboxDataMgr> BundleDataMgr::GetSandboxDataMgr() const
 {
     return sandboxDataMgr_;
@@ -3061,33 +3008,6 @@ int32_t BundleDataMgr::GetDisposedStatus(const std::string &bundleName)
     return info.GetDisposedStatus();
 }
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-std::shared_ptr<Media::PixelMap> BundleDataMgr::LoadImageFile(const std::string &path) const
-{
-    APP_LOGD("BundleDataMgr::LoadImageFile IN");
-    uint32_t errorCode = 0;
-    Media::SourceOptions opts;
-    std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(path,
-                                                                                            opts,
-                                                                                            errorCode);
-    if (errorCode != 0) {
-        APP_LOGE("Failed to create image source path %{private}s err %{public}d",
-            path.c_str(), errorCode);
-        return nullptr;
-    }
-
-    Media::DecodeOptions decodeOpts;
-    auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
-    if (errorCode != 0) {
-        APP_LOGE("Failed to create pixelmap path %{private}s err %{public}d",
-            path.c_str(), errorCode);
-        return nullptr;
-    }
-    APP_LOGD("BundleDataMgr::LoadImageFile OUT");
-    return std::shared_ptr<Media::PixelMap>(std::move(pixelMapPtr));
-}
-#endif
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
     AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const
@@ -3195,5 +3115,49 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
     return false;
 }
 #endif
+
+int32_t BundleDataMgr::GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName) const
+{
+    APP_LOGI("begin to GetMediaFileDescriptor.");
+    int32_t fd = -1;
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty");
+        return fd;
+    }
+    APP_LOGD("GetMediaFileDescriptor %{public}s", bundleName.c_str());
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return fd;
+    }
+    auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId());
+    if (!ability) {
+        APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
+        return fd;
+    }
+    BundleInfo bundleInfo;
+    int32_t flags = fd;
+    infoItem->second.GetBundleInfo(flags, bundleInfo, GetUserId());
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager = GetResourceManager(bundleInfo);
+    if (resourceManager == nullptr) {
+        APP_LOGE("InitResourceManager failed");
+        return fd;
+    }
+    std::string iconPath;
+    OHOS::Global::Resource::RState iconPathErrval =
+        resourceManager->GetMediaById(static_cast<uint32_t>((*ability).iconId), iconPath);
+    if (iconPathErrval != OHOS::Global::Resource::RState::SUCCESS) {
+        APP_LOGE("GetMediaById iconPath failed");
+        return fd;
+    }
+    APP_LOGD("GetMediaById iconPath: %{public}s", iconPath.c_str());
+    fd = BundleUtil::CreateFileDescriptorForReadOnly(iconPath, 0);
+    if (fd < 0) {
+        APP_LOGE("create file descriptor failed");
+    }
+    return fd;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

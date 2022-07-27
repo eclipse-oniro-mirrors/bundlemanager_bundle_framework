@@ -31,6 +31,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
+#include "bundle_graphics_client.h"
 #include "pixel_map_napi.h"
 #endif
 #include "securec.h"
@@ -5911,15 +5912,11 @@ static std::shared_ptr<Media::PixelMap> InnerGetAbilityIcon(
         APP_LOGE("bundleName or abilityName is invalid param");
         return nullptr;
     }
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return nullptr;
-    }
+    BundleGraphicsClient client;
     if (hasModuleName) {
-        return iBundleMgr->GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
+        return client.GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
     }
-    return iBundleMgr->GetAbilityPixelMapIcon(bundleName, abilityName);
+    return client.GetAbilityPixelMapIcon(bundleName, "", abilityName);
 }
 
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info)

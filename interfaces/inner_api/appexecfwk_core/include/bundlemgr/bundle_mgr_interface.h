@@ -33,9 +33,6 @@
 #include "hap_module_info.h"
 #include "module_usage_record.h"
 #include "permission_define.h"
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-#include "pixel_map.h"
-#endif
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -941,19 +938,11 @@ public:
         return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
     }
 
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
+    virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName)
     {
-        return nullptr;
+        return 0;
     }
-
-    virtual std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName)
-    {
-        return nullptr;
-    }
-#endif
 
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
@@ -998,8 +987,6 @@ public:
         SET_ABILITY_ENABLED,
         GET_ABILITY_INFO,
         GET_ABILITY_INFO_WITH_MODULE_NAME,
-        GET_ABILITY_PIXELMAP_ICON,
-        GET_ABILITY_PIXELMAP_ICON_WITH_MODULE_NAME,
         GET_ALL_FORMS_INFO,
         GET_FORMS_INFO_BY_APP,
         GET_FORMS_INFO_BY_MODULE,
@@ -1044,7 +1031,8 @@ public:
         CHECK_ABILITY_ENABLE_INSTALL,
         GET_SANDBOX_APP_ABILITY_INFO,
         GET_SANDBOX_APP_EXTENSION_INFOS,
-        GET_SANDBOX_MODULE_INFO
+        GET_SANDBOX_MODULE_INFO,
+        GET_MEDIA_FILE_DESCRIPTOR,
     };
 };
 }  // namespace AppExecFwk
