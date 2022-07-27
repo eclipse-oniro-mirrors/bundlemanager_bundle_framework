@@ -33,7 +33,7 @@ AgingRequest::AgingRequest()
 void AgingRequest::InitAgingDatasizeThreshold()
 {
     char szDatasizeThreshold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_DATA_SIZE_THRESHOLD, "", szDatasizeThreshold,
+    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_DATA_SIZE_THRESHOLD.c_str(), "", szDatasizeThreshold,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szDatasizeThreshold is %{public}d", ret, atoi(szDatasizeThreshold));
     if (ret <= 0) {
@@ -49,7 +49,7 @@ void AgingRequest::InitAgingDatasizeThreshold()
 void AgingRequest::InitAgingOneDayTimeMs()
 {
     char szOneDayTimeMs[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_RECENILY_USED_THRESHOLD, "", szOneDayTimeMs,
+    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_RECENILY_USED_THRESHOLD.c_str(), "", szOneDayTimeMs,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szOneDayTimeMs is %{public}d", ret, atoi(szOneDayTimeMs));
     if (ret <= 0) {
