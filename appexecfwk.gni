@@ -27,7 +27,7 @@ declare_args() {
   bundle_framework_default_app = true
   bundle_framework_launcher = true
   bundle_framework_sandbox_app = true
-  bundle_framework_quick_fix = true
+  bundle_framework_quick_fix = false
 
   ability_runtime_enable = true
   account_enable = true
