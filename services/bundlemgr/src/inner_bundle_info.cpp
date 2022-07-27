@@ -41,11 +41,14 @@ const std::string USER_ID = "userId_";
 const std::string APP_FEATURE = "appFeature";
 const std::string HAS_ENTRY = "hasEntry";
 const std::string CAN_UNINSTALL = "canUninstall";
+const std::string NAME = "name";
 const std::string MODULE_PACKAGE = "modulePackage";
 const std::string MODULE_PATH = "modulePath";
 const std::string MODULE_NAME = "moduleName";
 const std::string MODULE_DESCRIPTION = "description";
 const std::string MODULE_DESCRIPTION_ID = "descriptionId";
+const std::string MODULE_ICON = "icon";
+const std::string MODULE_ICON_ID = "iconId";
 const std::string MODULE_LABEL = "label";
 const std::string MODULE_LABEL_ID = "labelId";
 const std::string MODULE_DESCRIPTION_INSTALLATION_FREE = "installationFree";
@@ -327,6 +330,7 @@ void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermissio
 void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
 {
     jsonObject = nlohmann::json {
+        {NAME, info.name},
         {MODULE_PACKAGE, info.modulePackage},
         {MODULE_NAME, info.moduleName},
         {MODULE_PATH, info.modulePath},
@@ -338,6 +342,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_DISTRO, info.distro},
         {MODULE_DESCRIPTION, info.description},
         {MODULE_DESCRIPTION_ID, info.descriptionId},
+        {MODULE_ICON, info.icon},
+        {MODULE_ICON_ID, info.iconId},
         {MODULE_LABEL, info.label},
         {MODULE_LABEL_ID, info.labelId},
         {MODULE_DESCRIPTION_INSTALLATION_FREE, info.installationFree},
@@ -428,6 +434,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
     const auto &jsonObjectEnd = jsonObject.end();
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
+        NAME,
+        info.name,
+        JsonType::STRING,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
         MODULE_PACKAGE,
         info.modulePackage,
         JsonType::STRING,
@@ -510,6 +524,22 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_DESCRIPTION_ID,
         info.descriptionId,
+        JsonType::NUMBER,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ICON,
+        info.icon,
+        JsonType::STRING,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ICON_ID,
+        info.iconId,
         JsonType::NUMBER,
         false,
         ProfileReader::parseResult,
@@ -1205,9 +1235,15 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         return std::nullopt;
     }
     HapModuleInfo hapInfo;
-    hapInfo.name = it->second.modulePackage;
+    hapInfo.name = it->second.name;
+    hapInfo.package = it->second.modulePackage;
     hapInfo.moduleName = it->second.moduleName;
     hapInfo.description = it->second.description;
+    hapInfo.descriptionId = it->second.descriptionId;
+    hapInfo.label = it->second.label;
+    hapInfo.labelId = it->second.labelId;
+    hapInfo.iconPath = it->second.icon;
+    hapInfo.iconId = it->second.iconId;
     hapInfo.mainAbility = it->second.mainAbility;
     hapInfo.srcPath = it->second.srcPath;
     hapInfo.supportedModes = baseApplicationInfo_.supportedModes;
@@ -1248,8 +1284,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     for (auto &ability : baseAbilityInfos_) {
         if (ability.first.find(key) != std::string::npos) {
             if (!first) {
-                hapInfo.label = ability.second.label;
-                hapInfo.iconPath = ability.second.iconPath;
                 hapInfo.deviceTypes = ability.second.deviceTypes;
                 first = true;
             }

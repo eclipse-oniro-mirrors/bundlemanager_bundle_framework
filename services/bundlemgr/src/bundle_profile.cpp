@@ -2054,6 +2054,11 @@ uint32_t GetBackgroundModes(const std::vector<std::string>& backgroundModes)
 
 bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleInfo &innerModuleInfo)
 {
+    if (configJson.module.name.substr(0, 1) == ".") {
+        innerModuleInfo.name = configJson.module.package + configJson.module.name;
+    } else {
+        innerModuleInfo.name = configJson.module.name;
+    }
     innerModuleInfo.modulePackage = configJson.module.package;
     innerModuleInfo.moduleName = configJson.module.distro.moduleName;
     innerModuleInfo.installationFree = configJson.module.distro.installationFree;
@@ -2241,6 +2246,12 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
             APP_LOGE("parse to abilityInfo failed");
             return false;
         }
+        if (innerModuleInfo.mainAbility == abilityInfo.name) {
+            innerModuleInfo.icon = abilityInfo.iconPath;
+            innerModuleInfo.iconId = abilityInfo.iconId;
+            innerModuleInfo.label = abilityInfo.label;
+            innerModuleInfo.labelId = abilityInfo.labelId;
+        }
         std::string keyName;
         keyName.append(configJson.app.bundleName).append(".")
             .append(configJson.module.package).append(".").append(abilityInfo.name);
@@ -2279,10 +2290,6 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
                     applicationInfo.labelId = ability.labelId;
                     applicationInfo.iconPath = ability.icon;
                     applicationInfo.iconId = ability.iconId;
-                    if (innerModuleInfo.label.empty()) {
-                        innerModuleInfo.label = ability.label;
-                        innerModuleInfo.labelId = ability.labelId;
-                    }
                     find = true;
                 }
                 if (std::find(skill.entities.begin(), skill.entities.end(), Constants::FLAG_HOME_INTENT_FROM_SYSTEM) !=

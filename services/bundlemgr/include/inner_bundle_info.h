@@ -55,6 +55,7 @@ struct DefinePermission {
 };
 
 struct InnerModuleInfo {
+    std::string name;
     std::string modulePackage;
     std::string moduleName;
     std::string modulePath;
@@ -64,6 +65,8 @@ struct InnerModuleInfo {
     int32_t labelId = 0;
     std::string description;
     int32_t descriptionId = 0;
+    std::string icon;
+    int32_t iconId = 0;
     std::string mainAbility;
     std::string srcPath;
     bool isEntry = false;
