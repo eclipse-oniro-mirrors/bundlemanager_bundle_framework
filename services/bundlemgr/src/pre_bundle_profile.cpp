@@ -34,7 +34,7 @@ const std::string BUNDLE_NAME = "bundleName";
 const std::string KEEP_ALIVE = "keepAlive";
 const std::string SINGLETON = "singleton";
 const std::string BOOTABLE = "bootable";
-const std::string ALLOW_COMMENT_EVENT = "allowCommentEvent";
+const std::string ALLOW_COMMON_EVENT = "allowCommonEvent";
 const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
 const std::string APP_SIGNATURE = "appSignature";
 const std::string ASSOCIATED_WAKE_UP = "associatedWakeUp";
@@ -220,8 +220,8 @@ ErrCode PreBundleProfile::TransformTo(
             ArrayType::NOT_ARRAY);
         GetValueIfFindKey<std::vector<std::string>>(array,
             jsonObjectEnd,
-            ALLOW_COMMENT_EVENT,
-            preBundleConfigInfo.allowCommentEvent,
+            ALLOW_COMMON_EVENT,
+            preBundleConfigInfo.allowCommonEvent,
             JsonType::ARRAY,
             false,
             parseResult,
