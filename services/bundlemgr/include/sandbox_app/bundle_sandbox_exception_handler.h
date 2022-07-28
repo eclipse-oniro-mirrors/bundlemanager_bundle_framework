@@ -33,7 +33,7 @@ public:
 
 private:
     static void RemoveSandboxDataDirAndTokenId(const std::string &bundleName,
-        const std::vector<SandboxAppPersistentInfo> &sandboxPersistentInfo);
+        const std::vector<SandboxAppPersistentInfo> &sandboxPersistentInfo, const InnerBundleInfo &info);
     void UpdateBundleInfoToStorage(const InnerBundleInfo &info);
 
     std::weak_ptr<IBundleDataStorage> dataStorage_;
