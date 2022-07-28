@@ -228,6 +228,7 @@ private:
     bool GetAbilityMgrProxy();
     void WaitFromConnecting(std::unique_lock<std::mutex> &lock);
     void WaitFromConnected(std::unique_lock<std::mutex> &lock);
+    void DisconnectDelay();
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
