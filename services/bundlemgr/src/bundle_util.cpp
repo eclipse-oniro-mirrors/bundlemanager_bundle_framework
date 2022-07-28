@@ -457,5 +457,35 @@ Resource BundleUtil::GetResource(const std::string &bundleName, const std::strin
     resource.id = resId;
     return resource;
 }
+
+bool BundleUtil::CreateDir(const std::string &dir)
+{
+    if (dir.empty()) {
+        APP_LOGE("path is empty");
+        return false;
+    }
+
+    if (IsExistFile(dir)) {
+        return true;
+    }
+
+    if (!OHOS::ForceCreateDirectory(dir)) {
+        APP_LOGE("mkdir %{public}s failed", dir.c_str());
+        return false;
+    }
+
+    if (chown(dir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
+        APP_LOGE("fail to change %{public}s ownership", dir.c_str());
+        return false;
+    }
+
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (!OHOS::ChangeModeFile(dir, mode)) {
+        APP_LOGE("change mode failed, temp install dir : %{public}s", dir.c_str());
+        return false;
+    }
+
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

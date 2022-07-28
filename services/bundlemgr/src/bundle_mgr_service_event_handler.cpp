@@ -40,6 +40,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string APP_SUFFIX = "/app";
+const std::string TEMP_PREFIX = "temp_";
+const std::string MODULE_PREFIX = "module_";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -47,14 +49,56 @@ std::set<std::string> recoverList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 bool hasLoadPreInstallProFile_ = false;
 
+void MoveTempPath(const std::vector<std::string> &fromPaths,
+    const std::string &bundleName, std::vector<std::string> &toPaths)
+{
+    std::string tempDir =
+        Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + TEMP_PREFIX + bundleName;
+    if (!BundleUtil::CreateDir(tempDir)) {
+        APP_LOGE("create tempdir failed %{public}s", tempDir.c_str());
+        return;
+    }
+
+    int32_t hapIndex = 0;
+    for (const auto &path : fromPaths) {
+        auto toPath = tempDir + Constants::PATH_SEPARATOR + MODULE_PREFIX
+            + std::to_string(hapIndex) + Constants::INSTALL_FILE_SUFFIX;
+        hapIndex++;
+        if (!BundleUtil::RenameFile(path, toPath)) {
+            APP_LOGW("move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
+            continue;
+        }
+
+        toPaths.emplace_back(toPath);
+    }
+}
+
 class InnerReceiverImpl : public StatusReceiverHost {
 public:
     InnerReceiverImpl() = default;
     virtual ~InnerReceiverImpl() override = default;
 
+    void SetBundleName(const std::string &bundleName)
+    {
+        bundleName_ = bundleName;
+    }
+
     virtual void OnStatusNotify(const int progress) override {}
     virtual void OnFinished(
-        const int32_t resultCode, const std::string &resultMsg) override {}
+        const int32_t resultCode, const std::string &resultMsg) override
+    {
+        if (bundleName_.empty()) {
+            return;
+        }
+
+        std::string tempDir = Constants::HAP_COPY_PATH
+            + Constants::PATH_SEPARATOR + TEMP_PREFIX + bundleName_;
+        APP_LOGD("delete tempDir %{public}s", tempDir.c_str());
+        BundleUtil::DeleteDir(tempDir);
+    }
+
+private:
+    std::string bundleName_;
 };
 }
 
@@ -361,7 +405,10 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
         installParam.streamInstallMode = true;
         sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
-        installer->Install(hapPaths.second, installParam, innerReceiverImpl);
+        innerReceiverImpl->SetBundleName(hapPaths.first);
+        std::vector<std::string> tempHaps;
+        MoveTempPath(hapPaths.second, hapPaths.first, tempHaps);
+        installer->Install(tempHaps, installParam, innerReceiverImpl);
     }
 
     return ResultCode::REINSTALL_OK;
