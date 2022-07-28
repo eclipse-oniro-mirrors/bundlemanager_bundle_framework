@@ -31,8 +31,8 @@ ohos_benchmarktest("BenchmarkTestForBundleMgrClient") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "ipc:ipc_core",
-    "utils_base:utils",
   ]
 }
 

@@ -30,7 +30,7 @@ ohos_benchmarktest("BenchmarkTestForRemoteAbilityInfo") {
   external_deps = [
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
-    "utils_base:utils",
+    "c_utils:utils",
   ]
 }
 
