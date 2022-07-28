@@ -33,6 +33,7 @@ const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string FREE_INSTLL_CALLING_APP_ID = "freeInstallCallingAppId";
 const std::string FREE_INSTLL_CALLING_BUNDLENAMES = "freeInstallCallingBundleNames";
 const std::string FREE_INSTALL_CALLINGUID = "freeInstallCallingUid";
+const std::string DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
 const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
@@ -47,6 +48,7 @@ constexpr uint32_t BIT_THREE = 8;
 constexpr uint32_t BIT_FOUR = 16;
 constexpr uint32_t BIT_FIVE = 32;
 constexpr uint32_t BIT_SIX = 64;
+constexpr uint32_t DISCONNECT_DELAY = 20000;
 constexpr uint32_t OUT_TIME = 30000;
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
@@ -203,6 +205,9 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
 {
     APP_LOGI("ConnectAbility start target bundle = %{public}s", want.GetBundle().c_str());
     std::unique_lock<std::mutex> lock(mutex_);
+    if (handler_ != nullptr) {
+        handler_->RemoveTask(DISCONNECT_DELAY_TASK);
+    }
     if (connectState_ == ServiceCenterConnectState::CONNECTING) {
         WaitFromConnecting(lock);
     } else if (connectState_ == ServiceCenterConnectState::DISCONNECTED) {
@@ -237,6 +242,21 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
     }
 }
 
+void BundleConnectAbilityMgr::DisconnectDelay()
+{
+    if (handler_ == nullptr) {
+        APP_LOGE("DisconnectDelay, handler is nullptr");
+        return;
+    }
+    auto disconnectFunc = [connect = shared_from_this()]() {
+        APP_LOGI("disconnectFunc Disconnect Ability");
+        if (connect) {
+            connect->DisconnectAbility();
+        }
+    };
+    handler_->PostTask(disconnectFunc, DISCONNECT_DELAY_TASK, DISCONNECT_DELAY);
+}
+
 void BundleConnectAbilityMgr::SendCallBack(
     int32_t resultCode, const AAFwk::Want &want, int32_t userId, const std::string &transactId)
 {
@@ -250,8 +270,8 @@ void BundleConnectAbilityMgr::SendCallBack(
     mapMutex_.unlock();
     if (freeInstallParamsMap_.size() == 0) {
         if (connectState_ == ServiceCenterConnectState::CONNECTED) {
-            APP_LOGI("Disconnect Ability.");
-            DisconnectAbility();
+            APP_LOGI("DisconnectDelay");
+            DisconnectDelay();
         }
     }
 
