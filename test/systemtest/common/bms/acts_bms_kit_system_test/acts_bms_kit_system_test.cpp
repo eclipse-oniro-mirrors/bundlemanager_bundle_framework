@@ -36,11 +36,7 @@ using namespace std::chrono_literals;
 
 namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
-const std::string SYSTEM_BUNDLE_PATH = "/system/app/com.ohos.settings/";
 const std::string BASE_BUNDLE_NAME = "com.third.hiworld.example";
-const std::string SYSTEM_LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
-const std::string SYSTEM_SETTINGS_BUNDLE_NAME = "com.ohos.settings";
-const std::string SYSTEM_SYSTEMUI_BUNDLE_NAME = "com.ohos.systemui";
 const std::string BUNDLE_DATA_ROOT_PATH = "/data/app/el2/100/base/";
 const std::string ERROR_INSTALL_FAILED = "install failed!";
 const std::string ERROR_UNINSTALL_FAILED = "uninstall failed!";
@@ -726,55 +722,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0100, Function | MediumTest | Leve
 }
 
 /**
- * @tc.number: GetBundleInfos_0200
- * @tc.name: test query bundleinfos
- * @tc.desc: 1.under '/system/app/bms_bundle',there exist some hap
- *           2.query all bundleinfos
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleInfos_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-
-        std::vector<BundleInfo> bundleInfos;
-        bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
-        EXPECT_TRUE(getInfoResult);
-        int count = 0;
-        for (auto bundleInfo : bundleInfos) {
-            if (IsSubStr(bundleInfo.name, SYSTEM_LAUNCHER_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(bundleInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(bundleInfo.name, SYSTEM_SYSTEMUI_BUNDLE_NAME)) {
-                count++;
-            }
-            if (count == 3) {
-                break;
-            }
-        }
-        EXPECT_GE(count, 2);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleInfos_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleInfos_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleInfos_0200" << std::endl;
-}
-
-/**
  * @tc.number: GetApplicationInfo_0100
  * @tc.name: test query application information
  * EnvConditions: system running normally
@@ -977,43 +924,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0400, Function | MediumTest | 
 }
 
 /**
- * @tc.number: GetApplicationInfo_0500
- * @tc.name: test GetApplicationInfo interface
- * @tc.desc: 1.under '/system/app',there is a hap
- *           2.install the hap
- *           3.call GetApplicationInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0500, Function | MediumTest | Level1)
-{
-    std::cout << "START GetApplicationInfo_0500" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-
-        ApplicationInfo appInfo;
-        bool getInfoResult = bundleMgrProxy->GetApplicationInfo(
-            SYSTEM_SETTINGS_BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(appInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME);
-        if (!getInfoResult) {
-            APP_LOGI("GetApplicationInfo_0500 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetApplicationInfo_0500 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetApplicationInfo_0500" << std::endl;
-}
-
-/**
  * @tc.number: GetApplicationInfo_0600
  * @tc.name: test GetApplicationInfo interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -1174,56 +1084,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfos_0100, Function | MediumTest |
 }
 
 /**
- * @tc.number: GetApplicationInfos_0200
- * @tc.name: test query applicationinfos
- * @tc.desc: 1.there are some system-app installed in system
- *           2.query all appinfos
- */
-HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfos_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START GetApplicationInfos_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::vector<ApplicationInfo> appInfos;
-        bool getInfoResult =
-            bundleMgrProxy->GetApplicationInfos(
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, appInfos);
-        EXPECT_TRUE(getInfoResult);
-        int count = 0;
-        for (auto appInfo : appInfos) {
-            if (IsSubStr(appInfo.name, SYSTEM_LAUNCHER_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(appInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(appInfo.name, SYSTEM_SYSTEMUI_BUNDLE_NAME)) {
-                count++;
-            }
-            if (count == 3) {
-                break;
-            }
-        }
-        EXPECT_GE(count, 2);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetApplicationInfos_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetApplicationInfos_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetApplicationInfos_0200" << std::endl;
-}
-
-/**
  * @tc.number: GetBundleArchiveInfo_0100
  * @tc.name: test query archive information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -1349,44 +1209,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0300, Function | MediumTest 
     }
     EXPECT_TRUE(result);
     std::cout << "END GetBundleArchiveInfo_0300" << std::endl;
-}
-
-/**
- * @tc.number: GetBundleArchiveInfo_0400
- * @tc.name: test query archive information
- * @tc.desc: 1.under '/system/app',there is a hap
- *           2.query archive information
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0400, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleArchiveInfo_0400" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::string hapFilePath = SYSTEM_BUNDLE_PATH + "Settings.hap";
-
-        BundleInfo bundleInfo;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool getInfoResult =
-            bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleArchiveInfo_0400 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleArchiveInfo_0400 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleArchiveInfo_0400" << std::endl;
 }
 
 /**
@@ -1570,39 +1392,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0300, Function | MediumTest | 
 }
 
 /**
- * @tc.number: GetUidByBundleName_0400
- * @tc.name: test GetUidByBundleName interface
- * @tc.desc: 1.under '/system/app',there is a hap
- *           2.call GetUidByBundleName
- */
-HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0400, Function | MediumTest | Level1)
-{
-    std::cout << "START GetUidByBundleName_0400" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-
-        int uid = bundleMgrProxy->GetUidByBundleName(SYSTEM_SETTINGS_BUNDLE_NAME, USERID);
-        EXPECT_GE(uid, Constants::BASE_USER_RANGE);
-        if (uid == Constants::INVALID_UID) {
-            APP_LOGI("GetUidByBundleName_0400 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetUidByBundleName_0400 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetUidByBundleName_0400" << std::endl;
-}
-
-/**
  * @tc.number: GetBundleNameForUid_0100
  * @tc.name: test query bundlenames
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -1652,45 +1441,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0100, Function | MediumTest |
     }
     EXPECT_TRUE(result);
     std::cout << "END GetBundleNameForUid_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetBundleNameForUid_0200
- * @tc.name: test query bundlenames
- * @tc.desc: 1.query bundlename by uid
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleNameForUid_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-
-        BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(SYSTEM_SETTINGS_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        int uid = bundleInfo.uid;
-
-        std::string bundleName;
-        bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleName, SYSTEM_SETTINGS_BUNDLE_NAME);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleNameForUid_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleNameForUid_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleNameForUid_0200" << std::endl;
 }
 
 /**
@@ -1773,41 +1523,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0100, Function | MediumTest | Level1)
     }
     EXPECT_TRUE(result);
     std::cout << "END GetAppType_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetAppType_0200
- * @tc.name: test GetAppType interface
- * @tc.desc: 1.under '/system/app/',there is a hap
- *           2.install the hap
- *           3.call GetAppType
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAppType_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START GetAppType_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string appType = bundleMgrProxy->GetAppType(SYSTEM_SETTINGS_BUNDLE_NAME);
-        EXPECT_EQ(appType, Constants::EMPTY_STRING);
-
-        if (std::strcmp(appType.c_str(), "") != 0) {
-            APP_LOGI("GetAppType_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetAppType_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetAppType_0200" << std::endl;
 }
 
 /**
@@ -1986,43 +1701,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0100, Function | MediumTest | Lev
     }
     EXPECT_TRUE(result);
     std::cout << "END GetAbilityLabel_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetAbilityLabel_0200
- * @tc.name: test GetAbilityLabel interface
- * @tc.desc: 1.under '/system/app',there is a hap
- *           2.install the hap
- *           3.call GetAbilityLabel
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START GetAbilityLabel_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
-        std::string abilityName = "com.ohos.settings.MainAbility";
-
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
-        EXPECT_NE(abilityLabel, "EMPTY_STRING");
-
-        if (std::strcmp(abilityLabel.c_str(), "EMPTY_STRING") == 0) {
-            APP_LOGI("GetAbilityLabel_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetAbilityLabel_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetAbilityLabel_0200" << std::endl;
 }
 
 /**
@@ -4328,46 +4006,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0200, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: GetBundlesForUid_0300
- * @tc.name: test GetBundlesForUid interface
- * @tc.desc: 1.query bundles by uid
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0300, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundlesForUid_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
-        BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        int uid = bundleInfo.uid;
-        std::vector<std::string> bundleNames;
-        bool ret = bundleMgrProxy->GetBundlesForUid(uid, bundleNames);
-        EXPECT_TRUE(ret);
-        for (auto bundleName : bundleNames) {
-            EXPECT_EQ(bundleName, SYSTEM_SETTINGS_BUNDLE_NAME);
-        }
-
-        if (!ret) {
-            APP_LOGI("GetBundlesForUid_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundlesForUid_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundlesForUid_0300" << std::endl;
-}
-
-/**
  * @tc.number: GetNameForUid_0100
  * @tc.name: test GetNameForUid interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there are two apps
@@ -4476,43 +4114,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0200, Function | MediumTest | Level
     }
     EXPECT_TRUE(result);
     std::cout << "END GetNameForUid_0200" << std::endl;
-}
-
-/**
- * @tc.number: GetNameForUid_0300
- * @tc.name: test GetNameForUid interface
- * @tc.desc: 1.get name by uid
- */
-HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0300, Function | MediumTest | Level1)
-{
-    std::cout << "START GetNameForUid_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
-        BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        std::string name;
-        bool ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(name, SYSTEM_SETTINGS_BUNDLE_NAME);
-
-        if (!ret) {
-            APP_LOGI("GetNameForUid_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetNameForUid_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetNameForUid_0300" << std::endl;
 }
 
 /**
