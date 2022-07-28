@@ -33,7 +33,7 @@ struct PreBundleConfigInfo {
     bool bootable = false;
     bool runningResourcesApply = false;
     bool associatedWakeUp = false;
-    std::vector<std::string> allowCommentEvent;
+    std::vector<std::string> allowCommonEvent;
     std::vector<std::string> appSignature;
 
     bool operator <(const PreBundleConfigInfo &preBundleConfigInfo) const
@@ -49,7 +49,7 @@ struct PreBundleConfigInfo {
         bootable = false;
         runningResourcesApply = false;
         associatedWakeUp = false;
-        allowCommentEvent.clear();
+        allowCommonEvent.clear();
         appSignature.clear();
     }
 
