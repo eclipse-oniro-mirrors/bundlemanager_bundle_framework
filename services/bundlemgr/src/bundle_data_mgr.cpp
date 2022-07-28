@@ -2775,6 +2775,7 @@ std::string BundleDataMgr::GetStringById(
 {
     APP_LOGD("GetStringById:%{public}s , %{public}s, %{public}d", bundleName.c_str(), moduleName.c_str(), resId);
 #ifdef GLOBAL_RESMGR_ENABLE
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, moduleName, userId);
     if (resourceManager == nullptr) {
@@ -2800,6 +2801,7 @@ std::string BundleDataMgr::GetIconById(
     APP_LOGI("GetIconById bundleName:%{public}s, moduleName:%{public}s, resId:%{public}d, density:%{public}d",
         bundleName.c_str(), moduleName.c_str(), resId, density);
 #ifdef GLOBAL_RESMGR_ENABLE
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, moduleName, userId);
     if (resourceManager == nullptr) {
@@ -2823,7 +2825,6 @@ std::string BundleDataMgr::GetIconById(
 std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceManager(
     const std::string &bundleName, const std::string &moduleName, int32_t userId) const
 {
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId)) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
