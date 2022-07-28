@@ -192,6 +192,7 @@ constexpr const char* USER_ID = "userId";
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
+constexpr const char* HAP_PATH = "hapPath";
 constexpr int32_t MAX_LIMIT_SIZE = 4;
 
 constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";

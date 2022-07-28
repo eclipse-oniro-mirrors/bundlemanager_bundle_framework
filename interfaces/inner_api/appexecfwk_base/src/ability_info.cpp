@@ -186,6 +186,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
 
     codePath = Str16ToStr8(parcel.ReadString16());
     resourcePath = Str16ToStr8(parcel.ReadString16());
+    hapPath = Str16ToStr8(parcel.ReadString16());
 
     srcEntrance = Str16ToStr8(parcel.ReadString16());
     int32_t metadataSize;
@@ -316,6 +317,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(applicationName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(codePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(resourcePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcEntrance));
 
@@ -466,6 +468,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_APPLICATION_NAME, abilityInfo.applicationName},
         {JSON_KEY_CODE_PATH, abilityInfo.codePath},
         {JSON_KEY_RESOURCE_PATH, abilityInfo.resourcePath},
+        {Constants::HAP_PATH, abilityInfo.hapPath},
         {SRC_ENTRANCE, abilityInfo.srcEntrance},
         {META_DATA, abilityInfo.metadata},
         {IS_MODULE_JSON, abilityInfo.isModuleJson},
@@ -929,6 +932,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         jsonObjectEnd,
         JSON_KEY_RESOURCE_PATH,
         abilityInfo.resourcePath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::HAP_PATH,
+        abilityInfo.hapPath,
         JsonType::STRING,
         false,
         parseResult,

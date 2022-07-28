@@ -93,6 +93,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     applicationInfo = *appInfo;
 
     resourcePath = Str16ToStr8(parcel.ReadString16());
+    hapPath = Str16ToStr8(parcel.ReadString16());
     enabled = parcel.ReadBool();
     process = Str16ToStr8(parcel.ReadString16());
     return true;
@@ -137,6 +138,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &applicationInfo);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(resourcePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     return true;
@@ -166,6 +168,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {META_DATA, extensionInfo.metadata},
         {APPLICATION_INFO, extensionInfo.applicationInfo},
         {RESOURCE_PATH, extensionInfo.resourcePath},
+        {Constants::HAP_PATH, extensionInfo.hapPath},
         {ENABLED, extensionInfo.enabled},
         {PROCESS, extensionInfo.process}
     };
@@ -332,6 +335,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         jsonObjectEnd,
         RESOURCE_PATH,
         extensionInfo.resourcePath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::HAP_PATH,
+        extensionInfo.hapPath,
         JsonType::STRING,
         false,
         parseResult,

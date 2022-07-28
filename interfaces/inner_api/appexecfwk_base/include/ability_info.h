@@ -214,6 +214,7 @@ struct AbilityInfo : public Parcelable {
 
     std::string codePath;         // ability main code path with name
     std::string resourcePath;     // resource path for resource init
+    std::string hapPath;
 
     std::string srcEntrance;
     std::vector<Metadata> metadata;
