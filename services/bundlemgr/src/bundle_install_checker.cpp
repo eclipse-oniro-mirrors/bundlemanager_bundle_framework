@@ -222,6 +222,10 @@ void BundleInstallChecker::CollectProvisionInfo(
 void BundleInstallChecker::CollectPreBundleInfo(
     const InstallCheckParam &checkParam, InnerBundleInfo &newInfo)
 {
+    if (!BMSEventHandler::HasPreInstallProfile()) {
+        return;
+    }
+
     // reset privilege attributes
     newInfo.SetKeepAlive(false);
     newInfo.SetSingleton(false);
