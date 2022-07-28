@@ -57,6 +57,8 @@ int DistributedBmsHost::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         case static_cast<uint32_t>(IDistributedBms::Message::GET_ABILITY_INFOS):
         case static_cast<uint32_t>(IDistributedBms::Message::GET_ABILITY_INFOS_WITH_LOCALE):
             return HandleGetAbilityInfos(data, reply);
+        case static_cast<uint32_t>(IDistributedBms::Message::GET_DISTRIBUTED_BUNDLE_INFO):
+            return HandleGetDistributedBundleInfo(data, reply);
         default:
             APP_LOGW("DistributedBmsHost receives unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -172,6 +174,28 @@ int DistributedBmsHost::HandleGetAbilityInfos(Parcel &data, Parcel &reply)
     }
     if (!WriteParcelableVector<RemoteAbilityInfo>(remoteAbilityInfos, reply)) {
         APP_LOGE("GetAbilityInfos write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return NO_ERROR;
+}
+
+int DistributedBmsHost::HandleGetDistributedBundleInfo(Parcel &data, Parcel &reply)
+{
+    APP_LOGI("DistributedBmsHost handle get distributedBundleInfo");
+    std::string networkId = data.ReadString();
+    std::string bundleName = data.ReadString();
+    DistributedBundleInfo distributedBundleInfo;
+    bool ret = GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
+    if (!ret) {
+        APP_LOGE("GetDistributedBundleInfo failed");
+        return INVALID_OPERATION;
+    }
+    if (!reply.WriteBool(true)) {
+        APP_LOGE("GetDistributedBundleInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteParcelable(&distributedBundleInfo)) {
+        APP_LOGE("GetDistributedBundleInfo write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return NO_ERROR;

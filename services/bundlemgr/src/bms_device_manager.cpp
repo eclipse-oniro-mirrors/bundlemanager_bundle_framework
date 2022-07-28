@@ -16,8 +16,8 @@
 #include "bms_device_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_mgr_service.h"
 #include "device_manager.h"
-#include "distributed_data_storage.h"
 #include "service_control.h"
 #include "system_ability_definition.h"
 
@@ -65,7 +65,12 @@ void BmsDeviceManager::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     APP_LOGI("OnAddSystemAbility systemAbilityId:%{public}d add!", systemAbilityId);
     if (DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID == systemAbilityId) {
         InitDeviceManager();
-        if (GetTrustedDeviceListSize() > 0) {
+        std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+        if (!GetTrustedDeviceList(deviceList)) {
+            APP_LOGW("deviceManager GetTrustedDeviceList failed");
+            return;
+        }
+        if (deviceList.size() > 0) {
             StartDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
         }
     }
@@ -75,26 +80,51 @@ void BmsDeviceManager::OnRemoveSystemAbility(int32_t systemAbilityId, const std:
 {
     APP_LOGI("OnRemoveSystemAbility systemAbilityId:%{public}d removed!", systemAbilityId);
     if (DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID == systemAbilityId) {
-        if (GetTrustedDeviceListSize() > 0) {
+        std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+        if (!GetTrustedDeviceList(deviceList)) {
+            APP_LOGW("deviceManager GetTrustedDeviceList failed");
+            return;
+        }
+        if (deviceList.size() > 0) {
             StartDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
         }
     }
 }
 
-int BmsDeviceManager::GetTrustedDeviceListSize()
+bool BmsDeviceManager::GetAllDeviceList(std::vector<std::string> &deviceIds)
+{
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    if (!GetTrustedDeviceList(deviceList)) {
+        APP_LOGE("GetTrustedDeviceList failed");
+        return false;
+    }
+    for (auto &device : deviceList) {
+        deviceIds.emplace_back(device.deviceId);
+    }
+    DistributedHardware::DmDeviceInfo dmDeviceInfo;
+    int32_t ret =
+        DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(BUNDLE_NAME, dmDeviceInfo);
+    if (ret != 0) {
+        APP_LOGE("GetLocalDeviceInfo failed");
+        return false;
+    }
+    deviceIds.emplace_back(dmDeviceInfo.deviceId);
+    return true;
+}
+
+bool BmsDeviceManager::GetTrustedDeviceList(std::vector<DistributedHardware::DmDeviceInfo> &deviceList)
 {
     if (!InitDeviceManager()) {
-        return -1;
+        return false;
     }
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     int32_t ret =
         DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(BUNDLE_NAME, "", deviceList);
     if (ret != 0) {
-        APP_LOGE("GetTrustedDeviceList failed, ret:%{public}d", ret);
-        return -1;
+        APP_LOGW("GetTrustedDeviceList failed, ret:%{public}d", ret);
+        return false;
     }
     APP_LOGD("GetTrustedDeviceList size :%{public}ud", static_cast<uint32_t>(deviceList.size()));
-    return deviceList.size();
+    return true;
 }
 
 void BmsDeviceManager::StartDynamicSystemProcess(int32_t systemAbilityId)
@@ -137,15 +167,17 @@ void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceOnline(const DistributedH
 
 void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    DistributedDataStorage::GetInstance()->RemoveDeviceData(std::string(deviceInfo.networkId));
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    int32_t ret =
-        DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(BUNDLE_NAME, "", deviceList);
-    if (ret != 0) {
-        APP_LOGE("GetTrustedDeviceList failed, ret:%{public}d", ret);
+    APP_LOGI("DeviceInitCallBack OnDeviceOffline");
+    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
+    if (deviceManager == nullptr) {
+        APP_LOGW("deviceManager is nullptr");
         return;
     }
-    APP_LOGI("OnDeviceOffline GetTrustedDeviceList size :%{public}u", static_cast<uint32_t>(deviceList.size()));
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    if (!deviceManager->GetTrustedDeviceList(deviceList)) {
+        APP_LOGW("deviceManager GetTrustedDeviceList failed");
+        return;
+    }
     if (deviceList.size() == 0) {
         BmsDeviceManager::StopDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     }

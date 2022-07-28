@@ -20,6 +20,9 @@
 #include "bundle_constants.h"
 #include "bundle_distributed_manager.h"
 #include "bundle_permission_mgr.h"
+#include "common_event_data.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
 #include "datetime_ex.h"
 #include "perf_profile.h"
 #include "system_ability_definition.h"
@@ -83,24 +86,10 @@ void BundleMgrService::OnStart()
 #endif
 }
 
-void BundleMgrService::AfterRegisterToService()
-{
-    if (distributedSub_ == nullptr) {
-        EventFwk::MatchingSkills matchingSkills;
-        matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
-        EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-        distributedSub_ = std::make_shared<DistributedMonitor>(dataMgr_, subscribeInfo);
-        EventFwk::CommonEventManager::SubscribeCommonEvent(distributedSub_);
-    }
-}
-
 void BundleMgrService::OnStop()
 {
     APP_LOGI("OnStop is called");
     SelfClean();
-    if (distributedSub_) {
-        EventFwk::CommonEventManager::UnSubscribeCommonEvent(distributedSub_);
-    }
 }
 
 bool BundleMgrService::IsServiceReady() const
@@ -340,7 +329,6 @@ void BundleMgrService::RegisterService()
 
     PerfProfile::GetInstance().SetBmsLoadEndTime(GetTickCount());
     PerfProfile::GetInstance().Dump();
-    AfterRegisterToService();
 }
 
 void BundleMgrService::NotifyBundleScanStatus()

@@ -171,6 +171,31 @@ int32_t DistributedBmsProxy::GetAbilityInfos(const std::vector<ElementName> &ele
     return result;
 }
 
+bool DistributedBmsProxy::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
+    DistributedBundleInfo &distributedBundleInfo)
+{
+    APP_LOGD("DistributedBmsProxy GetDistributedBundleInfo");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetDistributedBundleInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(networkId)) {
+        APP_LOGE("DistributedBmsProxy GetDistributedBundleInfo write networkId error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("DistributedBmsProxy GetDistributedBundleInfo write bundleName error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t result = GetParcelableInfo<DistributedBundleInfo>(
+        IDistributedBms::Message::GET_DISTRIBUTED_BUNDLE_INFO, data, distributedBundleInfo);
+    if (result == OHOS::NO_ERROR) {
+        return true;
+    }
+    return false;
+}
+
 template<typename T>
 bool DistributedBmsProxy::WriteParcelableVector(const std::vector<T> &parcelableVector, Parcel &data)
 {

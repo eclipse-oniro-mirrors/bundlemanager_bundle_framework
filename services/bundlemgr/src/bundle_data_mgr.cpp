@@ -59,7 +59,6 @@ BundleDataMgr::BundleDataMgr()
     dataStorage_ = std::make_shared<BundleDataStorageDatabase>();
     preInstallDataStorage_ = std::make_shared<PreInstallDataStorage>();
 #endif
-    distributedDataStorage_ = DistributedDataStorage::GetInstance();
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     APP_LOGI("BundleDataMgr instance is created");
@@ -2346,12 +2345,6 @@ std::set<int32_t> BundleDataMgr::GetAllUser() const
     return multiUserIdsSet_;
 }
 
-bool BundleDataMgr::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
-    DistributedBundleInfo &distributedBundleInfo)
-{
-    return distributedDataStorage_->QueryStroageDistributeInfo(bundleName, networkId, distributedBundleInfo);
-}
-
 bool BundleDataMgr::GetInnerBundleUserInfos(
     const std::string &bundleName, std::vector<InnerBundleUserInfo> &innerBundleUserInfos) const
 {
@@ -2882,7 +2875,12 @@ bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundle
 
 bool BundleDataMgr::QueryAllDeviceIds(std::vector<std::string> &deviceIds)
 {
-    return distributedDataStorage_->QueryAllDeviceIds(deviceIds);
+    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
+    if (deviceManager == nullptr) {
+        APP_LOGE("deviceManager is nullptr");
+        return false;
+    }
+    return deviceManager->GetAllDeviceList(deviceIds);
 }
 
 const std::vector<PreInstallBundleInfo>& BundleDataMgr::GetAllPreInstallBundleInfos()

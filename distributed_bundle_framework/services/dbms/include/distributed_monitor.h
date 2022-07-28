@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DISTRIBUTED_MONITOR_H
-#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DISTRIBUTED_MONITOR_H
+#ifndef FOUNDATION_APPEXECFWK_SERVICES_DBMS_INCLUDE_DISTRIBUTED_MONITOR_H
+#define FOUNDATION_APPEXECFWK_SERVICES_DBMS_INCLUDE_DISTRIBUTED_MONITOR_H
 
-#include "bundle_data_mgr.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "common_event_subscriber.h"
@@ -27,42 +26,32 @@ namespace OHOS {
 namespace AppExecFwk {
 class DistributedMonitor : public EventFwk::CommonEventSubscriber {
 public:
-    DistributedMonitor(const std::shared_ptr<BundleDataMgr> &bundleDataMgr,
-                const EventFwk::CommonEventSubscribeInfo& sp):CommonEventSubscriber(sp)
-    {
-        bundleDataMgr_ = bundleDataMgr;
-    }
-    ~DistributedMonitor()
-    {
-        if (!bundleDataMgr_) {
-            bundleDataMgr_.reset();
-        }
-    }
+    DistributedMonitor(const EventFwk::CommonEventSubscribeInfo& sp):CommonEventSubscriber(sp) {}
+    ~DistributedMonitor() {}
+
     void OnReceiveEvent(const EventFwk::CommonEventData &eventData)
     {
-        APP_LOGI("OnReceiveEvent");
         auto want = eventData.GetWant();
         std::string action = want.GetAction();
+        APP_LOGI("OnReceiveEvent action:%{public}s", action.c_str());
         if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
             int32_t userId = eventData.GetCode();
             APP_LOGI("OnReceiveEvent switched userId:%{public}d", userId);
-            std::vector<BundleInfo> bundleInfos;
-            int32_t flags = BundleFlag::GET_BUNDLE_WITH_ABILITIES |
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE |
-                AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE;
-            bool ret = bundleDataMgr_->GetBundleInfos(flags, bundleInfos, userId);
-            if (ret) {
-                DistributedDataStorage::GetInstance()->UpdateDistributedData(bundleInfos);
-            } else {
-                APP_LOGW("OnReceiveEvent GetBundleInfos failed");
-            }
+            DistributedDataStorage::GetInstance()->UpdateDistributedData(userId);
+            return;
+        }
+        int32_t userId = want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID);
+        std::string bundleName = want.GetElement().GetBundleName();
+        if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED ||
+            action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED) {
+            DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(bundleName, userId);
+        } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
+            DistributedDataStorage::GetInstance()->DeleteStorageDistributeInfo(bundleName, userId);
         } else {
-            APP_LOGI("OnReceiveEvent action = %{public}s not support", action.c_str());
+            APP_LOGW("OnReceiveEvent undefined action");
         }
     }
-private:
-    std::shared_ptr<BundleDataMgr> bundleDataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DISTRIBUTED_MONITOR_H
+#endif  // FOUNDATION_APPEXECFWK_SERVICES_DBMS_INCLUDE_DISTRIBUTED_MONITOR_H

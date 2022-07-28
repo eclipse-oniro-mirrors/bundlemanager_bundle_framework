@@ -96,10 +96,6 @@ ErrCode BaseBundleInstaller::InstallBundle(
         }
     }
 
-    if (result == ERR_OK) {
-        DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(bundleName_, userId_);
-    }
-
     SendBundleSystemEvent(
         bundleName_,
         ((isAppExist_ && hasInstalledInUser_) ? BundleEventType::UPDATE : BundleEventType::INSTALL),
@@ -130,10 +126,6 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
         }
-    }
-
-    if (result == ERR_OK) {
-        DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(bundleName, userId_);
     }
 
     SendBundleSystemEvent(
@@ -168,10 +160,6 @@ ErrCode BaseBundleInstaller::Recover(
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
         }
-    }
-
-    if (result == ERR_OK) {
-        DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(bundleName, userId_);
     }
 
     auto recoverInstallParam = installParam;
@@ -215,7 +203,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
         DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
 #endif
-        DistributedDataStorage::GetInstance()->DeleteStorageDistributeInfo(bundleName, userId_);
     }
 
     SendBundleSystemEvent(
@@ -251,16 +238,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
-        }
-    }
-
-    if (result == ERR_OK) {
-        InnerBundleInfo innerBundleInfo;
-        if (!dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo)) {
-            DistributedDataStorage::GetInstance()->DeleteStorageDistributeInfo(bundleName, userId_);
-        } else {
-            DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(bundleName, userId_);
-            dataMgr_->EnableBundle(bundleName);
         }
     }
 

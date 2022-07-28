@@ -962,6 +962,11 @@ public:
         return Constants::EMPTY_STRING;
     }
 
+    virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid)
+    {
+        return 0;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1054,6 +1059,7 @@ public:
         GET_QUICK_FIX_MANAGER_PROXY,
         GET_STRING_BY_ID,
         GET_ICON_BY_ID,
+        GET_UDID_BY_NETWORK_ID,
     };
 };
 }  // namespace AppExecFwk

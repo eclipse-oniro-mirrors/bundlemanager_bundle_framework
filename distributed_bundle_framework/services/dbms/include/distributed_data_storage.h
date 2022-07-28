@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_DISTRIBUTED_DATA_STORAGE_H
-#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_DISTRIBUTED_DATA_STORAGE_H
+#ifndef FOUNDATION_APPEXECFWK_SERVICES_DBMS_INCLUDE_DISTRIBUTED_DATA_STORAGE_H
+#define FOUNDATION_APPEXECFWK_SERVICES_DBMS_INCLUDE_DISTRIBUTED_DATA_STORAGE_H
 
 #include <map>
 
@@ -32,16 +32,14 @@ public:
     ~DistributedDataStorage();
     static std::shared_ptr<DistributedDataStorage> GetInstance();
 
-    bool SaveStorageDistributeInfo(const std::string &bundleName, int32_t userId);
-    bool DeleteStorageDistributeInfo(const std::string &bundleName, int32_t userId);
-    bool QueryStroageDistributeInfo(const std::string &bundleName, const std::string &networkId,
+    void SaveStorageDistributeInfo(const std::string &bundleName, int32_t userId);
+    void DeleteStorageDistributeInfo(const std::string &bundleName, int32_t userId);
+    bool GetStorageDistributeInfo(const std::string &networkId, const std::string &bundleName,
         DistributedBundleInfo &info);
-    bool QueryAllDeviceIds(std::vector<std::string> &deviceIds);
-    void UpdateDistributedData(const std::vector<BundleInfo> &bundleInfos);
-    void RemoveDeviceData(const std::string &networkId);
+    void UpdateDistributedData(int32_t userId);
 
 private:
-    void DeviceAndNameToKey(const std::string &udid, const std::string &bundleName, std::string &key) const;
+    std::string DeviceAndNameToKey(const std::string &udid, const std::string &bundleName) const;
     void TryTwice(const std::function<DistributedKv::Status()> &func) const;
     bool CheckKvStore();
     DistributedKv::Status GetKvStore();
@@ -61,4 +59,4 @@ private:
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_DISTRIBUTED_DATA_STORAGE_H
+#endif  // FOUNDATION_APPEXECFWK_SERVICES_DBMS_INCLUDE_DISTRIBUTED_DATA_STORAGE_H

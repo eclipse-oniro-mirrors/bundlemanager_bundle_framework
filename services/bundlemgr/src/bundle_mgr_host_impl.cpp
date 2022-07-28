@@ -26,10 +26,14 @@
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
+#include "distributed_bms_proxy.h"
 #include "element_name.h"
+#include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "iservice_registry.h"
 #include "json_serializer.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1016,7 +1020,7 @@ bool BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, boo
         EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, true);
         return false;
     }
-    DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(bundleName, userId);
+
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, false);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
@@ -1076,7 +1080,7 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
             abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
         return false;
     }
-    DistributedDataStorage::GetInstance()->SaveStorageDistributeInfo(abilityInfo.bundleName, userId);
+
     EventReport::SendComponentStateSysEvent(
         abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, false);
     InnerBundleUserInfo innerBundleUserInfo;
@@ -1183,12 +1187,12 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 {
     APP_LOGD("start GetDistributedBundleInfo, networkId : %{public}s, bundleName : %{public}s",
         networkId.c_str(), bundleName.c_str());
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+    auto distributedBundleMgr = GetDistributedBundleMgrService();
+    if (distributedBundleMgr == nullptr) {
+        APP_LOGE("DistributedBundleMgrService is nullptr");
         return false;
     }
-    return dataMgr->GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
+    return distributedBundleMgr->GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
 }
 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32_t &flag, const int32_t &userId,
@@ -1275,6 +1279,18 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
 const std::shared_ptr<BundleDataMgr> BundleMgrHostImpl::GetDataMgrFromService()
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+}
+
+const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrService()
+{
+    auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        APP_LOGE("saMgr is nullptr");
+        return nullptr;
+    }
+    OHOS::sptr<OHOS::IRemoteObject> remoteObject =
+        saMgr->CheckSystemAbility(OHOS::DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    return OHOS::iface_cast<IDistributedBms>(remoteObject);
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -1612,6 +1628,21 @@ std::string BundleMgrHostImpl::GetIconById(
         return Constants::EMPTY_STRING;
     }
     return dataMgr->GetIconById(bundleName, moduleName, resId, density, userId);
+}
+
+int32_t BundleMgrHostImpl::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
+{
+#ifdef DEVICE_MANAGER_ENABLE
+    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
+    if (deviceManager == nullptr) {
+        APP_LOGE("deviceManager is nullptr");
+        return -1;
+    }
+    return deviceManager->GetUdidByNetworkId(networkId, udid);
+#else
+    APP_LOGW("deviceManager is unable");
+    return -1;
+#endif
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

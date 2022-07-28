@@ -21,20 +21,21 @@
 #include "bundle_info.h"
 #include "bundle_mgr_interface.h"
 #include "distributed_bms_host.h"
+#include "distributed_monitor.h"
 #include "if_system_ability_manager.h"
 #include "iremote_object.h"
 #include "image_buffer.h"
 #include "resource_manager.h"
+#include "singleton.h"
 #include "system_ability.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 class DistributedBms : public SystemAbility, public DistributedBmsHost {
+    DECLARE_DELAYED_SINGLETON(DistributedBms);
     DECLARE_SYSTEM_ABILITY(DistributedBms);
 
 public:
-    DistributedBms(int32_t saId, bool runOnCreate);
-    ~DistributedBms();
+    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 
     /**
      * @brief get remote ability info
@@ -109,6 +110,9 @@ public:
      */
     int32_t GetAbilityInfos(const std::vector<ElementName> &elementNames, const std::string &localeInfo,
         std::vector<RemoteAbilityInfo> &remoteAbilityInfos) override;
+    
+    bool GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
+        DistributedBundleInfo &distributedBundleInfo) override;
 
     /**
      * @brief Start the bundle manager service.
@@ -121,16 +125,17 @@ public:
      */
     virtual void OnStop() override;
 private:
+    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_;
+    std::shared_ptr<DistributedMonitor> distributedSub_;
+    std::mutex bundleMgrMutex_;
+
+    void Init();
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(
         const AppExecFwk::BundleInfo &bundleInfo, const std::string &localeInfo);
     bool GetMediaBase64(std::string &path, std::string &value);
     bool GetMediaBae64FromImageBuffer(std::shared_ptr<ImageBuffer>& imageBuffer, std::string& value);
     std::unique_ptr<unsigned char[]> LoadResourceFile(std::string &path, int &len);
     std::unique_ptr<char[]> EncodeBase64(std::unique_ptr<unsigned char[]> &data, int srcLen);
-    bool GetCurrentUserId(int &userId);
-
-    static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_;
-    static std::mutex bundleMgrMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -23,6 +23,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_service_event_handler.h"
+#include "distributed_bms_interface.h"
 #include "inner_bundle_user_info.h"
 
 namespace OHOS {
@@ -660,9 +661,11 @@ public:
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId) override;
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
+    virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
+    const OHOS::sptr<IDistributedBms> GetDistributedBundleMgrService();
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleConnectAbilityMgr> GetConnectAbilityMgrFromService();
 #endif
