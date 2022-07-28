@@ -189,6 +189,7 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 void BMSEventHandler::BundleBootStartEvent()
 {
     OnBundleBootStart(Constants::DEFAULT_USERID);
+    PerfProfile::GetInstance().Dump();
 }
 
 void BMSEventHandler::BundleRebootStartEvent()
@@ -463,17 +464,17 @@ void BMSEventHandler::ClearPreInstallCache()
     hasLoadPreInstallProFile_ = false;
 }
 
-void BMSEventHandler::LoadPreInstallProFile()
+bool BMSEventHandler::LoadPreInstallProFile()
 {
     if (hasLoadPreInstallProFile_) {
-        return;
+        return !installList_.empty();
     }
 
     std::vector<std::string> rootDirList;
     GetPreInstallRootDirList(rootDirList);
     if (rootDirList.empty()) {
         APP_LOGE("dirList is empty");
-        return;
+        return false;
     }
 
     for (const auto &rootDir : rootDirList) {
@@ -481,6 +482,12 @@ void BMSEventHandler::LoadPreInstallProFile()
     }
 
     hasLoadPreInstallProFile_ = true;
+    return !installList_.empty();
+}
+
+bool BMSEventHandler::HasPreInstallProfile()
+{
+    return !installList_.empty();
 }
 
 void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
@@ -497,7 +504,17 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
-    LoadPreInstallProFile();
+    if (LoadPreInstallProFile()) {
+        GetPreInstallDirFromLoadProFile(bundleDirs);
+        return;
+    }
+#endif
+
+    GetPreInstallDirFromScan(bundleDirs);
+}
+
+void BMSEventHandler::GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs)
+{
     for (const auto &installInfo : installList_) {
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
             APP_LOGW("bundle(%{public}s) not allowed installed", installInfo.bundleDir.c_str());
@@ -506,13 +523,15 @@ void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
 
         bundleDirs.emplace_back(installInfo.bundleDir);
     }
-#else
+}
+
+void BMSEventHandler::GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs)
+{
     std::list<std::string> scanbundleDirs;
     GetBundleDirFromScan(scanbundleDirs);
     for (const auto &scanbundleDir : scanbundleDirs) {
         bundleDirs.emplace_back(scanbundleDir);
     }
-#endif
 }
 
 void BMSEventHandler::AnalyzeHaps(
@@ -667,11 +686,14 @@ bool BMSEventHandler::ScanDir(
 void BMSEventHandler::OnBundleBootStart(int32_t userId)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
-    ProcessBootBundleInstallFromPreBundleProFile(userId);
-#else
-    ProcessBootBundleInstallFromScan(userId);
+    if (LoadPreInstallProFile()) {
+        APP_LOGD("Process boot bundle install from pre bundle proFile");
+        InnerProcessBootPreBundleProFileInstall(userId);
+        return;
+    }
 #endif
-    PerfProfile::GetInstance().Dump();
+
+    ProcessBootBundleInstallFromScan(userId);
 }
 
 void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
@@ -714,13 +736,6 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
             bundleDirs.push_back(item);
         }
     }
-}
-
-void BMSEventHandler::ProcessBootBundleInstallFromPreBundleProFile(int32_t userId)
-{
-    APP_LOGD("Process boot bundle install from pre bundle proFile");
-    LoadPreInstallProFile();
-    InnerProcessBootPreBundleProFileInstall(userId);
 }
 
 void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
@@ -824,17 +839,13 @@ void BMSEventHandler::ProcessRebootBundleInstall()
 {
     APP_LOGD("Process reboot bundle install start");
 #ifdef USE_PRE_BUNDLE_PROFILE
-    ProcessRebootBundleInstallFromPreBundleProFile();
-#else
-    ProcessRebootBundleInstallFromScan();
+    if (LoadPreInstallProFile()) {
+        ProcessReBootPreBundleProFileInstall();
+        return;
+    }
 #endif
-}
 
-void BMSEventHandler::ProcessRebootBundleInstallFromPreBundleProFile()
-{
-    APP_LOGD("Process reboot bundle install from pre bundle proFile");
-    LoadPreInstallProFile();
-    ProcessReBootPreBundleProFileInstall();
+    ProcessRebootBundleInstallFromScan();
 }
 
 void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
@@ -1199,6 +1210,10 @@ bool BMSEventHandler::ParseHapFiles(
 bool BMSEventHandler::IsPreInstallRecoverable(const std::string &path)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
+    if (!HasPreInstallProfile()) {
+        return true;
+    }
+
     if (!hasLoadPreInstallProFile_) {
         APP_LOGE("Not load preInstall proFile or release.");
         return false;
@@ -1218,6 +1233,10 @@ bool BMSEventHandler::IsPreInstallRecoverable(const std::string &path)
 bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
+    if (!HasPreInstallProfile()) {
+        return false;
+    }
+
     if (!hasLoadPreInstallProFile_) {
         APP_LOGE("Not load preInstall proFile or release.");
         return false;
