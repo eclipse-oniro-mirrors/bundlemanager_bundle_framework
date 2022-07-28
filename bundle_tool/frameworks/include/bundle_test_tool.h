@@ -38,6 +38,9 @@ private:
         std::string moduleName, std::string abilityName);
     ErrCode RunAsSetRemovableCommand();
     ErrCode RunAsGetRemovableCommand();
+    ErrCode RunAsInstallSandboxCommand();
+    ErrCode RunAsUninstallSandboxCommand();
+    ErrCode RunAsDumpSandboxCommand();
     
     std::condition_variable cv_;
     std::mutex mutex_;
@@ -50,6 +53,14 @@ private:
     bool SetIsRemovableOperation(const std::string &bundleName, const std::string &moduleName, int isRemovable) const;
     bool GetIsRemovableOperation(
         const std::string &bundleName, const std::string &moduleName, std::string &result) const;
+    bool CheckSandboxErrorOption(int option, int counter, const std::string &commandName);
+    bool CheckSandboxCorrectOption(int option, const std::string &commandName, int &data, std::string &bundleName);
+    ErrCode InstallSandboxOperation(
+        const std::string &bundleName, const int32_t userId, const int32_t dlpType, int32_t &appIndex) const;
+    ErrCode UninstallSandboxOperation(
+        const std::string &bundleName, const int32_t appIndex, const int32_t userId) const;
+    ErrCode DumpSandboxBundleInfo(const std::string &bundleName, const int32_t appIndex, const int32_t userId,
+        std::string &dumpResults);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
