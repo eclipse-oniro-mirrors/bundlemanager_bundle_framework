@@ -760,36 +760,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0100, Function | M
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0100";
 }
-/**
- * @tc.number: BMS_GetApplicationInfo_0200
- * @tc.name: test GetApplicationInfo by LauncherService
- * @tc.desc: get the application info with perms of third app by bundleName
- */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0200, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START GetApplicationInfo_0200";
-    std::string message;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap";
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "6";
-
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-
-    LauncherService launcherservice;
-
-    ApplicationInfo applicationInfo;
-    bool Result = launcherservice.GetApplicationInfo(
-        bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, applicationInfo);
-    EXPECT_TRUE(Result);
-
-    CommonTool commonTool;
-    std::string permissions = commonTool.VectorToStr(applicationInfo.permissions);
-    EXPECT_EQ(permissions, CAMERA);
-    EXPECT_EQ(applicationInfo.name, bundleName);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END GetApplicationInfo_0200";
-}
 
 /**
  * @tc.number: BMS_GetApplicationInfo_0300

@@ -36,7 +36,6 @@ using namespace std::chrono_literals;
 
 namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
-const std::string SYSTEM_BUNDLE_PATH = "/system/app/com.ohos.settings/";
 const std::string BASE_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string SYSTEM_LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 const std::string SYSTEM_SETTINGS_BUNDLE_NAME = "com.ohos.settings";
@@ -1352,44 +1351,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0300, Function | MediumTest 
 }
 
 /**
- * @tc.number: GetBundleArchiveInfo_0400
- * @tc.name: test query archive information
- * @tc.desc: 1.under '/system/app',there is a hap
- *           2.query archive information
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0400, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleArchiveInfo_0400" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::string hapFilePath = SYSTEM_BUNDLE_PATH + "Settings.hap";
-
-        BundleInfo bundleInfo;
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool getInfoResult =
-            bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleArchiveInfo_0400 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleArchiveInfo_0400 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleArchiveInfo_0400" << std::endl;
-}
-
-/**
  * @tc.number: GetBundleArchiveInfo_0500
  * @tc.name: test query  ".rpk" information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap with invalid suffix
@@ -1986,43 +1947,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0100, Function | MediumTest | Lev
     }
     EXPECT_TRUE(result);
     std::cout << "END GetAbilityLabel_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetAbilityLabel_0200
- * @tc.name: test GetAbilityLabel interface
- * @tc.desc: 1.under '/system/app',there is a hap
- *           2.install the hap
- *           3.call GetAbilityLabel
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START GetAbilityLabel_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
-        std::string abilityName = "com.ohos.settings.MainAbility";
-
-        sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
-        EXPECT_NE(abilityLabel, "EMPTY_STRING");
-
-        if (std::strcmp(abilityLabel.c_str(), "EMPTY_STRING") == 0) {
-            APP_LOGI("GetAbilityLabel_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetAbilityLabel_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetAbilityLabel_0200" << std::endl;
 }
 
 /**

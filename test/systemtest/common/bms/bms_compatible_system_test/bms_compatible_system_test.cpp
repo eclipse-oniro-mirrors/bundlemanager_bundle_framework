@@ -524,7 +524,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | Mediu
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0800";
     std::string message;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap";
-    std::string bundleName = "com.third.hiworld.example1";
+    std::string bundleName = "com.example.third6";
     std::string CAMERA = "ohos.permission.CAMERA";
 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
