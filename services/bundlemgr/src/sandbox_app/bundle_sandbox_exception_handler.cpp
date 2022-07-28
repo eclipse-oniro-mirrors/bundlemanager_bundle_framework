@@ -17,6 +17,7 @@
 
 #include <thread>
 
+#include "bundle_common_event_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_permission_mgr.h"
 #include "installd_client.h"
@@ -47,13 +48,18 @@ void BundleSandboxExceptionHandler::RemoveSandboxApp(InnerBundleInfo &info)
     info.ClearSandboxPersistentInfo();
     UpdateBundleInfoToStorage(info);
 
-    std::thread removeThread(RemoveSandboxDataDirAndTokenId, bundleName, sandboxPersistentInfo);
+    std::thread removeThread(RemoveSandboxDataDirAndTokenId, bundleName, sandboxPersistentInfo, info);
     removeThread.detach();
 }
 
 void BundleSandboxExceptionHandler::RemoveSandboxDataDirAndTokenId(const std::string &bundleName,
-    const std::vector<SandboxAppPersistentInfo> &sandboxPersistentInfo)
+    const std::vector<SandboxAppPersistentInfo> &sandboxPersistentInfo, const InnerBundleInfo &info)
 {
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    if (commonEventMgr == nullptr) {
+        APP_LOGW("commonEventMgr is nullptr");
+    }
+
     for (const auto& sandboxInfo : sandboxPersistentInfo) {
         APP_LOGD("start to remove sandbox dir of %{public}s_%{public}d", bundleName.c_str(), sandboxInfo.appIndex);
         if (sandboxInfo.appIndex <= 0) {
@@ -70,6 +76,11 @@ void BundleSandboxExceptionHandler::RemoveSandboxDataDirAndTokenId(const std::st
         ErrCode result = InstalldClient::GetInstance()->RemoveBundleDataDir(innerBundleName, sandboxInfo.userId);
         if (result != ERR_OK) {
             APP_LOGE("fail to remove data dir: %{public}s, error is %{public}d", innerBundleName.c_str(), result);
+        }
+
+        if (commonEventMgr != nullptr) {
+            int32_t userId = sandboxInfo.userId;
+            commonEventMgr->NotifySandboxAppStatus(info, info.GetUid(userId), userId, SandboxInstallType::UNINSTALL);
         }
     }
 }
