@@ -145,7 +145,7 @@ constexpr const char* PERMISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE
 constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 
 // install list permissions file
-constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/permission/install_list_permissions.json";
+constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 
 enum class AppType {
     SYSTEM_APP = 0,
