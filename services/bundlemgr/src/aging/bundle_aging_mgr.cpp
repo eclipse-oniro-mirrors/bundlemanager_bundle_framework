@@ -47,7 +47,7 @@ void BundleAgingMgr::InitAgingRunner()
 void BundleAgingMgr::InitAgingTimerInterval()
 {
     char szTimerThresold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_TIMER_INTERVAL, "", szTimerThresold,
+    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_TIMER_INTERVAL.c_str(), "", szTimerThresold,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szTimerThresold is %{public}d", ret, atoi(szTimerThresold));
     if (ret <= 0) {
@@ -63,7 +63,7 @@ void BundleAgingMgr::InitAgingTimerInterval()
 void BundleAgingMgr::InitAgingBatteryThresold()
 {
     char szBatteryThresold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_BATTER_THRESHOLD, "", szBatteryThresold,
+    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_BATTER_THRESHOLD.c_str(), "", szBatteryThresold,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szBatteryThresold is %{public}d", ret, atoi(szBatteryThresold));
     if (ret <= 0) {
