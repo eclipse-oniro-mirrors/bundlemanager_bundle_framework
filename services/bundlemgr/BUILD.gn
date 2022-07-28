@@ -246,11 +246,6 @@ ohos_shared_library("libbms") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
 
-  if (bundle_framework_graphics) {
-    external_deps += [ "multimedia_image_standard:image_native" ]
-    defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
-  }
-
   if (device_manager_enable) {
     sources += [ "src/bms_device_manager.cpp" ]
     external_deps += [ "device_manager:devicemanagersdk" ]

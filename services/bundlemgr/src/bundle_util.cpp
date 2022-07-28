@@ -322,16 +322,6 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId)
     return tempDir;
 }
 
-void BundleUtil::CloseFileDescriptor(std::vector<int32_t> &fdVec)
-{
-    for_each(fdVec.begin(), fdVec.end(), [](const auto &fd) {
-        if (fd > 0) {
-            close(fd);
-        }
-    });
-    fdVec.clear();
-}
-
 int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long long offset)
 {
     int fd = -1;
@@ -340,13 +330,40 @@ int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long lon
         return fd;
     }
     if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH)) < 0) {
-        APP_LOGE("stream installer open bundlePath %{public}s failed", bundlePath.c_str());
+        APP_LOGE("open bundlePath %{public}s failed", bundlePath.c_str());
         return fd;
     }
     if (offset > 0) {
         lseek(fd, offset, SEEK_SET);
     }
     return fd;
+}
+
+int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePath, long long offset)
+{
+    int fd = -1;
+    if (bundlePath.length() > Constants::PATH_MAX_SIZE) {
+        APP_LOGE("the length of the bundlePath exceeds maximum limitation");
+        return fd;
+    }
+    if ((fd = open(bundlePath.c_str(), O_RDONLY)) < 0) {
+        APP_LOGE("open bundlePath %{public}s failed", bundlePath.c_str());
+        return fd;
+    }
+    if (offset > 0) {
+        lseek(fd, offset, SEEK_SET);
+    }
+    return fd;
+}
+
+void BundleUtil::CloseFileDescriptor(std::vector<int32_t> &fdVec)
+{
+    for_each(fdVec.begin(), fdVec.end(), [](const auto &fd) {
+        if (fd > 0) {
+            close(fd);
+        }
+    });
+    fdVec.clear();
 }
 
 bool BundleUtil::IsExistFile(const std::string &path)

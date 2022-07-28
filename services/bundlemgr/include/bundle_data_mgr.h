@@ -38,9 +38,6 @@
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
 #include "module_usage_record.h"
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-#include "pixel_map.h"
-#endif
 #include "preinstall_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -652,10 +649,6 @@ public:
 
     bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos);
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-    std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName) const;
-#endif
 
     /**
      * @brief Sets whether to enable isRemovable based on given bundle name, module name and isEnable.
@@ -718,6 +711,9 @@ public:
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
+    int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName) const;
+
 private:
     /**
      * @brief Init transferStates.
@@ -778,9 +774,6 @@ private:
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(
         const AppExecFwk::BundleInfo &bundleInfo) const;
-#endif
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-    std::shared_ptr<Media::PixelMap> LoadImageFile(const std::string &path) const;
 #endif
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;

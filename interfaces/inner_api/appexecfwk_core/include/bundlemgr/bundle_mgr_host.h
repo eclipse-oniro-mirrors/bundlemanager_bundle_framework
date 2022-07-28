@@ -41,119 +41,119 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetApplicationInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetApplicationInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetApplicationInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetApplicationInfoWithIntFlags(Parcel &data, Parcel &reply);
+    ErrCode HandleGetApplicationInfoWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetApplicationInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetApplicationInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleGetApplicationInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetApplicationInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetApplicationInfosWithIntFlags(Parcel &data, Parcel &reply);
+    ErrCode HandleGetApplicationInfosWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundlePackInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundlePackInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundlePackInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundlePackInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundlePackInfoWithIntFlags(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundlePackInfoWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleInfoWithIntFlags(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleInfoWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleInfosWithIntFlags(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleInfosWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleNameForUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleNameForUid(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleNameForUid(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundlesForUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundlesForUid(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundlesForUid(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetNameForUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetNameForUid(Parcel &data, Parcel &reply);
+    ErrCode HandleGetNameForUid(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleGids function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleGids(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleGids(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleGidsByUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleGidsByUid(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleGidsByUid(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleInfosByMetaData function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleInfosByMetaData(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleInfosByMetaData(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the QueryAbilityInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
      /**
      * @brief Handles the QueryAbilityInfo function called from a IBundleMgr proxy object with callback.
@@ -161,7 +161,7 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfoWithCallback(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfoWithCallback(MessageParcel &data, MessageParcel &reply);
 
     /**
      * @brief Handles the UpgradeAtomicService function called from a IBundleMgr proxy object.
@@ -169,7 +169,7 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleUpgradeAtomicService(Parcel &data, Parcel &reply);
+    ErrCode HandleUpgradeAtomicService(MessageParcel &data, MessageParcel &reply);
 
     /**
      * @brief Handles the QueryAbilityInfo function called from a IBundleMgr proxy object.
@@ -177,316 +177,312 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfoMutiparam(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfoMutiparam(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the QueryAbilityInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the QueryAbilityInfoByUri function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfoByUri(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfoByUri(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the QueryAbilityInfoByUri function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfosByUri(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfosByUri(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the QueryAbilityInfosMutiparam function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfosMutiparam(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfosMutiparam(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleQueryAllAbilityInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAllAbilityInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAllAbilityInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the QueryAbilityInfoByUri function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryAbilityInfoByUriForUserId(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryAbilityInfoByUriForUserId(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the QueryKeepAliveBundleInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryKeepAliveBundleInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryKeepAliveBundleInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAbilityLabel function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetAbilityLabel(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAbilityLabel(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAbilityLabel function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetAbilityLabelWithModuleName(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAbilityLabelWithModuleName(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CheckIsSystemAppByUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleCheckIsSystemAppByUid(Parcel &data, Parcel &reply);
+    ErrCode HandleCheckIsSystemAppByUid(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleArchiveInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleArchiveInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleArchiveInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleArchiveInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleArchiveInfoWithIntFlags(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleArchiveInfoWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetHapModuleInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetHapModuleInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetHapModuleInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetHapModuleInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetHapModuleInfoWithUserId(Parcel &data, Parcel &reply);
+    ErrCode HandleGetHapModuleInfoWithUserId(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetLaunchWantForBundle function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetLaunchWantForBundle(Parcel &data, Parcel &reply);
+    ErrCode HandleGetLaunchWantForBundle(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CheckPublicKeys function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleCheckPublicKeys(Parcel &data, Parcel &reply);
+    ErrCode HandleCheckPublicKeys(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetPermissionDef function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetPermissionDef(Parcel &data, Parcel &reply);
+    ErrCode HandleGetPermissionDef(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HasSystemCapability function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleHasSystemCapability(Parcel &data, Parcel &reply);
+    ErrCode HandleHasSystemCapability(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetSystemAvailableCapabilities function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetSystemAvailableCapabilities(Parcel &data, Parcel &reply);
+    ErrCode HandleGetSystemAvailableCapabilities(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the IsSafeMode function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleIsSafeMode(Parcel &data, Parcel &reply);
+    ErrCode HandleIsSafeMode(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CleanBundleCacheFiles function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleCleanBundleCacheFiles(Parcel &data, Parcel &reply);
+    ErrCode HandleCleanBundleCacheFiles(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CleanBundleDataFiles function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleCleanBundleDataFiles(Parcel &data, Parcel &reply);
+    ErrCode HandleCleanBundleDataFiles(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the RegisterBundleStatusCallback function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleRegisterBundleStatusCallback(Parcel &data, Parcel &reply);
+    ErrCode HandleRegisterBundleStatusCallback(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the ClearBundleStatusCallback function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleClearBundleStatusCallback(Parcel &data, Parcel &reply);
+    ErrCode HandleClearBundleStatusCallback(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the UnregisterBundleStatusCallback function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleUnregisterBundleStatusCallback(Parcel &data, Parcel &reply);
+    ErrCode HandleUnregisterBundleStatusCallback(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the DumpInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleDumpInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleDumpInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleInstaller function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleInstaller(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleInstaller(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleUserMgr function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetBundleUserMgr(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleUserMgr(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the IsApplicationEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleIsApplicationEnabled(Parcel &data, Parcel &reply);
+    ErrCode HandleIsApplicationEnabled(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the SetApplicationEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleSetApplicationEnabled(Parcel &data, Parcel &reply);
+    ErrCode HandleSetApplicationEnabled(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the IsAbilityEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleIsAbilityEnabled(Parcel &data, Parcel &reply);
+    ErrCode HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the SetAbilityEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleSetAbilityEnabled(Parcel &data, Parcel &reply);
+    ErrCode HandleSetAbilityEnabled(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAllFormsInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetAllFormsInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAllFormsInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetFormsInfoByApp function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetFormsInfoByApp(Parcel &data, Parcel &reply);
+    ErrCode HandleGetFormsInfoByApp(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleGetFormsInfoByModule function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetFormsInfoByModule(Parcel &data, Parcel &reply);
+    ErrCode HandleGetFormsInfoByModule(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleGetShortcutInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetShortcutInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleGetShortcutInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleGetAllCommonEventInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetAllCommonEventInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAllCommonEventInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetDistributedBundleInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetDistributedBundleInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetDistributedBundleInfo(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleGetAppPrivilegeLevel function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetAppPrivilegeLevel(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAppPrivilegeLevel(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleQueryExtAbilityInfosWithoutType function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryExtAbilityInfosWithoutType(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryExtAbilityInfosWithoutType(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleQueryExtensionInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleQueryExtAbilityInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryExtAbilityInfos(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleQueryExtAbilityInfosByType(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryExtAbilityInfosByType(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleVerifyCallingPermission(Parcel &data, Parcel &reply);
+    ErrCode HandleVerifyCallingPermission(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAccessibleAppCodePaths(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAccessibleAppCodePaths(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleQueryExtensionAbilityInfoByUri(Parcel &data, Parcel &reply);
+    ErrCode HandleQueryExtensionAbilityInfoByUri(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAppIdByBundleName(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAppIdByBundleName(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAppType(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAppType(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetUidByBundleName(Parcel &data, Parcel &reply);
+    ErrCode HandleGetUidByBundleName(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAbilityPixelMapIcon(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAbilityPixelMapIconWithModuleName(Parcel &data, Parcel &reply);
-
-    ErrCode HandleGetAbilityInfo(Parcel &data, Parcel &reply);
-
-    ErrCode HandleGetAbilityInfoWithModuleName(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAbilityInfoWithModuleName(MessageParcel &data, MessageParcel &reply);
 
     /**
      * @brief Handles the HandleGetModuleUpgradeFlag function called from a IBundleMgr proxy object.
@@ -494,55 +490,57 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleGetModuleUpgradeFlag(Parcel &data, Parcel &reply);
+    ErrCode HandleGetModuleUpgradeFlag(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleSetModuleUpgradeFlag function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleSetModuleUpgradeFlag(Parcel &data, Parcel &reply);
+    ErrCode HandleSetModuleUpgradeFlag(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleIsModuleRemovable function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleIsModuleRemovable(Parcel &data, Parcel &reply);
+    ErrCode HandleIsModuleRemovable(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleSetModuleRemovable function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleSetModuleRemovable(Parcel &data, Parcel &reply);
+    ErrCode HandleSetModuleRemovable(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleImplicitQueryInfoByPriority(Parcel &data, Parcel &reply);
+    ErrCode HandleImplicitQueryInfoByPriority(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleImplicitQueryInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleImplicitQueryInfos(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAllDependentModuleNames(Parcel &data, Parcel &reply);
+    ErrCode HandleGetAllDependentModuleNames(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetSandboxBundleInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetSandboxBundleInfo(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleSetDisposedStatus(Parcel &data, Parcel &reply);
+    ErrCode HandleSetDisposedStatus(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetDisposedStatus(Parcel &data, Parcel &reply);
+    ErrCode HandleGetDisposedStatus(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleObtainCallingBundleName(Parcel &data, Parcel &reply);
+    ErrCode HandleObtainCallingBundleName(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetBundleStats(Parcel &data, Parcel &reply);
+    ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleCheckAbilityEnableInstall(Parcel &data, Parcel &reply);
+    ErrCode HandleCheckAbilityEnableInstall(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetSandboxAbilityInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetSandboxAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetSandboxExtAbilityInfos(Parcel &data, Parcel &reply);
+    ErrCode HandleGetSandboxExtAbilityInfos(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetSandboxHapModuleInfo(Parcel &data, Parcel &reply);
+    ErrCode HandleGetSandboxHapModuleInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetMediaFileDescriptor(MessageParcel &data, MessageParcel &reply);
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    ErrCode HandleGetDefaultAppProxy(Parcel &data, Parcel &reply);
+    ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif
 
 private:
@@ -553,7 +551,7 @@ private:
      * @return Returns true if objects send successfully; returns false otherwise.
      */
     template<typename T>
-    bool WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &reply);
+    bool WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply);
     /**
      * @brief Write a parcelabe vector objects to ashmem.
      * @param parcelableVector Indicates the objects to be write.
@@ -563,7 +561,7 @@ private:
      */
     template<typename T>
     bool WriteParcelableVectorIntoAshmem(
-        std::vector<T> &parcelableVector, const char *ashmemName, Parcel &reply);
+        std::vector<T> &parcelableVector, const char *ashmemName, MessageParcel &reply);
     /**
      * @brief Allocat ashmem num.
      * @return Returns ashmem num.
@@ -571,7 +569,7 @@ private:
     int32_t AllocatAshmemNum();
     void init();
 
-    using BundleMgrHostFunc = ErrCode (BundleMgrHost::*)(Parcel &, Parcel &);
+    using BundleMgrHostFunc = ErrCode (BundleMgrHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, BundleMgrHostFunc> funcMap_;
 
     std::mutex bundleAshmemMutex_;
