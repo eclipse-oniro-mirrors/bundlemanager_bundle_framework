@@ -107,9 +107,9 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
 bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
-    std::vector<Metadata> data = hapModuleInfo.metadata;
-    std::string resourcePath = hapModuleInfo.resourcePath;
-    if (!GetResProfileByMetadata(data, metadataName, resourcePath, profileInfos)) {
+    bool isCompressed = false;
+    std::string resourcePath = isCompressed ? hapModuleInfo.hapPath : hapModuleInfo.resourcePath;
+    if (!GetResProfileByMetadata(hapModuleInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
         return false;
     }
@@ -123,9 +123,9 @@ bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, c
 bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
-    std::vector<Metadata> data = extensionInfo.metadata;
-    std::string resourcePath = extensionInfo.resourcePath;
-    if (!GetResProfileByMetadata(data, metadataName, resourcePath, profileInfos)) {
+    bool isCompressed = false;
+    std::string resourcePath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
+    if (!GetResProfileByMetadata(extensionInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
         return false;
     }
@@ -139,9 +139,9 @@ bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extension
 bool BundleMgrClientImpl::GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
-    std::vector<Metadata> data = abilityInfo.metadata;
-    std::string resourcePath = abilityInfo.resourcePath;
-    if (!GetResProfileByMetadata(data, metadataName, resourcePath, profileInfos)) {
+    bool isCompressed = false;
+    std::string resourcePath = isCompressed ? abilityInfo.hapPath : abilityInfo.resourcePath;
+    if (!GetResProfileByMetadata(abilityInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
         return false;
     }
@@ -156,13 +156,18 @@ bool BundleMgrClientImpl::GetProfileFromExtension(const ExtensionAbilityInfo &ex
     const std::string &metadataName, std::vector<std::string> &profileInfos) const
 {
     APP_LOGD("get extension config file from extension dir begin");
-    std::string resPath = extensionInfo.resourcePath;
+    bool isCompressed = false;
+    std::string resPath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
     if (!ConvertResourcePath(extensionInfo.bundleName, resPath)) {
-        APP_LOGE("ConvertResourcePath failed %{public}s", extensionInfo.resourcePath.c_str());
+        APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
     ExtensionAbilityInfo innerExtension = extensionInfo;
-    innerExtension.resourcePath = resPath;
+    if (isCompressed) {
+        innerExtension.hapPath = resPath;
+    } else {
+        innerExtension.resourcePath = resPath;
+    }
     return GetResConfigFile(innerExtension, metadataName, profileInfos);
 }
 
@@ -170,13 +175,18 @@ bool BundleMgrClientImpl::GetProfileFromAbility(const AbilityInfo &abilityInfo, 
     std::vector<std::string> &profileInfos) const
 {
     APP_LOGD("get ability config file from ability begin");
-    std::string resPath = abilityInfo.resourcePath;
+    bool isCompressed = false;
+    std::string resPath = isCompressed ? abilityInfo.hapPath : abilityInfo.resourcePath;
     if (!ConvertResourcePath(abilityInfo.bundleName, resPath)) {
-        APP_LOGE("ConvertResourcePath failed %{public}s", abilityInfo.resourcePath.c_str());
+        APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
     AbilityInfo innerAbilityInfo = abilityInfo;
-    innerAbilityInfo.resourcePath = resPath;
+    if (isCompressed) {
+        innerAbilityInfo.hapPath = resPath;
+    } else {
+        innerAbilityInfo.resourcePath = resPath;
+    }
     return GetResConfigFile(innerAbilityInfo, metadataName, profileInfos);
 }
 
@@ -184,13 +194,18 @@ bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, 
     std::vector<std::string> &profileInfos) const
 {
     APP_LOGD("get hap module config file from hap begin");
-    std::string resPath = hapModuleInfo.resourcePath;
+    bool isCompressed = false;
+    std::string resPath = isCompressed ? hapModuleInfo.hapPath : hapModuleInfo.resourcePath;
     if (!ConvertResourcePath(hapModuleInfo.bundleName, resPath)) {
-        APP_LOGE("ConvertResourcePath failed %{public}s", hapModuleInfo.resourcePath.c_str());
+        APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
     HapModuleInfo innerHapModuleInfo = hapModuleInfo;
-    innerHapModuleInfo.resourcePath = resPath;
+    if (isCompressed) {
+        innerHapModuleInfo.hapPath = resPath;
+    } else {
+        innerHapModuleInfo.resourcePath = resPath;
+    }
     return GetResConfigFile(innerHapModuleInfo, metadataName, profileInfos);
 }
 
@@ -223,7 +238,8 @@ std::vector<std::string> BundleMgrClientImpl::GetAccessibleAppCodePaths(int32_t 
 }
 
 bool BundleMgrClientImpl::GetResProfileByMetadata(const std::vector<Metadata> &metadata,
-    const std::string &metadataName, const std ::string &resourcePath, std::vector<std::string> &profileInfos) const
+    const std::string &metadataName, const std ::string &resourcePath, bool isCompressed,
+    std::vector<std::string> &profileInfos) const
 {
 #ifdef GLOBAL_RESMGR_ENABLE
     if (metadata.empty()) {
@@ -241,15 +257,17 @@ bool BundleMgrClientImpl::GetResProfileByMetadata(const std::vector<Metadata> &m
     }
 
     if (metadataName.empty()) {
-        for_each(metadata.begin(), metadata.end(), [this, &resMgr, &profileInfos](const Metadata& data)->void {
-            if (!GetResFromResMgr(data.resource, resMgr, profileInfos)) {
+        for_each(metadata.begin(), metadata.end(),
+            [this, &resMgr, isCompressed, &profileInfos](const Metadata& data)->void {
+            if (!GetResFromResMgr(data.resource, resMgr, isCompressed, profileInfos)) {
                 APP_LOGW("GetResFromResMgr failed");
             }
         });
     } else {
         for_each(metadata.begin(), metadata.end(),
-            [this, &resMgr, &metadataName, &profileInfos](const Metadata& data)->void {
-            if ((metadataName.compare(data.name) == 0) && (!GetResFromResMgr(data.resource, resMgr, profileInfos))) {
+            [this, &resMgr, &metadataName, isCompressed, &profileInfos](const Metadata& data)->void {
+            if ((metadataName.compare(data.name) == 0)
+                && (!GetResFromResMgr(data.resource, resMgr, isCompressed, profileInfos))) {
                 APP_LOGW("GetResFromResMgr failed");
             }
         });
@@ -292,7 +310,7 @@ std::shared_ptr<ResourceManager> BundleMgrClientImpl::InitResMgr(const std::stri
 }
 
 bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std::shared_ptr<ResourceManager> &resMgr,
-    std::vector<std::string> &profileInfos) const
+    bool isCompressed, std::vector<std::string> &profileInfos) const
 {
     APP_LOGD("GetResFromResMgr begin");
     if (resName.empty()) {
@@ -306,6 +324,12 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
         return false;
     }
     std::string profileName = resName.substr(pos + strlen(Constants::PROFILE_FILE_PREFIX));
+    // hap is compressed status, get file content.
+    if (isCompressed) {
+        APP_LOGD("compressed status.");
+        return false;
+    }
+    // hap is decompressed status, get file path then read file.
     std::string resPath;
     if (resMgr->GetProfileByName(profileName.c_str(), resPath) != SUCCESS) {
         APP_LOGE("GetResFromResMgr profileName cannot be found");
