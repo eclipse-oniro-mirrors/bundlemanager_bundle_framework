@@ -41,6 +41,8 @@ private:
     ErrCode RunAsInstallSandboxCommand();
     ErrCode RunAsUninstallSandboxCommand();
     ErrCode RunAsDumpSandboxCommand();
+    ErrCode RunAsGetStringCommand();
+    ErrCode RunAsGetIconCommand();
     
     std::condition_variable cv_;
     std::mutex mutex_;
@@ -54,6 +56,8 @@ private:
     bool GetIsRemovableOperation(
         const std::string &bundleName, const std::string &moduleName, std::string &result) const;
     bool CheckSandboxErrorOption(int option, int counter, const std::string &commandName);
+    bool CheckGetStringCorrectOption(int option, const std::string &commandName, int &temp, std::string &name);
+    bool CheckGetIconCorrectOption(int option, const std::string &commandName, int &temp, std::string &name);
     bool CheckSandboxCorrectOption(int option, const std::string &commandName, int &data, std::string &bundleName);
     ErrCode InstallSandboxOperation(
         const std::string &bundleName, const int32_t userId, const int32_t dlpType, int32_t &appIndex) const;
@@ -61,6 +65,7 @@ private:
         const std::string &bundleName, const int32_t appIndex, const int32_t userId) const;
     ErrCode DumpSandboxBundleInfo(const std::string &bundleName, const int32_t appIndex, const int32_t userId,
         std::string &dumpResults);
+    ErrCode StringToInt(std::string option, const std::string &commandName, int &temp, bool &result);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
