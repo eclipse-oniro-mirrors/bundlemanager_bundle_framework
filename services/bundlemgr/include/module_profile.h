@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_MODULE_PROFILE_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_MODULE_PROFILE_H
 
+#include "app_privilege_capability.h"
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
 #include "inner_bundle_info.h"
@@ -28,10 +29,14 @@ public:
      * @brief Transform the information of module.json to InnerBundleInfo object.
      * @param source Indicates the std::ostringstream of module.json.
      * @param bundleExtractor hold hap files.
+     * @param appPrivilegeCapability Indicates appPrivilegeCapability.
      * @param innerBundleInfo Indicates the obtained InnerBundleInfo object.
      * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
      */
-    ErrCode TransformTo(const std::ostringstream &source, const BundleExtractor &bundleExtractor,
+    ErrCode TransformTo(
+        const std::ostringstream &source,
+        const BundleExtractor &bundleExtractor,
+        const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &innerBundleInfo) const;
 };
 }  // namespace AppExecFwk

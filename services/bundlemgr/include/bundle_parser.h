@@ -19,6 +19,7 @@
 #include <set>
 #include <string>
 
+#include "app_privilege_capability.h"
 #include "appexecfwk_errors.h"
 #include "default_permission.h"
 #include "inner_bundle_info.h"
@@ -32,10 +33,14 @@ public:
     /**
      * @brief Parse bundle by the path name, then save in innerBundleInfo info.
      * @param pathName Indicates the path of Bundle.
+     * @param appPrivilegeCapability Indicates the appPrivilegeCapability of Bundle
      * @param innerBundleInfo Indicates the obtained InnerBundleInfo object.
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
-    ErrCode Parse(const std::string &pathName, InnerBundleInfo &innerBundleInfo) const;
+    ErrCode Parse(
+        const std::string &pathName,
+        const AppPrivilegeCapability &appPrivilegeCapability,
+        InnerBundleInfo &innerBundleInfo) const;
 
     ErrCode ParsePackInfo(const std::string &pathName, BundlePackInfo &bundlePackInfo) const;
     /**

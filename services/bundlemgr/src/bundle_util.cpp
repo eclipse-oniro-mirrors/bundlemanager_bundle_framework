@@ -422,6 +422,11 @@ bool BundleUtil::DeleteDir(const std::string &path)
     return true;
 }
 
+std::string BundleUtil::GetBoolStrVal(bool val)
+{
+    return val ? "true" : "false";
+}
+
 bool BundleUtil::CopyFile(
     const std::string &sourceFile, const std::string &destinationFile)
 {

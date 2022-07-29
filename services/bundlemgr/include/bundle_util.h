@@ -138,7 +138,7 @@ public:
      * @return Returns result.
      */
     static bool DeleteDir(const std::string &path);
-
+    static std::string GetBoolStrVal(bool val);
     static void MakeHmdfsConfig(const std::string &bundleName, int32_t bundleId);
     static void RemoveHmdfsConfig(const std::string &bundleName);
     static std::string CreateInstallTempDir(uint32_t installerId);
