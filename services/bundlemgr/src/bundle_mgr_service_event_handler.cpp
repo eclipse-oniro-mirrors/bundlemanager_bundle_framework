@@ -1237,6 +1237,8 @@ bool BMSEventHandler::ParseHapFiles(
 
     BundleParser bundleParser;
     AppPrivilegeCapability appPrivilegeCapability;
+    appPrivilegeCapability.allowMultiProcess = true;
+    appPrivilegeCapability.allowUsePrivilegeExtension = true;
     for (auto realPath : realPaths) {
         InnerBundleInfo innerBundleInfo;
         ret = bundleParser.Parse(realPath, appPrivilegeCapability, innerBundleInfo);

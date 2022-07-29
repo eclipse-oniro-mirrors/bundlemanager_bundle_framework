@@ -1634,7 +1634,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
-    SetAllowCommonEvent(applicationInfo.formVisibleNotify);
+    SetAllowCommonEvent(applicationInfo.allowCommonEvent);
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)

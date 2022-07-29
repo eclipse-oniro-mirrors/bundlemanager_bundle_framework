@@ -437,6 +437,8 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
     InnerBundleInfo info;
     BundleParser bundleParser;
     AppPrivilegeCapability appPrivilegeCapability;
+    appPrivilegeCapability.allowMultiProcess = true;
+    appPrivilegeCapability.allowUsePrivilegeExtension = true;
     ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);

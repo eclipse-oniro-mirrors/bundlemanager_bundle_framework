@@ -1541,10 +1541,9 @@ public:
     void SetAllowCommonEvent(const std::vector<std::string> &allowCommonEvent)
     {
         baseApplicationInfo_->allowCommonEvent.clear();
-        baseApplicationInfo_->allowCommonEvent.insert(
-            baseApplicationInfo_->allowCommonEvent.end(),
-            baseApplicationInfo_->allowCommonEvent.begin(),
-            allowCommonEvent.end());
+        for (const auto &event : allowCommonEvent) {
+            baseApplicationInfo_->allowCommonEvent.emplace_back(event);
+        }
     }
 
     void SetDisposedStatus(int32_t status);

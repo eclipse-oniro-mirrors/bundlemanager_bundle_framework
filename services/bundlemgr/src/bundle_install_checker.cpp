@@ -295,7 +295,7 @@ void BundleInstallChecker::CollectPreBundleInfo(
     newInfo.SetBootable(preBundleConfigInfo.bootable);
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
-    newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommentEvent);
+    newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
 }
 
 ErrCode BundleInstallChecker::ParseBundleInfo(
@@ -518,7 +518,7 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
 
     APP_LOGD("AppPrivilegeCapability %{public}s",
         appPrivilegeCapability.ToString().c_str());
-#ifdef USE_PRE_BUNDLE_PROFILE
+#ifndef USE_PRE_BUNDLE_PROFILE
     appPrivilegeCapability.allowMultiProcess = true;
     appPrivilegeCapability.allowUsePrivilegeExtension = true;
 #endif
