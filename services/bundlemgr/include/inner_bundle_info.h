@@ -852,6 +852,12 @@ public:
     {
         if (innerModuleInfos_.count(currentPackage_) == 1) {
             innerModuleInfos_.at(currentPackage_).hapPath = hapPath;
+            for (auto &abilityInfo : baseAbilityInfos_) {
+                abilityInfo.second.hapPath = hapPath;
+            }
+            for (auto &extensionInfo : baseExtensionInfos_) {
+                extensionInfo.second.hapPath = hapPath;
+            }
         }
     }
 

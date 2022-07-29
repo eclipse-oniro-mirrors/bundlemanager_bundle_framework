@@ -71,6 +71,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     ApplicationInfo applicationInfo;
     // set when install
     std::string resourcePath;
+    std::string hapPath;
     bool enabled = true;
     std::string process;
 

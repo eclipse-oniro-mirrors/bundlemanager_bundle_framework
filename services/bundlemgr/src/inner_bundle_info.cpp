@@ -1948,7 +1948,8 @@ void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos)
     if (isNewVersion_) {
         AbilityInfo abilityInfo;
         GetMainAbilityInfo(abilityInfo);
-        if (!abilityInfo.resourcePath.empty() && abilityInfo.metadata.size() > 0) {
+        if ((!abilityInfo.resourcePath.empty() || !abilityInfo.hapPath.empty())
+            && abilityInfo.metadata.size() > 0) {
             std::vector<std::string> rawJson;
             BundleMgrClient bundleMgrClient;
             bool ret = bundleMgrClient.GetResConfigFile(abilityInfo, META_DATA_SHORTCUTS_NAME, rawJson);
