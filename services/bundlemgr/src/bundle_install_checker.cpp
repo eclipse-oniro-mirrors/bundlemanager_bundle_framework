@@ -291,6 +291,7 @@ void BundleInstallChecker::CollectPreBundleInfo(
     newInfo.SetBootable(preBundleConfigInfo.bootable);
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
+    newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommentEvent);
 }
 
 ErrCode BundleInstallChecker::ParseBundleInfo(
