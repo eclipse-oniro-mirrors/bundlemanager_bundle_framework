@@ -17,7 +17,7 @@ import("../../../appexecfwk.gni")
 config("zip_config") {
   include_dirs = [
     "include",
-    "//utils/native/base/include",
+    "//commonlibrary/c_utils/base/include",
     "//third_party/libuv/include",
     "//third_party/node/src",
     "//third_party/zlib",
@@ -57,11 +57,11 @@ ohos_shared_library("zlib") {
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog_native:libhilog_base",
     "hiviewdfx_hilog_native:libhilog",
     "napi:ace_napi",
-    "utils_base:utils",
   ]
 
   install_enable = true

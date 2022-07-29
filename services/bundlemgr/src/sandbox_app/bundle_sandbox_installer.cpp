@@ -15,6 +15,7 @@
 
 #include "bundle_sandbox_installer.h"
 
+#include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_common_event_mgr.h"
@@ -194,7 +195,12 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
         return ERR_APPEXECFWK_SANDBOX_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
 
-    // 4. delete accesstoken id and appIndex
+    // 4. kill sandbox app process
+    if (!AbilityManagerHelper::UninstallApplicationProcesses(info.GetApplicationName(), info.GetUid(userId_))) {
+        APP_LOGW("sandbox app process cannot be killed");
+    }
+
+    // 5. delete accesstoken id and appIndex
     uint32_t accessTokenId = info.GetAccessTokenId(userId_);
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -206,7 +212,7 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
         return ERR_APPEXECFWK_SANDBOX_INSTALL_DELETE_APP_INDEX_FAILED;
     }
 
-    // 5. remove data dir and uid, gid
+    // 6. remove data dir and uid, gid
     std::string innerBundleName = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
     result = InstalldClient::GetInstance()->RemoveBundleDataDir(innerBundleName, userId_);
     if (result != ERR_OK) {
@@ -217,13 +223,13 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
     info.AddInnerBundleUserInfo(userInfo);
     dataMgr_->RecycleUidAndGid(info);
 
-    // 6. remove new innerBundleInfo from sandData manager
+    // 7. remove new innerBundleInfo from sandData manager
     sandboxDataMgr_->DeleteSandboxAppInfo(bundleName, appIndex);
 
-    // 7. remove sandbox persistent info
+    // 8. remove sandbox persistent info
     DeleteSandboxPersitentInfo(bundleName, accessTokenId, appIndex, userId);
 
-    // 8. publish common event
+    // 9. publish common event
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     result = commonEventMgr->NotifySandboxAppStatus(info, userInfo.uid, userId_, SandboxInstallType::UNINSTALL);
     if (result != ERR_OK) {

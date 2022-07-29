@@ -20,6 +20,7 @@ config("tools_bm_config") {
     "include/bundle_tool_callback",
     "${common_path}/log/include",
     "${kits_path}/js/bundlemgr",
+    "//third_party/json/include",
     "//utils/system/safwk/native/include",
   ]
 
@@ -51,13 +52,13 @@ ohos_source_set("tools_bm_source_set") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
 
   part_name = "bundle_tool"
@@ -91,17 +92,19 @@ ohos_source_set("tools_test_bm_source_set") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
+  deps = [ "//third_party/jsoncpp:jsoncpp" ]
+
   external_deps = [
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
 
   part_name = "bundle_tool"

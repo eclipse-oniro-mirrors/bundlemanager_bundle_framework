@@ -60,9 +60,9 @@ public:
     static void GetPreInstallRootDirList(std::vector<std::string> &rootDirList);
     /**
      * @brief Load all preInstall infos from proFile.
-     * @return
+     * @return Returns true if get the preInstall list successfully; returns false otherwise.
      */
-    static void LoadPreInstallProFile();
+    static bool LoadPreInstallProFile();
     /**
      * @brief Clear all preInstall infos cache.
      * @return
@@ -74,6 +74,11 @@ public:
      * @return Returns true if get the preInstall capability successfully; returns false otherwise.
      */
     static bool GetPreInstallCapability(PreBundleConfigInfo &preBundleConfigInfo);
+    /**
+     * @brief Has preInstall profile or not.
+     * @return Returns result.
+     */
+    static bool HasPreInstallProfile();
 
     enum {
         BMS_START = 0,
@@ -246,12 +251,6 @@ private:
      */
     void ProcessBootBundleInstallFromScan(int32_t userId);
     /**
-     * @brief Process boot bundle install from pre bundle profile.
-     * @param userId Indicates the userId.
-     * @return
-     */
-    void ProcessBootBundleInstallFromPreBundleProFile(int32_t userId);
-    /**
      * @brief Process bundle install by scanInfos.
      * @param userId Indicates the userId.
      * @return
@@ -299,11 +298,6 @@ private:
      * @return
      */
     void ProcessRebootBundleInstall();
-    /**
-     * @brief Process reboot bundle install from pre bundle profile.
-     * @return
-     */
-    void ProcessRebootBundleInstallFromPreBundleProFile();
     /**
      * @brief Process reboot bundle install by scanInfos.
      * @return
@@ -421,6 +415,9 @@ private:
      * @return Returns true if the preInstall is removable; returns false otherwise.
      */
     bool IsPreInstallRemovable(const std::string &path);
+
+    void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
+    void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
 
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;

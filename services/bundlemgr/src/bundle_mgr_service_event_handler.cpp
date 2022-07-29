@@ -41,6 +41,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string APP_SUFFIX = "/app";
+const std::string TEMP_PREFIX = "temp_";
+const std::string MODULE_PREFIX = "module_";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -48,14 +50,56 @@ std::set<std::string> recoverList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 bool hasLoadPreInstallProFile_ = false;
 
+void MoveTempPath(const std::vector<std::string> &fromPaths,
+    const std::string &bundleName, std::vector<std::string> &toPaths)
+{
+    std::string tempDir =
+        Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + TEMP_PREFIX + bundleName;
+    if (!BundleUtil::CreateDir(tempDir)) {
+        APP_LOGE("create tempdir failed %{public}s", tempDir.c_str());
+        return;
+    }
+
+    int32_t hapIndex = 0;
+    for (const auto &path : fromPaths) {
+        auto toPath = tempDir + Constants::PATH_SEPARATOR + MODULE_PREFIX
+            + std::to_string(hapIndex) + Constants::INSTALL_FILE_SUFFIX;
+        hapIndex++;
+        if (!BundleUtil::RenameFile(path, toPath)) {
+            APP_LOGW("move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
+            continue;
+        }
+
+        toPaths.emplace_back(toPath);
+    }
+}
+
 class InnerReceiverImpl : public StatusReceiverHost {
 public:
     InnerReceiverImpl() = default;
     virtual ~InnerReceiverImpl() override = default;
 
+    void SetBundleName(const std::string &bundleName)
+    {
+        bundleName_ = bundleName;
+    }
+
     virtual void OnStatusNotify(const int progress) override {}
     virtual void OnFinished(
-        const int32_t resultCode, const std::string &resultMsg) override {}
+        const int32_t resultCode, const std::string &resultMsg) override
+    {
+        if (bundleName_.empty()) {
+            return;
+        }
+
+        std::string tempDir = Constants::HAP_COPY_PATH
+            + Constants::PATH_SEPARATOR + TEMP_PREFIX + bundleName_;
+        APP_LOGD("delete tempDir %{public}s", tempDir.c_str());
+        BundleUtil::DeleteDir(tempDir);
+    }
+
+private:
+    std::string bundleName_;
 };
 }
 
@@ -190,6 +234,7 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 void BMSEventHandler::BundleBootStartEvent()
 {
     OnBundleBootStart(Constants::DEFAULT_USERID);
+    PerfProfile::GetInstance().Dump();
 }
 
 void BMSEventHandler::BundleRebootStartEvent()
@@ -361,7 +406,10 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
         installParam.streamInstallMode = true;
         sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
-        installer->Install(hapPaths.second, installParam, innerReceiverImpl);
+        innerReceiverImpl->SetBundleName(hapPaths.first);
+        std::vector<std::string> tempHaps;
+        MoveTempPath(hapPaths.second, hapPaths.first, tempHaps);
+        installer->Install(tempHaps, installParam, innerReceiverImpl);
     }
 
     return ResultCode::REINSTALL_OK;
@@ -464,17 +512,17 @@ void BMSEventHandler::ClearPreInstallCache()
     hasLoadPreInstallProFile_ = false;
 }
 
-void BMSEventHandler::LoadPreInstallProFile()
+bool BMSEventHandler::LoadPreInstallProFile()
 {
     if (hasLoadPreInstallProFile_) {
-        return;
+        return !installList_.empty();
     }
 
     std::vector<std::string> rootDirList;
     GetPreInstallRootDirList(rootDirList);
     if (rootDirList.empty()) {
         APP_LOGE("dirList is empty");
-        return;
+        return false;
     }
 
     for (const auto &rootDir : rootDirList) {
@@ -482,6 +530,12 @@ void BMSEventHandler::LoadPreInstallProFile()
     }
 
     hasLoadPreInstallProFile_ = true;
+    return !installList_.empty();
+}
+
+bool BMSEventHandler::HasPreInstallProfile()
+{
+    return !installList_.empty();
 }
 
 void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
@@ -498,7 +552,17 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
-    LoadPreInstallProFile();
+    if (LoadPreInstallProFile()) {
+        GetPreInstallDirFromLoadProFile(bundleDirs);
+        return;
+    }
+#endif
+
+    GetPreInstallDirFromScan(bundleDirs);
+}
+
+void BMSEventHandler::GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs)
+{
     for (const auto &installInfo : installList_) {
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
             APP_LOGW("bundle(%{public}s) not allowed installed", installInfo.bundleDir.c_str());
@@ -507,13 +571,15 @@ void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
 
         bundleDirs.emplace_back(installInfo.bundleDir);
     }
-#else
+}
+
+void BMSEventHandler::GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs)
+{
     std::list<std::string> scanbundleDirs;
     GetBundleDirFromScan(scanbundleDirs);
     for (const auto &scanbundleDir : scanbundleDirs) {
         bundleDirs.emplace_back(scanbundleDir);
     }
-#endif
 }
 
 void BMSEventHandler::AnalyzeHaps(
@@ -668,11 +734,14 @@ bool BMSEventHandler::ScanDir(
 void BMSEventHandler::OnBundleBootStart(int32_t userId)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
-    ProcessBootBundleInstallFromPreBundleProFile(userId);
-#else
-    ProcessBootBundleInstallFromScan(userId);
+    if (LoadPreInstallProFile()) {
+        APP_LOGD("Process boot bundle install from pre bundle proFile");
+        InnerProcessBootPreBundleProFileInstall(userId);
+        return;
+    }
 #endif
-    PerfProfile::GetInstance().Dump();
+
+    ProcessBootBundleInstallFromScan(userId);
 }
 
 void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
@@ -715,13 +784,6 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
             bundleDirs.push_back(item);
         }
     }
-}
-
-void BMSEventHandler::ProcessBootBundleInstallFromPreBundleProFile(int32_t userId)
-{
-    APP_LOGD("Process boot bundle install from pre bundle proFile");
-    LoadPreInstallProFile();
-    InnerProcessBootPreBundleProFileInstall(userId);
 }
 
 void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
@@ -825,17 +887,13 @@ void BMSEventHandler::ProcessRebootBundleInstall()
 {
     APP_LOGD("Process reboot bundle install start");
 #ifdef USE_PRE_BUNDLE_PROFILE
-    ProcessRebootBundleInstallFromPreBundleProFile();
-#else
-    ProcessRebootBundleInstallFromScan();
+    if (LoadPreInstallProFile()) {
+        ProcessReBootPreBundleProFileInstall();
+        return;
+    }
 #endif
-}
 
-void BMSEventHandler::ProcessRebootBundleInstallFromPreBundleProFile()
-{
-    APP_LOGD("Process reboot bundle install from pre bundle proFile");
-    LoadPreInstallProFile();
-    ProcessReBootPreBundleProFileInstall();
+    ProcessRebootBundleInstallFromScan();
 }
 
 void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
@@ -1201,6 +1259,10 @@ bool BMSEventHandler::ParseHapFiles(
 bool BMSEventHandler::IsPreInstallRecoverable(const std::string &path)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
+    if (!HasPreInstallProfile()) {
+        return true;
+    }
+
     if (!hasLoadPreInstallProFile_) {
         APP_LOGE("Not load preInstall proFile or release.");
         return false;
@@ -1220,6 +1282,10 @@ bool BMSEventHandler::IsPreInstallRecoverable(const std::string &path)
 bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
+    if (!HasPreInstallProfile()) {
+        return false;
+    }
+
     if (!hasLoadPreInstallProFile_) {
         APP_LOGE("Not load preInstall proFile or release.");
         return false;

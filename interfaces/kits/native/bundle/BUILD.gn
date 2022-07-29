@@ -52,10 +52,10 @@ ohos_shared_library("bundle_ndk") {
   deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

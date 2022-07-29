@@ -146,6 +146,7 @@ public:
     static int32_t CreateFileDescriptorForReadOnly(const std::string &bundlePath, long long offset);
     static void CloseFileDescriptor(std::vector<int32_t> &fdVec);
     static Resource GetResource(const std::string &bundleName, const std::string &moduleName, int32_t resId);
+    static bool CreateDir(const std::string &dir);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
