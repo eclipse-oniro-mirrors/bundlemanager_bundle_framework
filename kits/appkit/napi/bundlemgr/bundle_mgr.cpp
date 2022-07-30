@@ -5166,23 +5166,23 @@ void GetAbilityLabelAsyncComplete(napi_env env, napi_status status, void *data)
     APP_LOGI("NAPI_GetAbilityLabel, main event thread complete.");
     AsyncAbilityLabelCallbackInfo *asyncCallbackInfo = static_cast<AsyncAbilityLabelCallbackInfo *>(data);
     napi_value callback = nullptr;
-    napi_value undefined = nullptr;
     napi_value result[ARGS_SIZE_TWO] = {nullptr};
     napi_value callResult = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
     if (asyncCallbackInfo->err) {
         napi_create_int32(env, asyncCallbackInfo->err, &result[PARAM0]);
     }
 
     if (asyncCallbackInfo->err == NAPI_ERR_NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[PARAM0]));
         napi_create_string_utf8(env, asyncCallbackInfo->abilityLabel.c_str(), NAPI_AUTO_LENGTH, &result[PARAM1]);
     } else {
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->err, &result[PARAM0]));
         result[PARAM1] = WrapUndefinedToJS(env);
     }
 
     NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
     NAPI_CALL_RETURN_VOID(env,
-        napi_call_function(env, undefined, callback, sizeof(result) / sizeof(result[PARAM0]), result, &callResult));
+        napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[PARAM0]), result, &callResult));
 
     if (asyncCallbackInfo->callback != nullptr) {
         NAPI_CALL_RETURN_VOID(env, napi_delete_reference(env, asyncCallbackInfo->callback));
