@@ -202,17 +202,13 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
     napi_value callback = nullptr;
     napi_value placeHolder = nullptr;
     if (!asyncCallbackInfo->isString) {
-        napi_value result[ARGS_SIZE_TWO] = { 0 };
         if (asyncCallbackInfo->failRef) {
+            napi_value result[ARGS_SIZE_TWO] = { 0 };
             NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "value is not an available number",
                 NAPI_AUTO_LENGTH, &result[PARAM0]));
             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, INVALID_NUMBER, &result[PARAM1]));
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->failRef, &callback));
             napi_call_function(env, nullptr, callback, ARGS_SIZE_TWO, result, &placeHolder);
-        }
-        if (asyncCallbackInfo->completeRef) {
-            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->completeRef, &callback));
-            napi_call_function(env, nullptr, callback, 0, result, &placeHolder);
         }
     } else {
         if (asyncCallbackInfo->successRef) {
@@ -222,6 +218,10 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->successRef, &callback));
             napi_call_function(env, nullptr, callback, ARGS_SIZE_ONE, result, &placeHolder);
         }
+    }
+    if (asyncCallbackInfo->completeRef) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->completeRef, &callback));
+        napi_call_function(env, nullptr, callback, 0, nullptr, &placeHolder);
     }
     APP_LOGI("NAPI_HasInstalled, main event thread complete end.");
 }
