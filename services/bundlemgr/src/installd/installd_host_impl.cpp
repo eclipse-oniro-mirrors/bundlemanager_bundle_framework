@@ -407,7 +407,11 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
             oldPath.c_str(), newPath.c_str());
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
-
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(newPath, mode)) {
+        APP_LOGE("change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
     return ERR_OK;
 }
 
@@ -422,7 +426,11 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
             oldPath.c_str(), newPath.c_str());
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
-
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(newPath, mode)) {
+        APP_LOGE("change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
     return ERR_OK;
 }
 
