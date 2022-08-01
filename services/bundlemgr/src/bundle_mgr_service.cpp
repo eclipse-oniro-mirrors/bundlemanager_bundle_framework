@@ -62,6 +62,9 @@ BundleMgrService::~BundleMgrService()
     if (hidumpHelper_) {
         hidumpHelper_.reset();
     }
+
+    bmsThreadPool_.Stop();
+
     APP_LOGI("instance is destroyed");
 }
 
@@ -111,6 +114,9 @@ bool BundleMgrService::Init()
         APP_LOGW("init more than one time");
         return false;
     }
+
+    bmsThreadPool_.Start(THREAD_NUMBER);
+    bmsThreadPool_.SetMaxTaskNum(Constants::MAX_TASK_NUMBER);
 
     if (host_ == nullptr) {
         host_ = new (std::nothrow) BundleMgrHostImpl();
@@ -382,6 +388,11 @@ bool BundleMgrService::Hidump(const std::vector<std::string> &args, std::string&
 
     APP_LOGD("HidumpHelper failed");
     return false;
+}
+
+ThreadPool &BundleMgrService::GetThreadPool()
+{
+    return bmsThreadPool_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

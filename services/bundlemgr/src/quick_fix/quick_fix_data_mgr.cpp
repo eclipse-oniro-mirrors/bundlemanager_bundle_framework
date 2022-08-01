@@ -34,6 +34,8 @@ QuickFixDataMgr::QuickFixDataMgr()
         APP_LOGE("create QuickFixDataMgr failed.");
         return;
     }
+
+    InitStatesMap();
 }
 
 QuickFixDataMgr::~QuickFixDataMgr()
@@ -41,34 +43,42 @@ QuickFixDataMgr::~QuickFixDataMgr()
     APP_LOGD("destroy QuickFixDataMgr.");
 }
 
-bool QuickFixDataMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-    const sptr<IQuickFixStatusCallback> &statusCallback)
+void QuickFixDataMgr::InitStatesMap()
 {
-    if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
+    statesMap_ = {
+        {QuickFixStatus::DEPLOY_START, QuickFixStatus::DEPLOY_END},
+        {QuickFixStatus::DEPLOY_END, QuickFixStatus::SWITCH_START},
+        {QuickFixStatus::SWITCH_START, QuickFixStatus::SWITCH_END},
+        {QuickFixStatus::SWITCH_END, QuickFixStatus::DELETE_START},
+        {QuickFixStatus::DELETE_START, QuickFixStatus::DELETE_END}
+    };
+}
+
+ErrCode QuickFixDataMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
+{
+    if (bundleFilePaths.empty()) {
         APP_LOGE("QuickFixDataMgr::DeployQuickFix wrong parms");
-        return false;
+        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
     }
-    return true;
+    return ERR_OK;
 }
 
-bool QuickFixDataMgr::SwitchQuickFix(const std::string &bundleName,
-    const sptr<IQuickFixStatusCallback> &statusCallback)
+ErrCode QuickFixDataMgr::SwitchQuickFix(const std::string &bundleName)
 {
-    if (bundleName.empty() || (statusCallback == nullptr)) {
+    if (bundleName.empty()) {
         APP_LOGE("QuickFixDataMgr::SwitchQuickFix wrong parms");
-        return false;
+        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
     }
-    return true;
+    return ERR_OK;
 }
 
-bool QuickFixDataMgr::DeleteQuickFix(const std::string &bundleName,
-    const sptr<IQuickFixStatusCallback> &statusCallback)
+ErrCode QuickFixDataMgr::DeleteQuickFix(const std::string &bundleName)
 {
-    if (bundleName.empty() || (statusCallback == nullptr)) {
+    if (bundleName.empty()) {
         APP_LOGE("QuickFixDataMgr::DeleteQuickFix wrong parms");
-        return false;
+        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
     }
-    return true;
+    return ERR_OK;
 }
 
 bool QuickFixDataMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)

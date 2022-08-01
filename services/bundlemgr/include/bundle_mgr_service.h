@@ -20,6 +20,7 @@
 
 #include "singleton.h"
 #include "system_ability.h"
+#include "thread_pool.h"
 
 #ifdef DEVICE_MANAGER_ENABLE
 #include "bms_device_manager.h"
@@ -120,6 +121,8 @@ public:
      */
     bool Hidump(const std::vector<std::string> &args, std::string& result) const;
 
+    ThreadPool &GetThreadPool();
+
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -163,6 +166,9 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     std::shared_ptr<DistributedMonitor> distributedSub_;
+    // Thread pool used to start installation or quick fix in parallel.
+    ThreadPool bmsThreadPool_;
+    const int THREAD_NUMBER = std::thread::hardware_concurrency();
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<DefaultAppHostImpl> defaultAppHostImpl_;

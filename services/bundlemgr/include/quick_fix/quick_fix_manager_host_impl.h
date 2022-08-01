@@ -16,11 +16,16 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_QUICK_FIX_MANAGER_HOST_IMPL_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_QUICK_FIX_MANAGER_HOST_IMPL_H
 
+#include "quick_fix_async_mgr.h"
 #include "quick_fix_manager_host.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class QuickFixManagerHostImpl : public QuickFixManagerHost {
+public:
+    QuickFixManagerHostImpl();
+    virtual ~QuickFixManagerHostImpl();
+
     virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
@@ -29,6 +34,10 @@ class QuickFixManagerHostImpl : public QuickFixManagerHost {
 
     virtual bool DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
+
+private:
+    void Init();
+    std::shared_ptr<QuickFixAsyncMgr> quickFixAsyncMgr_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS

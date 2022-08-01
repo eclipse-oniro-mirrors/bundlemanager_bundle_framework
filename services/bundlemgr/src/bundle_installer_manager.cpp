@@ -19,6 +19,7 @@
 
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
+#include "bundle_mgr_service.h"
 #include "datetime_ex.h"
 #include "xcollie_helper.h"
 
@@ -35,14 +36,11 @@ const unsigned int TIME_OUT_SECONDS = 60 * 5;
 BundleInstallerManager::BundleInstallerManager(const std::shared_ptr<EventRunner> &runner) : EventHandler(runner)
 {
     APP_LOGI("create bundle installer manager instance");
-    installersPool_.Start(THREAD_NUMBER);
-    installersPool_.SetMaxTaskNum(MAX_TASK_NUMBER);
 }
 
 BundleInstallerManager::~BundleInstallerManager()
 {
     APP_LOGI("destroy bundle installer manager instance");
-    installersPool_.Stop();
 }
 
 void BundleInstallerManager::ProcessEvent(const InnerEvent::Pointer &event)
@@ -70,7 +68,7 @@ void BundleInstallerManager::CreateInstallTask(
         installer->Install(bundleFilePath, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    installersPool_.AddTask(task);
+    AddTask(task);
 }
 
 void BundleInstallerManager::CreateRecoverTask(
@@ -86,7 +84,7 @@ void BundleInstallerManager::CreateRecoverTask(
         installer->Recover(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    installersPool_.AddTask(task);
+    AddTask(task);
 }
 
 void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &bundleFilePaths,
@@ -102,7 +100,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
         installer->Install(bundleFilePaths, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    installersPool_.AddTask(task);
+    AddTask(task);
 }
 
 void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bundleName,
@@ -119,7 +117,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
         installer->InstallByBundleName(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    installersPool_.AddTask(task);
+    AddTask(task);
 }
 
 void BundleInstallerManager::CreateUninstallTask(
@@ -135,7 +133,7 @@ void BundleInstallerManager::CreateUninstallTask(
         installer->Uninstall(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    installersPool_.AddTask(task);
+    AddTask(task);
 }
 
 void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, const std::string &modulePackage,
@@ -151,7 +149,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
         installer->Uninstall(bundleName, modulePackage, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    installersPool_.AddTask(task);
+    AddTask(task);
 }
 
 std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const sptr<IStatusReceiver> &statusReceiver)
@@ -185,6 +183,18 @@ void BundleInstallerManager::RemoveInstaller(const int64_t installerId)
     if (installers_.erase(installerId) > 0) {
         APP_LOGD("erase the specific %{public}" PRId64 " installer", installerId);
     }
+}
+
+void BundleInstallerManager::AddTask(const ThreadPoolTask &task)
+{
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bundleMgrService == nullptr) {
+        APP_LOGE("bundleMgrService is nullptr");
+        return;
+    }
+
+    ThreadPool &installersPool = bundleMgrService->GetThreadPool();
+    installersPool.AddTask(task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

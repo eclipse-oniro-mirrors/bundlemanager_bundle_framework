@@ -346,8 +346,14 @@ int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePat
         APP_LOGE("the length of the bundlePath exceeds maximum limitation");
         return fd;
     }
-    if ((fd = open(bundlePath.c_str(), O_RDONLY)) < 0) {
-        APP_LOGE("open bundlePath %{public}s failed", bundlePath.c_str());
+    std::string realPath;
+    if (!PathToRealPath(bundlePath, realPath)) {
+        APP_LOGE("file is not real path");
+        return fd;
+    }
+
+    if ((fd = open(realPath.c_str(), O_RDONLY)) < 0) {
+        APP_LOGE("open bundlePath %{public}s failed", realPath.c_str());
         return fd;
     }
     if (offset > 0) {
