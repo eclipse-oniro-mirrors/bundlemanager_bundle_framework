@@ -1598,6 +1598,9 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->labelId = applicationInfo.labelId;
     baseApplicationInfo_->description = applicationInfo.description;
     baseApplicationInfo_->descriptionId = applicationInfo.descriptionId;
+    baseApplicationInfo_->iconResource = applicationInfo.iconResource;
+    baseApplicationInfo_->labelResource = applicationInfo.labelResource;
+    baseApplicationInfo_->descriptionResource = applicationInfo.descriptionResource;
 
     baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
     baseApplicationInfo_->removable = applicationInfo.removable;
