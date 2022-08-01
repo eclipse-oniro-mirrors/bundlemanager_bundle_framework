@@ -271,7 +271,7 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
 {
     auto elementName = want.GetElement();
     if (elementName.GetDeviceID().empty() || elementName.GetBundleName().empty() ||
-        elementName.GetModuleName().empty() || elementName.GetAbilityName().empty()) {
+        elementName.GetAbilityName().empty()) {
         APP_LOGE("check ability install parameter is invalid");
         return false;
     }
