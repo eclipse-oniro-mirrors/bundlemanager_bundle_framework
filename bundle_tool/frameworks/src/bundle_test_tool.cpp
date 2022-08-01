@@ -46,7 +46,10 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "  getrm        obtain the value of isRemovable by given bundle name and module name\n"
                              "  installSandbox      indicates install sandbox\n"
                              "  uninstallSandbox    indicates uninstall sandbox\n"
-                             "  dumpSandbox         indicates dump sandbox info\n";
+                             "  dumpSandbox         indicates dump sandbox info\n"
+                             "  getStr      obtain the value of label by given bundle name, module name and label id\n"
+                             "  getIcon     obtain the value of icon by given bundle name, module name,\n"
+                             "              density and icon id\n";
 
 const std::string HELP_MSG_GET_REMOVABLE =
     "usage: bundle_test_tool getrm <options>\n"
@@ -83,7 +86,7 @@ const std::string HELP_MSG_UNINSTALL_SANDBOX =
     "  -h, --help                             list available commands\n"
     "  -u, --user-id <user-id>                specify a user id\n"
     "  -a, --app-index <app-index>            specify a app index\n"
-    "  -n, --bundle-nam e <bundle-name>        install a sandbox of a bundle\n";
+    "  -n, --bundle-name <bundle-name>        install a sandbox of a bundle\n";
 
 const std::string HELP_MSG_DUMP_SANDBOX =
     "usage: bundle_test_tool dumpSandbox <options>\n"
@@ -92,6 +95,40 @@ const std::string HELP_MSG_DUMP_SANDBOX =
     "  -u, --user-id <user-id>                specify a user id\n"
     "  -a, --app-index <app-index>            specify a app index\n"
     "  -n, --bundle-name <bundle-name>        install a sandbox of a bundle\n";
+
+const std::string HELP_MSG_GET_STRING =
+    "usage: bundle_test_tool getStr <options>\n"
+    "eg:bundle_test_tool getStr -m <module-name> -n <bundle-name> -u <user-id> -i --id <id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name <bundle-name>        specify bundle name of the application\n"
+    "  -m, --module-name <module-name>        specify module name of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n"
+    "  -i, --id <id>                          specify a label id of the application\n";
+
+const std::string HELP_MSG_GET_ICON =
+    "usage: bundle_test_tool getIcon <options>\n"
+    "eg:bundle_test_tool getIcon -m <module-name> -n <bundle-name> -u <user-id> -d --density <density> -i --id <id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       specify bundle name of the application\n"
+    "  -m, --module-name <module-name>        specify module name of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n"
+    "  -d, --density <density>                specify a density\n"
+    "  -i, --id <id>                          specify a icon id of the application\n";
+
+const std::string HELP_MSG_NO_GETSTRING_OPTION =
+    "error: you must specify a bundle name with '-n' or '--bundle-name' \n"
+    "and a module name with '-m' or '--module-name' \n"
+    "and a userid with '-u' or '--user-id' \n"
+    "and a labelid with '-i' or '--id' \n";
+
+const std::string HELP_MSG_NO_GETICON_OPTION =
+    "error: you must specify a bundle name with '-n' or '--bundle-name' \n"
+    "and a module name with '-m' or '--module-name' \n"
+    "and a userid with '-u' or '--user-id' \n"
+    "and a density with '-d' or '--density' \n"
+    "and a iconid with '-i' or '--id' \n";
 
 const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n";
@@ -111,6 +148,10 @@ const std::string STRING_UNINSTALL_SANDBOX_SUCCESSFULLY = "uninstall sandbox app
 const std::string STRING_UNINSTALL_SANDBOX_FAILED = "uninstall sandbox app failed\n";
 
 const std::string STRING_DUMP_SANDBOX_FAILED = "dump sandbox app info failed\n";
+
+const std::string STRING_GET_STRING_NG = "error: failed to get label \n";
+
+const std::string STRING_GET_ICON_NG = "error: failed to get icon \n";
 
 const std::string GET_RM = "getrm";
 const std::string SET_RM = "setrm";
@@ -139,6 +180,17 @@ const struct option LONG_OPTIONS_SANDBOX[] = {
     {"app-index", required_argument, nullptr, 'a'},
     {nullptr, 0, nullptr, 0},
 };
+
+const std::string SHORT_OPTIONS_GET = "hn:m:u:i:d:";
+const struct option LONG_OPTIONS_GET[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"bundle-name", required_argument, nullptr, 'n'},
+    {"module-name", required_argument, nullptr, 'm'},
+    {"user-id", required_argument, nullptr, 'u'},
+    {"id", required_argument, nullptr, 'i'},
+    {"density", required_argument, nullptr, 'd'},
+    {nullptr, 0, nullptr, 0},
+};
 }  // namespace
 
 BundleTestTool::BundleTestTool(int argc, char *argv[]) : ShellCommand(argc, argv, TOOL_NAME)
@@ -157,6 +209,8 @@ ErrCode BundleTestTool::CreateCommandMap()
         {"installSandbox", std::bind(&BundleTestTool::RunAsInstallSandboxCommand, this)},
         {"uninstallSandbox", std::bind(&BundleTestTool::RunAsUninstallSandboxCommand, this)},
         {"dumpSandbox", std::bind(&BundleTestTool::RunAsDumpSandboxCommand, this)},
+        {"getStr", std::bind(&BundleTestTool::RunAsGetStringCommand, this)},
+        {"getIcon", std::bind(&BundleTestTool::RunAsGetIconCommand, this)},
     };
 
     return OHOS::ERR_OK;
@@ -761,6 +815,214 @@ ErrCode BundleTestTool::RunAsDumpSandboxCommand()
         resultReceiver_.append(dumpRes);
     } else {
         resultReceiver_.append(STRING_DUMP_SANDBOX_FAILED + "errCode is "+ std::to_string(ret) + "\n");
+    }
+    return result;
+}
+
+ErrCode BundleTestTool::StringToInt(
+    std::string optarg, const std::string &commandName, int &temp, bool &result)
+{
+    try {
+        temp = std::stoi(optarg);
+        APP_LOGD("bundle_test_tool %{public}s -u user-id:%{public}d, %{public}s",
+            commandName.c_str(), temp, argv_[optind - 1]);
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        result = false;
+    }
+    return OHOS::ERR_OK;
+}
+
+bool BundleTestTool::CheckGetStringCorrectOption(
+    int option, const std::string &commandName, int &temp, std::string &name)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'n': {
+            name = optarg;
+            APP_LOGD("bundle_test_tool %{public}s -n %{public}s", commandName.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 'm': {
+            name = optarg;
+            APP_LOGD("bundle_test_tool %{public}s -m module-name:%{public}s, %{public}s",
+                commandName.c_str(), name.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, temp, ret);
+            break;
+        }
+        case 'i': {
+            StringToInt(optarg, commandName, temp, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsGetStringCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "getStr";
+    std::string name = "";
+    std::string bundleName = "";
+    std::string moduleName = "";
+    int userId = 100;
+    int labelId = 0;
+    APP_LOGD("RunAsGetStringCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            // When scanning the first argument
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                // 'GetStringById' with no option: GetStringById
+                // 'GetStringById' with a wrong argument: GetStringById
+                APP_LOGD("bundle_test_tool getStr with no option.");
+                resultReceiver_.append(HELP_MSG_NO_GETSTRING_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        int temp = 0;
+        result = !CheckGetStringCorrectOption(option, commandName, temp, name)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        moduleName = option == 'm' ? name : moduleName;
+        bundleName = option == 'n' ? name : bundleName;
+        userId = option == 'u' ? temp : userId;
+        labelId = option == 'i' ? temp : labelId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_GET_STRING);
+    } else {
+        std::string results = "";
+        results = bundleMgrProxy_->GetStringById(bundleName, moduleName, labelId, userId);
+        if (results.empty()) {
+            resultReceiver_.append(STRING_GET_STRING_NG);
+            return result;
+        }
+        resultReceiver_.append(results);
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckGetIconCorrectOption(
+    int option, const std::string &commandName, int &temp, std::string &name)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'n': {
+            name = optarg;
+            APP_LOGD("bundle_test_tool %{public}s -n %{public}s", commandName.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 'm': {
+            name = optarg;
+            APP_LOGD("bundle_test_tool %{public}s -m module-name:%{public}s, %{public}s",
+                commandName.c_str(), name.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, temp, ret);
+            break;
+        }
+        case 'i': {
+            StringToInt(optarg, commandName, temp, ret);
+            break;
+        }
+        case 'd': {
+            StringToInt(optarg, commandName, temp, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsGetIconCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "getIcon";
+    std::string name = "";
+    std::string bundleName = "";
+    std::string moduleName = "";
+    int userId = 100;
+    int iconId = 0;
+    int density = 0;
+    APP_LOGD("RunAsGetIconCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            // When scanning the first argument
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                // 'GetIconById' with no option: GetStringById
+                // 'GetIconById' with a wrong argument: GetStringById
+                APP_LOGD("bundle_test_tool getIcon with no option.");
+                resultReceiver_.append(HELP_MSG_NO_GETICON_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        int temp = 0;
+        result = !CheckGetIconCorrectOption(option, commandName, temp, name)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        moduleName = option == 'm' ? name : moduleName;
+        bundleName = option == 'n' ? name : bundleName;
+        userId = option == 'u' ? temp : userId;
+        iconId = option == 'i' ? temp : iconId;
+        density = option == 'd' ? temp : density;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_GET_ICON);
+    } else {
+        std::string results = "";
+        results = bundleMgrProxy_->GetIconById(bundleName, moduleName, iconId, density, userId);
+        if (results.empty()) {
+            resultReceiver_.append(STRING_GET_ICON_NG);
+            return result;
+        }
+        resultReceiver_.append(results);
     }
     return result;
 }
