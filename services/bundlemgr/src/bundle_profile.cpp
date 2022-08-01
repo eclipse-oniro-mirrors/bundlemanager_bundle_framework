@@ -2114,6 +2114,8 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
     if (configJson.module.distro.moduleType.compare(ProfileReader::MODULE_DISTRO_MODULE_TYPE_VALUE_ENTRY) == 0) {
         applicationInfo.description = configJson.module.description;
         applicationInfo.descriptionId = configJson.module.descriptionId;
+        applicationInfo.descriptionResource = BundleUtil::GetResource(
+            configJson.app.bundleName, configJson.module.distro.moduleName, configJson.module.descriptionId);
     }
     return true;
 }
@@ -2417,8 +2419,6 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
                         configJson.app.bundleName, configJson.module.distro.moduleName, ability.iconId);
                     applicationInfo.labelResource = BundleUtil::GetResource(
                         configJson.app.bundleName, configJson.module.distro.moduleName, ability.labelId);
-                    applicationInfo.descriptionResource = BundleUtil::GetResource(
-                        configJson.app.bundleName, configJson.module.distro.moduleName, ability.descriptionId);
                     find = true;
                 }
                 if (std::find(skill.entities.begin(), skill.entities.end(), Constants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
