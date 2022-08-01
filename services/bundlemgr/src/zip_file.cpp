@@ -20,6 +20,7 @@
 #include <ostream>
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "securec.h"
 #include "zlib.h"
 
@@ -253,8 +254,19 @@ bool ZipFile::HasEntry(const std::string &entryName) const
 
 bool ZipFile::IsDirExist(const std::string &dir) const
 {
+    APP_LOGD("target dir: %{public}s", dir.c_str());
+    if (dir.empty()) {
+        APP_LOGE("target dir is empty");
+        return false;
+    }
+
+    auto tempDir = dir;
+    if (tempDir.back() != Constants::FILE_SEPARATOR_CHAR) {
+        tempDir.push_back(Constants::FILE_SEPARATOR_CHAR);
+    }
+
     for (const auto &item : entriesMap_) {
-        if (item.first.find(dir) == 0) {
+        if (item.first.find(tempDir) == 0) {
             APP_LOGD("find target dir, fileName : %{public}s", item.first.c_str());
             return true;
         }
