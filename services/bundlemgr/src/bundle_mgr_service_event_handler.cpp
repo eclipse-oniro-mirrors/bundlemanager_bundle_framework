@@ -65,7 +65,7 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
         auto toPath = tempDir + Constants::PATH_SEPARATOR + MODULE_PREFIX
             + std::to_string(hapIndex) + Constants::INSTALL_FILE_SUFFIX;
         hapIndex++;
-        if (!BundleUtil::RenameFile(path, toPath)) {
+        if (InstalldClient::GetInstance()->MoveFile(path, toPath) != ERR_OK) {
             APP_LOGW("move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
             continue;
         }
