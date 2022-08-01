@@ -19,6 +19,7 @@
 #include <future>
 
 #include "app_log_wrapper.h"
+#include "app_privilege_capability.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -432,9 +433,13 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         APP_LOGE("GetBundleArchiveInfo file path %{private}s invalid", hapFilePath.c_str());
         return false;
     }
+
     InnerBundleInfo info;
     BundleParser bundleParser;
-    ret = bundleParser.Parse(realPath, info);
+    AppPrivilegeCapability appPrivilegeCapability;
+    appPrivilegeCapability.allowMultiProcess = true;
+    appPrivilegeCapability.allowUsePrivilegeExtension = true;
+    ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return false;

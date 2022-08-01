@@ -24,6 +24,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string PRIVILEGE_ALLOW_APP_DATA_NOT_CLEARED = "AllowAppDataNotCleared";
+const std::string PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
+const std::string PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
+const std::string PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriorityQueried";
+const std::string PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
+const std::string PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
+const std::string PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
+
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
     { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
@@ -31,6 +39,38 @@ const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIB
     { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
     { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
 };
+
+const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivilegeCapability)>
+        PRIVILEGE_MAP = {
+            { PRIVILEGE_ALLOW_APP_DATA_NOT_CLEARED,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.userDataClearable = false;
+                } },
+            { PRIVILEGE_ALLOW_APP_MULTI_PROCESS,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowMultiProcess = true;
+                } },
+            { PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.hideDesktopIcon = true;
+                } },
+            { PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowQueryPriority = true;
+                } },
+            { PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowExcludeFromMissions = true;
+                } },
+            { PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowUsePrivilegeExtension = true;
+                } },
+            { PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.formVisibleNotify = true;
+                } },
+        };
 
 std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
 {
@@ -160,8 +200,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
         }
 
+        AppPrivilegeCapability appPrivilegeCapability;
+        ParseAppPrivilegeCapability(provisionInfo, appPrivilegeCapability);
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
-        result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
+        result = ParseBundleInfo(bundlePaths[i], appPrivilegeCapability, newInfo, packInfo);
         if (result != ERR_OK) {
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
@@ -177,7 +219,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         }
 
         SetEntryInstallationFree(packInfo, newInfo);
-        CollectProvisionInfo(provisionInfo, newInfo);
+        CollectProvisionInfo(provisionInfo, appPrivilegeCapability, newInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
         CollectPreBundleInfo(checkParam, newInfo);
 #endif
@@ -199,7 +241,9 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 }
 
 void BundleInstallChecker::CollectProvisionInfo(
-    const Security::Verify::ProvisionInfo &provisionInfo, InnerBundleInfo &newInfo)
+    const Security::Verify::ProvisionInfo &provisionInfo,
+    const AppPrivilegeCapability &appPrivilegeCapability,
+    InnerBundleInfo &newInfo)
 {
     newInfo.SetProvisionId(provisionInfo.appId);
     newInfo.SetAppFeature(provisionInfo.bundleInfo.appFeature);
@@ -209,14 +253,9 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
     newInfo.SetAppProvisionType(GetAppProvisionType(provisionInfo.type));
 
-    newInfo.SetUserDataClearable(provisionInfo.bundleInfo.userDataClearable);
-    newInfo.SetMultiProcess(provisionInfo.bundleInfo.multiProcess);
-    newInfo.SetHideDesktopIcon(provisionInfo.bundleInfo.hideDesktopIcon);
-    newInfo.SetQueryPriority(provisionInfo.bundleInfo.queryPriority);
-    newInfo.SetExcludeFromMissions(provisionInfo.bundleInfo.excludeFromMissions);
-    newInfo.SetRestartAfterKilled(provisionInfo.bundleInfo.restartAfterKilled);
-    newInfo.SetUsePrivilegeExtension(provisionInfo.bundleInfo.usePrivilegeExtension);
-    newInfo.SetFormVisibleNotify(provisionInfo.bundleInfo.formVisibleNotify);
+    newInfo.SetUserDataClearable(appPrivilegeCapability.userDataClearable);
+    newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
+    newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 }
 
 void BundleInstallChecker::CollectPreBundleInfo(
@@ -256,15 +295,17 @@ void BundleInstallChecker::CollectPreBundleInfo(
     newInfo.SetBootable(preBundleConfigInfo.bootable);
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
+    newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
 }
 
 ErrCode BundleInstallChecker::ParseBundleInfo(
     const std::string &bundleFilePath,
+    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &info,
     BundlePackInfo &packInfo) const
 {
     BundleParser bundleParser;
-    ErrCode result = bundleParser.Parse(bundleFilePath, info);
+    ErrCode result = bundleParser.Parse(bundleFilePath, appPrivilegeCapability, info);
     if (result != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", result);
         return result;
@@ -462,6 +503,25 @@ ErrCode BundleInstallChecker::CheckMultiNativeSo(
 void BundleInstallChecker::ResetProperties()
 {
     isContainEntry_ = false;
+}
+
+void BundleInstallChecker::ParseAppPrivilegeCapability(
+    const Security::Verify::ProvisionInfo &provisionInfo,
+    AppPrivilegeCapability &appPrivilegeCapability)
+{
+    for (const auto &appPrivilege : provisionInfo.appPrivilegeCapabilities) {
+        auto iter = PRIVILEGE_MAP.find(appPrivilege);
+        if (iter != PRIVILEGE_MAP.end()) {
+            iter->second(appPrivilegeCapability);
+        }
+    }
+
+    APP_LOGD("AppPrivilegeCapability %{public}s",
+        appPrivilegeCapability.ToString().c_str());
+#ifndef USE_PRE_BUNDLE_PROFILE
+    appPrivilegeCapability.allowMultiProcess = true;
+    appPrivilegeCapability.allowUsePrivilegeExtension = true;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

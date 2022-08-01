@@ -19,6 +19,7 @@
 #include <sstream>
 
 #include "app_log_wrapper.h"
+#include "app_privilege_capability.h"
 #include "bundle_constants.h"
 #include "bundle_util.h"
 #include "common_profile.h"
@@ -1819,6 +1820,11 @@ void from_json(const nlohmann::json &jsonObject, ConfigJson &configJson)
 }  // namespace ProfileReader
 
 namespace {
+struct TransformParam {
+    bool isSystemApp = false;
+    bool isPreInstallApp = false;
+    AppPrivilegeCapability appPrivilegeCapability;
+};
 
 bool CheckBundleNameIsValid(const std::string &bundleName)
 {
@@ -2040,8 +2046,11 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
     return false;
 }
 
-bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
-    ApplicationInfo &applicationInfo, bool isPreInstallApp, const BundleExtractor &bundleExtractor)
+bool ToApplicationInfo(
+    const ProfileReader::ConfigJson &configJson,
+    const BundleExtractor &bundleExtractor,
+    const TransformParam &transformParam,
+    ApplicationInfo &applicationInfo)
 {
     APP_LOGD("transform ConfigJson to ApplicationInfo");
     applicationInfo.name = configJson.app.bundleName;
@@ -2061,7 +2070,7 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
 
     // if there is main ability, it's icon label description will be set to applicationInfo.
 
-    if (applicationInfo.isSystemApp && isPreInstallApp) {
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
         applicationInfo.keepAlive = configJson.deveicConfig.defaultDevice.keepAlive;
         applicationInfo.singleton = configJson.app.singleton;
         applicationInfo.userDataClearable = configJson.app.userDataClearable;
@@ -2076,10 +2085,13 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
     applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
     applicationInfo.distributedNotificationEnabled = true;
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
-    applicationInfo.process = configJson.deveicConfig.defaultDevice.process;
-    if (applicationInfo.process.empty()) {
-        applicationInfo.process = applicationInfo.bundleName;
+    if (transformParam.appPrivilegeCapability.allowMultiProcess) {
+        applicationInfo.process = configJson.deveicConfig.defaultDevice.process;
+        if (applicationInfo.process.empty()) {
+            applicationInfo.process = applicationInfo.bundleName;
+        }
     }
+
     auto it = find(configJson.module.supportedModes.begin(),
         configJson.module.supportedModes.end(),
         ProfileReader::MODULE_SUPPORTED_MODES_VALUE_DRIVE);
@@ -2118,8 +2130,12 @@ bool ToApplicationInfo(const ProfileReader::ConfigJson &configJson,
     return true;
 }
 
-bool ToBundleInfo(const ProfileReader::ConfigJson &configJson, const ApplicationInfo &applicationInfo,
-    const InnerModuleInfo &innerModuleInfo, bool isPreInstallApp, BundleInfo &bundleInfo)
+bool ToBundleInfo(
+    const ProfileReader::ConfigJson &configJson,
+    const ApplicationInfo &applicationInfo,
+    const InnerModuleInfo &innerModuleInfo,
+    const TransformParam &transformParam,
+    BundleInfo &bundleInfo)
 {
     bundleInfo.name = applicationInfo.bundleName;
 
@@ -2132,7 +2148,7 @@ bool ToBundleInfo(const ProfileReader::ConfigJson &configJson, const Application
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;
-    bundleInfo.isPreInstallApp = isPreInstallApp;
+    bundleInfo.isPreInstallApp = transformParam.isPreInstallApp;
 
     bundleInfo.vendor = applicationInfo.vendor;
     bundleInfo.releaseType = applicationInfo.apiReleaseType;
@@ -2211,8 +2227,11 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     return true;
 }
 
-bool ToAbilityInfo(const ProfileReader::ConfigJson &configJson, const ProfileReader::Ability &ability,
-    AbilityInfo &abilityInfo, bool isSystemApp,  bool isPreInstallApp)
+bool ToAbilityInfo(
+    const ProfileReader::ConfigJson &configJson,
+    const ProfileReader::Ability &ability,
+    const TransformParam &transformParam,
+    AbilityInfo &abilityInfo)
 {
     abilityInfo.name = ability.name;
     if (ability.srcLanguage != "c++" && ability.name.substr(0, 1) == ".") {
@@ -2229,7 +2248,11 @@ bool ToAbilityInfo(const ProfileReader::ConfigJson &configJson, const ProfileRea
     abilityInfo.kind = ability.type;
     abilityInfo.srcPath = ability.srcPath;
     abilityInfo.srcLanguage = ability.srcLanguage;
-    if (isSystemApp && isPreInstallApp) {
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (transformParam.appPrivilegeCapability.allowQueryPriority) {
+#else
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
+#endif
         abilityInfo.priority = ability.priority;
     }
 
@@ -2303,7 +2326,10 @@ bool ToAbilityInfo(const ProfileReader::ConfigJson &configJson, const ProfileRea
     return true;
 }
 
-bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtractor &bundleExtractor,
+bool ToInnerBundleInfo(
+    ProfileReader::ConfigJson &configJson,
+    const BundleExtractor &bundleExtractor,
+    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &innerBundleInfo)
 {
     APP_LOGD("transform profile configJson to innerBundleInfo");
@@ -2315,11 +2341,15 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
         APP_LOGE("module infos is invalid");
         return false;
     }
-    bool isPreInstallApp = innerBundleInfo.IsPreInstallApp();
+
+    TransformParam transformParam;
+    transformParam.isPreInstallApp = innerBundleInfo.IsPreInstallApp();
+    transformParam.appPrivilegeCapability = appPrivilegeCapability;
 
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
-    if (!ToApplicationInfo(configJson, applicationInfo, isPreInstallApp, bundleExtractor)) {
+    transformParam.isSystemApp = applicationInfo.isSystemApp;
+    if (!ToApplicationInfo(configJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;
     }
@@ -2328,7 +2358,7 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
     ToInnerModuleInfo(configJson, innerModuleInfo);
 
     BundleInfo bundleInfo;
-    ToBundleInfo(configJson, applicationInfo, innerModuleInfo, isPreInstallApp, bundleInfo);
+    ToBundleInfo(configJson, applicationInfo, innerModuleInfo, transformParam, bundleInfo);
 
     for (const auto &info : configJson.module.shortcuts) {
         ShortcutInfo shortcutInfo;
@@ -2369,7 +2399,7 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
     bool find = false;
     for (const auto &ability : configJson.module.abilities) {
         AbilityInfo abilityInfo;
-        if (!ToAbilityInfo(configJson, ability, abilityInfo, applicationInfo.isSystemApp, isPreInstallApp)) {
+        if (!ToAbilityInfo(configJson, ability, transformParam, abilityInfo)) {
             APP_LOGE("parse to abilityInfo failed");
             return false;
         }
@@ -2422,7 +2452,7 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
                     find = true;
                 }
                 if (std::find(skill.entities.begin(), skill.entities.end(), Constants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
-                    skill.entities.end() && isPreInstallApp) {
+                    skill.entities.end() && transformParam.isPreInstallApp) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
                 }
@@ -2440,7 +2470,10 @@ bool ToInnerBundleInfo(ProfileReader::ConfigJson &configJson, const BundleExtrac
 
 }  // namespace
 
-ErrCode BundleProfile::TransformTo(const std::ostringstream &source, const BundleExtractor &bundleExtractor,
+ErrCode BundleProfile::TransformTo(
+    const std::ostringstream &source,
+    const BundleExtractor &bundleExtractor,
+    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGI("transform profile stream to bundle info");
@@ -2458,7 +2491,8 @@ ErrCode BundleProfile::TransformTo(const std::ostringstream &source, const Bundl
         ProfileReader::parseResult = ERR_OK;
         return ret;
     }
-    if (!ToInnerBundleInfo(configJson, bundleExtractor, innerBundleInfo)) {
+    if (!ToInnerBundleInfo(
+        configJson, bundleExtractor, appPrivilegeCapability, innerBundleInfo)) {
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     return ERR_OK;

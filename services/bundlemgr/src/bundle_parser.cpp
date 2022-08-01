@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "app_privilege_capability.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_profile.h"
@@ -94,7 +95,10 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     return true;
 }
 
-ErrCode BundleParser::Parse(const std::string &pathName, InnerBundleInfo &innerBundleInfo) const
+ErrCode BundleParser::Parse(
+    const std::string &pathName,
+    const AppPrivilegeCapability &appPrivilegeCapability,
+    InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGI("parse from %{private}s", pathName.c_str());
     BundleExtractor bundleExtractor(pathName);
@@ -114,12 +118,14 @@ ErrCode BundleParser::Parse(const std::string &pathName, InnerBundleInfo &innerB
         APP_LOGD("module.json transform to InnerBundleInfo");
         innerBundleInfo.SetIsNewVersion(true);
         ModuleProfile moduleProfile;
-        return moduleProfile.TransformTo(outStream, bundleExtractor, innerBundleInfo);
+        return moduleProfile.TransformTo(
+            outStream, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
     }
     APP_LOGD("config.json transform to InnerBundleInfo");
     innerBundleInfo.SetIsNewVersion(false);
     BundleProfile bundleProfile;
-    ErrCode ret = bundleProfile.TransformTo(outStream, bundleExtractor, innerBundleInfo);
+    ErrCode ret = bundleProfile.TransformTo(
+        outStream, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("transform stream to innerBundleInfo failed %{public}d", ret);
         return ret;

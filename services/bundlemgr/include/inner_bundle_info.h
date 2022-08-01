@@ -1528,39 +1528,22 @@ public:
         baseApplicationInfo_->userDataClearable = userDataClearable;
     }
 
-    void SetMultiProcess(bool multiProcess)
-    {
-        baseApplicationInfo_->multiProcess = multiProcess;
-    }
-
     void SetHideDesktopIcon(bool hideDesktopIcon)
     {
         baseApplicationInfo_->hideDesktopIcon = hideDesktopIcon;
     }
 
-    void SetQueryPriority(bool queryPriority)
-    {
-        baseApplicationInfo_->queryPriority = queryPriority;
-    }
-
-    void SetExcludeFromMissions(bool excludeFromMissions)
-    {
-        baseApplicationInfo_->excludeFromMissions = excludeFromMissions;
-    }
-
-    void SetRestartAfterKilled(bool restartAfterKilled)
-    {
-        baseApplicationInfo_->restartAfterKilled = restartAfterKilled;
-    }
-
-    void SetUsePrivilegeExtension(bool usePrivilegeExtension)
-    {
-        baseApplicationInfo_->usePrivilegeExtension = usePrivilegeExtension;
-    }
-
     void SetFormVisibleNotify(bool formVisibleNotify)
     {
         baseApplicationInfo_->formVisibleNotify = formVisibleNotify;
+    }
+
+    void SetAllowCommonEvent(const std::vector<std::string> &allowCommonEvent)
+    {
+        baseApplicationInfo_->allowCommonEvent.clear();
+        for (const auto &event : allowCommonEvent) {
+            baseApplicationInfo_->allowCommonEvent.emplace_back(event);
+        }
     }
 
     void SetDisposedStatus(int32_t status);

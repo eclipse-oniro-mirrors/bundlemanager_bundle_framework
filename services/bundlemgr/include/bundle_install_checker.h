@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "app_privilege_capability.h"
 #include "appexecfwk_errors.h"
 #include "bundle_pack_info.h"
 #include "bundle_verify_mgr.h"
@@ -102,6 +103,7 @@ private:
 
     ErrCode ParseBundleInfo(
         const std::string &bundleFilePath,
+        const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &info,
         BundlePackInfo &packInfo) const;
 
@@ -115,10 +117,15 @@ private:
 
     void CollectProvisionInfo(
         const Security::Verify::ProvisionInfo &provisionInfo,
+        const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &newInfo);
 
     void CollectPreBundleInfo(
         const InstallCheckParam &checkParam, InnerBundleInfo &newInfo);
+
+    void ParseAppPrivilegeCapability(
+        const Security::Verify::ProvisionInfo &provisionInfo,
+        AppPrivilegeCapability &appPrivilegeCapability);
 
     bool isContainEntry_ = false;
 };

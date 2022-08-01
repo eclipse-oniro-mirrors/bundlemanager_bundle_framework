@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "app_log_wrapper.h"
+#include "app_privilege_capability.h"
 #include "bundle_constants.h"
 #include "bundle_util.h"
 #include "common_profile.h"
@@ -1253,6 +1254,12 @@ void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
 }  // namespace Profile
 
 namespace {
+struct TransformParam {
+    bool isSystemApp = false;
+    bool isPreInstallApp = false;
+    AppPrivilegeCapability appPrivilegeCapability;
+};
+
 void GetMetadata(std::vector<Metadata> &metadata, const std::vector<Profile::Metadata> &profileMetadata)
 {
     for (const Profile::Metadata &item : profileMetadata) {
@@ -1374,8 +1381,11 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
     return false;
 }
 
-bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &applicationInfo,
-    bool isPreInstallApp, const BundleExtractor &bundleExtractor)
+bool ToApplicationInfo(
+    const Profile::ModuleJson &moduleJson,
+    const BundleExtractor &bundleExtractor,
+    const TransformParam &transformParam,
+    ApplicationInfo &applicationInfo)
 {
     APP_LOGD("transform ModuleJson to ApplicationInfo");
     auto app = moduleJson.app;
@@ -1407,7 +1417,7 @@ bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &a
         BundleUtil::GetResource(app.bundleName, moduleJson.module.name, app.descriptionId);
     applicationInfo.targetBundleList = app.targetBundleList;
 
-    if (applicationInfo.isSystemApp && isPreInstallApp) {
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
         applicationInfo.keepAlive = app.keepAlive;
         applicationInfo.singleton = app.singleton;
         applicationInfo.userDataClearable = app.userDataClearable;
@@ -1441,7 +1451,7 @@ bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &a
         if (deviceConfig.distributedNotificationEnabled.first) {
             applicationInfo.distributedNotificationEnabled = deviceConfig.distributedNotificationEnabled.second;
         }
-        if (applicationInfo.isSystemApp && isPreInstallApp) {
+        if (applicationInfo.isSystemApp && transformParam.isPreInstallApp) {
             if (deviceConfig.keepAlive.first) {
                 applicationInfo.keepAlive = deviceConfig.keepAlive.second;
             }
@@ -1473,8 +1483,11 @@ bool ToApplicationInfo(const Profile::ModuleJson &moduleJson, ApplicationInfo &a
     return true;
 }
 
-bool ToBundleInfo(const ApplicationInfo &applicationInfo,
-    const InnerModuleInfo &innerModuleInfo, bool isPreInstallApp, BundleInfo &bundleInfo)
+bool ToBundleInfo(
+    const ApplicationInfo &applicationInfo,
+    const InnerModuleInfo &innerModuleInfo,
+    const TransformParam &transformParam,
+    BundleInfo &bundleInfo)
 {
     bundleInfo.name = applicationInfo.bundleName;
 
@@ -1487,7 +1500,7 @@ bool ToBundleInfo(const ApplicationInfo &applicationInfo,
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;
-    bundleInfo.isPreInstallApp = isPreInstallApp;
+    bundleInfo.isPreInstallApp = transformParam.isPreInstallApp;
 
     bundleInfo.vendor = applicationInfo.vendor;
     bundleInfo.releaseType = applicationInfo.apiReleaseType;
@@ -1539,8 +1552,11 @@ std::set<SupportWindowMode> ConvertToAbilityWindowMode(const std::vector<std::st
     return modes;
 }
 
-bool ToAbilityInfo(const Profile::ModuleJson &moduleJson, const Profile::Ability &ability,
-    AbilityInfo &abilityInfo, bool isSystemApp, bool isPreInstallApp)
+bool ToAbilityInfo(
+    const Profile::ModuleJson &moduleJson,
+    const Profile::Ability &ability,
+    const TransformParam &transformParam,
+    AbilityInfo &abilityInfo)
 {
     APP_LOGD("transform ModuleJson to AbilityInfo");
     abilityInfo.name = ability.name;
@@ -1551,10 +1567,20 @@ bool ToAbilityInfo(const Profile::ModuleJson &moduleJson, const Profile::Ability
     abilityInfo.iconId = ability.iconId;
     abilityInfo.label = ability.label;
     abilityInfo.labelId = ability.labelId;
-    if (isSystemApp && isPreInstallApp) {
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (transformParam.appPrivilegeCapability.allowQueryPriority) {
+        abilityInfo.priority = ability.priority;
+    }
+
+    if (transformParam.appPrivilegeCapability.allowExcludeFromMissions) {
+        abilityInfo.excludeFromMissions = ability.excludeFromMissions;
+    }
+#else
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
         abilityInfo.priority = ability.priority;
         abilityInfo.excludeFromMissions = ability.excludeFromMissions;
     }
+#endif
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
     abilityInfo.continuable = ability.continuable;
@@ -1614,10 +1640,21 @@ ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
     return ExtensionAbilityType::UNSPECIFIED;
 }
 
-bool ToExtensionInfo(const Profile::ModuleJson &moduleJson, const Profile::Extension &extension,
-    ExtensionAbilityInfo &extensionInfo, bool isSystemApp, bool isPreInstallApp)
+bool ToExtensionInfo(
+    const Profile::ModuleJson &moduleJson,
+    const Profile::Extension &extension,
+    const TransformParam &transformParam,
+    ExtensionAbilityInfo &extensionInfo)
 {
     APP_LOGD("transform ModuleJson to ExtensionAbilityInfo");
+    extensionInfo.type = ConvertToExtensionAbilityType(extension.type);
+    bool privilegeType = (extensionInfo.type == ExtensionAbilityType::SERVICE)
+        || (extensionInfo.type == ExtensionAbilityType::DATASHARE);
+    if (privilegeType && !transformParam.appPrivilegeCapability.allowUsePrivilegeExtension) {
+        APP_LOGE("not allow use privilege extension");
+        return false;
+    }
+
     extensionInfo.name = extension.name;
     extensionInfo.srcEntrance = extension.srcEntrance;
     extensionInfo.icon = extension.icon;
@@ -1626,8 +1663,7 @@ bool ToExtensionInfo(const Profile::ModuleJson &moduleJson, const Profile::Exten
     extensionInfo.labelId = extension.labelId;
     extensionInfo.description = extension.description;
     extensionInfo.descriptionId = extension.descriptionId;
-    extensionInfo.type = ConvertToExtensionAbilityType(extension.type);
-    if (isSystemApp && isPreInstallApp) {
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
         extensionInfo.priority = extension.priority;
         extensionInfo.readPermission = extension.readPermission;
         extensionInfo.writePermission = extension.writePermission;
@@ -1651,10 +1687,12 @@ bool ToExtensionInfo(const Profile::ModuleJson &moduleJson, const Profile::Exten
     return true;
 }
 
-void GetPermissions(const Profile::ModuleJson &moduleJson, InnerModuleInfo &innerModuleInfo,
-    bool isSystemApp, bool isPreInstallApp)
+void GetPermissions(
+    const Profile::ModuleJson &moduleJson,
+    const TransformParam &transformParam,
+    InnerModuleInfo &innerModuleInfo)
 {
-    if (isSystemApp && isPreInstallApp) {
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
         for (const DefinePermission &definePermission : moduleJson.module.definePermissions) {
             if (definePermission.name.empty()) {
                 continue;
@@ -1677,8 +1715,10 @@ void GetPermissions(const Profile::ModuleJson &moduleJson, InnerModuleInfo &inne
     }
 }
 
-bool ToInnerModuleInfo(const Profile::ModuleJson &moduleJson, InnerModuleInfo &innerModuleInfo,
-    bool isSystemApp, bool isPreInstallApp)
+bool ToInnerModuleInfo(
+    const Profile::ModuleJson &moduleJson,
+    const TransformParam &transformParam,
+    InnerModuleInfo &innerModuleInfo)
 {
     APP_LOGD("transform ModuleJson to InnerModuleInfo");
     innerModuleInfo.name = moduleJson.module.name;
@@ -1697,26 +1737,33 @@ bool ToInnerModuleInfo(const Profile::ModuleJson &moduleJson, InnerModuleInfo &i
             innerModuleInfo.isEntry = true;
         }
     }
+
     innerModuleInfo.mainAbility = moduleJson.module.mainElement;
     innerModuleInfo.srcEntrance = moduleJson.module.srcEntrance;
-    if (!moduleJson.module.process.empty()) {
-        innerModuleInfo.process = moduleJson.module.process;
-    } else {
-        innerModuleInfo.process = moduleJson.app.bundleName;
+    if (transformParam.appPrivilegeCapability.allowMultiProcess) {
+        if (!moduleJson.module.process.empty()) {
+            innerModuleInfo.process = moduleJson.module.process;
+        } else {
+            innerModuleInfo.process = moduleJson.app.bundleName;
+        }
     }
+
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
         if (Profile::DEVICE_TYPE_SET.find(deviceType) != Profile::DEVICE_TYPE_SET.end()) {
             innerModuleInfo.deviceTypes.emplace_back(deviceType);
         }
     }
+
     if (Profile::VIRTUAL_MACHINE_SET.find(moduleJson.module.virtualMachine) != Profile::VIRTUAL_MACHINE_SET.end()) {
         innerModuleInfo.virtualMachine = moduleJson.module.virtualMachine;
     }
+
     if (Profile::UI_SYNTAX_SET.find(moduleJson.module.uiSyntax) != Profile::UI_SYNTAX_SET.end()) {
         innerModuleInfo.uiSyntax = moduleJson.module.uiSyntax;
     }
+
     innerModuleInfo.pages = moduleJson.module.pages;
-    GetPermissions(moduleJson, innerModuleInfo, isSystemApp, isPreInstallApp);
+    GetPermissions(moduleJson, transformParam, innerModuleInfo);
     innerModuleInfo.dependencies = moduleJson.module.dependencies;
     innerModuleInfo.compileMode = moduleJson.module.compileMode;
     innerModuleInfo.isModuleJson = true;
@@ -1725,7 +1772,10 @@ bool ToInnerModuleInfo(const Profile::ModuleJson &moduleJson, InnerModuleInfo &i
     return true;
 }
 
-bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtractor &bundleExtractor,
+bool ToInnerBundleInfo(
+    const Profile::ModuleJson &moduleJson,
+    const BundleExtractor &bundleExtractor,
+    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &innerBundleInfo)
 {
     APP_LOGD("transform ModuleJson to InnerBundleInfo");
@@ -1733,25 +1783,30 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
         APP_LOGE("bundle name is invalid");
         return false;
     }
-    bool isPreInstallApp = innerBundleInfo.IsPreInstallApp();
+
+    TransformParam transformParam;
+    transformParam.appPrivilegeCapability = appPrivilegeCapability;
+    transformParam.isPreInstallApp = innerBundleInfo.IsPreInstallApp();
+
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
-    if (!ToApplicationInfo(moduleJson, applicationInfo, isPreInstallApp, bundleExtractor)) {
+    transformParam.isSystemApp = applicationInfo.isSystemApp;
+    if (!ToApplicationInfo(moduleJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;
     }
 
     InnerModuleInfo innerModuleInfo;
-    ToInnerModuleInfo(moduleJson, innerModuleInfo, applicationInfo.isSystemApp, isPreInstallApp);
+    ToInnerModuleInfo(moduleJson, transformParam, innerModuleInfo);
 
     BundleInfo bundleInfo;
-    ToBundleInfo(applicationInfo, innerModuleInfo, isPreInstallApp, bundleInfo);
+    ToBundleInfo(applicationInfo, innerModuleInfo, transformParam, bundleInfo);
 
     // handle abilities
     bool findEntry = false;
     for (const Profile::Ability &ability : moduleJson.module.abilities) {
         AbilityInfo abilityInfo;
-        ToAbilityInfo(moduleJson, ability, abilityInfo, applicationInfo.isSystemApp, isPreInstallApp);
+        ToAbilityInfo(moduleJson, ability, transformParam, abilityInfo);
         if (innerModuleInfo.mainAbility == abilityInfo.name) {
             innerModuleInfo.icon = abilityInfo.iconPath;
             innerModuleInfo.iconId = abilityInfo.iconId;
@@ -1781,7 +1836,7 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
                 // get launcher application and ability
                 bool isLauncherEntity = std::find(skill.entities.begin(), skill.entities.end(),
                     Constants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.end();
-                if (isLauncherEntity && isPreInstallApp) {
+                if (isLauncherEntity && transformParam.isPreInstallApp) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
                 }
@@ -1794,7 +1849,11 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
     // handle extensionAbilities
     for (const Profile::Extension &extension : moduleJson.module.extensionAbilities) {
         ExtensionAbilityInfo extensionInfo;
-        ToExtensionInfo(moduleJson, extension, extensionInfo, applicationInfo.isSystemApp, isPreInstallApp);
+        if (!ToExtensionInfo(moduleJson, extension, transformParam, extensionInfo)) {
+            APP_LOGE("To extensionInfo failed");
+            return false;
+        }
+
         if (innerModuleInfo.mainAbility == extensionInfo.name) {
             innerModuleInfo.icon = extensionInfo.icon;
             innerModuleInfo.iconId = extensionInfo.iconId;
@@ -1818,7 +1877,10 @@ bool ToInnerBundleInfo(const Profile::ModuleJson &moduleJson, const BundleExtrac
 }
 }  // namespace
 
-ErrCode ModuleProfile::TransformTo(const std::ostringstream &source, const BundleExtractor &bundleExtractor,
+ErrCode ModuleProfile::TransformTo(
+    const std::ostringstream &source,
+    const BundleExtractor &bundleExtractor,
+    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGD("transform module.json stream to InnerBundleInfo");
@@ -1836,7 +1898,8 @@ ErrCode ModuleProfile::TransformTo(const std::ostringstream &source, const Bundl
         Profile::parseResult = ERR_OK;
         return ret;
     }
-    if (!ToInnerBundleInfo(moduleJson, bundleExtractor, innerBundleInfo)) {
+    if (!ToInnerBundleInfo(
+        moduleJson, bundleExtractor, appPrivilegeCapability, innerBundleInfo)) {
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     return ERR_OK;

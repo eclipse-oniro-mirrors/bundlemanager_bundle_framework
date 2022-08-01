@@ -134,13 +134,9 @@ protected:
                         "bootable": false,
                         "runningResourcesApply": false,
                         "associatedWakeUp": false,
-                        "multiProcess": false,
                         "hideDesktopIcon": false,
-                        "queryPriority": false,
-                        "excludeFromMissions": false,
-                        "restartAfterKilled": false,
-                        "usePrivilegeExtension": false,
-                        "formVisibleNotify": false
+                        "formVisibleNotify": false,
+                        "allowCommonEvent": []
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -434,13 +430,9 @@ protected:
                 "bootable": false,
                 "runningResourcesApply": false,
                 "associatedWakeUp": false,
-                "multiProcess": false,
                 "hideDesktopIcon": false,
-                "queryPriority": false,
-                "excludeFromMissions": false,
-                "restartAfterKilled": false,
-                "usePrivilegeExtension": false,
-                "formVisibleNotify": false
+                "formVisibleNotify": false,
+                "allowCommonEvent": []
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -527,13 +519,9 @@ protected:
                     "bootable": false,
                     "runningResourcesApply": false,
                     "associatedWakeUp": false,
-                    "multiProcess": false,
                     "hideDesktopIcon": false,
-                    "queryPriority": false,
-                    "excludeFromMissions": false,
-                    "restartAfterKilled": false,
-                    "usePrivilegeExtension": false,
-                    "formVisibleNotify": false
+                    "formVisibleNotify": false,
+                    "allowCommonEvent": []
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",

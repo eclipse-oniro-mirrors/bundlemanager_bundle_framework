@@ -21,6 +21,7 @@
 #include "accesstoken_kit.h"
 #include "access_token.h"
 #include "app_log_wrapper.h"
+#include "app_privilege_capability.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -1235,9 +1236,12 @@ bool BMSEventHandler::ParseHapFiles(
     }
 
     BundleParser bundleParser;
+    AppPrivilegeCapability appPrivilegeCapability;
+    appPrivilegeCapability.allowMultiProcess = true;
+    appPrivilegeCapability.allowUsePrivilegeExtension = true;
     for (auto realPath : realPaths) {
         InnerBundleInfo innerBundleInfo;
-        ret = bundleParser.Parse(realPath, innerBundleInfo);
+        ret = bundleParser.Parse(realPath, appPrivilegeCapability, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("Parse bundle info failed, error: %{public}d", ret);
             continue;
