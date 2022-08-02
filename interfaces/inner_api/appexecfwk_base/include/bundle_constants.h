@@ -71,6 +71,7 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
 };
 
 constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
+constexpr const char* QUICK_FIX_MGR = "QuickFixMgr";
 constexpr const char* INSTALLD_SERVICE_NAME = "installd";
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
@@ -270,6 +271,9 @@ constexpr const char* SYSCAP_SERVICE_ID = "syscap";
 constexpr const char* SYSCAP_SERVICE_TYPE = "syscap";
 constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
 constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
+
+// thread pool
+constexpr int32_t MAX_TASK_NUMBER = 10;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

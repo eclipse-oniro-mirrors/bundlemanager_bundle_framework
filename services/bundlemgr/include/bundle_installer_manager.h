@@ -22,7 +22,6 @@
 #include <unordered_map>
 
 #include "nocopyable.h"
-#include "thread_pool.h"
 
 #include "bundle_installer.h"
 #include "event_handler.h"
@@ -32,6 +31,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleInstallerManager : public EventHandler {
 public:
+    using ThreadPoolTask = std::function<void()>;
+
     explicit BundleInstallerManager(const std::shared_ptr<EventRunner> &runner);
     virtual ~BundleInstallerManager() override;
     /**
@@ -113,11 +114,9 @@ private:
      */
     void RemoveInstaller(const int64_t installerId);
 
+    void AddTask(const ThreadPoolTask &task);
+
 private:
-    const int MAX_TASK_NUMBER = 10;
-    const int THREAD_NUMBER = std::thread::hardware_concurrency();
-    // Thread pool used to start multipule installer in parallel.
-    ThreadPool installersPool_;
     std::mutex mutex_;
     // map key will use timestamp.
     std::unordered_map<int64_t, std::shared_ptr<BundleInstaller>> installers_;
