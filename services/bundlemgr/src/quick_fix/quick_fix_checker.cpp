@@ -15,7 +15,6 @@
 
 #include "quick_fix_checker.h"
 
-#include "bundle_info.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -117,7 +116,8 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
 
 ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
     const std::unordered_map<std::string, AppQuickFix> &infos,
-    const Security::Verify::ProvisionInfo &provisionInfo)
+    const Security::Verify::ProvisionInfo &provisionInfo,
+    BundleInfo &bundleInfo)
 {
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if ((dataMgr == nullptr) || infos.empty()) {
@@ -126,19 +126,42 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
     }
     // check bundleName is exists
     BundleInfo bundleInfo;
-    if (!dataMgr->GetBundleInfo(infos.begin()->second.bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
+    const auto &qfInfo = infos.begin()->second;
+    if (!dataMgr->GetBundleInfo(qfInfo.bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
         bundleInfo, Constants::UNSPECIFIED_USERID)) {
-        APP_LOGE("error: bundleName %{public}s does not exist!", infos.begin()->second.bundleName.c_str());
+        APP_LOGE("error: bundleName %{public}s does not exist!", qfInfo.bundleName.c_str());
         return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
     // check versionCode and versionName
-    if (bundleInfo.versionCode != (infos.begin()->second).versionCode) {
+    if (bundleInfo.versionCode != qfInfo.versionCode) {
         return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME;
     }
-    if (bundleInfo.versionName != (infos.begin()->second).versionName) {
+    if (bundleInfo.versionName != qfInfo.versionName) {
         return ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME;
     }
+    // check cpuAbi
+    if (!qfInfo.deployingAppqfInfo.cpuAbi.empty() &&
+        (qfInfo.deployingAppqfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
+        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+    }
+    // check library path
+    if (!qfInfo.deployingAppqfInfo.nativeLibraryPath.empty() &&
+        (qfInfo.deployingAppqfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
+        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+    }
     // check moduleName is exists
+    ErrCode ret = CheckModuleNameExist(bundleInfo, infos);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    // check signature info
+    ret = CheckSignatureInfo(bundleInfo, provisionInfo);
+    return ret;
+}
+
+ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,
+    const std::unordered_map<std::string, AppQuickFix> &infos)
+{
     for (const auto &info : infos) {
         if (info.second.deployingAppqfInfo.hqfInfos.empty()) {
             return ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST;
@@ -151,7 +174,12 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
             return ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST;
         }
     }
-    // check signature info
+    return ERR_OK;
+}
+
+ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
+    const Security::Verify::ProvisionInfo &provisionInfo)
+{
     if ((bundleInfo.appId != provisionInfo.appId) ||
         (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl) ||
         (bundleInfo.applicationInfo.appDistributionType != GetAppDistributionType(provisionInfo.distributionType)) ||
@@ -171,7 +199,7 @@ ErrCode QuickFixChecker::CheckMultiNativeSo(
     }
     const AppqfInfo &appqfInfo = (infos.begin()->second).deployingAppqfInfo;
     std::string nativeLibraryPath = appqfInfo.nativeLibraryPath;
-    std::string cpuAbi = appqfInfo.deployedAppqfInfo.cpuAbi;
+    std::string cpuAbi = appqfInfo.cpuAbi;
     for (const auto &info : infos) {
         const AppqfInfo &qfInfo = info.second.deployingAppqfInfo;
         if (qfInfo.nativeLibraryPath.empty()) {

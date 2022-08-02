@@ -17,9 +17,11 @@
 #define FOUNDATION_BUNDLE_MANAGER_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_CHECKER_H
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "appexecfwk_errors.h"
+#include "bundle_info.h"
 #include "bundle_verify_mgr.h"
 #include "quick_fix/app_quick_fix.h"
 
@@ -40,11 +42,19 @@ public:
     ErrCode CheckMultiNativeSo(
         std::unordered_map<std::string, AppQuickFix> &infos);
 
-    ErrCode CheckAppQuickFixInfosWithInstalledBundle(const std::unordered_map<std::string, AppQuickFix> &infos,
-        const Security::Verify::ProvisionInfo &provisionInfo);
+    ErrCode CheckAppQuickFixInfosWithInstalledBundle(
+        const std::unordered_map<std::string, AppQuickFix> &infos,
+        const Security::Verify::ProvisionInfo &provisionInfo,
+        BundleInfo &bundleInfo);
 
 private:
     ErrCode ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix);
+
+    ErrCode CheckModuleNameExist(const BundleInfo &bundleInfo,
+        const std::unordered_map<std::string, AppQuickFix> &infos);
+
+    ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
+        const Security::Verify::ProvisionInfo &provisionInfo);
 };
 } // AppExecFwk
 } // OHOS
