@@ -22,6 +22,7 @@
 #include "iremote_broker.h"
 
 #include "appexecfwk_errors.h"
+#include "ipc/file_stat.h"
 #include "installd/installd_constants.h"
 
 namespace OHOS {
@@ -154,6 +155,15 @@ public:
      */
     virtual ErrCode Mkdir(
         const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) = 0;
+
+    /**
+     * @brief Get file stat.
+     * @param file Indicates file.
+     * @param fileStat Indicates fileStat.
+     * @return Returns ERR_OK if get file stat successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) = 0;
+
 protected:
     enum Message : uint32_t {
         CREATE_BUNDLE_DIR = 1,
@@ -170,7 +180,8 @@ protected:
         SCAN_DIR,
         MOVE_FILE,
         COPY_FILE,
-        MKDIR
+        MKDIR,
+        GET_FILE_STAT
     };
 };
 

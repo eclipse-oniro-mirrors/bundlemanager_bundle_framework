@@ -122,6 +122,8 @@ public:
     virtual ErrCode Mkdir(
         const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) override;
 
+    virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
 };

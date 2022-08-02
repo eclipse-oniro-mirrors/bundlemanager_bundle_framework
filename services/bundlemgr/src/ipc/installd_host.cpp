@@ -51,6 +51,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::MOVE_FILE, &InstalldHost::HandleMoveFile);
     funcMap_.emplace(IInstalld::Message::COPY_FILE, &InstalldHost::HandleCopyFile);
     funcMap_.emplace(IInstalld::Message::MKDIR, &InstalldHost::HandleMkdir);
+    funcMap_.emplace(IInstalld::Message::GET_FILE_STAT, &InstalldHost::HandleGetFileStat);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -231,6 +232,20 @@ bool InstalldHost::HandleMkdir(MessageParcel &data, MessageParcel &reply)
     int32_t gid = data.ReadInt32();
     ErrCode result = Mkdir(dir, mode, uid, gid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleGetFileStat(MessageParcel &data, MessageParcel &reply)
+{
+    std::string file = Str16ToStr8(data.ReadString16());
+    FileStat fileStat;
+    ErrCode result = GetFileStat(file, fileStat);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteParcelable(&fileStat)) {
+        APP_LOGE("fail to GetFileStat from reply");
+        return false;
+    }
+
     return true;
 }
 }  // namespace AppExecFwk
