@@ -65,7 +65,7 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
         auto toPath = tempDir + Constants::PATH_SEPARATOR + MODULE_PREFIX
             + std::to_string(hapIndex) + Constants::INSTALL_FILE_SUFFIX;
         hapIndex++;
-        if (!BundleUtil::RenameFile(path, toPath)) {
+        if (InstalldClient::GetInstance()->MoveFile(path, toPath) != ERR_OK) {
             APP_LOGW("move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
             continue;
         }
@@ -335,16 +335,16 @@ bool BMSEventHandler::AnalyzeUserData(
         return false;
     }
 
-    struct stat s;
     std::string userDataBundlePath = userDataDir + userDataBundleName;
     APP_LOGD("Analyze user data path(%{public}s)", userDataBundlePath.c_str());
-    if (stat(userDataBundlePath.c_str(), &s) != 0) {
-        APP_LOGE("Stat user data path(%{public}s) failed", userDataBundlePath.c_str());
+    FileStat fileStat;
+    if (InstalldClient::GetInstance()->GetFileStat(userDataBundlePath, fileStat) != ERR_OK) {
+        APP_LOGE("GetFileStat path(%{public}s) failed", userDataBundlePath.c_str());
         return false;
     }
 
     // It should be a bundleName dir
-    if (!(s.st_mode & S_IFDIR)) {
+    if (!fileStat.isDir) {
         APP_LOGE("UserDataBundlePath(%{public}s) is not dir", userDataBundlePath.c_str());
         return false;
     }
@@ -352,9 +352,9 @@ bool BMSEventHandler::AnalyzeUserData(
     InnerBundleUserInfo innerBundleUserInfo;
     innerBundleUserInfo.bundleName = userDataBundleName;
     innerBundleUserInfo.bundleUserInfo.userId = userId;
-    innerBundleUserInfo.uid = static_cast<int32_t>(s.st_uid);
-    innerBundleUserInfo.gids.emplace_back(static_cast<int32_t>(s.st_gid));
-    innerBundleUserInfo.installTime = static_cast<int64_t>(s.st_mtime);
+    innerBundleUserInfo.uid = fileStat.uid;
+    innerBundleUserInfo.gids.emplace_back(fileStat.gid);
+    innerBundleUserInfo.installTime = fileStat.lastModifyTime;
     innerBundleUserInfo.updateTime = innerBundleUserInfo.installTime;
     auto tokenId = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(
         innerBundleUserInfo.bundleUserInfo.userId, userDataBundleName, 0);

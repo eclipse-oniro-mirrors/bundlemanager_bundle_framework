@@ -251,6 +251,30 @@ ErrCode InstalldProxy::Mkdir(
     return TransactInstalldCmd(IInstalld::Message::MKDIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(file));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(IInstalld::Message::GET_FILE_STAT, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+
+    std::unique_ptr<FileStat> info(reply.ReadParcelable<FileStat>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+
+    fileStat = *info;
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

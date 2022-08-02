@@ -210,5 +210,15 @@ ErrCode InstalldClient::Mkdir(
 
     return CallService(&IInstalld::Mkdir, dir, mode, uid, gid);
 }
+
+ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)
+{
+    if (file.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::GetFileStat, file, fileStat);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

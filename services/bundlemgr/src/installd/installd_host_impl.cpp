@@ -454,5 +454,26 @@ ErrCode InstalldHostImpl::Mkdir(
 
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileStat)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    APP_LOGD("GetFileStat start %{public}s", file.c_str());
+    struct stat s;
+    if (stat(file.c_str(), &s) != 0) {
+        APP_LOGE("Stat file(%{public}s) failed", file.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    fileStat.uid = static_cast<int32_t>(s.st_uid);
+    fileStat.gid = static_cast<int32_t>(s.st_gid);
+    fileStat.lastModifyTime = static_cast<int64_t>(s.st_mtime);
+    fileStat.isDir = s.st_mode & S_IFDIR;
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
