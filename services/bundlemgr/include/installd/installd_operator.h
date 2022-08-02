@@ -160,6 +160,8 @@ public:
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 
     static bool CopyFile(const std::string &sourceFile, const std::string &destinationFile);
+
+    static bool ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
