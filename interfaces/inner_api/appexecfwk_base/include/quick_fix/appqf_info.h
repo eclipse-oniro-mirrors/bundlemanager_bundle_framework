@@ -25,8 +25,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct AppqfInfo : public Parcelable {
-    int32_t versionCode; // quick fix version code
+    int32_t versionCode = 0; // quick fix version code
     std::string versionName; // quick fix version name
+    std::string cpuAbi; // quick fix abi
     std::string nativeLibraryPath; // quick fix so path
     std::vector<HqfInfo> hqfInfos;
 

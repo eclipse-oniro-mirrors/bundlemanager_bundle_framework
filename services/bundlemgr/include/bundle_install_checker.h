@@ -101,6 +101,8 @@ public:
 
 private:
 
+    ErrCode ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix);
+
     ErrCode ParseBundleInfo(
         const std::string &bundleFilePath,
         const AppPrivilegeCapability &appPrivilegeCapability,
