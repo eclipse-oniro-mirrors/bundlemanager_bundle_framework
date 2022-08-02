@@ -125,7 +125,6 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
         return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
     }
     // check bundleName is exists
-    BundleInfo bundleInfo;
     const auto &qfInfo = infos.begin()->second;
     if (!dataMgr->GetBundleInfo(qfInfo.bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
         bundleInfo, Constants::UNSPECIFIED_USERID)) {
