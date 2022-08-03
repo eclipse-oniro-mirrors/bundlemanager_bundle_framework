@@ -112,6 +112,7 @@ bool QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd,
     path = tmpDir + fileName;
     if ((fd = BundleUtil::CreateFileDescriptor(path, 0)) < 0) {
         APP_LOGE("create file descriptor failed.");
+        BundleUtil::DeleteDir(tmpDir);
         return false;
     }
     return true;
