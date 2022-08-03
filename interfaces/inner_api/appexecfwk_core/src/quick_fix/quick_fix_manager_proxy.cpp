@@ -175,6 +175,7 @@ bool QuickFixManagerProxy::CreateFd(const std::string &fileName, int32_t &fd, st
     path = reply.ReadString();
     if (path.empty()) {
         APP_LOGE("invalid path.");
+        close(fd);
         return false;
     }
     APP_LOGD("create fd success.");
@@ -228,7 +229,7 @@ bool QuickFixManagerProxy::CopyFiles(
         close(destFd);
     }
     APP_LOGD("copy files success.");
-    return true;  
+    return true;
 }
 
 bool QuickFixManagerProxy::SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply)
