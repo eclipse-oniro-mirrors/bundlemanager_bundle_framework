@@ -17,6 +17,8 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_permission_mgr.h"
+#include "bundle_util.h"
 #include "quick_fix_data_mgr.h"
 
 namespace OHOS {
@@ -89,6 +91,30 @@ bool QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
     }
 
     return quickFixAsyncMgr_->DeleteQuickFix(bundleName, statusCallback);
+}
+
+bool QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
+{
+    APP_LOGD("QuickFixManagerHostImpl::CreateFd start.");
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("verify install permission failed.");
+        return false;
+    }
+    if (!BundleUtil::CheckFileType(fileName, Constants::QUICK_FIX_FILE_SUFFIX)) {
+        APP_LOGE("not quick fix file.");
+        return false;
+    }
+    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_, true);
+    if (tmpDir.empty()) {
+        APP_LOGE("create tmp dir failed.");
+        return false;
+    }
+    path = tmpDir + fileName;
+    if ((fd = BundleUtil::CreateFileDescriptor(path, 0)) < 0) {
+        APP_LOGE("create file descriptor failed.");
+        return false;
+    }
+    return true;
 }
 }
 } // namespace OHOS

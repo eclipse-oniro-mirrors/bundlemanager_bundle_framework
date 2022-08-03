@@ -15,6 +15,8 @@
 
 #include "quick_fix_manager_host.h"
 
+#include <unistd.h>
+
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "hitrace_meter.h"
@@ -50,6 +52,8 @@ int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
             return HandleSwitchQuickFix(data, reply);
         case IQuickFixManager::Message::DELETE_QUICK_FIX:
             return HandleDeleteQuickFix(data, reply);
+        case IQuickFixManager::Message::CREATE_FD:
+            return HandleCreateFd(data, reply);
         default:
             APP_LOGW("QuickFixManagerHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -117,6 +121,35 @@ ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessagePa
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode QuickFixManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& reply)
+{
+    APP_LOGD("begin to HandleCreateFd.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string fileName = data.ReadString();
+    int32_t fd = -1;
+    std::string path;
+    bool ret = CreateFd(fileName, fd, path);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!ret) {
+        return ERR_OK;
+    }
+    if (!reply.WriteFileDescriptor(fd)) {
+        APP_LOGE("write fd failed.");
+        close(fd);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(path)) {
+        APP_LOGE("write path failed.");
+        close(fd);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    close(fd);
     return ERR_OK;
 }
 } // AppExecFwk

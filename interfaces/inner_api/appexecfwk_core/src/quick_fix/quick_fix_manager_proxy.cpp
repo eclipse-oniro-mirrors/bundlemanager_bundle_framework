@@ -15,6 +15,8 @@
 
 #include "quick_fix_manager_proxy.h"
 
+#include <unistd.h>
+
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "hitrace_meter.h"
@@ -22,6 +24,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string SEPARATOR = "/";
+const int32_t DEFAULT_BUFFER_SIZE = 65536;
+}
+
 QuickFixManagerProxy::QuickFixManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IQuickFixManager>(object)
 {
     APP_LOGI("create QuickFixManagerProxy.");
@@ -132,6 +139,96 @@ bool QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
     }
 
     return reply.ReadBool();
+}
+
+bool QuickFixManagerProxy::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
+{
+    APP_LOGD("begin to create fd.");
+    if (fileName.empty()) {
+        APP_LOGE("fileName is empty.");
+        return false;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interface token failed.");
+        return false;
+    }
+    if (!data.WriteString(fileName)) {
+        APP_LOGE("write fileName failed.");
+        return false;
+    }
+    MessageParcel reply;
+    if (!SendRequest(IQuickFixManager::Message::CREATE_FD, data, reply)) {
+        APP_LOGE("send request failed.");
+        return false;
+    }
+    bool ret = reply.ReadBool();
+    if (!ret) {
+        APP_LOGE("reply return false.");
+        return false;
+    }
+    fd = reply.ReadFileDescriptor();
+    if (fd < 0) {
+        APP_LOGE("invalid fd.");
+        return false;
+    }
+    path = reply.ReadString();
+    if (path.empty()) {
+        APP_LOGE("invalid path.");
+        return false;
+    }
+    APP_LOGD("create fd success.");
+    return true;
+}
+
+bool QuickFixManagerProxy::CopyFiles(
+    const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
+{
+    APP_LOGD("begin to copy files.");
+    if (sourceFiles.empty()) {
+        APP_LOGE("sourceFiles empty.");
+        return false;
+    }
+    for (const std::string &sourcePath : sourceFiles) {
+        size_t pos = sourcePath.find_last_of(SEPARATOR);
+        if (pos == std::string::npos) {
+            APP_LOGE("invalid sourcePath.");
+            return false;
+        }
+        std::string fileName = sourcePath.substr(pos + 1);
+        if (fileName.empty()) {
+            APP_LOGE("file name empty.");
+            return false;
+        }
+        APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
+        int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
+        if (sourceFd < 0) {
+            APP_LOGE("open file failed.");
+            return false;
+        }
+        int32_t destFd = -1;
+        std::string destPath;
+        bool ret = CreateFd(fileName, destFd, destPath);
+        if (!ret || destFd < 0 || destPath.empty()) {
+            APP_LOGE("create fd failed.");
+            close(sourceFd);
+            return false;
+        }
+        char buffer[DEFAULT_BUFFER_SIZE] = {0};
+        int offset = -1;
+        while ((offset = read(sourceFd, buffer, sizeof(buffer))) > 0) {
+            if (write(destFd, buffer, offset) < 0) {
+                close(sourceFd);
+                close(destFd);
+                return false;
+            }
+        }
+        destFiles.emplace_back(destPath);
+        close(sourceFd);
+        close(destFd);
+    }
+    APP_LOGD("copy files success.");
+    return true;  
 }
 
 bool QuickFixManagerProxy::SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply)

@@ -1697,6 +1697,19 @@ static bool InnerGetApplicationInfo(napi_env env, const std::string &bundleName,
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+    APP_LOGI("squirrel begin");
+    sptr<IQuickFixManager> qf = iBundleMgr->GetQuickFixManagerProxy();
+    std::vector<std::string> sourceFiles;
+    sourceFiles.emplace_back("/data/storage/el2/base/hello.hqf");
+    sourceFiles.emplace_back("/data/storage/el2/base/world.hqf");
+    sourceFiles.emplace_back("/data/storage/el2/base/test.hqf");
+    std::vector<std::string> destFiles;
+    bool ret = qf->CopyFiles(sourceFiles, destFiles);
+    APP_LOGI("squirrel CopyFiles ret : %{public}d", ret);
+    for (const auto& path : destFiles) {
+        APP_LOGI("squirrel destPath: %{public}s", path.c_str());
+    }
+    APP_LOGI("squirrel end");
     return iBundleMgr->GetApplicationInfo(bundleName, flags, userId, appInfo);
 }
 

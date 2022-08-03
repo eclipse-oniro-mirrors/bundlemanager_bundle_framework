@@ -301,10 +301,11 @@ void BundleUtil::RemoveHmdfsConfig(const std::string &bundleName)
     }
 }
 
-std::string BundleUtil::CreateInstallTempDir(uint32_t installerId)
+std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, bool isQuickFix)
 {
     std::time_t curTime = std::time(0);
-    std::string tempDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + std::to_string(curTime) +
+    std::string tempDir = isQuickFix ? Constants::QUICK_FIX_COPY_PATH : Constants::HAP_COPY_PATH;
+    tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
         std::to_string(installerId) + Constants::PATH_SEPARATOR;
     if (!OHOS::ForceCreateDirectory(tempDir)) {
         APP_LOGE("mkdir %{private}s failed", tempDir.c_str());

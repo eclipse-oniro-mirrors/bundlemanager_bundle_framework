@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_QUICK_FIX_MANAGER_HOST_IMPL_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_QUICK_FIX_MANAGER_HOST_IMPL_H
 
+#include <atomic>
+
 #include "quick_fix_async_mgr.h"
 #include "quick_fix_manager_host.h"
 
@@ -35,9 +37,12 @@ public:
     virtual bool DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
+    virtual bool CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
+
 private:
     void Init();
     std::shared_ptr<QuickFixAsyncMgr> quickFixAsyncMgr_ = nullptr;
+    std::atomic<uint32_t> id_ = 0;
 };
 } // AppExecFwk
 } // OHOS
