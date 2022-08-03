@@ -39,7 +39,6 @@
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_user_mgr_host_impl.h"
-#include "distributed_monitor.h"
 #include "hidump_helper.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
@@ -138,11 +137,6 @@ private:
      * @return
      */
     void SelfClean();
-    /**
-     * @brief Do some work after register to service.
-     * @return
-     */
-    void AfterRegisterToService();
 
     void BmsStart();
 
@@ -165,7 +159,6 @@ private:
     sptr<BundleMgrHostImpl> host_;
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
-    std::shared_ptr<DistributedMonitor> distributedSub_;
     // Thread pool used to start installation or quick fix in parallel.
     ThreadPool bmsThreadPool_;
     const int THREAD_NUMBER = std::thread::hardware_concurrency();

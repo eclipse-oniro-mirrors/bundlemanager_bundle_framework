@@ -31,12 +31,13 @@ public:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId);
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId);
     int32_t GetUdidByNetworkId(const std::string &netWorkId, std::string &udid);
-    
+    bool GetAllDeviceList(std::vector<std::string> &deviceIds);
+
 private:
     static void StartDynamicSystemProcess(int32_t systemAbilityId);
     static void StopDynamicSystemProcess(int32_t systemAbilityId);
     bool InitDeviceManager();
-    int GetTrustedDeviceListSize();
+    bool GetTrustedDeviceList(std::vector<DistributedHardware::DmDeviceInfo> &deviceList);
 
     mutable std::mutex isInitMutex_;
     bool isInit_ = false;

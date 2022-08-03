@@ -18,17 +18,18 @@
 #include <fstream>
 #include <vector>
 
+#include "account_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "distributed_bms_proxy.h"
+#include "distributed_data_storage.h"
 #include "event_report.h"
 #include "iservice_registry.h"
 #include "if_system_ability_manager.h"
 #include "locale_config.h"
 #include "locale_info.h"
-#include "os_account_manager.h"
 #include "image_compress.h"
 #include "system_ability_definition.h"
 
@@ -92,12 +93,10 @@ namespace {
         return eventInfo;
     }
 }
-REGISTER_SYSTEM_ABILITY_BY_ID(DistributedBms, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID, true);
+const bool REGISTER_RESULT =
+    SystemAbility::MakeAndRegisterAbility(DelayedSingleton<DistributedBms>::GetInstance().get());
 
-OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
-std::mutex bundleMgrMutex_;
-
-DistributedBms::DistributedBms(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
+DistributedBms::DistributedBms() : SystemAbility(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID, true)
 {
     APP_LOGI("DistributedBms :%{public}s call", __func__);
 }
@@ -110,6 +109,7 @@ DistributedBms::~DistributedBms()
 void DistributedBms::OnStart()
 {
     APP_LOGI("DistributedBms: OnStart");
+    Init();
     bool res = Publish(this);
     if (!res) {
         APP_LOGE("DistributedBms: OnStart failed");
@@ -120,9 +120,34 @@ void DistributedBms::OnStart()
 void DistributedBms::OnStop()
 {
     APP_LOGI("DistributedBms: OnStop");
+    if (distributedSub_ != nullptr) {
+        EventFwk::CommonEventManager::UnSubscribeCommonEvent(distributedSub_);
+    }
 }
 
-static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr()
+void DistributedBms::Init()
+{
+    APP_LOGI("DistributedBms: Init");
+    DistributedDataStorage::GetInstance();
+    if (distributedSub_ == nullptr) {
+        EventFwk::MatchingSkills matchingSkills;
+        matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+        matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+        matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+        matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+        EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+        distributedSub_ = std::make_shared<DistributedMonitor>(subscribeInfo);
+        EventFwk::CommonEventManager::SubscribeCommonEvent(distributedSub_);
+    }
+    int32_t userId = AccountManagerHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGW("get user id failed");
+        return;
+    }
+    DistributedDataStorage::GetInstance()->UpdateDistributedData(userId);
+}
+
+OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> DistributedBms::GetBundleMgr()
 {
     if (bundleMgr_ == nullptr) {
         std::lock_guard<std::mutex> lock(bundleMgrMutex_);
@@ -137,11 +162,7 @@ static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr()
                 APP_LOGE("GetBundleMgr GetSystemAbility is null");
                 return nullptr;
             }
-            auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-            if (bundleMgr == nullptr) {
-                APP_LOGE("GetBundleMgr iface_cast get null");
-            }
-            bundleMgr_ = bundleMgr;
+            bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
         }
     }
     return bundleMgr_;
@@ -225,8 +246,8 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
         APP_LOGE("DistributedBms GetBundleMgr failed");
         return ERR_APPEXECFWK_FAILED_SERVICE_DIED;
     }
-    int userId = -1;
-    if (!GetCurrentUserId(userId)) {
+    int userId = AccountManagerHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
         APP_LOGE("GetCurrentUserId failed");
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
@@ -310,6 +331,13 @@ int32_t DistributedBms::GetAbilityInfos(const std::vector<ElementName> &elementN
         remoteAbilityInfos.push_back(remoteAbilityInfo);
     }
     return OHOS::NO_ERROR;
+}
+
+bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
+    DistributedBundleInfo &distributedBundleInfo)
+{
+    return DistributedDataStorage::GetInstance()->GetStorageDistributeInfo(
+        networkId, bundleName, distributedBundleInfo);
 }
 
 std::shared_ptr<Global::Resource::ResourceManager> DistributedBms::GetResourceManager(
@@ -426,22 +454,6 @@ std::unique_ptr<char[]> DistributedBms::EncodeBase64(std::unique_ptr<unsigned ch
     dstData[outLen] = '\0';
 
     return result;
-}
-
-bool DistributedBms::GetCurrentUserId(int &userId)
-{
-    std::vector<int> activeIds;
-    int ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
-    if (ret != 0) {
-        APP_LOGE("QueryActiveOsAccountIds failed ret:%{public}d", ret);
-        return false;
-    }
-    if (activeIds.empty()) {
-        APP_LOGE("QueryActiveOsAccountIds activeIds empty");
-        return false;
-    }
-    userId = activeIds[0];
-    return true;
 }
 }
 }

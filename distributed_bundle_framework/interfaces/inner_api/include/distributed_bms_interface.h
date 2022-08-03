@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "distributed_bundle_info.h"
 #include "element_name.h"
 #include "iremote_broker.h"
 #include "remote_ability_info.h"
@@ -105,6 +106,9 @@ public:
     virtual int32_t GetAbilityInfos(const std::vector<ElementName> &elementNames, const std::string &localeInfo,
         std::vector<RemoteAbilityInfo> &remoteAbilityInfos) = 0;
 
+    virtual bool GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
+        DistributedBundleInfo &distributedBundleInfo) = 0;
+
     enum class Message {
         GET_REMOTE_ABILITY_INFO = 0,
         GET_REMOTE_ABILITY_INFOS,
@@ -114,6 +118,7 @@ public:
         GET_REMOTE_ABILITY_INFOS_WITH_LOCALE,
         GET_ABILITY_INFO_WITH_LOCALE,
         GET_ABILITY_INFOS_WITH_LOCALE,
+        GET_DISTRIBUTED_BUNDLE_INFO,
     };
 };
 }  // namespace AppExecFwk

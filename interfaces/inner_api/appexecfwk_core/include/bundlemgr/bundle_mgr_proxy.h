@@ -653,6 +653,8 @@ public:
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
 
+    virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif

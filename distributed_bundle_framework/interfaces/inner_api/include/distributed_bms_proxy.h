@@ -103,6 +103,9 @@ public:
      */
     int32_t GetAbilityInfos(const std::vector<ElementName> &elementNames, const std::string &localeInfo,
         std::vector<RemoteAbilityInfo> &remoteAbilityInfos) override;
+    
+    bool GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
+        DistributedBundleInfo &distributedBundleInfo) override;
 private:
     int32_t SendRequest(IDistributedBms::Message code, MessageParcel &data, MessageParcel &reply);
     template<typename T>
