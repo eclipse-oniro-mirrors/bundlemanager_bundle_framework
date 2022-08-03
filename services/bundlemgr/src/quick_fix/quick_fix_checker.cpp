@@ -22,36 +22,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
-    { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
-    { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
-    { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
-    { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
-    { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
-};
-const size_t QUICK_FIX_MAP_SIZE = 1;
-
-std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
-{
-    auto typeIter = APP_DISTRIBUTION_TYPE_MAPS.find(type);
-    if (typeIter == APP_DISTRIBUTION_TYPE_MAPS.end()) {
-        APP_LOGE("wrong AppDistType");
-        return Constants::APP_DISTRIBUTION_TYPE_NONE;
-    }
-
-    return typeIter->second;
-}
-
-std::string GetAppProvisionType(const Security::Verify::ProvisionType &type)
-{
-    if (type == Security::Verify::ProvisionType::DEBUG) {
-        return Constants::APP_PROVISION_TYPE_DEBUG;
-    }
-
-    return Constants::APP_PROVISION_TYPE_RELEASE;
-}
-}
+size_t QuickFixChecker::QUICK_FIX_MAP_SIZE = 1;
 
 ErrCode QuickFixChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
@@ -119,7 +90,12 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
     const Security::Verify::ProvisionInfo &provisionInfo,
     BundleInfo &bundleInfo)
 {
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bms == nullptr) {
+        APP_LOGE("failed due to bms is nullptr");
+        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = bms->GetDataMgr();
     if ((dataMgr == nullptr) || infos.empty()) {
         APP_LOGE("failed due to dataMgr is nullptr");
         return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
@@ -180,9 +156,7 @@ ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
     const Security::Verify::ProvisionInfo &provisionInfo)
 {
     if ((bundleInfo.appId != provisionInfo.appId) ||
-        (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl) ||
-        (bundleInfo.applicationInfo.appDistributionType != GetAppDistributionType(provisionInfo.distributionType)) ||
-        (bundleInfo.applicationInfo.appProvisionType != GetAppProvisionType(provisionInfo.type))) {
+        (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl)) {
             APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
                 bundleInfo.name.c_str());
             return ERR_APPEXECFWK_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
@@ -209,9 +183,10 @@ ErrCode QuickFixChecker::CheckMultiNativeSo(
             cpuAbi = qfInfo.cpuAbi;
             continue;
         }
-        if ((nativeLibraryPath != qfInfo.nativeLibraryPath)
-            || (cpuAbi != qfInfo.cpuAbi)) {
-            return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+        if (!qfInfo.nativeLibraryPath.empty()) {
+            if ((nativeLibraryPath != qfInfo.nativeLibraryPath) || (cpuAbi != qfInfo.cpuAbi)) {
+                return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+            }
         }
     }
 
@@ -224,6 +199,33 @@ ErrCode QuickFixChecker::CheckMultiNativeSo(
     }
 
     return ERR_OK;
+}
+
+std::string QuickFixChecker::GetAppDistributionType(const Security::Verify::AppDistType &type)
+{
+    std::unordered_map<Security::Verify::AppDistType, std::string> map = {
+        { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
+        { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
+        { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+        { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
+        { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    };
+    auto typeIter = map.find(type);
+    if (typeIter == map.end()) {
+        APP_LOGE("wrong AppDistType");
+        return Constants::APP_DISTRIBUTION_TYPE_NONE;
+    }
+
+    return typeIter->second;
+}
+
+std::string QuickFixChecker::GetAppProvisionType(const Security::Verify::ProvisionType &type)
+{
+    if (type == Security::Verify::ProvisionType::DEBUG) {
+        return Constants::APP_PROVISION_TYPE_DEBUG;
+    }
+
+    return Constants::APP_PROVISION_TYPE_RELEASE;
 }
 } // AppExecFwk
 } // OHOS

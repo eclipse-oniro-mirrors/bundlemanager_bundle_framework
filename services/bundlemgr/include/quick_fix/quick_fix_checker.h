@@ -55,6 +55,12 @@ private:
 
     ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
         const Security::Verify::ProvisionInfo &provisionInfo);
+
+    std::string GetAppDistributionType(const Security::Verify::AppDistType &type);
+
+    std::string GetAppProvisionType(const Security::Verify::ProvisionType &type);
+
+    static size_t QUICK_FIX_MAP_SIZE;
 };
 } // AppExecFwk
 } // OHOS
