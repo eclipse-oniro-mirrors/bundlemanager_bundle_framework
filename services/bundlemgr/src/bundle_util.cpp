@@ -495,7 +495,22 @@ bool BundleUtil::CreateDir(const std::string &dir)
         APP_LOGE("change mode failed, temp install dir : %{public}s", dir.c_str());
         return false;
     }
+    return true;
+}
 
+bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath)
+{
+    if (sandBoxPath.empty() || bundleName.empty() ||
+        sandBoxPath.find(Constants::SANDBOX_DATA_PATH) == std::string::npos) {
+        APP_LOGE("input sandboxPath or bundleName invalid");
+        return false;
+    }
+    
+    realPath = sandBoxPath;
+    std::string relaDataPath = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR
+        + std::to_string(BundleUtil::GetUserIdByCallingUid()) + Constants::BASE + bundleName;
+    realPath.replace(realPath.find(Constants::SANDBOX_DATA_PATH),
+        std::string(Constants::SANDBOX_DATA_PATH).size(), relaDataPath);
     return true;
 }
 }  // namespace AppExecFwk
