@@ -162,6 +162,12 @@ public:
     static bool CopyFile(const std::string &sourceFile, const std::string &destinationFile);
 
     static bool ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid);
+
+    static bool ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+        const std::string &cpuAbi);
+
+    static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
+        const std::string &newSoPath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

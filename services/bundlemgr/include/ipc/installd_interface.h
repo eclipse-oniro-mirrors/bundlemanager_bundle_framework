@@ -164,6 +164,12 @@ public:
      */
     virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) = 0;
 
+    virtual ErrCode ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+        const std::string &cpuAbi) = 0;
+
+    virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
+    const std::string &newSoPath) = 0;
+
 protected:
     enum Message : uint32_t {
         CREATE_BUNDLE_DIR = 1,
@@ -181,7 +187,9 @@ protected:
         MOVE_FILE,
         COPY_FILE,
         MKDIR,
-        GET_FILE_STAT
+        GET_FILE_STAT,
+        EXTRACT_SO_FILES,
+        APPLY_DIFF_PATCH
     };
 };
 

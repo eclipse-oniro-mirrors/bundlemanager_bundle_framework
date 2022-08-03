@@ -526,5 +526,41 @@ bool InstalldOperator::CopyFile(
     out.close();
     return true;
 }
+
+bool InstalldOperator::ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+    const std::string &cpuAbi)
+{
+    BundleExtractor extractor(filePath);
+    if (!extractor.Init()) {
+        return false;
+    }
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames)) {
+        return false;
+    }
+    for (const auto &entryName : entryNames) {
+        if (strcmp(entryName.c_str(), ".") == 0 ||
+            strcmp(entryName.c_str(), "..") == 0) {
+            continue;
+        }
+        if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
+            continue;
+        }
+        // handle native so
+        if (isNativeSo(entryName, targetSoPath, cpuAbi)) {
+            ExtractSo(extractor, entryName, targetSoPath, cpuAbi);
+        }
+    }
+    return true;
+}
+
+bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
+    const std::string &newSoPath)
+{
+    if (oldSoPath.empty() || diffSoPath.empty() || newSoPath.empty()) {
+        return false;
+    }
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
