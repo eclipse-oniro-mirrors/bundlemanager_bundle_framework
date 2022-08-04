@@ -3136,16 +3136,16 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
         uint32_t arrayLength = 0;
         napi_value valueAry = 0;
         napi_valuetype valueAryType = napi_undefined;
-        NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
+        NAPI_CALL_BASE(env, napi_is_array(env, property, &isArray), false);
         if (!isArray) {
             APP_LOGE("hashParams is not array!");
             return false;
         }
 
-        NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
+        NAPI_CALL_BASE(env, napi_get_array_length(env, property, &arrayLength), false);
         APP_LOGD("ParseHashParams property is array, length=%{public}ud", arrayLength);
         for (uint32_t j = 0; j < arrayLength; j++) {
-            NAPI_CALL_BASE(env, napi_get_element(env, args, j, &valueAry), false);
+            NAPI_CALL_BASE(env, napi_get_element(env, property, j, &valueAry), false);
             NAPI_CALL_BASE(env, napi_typeof(env, valueAry, &valueAryType), false);
             std::string key;
             std::string value;
