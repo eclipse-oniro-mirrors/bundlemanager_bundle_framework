@@ -222,6 +222,52 @@ std::string InstalldOperator::GetPathDir(const std::string &path)
     return path.substr(0, pos + 1);
 }
 
+bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid)
+{
+    std::string subPath;
+    bool ret = true;
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        return false;
+    }
+
+    while (true) {
+        struct dirent *ptr = readdir(dir);
+        if (ptr == nullptr) {
+            break;
+        }
+
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+
+        subPath = OHOS::IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name);
+        if (ptr->d_type == DT_DIR) {
+            ret = ChangeDirOwnerRecursively(subPath, uid, gid);
+            continue;
+        }
+
+        if (access(subPath.c_str(), F_OK) == 0) {
+            if (!ChangeFileAttr(subPath, uid, gid)) {
+                APP_LOGE("Failed to ChangeFileAttr %{public}s", subPath.c_str());
+                closedir(dir);
+                return false;
+            }
+        }
+    }
+
+    closedir(dir);
+    std::string currentPath = OHOS::ExcludeTrailingPathDelimiter(path);
+    if (access(currentPath.c_str(), F_OK) == 0) {
+        if (!ChangeFileAttr(currentPath, uid, gid)) {
+            APP_LOGE("Failed to ChangeFileAttr %{public}s", currentPath.c_str());
+            return false;
+        }
+    }
+
+    return ret;
+}
+
 bool InstalldOperator::ChangeFileAttr(const std::string &filePath, const int uid, const int gid)
 {
     APP_LOGD("begin to change %{private}s file attribute", filePath.c_str());
@@ -311,7 +357,7 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
     if (!OHOS::ChangeModeDirectory(path, mode)) {
         return false;
     }
-    return ChangeFileAttr(path, uid, gid);
+    return ChangeDirOwnerRecursively(path, uid, gid);
 }
 
 int64_t InstalldOperator::GetDiskUsage(const std::string &dir)
