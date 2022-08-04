@@ -40,6 +40,6 @@ ohos_fuzztest("GetBundleInfosFuzzTest") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 }

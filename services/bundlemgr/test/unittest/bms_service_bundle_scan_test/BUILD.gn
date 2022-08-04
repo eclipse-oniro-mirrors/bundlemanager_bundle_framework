@@ -77,7 +77,7 @@ ohos_unittest("BmsServiceBundleScanTest") {
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
   defines = []
   if (configpolicy_enable) {

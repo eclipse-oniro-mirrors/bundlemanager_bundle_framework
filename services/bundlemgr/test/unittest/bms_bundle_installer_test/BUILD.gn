@@ -85,7 +85,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   defines = []
@@ -210,7 +210,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   defines = []

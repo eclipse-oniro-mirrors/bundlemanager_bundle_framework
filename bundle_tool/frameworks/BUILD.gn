@@ -58,7 +58,7 @@ ohos_source_set("tools_bm_source_set") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   part_name = "bundle_tool"
@@ -104,7 +104,7 @@ ohos_source_set("tools_test_bm_source_set") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   part_name = "bundle_tool"

@@ -45,7 +45,7 @@ ohos_shared_library("bundle") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   if (bundle_framework_graphics) {
