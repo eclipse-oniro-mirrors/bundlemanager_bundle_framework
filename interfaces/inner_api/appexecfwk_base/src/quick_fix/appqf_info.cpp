@@ -26,6 +26,7 @@ namespace AppExecFwk {
 namespace {
 const std::string APP_QF_INFO_VERSION_CODE = "versionCode";
 const std::string APP_QF_INFO_VERSION_NAME = "versionName";
+const std::string APP_QF_INFO_CPU_ABI = "cpuAbi";
 const std::string APP_QF_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string APP_QF_INFO_HQF_INFOS = "hqfInfos";
 }
@@ -35,6 +36,7 @@ void to_json(nlohmann::json &jsonObject, const AppqfInfo &appqfInfo)
     jsonObject = nlohmann::json {
         {APP_QF_INFO_VERSION_CODE, appqfInfo.versionCode},
         {APP_QF_INFO_VERSION_NAME, appqfInfo.versionName},
+        {APP_QF_INFO_CPU_ABI, appqfInfo.cpuAbi},
         {APP_QF_INFO_NATIVE_LIBRARY_PATH, appqfInfo.nativeLibraryPath},
         {APP_QF_INFO_HQF_INFOS, appqfInfo.hqfInfos}
     };
@@ -55,6 +57,11 @@ void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo)
         ArrayType::NOT_ARRAY);
 
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+        APP_QF_INFO_CPU_ABI, appqfInfo.cpuAbi,
+        JsonType::STRING, false, parseResult,
+        ArrayType::NOT_ARRAY);
+
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
         APP_QF_INFO_NATIVE_LIBRARY_PATH, appqfInfo.nativeLibraryPath,
         JsonType::STRING, false, parseResult,
         ArrayType::NOT_ARRAY);
@@ -69,6 +76,7 @@ bool AppqfInfo::ReadFromParcel(Parcel &parcel)
 {
     versionCode = parcel.ReadInt32();
     versionName = Str16ToStr8(parcel.ReadString16());
+    cpuAbi = Str16ToStr8(parcel.ReadString16());
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     int32_t hqfSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hqfSize);
@@ -87,6 +95,7 @@ bool AppqfInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hqfInfos.size());
     for (auto &hqfInfo : hqfInfos) {
