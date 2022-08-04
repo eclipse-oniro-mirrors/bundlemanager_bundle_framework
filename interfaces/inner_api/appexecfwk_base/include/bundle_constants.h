@@ -16,7 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_CONSTANTS_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_CONSTANTS_H
 
-#include<map>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -26,6 +26,7 @@ namespace Constants {
 const std::string EMPTY_STRING = "";
 constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
 constexpr const char* MODULE_PROFILE_NAME = "module.json";
+constexpr const char* PATCH_PROFILE_NAME = "patch.json";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
