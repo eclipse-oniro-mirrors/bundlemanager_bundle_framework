@@ -175,7 +175,11 @@ void InstalldOperator::ExtractSo(const BundleExtractor &extractor, const std::st
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
     std::string targetSoName = entryName.substr(prefix.length());
-    std::string targetSo = targetSoPath + targetSoName;
+    std::string targetSo = targetSoPath;
+    if (targetSo.back() != Constants::FILE_SEPARATOR_CHAR) {
+        targetSo += Constants::FILE_SEPARATOR_CHAR;
+    }
+    targetSo += targetSoName;
     bool ret = extractor.ExtractFile(entryName, targetSo);
     if (!ret) {
         APP_LOGE("extract so failed, entryName : %{public}s", entryName.c_str());
