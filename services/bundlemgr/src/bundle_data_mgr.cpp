@@ -1092,7 +1092,9 @@ bool BundleDataMgr::GetBundleInfos(
 
         BundleInfo bundleInfo;
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-        innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId);
+        if (!innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId)) {
+            continue;
+        }
         bundleInfos.emplace_back(bundleInfo);
         find = true;
     }

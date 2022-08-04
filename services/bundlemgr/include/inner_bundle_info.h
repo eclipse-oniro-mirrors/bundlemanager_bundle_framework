@@ -1102,7 +1102,7 @@ public:
      * @param bundleInfos Indicates all of the obtained BundleInfo objects.
      * @param userId Indicates the user ID.
      */
-    void GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    bool GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Check if special metadata is in the application.
      * @param metaData Indicates the special metaData.

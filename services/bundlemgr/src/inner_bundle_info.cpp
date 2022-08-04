@@ -1788,12 +1788,12 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 }
 
-void InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
+bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
         APP_LOGE("can not find userId %{public}d when GetBundleInfo", userId);
-        return;
+        return false;
     }
 
     bundleInfo = *baseBundleInfo_;
@@ -1848,6 +1848,7 @@ void InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     }
     GetBundleWithAbilities(flags, bundleInfo, userId);
     GetBundeleWithExtension(flags, bundleInfo, userId);
+    return true;
 }
 
 void InnerBundleInfo::GetModuleWithHashValue(
