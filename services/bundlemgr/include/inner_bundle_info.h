@@ -1349,6 +1349,15 @@ public:
     void GetUriPrefixList(std::vector<std::string> &uriPrefixList, const std::string &excludeModule = "") const;
     void GetUriPrefixList(std::vector<std::string> &uriPrefixList, int32_t userId,
         const std::string &excludeModule = "") const;
+
+    const std::string &GetCurModuleName() const;
+
+    std::vector<std::string> GetDistroModuleName() const;
+
+    std::string GetModuleNameByPackage(const std::string &packageName) const;
+
+    std::string GetModuleTypeByPackage(const std::string &packageName) const;
+
 private:
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;

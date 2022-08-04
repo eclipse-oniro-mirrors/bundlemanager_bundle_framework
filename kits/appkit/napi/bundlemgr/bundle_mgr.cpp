@@ -2734,6 +2734,8 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APPTYPE_NOT_SAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_URI_DUPLICATE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_NOT_COMPATIBLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_CONFLICT";
             break;

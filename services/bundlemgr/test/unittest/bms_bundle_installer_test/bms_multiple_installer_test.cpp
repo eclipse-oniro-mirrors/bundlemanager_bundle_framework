@@ -689,7 +689,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0900, Function | SmallTes
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1000, Function | SmallTest | Level0)
 {
     std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_SECOND;
+    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FOURTH;
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
@@ -809,16 +809,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1600, Function | SmallTes
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, false);
-    EXPECT_EQ(installRes, ERR_OK);
-    CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-
-    BundleInfo info;
-    auto result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, info, USERID);
-    EXPECT_TRUE(result);
-    IsContainModuleInfo(info, PACKAGE_NAME_SECOND);
-
-    ClearBundleInfo();
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME);
 }
 
 /**
@@ -1035,15 +1026,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2500, Function | SmallTes
     std::string firstBundleFile = RESOURCE_TEST4_PATH;
     filePaths.emplace_back(firstBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, false);
-    EXPECT_EQ(installRes, ERR_OK);
-    CheckFileExist();
-
-    BundleInfo info;
-    auto result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, info, USERID);
-    EXPECT_TRUE(result);
-    IsContainModuleInfo(info, PACKAGE_NAME_SECOND);
-
-    ClearBundleInfo();
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME);
 }
 
 /**
