@@ -2095,7 +2095,6 @@ bool InnerBundleInfo::GetInnerBundleUserInfo(
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGD("no this user %{public}s", key.c_str());
         return false;
     }
 

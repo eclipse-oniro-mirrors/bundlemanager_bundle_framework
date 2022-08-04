@@ -37,10 +37,18 @@ public:
     virtual bool DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
 
+    virtual bool CreateFd(const std::string &fileName, int32_t &fd, std::string &path) = 0;
+
+    virtual bool CopyFiles(const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
+    {
+        return false;
+    }
+
     enum Message : uint32_t {
         DEPLOY_QUICK_FIX = 0,
         SWITCH_QUICK_FIX = 1,
-        DELETE_QUICK_FIX = 2
+        DELETE_QUICK_FIX = 2,
+        CREATE_FD = 3
     };
 };
 } // AppExecFwk

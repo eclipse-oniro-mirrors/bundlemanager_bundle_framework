@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 enum QuickFixStatus : int32_t {
-    UNKNOWN_STATUS = 0,
+    DEFAULT_STATUS = 0,
     DEPLOY_START,
     DEPLOY_END,
     SWITCH_START,
@@ -40,7 +40,7 @@ enum QuickFixStatus : int32_t {
 struct QuickFixMark {
     std::string bundleName;
     std::string moduleName;
-    int32_t status = QuickFixStatus::UNKNOWN_STATUS;
+    int32_t status = QuickFixStatus::DEFAULT_STATUS;
 };
 
 class InnerAppQuickFix {
