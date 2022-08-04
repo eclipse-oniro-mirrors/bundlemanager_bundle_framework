@@ -103,6 +103,17 @@ ohos_source_set("bundle_parser") {
     "src/pre_bundle_profile.cpp",
   ]
 
+  if (bundle_framework_quick_fix) {
+    sources += [
+      "include/quick_fix/patch_extractor.h",
+      "include/quick_fix/patch_parser.h",
+      "include/quick_fix/patch_profile.h",
+      "src/quick_fix/patch_extractor.cpp",
+      "src/quick_fix/patch_parser.cpp",
+      "src/quick_fix/patch_profile.cpp",
+    ]
+  }
+
   public_configs = bundlemgr_parser_common_config
   cflags = []
   if (target_cpu == "arm") {

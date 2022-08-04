@@ -32,14 +32,6 @@ public:
      */
     virtual bool Init();
     /**
-     * @brief Extract the Profile to dest stream.
-     * @param dest Indicates the obtained std::ostream object..
-     * @return Returns true if the profile extracted successfully; returns false otherwise.
-     */
-    virtual bool ExtractProfile(std::ostream &dest) const = 0;
-
-    virtual bool ExtractPackFile(std::ostream &dest) const = 0;
-    /**
      * @brief Extract to dest stream by file name.
      * @param fileName Indicates the file name.
      * @param dest Indicates the obtained std::ostream object.

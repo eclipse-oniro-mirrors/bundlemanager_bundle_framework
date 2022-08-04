@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,13 +31,13 @@ public:
      * @param dest Indicates the obtained std::ostream object.
      * @return Returns true if the Profile is successfully extracted; returns false otherwise.
      */
-    virtual bool ExtractProfile(std::ostream &dest) const override;
+    bool ExtractProfile(std::ostream &dest) const;
     /**
      * @brief Extract the pack.info of a hap to dest stream.
      * @param dest Indicates the obtained std::ostream object.
      * @return Returns true if the file is successfully extracted; returns false otherwise.
      */
-    virtual bool ExtractPackFile(std::ostream &dest) const override;
+    bool ExtractPackFile(std::ostream &dest) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
