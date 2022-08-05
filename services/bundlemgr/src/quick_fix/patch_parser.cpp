@@ -40,7 +40,7 @@ ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &ap
     APP_LOGD("extract patch complete");
 
     PatchProfile patchProfile;
-    ErrCode ret = patchProfile.TransformTo(outStreamForHatchInfo, appQuickFix);
+    ErrCode ret = patchProfile.TransformTo(outStreamForHatchInfo, appQuickFix, patchExtractor);
     if (ret != ERR_OK) {
         APP_LOGE("transform stream to appQuickFix failed %{public}d", ret);
         return ret;

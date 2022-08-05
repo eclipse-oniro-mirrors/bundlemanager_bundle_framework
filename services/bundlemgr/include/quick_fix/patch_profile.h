@@ -24,8 +24,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class PatchProfile {
 public:
-    ErrCode TransformTo(const std::ostringstream &source, AppQuickFix &appQuickFix);
-    bool ParserNativeSo(AppqfInfo &appqfInfo, const PatchExtractor &patchExtractor);
+    ErrCode TransformTo(
+        const std::ostringstream &source, AppQuickFix &appQuickFix, const PatchExtractor &patchExtractor);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

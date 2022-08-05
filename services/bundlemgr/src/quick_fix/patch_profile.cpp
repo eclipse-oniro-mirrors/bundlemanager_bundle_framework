@@ -164,37 +164,6 @@ void from_json(const nlohmann::json &jsonObject, PatchJson &patchJson)
 }
 }
 
-void ToPatchInfo(PatchProfileReader::PatchJson &patchJson, AppQuickFix &appQuickFix)
-{
-    appQuickFix.bundleName = patchJson.app.bundleName;
-    appQuickFix.versionCode = patchJson.app.versionCode;
-    appQuickFix.versionName = patchJson.app.versionName;
-    appQuickFix.deployingAppqfInfo.versionCode = patchJson.app.patchVersionCode;
-    appQuickFix.deployingAppqfInfo.versionName = patchJson.app.patchVersionName;
-    HqfInfo hqfInfo;
-    hqfInfo.moduleName = patchJson.module.name;
-    hqfInfo.hapSha256 = patchJson.module.originalModuleHash;
-    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
-}
-
-ErrCode PatchProfile::TransformTo(const std::ostringstream &source, AppQuickFix &appQuickFix)
-{
-    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
-    if (jsonObject.is_discarded()) {
-        APP_LOGE("bad profile");
-        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
-    }
-    PatchProfileReader::PatchJson patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
-    if (PatchProfileReader::parseResult != ERR_OK) {
-        APP_LOGE("parseResult is %{public}d", PatchProfileReader::parseResult);
-        int32_t ret = PatchProfileReader::parseResult;
-        PatchProfileReader::parseResult = ERR_OK;
-        return ret;
-    }
-    ToPatchInfo(patchJson, appQuickFix);
-    return ERR_OK;
-}
-
 bool IsDefaultNativeSo(bool isSystemLib64Exist, const PatchExtractor &patchExtractor, AppqfInfo &appqfInfo)
 {
     if (isSystemLib64Exist) {
@@ -232,7 +201,7 @@ bool IsDefaultNativeSo(bool isSystemLib64Exist, const PatchExtractor &patchExtra
     return false;
 }
 
-bool PatchProfile::ParserNativeSo(AppqfInfo &appqfInfo, const PatchExtractor &patchExtractor)
+bool ParserNativeSo(AppqfInfo &appqfInfo, const PatchExtractor &patchExtractor)
 {
     std::string abis = GetAbiList();
     std::vector<std::string> abiList;
@@ -278,6 +247,39 @@ bool PatchProfile::ParserNativeSo(AppqfInfo &appqfInfo, const PatchExtractor &pa
     }
 
     return false;
+}
+
+void ToPatchInfo(PatchProfileReader::PatchJson &patchJson, AppQuickFix &appQuickFix)
+{
+    appQuickFix.bundleName = patchJson.app.bundleName;
+    appQuickFix.versionCode = patchJson.app.versionCode;
+    appQuickFix.versionName = patchJson.app.versionName;
+    appQuickFix.deployingAppqfInfo.versionCode = patchJson.app.patchVersionCode;
+    appQuickFix.deployingAppqfInfo.versionName = patchJson.app.patchVersionName;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = patchJson.module.name;
+    hqfInfo.hapSha256 = patchJson.module.originalModuleHash;
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
+}
+
+ErrCode PatchProfile::TransformTo(
+    const std::ostringstream &source, AppQuickFix &appQuickFix, const PatchExtractor &patchExtractor)
+{
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("bad profile");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    PatchProfileReader::PatchJson patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
+    if (PatchProfileReader::parseResult != ERR_OK) {
+        APP_LOGE("parseResult is %{public}d", PatchProfileReader::parseResult);
+        int32_t ret = PatchProfileReader::parseResult;
+        PatchProfileReader::parseResult = ERR_OK;
+        return ret;
+    }
+    ToPatchInfo(patchJson, appQuickFix);
+    ParserNativeSo(appQuickFix.deployingAppqfInfo, patchExtractor);
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
