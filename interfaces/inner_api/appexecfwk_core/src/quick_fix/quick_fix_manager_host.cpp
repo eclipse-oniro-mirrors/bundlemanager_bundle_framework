@@ -15,6 +15,7 @@
 
 #include "quick_fix_manager_host.h"
 
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
