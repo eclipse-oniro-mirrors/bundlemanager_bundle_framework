@@ -685,6 +685,7 @@ private:
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
+    bool GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo);
     std::shared_ptr<BMSEventHandler> handler_;
 };
 }  // namespace AppExecFwk

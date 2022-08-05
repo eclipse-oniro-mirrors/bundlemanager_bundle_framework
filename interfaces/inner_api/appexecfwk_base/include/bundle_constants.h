@@ -64,6 +64,8 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bun
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
+constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
+constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",

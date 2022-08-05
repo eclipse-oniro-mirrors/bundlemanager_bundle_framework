@@ -147,6 +147,7 @@ public:
     static void CloseFileDescriptor(std::vector<int32_t> &fdVec);
     static Resource GetResource(const std::string &bundleName, const std::string &moduleName, int32_t resId);
     static bool CreateDir(const std::string &dir);
+    static bool RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
