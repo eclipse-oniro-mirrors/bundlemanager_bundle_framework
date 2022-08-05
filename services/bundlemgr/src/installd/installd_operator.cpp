@@ -118,8 +118,8 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
             continue;
         }
         // handle native so
-        if (isNativeSo(entryName, targetSoPath, cpuAbi)) {
-            ExtractSo(extractor, entryName, targetSoPath, cpuAbi);
+        if (IsNativeSo(entryName, targetSoPath, cpuAbi)) {
+            ExtractTargetFile(extractor, entryName, targetSoPath, cpuAbi);
             continue;
         }
         const std::string dir = GetPathDir(entryName);
@@ -142,10 +142,10 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
     return true;
 }
 
-bool InstalldOperator::isNativeSo(const std::string &entryName,
+bool InstalldOperator::IsNativeSo(const std::string &entryName,
     const std::string &targetSoPath, const std::string &cpuAbi)
 {
-    APP_LOGD("isNativeSo, entryName : %{public}s", entryName.c_str());
+    APP_LOGD("IsNativeSo, entryName : %{public}s", entryName.c_str());
     if (targetSoPath.empty()) {
         APP_LOGD("current hap not include so");
         return false;
@@ -163,26 +163,47 @@ bool InstalldOperator::isNativeSo(const std::string &entryName,
     return true;
 }
 
-void InstalldOperator::ExtractSo(const BundleExtractor &extractor, const std::string &entryName,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+bool InstalldOperator::IsDiffFiles(const std::string &entryName,
+    const std::string &targetPath, const std::string &cpuAbi)
+{
+    APP_LOGD("IsDiffFiles, entryName : %{public}s", entryName.c_str());
+    if (targetPath.empty()) {
+        APP_LOGD("current hap not include diff");
+        return false;
+    }
+    std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+    if (entryName.find(prefix) == std::string::npos) {
+        APP_LOGD("entryName not start with %{public}s", prefix.c_str());
+        return false;
+    }
+    if (entryName.find(Constants::DIFF_SUFFIX) == std::string::npos) {
+        APP_LOGD("file name not diff format.");
+        return false;
+    }
+    APP_LOGD("find native diff, entryName : %{public}s", entryName.c_str());
+    return true;
+}
+
+void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
+    const std::string &targetPath, const std::string &cpuAbi)
 {
     // create dir if not exist
-    if (!IsExistDir(targetSoPath)) {
-        if (!MkRecursiveDir(targetSoPath, true)) {
-            APP_LOGE("create targetSoPath %{private}s failed", targetSoPath.c_str());
+    if (!IsExistDir(targetPath)) {
+        if (!MkRecursiveDir(targetPath, true)) {
+            APP_LOGE("create targetPath %{private}s failed", targetPath.c_str());
             return;
         }
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
     std::string targetSoName = entryName.substr(prefix.length());
-    std::string targetSo = targetSoPath;
+    std::string targetSo = targetPath;
     if (targetSo.back() != Constants::FILE_SEPARATOR_CHAR) {
         targetSo += Constants::FILE_SEPARATOR_CHAR;
     }
     targetSo += targetSoName;
     bool ret = extractor.ExtractFile(entryName, targetSo);
     if (!ret) {
-        APP_LOGE("extract so failed, entryName : %{public}s", entryName.c_str());
+        APP_LOGE("extract file failed, entryName : %{public}s", entryName.c_str());
         return;
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
@@ -190,7 +211,7 @@ void InstalldOperator::ExtractSo(const BundleExtractor &extractor, const std::st
         APP_LOGE("change mode failed, targetSo : %{public}s", targetSo.c_str());
         return;
     }
-    APP_LOGD("extract so success, targetSo : %{public}s", targetSo.c_str());
+    APP_LOGD("extract file success, targetSo : %{public}s", targetSo.c_str());
 }
 
 bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &newPath)
@@ -210,8 +231,8 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
         return false;
     }
 
-    if (!(IsValideCodePath(realOldPath) && IsValideCodePath(newPath))) {
-        APP_LOGE("IsValideCodePath failed");
+    if (!(IsValidCodePath(realOldPath) && IsValidCodePath(newPath))) {
+        APP_LOGE("IsValidCodePath failed");
         return false;
     }
     return RenameFile(realOldPath, newPath);
@@ -306,7 +327,7 @@ bool InstalldOperator::IsValidPath(const std::string &rootDir, const std::string
     return path.compare(0, rootDir.size(), rootDir) == 0;
 }
 
-bool InstalldOperator::IsValideCodePath(const std::string &codePath)
+bool InstalldOperator::IsValidCodePath(const std::string &codePath)
 {
     if (codePath.empty()) {
         return false;
@@ -531,7 +552,7 @@ bool InstalldOperator::CopyFile(
     return true;
 }
 
-bool InstalldOperator::ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {
     BundleExtractor extractor(filePath);
@@ -550,9 +571,9 @@ bool InstalldOperator::ExtractSoFiles(const std::string &filePath, const std::st
         if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
             continue;
         }
-        // handle native so
-        if (isNativeSo(entryName, targetSoPath, cpuAbi)) {
-            ExtractSo(extractor, entryName, targetSoPath, cpuAbi);
+        // handle diff file
+        if (IsDiffFiles(entryName, targetPath, cpuAbi)) {
+            ExtractTargetFile(extractor, entryName, targetPath, cpuAbi);
         }
     }
     return true;

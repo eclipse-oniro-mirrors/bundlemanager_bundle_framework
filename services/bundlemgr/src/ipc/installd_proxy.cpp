@@ -275,18 +275,18 @@ ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+ErrCode InstalldProxy::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(filePath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::EXTRACT_SO_FILES, data, reply, option);
+    return TransactInstalldCmd(IInstalld::Message::EXTRACT_DIFF_FILES, data, reply, option);
 }
 
 ErrCode InstalldProxy::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,

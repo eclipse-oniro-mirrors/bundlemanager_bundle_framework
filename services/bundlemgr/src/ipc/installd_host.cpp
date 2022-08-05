@@ -52,7 +52,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::COPY_FILE, &InstalldHost::HandleCopyFile);
     funcMap_.emplace(IInstalld::Message::MKDIR, &InstalldHost::HandleMkdir);
     funcMap_.emplace(IInstalld::Message::GET_FILE_STAT, &InstalldHost::HandleGetFileStat);
-    funcMap_.emplace(IInstalld::Message::EXTRACT_SO_FILES, &InstalldHost::HandleExtractSoFiles);
+    funcMap_.emplace(IInstalld::Message::EXTRACT_DIFF_FILES, &InstalldHost::HandleExtractDiffFiles);
     funcMap_.emplace(IInstalld::Message::APPLY_DIFF_PATCH, &InstalldHost::HandleApplyDiffPatch);
 }
 
@@ -251,12 +251,12 @@ bool InstalldHost::HandleGetFileStat(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
-bool InstalldHost::HandleExtractSoFiles(MessageParcel &data, MessageParcel &reply)
+bool InstalldHost::HandleExtractDiffFiles(MessageParcel &data, MessageParcel &reply)
 {
     std::string filePath = Str16ToStr8(data.ReadString16());
-    std::string targetSoPath = Str16ToStr8(data.ReadString16());
+    std::string targetPath = Str16ToStr8(data.ReadString16());
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    ErrCode result = ExtractSoFiles(filePath, targetSoPath, cpuAbi);
+    ErrCode result = ExtractDiffFiles(filePath, targetPath, cpuAbi);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

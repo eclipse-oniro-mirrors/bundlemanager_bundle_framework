@@ -124,7 +124,7 @@ public:
 
     virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) override;
 
-    virtual ErrCode ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+    virtual ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi) override;
 
     virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,

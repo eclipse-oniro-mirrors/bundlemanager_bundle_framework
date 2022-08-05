@@ -164,7 +164,7 @@ public:
      */
     virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) = 0;
 
-    virtual ErrCode ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+    virtual ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi) = 0;
 
     virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
@@ -188,7 +188,7 @@ protected:
         COPY_FILE,
         MKDIR,
         GET_FILE_STAT,
-        EXTRACT_SO_FILES,
+        EXTRACT_DIFF_FILES,
         APPLY_DIFF_PATCH
     };
 };

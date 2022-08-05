@@ -65,10 +65,10 @@ public:
     static bool ExtractFiles(const std::string &sourcePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi);
 
-    static bool isNativeSo(const std::string &entryName, const std::string &targetSoPath, const std::string &cpuAbi);
+    static bool IsNativeSo(const std::string &entryName, const std::string &targetSoPath, const std::string &cpuAbi);
 
-    static void ExtractSo(const BundleExtractor &extractor, const std::string &entryName,
-        const std::string &targetSoPath, const std::string &cpuAbi);
+    static void ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
+        const std::string &targetPath, const std::string &cpuAbi);
 
     /**
      * @brief Rename a directory from old path to new path.
@@ -104,7 +104,7 @@ public:
      * @param codePath Indicates the path to be checked.
      * @return Returns true if the file renamed successfully; returns false otherwise.
      */
-    static bool IsValideCodePath(const std::string &codePath);
+    static bool IsValidCodePath(const std::string &codePath);
     /**
      * @brief Get the parent directory path of a file.
      * @param codePath Indicates the file path.
@@ -163,7 +163,10 @@ public:
 
     static bool ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid);
 
-    static bool ExtractSoFiles(const std::string &filePath, const std::string &targetSoPath,
+    static bool IsDiffFiles(const std::string &entryName,
+        const std::string &targetPath, const std::string &cpuAbi);
+
+    static bool ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi);
 
     static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,

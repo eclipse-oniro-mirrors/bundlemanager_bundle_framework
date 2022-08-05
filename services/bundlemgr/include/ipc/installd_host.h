@@ -127,7 +127,7 @@ private:
 
     bool HandleGetFileStat(MessageParcel &data, MessageParcel &reply);
 
-    bool HandleExtractSoFiles(MessageParcel &data, MessageParcel &reply);
+    bool HandleExtractDiffFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandleApplyDiffPatch(MessageParcel &data, MessageParcel &reply);;
 
