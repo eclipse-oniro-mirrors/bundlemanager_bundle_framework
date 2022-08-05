@@ -488,16 +488,15 @@ ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const st
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::ExtractDiffFiles(filePath, targetPath, cpuAbi)) {
-        APP_LOGE("ExtractDiffFiles %{public}s to %{public}s failed", filePath.c_str(), targetPath.c_str());
         return ERR_APPEXECFWK_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
     }
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
+ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath)
 {
-    if (oldSoPath.empty() || diffSoPath.empty() || newSoPath.empty()) {
+    if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
         APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -505,9 +504,7 @@ ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffSoPath, newSoPath)) {
-        APP_LOGE("ApplyDiffPatch failed oldSoPath: %{public}s, diffSoPath: %{public}s, newSoPath: %{public}s",
-            oldSoPath.c_str(), diffSoPath.c_str(), newSoPath.c_str());
+    if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath)) {
         return ERR_APPEXECFWK_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
     }
     return ERR_OK;

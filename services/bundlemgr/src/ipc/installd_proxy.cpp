@@ -289,13 +289,13 @@ ErrCode InstalldProxy::ExtractDiffFiles(const std::string &filePath, const std::
     return TransactInstalldCmd(IInstalld::Message::EXTRACT_DIFF_FILES, data, reply, option);
 }
 
-ErrCode InstalldProxy::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
+ErrCode InstalldProxy::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldSoPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(diffSoPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(diffFilePath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newSoPath));
 
     MessageParcel reply;

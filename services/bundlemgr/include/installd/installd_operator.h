@@ -169,7 +169,7 @@ public:
     static bool ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi);
 
-    static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
+    static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath);
 };
 }  // namespace AppExecFwk

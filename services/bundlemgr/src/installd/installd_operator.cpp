@@ -195,23 +195,22 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         }
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-    std::string targetSoName = entryName.substr(prefix.length());
-    std::string targetSo = targetPath;
-    if (targetSo.back() != Constants::FILE_SEPARATOR_CHAR) {
-        targetSo += Constants::FILE_SEPARATOR_CHAR;
+    std::string targetName = entryName.substr(prefix.length());
+    std::string path = targetPath;
+    if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+        path += Constants::FILE_SEPARATOR_CHAR;
     }
-    targetSo += targetSoName;
-    bool ret = extractor.ExtractFile(entryName, targetSo);
+    path += targetName;
+    bool ret = extractor.ExtractFile(entryName, path);
     if (!ret) {
         APP_LOGE("extract file failed, entryName : %{public}s", entryName.c_str());
         return;
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-    if (!OHOS::ChangeModeFile(targetSo, mode)) {
-        APP_LOGE("change mode failed, targetSo : %{public}s", targetSo.c_str());
+    if (!OHOS::ChangeModeFile(path, mode)) {
         return;
     }
-    APP_LOGD("extract file success, targetSo : %{public}s", targetSo.c_str());
+    APP_LOGD("extract file success, path : %{private}s", path.c_str());
 }
 
 bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &newPath)
@@ -579,10 +578,10 @@ bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::
     return true;
 }
 
-bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffSoPath,
+bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath)
 {
-    if (oldSoPath.empty() || diffSoPath.empty() || newSoPath.empty()) {
+    if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
         return false;
     }
     return true;

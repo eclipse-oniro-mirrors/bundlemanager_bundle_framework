@@ -264,9 +264,9 @@ bool InstalldHost::HandleExtractDiffFiles(MessageParcel &data, MessageParcel &re
 bool InstalldHost::HandleApplyDiffPatch(MessageParcel &data, MessageParcel &reply)
 {
     std::string oldSoPath = Str16ToStr8(data.ReadString16());
-    std::string diffSoPath = Str16ToStr8(data.ReadString16());
+    std::string diffFilePath = Str16ToStr8(data.ReadString16());
     std::string newSoPath = Str16ToStr8(data.ReadString16());
-    ErrCode result = ApplyDiffPatch(oldSoPath, diffSoPath, newSoPath);
+    ErrCode result = ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
