@@ -18,6 +18,7 @@
 
 #include "appexecfwk_errors.h"
 #include "quick_fix/app_quick_fix.h"
+#include "quick_fix/appqf_info.h"
 #include "quick_fix/patch_extractor.h"
 
 namespace OHOS {
@@ -25,7 +26,10 @@ namespace AppExecFwk {
 class PatchProfile {
 public:
     ErrCode TransformTo(
-        const std::ostringstream &source, AppQuickFix &appQuickFix, const PatchExtractor &patchExtractor);
+        const std::ostringstream &source, const PatchExtractor &patchExtractor, AppQuickFix &appQuickFix);
+private:
+    bool DefaultNativeSo(const PatchExtractor &patchExtractor, bool isSystemLib64Exist, AppqfInfo &appqfInfo);
+    bool ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo &appqfInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
