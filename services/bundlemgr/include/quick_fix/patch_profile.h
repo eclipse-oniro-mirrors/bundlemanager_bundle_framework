@@ -18,12 +18,14 @@
 
 #include "appexecfwk_errors.h"
 #include "quick_fix/app_quick_fix.h"
+#include "quick_fix/patch_extractor.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class PatchProfile {
 public:
     ErrCode TransformTo(const std::ostringstream &source, AppQuickFix &appQuickFix);
+    bool ParserNativeSo(AppqfInfo &appqfInfo, const PatchExtractor &patchExtractor);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
