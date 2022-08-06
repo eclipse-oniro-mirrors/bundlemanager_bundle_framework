@@ -62,7 +62,7 @@ ohos_shared_library("libdbms") {
     "ipc:ipc_core",
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   if (hisysevent_enable) {

@@ -45,7 +45,7 @@ ohos_shared_library("bundlemgr_graphics") {
     "ipc:ipc_core",
     "multimedia_image_standard:image_native",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "bundlemanager"

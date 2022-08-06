@@ -48,7 +48,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
   defines = []
   if (build_selinux) {

@@ -21,7 +21,7 @@ config("tools_bm_config_moduletest") {
     "${appexecfwk_path}/services/bundlemgr/include/installd",
     "${appexecfwk_path}/services/bundlemgr/include",
     "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
-    "//foundation/distributedschedule/safwk/services/safwk/include",
+    "//foundation/systemabilitymgr/safwk/services/safwk/include",
     "//third_party/json/include",
     "//third_party/zlib",
     "//third_party/zlib/contrib/minizip",
@@ -76,7 +76,7 @@ ohos_moduletest("bm_command_dump_module_test") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 }
 
@@ -123,7 +123,7 @@ ohos_moduletest("bm_command_install_module_test") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 }
 
@@ -170,7 +170,7 @@ ohos_moduletest("bm_command_uninstall_module_test") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 }
 

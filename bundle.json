@@ -61,7 +61,7 @@
                 "power_manager",
                 "safwk",
                 "resource_management",
-                "samgr_standard",
+                "samgr",
                 "selinux",
                 "syscap_codec",
                 "utils_base",
