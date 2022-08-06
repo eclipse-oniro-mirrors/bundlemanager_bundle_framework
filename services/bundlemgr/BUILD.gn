@@ -158,7 +158,6 @@ ohos_shared_library("libbms") {
     "src/bundle_common_event_mgr.cpp",
     "src/bundle_data_mgr.cpp",
     "src/bundle_data_storage.cpp",
-    "src/bundle_data_storage_database.cpp",
     "src/bundle_mgr_host_impl.cpp",
     "src/bundle_mgr_service.cpp",
     "src/bundle_mgr_service_event_handler.cpp",
@@ -167,8 +166,6 @@ ohos_shared_library("libbms") {
     "src/bundle_status_callback_death_recipient.cpp",
     "src/bundle_user_mgr_host_impl.cpp",
     "src/hidump_helper.cpp",
-    "src/kvstore_death_recipient_callback.cpp",
-    "src/preinstall_data_storage.cpp",
     "src/system_ability_helper.cpp",
   ]
 
@@ -212,7 +209,6 @@ ohos_shared_library("libbms") {
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "distributed_bundle_framework:dbms_fwk",
-    "distributeddatamgr:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
@@ -308,6 +304,13 @@ ohos_shared_library("libbms") {
       "src/preinstall_data_storage_rdb.cpp",
       "src/rdb/bms_rdb_open_callback.cpp",
       "src/rdb/rdb_data_manager.cpp",
+    ]
+  } else {
+    external_deps += [ "distributeddatamgr:distributeddata_inner" ]
+    sources += [
+      "src/bundle_data_storage_database.cpp",
+      "src/kvstore_death_recipient_callback.cpp",
+      "src/preinstall_data_storage.cpp",
     ]
   }
 

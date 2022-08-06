@@ -75,12 +75,7 @@ std::unique_ptr<RdbDataManager> BmsRdbDataManagerTest::OpenDbAndTable()
     bmsRdbConfig.dbPath = DB_PATH;
     bmsRdbConfig.dbName = DB_NAME;
     bmsRdbConfig.tableName = TABLE_NAME;
-    std::unique_ptr<RdbDataManager> rdbDataManager = std::make_unique<RdbDataManager>(bmsRdbConfig);
-    if (!rdbDataManager->Init()) {
-        return nullptr;
-    }
-
-    return rdbDataManager;
+    return std::make_unique<RdbDataManager>(bmsRdbConfig);
 }
 
 void BmsRdbDataManagerTest::CloseDb()
