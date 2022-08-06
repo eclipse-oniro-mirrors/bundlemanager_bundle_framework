@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
-std::map<std::string, std::map<std::string, bool>> BundlePermissionMgr::defaultPermissions_;
+std::map<std::string, DefaultPermission> BundlePermissionMgr::defaultPermissions_;
 
 bool BundlePermissionMgr::Init()
 {
@@ -54,14 +54,7 @@ bool BundlePermissionMgr::Init()
 
     defaultPermissions_.clear();
     for (const auto &permission : permissions) {
-        std::map<std::string, bool> permissionInfo;
-        APP_LOGD("BundlePermissionMgr::Init bundleName: %{public}s", permission.bundleName.c_str());
-        for (const auto &info : permission.grantPermission) {
-            APP_LOGD("BundlePermissionMgr::Init permissionName: %{public}s, userCancellable: %{public}d",
-                info.name.c_str(), info.userCancellable);
-            permissionInfo.try_emplace(info.name, info.userCancellable);
-        }
-        defaultPermissions_.try_emplace(permission.bundleName, permissionInfo);
+        defaultPermissions_.try_emplace(permission.bundleName, permission);
     }
     APP_LOGD("BundlePermissionMgr::Init success");
     return true;
@@ -444,7 +437,18 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(Security::AccessToken::Ac
     if (innerBundleInfo.IsPreInstallApp()) {
         for (const auto &perm: userGrantPermList) {
             bool userCancellable = false;
-            if (!CheckPermissionInDefaultPermissions(bundleName, perm, userCancellable)) {
+            DefaultPermission permission;
+            if (!GetDefaultPermission(bundleName, permission)) {
+                continue;
+            }
+
+#ifdef USE_PRE_BUNDLE_PROFILE
+            if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint())) {
+                continue;
+            }
+#endif
+
+            if (!CheckPermissionInDefaultPermissions(permission, perm, userCancellable)) {
                 continue;
             }
             AccessToken::PermissionFlag flag = userCancellable ?
@@ -623,24 +627,46 @@ bool BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, Pe
     return false;
 }
 
-bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const std::string &bundleName,
+bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,
     const std::string &permissionName, bool &userCancellable)
 {
-    auto iterBundleName = defaultPermissions_.find(bundleName);
-    if (iterBundleName == defaultPermissions_.end()) {
+    auto &grantPermission = defaultPermission.grantPermission;
+    auto iter = std::find_if(grantPermission.begin(), grantPermission.end(), [&permissionName](const auto &defPerm) {
+            return defPerm.name == permissionName;
+        });
+    if (iter == grantPermission.end()) {
+        APP_LOGW("can not find permission(%{public}s)", permissionName.c_str());
+        return false;
+    }
+
+    userCancellable = iter->userCancellable;
+    return true;
+}
+
+bool BundlePermissionMgr::GetDefaultPermission(
+    const std::string &bundleName, DefaultPermission &permission)
+{
+    auto iter = defaultPermissions_.find(bundleName);
+    if (iter == defaultPermissions_.end()) {
         APP_LOGW("bundleName: %{public}s does not exist in defaultPermissions",
             bundleName.c_str());
         return false;
     }
-    std::map<std::string, bool> info = iterBundleName->second;
-    auto iterPermission = info.find(permissionName);
-    if (iterPermission == info.end()) {
-        APP_LOGW("bundleName: %{public}s, permissionName: %{public}s does not exist in defaultPermissions",
-            bundleName.c_str(), permissionName.c_str());
-        return false;
-    }
-    userCancellable = iterPermission->second;
+
+    permission = iter->second;
     return true;
+}
+
+bool BundlePermissionMgr::MatchSignature(
+    const DefaultPermission &permission, const std::string &signature)
+{
+        if (permission.appSignature.empty()) {
+            APP_LOGW("appSignature is empty");
+            return true;
+        }
+
+        return std::find(permission.appSignature.begin(),
+            permission.appSignature.end(), signature) != permission.appSignature.end();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

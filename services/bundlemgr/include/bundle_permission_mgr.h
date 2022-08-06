@@ -18,6 +18,7 @@
 
 #include "accesstoken_kit.h"
 #include "bundle_constants.h"
+#include "default_permission.h"
 #include "inner_bundle_info.h"
 #include "permission_define.h"
 
@@ -133,14 +134,18 @@ private:
     static std::vector<std::string> GetNeedDeleteRequestPermissionName(const InnerBundleInfo &oldInfo,
         const InnerBundleInfo &newInfo);
 
-    static bool CheckPermissionInDefaultPermissions(const std::string &bundleName, const std::string &permissionName,
-        bool &userCancellable);
+    static bool GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission);
+
+    static bool MatchSignature(const DefaultPermission &permission, const std::string &signature);
+
+    static bool CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,
+        const std::string &permissionName, bool &userCancellable);
 
     static bool GrantPermission(const Security::AccessToken::AccessTokenID tokenId,
         const std::string &permissionName, const Security::AccessToken::PermissionFlag flag,
         const std::string &bundleName);
 
-    static std::map<std::string, std::map<std::string, bool>> defaultPermissions_;
+    static std::map<std::string, DefaultPermission> defaultPermissions_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
