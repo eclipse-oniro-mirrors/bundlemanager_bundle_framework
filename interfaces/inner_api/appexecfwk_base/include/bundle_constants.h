@@ -117,6 +117,7 @@ const std::map<std::string, std::string> ABI_MAP = {
 };
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
+constexpr const char* DIFF_SUFFIX = ".diff";
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;

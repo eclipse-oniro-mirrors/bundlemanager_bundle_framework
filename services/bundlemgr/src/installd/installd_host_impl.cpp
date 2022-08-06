@@ -475,5 +475,39 @@ ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileSta
     fileStat.isDir = s.st_mode & S_IFDIR;
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
+    const std::string &cpuAbi)
+{
+    if (filePath.empty() || targetPath.empty()) {
+        APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::ExtractDiffFiles(filePath, targetPath, cpuAbi)) {
+        return ERR_APPEXECFWK_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
+    const std::string &newSoPath)
+{
+    if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
+        APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath)) {
+        return ERR_APPEXECFWK_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

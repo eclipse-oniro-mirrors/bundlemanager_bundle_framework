@@ -220,5 +220,23 @@ ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)
 
     return CallService(&IInstalld::GetFileStat, file, fileStat);
 }
+
+ErrCode InstalldClient::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
+    const std::string &cpuAbi)
+{
+    if (filePath.empty() || targetPath.empty() || cpuAbi.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractDiffFiles, filePath, targetPath, cpuAbi);
+}
+
+ErrCode InstalldClient::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
+    const std::string &newSoPath)
+{
+    if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ApplyDiffPatch, oldSoPath, diffFilePath, newSoPath);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

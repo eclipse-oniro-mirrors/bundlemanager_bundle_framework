@@ -134,6 +134,12 @@ public:
 
     ErrCode GetFileStat(const std::string &file, FileStat &fileStat);
 
+    ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
+        const std::string &cpuAbi);
+
+    ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
+        const std::string &newSoPath);
+
 private:
     /**
      * @brief Get the installd proxy object.
