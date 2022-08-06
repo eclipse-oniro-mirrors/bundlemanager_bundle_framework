@@ -120,6 +120,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function |
     ASSERT_EQ(destFiles.size(), sourceFiles.size());
     ASSERT_TRUE(FileExists(destFiles[0]));
     ASSERT_TRUE(FileExists(destFiles[1]));
+    DeleteFiles(sourceFiles);
     DeleteFiles(destFiles);
     APP_LOGI("end of BmsBundleQuickFixManager_0100.");
 }
@@ -140,6 +141,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function |
     std::vector<std::string> destFiles;
     bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
     ASSERT_FALSE(ret);
+    DeleteFiles(sourceFiles);
     APP_LOGI("end of BmsBundleQuickFixManager_0200.");
 }
 
