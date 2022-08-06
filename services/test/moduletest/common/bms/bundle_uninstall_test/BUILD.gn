@@ -36,7 +36,6 @@ ohos_moduletest("BmsBundleUninstallerModuleTest") {
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
@@ -49,8 +48,6 @@ ohos_moduletest("BmsBundleUninstallerModuleTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
-    "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
-    "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
   ]
 
   sources += bundle_install_sources
@@ -111,6 +108,25 @@ ohos_moduletest("BmsBundleUninstallerModuleTest") {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (bms_rdb_enable) {
+    configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+    defines += [ "BMS_RDB_ENABLE" ]
+    external_deps += [ "relational_store:native_rdb" ]
+    sources += [
+      "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
+      "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+      "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+      "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    ]
+  } else {
+    external_deps += [ "distributeddatamgr:distributeddata_inner" ]
+    sources += [
+      "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
+      "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
+      "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
+    ]
   }
 
   resource_config_file =
