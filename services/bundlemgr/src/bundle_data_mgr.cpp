@@ -1308,7 +1308,7 @@ std::string BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const 
         return (*ability).label;
     }
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, moduleName, GetUserId());
+        GetResourceManager(bundleName, (*ability).moduleName, GetUserId());
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return Constants::EMPTY_STRING;
