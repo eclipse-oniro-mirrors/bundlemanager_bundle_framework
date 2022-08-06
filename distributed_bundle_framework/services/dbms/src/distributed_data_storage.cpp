@@ -97,7 +97,7 @@ void DistributedDataStorage::SaveStorageDistributeInfo(const std::string &bundle
     }
 }
 
-bool DistributedDataStorage::InnerSaveStorageDistributeInfo(const DistributedBundleInfo distributedBundleInfo)
+bool DistributedDataStorage::InnerSaveStorageDistributeInfo(const DistributedBundleInfo &distributedBundleInfo)
 {
     std::string udid;
     bool ret = GetLocalUdid(udid);
