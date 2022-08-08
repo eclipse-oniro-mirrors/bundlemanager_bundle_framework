@@ -1334,13 +1334,6 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
                 return true;
             }
 
-            if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::X86_64)) {
-                applicationInfo.cpuAbi = Constants::X86_64;
-                applicationInfo.nativeLibraryPath =
-                    Constants::LIBS + Constants::ABI_MAP.at(Constants::X86_64);
-                return true;
-            }
-
             return false;
         }
 
@@ -1355,13 +1348,6 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
             applicationInfo.cpuAbi = Constants::ARM_EABI;
             applicationInfo.nativeLibraryPath =
                 Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI);
-            return true;
-        }
-
-        if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::X86)) {
-            applicationInfo.cpuAbi = Constants::X86;
-            applicationInfo.nativeLibraryPath =
-                Constants::LIBS + Constants::ABI_MAP.at(Constants::X86);
             return true;
         }
 
