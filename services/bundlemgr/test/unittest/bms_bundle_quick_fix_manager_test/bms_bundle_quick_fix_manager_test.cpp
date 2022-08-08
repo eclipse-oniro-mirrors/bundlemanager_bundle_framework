@@ -120,8 +120,12 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function |
     ASSERT_EQ(destFiles.size(), sourceFiles.size());
     EXPECT_TRUE(FileExists(destFiles[0]));
     EXPECT_TRUE(FileExists(destFiles[1]));
-    EXPECT_EQ(LoadStringFromFile(FILE1_PATH), FILE1_PATH);
-    EXPECT_EQ(LoadStringFromFile(FILE2_PATH), FILE2_PATH);
+    std::string content1;
+    LoadStringFromFile(FILE1_PATH, content1);
+    EXPECT_EQ(content1, FILE1_PATH);
+    std::string content2;
+    LoadStringFromFile(FILE2_PATH, content2);
+    EXPECT_EQ(content2, FILE2_PATH);
     DeleteFiles(sourceFiles);
     DeleteFiles(destFiles);
     APP_LOGI("end of BmsBundleQuickFixManager_0100.");
