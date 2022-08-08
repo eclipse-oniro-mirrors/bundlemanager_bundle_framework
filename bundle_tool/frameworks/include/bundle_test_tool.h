@@ -43,7 +43,10 @@ private:
     ErrCode RunAsDumpSandboxCommand();
     ErrCode RunAsGetStringCommand();
     ErrCode RunAsGetIconCommand();
-    
+    ErrCode RunAsDeployQuickFix();
+    ErrCode RunAsSwitchQuickFix();
+    ErrCode RunAsDeleteQuickFix();
+
     std::condition_variable cv_;
     std::mutex mutex_;
 
@@ -66,6 +69,10 @@ private:
     ErrCode DumpSandboxBundleInfo(const std::string &bundleName, const int32_t appIndex, const int32_t userId,
         std::string &dumpResults);
     ErrCode StringToInt(std::string option, const std::string &commandName, int &temp, bool &result);
+    ErrCode DeployQuickFix(const std::vector<std::string> &quickFixPaths);
+    ErrCode SwitchQuickFix(const std::string &bundleName, int32_t enable);
+    ErrCode DeleteQuickFix(const std::string &bundleName);
+    ErrCode GetQuickFixPath(int32_t index, std::vector<std::string>& quickFixPaths) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

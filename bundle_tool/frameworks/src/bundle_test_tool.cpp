@@ -19,9 +19,10 @@
 #include <cstring>
 #include <future>
 #include <getopt.h>
+#include <iostream>
+#include <set>
 #include <unistd.h>
 #include <vector>
-#include <iostream>
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
@@ -30,7 +31,11 @@
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_tool_callback_stub.h"
+#include "directory_ex.h"
 #include "parameter.h"
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+#include "quick_fix_status_callback_host_impl.h"
+#endif
 #include "status_receiver_impl.h"
 #include "string_ex.h"
 #include "json_util.h"
@@ -38,6 +43,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+// param
+const int32_t INDEX_OFFSET = 2;
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
@@ -49,7 +56,10 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "  dumpSandbox         indicates dump sandbox info\n"
                              "  getStr      obtain the value of label by given bundle name, module name and label id\n"
                              "  getIcon     obtain the value of icon by given bundle name, module name,\n"
-                             "              density and icon id\n";
+                             "              density and icon id\n"
+                             "  deployQuickFix      deploy a quick fix patch of an already installed bundle\n"
+                             "  switchQuickFix      switch a quick fix patch of an already installed bundle\n"
+                             "  deleteQuickFix      delete a quick fix patch of an already installed bundle\n";
 
 const std::string HELP_MSG_GET_REMOVABLE =
     "usage: bundle_test_tool getrm <options>\n"
@@ -130,6 +140,29 @@ const std::string HELP_MSG_NO_GETICON_OPTION =
     "and a density with '-d' or '--density' \n"
     "and a iconid with '-i' or '--id' \n";
 
+const std::string HELP_MSG_DEPLOY_QUICK_FIX =
+    "usage: bundle_test_tool deploy quick fix <options>\n"
+    "eg:bundle_test_tool deployQuickFix -p <quickFixPath> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -p, --patch-path  <patch-path>         specify patch path of the patch\n";
+
+const std::string HELP_MSG_SWITCH_QUICK_FIX =
+    "usage: bundle_test_tool switch quick fix <options>\n"
+    "eg:bundle_test_tool switchQuickFix -n <bundle-name> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       specify bundleName of the patch\n"
+    "  -e, --enbale  <enable>                 enable a deployed patch of disable an under using patch,\n"
+    "                                         1 represents enable and 0 represents disable\n";
+
+const std::string HELP_MSG_DELETE_QUICK_FIX =
+    "usage: bundle_test_tool delete quick fix <options>\n"
+    "eg:bundle_test_tool deleteQuickFix -n <bundle-name> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       specify bundleName of the patch\n";
+
 const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n";
 
@@ -152,6 +185,14 @@ const std::string STRING_DUMP_SANDBOX_FAILED = "dump sandbox app info failed\n";
 const std::string STRING_GET_STRING_NG = "error: failed to get label \n";
 
 const std::string STRING_GET_ICON_NG = "error: failed to get icon \n";
+
+const std::string STRING_DEPLOY_QUICK_FIX_OK = "deploy quick fix successfully\n";
+const std::string STRING_DEPLOY_QUICK_FIX_NG = "deploy quick fix failed\n";
+const std::string HELP_MSG_NO_QUICK_FIX_PATH_OPTION = "need a quick fix patch path\n";
+const std::string STRING_SWITCH_QUICK_FIX_OK = "switch quick fix successfully\n";
+const std::string STRING_SWITCH_QUICK_FIX_NG = "switch quick fix failed\n";
+const std::string STRING_DELETE_QUICK_FIX_OK = "delete quick fix successfully\n";
+const std::string STRING_DELETE_QUICK_FIX_NG = "delete quick fix failed\n";
 
 const std::string GET_RM = "getrm";
 const std::string SET_RM = "setrm";
@@ -191,6 +232,15 @@ const struct option LONG_OPTIONS_GET[] = {
     {"density", required_argument, nullptr, 'd'},
     {nullptr, 0, nullptr, 0},
 };
+
+const std::string SHORT_OPTIONS_QUICK_FIX = "hp:n:e:";
+const struct option LONG_OPTIONS_QUICK_FIX[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"patch-path", required_argument, nullptr, 'p'},
+    {"bundle-name", required_argument, nullptr, 'n'},
+    {"enable", required_argument, nullptr, 'e'},
+    {nullptr, 0, nullptr, 0},
+};
 }  // namespace
 
 BundleTestTool::BundleTestTool(int argc, char *argv[]) : ShellCommand(argc, argv, TOOL_NAME)
@@ -211,6 +261,9 @@ ErrCode BundleTestTool::CreateCommandMap()
         {"dumpSandbox", std::bind(&BundleTestTool::RunAsDumpSandboxCommand, this)},
         {"getStr", std::bind(&BundleTestTool::RunAsGetStringCommand, this)},
         {"getIcon", std::bind(&BundleTestTool::RunAsGetIconCommand, this)},
+        {"deployQuickFix", std::bind(&BundleTestTool::RunAsDeployQuickFix, this)},
+        {"switchQuickFix", std::bind(&BundleTestTool::RunAsSwitchQuickFix, this)},
+        {"deleteQuickFix", std::bind(&BundleTestTool::RunAsDeleteQuickFix, this)}
     };
 
     return OHOS::ERR_OK;
@@ -1025,6 +1078,269 @@ ErrCode BundleTestTool::RunAsGetIconCommand()
         resultReceiver_.append(results);
     }
     return result;
+}
+
+ErrCode BundleTestTool::RunAsDeployQuickFix()
+{
+    int32_t result = OHOS::ERR_OK;
+    int32_t option = -1;
+    int32_t counter = 0;
+    int32_t index = 0;
+    std::vector<std::string> quickFixPaths;
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+
+        if (option == -1 || option == '?') {
+            if (counter == 1 && strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            if (optopt == 'p') {
+                // 'bm deployQuickFix --patch-path' with no argument
+                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            break;
+        }
+
+        if (option == 'p') {
+            APP_LOGD("'bm deployQuickFix -p %{public}s'", argv_[optind - 1]);
+            quickFixPaths.emplace_back(optarg);
+            index = optind;
+            continue;
+        }
+        result = OHOS::ERR_INVALID_VALUE;
+        break;
+    }
+
+    if (result != OHOS::ERR_OK || GetQuickFixPath(index, quickFixPaths) != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_DEPLOY_QUICK_FIX);
+        return result;
+    }
+
+    int32_t deployResult = DeployQuickFix(quickFixPaths);
+    resultReceiver_ = (deployResult == OHOS::ERR_OK) ? STRING_DEPLOY_QUICK_FIX_OK : STRING_DEPLOY_QUICK_FIX_NG;
+    resultReceiver_ += GetMessageFromCode(deployResult);
+
+    return result;
+}
+
+ErrCode BundleTestTool::GetQuickFixPath(int32_t index, std::vector<std::string>& quickFixPaths) const
+{
+    APP_LOGI("GetQuickFixPath start");
+    for (; index < argc_ && index >= INDEX_OFFSET; ++index) {
+        if (argList_[index - INDEX_OFFSET] == "-p" || argList_[index - INDEX_OFFSET] == "--patch-path") {
+            break;
+        }
+
+        std::string innerPath = argList_[index - INDEX_OFFSET];
+        if (innerPath.empty() || innerPath == "-p" || innerPath == "--patch-path") {
+            quickFixPaths.clear();
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        APP_LOGD("GetQuickFixPath is %{public}s'", innerPath.c_str());
+        quickFixPaths.emplace_back(innerPath);
+    }
+    return OHOS::ERR_OK;
+}
+
+ErrCode BundleTestTool::RunAsSwitchQuickFix()
+{
+    int32_t result = OHOS::ERR_OK;
+    int32_t option = -1;
+    int32_t counter = 0;
+    int32_t enable = 0;
+    std::string bundleName;
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+
+        if (option == -1 || option == '?') {
+            if (counter == 1 && strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            if (optopt == 'n' || optopt == 'e') {
+                // 'bm switchQuickFix -n -e' with no argument
+                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            break;
+        }
+
+        if (option == 'n') {
+            APP_LOGD("'bm switchQuickFix -n %{public}s'", argv_[optind - 1]);
+            bundleName = optarg;
+            continue;
+        }
+        if (option == 'e' && OHOS::StrToInt(optarg, enable)) {
+            APP_LOGD("'bm switchQuickFix -e %{public}s'", argv_[optind - 1]);
+            continue;
+        }
+        result = OHOS::ERR_INVALID_VALUE;
+        break;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_SWITCH_QUICK_FIX);
+        return result;
+    }
+    int32_t switchResult = SwitchQuickFix(bundleName, enable);
+    resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
+    resultReceiver_ += GetMessageFromCode(switchResult);
+
+    return result;
+}
+
+ErrCode BundleTestTool::RunAsDeleteQuickFix()
+{
+    int32_t result = OHOS::ERR_OK;
+    int32_t option = -1;
+    int32_t counter = 0;
+    std::string bundleName;
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+
+        if (option == -1 || option == '?') {
+            if (counter == 1 && strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            if (optopt == 'n') {
+                // 'bm deleteQuickFix -n' with no argument
+                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            break;
+        }
+
+        if (option == 'n') {
+            APP_LOGD("'bm deleteQuickFix -n %{public}s'", argv_[optind - 1]);
+            bundleName = optarg;
+            continue;
+        }
+        result = OHOS::ERR_INVALID_VALUE;
+        break;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_SWITCH_QUICK_FIX);
+        return result;
+    }
+    int32_t switchResult = DeleteQuickFix(bundleName);
+    resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
+    resultReceiver_ += GetMessageFromCode(switchResult);
+
+    return result;
+}
+
+ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixPaths)
+{
+    std::set<std::string> realPathSet;
+    for (const auto &quickFixPath : quickFixPaths) {
+        std::string realPath;
+        if (!PathToRealPath(quickFixPath, realPath)) {
+            APP_LOGW("quickFixPath %{public}s is invalid", quickFixPath.c_str());
+            continue;
+        }
+        APP_LOGD("realPath is %{public}s", realPath.c_str());
+        realPathSet.insert(realPath);
+    }
+    std::vector<std::string> pathVec(realPathSet.begin(), realPathSet.end());
+
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    sptr<QuickFixStatusCallbackHostlmpl> callback(new (std::nothrow) QuickFixStatusCallbackHostlmpl());
+    if (callback == nullptr || bundleMgrProxy_ == nullptr) {
+        APP_LOGE("callback or bundleMgrProxy is null");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    auto quickFixProxy = bundleMgrProxy_->GetQuickFixManagerProxy();
+    if (quickFixProxy == nullptr) {
+        APP_LOGE("quickFixProxy is null");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+
+    if (!quickFixProxy->DeployQuickFix(pathVec, callback)) {
+        APP_LOGE("DeployQuickFix failed");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+#else
+    return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+#endif
+}
+
+ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t enable)
+{
+    APP_LOGD("SwitchQuickFix bundleName: %{public}s, enable: %{public}d", bundleName.c_str(), enable);
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    sptr<QuickFixStatusCallbackHostlmpl> callback(new (std::nothrow) QuickFixStatusCallbackHostlmpl());
+    if (callback == nullptr || bundleMgrProxy_ == nullptr) {
+        APP_LOGE("callback or bundleMgrProxy is null");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    auto quickFixProxy = bundleMgrProxy_->GetQuickFixManagerProxy();
+    if (quickFixProxy == nullptr) {
+        APP_LOGE("quickFixProxy is null");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    if (enable != 0 && enable != 1) {
+        APP_LOGE("enable is wrong");
+        return IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
+    }
+
+    if (!quickFixProxy->SwitchQuickFix(bundleName, callback)) {
+        APP_LOGE("SwitchQuickFix failed");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+#else
+    return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+#endif
+}
+
+ErrCode BundleTestTool::DeleteQuickFix(const std::string &bundleName)
+{
+    APP_LOGD("DeleteQuickFix bundleName: %{public}s", bundleName.c_str());
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    sptr<QuickFixStatusCallbackHostlmpl> callback(new (std::nothrow) QuickFixStatusCallbackHostlmpl());
+    if (callback == nullptr || bundleMgrProxy_ == nullptr) {
+        APP_LOGE("callback or bundleMgrProxy is null");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    auto quickFixProxy = bundleMgrProxy_->GetQuickFixManagerProxy();
+    if (quickFixProxy == nullptr) {
+        APP_LOGE("quickFixProxy is null");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    if (!quickFixProxy->DeleteQuickFix(bundleName, callback)) {
+        APP_LOGE("DeleteQuickFix failed");
+        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+#else
+    return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+#endif
 }
 } // AppExecFwk
 } // OHOS
