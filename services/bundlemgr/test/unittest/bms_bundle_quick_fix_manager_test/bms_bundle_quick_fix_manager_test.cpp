@@ -116,10 +116,12 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function |
     CreateFiles(sourceFiles);
     std::vector<std::string> destFiles;
     bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    ASSERT_TRUE(ret);
+    EXPECT_TRUE(ret);
     ASSERT_EQ(destFiles.size(), sourceFiles.size());
-    ASSERT_TRUE(FileExists(destFiles[0]));
-    ASSERT_TRUE(FileExists(destFiles[1]));
+    EXPECT_TRUE(FileExists(destFiles[0]));
+    EXPECT_TRUE(FileExists(destFiles[1]));
+    EXPECT_EQ(LoadStringFromFile(FILE1_PATH), FILE1_PATH);
+    EXPECT_EQ(LoadStringFromFile(FILE2_PATH), FILE2_PATH);
     DeleteFiles(sourceFiles);
     DeleteFiles(destFiles);
     APP_LOGI("end of BmsBundleQuickFixManager_0100.");
@@ -140,7 +142,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function |
     CreateFiles(sourceFiles);
     std::vector<std::string> destFiles;
     bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    ASSERT_FALSE(ret);
+    EXPECT_FALSE(ret);
     DeleteFiles(sourceFiles);
     APP_LOGI("end of BmsBundleQuickFixManager_0200.");
 }
@@ -159,7 +161,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0300, Function |
     std::vector<std::string> sourceFiles {NOT_EXIST_FILE_PATH};
     std::vector<std::string> destFiles;
     bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    ASSERT_FALSE(ret);
+    EXPECT_FALSE(ret);
     APP_LOGI("end of BmsBundleQuickFixManager_0300.");
 }
 
@@ -177,7 +179,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0400, Function |
     std::vector<std::string> sourceFiles;
     std::vector<std::string> destFiles;
     bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    ASSERT_FALSE(ret);
+    EXPECT_FALSE(ret);
     APP_LOGI("end of BmsBundleQuickFixManager_0400.");
 }
 }
