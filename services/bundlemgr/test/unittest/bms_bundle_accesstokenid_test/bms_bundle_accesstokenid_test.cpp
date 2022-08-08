@@ -84,8 +84,8 @@ void BmsBundleAccessTokenIdTest::TearDownTestCase()
 
 void BmsBundleAccessTokenIdTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
+    StartBundleService();
 }
 
 void BmsBundleAccessTokenIdTest::TearDown()

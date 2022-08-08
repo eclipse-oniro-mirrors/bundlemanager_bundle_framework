@@ -1119,6 +1119,11 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
     }
 
+    if (bundleInstallChecker_->IsContainModuleName(newInfo, oldInfo)) {
+        APP_LOGE("moduleName is already existed");
+        return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
+    }
+
     // same version need to check app label
     ErrCode result = ERR_OK;
     if (oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
@@ -1190,6 +1195,11 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             APP_LOGE("install more than one entry module");
             return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
         }
+    }
+
+    if (!bundleInstallChecker_->IsExistedDistroModule(newInfo, oldInfo)) {
+        APP_LOGE("moduleName is inconsistent in the updating hap");
+        return ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME;
     }
 
     ErrCode result = ERR_OK;

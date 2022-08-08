@@ -213,9 +213,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             if (isContainEntry_) {
                 APP_LOGE("more than one entry hap in the direction!");
                 return ERR_APPEXECFWK_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP;
-            } else {
-                isContainEntry_ = true;
             }
+            isContainEntry_ = true;
         }
 
         SetEntryInstallationFree(packInfo, newInfo);
@@ -235,7 +234,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 
         infos.emplace(bundlePaths[i], newInfo);
     }
-
+    if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
+        APP_LOGE("install failed due to duplicated moduleName");
+        return result;
+    }
     APP_LOGD("finish parse hap file");
     return result;
 }
@@ -522,6 +524,62 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
     appPrivilegeCapability.allowMultiProcess = true;
     appPrivilegeCapability.allowUsePrivilegeExtension = true;
 #endif
+}
+
+ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    std::set<std::string> moduleSet;
+    for (const auto &info : infos) {
+        std::vector<std::string> moduleVec = info.second.GetDistroModuleName();
+        if (moduleVec.empty()) {
+            APP_LOGE("moduleName vector is empty");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        moduleSet.insert(moduleVec[0]);
+    }
+
+    if (moduleSet.size() != infos.size()) {
+        APP_LOGE("someone moduleName is not unique in the haps");
+        return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
+    }
+    return ERR_OK;
+}
+
+bool BundleInstallChecker::IsExistedDistroModule(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const
+{
+    std::string moduleName = newInfo.GetCurModuleName();
+    std::string packageName = newInfo.GetCurrentModulePackage();
+    if (packageName.empty() || moduleName.empty()) {
+        APP_LOGE("IsExistedDistroModule failed due to invalid packageName or moduleName");
+        return false;
+    }
+    std::string oldModuleName = info.GetModuleNameByPackage(packageName);
+    // check consistency of module name
+    if (moduleName.compare(oldModuleName) != 0) {
+        APP_LOGE("no moduleName in the innerModuleInfo");
+        return false;
+    }
+    // check consistency of module type
+    std::string newModuleType = newInfo.GetModuleTypeByPackage(packageName);
+    std::string oldModuleType = info.GetModuleTypeByPackage(packageName);
+    if (newModuleType.compare(oldModuleType) != 0) {
+        APP_LOGE("moduleType is different between the new hap and the original hap");
+        return false;
+    }
+
+    return true;
+}
+
+bool BundleInstallChecker::IsContainModuleName(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const
+{
+    std::string moduleName = newInfo.GetCurModuleName();
+    std::vector<std::string> moduleVec = info.GetDistroModuleName();
+    if (moduleName.empty() || moduleVec.empty()) {
+        APP_LOGE("IsContainModuleName failed due to invalid moduleName or modulevec");
+        return false;
+    }
+    return (find(moduleVec.cbegin(), moduleVec.cend(), moduleName) == moduleVec.cend()) ? false : true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -430,6 +430,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: operation time out.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME,
+        "error: moduleName is not unique.",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME,
+        "error: moduleName is inconsistent.",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }

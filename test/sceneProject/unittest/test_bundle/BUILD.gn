@@ -19,7 +19,10 @@ group("test_bundle") {
     # deps file
     "defaultAppTest:defaultAppTest",
     "first_right:first_right",
+    "first_right_with_diff_moduleName:first_right_with_diff_moduleName",
+    "first_right_with_diff_moduleType:first_right_with_diff_moduleType",
     "resourceManagerTest:resourceManagerTest",
     "sandboxTest:sandboxTest",
+    "second_right_with_same_moduleName:second_right_with_same_moduleName",
   ]
 }
