@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "directory_ex.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
 
@@ -191,7 +192,12 @@ bool QuickFixManagerProxy::CopyFiles(
         APP_LOGE("sourceFiles empty.");
         return false;
     }
-    for (const std::string &sourcePath : sourceFiles) {
+    for (const std::string &path : sourceFiles) {
+        std::string sourcePath;
+        if (!PathToRealPath(path, sourcePath)) {
+            APP_LOGE("to real path failed.");
+            return false;
+        }
         size_t pos = sourcePath.find_last_of(SEPARATOR);
         if (pos == std::string::npos) {
             APP_LOGE("invalid sourcePath.");
