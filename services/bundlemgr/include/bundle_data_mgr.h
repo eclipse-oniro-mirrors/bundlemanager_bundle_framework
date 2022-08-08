@@ -698,6 +698,8 @@ public:
 
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
+    void UpdatePreInstallPrivilegeCapability(
+        const std::string &bundleName, const ApplicationInfo &appInfo, bool recovable);
 
 private:
     /**

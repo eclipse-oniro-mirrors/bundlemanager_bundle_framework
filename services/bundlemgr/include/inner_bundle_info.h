@@ -1568,6 +1568,9 @@ public:
 
     std::string GetModuleTypeByPackage(const std::string &packageName) const;
 
+    void UpdatePreInstallPrivilegeCapability(
+        bool isPreInstall, const ApplicationInfo &applicationInfo);
+
 private:
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;

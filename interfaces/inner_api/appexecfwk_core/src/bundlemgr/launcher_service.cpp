@@ -145,8 +145,11 @@ bool LauncherService::GetAbilityList(
         }
         LauncherAbilityInfo info;
         info.applicationInfo = ability.applicationInfo;
-        info.labelId = ability.labelId;
-        info.iconId = ability.iconId;
+        if (!info.applicationInfo.hideDesktopIcon) {
+            info.labelId = ability.labelId;
+            info.iconId = ability.iconId;
+        }
+
         ElementName elementName;
         elementName.SetBundleName(ability.bundleName);
         elementName.SetModuleName(ability.moduleName);
@@ -183,6 +186,7 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
         if (ability.applicationInfo.isLauncherApp || !ability.enabled) {
             continue;
         }
+
         LauncherAbilityInfo info;
         BundleInfo bundleInfo;
         BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
@@ -190,10 +194,14 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
             APP_LOGE("Get bundle info failed for %{public}s",  ability.bundleName.c_str());
             continue;
         }
+
         info.installTime = bundleInfo.installTime;
         info.applicationInfo = ability.applicationInfo;
-        info.labelId = ability.labelId;
-        info.iconId = ability.iconId;
+        if (!info.applicationInfo.hideDesktopIcon) {
+            info.labelId = ability.labelId;
+            info.iconId = ability.iconId;
+        }
+
         info.userId = userId;
         ElementName elementName;
         elementName.SetBundleName(ability.bundleName);
@@ -250,14 +258,17 @@ bool LauncherService::GetAbilityInfo(const Want &want, const int userId, Launche
 
     LauncherAbilityInfo info;
     info.applicationInfo = abilityInfo.applicationInfo;
-    info.labelId = abilityInfo.labelId;
+    if (!info.applicationInfo.hideDesktopIcon) {
+        info.labelId = abilityInfo.labelId;
+        info.iconId = iconId;
+    }
+
     ElementName elementName;
     elementName.SetBundleName(abilityInfo.bundleName);
     elementName.SetModuleName(abilityInfo.moduleName);
     elementName.SetAbilityName(abilityInfo.name);
     elementName.SetDeviceID(abilityInfo.deviceId);
     info.elementName = elementName;
-    info.iconId = iconId;
     info.userId = userId;
     info.installTime = installTime;
     launcherAbilityInfo = info;

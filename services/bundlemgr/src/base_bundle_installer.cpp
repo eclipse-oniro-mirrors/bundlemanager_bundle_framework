@@ -333,6 +333,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
 
+    UpdataNewInfosPrivilegeCapabilityFromOldInfo(installParam.needSavePreInstallInfo, newInfos);
     // singleton app can only be installed in U0 and U0 can only install singleton app.
     bool isSingleton = newInfos.begin()->second.IsSingleton();
     if ((isSingleton && (userId_ != Constants::DEFAULT_USERID)) ||
@@ -2057,6 +2058,27 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     }
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::UpdataNewInfosPrivilegeCapabilityFromOldInfo(
+    bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    InnerBundleInfo bundleInfo;
+    bool isBundleExist = false;
+    GetInnerBundleInfo(bundleInfo, isBundleExist);
+    dataMgr_->EnableBundle(bundleName_);
+    if (!isBundleExist) {
+        APP_LOGE("bundle(%{public}s) is not exist", bundleName_.c_str());
+        return;
+    }
+
+    if (!isPreInstallApp && bundleInfo.IsPreInstallApp()) {
+        for (auto &newInfo : newInfos) {
+            newInfo.second.SetSingleton(bundleInfo.IsSingleton());
+        }
+    }
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

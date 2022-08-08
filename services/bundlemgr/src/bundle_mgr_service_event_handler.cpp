@@ -381,11 +381,10 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
     std::vector<std::string> preInstallDirs;
     GetPreInstallDir(preInstallDirs);
     for (const auto &preInstallDir : preInstallDirs) {
-        std::vector<std::string> filePaths { preInstallDir };
         bool recoverable = IsPreInstallRecoverable(preInstallDir);
         bool removable = IsPreInstallRemovable(preInstallDir);
         if (!OTAInstallSystemBundle(
-            filePaths, Constants::AppType::SYSTEM_APP, recoverable, removable)) {
+            preInstallDir, Constants::AppType::SYSTEM_APP, recoverable, removable)) {
             APP_LOGE("Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
             continue;
         }
@@ -946,8 +945,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         if (mapIter == loadExistData_.end()) {
             APP_LOGD("OTA Install new bundle(%{public}s) by path(%{private}s).",
                 bundleName.c_str(), scanPathIter.c_str());
-            std::vector<std::string> filePaths { scanPathIter };
-            if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
+            if (!OTAInstallSystemBundle(scanPathIter, appType, recoverable, removable)) {
                 APP_LOGE("OTA Install new bundle(%{public}s) error.", bundleName.c_str());
             }
 
@@ -962,6 +960,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         if (!hasBundleInstalled) {
             APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.",
                 bundleName.c_str());
+            continue;
+        }
+
+        // When the singleton changes, the users of the application are different,
+        // so it needs to be reinstalled
+        if (IsSingletonChange(bundleName, hasInstalledInfo)) {
+            APP_LOGD("Force reinstall(%{public}s) when singleton changes.", bundleName.c_str());
+            if (!OTAInstallSystemBundle(scanPathIter, appType, recoverable, removable)) {
+                APP_LOGE("Reinstall(%{public}s) failed when singleton changes", bundleName.c_str());
+            }
+
             continue;
         }
 
@@ -1007,11 +1016,13 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         if (filePaths.empty()) {
+            UpdatePreInstallPrivilegeCapability(scanPathIter, bundleName);
             continue;
         }
 
         if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
+            UpdatePreInstallPrivilegeCapability(scanPathIter, bundleName);
         }
     }
 }
@@ -1331,6 +1342,54 @@ bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConf
 
     preBundleConfigInfo = *iter;
     return true;
+}
+
+bool BMSEventHandler::OTAInstallSystemBundle(const std::string &filePath,
+    Constants::AppType appType, bool recoverable, bool removable)
+{
+    std::vector<std::string> filePaths { filePath };
+    return OTAInstallSystemBundle(filePaths, appType, recoverable, removable);
+}
+
+void BMSEventHandler::UpdatePreInstallPrivilegeCapability(
+    const std::string &bundleDir, const std::string &bundleName)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    bool removable = IsPreInstallRemovable(bundleDir);
+    bool recovable = IsPreInstallRecoverable(bundleDir);
+    PreBundleConfigInfo preBundleConfigInfo;
+    preBundleConfigInfo.bundleName = bundleName;
+    GetPreInstallCapability(preBundleConfigInfo);
+
+    ApplicationInfo appInfo;
+    appInfo.keepAlive = preBundleConfigInfo.keepAlive;
+    appInfo.removable = removable;
+    appInfo.singleton = preBundleConfigInfo.singleton;
+    appInfo.bootable = preBundleConfigInfo.bootable;
+    appInfo.runningResourcesApply = preBundleConfigInfo.runningResourcesApply;
+    appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
+    appInfo.allowCommonEvent.swap(preBundleConfigInfo.allowCommonEvent);
+    dataMgr->UpdatePreInstallPrivilegeCapability(bundleName, appInfo, recovable);
+#endif
+}
+
+bool BMSEventHandler::IsSingletonChange(
+    const std::string &bundleName, const BundleInfo &hasInstalledInfo)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    PreBundleConfigInfo preBundleConfigInfo;
+    preBundleConfigInfo.bundleName = bundleName;
+    GetPreInstallCapability(preBundleConfigInfo);
+    return preBundleConfigInfo.singleton != hasInstalledInfo.applicationInfo.singleton;
+#else
+    return false;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

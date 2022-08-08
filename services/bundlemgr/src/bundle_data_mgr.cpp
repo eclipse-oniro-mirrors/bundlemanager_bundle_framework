@@ -250,6 +250,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdatePreInstallPrivilegeCapability(
+                newInfo.IsPreInstallApp(), newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
@@ -370,6 +372,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdatePreInstallPrivilegeCapability(
+                newInfo.IsPreInstallApp(), newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
@@ -3170,6 +3174,36 @@ std::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()
 std::vector<sptr<IBundleStatusCallback>> BundleDataMgr::GetCallBackList() const
 {
     return callbackList_;
+}
+
+void BundleDataMgr::UpdatePreInstallPrivilegeCapability(
+    const std::string &bundleName, const ApplicationInfo &appInfo, bool recovable)
+{
+    APP_LOGD("UpdatePreInstallPrivilegeCapability %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+            return;
+        }
+
+        infoItem->second.UpdatePreInstallPrivilegeCapability(true, appInfo);
+    }
+
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGE("can not find preBundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    preInstallBundleInfo.SetRecoverable(recovable);
+    SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

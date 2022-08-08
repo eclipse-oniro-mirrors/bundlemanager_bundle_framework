@@ -1602,9 +1602,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->labelResource = applicationInfo.labelResource;
     baseApplicationInfo_->descriptionResource = applicationInfo.descriptionResource;
 
-    baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
-    baseApplicationInfo_->removable = applicationInfo.removable;
-    baseApplicationInfo_->singleton = applicationInfo.singleton;
     baseApplicationInfo_->userDataClearable = applicationInfo.userDataClearable;
     baseApplicationInfo_->accessible = applicationInfo.accessible;
 
@@ -1632,11 +1629,26 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
     baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
+    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
+    baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
+}
+
+void InnerBundleInfo::UpdatePreInstallPrivilegeCapability(
+    bool isPreInstall, const ApplicationInfo &applicationInfo)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (!isPreInstall) {
+        APP_LOGW("newInfo is not preInstall, not update preInstall privilege capability");
+        return;
+    }
+#endif
+
+    baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
+    baseApplicationInfo_->removable = applicationInfo.removable;
+    baseApplicationInfo_->singleton = applicationInfo.singleton;
     baseApplicationInfo_->bootable = applicationInfo.bootable;
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
-    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
-    baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
 }
 
