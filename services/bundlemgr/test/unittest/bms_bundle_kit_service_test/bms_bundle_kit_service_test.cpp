@@ -2086,7 +2086,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckIsSystemAppByUid_0200, Function | SmallTe
 
 /**
  * @tc.number: DUMP_0100
- * @tc.name: Dump bundlelist, all bundle info, bundle info for bundleName
+ * @tc.name: Dump bundlelist, bundle info for bundleName
  * @tc.desc: 1.system run normally
  *           2.dump info with one mock installed bundles
  */
@@ -2095,13 +2095,6 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0100, Function | SmallTest | Level1)
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string allInfoResult;
-    bool allInfoRet = hostImpl->DumpInfos(
-        DumpFlag::DUMP_ALL_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, allInfoResult);
-    EXPECT_TRUE(allInfoRet);
-    EXPECT_NE(std::string::npos, allInfoResult.find(BUNDLE_NAME_TEST));
-    EXPECT_NE(std::string::npos, allInfoResult.find(MODULE_NAME_TEST));
-    EXPECT_NE(std::string::npos, allInfoResult.find(ABILITY_NAME_TEST));
 
     std::string infoResult;
     bool infoRet = hostImpl->DumpInfos(
@@ -2150,7 +2143,7 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0200, Function | SmallTest | Level0)
 
 /**
  * @tc.number: DUMP_0300
- * @tc.name: Dump bundlelist, all bundle info, bundle info for bundleName
+ * @tc.name: Dump bundlelist, bundle info for bundleName
  * @tc.desc: 1.system run normally
  *           2.dump info with 2 installed bundles
  */
@@ -2167,23 +2160,12 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0300, Function | SmallTest | Level1)
     EXPECT_NE(std::string::npos, bundleNames.find(BUNDLE_NAME_DEMO));
     EXPECT_NE(std::string::npos, bundleNames.find(BUNDLE_NAME_TEST));
 
-    std::string allBundleInfos;
-    bool allInfoRet = hostImpl->DumpInfos(
-        DumpFlag::DUMP_ALL_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, allBundleInfos);
-    EXPECT_TRUE(allInfoRet);
-    EXPECT_NE(std::string::npos, allBundleInfos.find(BUNDLE_NAME_TEST));
-    EXPECT_NE(std::string::npos, allBundleInfos.find(BUNDLE_NAME_DEMO));
-    EXPECT_NE(std::string::npos, allBundleInfos.find(MODULE_NAME_TEST));
-    EXPECT_NE(std::string::npos, allBundleInfos.find(MODULE_NAME_DEMO));
-    EXPECT_NE(std::string::npos, allBundleInfos.find(ABILITY_NAME_TEST));
-    EXPECT_NE(std::string::npos, allBundleInfos.find(ABILITY_NAME_DEMO));
-
     std::string bundleInfo;
     bool infoRet = hostImpl->DumpInfos(
         DumpFlag::DUMP_BUNDLE_INFO, BUNDLE_NAME_TEST, DEFAULT_USERID, bundleInfo);
     EXPECT_TRUE(infoRet);
-    EXPECT_NE(std::string::npos, allBundleInfos.find(BUNDLE_NAME_TEST));
-    EXPECT_NE(std::string::npos, allBundleInfos.find(BUNDLE_NAME_DEMO));
+    EXPECT_NE(std::string::npos, bundleInfo.find(BUNDLE_NAME_TEST));
+    EXPECT_NE(std::string::npos, bundleInfo.find(BUNDLE_NAME_DEMO));
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
