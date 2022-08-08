@@ -2129,6 +2129,15 @@ void InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     infoItem->second.bundleUserInfo.enabled = enabled;
 }
 
+const std::string &InnerBundleInfo::GetCurModuleName() const
+{
+    if (innerModuleInfos_.find(currentPackage_) != innerModuleInfos_.end()) {
+        return innerModuleInfos_.at(currentPackage_).moduleName;
+    }
+
+    return Constants::EMPTY_STRING;
+}
+
 int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
 {
     if (HasInnerBundleUserInfo(requestUserId)) {
@@ -2224,6 +2233,33 @@ void InnerBundleInfo::GetUriPrefixList(std::vector<std::string> &uriPrefixList, 
         return;
     }
     GetUriPrefixList(uriPrefixList, excludeModule);
+}
+
+std::vector<std::string> InnerBundleInfo::GetDistroModuleName() const
+{
+    std::vector<std::string> moduleVec;
+    for (const auto &info : innerModuleInfos_) {
+        moduleVec.emplace_back(info.second.moduleName);
+    }
+    return moduleVec;
+}
+
+std::string InnerBundleInfo::GetModuleNameByPackage(const std::string &packageName) const
+{
+    auto it = innerModuleInfos_.find(packageName);
+    if (it == innerModuleInfos_.end()) {
+        return Constants::EMPTY_STRING;
+    }
+    return it->second.moduleName;
+}
+
+std::string InnerBundleInfo::GetModuleTypeByPackage(const std::string &packageName) const
+{
+    auto it = innerModuleInfos_.find(packageName);
+    if (it == innerModuleInfos_.end()) {
+        return Constants::EMPTY_STRING;
+    }
+    return it->second.distro.moduleType;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

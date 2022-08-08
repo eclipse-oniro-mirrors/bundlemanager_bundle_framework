@@ -419,6 +419,9 @@ private:
     ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
     ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
+    ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    bool IsExistedDistroModule(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
+    bool IsContainModuleName(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
