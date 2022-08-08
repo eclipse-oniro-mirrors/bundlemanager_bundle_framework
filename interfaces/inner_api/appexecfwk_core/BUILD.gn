@@ -111,7 +111,3 @@ ohos_shared_library("appexecfwk_core") {
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
-
-group("base_innerkits_target") {
-  deps = [ ":appexecfwk_core" ]
-}
