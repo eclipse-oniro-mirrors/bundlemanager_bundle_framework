@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_util.h"
 #include "json_util.h"
 #include "parameter.h"
@@ -161,9 +162,8 @@ void from_json(const nlohmann::json &jsonObject, PatchJson &patchJson)
         parseResult,
         ArrayType::NOT_ARRAY);
 }
-}
 
-void ToPatchInfo(PatchProfileReader::PatchJson &patchJson, AppQuickFix &appQuickFix)
+void ToPatchInfo(PatchJson &patchJson, AppQuickFix &appQuickFix)
 {
     appQuickFix.bundleName = patchJson.app.bundleName;
     appQuickFix.versionCode = patchJson.app.versionCode;
@@ -175,8 +175,105 @@ void ToPatchInfo(PatchProfileReader::PatchJson &patchJson, AppQuickFix &appQuick
     hqfInfo.hapSha256 = patchJson.module.originalModuleHash;
     appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
 }
+}
 
-ErrCode PatchProfile::TransformTo(const std::ostringstream &source, AppQuickFix &appQuickFix)
+bool PatchProfile::DefaultNativeSo(
+    const PatchExtractor &patchExtractor, bool isSystemLib64Exist, AppqfInfo &appqfInfo)
+{
+    if (isSystemLib64Exist) {
+        if (patchExtractor.IsDirExist(Constants::LIBS + Constants::ARM64_V8A)) {
+            appqfInfo.cpuAbi = Constants::ARM64_V8A;
+            auto iter = Constants::ABI_MAP.find(Constants::ARM64_V8A);
+            if (iter != Constants::ABI_MAP.end()) {
+                appqfInfo.nativeLibraryPath = Constants::LIBS + iter->second;
+                return true;
+            }
+            APP_LOGE("Can't find ARM64_V8A in ABI_MAP");
+            return false;
+        }
+        APP_LOGE(" ARM64_V8A's directory doesn't exist");
+        return false;
+    }
+
+    if (patchExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI_V7A)) {
+        appqfInfo.cpuAbi = Constants::ARM_EABI_V7A;
+        auto iter = Constants::ABI_MAP.find(Constants::ARM_EABI_V7A);
+        if (iter != Constants::ABI_MAP.end()) {
+            appqfInfo.nativeLibraryPath = Constants::LIBS + iter->second;
+            return true;
+        }
+        APP_LOGE("Can't find ARM_EABI_V7A in ABI_MAP");
+        return false;
+    }
+
+    if (patchExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI)) {
+        appqfInfo.cpuAbi = Constants::ARM_EABI;
+        auto iter = Constants::ABI_MAP.find(Constants::ARM_EABI);
+        if (iter != Constants::ABI_MAP.end()) {
+            appqfInfo.nativeLibraryPath = Constants::LIBS + iter->second;
+            return true;
+        }
+        APP_LOGE("Can't find ARM_EABI in ABI_MAP");
+        return false;
+    }
+    APP_LOGE("ARM_EABI_V7A and ARM_EABI directories do not exist");
+    return false;
+}
+
+bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo &appqfInfo)
+{
+    std::string abis = GetAbiList();
+    std::vector<std::string> abiList;
+    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    if (abiList.empty()) {
+        APP_LOGE("Abi is empty");
+        return false;
+    }
+    bool isDefault = std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
+    bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
+    APP_LOGD("abi list : %{public}s, isDefault : %{public}d, isSystemLib64Exist : %{public}d",
+        abis.c_str(), isDefault, isSystemLib64Exist);
+    bool soExist = patchExtractor.IsDirExist(Constants::LIBS);
+    if (!soExist) {
+        APP_LOGD("so not exist");
+        if (isDefault) {
+            appqfInfo.cpuAbi = isSystemLib64Exist ? Constants::ARM64_V8A : Constants::ARM_EABI_V7A;
+            return true;
+        }
+        for (const auto &abi : abiList) {
+            if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end()) {
+                appqfInfo.cpuAbi = abi;
+                return true;
+            }
+        }
+        APP_LOGE("None of the abiList are in the ABI_MAP");
+        return false;
+    }
+
+    APP_LOGD("so exist");
+    if (isDefault) {
+        return DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    }
+    
+    for (const auto &abi : abiList) {
+        std::string libsPath;
+        libsPath.append(Constants::LIBS).append(abi).append(Constants::PATH_SEPARATOR);
+        if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && patchExtractor.IsDirExist(libsPath)) {
+            appqfInfo.cpuAbi = abi;
+            auto iter = Constants::ABI_MAP.find(abi);
+            if (iter != Constants::ABI_MAP.end()) {
+                appqfInfo.nativeLibraryPath = Constants::LIBS + iter->second;
+                return true;
+            }
+            APP_LOGE("Can't find %{public}s in ABI_MAP", abi.c_str());
+            return false;
+        }
+    }
+    return false;
+}
+
+ErrCode PatchProfile::TransformTo(
+    const std::ostringstream &source, const PatchExtractor &patchExtractor, AppQuickFix &appQuickFix)
 {
     nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
     if (jsonObject.is_discarded()) {
@@ -190,7 +287,11 @@ ErrCode PatchProfile::TransformTo(const std::ostringstream &source, AppQuickFix 
         PatchProfileReader::parseResult = ERR_OK;
         return ret;
     }
-    ToPatchInfo(patchJson, appQuickFix);
+    PatchProfileReader::ToPatchInfo(patchJson, appQuickFix);
+    if (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo)) {
+        APP_LOGE("ParseNativeSo failed");
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk
