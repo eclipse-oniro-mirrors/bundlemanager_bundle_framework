@@ -735,11 +735,13 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
 #ifdef USE_PRE_BUNDLE_PROFILE
     if (LoadPreInstallProFile()) {
         APP_LOGD("Process boot bundle install from pre bundle proFile");
+        useScanMode_ = false;
         InnerProcessBootPreBundleProFileInstall(userId);
         return;
     }
 #endif
 
+    useScanMode_ = true;
     ProcessBootBundleInstallFromScan(userId);
 }
 
@@ -887,11 +889,13 @@ void BMSEventHandler::ProcessRebootBundleInstall()
     APP_LOGD("Process reboot bundle install start");
 #ifdef USE_PRE_BUNDLE_PROFILE
     if (LoadPreInstallProFile()) {
+        useScanMode_ = false;
         ProcessReBootPreBundleProFileInstall();
         return;
     }
 #endif
 
+    useScanMode_ = true;
     ProcessRebootBundleInstallFromScan();
 }
 
@@ -1354,7 +1358,11 @@ bool BMSEventHandler::OTAInstallSystemBundle(const std::string &filePath,
 void BMSEventHandler::UpdatePreInstallPrivilegeCapability(
     const std::string &bundleDir, const std::string &bundleName)
 {
-#ifdef USE_PRE_BUNDLE_PROFILE
+    if (useScanMode_) {
+        return;
+    }
+
+    // Only takes effect when use prebundle profile
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1376,20 +1384,19 @@ void BMSEventHandler::UpdatePreInstallPrivilegeCapability(
     appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
     appInfo.allowCommonEvent.swap(preBundleConfigInfo.allowCommonEvent);
     dataMgr->UpdatePreInstallPrivilegeCapability(bundleName, appInfo, recovable);
-#endif
 }
 
 bool BMSEventHandler::IsSingletonChange(
     const std::string &bundleName, const BundleInfo &hasInstalledInfo)
 {
-#ifdef USE_PRE_BUNDLE_PROFILE
+    if (useScanMode_) {
+        return false;
+    }
+
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = bundleName;
     GetPreInstallCapability(preBundleConfigInfo);
     return preBundleConfigInfo.singleton != hasInstalledInfo.applicationInfo.singleton;
-#else
-    return false;
-#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

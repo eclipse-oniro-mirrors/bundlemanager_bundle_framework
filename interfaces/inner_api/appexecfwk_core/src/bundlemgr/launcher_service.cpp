@@ -139,17 +139,20 @@ bool LauncherService::GetAbilityList(
         return false;
     }
 
+    if (bundleInfo.applicationInfo.hideDesktopIcon) {
+        APP_LOGW("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
+        return false;
+    }
+
     for (auto &ability : abilityInfos) {
         if (ability.bundleName != bundleName || !ability.enabled) {
             continue;
         }
+
         LauncherAbilityInfo info;
         info.applicationInfo = ability.applicationInfo;
-        if (!info.applicationInfo.hideDesktopIcon) {
-            info.labelId = ability.labelId;
-            info.iconId = ability.iconId;
-        }
-
+        info.labelId = ability.labelId;
+        info.iconId = ability.iconId;
         ElementName elementName;
         elementName.SetBundleName(ability.bundleName);
         elementName.SetModuleName(ability.moduleName);
@@ -187,6 +190,11 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
             continue;
         }
 
+        if (ability.applicationInfo.hideDesktopIcon) {
+            APP_LOGW("Bundle(%{public}s) hide desktop icon", ability.bundleName.c_str());
+            continue;
+        }
+
         LauncherAbilityInfo info;
         BundleInfo bundleInfo;
         BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
@@ -194,14 +202,10 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
             APP_LOGE("Get bundle info failed for %{public}s",  ability.bundleName.c_str());
             continue;
         }
-
         info.installTime = bundleInfo.installTime;
         info.applicationInfo = ability.applicationInfo;
-        if (!info.applicationInfo.hideDesktopIcon) {
-            info.labelId = ability.labelId;
-            info.iconId = ability.iconId;
-        }
-
+        info.labelId = ability.labelId;
+        info.iconId = ability.iconId;
         info.userId = userId;
         ElementName elementName;
         elementName.SetBundleName(ability.bundleName);
@@ -222,21 +226,30 @@ bool LauncherService::GetAbilityInfo(const Want &want, const int userId, Launche
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+
     ElementName element = want.GetElement();
     if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
         APP_LOGE("GetAbilityInfo elementName is empty");
         return false;
     }
+
     AbilityInfo abilityInfo;
     if (!iBundleMgr->QueryAbilityInfo(want, abilityInfo)) {
         APP_LOGE("Query AbilityInfo failed");
         return false;
     }
+
     if (!abilityInfo.enabled) {
         APP_LOGE("Query AbilityInfo is disabled");
         return false;
     }
+
     std::string bundleName = element.GetBundleName();
+    if (abilityInfo.applicationInfo.hideDesktopIcon) {
+        APP_LOGW("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
+        return false;
+    }
+
     int32_t iconId;
     ApplicationInfo appInfo;
     ApplicationFlag flag = ApplicationFlag::GET_BASIC_APPLICATION_INFO;
@@ -258,17 +271,14 @@ bool LauncherService::GetAbilityInfo(const Want &want, const int userId, Launche
 
     LauncherAbilityInfo info;
     info.applicationInfo = abilityInfo.applicationInfo;
-    if (!info.applicationInfo.hideDesktopIcon) {
-        info.labelId = abilityInfo.labelId;
-        info.iconId = iconId;
-    }
-
+    info.labelId = abilityInfo.labelId;
     ElementName elementName;
     elementName.SetBundleName(abilityInfo.bundleName);
     elementName.SetModuleName(abilityInfo.moduleName);
     elementName.SetAbilityName(abilityInfo.name);
     elementName.SetDeviceID(abilityInfo.deviceId);
     info.elementName = elementName;
+    info.iconId = iconId;
     info.userId = userId;
     info.installTime = installTime;
     launcherAbilityInfo = info;

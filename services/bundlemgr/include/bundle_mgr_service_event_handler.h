@@ -435,6 +435,8 @@ private:
     bool needNotifyBundleScanStatus_ = false;
 
     bool hasLoadAllPreInstallBundleInfosFromDb_ = false;
+
+    bool useScanMode_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

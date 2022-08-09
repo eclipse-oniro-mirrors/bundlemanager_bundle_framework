@@ -3194,6 +3194,7 @@ void BundleDataMgr::UpdatePreInstallPrivilegeCapability(
         }
 
         infoItem->second.UpdatePreInstallPrivilegeCapability(true, appInfo);
+        SaveInnerBundleInfo(infoItem->second);
     }
 
     PreInstallBundleInfo preInstallBundleInfo;
