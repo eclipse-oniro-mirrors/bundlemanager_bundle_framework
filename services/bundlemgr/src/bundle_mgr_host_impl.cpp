@@ -822,10 +822,6 @@ bool BundleMgrHostImpl::DumpInfos(
             ret = DumpAllBundleInfoNames(userId, result);
             break;
         }
-        case DumpFlag::DUMP_ALL_BUNDLE_INFO: {
-            ret = DumpAllBundleInfos(userId, result);
-            break;
-        }
         case DumpFlag::DUMP_BUNDLE_INFO: {
             ret = DumpBundleInfo(bundleName, userId, result);
             break;
@@ -881,46 +877,6 @@ bool BundleMgrHostImpl::DumpAllBundleInfoNamesByUserId(int32_t userId, std::stri
         result.append("\n");
     }
     APP_LOGI("DumpAllBundleInfoNamesByUserId successfully");
-    return true;
-}
-
-bool BundleMgrHostImpl::DumpAllBundleInfos(int32_t userId, std::string &result)
-{
-    APP_LOGD("DumpAllBundleInfos begin");
-    std::vector<BundleInfo> bundleInfos;
-    if (!GetBundleInfos(
-        BundleFlag::GET_BUNDLE_WITH_ABILITIES |
-        BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
-        BundleFlag::GET_BUNDLE_WITH_HASH_VALUE,
-        bundleInfos, userId)) {
-        APP_LOGE("get bundleInfos failed.");
-        return false;
-    }
-
-    for (const auto &info : bundleInfos) {
-        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-        if (userId == Constants::ALL_USERID) {
-            if (!GetBundleUserInfos(info.name, innerBundleUserInfos)) {
-                APP_LOGE("get all userInfos in bundle(%{public}s) failed", info.name.c_str());
-                return false;
-            }
-        } else {
-            InnerBundleUserInfo innerBundleUserInfo;
-            if (!GetBundleUserInfo(info.name, userId, innerBundleUserInfo)) {
-                APP_LOGI("get all userInfo in bundle(%{public}s) failed", info.name.c_str());
-            }
-            innerBundleUserInfos.emplace_back(innerBundleUserInfo);
-        }
-
-        result.append(info.name);
-        result.append(":\n");
-        nlohmann::json jsonObject = info;
-        jsonObject["hapModuleInfos"] = info.hapModuleInfos;
-        jsonObject["userInfo"] = innerBundleUserInfos;
-        result.append(jsonObject.dump(Constants::DUMP_INDENT));
-        result.append("\n");
-    }
-    APP_LOGD("DumpAllBundleInfos successfully");
     return true;
 }
 
