@@ -2165,7 +2165,6 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0300, Function | SmallTest | Level1)
         DumpFlag::DUMP_BUNDLE_INFO, BUNDLE_NAME_TEST, DEFAULT_USERID, bundleInfo);
     EXPECT_TRUE(infoRet);
     EXPECT_NE(std::string::npos, bundleInfo.find(BUNDLE_NAME_TEST));
-    EXPECT_NE(std::string::npos, bundleInfo.find(BUNDLE_NAME_DEMO));
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
