@@ -19,36 +19,28 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
-#if BUNDLE_FRAMEWORK_LAUNCHER
 #include "bundle_status_callback.h"
 #include "js_launcher_mgr.h"
 #include "launcher_service.h"
-#endif
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
 using namespace OHOS::AppExecFwk;
 
 namespace {
-#if BUNDLE_FRAMEWORK_LAUNCHER
+
 const std::string REGISTERCALLBACK = "BundleStatusChange";
 const std::string UNREGISTERCALLBACK = "BundleStatusChange";
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t OPERATION_SUCESS = 0;
 constexpr int32_t OPERATION_FAILED = 1;
 constexpr int32_t OPERATION_TYPE_MIAMATCH = 2;
-#else
-constexpr int32_t INDEX_ZERO = 0;
-constexpr int32_t UNSUPPORTED_FEATURE_ERRCODE = 801;
-const std::string UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
-#endif
 constexpr int32_t INDEX_ONE = 1;
 constexpr int32_t INDEX_TWO = 2;
 constexpr int32_t INDEX_THREE = 3;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 
-#if BUNDLE_FRAMEWORK_LAUNCHER
 struct AsyncHandleBundleContext {
     napi_env env = nullptr;
     napi_async_work asyncWork = nullptr;
@@ -984,98 +976,6 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
 
     return promise;
 }
-#else
-static napi_value JsLauncherCommon(napi_env env, size_t argc, napi_value *argv)
-{
-    napi_ref callback = nullptr;
-    if (argc > INDEX_ZERO) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[argc - INDEX_ONE], &valueType);
-        if (valueType == napi_function) {
-            napi_create_reference(env, argv[argc - INDEX_ONE], NAPI_RETURN_ONE, &callback);
-        }
-    }
-    napi_value promise = nullptr;
-    napi_deferred deferred = nullptr;
-    if (callback == nullptr) {
-        napi_create_promise(env, &deferred, &promise);
-    } else {
-        napi_get_undefined(env, &promise);
-    }
-
-    napi_value result[INDEX_TWO] = { 0 };
-    napi_create_int32(env, UNSUPPORTED_FEATURE_ERRCODE, &result[INDEX_ZERO]);
-    napi_create_string_utf8(env, UNSUPPORTED_FEATURE_MESSAGE.c_str(),
-        NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
-    if (callback) {
-        napi_value callbackTemp = nullptr;
-        napi_value placeHolder = nullptr;
-        napi_get_reference_value(env, callback, &callbackTemp);
-        napi_call_function(env, nullptr, callbackTemp,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder);
-    } else {
-        napi_reject_deferred(env, deferred, result[INDEX_ZERO]);
-    }
-    napi_delete_reference(env, callback);
-    return promise;
-}
-
-static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
-{
-    size_t argc = INDEX_THREE;
-    napi_value argv[INDEX_THREE] = { 0 };
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
-
-    return JsLauncherCommon(env, argc, argv);
-}
-
-static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
-{
-    size_t argc = INDEX_TWO;
-    napi_value argv[INDEX_TWO] = { 0 };
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
-
-    return JsLauncherCommon(env, argc, argv);
-}
-
-static napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
-{
-    size_t argc = INDEX_TWO;
-    napi_value argv[INDEX_TWO] = { 0 };
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
-
-    return JsLauncherCommon(env, argc, argv);
-}
-
-static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info info)
-{
-    size_t argc = INDEX_THREE;
-    napi_value argv[INDEX_THREE] = { 0 };
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
-
-    return JsLauncherCommon(env, argc, argv);
-}
-
-static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
-{
-    size_t argc = INDEX_TWO;
-    napi_value argv[INDEX_TWO] = { 0 };
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-
-    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
-
-    return JsLauncherCommon(env, argc, argv);
-}
-#endif
 
 static napi_value LauncherServiceExport(napi_env env, napi_value exports)
 {
