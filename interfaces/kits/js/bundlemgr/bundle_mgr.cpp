@@ -6037,23 +6037,19 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
 #else
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
 {
-    size_t requireArgc = ARGS_SIZE_TWO;
     size_t argc = ARGS_SIZE_FOUR;
     napi_value argv[ARGS_SIZE_FOUR] = { 0 };
     napi_value thisArg = nullptr;
     void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    if (argc < requireArgc) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     napi_ref callback = nullptr;
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, argv[argc - PARAM1], &valueType);
-    if (valueType == napi_function) {
-        napi_create_reference(env, argv[argc - PARAM1], NAPI_RETURN_ONE, &callback);
+    if (argc > PARAM0) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[argc - PARAM1], &valueType);
+        if (valueType == napi_function) {
+            napi_create_reference(env, argv[argc - PARAM1], NAPI_RETURN_ONE, &callback);
+        }
     }
     napi_value promise = nullptr;
     napi_deferred deferred = nullptr;

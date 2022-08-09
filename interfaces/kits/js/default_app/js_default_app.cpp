@@ -47,13 +47,6 @@ constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 
-static napi_value WrapVoidToJS(napi_env env)
-{
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_get_null(env, &result));
-    return result;
-}
-
 #if BUNDLE_FRAMEWORK_DEFAULT_APP
 using namespace OHOS::AAFwk;
 
@@ -147,6 +140,13 @@ static void ParseElementName(napi_env env, napi_value args, Want &want)
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     ElementName elementName("", bundleName, abilityName, moduleName);
     want.SetElement(elementName);
+}
+
+static napi_value WrapVoidToJS(napi_env env)
+{
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_get_null(env, &result));
+    return result;
 }
 
 static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const AbilityInfo &abilityInfo)
@@ -675,10 +675,12 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
 napi_value DefaultAppCommon(napi_env env, size_t argc, napi_value *argv)
 {
     napi_ref callback = nullptr;
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, argv[argc - ARGS_SIZE_ONE], &valueType);
-    if (valueType == napi_function) {
-        napi_create_reference(env, argv[argc - ARGS_SIZE_ONE], NAPI_RETURN_ONE, &callback);
+    if (argc > ARGS_SIZE_ZERO) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[argc - ARGS_SIZE_ONE], &valueType);
+        if (valueType == napi_function) {
+            napi_create_reference(env, argv[argc - ARGS_SIZE_ONE], NAPI_RETURN_ONE, &callback);
+        }
     }
     napi_value promise = nullptr;
     napi_deferred deferred = nullptr;
@@ -711,12 +713,7 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_SIZE_TWO] = {nullptr};
     napi_value thisArg = nullptr;
     void *data = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    if (argc < ARGS_SIZE_ONE) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return DefaultAppCommon(env, argc, argv);
 }
@@ -727,12 +724,7 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
     napi_value thisArg = nullptr;
     void *data = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    if (argc < ARGS_SIZE_ONE) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return DefaultAppCommon(env, argc, argv);
 }
@@ -743,12 +735,7 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
     napi_value thisArg = nullptr;
     void *data = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    if (argc < ARGS_SIZE_TWO) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return DefaultAppCommon(env, argc, argv);
 }
@@ -759,12 +746,7 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
     napi_value thisArg = nullptr;
     void *data = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    if (argc < ARGS_SIZE_ONE) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return DefaultAppCommon(env, argc, argv);
 }

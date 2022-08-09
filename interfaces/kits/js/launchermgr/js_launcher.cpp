@@ -985,20 +985,15 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
     return promise;
 }
 #else
-static napi_value WrapVoidToJS(napi_env env)
-{
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_get_null(env, &result));
-    return result;
-}
-
 static napi_value JsLauncherCommon(napi_env env, size_t argc, napi_value *argv)
 {
     napi_ref callback = nullptr;
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, argv[argc - INDEX_ONE], &valueType);
-    if (valueType == napi_function) {
-        napi_create_reference(env, argv[argc - INDEX_ONE], NAPI_RETURN_ONE, &callback);
+    if (argc > INDEX_ZERO) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[argc - INDEX_ONE], &valueType);
+        if (valueType == napi_function) {
+            napi_create_reference(env, argv[argc - INDEX_ONE], NAPI_RETURN_ONE, &callback);
+        }
     }
     napi_value promise = nullptr;
     napi_deferred deferred = nullptr;
@@ -1027,34 +1022,22 @@ static napi_value JsLauncherCommon(napi_env env, size_t argc, napi_value *argv)
 
 static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
 {
-    size_t requireArgc = INDEX_TWO;
     size_t argc = INDEX_THREE;
     napi_value argv[INDEX_THREE] = { 0 };
     napi_value thisArg = nullptr;
     void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    if (argc < requireArgc) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return JsLauncherCommon(env, argc, argv);
 }
 
 static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
 {
-    size_t requireArgc = INDEX_ONE;
     size_t argc = INDEX_TWO;
     napi_value argv[INDEX_TWO] = { 0 };
     napi_value thisArg = nullptr;
     void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    if (argc < requireArgc) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return JsLauncherCommon(env, argc, argv);
 }
@@ -1063,15 +1046,9 @@ static napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info 
 {
     size_t argc = INDEX_TWO;
     napi_value argv[INDEX_TWO] = { 0 };
-    size_t requireArgc = INDEX_ONE;
     napi_value thisArg = nullptr;
     void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    if (argc < requireArgc) {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return JsLauncherCommon(env, argc, argv);
 }
@@ -1080,16 +1057,9 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
 {
     size_t argc = INDEX_THREE;
     napi_value argv[INDEX_THREE] = { 0 };
-    size_t requireArgc = INDEX_TWO;
     napi_value thisArg = nullptr;
     void *data = nullptr;
-    std::string bundleName;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    if (argc < requireArgc)  {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return JsLauncherCommon(env, argc, argv);
 }
@@ -1098,15 +1068,10 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
 {
     size_t argc = INDEX_TWO;
     napi_value argv[INDEX_TWO] = { 0 };
-    size_t requireArgc = INDEX_ONE;
     napi_value thisArg = nullptr;
     void *data = nullptr;
 
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    if (argc < requireArgc)  {
-        APP_LOGE("param count invalid.");
-        return WrapVoidToJS(env);
-    }
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
     return JsLauncherCommon(env, argc, argv);
 }
