@@ -148,7 +148,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
       "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     ]
   } else {
-    external_deps += [ "distributeddatamgr:distributeddata_inner" ]
+    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
       "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
