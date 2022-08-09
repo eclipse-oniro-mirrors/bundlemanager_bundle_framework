@@ -730,7 +730,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
 
     if (InstalldClient::GetInstance()->CreateBundleDataDir(bundleName, userId, innerBundleUserInfo.uid,
-        innerBundleUserInfo.uid, GetAppPrivilegeLevel(bundleName))) {
+        innerBundleUserInfo.uid, GetAppPrivilegeLevel(bundleName, userId))) {
         APP_LOGE("%{public}s, CreateBundleDataDir failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;

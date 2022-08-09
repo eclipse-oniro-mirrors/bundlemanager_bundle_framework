@@ -254,10 +254,11 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
     newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
     newInfo.SetAppProvisionType(GetAppProvisionType(provisionInfo.type));
-
+#ifdef USE_PRE_BUNDLE_PROFILE
     newInfo.SetUserDataClearable(appPrivilegeCapability.userDataClearable);
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
+#endif
 }
 
 void BundleInstallChecker::CollectPreBundleInfo(
