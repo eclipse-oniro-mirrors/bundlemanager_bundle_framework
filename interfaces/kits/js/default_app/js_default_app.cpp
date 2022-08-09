@@ -18,14 +18,12 @@
 #include <string>
 
 #include "app_log_wrapper.h"
-#if BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
-#endif
 
 namespace OHOS {
 namespace AppExecFwk {

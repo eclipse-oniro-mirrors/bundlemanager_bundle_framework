@@ -14,8 +14,8 @@
  */
 
 #include <pthread.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <unistd.h>
 
 #include "app_log_wrapper.h"

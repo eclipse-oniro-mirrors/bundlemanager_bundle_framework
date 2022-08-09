@@ -26,9 +26,7 @@
 #include "napi/native_node_api.h"
 
 using namespace OHOS::AppExecFwk;
-
 namespace {
-
 const std::string REGISTERCALLBACK = "BundleStatusChange";
 const std::string UNREGISTERCALLBACK = "BundleStatusChange";
 constexpr int32_t NAPI_RETURN_ZERO = 0;
