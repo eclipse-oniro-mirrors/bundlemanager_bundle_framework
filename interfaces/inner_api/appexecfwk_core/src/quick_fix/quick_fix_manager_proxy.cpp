@@ -52,13 +52,20 @@ bool QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundle
         return false;
     }
 
+    std::vector<std::string> copyFilePaths;
+    bool ret = CopyFiles(bundleFilePaths, copyFilePaths);
+    if (!ret) {
+        APP_LOGE("copy files failed.");
+        return false;
+    }
+
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
         return false;
     }
-    if (!data.WriteStringVector(bundleFilePaths)) {
-        APP_LOGE("write bundleFilePaths failed.");
+    if (!data.WriteStringVector(copyFilePaths)) {
+        APP_LOGE("write copyFilePaths failed.");
         return false;
     }
     if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
