@@ -84,7 +84,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_NAME,
         app.versionName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
@@ -100,7 +100,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_NAME,
         app.patchVersionName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
 }
@@ -129,7 +129,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES,
         module.deviceTypes,
         JsonType::ARRAY,
-        true,
+        false,
         parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -137,7 +137,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH,
         module.originalModuleHash,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
 }
