@@ -524,7 +524,6 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
     std::string dumpResults = "";
     std::string bundleName = "";
     bool bundleDumpAll = false;
-    bool bundleDumpInfos = false;
     bool bundleDumpInfo = false;
     bool bundleDumpShortcut = false;
     bool bundleDumpDistributedBundleInfo = false;
@@ -604,13 +603,6 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
                 bundleDumpAll = true;
                 break;
             }
-            case 'i': {
-                // 'bm dump -i'
-                // 'bm dump --bundle-info'
-                APP_LOGD("'bm dump %{public}s'", argv_[optind - 1]);
-                bundleDumpInfos = true;
-                break;
-            }
             case 'n': {
                 // 'bm dump -n xxx'
                 // 'bm dump --bundle-name xxx'
@@ -675,8 +667,6 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
             dumpResults = DumpDistributedBundleInfo(deviceId, bundleName);
         } else if (bundleDumpAll) {
             dumpResults = DumpBundleList(userId);
-        } else if (bundleDumpInfos) {
-            dumpResults = DumpBundleInfos(userId);
         } else if (bundleDumpInfo) {
             dumpResults = DumpBundleInfo(bundleName, userId);
         }
@@ -1279,17 +1269,6 @@ std::string BundleManagerShellCommand::DumpBundleList(int32_t userId) const
         DumpFlag::DUMP_BUNDLE_LIST, BUNDLE_NAME_EMPTY, userId, dumpResults);
     if (!dumpRet) {
         APP_LOGE("failed to dump bundle list.");
-    }
-    return dumpResults;
-}
-
-std::string BundleManagerShellCommand::DumpBundleInfos(int32_t userId) const
-{
-    std::string dumpResults;
-    bool dumpRet = bundleMgrProxy_->DumpInfos(
-        DumpFlag::DUMP_ALL_BUNDLE_INFO, BUNDLE_NAME_EMPTY, userId, dumpResults);
-    if (!dumpRet) {
-        APP_LOGE("failed to dump bundle infos.");
     }
     return dumpResults;
 }

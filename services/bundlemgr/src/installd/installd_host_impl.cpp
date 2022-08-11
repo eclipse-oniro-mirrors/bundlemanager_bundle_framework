@@ -50,7 +50,7 @@ InstalldHostImpl::~InstalldHostImpl()
 
 ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -74,7 +74,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
 {
     APP_LOGD("ExtractModuleFiles extract original src %{public}s and target src %{public}s",
         srcModulePath.c_str(), targetPath.c_str());
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -97,7 +97,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     APP_LOGD("rename %{private}s to %{private}s", oldPath.c_str(), newPath.c_str());
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -128,7 +128,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int user
 ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
     const int userid, const int uid, const int gid, const std::string &apl)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -190,7 +190,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveBundleDataDir bundleName:%{public}s", bundleName.c_str());
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -216,7 +216,7 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
 ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveModuleDataDir ModuleDir:%{public}s", ModuleDir.c_str());
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -236,7 +236,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
 
 ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -254,7 +254,7 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     APP_LOGD("InstalldHostImpl::CleanBundleDataDir start");
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -282,7 +282,7 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 ErrCode InstalldHostImpl::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -341,7 +341,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl)
 {
 #ifdef WITH_SELINUX
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -367,7 +367,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
 ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     APP_LOGD("InstalldHostImpl::GetBundleCachePath start");
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -383,7 +383,7 @@ ErrCode InstalldHostImpl::ScanDir(
     const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
 {
     APP_LOGD("InstalldHostImpl::Scan start %{public}s", dir.c_str());
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -398,7 +398,7 @@ ErrCode InstalldHostImpl::ScanDir(
 
 ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string &newPath)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -417,7 +417,7 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
 
 ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -437,7 +437,7 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
 ErrCode InstalldHostImpl::Mkdir(
     const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -457,7 +457,7 @@ ErrCode InstalldHostImpl::Mkdir(
 
 ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileStat)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -483,7 +483,7 @@ ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const st
         APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
@@ -500,7 +500,7 @@ ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std
         APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_PROCESS_NAME)) {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }

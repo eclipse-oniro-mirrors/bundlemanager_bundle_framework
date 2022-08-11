@@ -41,7 +41,6 @@ namespace OHOS {
 namespace AppExecFwk {
 enum class DumpFlag {
     DUMP_BUNDLE_LIST = 1,  // corresponse to option "-bundle-list"
-    DUMP_ALL_BUNDLE_INFO,  // corresponse to option "-bundle"
     DUMP_BUNDLE_INFO,      // corresponse to option "-bundle [name]"
     DUMP_SHORTCUT_INFO,    // corresponse to option "-bundle [name] -shortcut-info"
 };

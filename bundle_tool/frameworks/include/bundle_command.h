@@ -66,7 +66,6 @@ const std::string HELP_MSG_DUMP =
     "options list:\n"
     "  -h, --help                           list available commands\n"
     "  -a, --all                            list all bundles in system\n"
-    "  -i, --bundle-info                    list all bundles info in system\n"
     "  -n, --bundle-name <bundle-name>      list the bundle info by a bundle name\n"
     "  -s, --shortcut-info                  list the shortcut info\n"
     "  -d, --device-id <device-id>          specify a device id\n"
@@ -171,7 +170,6 @@ private:
 
     std::string DumpBundleList(int32_t userId) const;
     std::string DumpBundleInfo(const std::string &bundleName, int32_t userId) const;
-    std::string DumpBundleInfos(int32_t userId) const;
     std::string DumpShortcutInfos(const std::string &bundleName, int32_t userId) const;
     std::string DumpDistributedBundleInfo(const std::string &deviceId, const std::string &bundleName);
     std::string DumpDependentModuleNames(const std::string &bundleName, const std::string &moduleName) const;
