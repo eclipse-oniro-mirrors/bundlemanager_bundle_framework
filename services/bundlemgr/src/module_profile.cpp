@@ -1122,7 +1122,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         MODULE_MAIN_ELEMENT,
         module.mainElement,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
