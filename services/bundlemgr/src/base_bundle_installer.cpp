@@ -2078,6 +2078,7 @@ void BaseBundleInstaller::UpdataNewInfosPrivilegeCapabilityFromOldInfo(
 
     for (auto &newInfo : newInfos) {
         newInfo.second.SetSingleton(bundleInfo.IsSingleton());
+        newInfo.second.SetRemovable(bundleInfo.IsRemovable());
     }
 #endif
 }

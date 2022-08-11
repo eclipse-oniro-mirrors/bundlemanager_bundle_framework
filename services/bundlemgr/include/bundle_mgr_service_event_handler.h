@@ -418,12 +418,29 @@ private:
 
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
-    void UpdatePreInstallPrivilegeCapability(
+    bool OTAEnable();
+    void UpdatePreInstallAttributes(
         const std::string &appDir, const std::string &bundleName);
     bool OTAInstallSystemBundle(const std::string &filePath,
         Constants::AppType appType, bool recoverable, bool removable);
+#ifdef USE_PRE_BUNDLE_PROFILE
+    void UpdateBundleRemovableAndRecovable(
+        const std::string &appDir, const std::string &bundleName);
+    void UpdateAllPreInstallPrivilegeCapability();
+    void UpdatePreInstallPrivilegeCapability(const std::string &bundleName);
+    void UpdatePreInstallPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
+    void ReInstallPreInstallByBundleName(const std::string &bundleName);
     bool IsSingletonChange(
         const std::string &bundleName, const BundleInfo &hasInstalledInfo);
+    bool IsSingletonChange(
+        const PreBundleConfigInfo &preBundleConfigInfo, bool &isSingletonChange);
+    bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
+    void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
+    bool GetInnerBundleInfo(
+        const std::string &bundleName, InnerBundleInfo &hasInstallInfo);
+    bool GetPreInstallInfo(
+        const std::string &bundleName, PreInstallBundleInfo &preInstallBundleInfo);
+#endif
 
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
@@ -435,8 +452,6 @@ private:
     bool needNotifyBundleScanStatus_ = false;
 
     bool hasLoadAllPreInstallBundleInfosFromDb_ = false;
-
-    bool useScanMode_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

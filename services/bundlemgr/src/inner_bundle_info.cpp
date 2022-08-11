@@ -1601,7 +1601,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->iconResource = applicationInfo.iconResource;
     baseApplicationInfo_->labelResource = applicationInfo.labelResource;
     baseApplicationInfo_->descriptionResource = applicationInfo.descriptionResource;
-
+    baseApplicationInfo_->removable = applicationInfo.removable;
     baseApplicationInfo_->userDataClearable = applicationInfo.userDataClearable;
     baseApplicationInfo_->accessible = applicationInfo.accessible;
 
@@ -1644,7 +1644,6 @@ void InnerBundleInfo::UpdatePreInstallPrivilegeCapability(
 #endif
 
     baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
-    baseApplicationInfo_->removable = applicationInfo.removable;
     baseApplicationInfo_->singleton = applicationInfo.singleton;
     baseApplicationInfo_->bootable = applicationInfo.bootable;
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;

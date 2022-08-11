@@ -3003,6 +3003,56 @@ bool BundleDataMgr::SetDisposedStatus(const std::string &bundleName, int32_t sta
     return true;
 }
 
+void BundleDataMgr::UpdateBundleRemovableAndRecovable(
+    const std::string &bundleName, bool removable, bool recovable)
+{
+    APP_LOGD("UpdateBundleRemovableAndRecovable %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+            return;
+        }
+
+        infoItem->second.SetRemovable(removable);
+        SaveInnerBundleInfo(infoItem->second);
+    }
+
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGE("can not find preBundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    preInstallBundleInfo.SetRecoverable(recovable);
+    SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
+void BundleDataMgr::UpdatePreInstallPrivilegeCapability(
+    const std::string &bundleName, const ApplicationInfo &appInfo)
+{
+    APP_LOGD("UpdatePreInstallPrivilegeCapability %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    infoItem->second.UpdatePreInstallPrivilegeCapability(true, appInfo);
+}
+
 int32_t BundleDataMgr::GetDisposedStatus(const std::string &bundleName)
 {
     APP_LOGD("GetDisposedStatus: bundleName: %{public}s", bundleName.c_str());
@@ -3174,37 +3224,6 @@ std::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()
 std::vector<sptr<IBundleStatusCallback>> BundleDataMgr::GetCallBackList() const
 {
     return callbackList_;
-}
-
-void BundleDataMgr::UpdatePreInstallPrivilegeCapability(
-    const std::string &bundleName, const ApplicationInfo &appInfo, bool recovable)
-{
-    APP_LOGD("UpdatePreInstallPrivilegeCapability %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-        auto infoItem = bundleInfos_.find(bundleName);
-        if (infoItem == bundleInfos_.end()) {
-            APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-            return;
-        }
-
-        infoItem->second.UpdatePreInstallPrivilegeCapability(true, appInfo);
-        SaveInnerBundleInfo(infoItem->second);
-    }
-
-    PreInstallBundleInfo preInstallBundleInfo;
-    if (!GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-        APP_LOGE("can not find preBundle %{public}s", bundleName.c_str());
-        return;
-    }
-
-    preInstallBundleInfo.SetRecoverable(recovable);
-    SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
