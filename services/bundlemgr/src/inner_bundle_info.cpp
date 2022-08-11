@@ -1859,7 +1859,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     }
     if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_APPQF_INFO)
         == GET_BUNDLE_WITH_APPQF_INFO) {
-        bundleinfo.appqfInfo = appqfInfo_;
+        bundleInfo.appqfInfo = appqfInfo_;
     }
     GetBundleWithAbilities(flags, bundleInfo, userId);
     GetBundeleWithExtension(flags, bundleInfo, userId);
