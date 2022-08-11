@@ -490,7 +490,7 @@ private:
      */
     void SaveHapPathToRecords(
         bool isPreInstallApp, const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void OnSingletonChange();
+    void OnSingletonChange(bool noSkipsKill);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
