@@ -30,7 +30,8 @@ ohos_unittest("BmsInstallDaemonTest") {
 
   sources += install_daemon_sources
 
-  sources -= [ "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp" ]
 
   sources += [ "bms_install_daemon_test.cpp" ]
 
