@@ -31,6 +31,7 @@
 #include "shortcut_info.h"
 #include "want.h"
 #include "distributed_bundle_info.h"
+#include "quick_fix/appqf_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1617,6 +1618,8 @@ private:
 
     // SandBox App Persistent Info
     std::vector<SandboxAppPersistentInfo> sandboxPersistentInfo_;
+    AppqfInfo appqfInfo_;
+
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

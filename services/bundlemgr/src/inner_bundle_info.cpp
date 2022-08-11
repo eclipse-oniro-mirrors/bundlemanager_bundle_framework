@@ -106,6 +106,7 @@ const std::string BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
 const std::string MODULE_COMPILE_MODE = "compileMode";
+const std::string APPQF_INFO = "appqfInfo";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -356,6 +357,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->baseExtensionInfos_= info.baseExtensionInfos_;
     this->extensionSkillInfos_ = info.extensionSkillInfos_;
     this->sandboxPersistentInfo_ = info.sandboxPersistentInfo_;
+    this->appqfInfo_ = info.appqfInfo_;
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
     if (this->baseApplicationInfo_ == nullptr) {
         APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
@@ -513,6 +515,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
     jsonObject[DISPOSED_STATUS] = disposedStatus_;
+    jsonObject[APPQF_INFO] = appqfInfo_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1361,6 +1364,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AppqfInfo>(jsonObject,
+        jsonObjectEnd,
+        APPQF_INFO,
+        appqfInfo_,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -1845,6 +1856,10 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
             APP_LOGE("get request permission state failed");
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
+    }
+    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_APPQF_INFO)
+        == GET_BUNDLE_WITH_APPQF_INFO) {
+        bundleinfo.appqfInfo = appqfInfo_;
     }
     GetBundleWithAbilities(flags, bundleInfo, userId);
     GetBundeleWithExtension(flags, bundleInfo, userId);
