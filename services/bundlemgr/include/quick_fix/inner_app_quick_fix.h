@@ -46,6 +46,7 @@ struct QuickFixMark {
 class InnerAppQuickFix {
 public:
     InnerAppQuickFix();
+    InnerAppQuickFix(const AppQuickFix &appQuickFix, const QuickFixMark &mark);
     ~InnerAppQuickFix();
 
     void SetAppQuickFix(const AppQuickFix &appQuickFix);

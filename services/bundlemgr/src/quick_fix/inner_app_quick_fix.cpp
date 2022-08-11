@@ -36,6 +36,11 @@ InnerAppQuickFix::InnerAppQuickFix()
 {
 }
 
+InnerAppQuickFix::InnerAppQuickFix(const AppQuickFix &appQuickFix, const QuickFixMark &mark)
+    : appQuickFix_(appQuickFix), quickFixMark_(mark)
+{
+}
+
 InnerAppQuickFix::~InnerAppQuickFix()
 {
 }

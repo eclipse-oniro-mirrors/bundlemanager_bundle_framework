@@ -90,6 +90,7 @@ ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessagePa
     APP_LOGI("begin to HandleSwitchQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    bool enable = data.ReadBool();
     sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
     if (object == nullptr) {
         APP_LOGE("read statusCallback failed.");
@@ -97,7 +98,7 @@ ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessagePa
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    bool ret = SwitchQuickFix(bundleName, statusCallback);
+    bool ret = SwitchQuickFix(bundleName, enable, statusCallback);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;

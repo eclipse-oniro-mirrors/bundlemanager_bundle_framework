@@ -61,7 +61,7 @@ bool QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bun
     return quickFixAsyncMgr_->DeployQuickFix(bundleFilePaths, statusCallback);
 }
 
-bool QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName,
+bool QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, bool enable,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("QuickFixManagerHostImpl::SwitchQuickFix start");
@@ -70,11 +70,11 @@ bool QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName,
         return false;
     }
     if (quickFixAsyncMgr_ == nullptr) {
-        APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix quickFixerAsyncMgr is nullptr");
+        APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix quickFixerAsyncMgr is nullptr");
         return false;
     }
 
-    return quickFixAsyncMgr_->SwitchQuickFix(bundleName, statusCallback);
+    return quickFixAsyncMgr_->SwitchQuickFix(bundleName, enable, statusCallback);
 }
 
 bool QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
@@ -86,7 +86,7 @@ bool QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
         return false;
     }
     if (quickFixAsyncMgr_ == nullptr) {
-        APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix quickFixerAsyncMgr is nullptr");
+        APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix quickFixerAsyncMgr is nullptr");
         return false;
     }
 
