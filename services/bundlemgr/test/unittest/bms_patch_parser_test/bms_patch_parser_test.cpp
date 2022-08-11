@@ -49,17 +49,17 @@ const nlohmann::json PATCH_JSON = R"(
     }
 )"_json;
 
-constexpr const char* BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME = "bundleName";
-constexpr const char* BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_CODE = "versionCode";
-constexpr const char* BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_NAME = "versionName";
-constexpr const char* BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_CODE = "patchVersionCode";
-constexpr const char* BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_NAME = "patchVersionName";
-constexpr const char* BUNDLE_PATCH_PROFILE_MODULE_KEY_NAME = "name";
-constexpr const char* BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE = "type";
-constexpr const char* BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES = "deviceTypes";
-constexpr const char* BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH = "originalModuleHash";
-constexpr const char* BUNDLE_PATCH_PROFILE_KEY_APP = "app";
-constexpr const char* BUNDLE_PATCH_PROFILE_KEY_MODULE = "module";
+std::string BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME = "bundleName";
+std::string BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_CODE = "versionCode";
+std::string BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_NAME = "versionName";
+std::string BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_CODE = "patchVersionCode";
+std::string BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_NAME = "patchVersionName";
+std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_NAME = "name";
+std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE = "type";
+std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES = "deviceTypes";
+std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH = "originalModuleHash";
+std::string BUNDLE_PATCH_PROFILE_KEY_APP = "app";
+std::string BUNDLE_PATCH_PROFILE_KEY_MODULE = "module";
 } // namespace
 
 class BmsPatchParserTest : public testing::Test {
@@ -70,8 +70,8 @@ public:
     void TearDown();
 
 protected:
-    void CheckNoPropProfileParseApp(const std::string &propKey, const ErrCode expectCode) const;
-    void CheckNoPropProfileParseModule(const std::string &propKey, const ErrCode expectCode) const;
+    void CheckNoPropProfileParseApp(const std::string &propKey) const;
+    void CheckNoPropProfileParseModule(const std::string &propKey) const;
     void CheckProfileTypes(const nlohmann::json &checkedProfileJson) const;
     
 protected:
@@ -92,7 +92,7 @@ void BmsPatchParserTest::TearDown()
     pathStream_.clear();
 }
 
-void BmsPatchParserTest::CheckNoPropProfileParseApp(const std::string &propKey, const ErrCode expectCode) const
+void BmsPatchParserTest::CheckNoPropProfileParseApp(const std::string &propKey) const
 {
     nlohmann::json errorProfileJson = PATCH_JSON;
     errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_APP].erase(propKey);
@@ -102,10 +102,10 @@ void BmsPatchParserTest::CheckNoPropProfileParseApp(const std::string &propKey, 
     AppQuickFix appQuickFix;
     PatchProfile patchProfile;
     ErrCode ret = patchProfile.TransformTo(profileFileBuffer, patchExtractor, appQuickFix);
-    EXPECT_EQ(ret, expectCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
-void BmsPatchParserTest::CheckNoPropProfileParseModule(const std::string &propKey, const ErrCode expectCode) const
+void BmsPatchParserTest::CheckNoPropProfileParseModule(const std::string &propKey) const
 {
     nlohmann::json errorProfileJson = PATCH_JSON;
     errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_MODULE].erase(propKey);
@@ -115,7 +115,7 @@ void BmsPatchParserTest::CheckNoPropProfileParseModule(const std::string &propKe
     AppQuickFix appQuickFix;
     PatchProfile patchProfile;
     ErrCode ret = patchProfile.TransformTo(profileFileBuffer, patchExtractor, appQuickFix);
-    EXPECT_EQ(ret, expectCode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
 void BmsPatchParserTest::CheckProfileTypes(const nlohmann::json &checkedProfileJson) const
@@ -166,7 +166,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0001, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsPatchParserTest, TestParse_0002, Function | SmallTest | Level0)
 {
-    CheckNoPropProfileParseApp(BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+    CheckNoPropProfileParseApp(BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME);
 }
 
 /**
@@ -178,7 +178,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0002, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsPatchParserTest, TestParse_0003, Function | SmallTest | Level0)
 {
-    CheckNoPropProfileParseApp(BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_CODE, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+    CheckNoPropProfileParseApp(BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_CODE);
 }
 
 /**
@@ -190,7 +190,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0003, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsPatchParserTest, TestParse_0004, Function | SmallTest | Level0)
 {
-    CheckNoPropProfileParseApp(BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_NAME, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+    CheckNoPropProfileParseApp(BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_NAME);
 }
 
 /**
@@ -202,7 +202,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0004, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsPatchParserTest, TestParse_0005, Function | SmallTest | Level0)
 {
-    CheckNoPropProfileParseModule(BUNDLE_PATCH_PROFILE_MODULE_KEY_NAME, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+    CheckNoPropProfileParseModule(BUNDLE_PATCH_PROFILE_MODULE_KEY_NAME);
 }
 
 /**
@@ -214,8 +214,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0005, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsPatchParserTest, TestParse_0006, Function | SmallTest | Level0)
 {
-    CheckNoPropProfileParseModule(BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH,
-        ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+    CheckNoPropProfileParseModule(BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH);
 }
 
 /**
@@ -318,7 +317,6 @@ HWTEST_F(BmsPatchParserTest, TestParse_0012, Function | SmallTest | Level0)
 {
     nlohmann::json errorTypeJson = PATCH_JSON;
     errorTypeJson[BUNDLE_PATCH_PROFILE_KEY_APP][BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME] = 1;
-
     CheckProfileTypes(errorTypeJson);
 }
 
@@ -430,7 +428,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0019, Function | SmallTest | Level0)
 HWTEST_F(BmsPatchParserTest, TestParse_0020, Function | SmallTest | Level0)
 {
     nlohmann::json errorTypeJson = PATCH_JSON;
-    errorTypeJson[BUNDLE_PATCH_PROFILE_KEY_MODULE][BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES] = {1,2};
+    errorTypeJson[BUNDLE_PATCH_PROFILE_KEY_MODULE][BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES] = {1, 2};
     CheckProfileTypes(errorTypeJson);
 }
 
@@ -439,9 +437,23 @@ HWTEST_F(BmsPatchParserTest, TestParse_0020, Function | SmallTest | Level0)
  * @tc.name: parse patch package by patch.json
  * @tc.require: AR000HBO6
  * @tc.desc: 1. system running normally
- *           2. test parse patch failed when originalModuleHash is not a string
+ *           2. test parse patch succeed when deviceType is a array but it is NULL
  */
 HWTEST_F(BmsPatchParserTest, TestParse_0021, Function | SmallTest | Level0)
+{
+    nlohmann::json errorTypeJson = PATCH_JSON;
+    errorTypeJson[BUNDLE_PATCH_PROFILE_KEY_MODULE][BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES] = {};
+    CheckProfileTypes(errorTypeJson);
+}
+
+/**
+ * @tc.number: TestParse_0022
+ * @tc.name: parse patch package by patch.json
+ * @tc.require: AR000HBO6
+ * @tc.desc: 1. system running normally
+ *           2. test parse patch failed when originalModuleHash is not a string
+ */
+HWTEST_F(BmsPatchParserTest, TestParse_0022, Function | SmallTest | Level0)
 {
     nlohmann::json errorTypeJson = PATCH_JSON;
     errorTypeJson[BUNDLE_PATCH_PROFILE_KEY_MODULE][BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH] = 1234567890;
