@@ -24,6 +24,7 @@
                 "access_token",
                 "bundle_framework",
                 "common",
+                "c_utils",
                 "hisysevent_native",
                 "hiviewdfx_hilog_native",
                 "i18n",
@@ -33,8 +34,7 @@
                 "os_account",
                 "resource_management",
                 "safwk",
-                "samgr",
-                "utils_base"
+                "samgr"
             ],
             "third_party": [
                 "libjpeg",
