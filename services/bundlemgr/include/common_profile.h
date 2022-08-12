@@ -337,6 +337,7 @@ constexpr const char* APP_ROUTER = "router";
 constexpr const char* APP_ACCESSIBLE = "accessible";
 constexpr const char* APP_TARGETBUNDLELIST = "targetBundleList";
 constexpr const char* APP_MULTI_PROJECTS = "multiProjects";
+constexpr const char* APP_PROCESS = "process";
 // module
 constexpr const char* MODULE_NAME = "name";
 constexpr const char* MODULE_TYPE = "type";

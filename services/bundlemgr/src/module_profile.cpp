@@ -238,6 +238,7 @@ struct App {
     std::vector<std::string> targetBundleList;
     std::map<std::string, DeviceConfig> deviceConfigs;
     bool multiProjects = false;
+    std::string process;
 };
 
 struct Module {
@@ -1063,6 +1064,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_PROCESS,
+        app.process,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1466,6 +1475,7 @@ bool ToApplicationInfo(
 
     applicationInfo.enabled = true;
     applicationInfo.multiProjects = app.multiProjects;
+    applicationInfo.process = app.process.empty() ? app.bundleName : app.process;
     return true;
 }
 
