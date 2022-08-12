@@ -130,6 +130,8 @@ private:
     void ParseAppPrivilegeCapability(
         const Security::Verify::ProvisionInfo &provisionInfo,
         AppPrivilegeCapability &appPrivilegeCapability);
+    
+    ErrCode CheckMainElement(const InnerBundleInfo &info);
 
     bool isContainEntry_ = false;
 };

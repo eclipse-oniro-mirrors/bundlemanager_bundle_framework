@@ -1135,6 +1135,11 @@ public:
     std::optional<InnerModuleInfo> GetInnerModuleInfoByModuleName(const std::string &moduleName) const;
 
     void GetModuleNames(std::vector<std::string> &moduleNames) const;
+
+    const std::map<std::string, InnerModuleInfo> &GetInnerModuleInfos() const
+    {
+        return innerModuleInfos_;
+    }
     /**
      * @brief Fetch all innerModuleInfos, can be modify.
      */
