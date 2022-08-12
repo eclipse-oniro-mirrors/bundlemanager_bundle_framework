@@ -29,7 +29,6 @@
 #include "hap_module_info.h"
 #include "inner_bundle_user_info.h"
 #include "json_util.h"
-#include "quick_fix/appqf_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -1618,9 +1617,6 @@ private:
 
     // SandBox App Persistent Info
     std::vector<SandboxAppPersistentInfo> sandboxPersistentInfo_;
-    // quick fix Info
-    AppqfInfo appqfInfo_;
-
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);
