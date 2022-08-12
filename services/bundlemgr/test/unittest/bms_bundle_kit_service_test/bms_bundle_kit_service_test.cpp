@@ -173,8 +173,6 @@ const std::string PORT_001 = "port001";
 const std::string PORT_002 = "port002";
 const std::string PATH_001 = "path001";
 const std::string PATH_REGEX_001 = ".*";
-const std::string QUICK_FIX_ABI = "quick fix cpuAbi";
-const std::string QUICK_FIX_SO_PATH = "quick fix soPath";
 const std::string URI_PATH_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 +
     PORT_SEPARATOR + PORT_001 + PATH_SEPARATOR + PATH_001;
 const std::string URI_PATH_DUPLICATE_001 = SCHEME_001 + SCHEME_SEPARATOR +
