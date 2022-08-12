@@ -17,8 +17,8 @@
 
 #include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
-#include "bundle_parser.h"
 #include "bundle_util.h"
+#include "patch_parser.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -35,7 +35,11 @@ ErrCode QuickFixChecker::CheckMultipleHapsSignInfo(
 
 ErrCode QuickFixChecker::ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix)
 {
-    return ERR_OK;
+    if (patchPath.empty()) {
+        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+    }
+    PatchParser parse;
+    return parse.ParsePatchInfo(patchPath, appQuickFix);
 }
 
 ErrCode QuickFixChecker::ParseAppQuickFixFiles(
@@ -103,7 +107,7 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
     // check bundleName is exists
     const auto &qfInfo = infos.begin()->second;
     if (!dataMgr->GetBundleInfo(qfInfo.bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
-        bundleInfo, Constants::UNSPECIFIED_USERID)) {
+        bundleInfo, Constants::ANY_USERID)) {
         APP_LOGE("error: bundleName %{public}s does not exist!", qfInfo.bundleName.c_str());
         return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
@@ -124,14 +128,8 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
         (qfInfo.deployingAppqfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
         return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
     }
-    // check moduleName is exists
-    ErrCode ret = CheckModuleNameExist(bundleInfo, infos);
-    if (ret != ERR_OK) {
-        return ret;
-    }
     // check signature info
-    ret = CheckSignatureInfo(bundleInfo, provisionInfo);
-    return ret;
+    return CheckSignatureInfo(bundleInfo, provisionInfo);
 }
 
 ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,
@@ -155,7 +153,8 @@ ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,
 ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
     const Security::Verify::ProvisionInfo &provisionInfo)
 {
-    if ((bundleInfo.appId != provisionInfo.appId) ||
+    std::string quickFixAppId = bundleInfo.name + Constants::FILE_UNDERLINE + provisionInfo.appId;
+    if ((bundleInfo.appId != quickFixAppId) ||
         (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl)) {
             APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
                 bundleInfo.name.c_str());

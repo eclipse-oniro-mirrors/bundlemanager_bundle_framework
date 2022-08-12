@@ -23,7 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
-    explicit QuickFixDeployer(const std::vector<std::string> &bundleFilePaths);
+    QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, shared_ptr<QuickFixDataMgr> quickFixDataMgr);
     virtual ~QuickFixDeployer() = default;
 
     virtual ErrCode Execute() override;
@@ -31,6 +31,44 @@ public:
 private:
     ErrCode DeployQuickFix();
 
+    ErrCode ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
+        InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix);
+
+    ErrCode ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFix,
+        const InnerAppQuickFix &oldInnerAppQuickFix);
+
+    ErrCode ParseAndCheckAppQuickFixInfos(
+        const std::vector<std::string> &bundleFilePaths,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+        std::unordered_map<std::string, AppQuickFix> &infos);
+
+    ErrCode ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
+        const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix);
+
+    ErrCode CheckAppQuickFixInfosWithInstalledBundle(
+        const std::unordered_map<std::string, AppQuickFix> &infos,
+        const Security::Verify::ProvisionInfo &provisionInfo,
+        BundleInfo &bundleInfo);
+
+    ErrCode CheckPatchVersionCode(
+        const AppQuickFix &newAppQuickFix,
+        const AppQuickFix &oldAppQuickFix);
+
+    ErrCode SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickFix);
+
+    ErrCode ExtractDiffFiles(
+        const std::string &targetPath,
+        const AppqfInfo &appQfInfo);
+
+    ErrCode ApplyDiffPatch(
+        const std::string &bundleName,
+        const std::string &libraryPath,
+        const std::string &diffSoPath,
+        const std::string &newPath);
+
+    ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
+
+    std::shared_ptr<QuickFixDataMgr> quickDataMgr_ = nullptr;
     std::vector<std::string> patchPaths_;
 };
 } // AppExecFwk
