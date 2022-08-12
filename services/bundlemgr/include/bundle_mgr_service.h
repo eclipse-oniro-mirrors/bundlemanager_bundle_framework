@@ -22,6 +22,9 @@
 #include "system_ability.h"
 #include "thread_pool.h"
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+#include "app_control_manager_host_impl.h"
+#endif
 #ifdef DEVICE_MANAGER_ENABLE
 #include "bms_device_manager.h"
 #endif
@@ -91,6 +94,10 @@ public:
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<IDefaultApp> GetDefaultAppProxy() const;
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    sptr<IAppControlMgr> GetAppControlProxy() const;
 #endif
 
 #ifdef DEVICE_MANAGER_ENABLE
@@ -165,6 +172,10 @@ private:
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<DefaultAppHostImpl> defaultAppHostImpl_;
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    sptr<AppControlManagerHostImpl> appControlManagerHostImpl_;
 #endif
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX

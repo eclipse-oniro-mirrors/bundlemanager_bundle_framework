@@ -16,6 +16,7 @@ import("../../../appexecfwk.gni")
 
 config("bundlemgr_sdk_config") {
   include_dirs = [
+    "include/app_control",
     "include/bundlemgr",
     "include/default_app",
     "include/quick_fix",
@@ -90,6 +91,14 @@ ohos_shared_library("appexecfwk_core") {
     sources += [
       "src/default_app/default_app_host.cpp",
       "src/default_app/default_app_proxy.cpp",
+    ]
+  }
+
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "src/app_control/app_control_host.cpp",
+      "src/app_control/app_control_proxy.cpp",
     ]
   }
 

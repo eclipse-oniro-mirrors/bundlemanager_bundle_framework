@@ -184,6 +184,9 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_FILE_DESCRIPTOR, &BundleMgrHost::HandleGetMediaFileDescriptor);
     funcMap_.emplace(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, &BundleMgrHost::HandleGetQuickFixManagerProxy);
     funcMap_.emplace(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, &BundleMgrHost::HandleGetUdidByNetworkId);
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
+#endif
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1805,6 +1808,24 @@ ErrCode BundleMgrHost::HandleGetDefaultAppProxy(MessageParcel &data, MessageParc
     }
 
     if (!reply.WriteObject<IRemoteObject>(defaultAppProxy->AsObject())) {
+        APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+ErrCode BundleMgrHost::HandleGetAppControlProxy(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IAppControlMgr> appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is nullptr.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(appControlProxy->AsObject())) {
         APP_LOGE("WriteObject failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

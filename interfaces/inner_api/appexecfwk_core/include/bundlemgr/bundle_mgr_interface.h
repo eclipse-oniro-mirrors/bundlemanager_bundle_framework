@@ -27,6 +27,7 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "../app_control/app_control_interface.h"
 #include "../default_app/default_app_interface.h"
 #include "../quick_fix/quick_fix_manager_interface.h"
 #include "distributed_bundle_info.h"
@@ -915,6 +916,11 @@ public:
         return nullptr;
     }
 
+    virtual sptr<IAppControlMgr> GetAppControlProxy()
+    {
+        return nullptr;
+    }
+
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats)
     {
         return false;
@@ -1059,6 +1065,7 @@ public:
         GET_STRING_BY_ID,
         GET_ICON_BY_ID,
         GET_UDID_BY_NETWORK_ID,
+        GET_APP_CONTROL_PROXY,
     };
 };
 }  // namespace AppExecFwk
