@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DEPLOYER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DEPLOYER_H
 
+#include "quick_fix_checker.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_interface.h"
 
@@ -23,7 +24,9 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
-    QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, shared_ptr<QuickFixDataMgr> quickFixDataMgr);
+    QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
+        std::shared_ptr<QuickFixDataMgr> &quickFixDataMgr);
+
     virtual ~QuickFixDeployer() = default;
 
     virtual ErrCode Execute() override;
@@ -68,8 +71,8 @@ private:
 
     ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
 
-    std::shared_ptr<QuickFixDataMgr> quickDataMgr_ = nullptr;
     std::vector<std::string> patchPaths_;
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS

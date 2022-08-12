@@ -24,8 +24,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &pacthPaths,
-    shared_ptr<QuickFixDataMgr> &quickFixDataMgr) : patchPaths_(pacthPaths), quickDataMgr_(quickFixDataMgr)
+QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
+    std::shared_ptr<QuickFixDataMgr> &quickFixDataMgr) : patchPaths_(bundleFilePaths), quickFixDataMgr_(quickFixDataMgr)
 {}
 
 ErrCode QuickFixDeployer::Execute()
@@ -35,7 +35,7 @@ ErrCode QuickFixDeployer::Execute()
 
 ErrCode QuickFixDeployer::DeployQuickFix()
 {
-    if (patchPaths_.empty() || (quickDataMgr_ == nullptr)) {
+    if (patchPaths_.empty() || (quickFixDataMgr_ == nullptr)) {
         APP_LOGE("DeployQuickFix wrong parms");
         return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
     }
@@ -65,9 +65,9 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     if (ret != ERR_OK) {
         bool isExist = oldInnerAppQuickFix.GetAppQuickFix().bundleName.empty();
         if (isExist) {
-            quickDataMgr_->SaveInnerAppQuickFix(oldInnerAppQuickFix);
+            quickFixDataMgr_->SaveInnerAppQuickFix(oldInnerAppQuickFix);
         } else {
-            quickDataMgr_->DeleteInnerAppQuickFix(newInnerAppQuickFix.GetAppQuickFix().bundleName);
+            quickFixDataMgr_->DeleteInnerAppQuickFix(newInnerAppQuickFix.GetAppQuickFix().bundleName);
         }
         return ret;
     }
@@ -90,7 +90,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix)
 {
     APP_LOGD("ToDeployStartStatus start.");
-    if (quickDataMgr_ == nullptr) {
+    if (quickFixDataMgr_ == nullptr) {
         return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
     }
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
@@ -101,7 +101,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         return ret;
     }
     std::string &bundleName = infos.begin()->second.bundleName;
-    bool isExist = quickDataMgr_->QueryInnerAppQuickFix(bundleName, oldInnerAppQuickFix);
+    bool isExist = quickFixDataMgr_->QueryInnerAppQuickFix(bundleName, oldInnerAppQuickFix);
     // 2. check current app quick fix version code
     ret = isExist ? CheckPatchVersionCode(infos.begin()->second, oldInnerAppQuickFix.GetAppQuickFix()) : ERR_OK;
     if (ret != ERR_OK) {
@@ -131,7 +131,7 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     const InnerAppQuickFix &oldInnerAppQuickFix)
 {
     APP_LOGD("ToDeployEndStatus start.");
-    if (quickDataMgr_ == nullptr) {
+    if (quickFixDataMgr_ == nullptr) {
         return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
     }
     // create patch path
@@ -274,10 +274,10 @@ ErrCode QuickFixDeployer::CheckPatchVersionCode(
 ErrCode QuickFixDeployer::SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
     APP_LOGD("SaveAppQuickFix start.");
-    if (quickDataMgr_ == nullptr) {
+    if (quickFixDataMgr_ == nullptr) {
         return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
     }
-    if (!quickDataMgr_->SaveInnerAppQuickFix(innerAppQuickFix)) {
+    if (!quickFixDataMgr_->SaveInnerAppQuickFix(innerAppQuickFix)) {
         APP_LOGE("inner app quick fix save failed");
         return ERR_APPEXECFWK_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED;
     }
@@ -332,7 +332,7 @@ ErrCode QuickFixDeployer::ApplyDiffPatch(
 ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath)
 {
     APP_LOGD("MoveHqfFiles start.");
-    if (targetPath.empty() || (quickDataMgr_ == nullptr)) {
+    if (targetPath.empty() || (quickFixDataMgr_ == nullptr)) {
         return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
     }
     QuickFixMark mark = innerAppQuickFix.GetQuickFixMark();
