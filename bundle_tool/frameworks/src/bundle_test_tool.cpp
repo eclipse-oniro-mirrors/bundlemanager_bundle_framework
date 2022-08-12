@@ -1308,8 +1308,8 @@ ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t en
         APP_LOGE("enable is wrong");
         return IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
     }
-
-    if (!quickFixProxy->SwitchQuickFix(bundleName, callback)) {
+    bool enableFlag = (enable == 0) ? false : true;
+    if (!quickFixProxy->SwitchQuickFix(bundleName, enableFlag, callback)) {
         APP_LOGE("SwitchQuickFix failed");
         return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
     }

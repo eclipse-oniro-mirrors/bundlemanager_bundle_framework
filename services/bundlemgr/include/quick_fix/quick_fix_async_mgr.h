@@ -34,9 +34,8 @@ public:
     virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
     bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback);
-    bool SwitchQuickFix(const std::string &bundleName,
+    bool SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback);
-
     bool DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback);
 

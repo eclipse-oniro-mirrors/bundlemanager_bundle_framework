@@ -31,7 +31,7 @@ public:
     virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
-    virtual bool SwitchQuickFix(const std::string &bundleName,
+    virtual bool SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
     virtual bool DeleteQuickFix(const std::string &bundleName,

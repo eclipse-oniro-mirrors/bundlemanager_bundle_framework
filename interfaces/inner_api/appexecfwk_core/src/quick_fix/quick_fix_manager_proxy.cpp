@@ -82,7 +82,7 @@ bool QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundle
     return reply.ReadBool();
 }
 
-bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName,
+bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool enable,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("begin to call SwitchQuickFix.");
@@ -100,6 +100,10 @@ bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName,
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("write bundleName failed.");
+        return false;
+    }
+    if (!data.WriteBool(enable)) {
+        APP_LOGE("write enable failed.");
         return false;
     }
     if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {

@@ -699,6 +699,8 @@ public:
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
 
+    bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
+
 private:
     /**
      * @brief Init transferStates.

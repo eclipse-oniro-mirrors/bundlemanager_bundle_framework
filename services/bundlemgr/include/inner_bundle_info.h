@@ -26,6 +26,7 @@
 #include "extension_ability_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
+#include "inner_app_quick_fix.h"
 #include "inner_bundle_user_info.h"
 #include "json_util.h"
 #include "shortcut_info.h"

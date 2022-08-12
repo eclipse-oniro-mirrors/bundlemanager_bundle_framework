@@ -19,8 +19,10 @@ module_output_path = "bundle_tool/tools"
 config("tools_bm_config_mock") {
   include_dirs = [
     "${inner_api_path}/appexecfwk_base/include",
+    "${inner_api_path}/appexecfwk_base/include/quick_fix",
     "${inner_api_path}/appexecfwk_core/include/bundlemgr",
     "${appexecfwk_path}/services/bundlemgr/include",
+    "${appexecfwk_path}/services/bundlemgr/include/quick_fix",
     "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
     "${bundletool_test_path}/mock",
     "//base/notification/eventhandler/interfaces/inner_api",

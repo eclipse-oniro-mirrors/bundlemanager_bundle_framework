@@ -63,7 +63,7 @@ bool QuickFixAsyncMgr::DeployQuickFix(const std::vector<std::string> &bundleFile
     return true;
 }
 
-bool QuickFixAsyncMgr::SwitchQuickFix(const std::string &bundleName,
+bool QuickFixAsyncMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("SwitchQuickFix begin");
@@ -73,8 +73,8 @@ bool QuickFixAsyncMgr::SwitchQuickFix(const std::string &bundleName,
         return false;
     }
 
-    auto task = [quickFixer, bundleName] {
-        quickFixer->SwitchQuickFix(bundleName);
+    auto task = [quickFixer, bundleName, enable] {
+        quickFixer->SwitchQuickFix(bundleName, enable);
     };
 
     ThreadPool &installersPool = DelayedSingleton<BundleMgrService>::GetInstance()->GetThreadPool();

@@ -19,7 +19,7 @@
 #include "quick_fix_manager_db_interface.h"
 
 #include <mutex>
-#include <unordered_map>
+#include <map>
 
 #include "quick_fix_status_callback_interface.h"
 #include "singleton.h"
@@ -31,12 +31,6 @@ public:
     QuickFixDataMgr();
     ~QuickFixDataMgr();
 
-    ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths);
-
-    ErrCode SwitchQuickFix(const std::string &bundleName);
-
-    ErrCode DeleteQuickFix(const std::string &bundleName);
-
     bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs);
 
     bool QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix);
@@ -45,12 +39,16 @@ public:
 
     bool DeleteInnerAppQuickFix(const std::string &bundleName);
 
+    bool IsNextStatusExisted(const QuickFixStatus &curStatus, const QuickFixStatus &nextStatus);
+
+    bool UpdateQuickFixStatus(const QuickFixStatus &nextStatus, InnerAppQuickFix &innerAppQuickFix);
+
 private:
     void InitStatesMap();
 
     mutable std::mutex mutex_;
     std::shared_ptr<IQuickFixManagerDb> quickFixManagerDb_ = nullptr;
-    std::unordered_map<QuickFixStatus, QuickFixStatus> statesMap_;
+    std::multimap<QuickFixStatus, QuickFixStatus> statesMap_;
 };
 } // OHOS
 } // AppExecFwk
