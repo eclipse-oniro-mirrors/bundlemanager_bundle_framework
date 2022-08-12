@@ -38,6 +38,8 @@ constexpr const char* BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES = "deviceType
 constexpr const char* BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH = "originalModuleHash";
 constexpr const char* BUNDLE_PATCH_PROFILE_KEY_APP = "app";
 constexpr const char* BUNDLE_PATCH_PROFILE_KEY_MODULE = "module";
+constexpr const char* BUNDLE_PATCH_TYPE_PATCH = "patch";
+constexpr const char* BUNDLE_PATCH_TYPE_HOT_RELOAD = "hotreload";
 
 thread_local int32_t parseResult = 0;
 struct App {
@@ -163,6 +165,17 @@ void from_json(const nlohmann::json &jsonObject, PatchJson &patchJson)
         ArrayType::NOT_ARRAY);
 }
 
+QuickFixType GetQuickFixType(const std::string &type)
+{
+    if (type == BUNDLE_PATCH_TYPE_PATCH) {
+        return QuickFixType::PATCH;
+    }
+    if (type == BUNDLE_PATCH_TYPE_HOT_RELOAD) {
+        return QuickFixType::HOT_RELOAD;
+    }
+    return QuickFixType::UNKNOWN;
+}
+
 void ToPatchInfo(PatchJson &patchJson, AppQuickFix &appQuickFix)
 {
     appQuickFix.bundleName = patchJson.app.bundleName;
@@ -170,6 +183,7 @@ void ToPatchInfo(PatchJson &patchJson, AppQuickFix &appQuickFix)
     appQuickFix.versionName = patchJson.app.versionName;
     appQuickFix.deployingAppqfInfo.versionCode = patchJson.app.patchVersionCode;
     appQuickFix.deployingAppqfInfo.versionName = patchJson.app.patchVersionName;
+    appQuickFix.deployingAppqfInfo.type = GetQuickFixType(patchJson.module.type);
     HqfInfo hqfInfo;
     hqfInfo.moduleName = patchJson.module.name;
     hqfInfo.hapSha256 = patchJson.module.originalModuleHash;
