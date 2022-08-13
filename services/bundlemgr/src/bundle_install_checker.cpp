@@ -220,10 +220,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         SetEntryInstallationFree(packInfo, newInfo);
         CollectProvisionInfo(provisionInfo, appPrivilegeCapability, newInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
-        if ((result = GetPrivilegeCapability(checkParam, newInfo)) != ERR_OK) {
-            APP_LOGE("install failed due to appSignature incompatible");
-            return result;
-        }
+        GetPrivilegeCapability(checkParam, newInfo);
 #endif
         if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
@@ -263,7 +260,7 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 }
 
-ErrCode BundleInstallChecker::GetPrivilegeCapability(
+void BundleInstallChecker::GetPrivilegeCapability(
     const InstallCheckParam &checkParam, InnerBundleInfo &newInfo)
 {
     newInfo.SetRemovable(checkParam.removable);
@@ -281,7 +278,7 @@ ErrCode BundleInstallChecker::GetPrivilegeCapability(
 
     if (!ret) {
         APP_LOGW("appSignature is incompatible");
-        return ERR_APPEXECFWK_INSTALL_APP_SIGNATURE_INCOMPATIBLE;
+        return;
     }
 
     newInfo.SetKeepAlive(preBundleConfigInfo.keepAlive);
@@ -290,7 +287,6 @@ ErrCode BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
-    return ERR_OK;
 }
 
 ErrCode BundleInstallChecker::ParseBundleInfo(

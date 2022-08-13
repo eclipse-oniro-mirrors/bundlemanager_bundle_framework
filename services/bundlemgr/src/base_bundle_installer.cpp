@@ -371,7 +371,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             newInnerBundleUserInfo.bundleUserInfo.userId = userId_;
             newInnerBundleUserInfo.bundleName = bundleName_;
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
-            ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
+            ScopeGuard userGuard([&] { RemoveBundleUserData(userId_, oldInfo, false); });
             accessTokenId_ = CreateAccessTokenId(oldInfo);
             oldInfo.SetAccessTokenId(accessTokenId_, userId_);
             result = GrantRequestPermissions(oldInfo, accessTokenId_);
@@ -423,7 +423,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     ScopeGuard userGuard([&] {
         if (!hasInstalledInUser_ || (!isAppExist_)) {
-            RemoveBundleUserData(oldInfo, false);
+            RemoveBundleUserData(userId_, oldInfo, false);
         }
     });
 
@@ -723,7 +723,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
-        return RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        return RemoveBundleUserData(userId_, oldInfo, installParam.isKeepData);
     }
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
@@ -845,7 +845,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (onlyInstallInUser) {
             return RemoveBundle(oldInfo, installParam.isKeepData);
         }
-        return RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        return RemoveBundleUserData(userId_, oldInfo, installParam.isKeepData);
     }
 
     ErrCode result = ERR_OK;
@@ -933,7 +933,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             curInnerBundleUserInfo.bundleUserInfo.userId = userId_;
             curInnerBundleUserInfo.bundleName = bundleName;
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
-            ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
+            ScopeGuard userGuard([&] { RemoveBundleUserData(userId_, oldInfo, false); });
             accessTokenId_ = CreateAccessTokenId(oldInfo);
             oldInfo.SetAccessTokenId(accessTokenId_, userId_);
             ErrCode result = GrantRequestPermissions(oldInfo, accessTokenId_);
@@ -1846,11 +1846,12 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool needRemoveData)
+ErrCode BaseBundleInstaller::RemoveBundleUserData(
+    int32_t userId, InnerBundleInfo &innerBundleInfo, bool needRemoveData)
 {
     auto bundleName = innerBundleInfo.GetBundleName();
-    APP_LOGD("remove user(%{public}d) in bundle(%{public}s).", userId_, bundleName.c_str());
-    if (!innerBundleInfo.HasInnerBundleUserInfo(userId_)) {
+    APP_LOGD("remove user(%{public}d) in bundle(%{public}s).", userId, bundleName.c_str());
+    if (!innerBundleInfo.HasInnerBundleUserInfo(userId)) {
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
@@ -1863,14 +1864,14 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     }
 
     // delete accessTokenId
-    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
+    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId);
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
 
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId)) {
         APP_LOGE("update bundle user info to db failed %{public}s when remove user",
             bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -2057,6 +2058,151 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     }
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::HandleSingletonChangedByBundleName(const std::string &bundleName)
+{
+    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr.");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+    std::lock_guard lock {mtx};
+    InnerBundleInfo innerBundleInfo;
+    bool isAppExist = dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo);
+    if (!isAppExist) {
+        APP_LOGE("App(%{public}s) not install", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+
+    bool isSingleton = innerBundleInfo.IsSingleton();
+    ErrCode result = ERR_OK;
+    if (isSingleton) {
+        result = HandleSingletonToNon(innerBundleInfo);
+    } else {
+        result = HandleNonToSingleton(innerBundleInfo);
+    }
+
+    dataMgr_->EnableBundle(bundleName);
+    return result;
+}
+
+ErrCode BaseBundleInstaller::HandleNonToSingleton(InnerBundleInfo &innerBundleInfo)
+{
+    ErrCode result = CreateNewUserData(Constants::DEFAULT_USERID, innerBundleInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("App(%{public}s) createNewUserData in User(0) failed",
+            innerBundleInfo.GetBundleName().c_str());
+        return result;
+    }
+
+    result = RemoveAllCommonUserData(innerBundleInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("App(%{public}s) RemoveAllCommonUserData failed",
+            innerBundleInfo.GetBundleName().c_str());
+    }
+
+    return result;
+}
+
+ErrCode BaseBundleInstaller::HandleSingletonToNon(InnerBundleInfo &innerBundleInfo)
+{
+    ErrCode result = CreateAllCommonUserData(innerBundleInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("App(%{public}s) CreateCommonUserData failed",
+            innerBundleInfo.GetBundleName().c_str());
+        return result;
+    }
+
+    result = RemoveBundleUserData(Constants::DEFAULT_USERID, innerBundleInfo, false);
+    if (result != ERR_OK) {
+        APP_LOGE("App(%{public}s) RemoveUserData User(0) failed",
+            innerBundleInfo.GetBundleName().c_str());
+    }
+
+    return result;
+}
+
+ErrCode BaseBundleInstaller::CreateAllCommonUserData(InnerBundleInfo &innerBundleInfo)
+{
+    ErrCode result = ERR_OK;
+    for (auto userId : GetExistsCommonUserIs()) {
+        result = CreateNewUserData(userId, innerBundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("App(%{public}s) createNewUserData in user(%{public}d) failed",
+                innerBundleInfo.GetBundleName().c_str(), userId);
+            RemoveAllCommonUserData(innerBundleInfo);
+            return result;
+        }
+    }
+
+    return result;
+}
+
+ErrCode BaseBundleInstaller::RemoveAllCommonUserData(InnerBundleInfo &innerBundleInfo)
+{
+    ErrCode result = ERR_OK;
+    for (auto userId : GetExistsCommonUserIs()) {
+        if (!innerBundleInfo.HasInnerBundleUserInfo(userId)) {
+            continue;
+        }
+
+        result = RemoveBundleUserData(userId, innerBundleInfo, false);
+        if (result != ERR_OK) {
+            APP_LOGE("App(%{public}s) RemoveBundleUserData in user(%{public}d) failed",
+                innerBundleInfo.GetBundleName().c_str(), userId);
+            return result;
+        }
+    }
+
+    return result;
+}
+
+ErrCode BaseBundleInstaller::CreateNewUserData(int32_t userId, InnerBundleInfo &innerBundleInfo)
+{
+    userId_ = userId;
+    InnerBundleUserInfo newInnerBundleUserInfo;
+    newInnerBundleUserInfo.bundleUserInfo.userId = userId_;
+    newInnerBundleUserInfo.bundleName = innerBundleInfo.GetBundleName();
+    innerBundleInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
+    accessTokenId_ = CreateAccessTokenId(innerBundleInfo);
+    innerBundleInfo.SetAccessTokenId(accessTokenId_, userId_);
+    ScopeGuard userGuard([&] { RemoveBundleUserData(userId_, innerBundleInfo, false); });
+    ErrCode result = GrantRequestPermissions(innerBundleInfo, accessTokenId_);
+    if (result != ERR_OK) {
+        APP_LOGE("App(%{public}s) GrantRequestPermissions failed",
+            innerBundleInfo.GetBundleName().c_str());
+        return result;
+    }
+
+    result = CreateBundleUserData(innerBundleInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("App(%{public}s) CreateBundleUserData failed",
+            innerBundleInfo.GetBundleName().c_str());
+        return result;
+    }
+
+    userGuard.Dismiss();
+    return ERR_OK;
+}
+
+std::set<int32_t> BaseBundleInstaller::GetExistsCommonUserIs()
+{
+    std::set<int32_t> userIds;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return userIds;
+    }
+
+    for (auto userId : dataMgr->GetAllUser()) {
+        if (userId >= Constants::START_USERID) {
+            userIds.insert(userId);
+        }
+    }
+    return userIds;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -51,7 +51,6 @@ void BundleDataStorageDatabase::SaveEntries(
     std::map<std::string, InnerBundleInfo> updateInfos;
     for (const auto &item : allEntries) {
         InnerBundleInfo innerBundleInfo;
-
         nlohmann::json jsonObject = nlohmann::json::parse(item.value.ToString(), nullptr, false);
         if (jsonObject.is_discarded()) {
             APP_LOGE("error key: %{private}s", item.key.ToString().c_str());
@@ -71,6 +70,7 @@ void BundleDataStorageDatabase::SaveEntries(
             }
             continue;
         }
+        innerBundleInfo.SetSingleton(innerBundleInfo.HasInnerBundleUserInfo(Constants::DEFAULT_USERID));
         bool isBundleValid = true;
         auto handler = std::make_shared<BundleExceptionHandler>(shared_from_this());
         handler->HandleInvalidBundle(innerBundleInfo, isBundleValid);

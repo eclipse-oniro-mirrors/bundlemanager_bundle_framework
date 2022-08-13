@@ -187,22 +187,5 @@ void BundleInstaller::SendRemoveEvent() const
         APP_LOGE("fail to remove %{public}" PRId64 " installer due to handler is expired", installerId_);
     }
 }
-
-std::set<int32_t> BundleInstaller::GetExistsCommonUserIs()
-{
-    std::set<int32_t> userIds;
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return userIds;
-    }
-
-    for (auto userId : dataMgr->GetAllUser()) {
-        if (userId >= Constants::START_USERID) {
-            userIds.insert(userId);
-        }
-    }
-    return userIds;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

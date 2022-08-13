@@ -153,6 +153,10 @@ protected:
      */
     void SaveHapToInstallPath(bool moveFileMode);
 
+    std::set<int32_t> GetExistsCommonUserIs();
+
+    ErrCode HandleSingletonChangedByBundleName(const std::string &bundleName);
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.
@@ -435,11 +439,13 @@ private:
     int32_t GetUserId(const int32_t &userId) const;
     /**
      * @brief Remove bundle user data.
+     * @param userId Indicates the userId.
      * @param innerBundleInfo Indicates the innerBundleInfo of the bundle.
      * @param needRemoveData Indicates need remove data or not.
      * @return Returns BundleUserMgr.
      */
-    ErrCode RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool needRemoveData = true);
+    ErrCode RemoveBundleUserData(
+        int32_t userId, InnerBundleInfo &innerBundleInfo, bool needRemoveData = true);
     /**
      * @brief Create bundle user data.
      * @param innerBundleInfo Indicates the bundle type of the application.
@@ -498,6 +504,11 @@ private:
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
+    ErrCode HandleSingletonToNon(InnerBundleInfo &innerBundleInfo);
+    ErrCode HandleNonToSingleton(InnerBundleInfo &innerBundleInfo);
+    ErrCode CreateAllCommonUserData(InnerBundleInfo &innerBundleInfo);
+    ErrCode RemoveAllCommonUserData(InnerBundleInfo &innerBundleInfo);
+    ErrCode CreateNewUserData(int32_t userId, InnerBundleInfo &innerBundleInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

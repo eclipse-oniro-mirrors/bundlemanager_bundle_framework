@@ -1601,7 +1601,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->iconResource = applicationInfo.iconResource;
     baseApplicationInfo_->labelResource = applicationInfo.labelResource;
     baseApplicationInfo_->descriptionResource = applicationInfo.descriptionResource;
-    baseApplicationInfo_->removable = applicationInfo.removable;
     baseApplicationInfo_->userDataClearable = applicationInfo.userDataClearable;
     baseApplicationInfo_->accessible = applicationInfo.accessible;
 
@@ -1642,6 +1641,18 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+}
+
+void InnerBundleInfo::UpdatePreInstallAttribute(
+    bool isPreInstall, const ApplicationInfo &applicationInfo)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (!isPreInstall) {
+        return;
+    }
+#endif
+
+    baseApplicationInfo_->removable = applicationInfo.removable;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)

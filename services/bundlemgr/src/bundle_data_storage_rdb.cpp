@@ -78,7 +78,7 @@ void BundleDataStorageRdb::TransformStrToInfo(
             rdbDataManager_->DeleteData(data.first);
             continue;
         }
-
+        innerBundleInfo.SetSingleton(innerBundleInfo.HasInnerBundleUserInfo(Constants::DEFAULT_USERID));
         bool isBundleValid = true;
         auto handler = std::make_shared<BundleExceptionHandler>(shared_from_this());
         handler->HandleInvalidBundle(innerBundleInfo, isBundleValid);

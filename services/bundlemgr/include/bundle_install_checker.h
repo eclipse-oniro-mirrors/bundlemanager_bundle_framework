@@ -124,7 +124,7 @@ private:
         const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &newInfo);
 
-    ErrCode GetPrivilegeCapability(
+    void GetPrivilegeCapability(
         const InstallCheckParam &checkParam, InnerBundleInfo &newInfo);
 
     void ParseAppPrivilegeCapability(

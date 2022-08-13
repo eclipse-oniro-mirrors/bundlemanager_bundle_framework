@@ -60,6 +60,8 @@ public:
      */
     bool UninstallSystemBundle(const std::string &bundleName, const std::string &modulePackage);
 
+    bool HandleSingletonChanged(const std::string &bundleName);
+
 private:
 
     DISALLOW_COPY_AND_MOVE(SystemBundleInstaller);

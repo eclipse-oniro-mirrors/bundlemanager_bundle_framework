@@ -250,6 +250,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdatePreInstallAttribute(
+                newInfo.IsPreInstallApp(), newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
@@ -370,6 +372,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdatePreInstallAttribute(
+                newInfo.IsPreInstallApp(), newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
@@ -2999,10 +3003,20 @@ bool BundleDataMgr::SetDisposedStatus(const std::string &bundleName, int32_t sta
     return true;
 }
 
-void BundleDataMgr::UpdateBundleRemovableAndRecovable(
-    const std::string &bundleName, bool removable, bool recovable)
+bool BundleDataMgr::GetInnerBundleInfoWithNoMutex(
+    const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGD("UpdateBundleRemovableAndRecovable %{public}s", bundleName.c_str());
+    auto &mtx = GetBundleMutex(bundleName);
+    std::lock_guard lock { mtx };
+    bool bundleExist = GetInnerBundleInfo(bundleName, innerBundleInfo);
+    EnableBundle(bundleName);
+    return bundleExist;
+}
+
+void BundleDataMgr::UpdatePreInstallAttribute(
+    const std::string &bundleName, const ApplicationInfo &appInfo, bool recovable)
+{
+    APP_LOGD("UpdatePreInstallAttribute %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return;
@@ -3016,7 +3030,7 @@ void BundleDataMgr::UpdateBundleRemovableAndRecovable(
             return;
         }
 
-        infoItem->second.SetRemovable(removable);
+        infoItem->second.UpdatePreInstallAttribute(true, appInfo);
         SaveInnerBundleInfo(infoItem->second);
     }
 

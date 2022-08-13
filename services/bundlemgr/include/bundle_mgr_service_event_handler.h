@@ -419,28 +419,16 @@ private:
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
     bool OTAEnable();
-    void UpdatePreInstallPrivilegeCapability(
-        const std::string &appDir, const std::string &bundleName);
-    bool OTAInstallSystemBundle(const std::string &filePath,
-        Constants::AppType appType, bool recoverable, bool removable);
 #ifdef USE_PRE_BUNDLE_PROFILE
-    void UpdateBundleRemovableAndRecovable(
+    void UpdatePreInstallAttribute(
         const std::string &appDir, const std::string &bundleName);
-    void UpdateAllPrivilegeCapability(bool otaChecked);
-    bool IsPreInstallApp(const std::string &bundleName);
-    void UpdatePrivilegeCapability(const std::string &bundleName);
+    void UpdateAllPrivilegeCapability();
     void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
-    void ReInstallPreInstallByBundleName(const std::string &bundleName);
-    bool IsSingletonChange(
-        const std::string &bundleName, const BundleInfo &hasInstalledInfo);
-    bool IsSingletonChange(
-        const PreBundleConfigInfo &preBundleConfigInfo, bool &isSingletonChange);
+    void HandleSingletonChanged(const std::string &bundleName);
     bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
     bool GetInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &hasInstallInfo);
-    bool GetPreInstallInfo(
-        const std::string &bundleName, PreInstallBundleInfo &preInstallBundleInfo);
 #endif
 
     // Used to save the information parsed by Hap in the scanned directory.
