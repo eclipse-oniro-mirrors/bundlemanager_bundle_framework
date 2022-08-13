@@ -69,10 +69,10 @@ ohos_unittest("BmsServiceStartupTest") {
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "distributed_bundle_framework:dbms_fwk",
-    "kv_store:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
+    "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
