@@ -31,7 +31,7 @@ enum class QuickFixType {
 };
 
 struct AppqfInfo : public Parcelable {
-    int32_t versionCode = 0; // quick fix version code
+    uint32_t versionCode = 0; // quick fix version code
     std::string versionName; // quick fix version name
     std::string cpuAbi; // quick fix abi
     std::string nativeLibraryPath; // quick fix so path

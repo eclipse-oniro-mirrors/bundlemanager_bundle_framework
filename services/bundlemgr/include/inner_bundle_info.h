@@ -23,6 +23,7 @@
 #include "bundle_info.h"
 #include "common_event_info.h"
 #include "common_profile.h"
+#include "distributed_bundle_info.h"
 #include "extension_ability_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
@@ -31,7 +32,6 @@
 #include "json_util.h"
 #include "shortcut_info.h"
 #include "want.h"
-#include "distributed_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {

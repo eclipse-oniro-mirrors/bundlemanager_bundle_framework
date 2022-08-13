@@ -904,7 +904,8 @@ bool BundleMgrHostImpl::DumpBundleInfo(
         BundleFlag::GET_BUNDLE_WITH_ABILITIES |
         BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
-        BundleFlag::GET_BUNDLE_WITH_HASH_VALUE, bundleInfo, userId)) {
+        BundleFlag::GET_BUNDLE_WITH_HASH_VALUE |
+        BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, bundleInfo, userId)) {
         APP_LOGE("get bundleInfo(%{public}s) failed", bundleName.c_str());
         return false;
     }
