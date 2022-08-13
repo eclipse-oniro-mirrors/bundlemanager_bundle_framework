@@ -39,7 +39,8 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
         APP_LOGE("DeployQuickFix failed due to nullptr statusCallback");
     }
 
-    std::shared_ptr<IQuickFix> deployer = std::make_shared<QuickFixDeployer>(bundleFilePaths);
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    std::shared_ptr<IQuickFix> deployer = std::make_shared<QuickFixDeployer>(bundleFilePaths, quickFixDataMgr);
     deployer->Execute();
 
     // callback operation

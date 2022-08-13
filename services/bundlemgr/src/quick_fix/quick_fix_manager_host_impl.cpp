@@ -104,7 +104,7 @@ bool QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd,
         APP_LOGE("not quick fix file.");
         return false;
     }
-    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_, true);
+    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_);
     if (tmpDir.empty()) {
         APP_LOGE("create tmp dir failed.");
         return false;
