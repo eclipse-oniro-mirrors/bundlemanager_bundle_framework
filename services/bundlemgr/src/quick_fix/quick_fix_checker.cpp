@@ -84,6 +84,9 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
         if (appQuickFix.deployingAppqfInfo.versionName != info.second.deployingAppqfInfo.versionName) {
             return ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME;
         }
+        if (appQuickFix.deployingAppqfInfo.type != info.second.deployingAppqfInfo.type) {
+            return ERR_APPEXECFWK_QUICK_FIX_PATCH_TYPE_NOT_SAME;
+        }
     }
     APP_LOGD("Check quick fix files end.");
     return ERR_OK;
@@ -91,45 +94,58 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
 
 ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
     const std::unordered_map<std::string, AppQuickFix> &infos,
-    const Security::Verify::ProvisionInfo &provisionInfo,
     BundleInfo &bundleInfo)
 {
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bms == nullptr) {
-        APP_LOGE("failed due to bms is nullptr");
         return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
     }
     std::shared_ptr<BundleDataMgr> dataMgr = bms->GetDataMgr();
     if ((dataMgr == nullptr) || infos.empty()) {
-        APP_LOGE("failed due to dataMgr is nullptr");
         return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
     }
     // check bundleName is exists
-    const auto &qfInfo = infos.begin()->second;
-    if (!dataMgr->GetBundleInfo(qfInfo.bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
+    const auto &appQuickFix = infos.begin()->second;
+    if (!dataMgr->GetBundleInfo(appQuickFix.bundleName, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO,
         bundleInfo, Constants::ANY_USERID)) {
-        APP_LOGE("error: bundleName %{public}s does not exist!", qfInfo.bundleName.c_str());
         return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
     // check versionCode and versionName
-    if (bundleInfo.versionCode != qfInfo.versionCode) {
+    if (bundleInfo.versionCode != appQuickFix.versionCode) {
         return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME;
     }
-    if (bundleInfo.versionName != qfInfo.versionName) {
+    const auto &qfInfo = appQuickFix.deployingAppqfInfo;
+    if (qfInfo.versionCode <= bundleInfo.appqfInfo.versionCode) {
+        APP_LOGE("qhf version code should be greater than the original");
+        return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_ERROR;
+    }
+    bool isDebug = bundleInfo.applicationInfo.debug &&
+        (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+    // hot reload does not require versionName and so files
+    if (qfInfo.type == QuickFixType::HOT_RELOAD) {
+        if (!isDebug) {
+            return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE;
+        }
+        if (bundleInfo.appqfInfo.type == QuickFixType::PATCH) {
+            return ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED,
+        }
+        return ERR_OK;
+    }
+    if (isDebug && (bundleInfo.appqfInfo.type == QuickFixType::HOT_RELOAD)) {
+        return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
+    }
+    if (bundleInfo.versionName != appQuickFix.versionName) {
         return ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME;
     }
-    // check cpuAbi
-    if (!qfInfo.deployingAppqfInfo.cpuAbi.empty() &&
-        (qfInfo.deployingAppqfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
+    if ((!qfInfo.cpuAbi.empty() && !bundleInfo.applicationInfo.cpuAbi.empty()) &&
+        (qfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
         return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
     }
-    // check library path
-    if (!qfInfo.deployingAppqfInfo.nativeLibraryPath.empty() &&
-        (qfInfo.deployingAppqfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
+    if ((!qfInfo.nativeLibraryPath.empty() && !bundleInfo.applicationInfo.nativeLibraryPath.empty()) &&
+        (qfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
         return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
     }
-    // check signature info
-    return CheckSignatureInfo(bundleInfo, provisionInfo);
+    return ERR_OK;
 }
 
 ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,

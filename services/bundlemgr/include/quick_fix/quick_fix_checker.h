@@ -44,17 +44,16 @@ public:
 
     ErrCode CheckAppQuickFixInfosWithInstalledBundle(
         const std::unordered_map<std::string, AppQuickFix> &infos,
-        const Security::Verify::ProvisionInfo &provisionInfo,
         BundleInfo &bundleInfo);
+
+    ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
+        const Security::Verify::ProvisionInfo &provisionInfo);
 
 private:
     ErrCode ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix);
 
     ErrCode CheckModuleNameExist(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, AppQuickFix> &infos);
-
-    ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
-        const Security::Verify::ProvisionInfo &provisionInfo);
 
     std::string GetAppDistributionType(const Security::Verify::AppDistType &type);
 

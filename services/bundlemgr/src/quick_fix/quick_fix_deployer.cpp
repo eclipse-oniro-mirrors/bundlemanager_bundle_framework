@@ -82,7 +82,6 @@ ErrCode QuickFixDeployer::DeployQuickFix()
             APP_LOGE("delete %{private}s failed", oldPath.c_str());
         }
     }
-    guardRemovePath.Dismiss();
     return ERR_OK;
 }
 
@@ -109,7 +108,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     }
     // 3. check with installed bundle
     BundleInfo bundleInfo;
-    ret = CheckAppQuickFixInfosWithInstalledBundle(infos, hapVerifyRes[0].GetProvisionInfo(), bundleInfo);
+    ret = CheckAppQuickFixInfosWithInstalledBundle(infos, hapVerifyRes, bundleInfo);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -137,8 +136,12 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     // create patch path
     AppQuickFix newQuickFix = newInnerAppQuickFix.GetAppQuickFix();
     std::string newPatchPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + newQuickFix.bundleName +
-        Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-        std::to_string(newQuickFix.deployingAppqfInfo.versionCode);
+        Constants::PATH_SEPARATOR;
+    if (newQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) {
+        newPatchPath += Constants::PATCH_PATH + std::to_string(newQuickFix.deployingAppqfInfo.versionCode);
+    } else
+        newPatchPath += Constants::HOT_RELOAD_PATH + std::to_string(newQuickFix.deployingAppqfInfo.versionCode);
+    }
     ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(newPatchPath);
     if (ret != ERR_OK) {
         return ret;
@@ -146,19 +149,21 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     ScopeGuard guardRemovePatchPath([newPatchPath] {
         InstalldClient::GetInstance()->RemoveDir(newPatchPath);
     });
-    // 1. extract diff so, diff so path
-    std::string diffFilePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
-        newQuickFix.bundleName + Constants::TMP_SUFFIX;
-    ScopeGuard guardRemoveDiffPath([diffFilePath] { InstalldClient::GetInstance()->RemoveDir(diffFilePath); });
-    ret = ExtractDiffFiles(diffFilePath, newQuickFix.deployingAppqfInfo);
-    if (ret != ERR_OK) {
-        return ret;
-    }
-    // 2. apply diff patch
-    ret = ApplyDiffPatch(newQuickFix.bundleName, newQuickFix.deployingAppqfInfo.nativeLibraryPath,
-        diffFilePath, newPatchPath);
-    if (ret != ERR_OK) {
-        return ret;
+    if (newQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) {
+        // 1. extract diff so, diff so path
+        std::string diffFilePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+            newQuickFix.bundleName + Constants::TMP_SUFFIX;
+        ScopeGuard guardRemoveDiffPath([diffFilePath] { InstalldClient::GetInstance()->RemoveDir(diffFilePath); });
+        ret = ExtractDiffFiles(diffFilePath, newQuickFix.deployingAppqfInfo);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        // 2. apply diff patch
+        ret = ApplyDiffPatch(newQuickFix.bundleName, newQuickFix.deployingAppqfInfo.nativeLibraryPath,
+            diffFilePath, newPatchPath);
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
     // 3. move hqf files to new patch path
     ret = MoveHqfFiles(newInnerAppQuickFix, newPatchPath);
@@ -181,23 +186,11 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     std::unordered_map<std::string, AppQuickFix> &infos)
 {
     QuickFixChecker checker;
-    // parse signature info
-    ErrCode ret = checker.CheckMultipleHapsSignInfo(bundleFilePaths, hapVerifyRes);
-    if ((ret != ERR_OK) || hapVerifyRes.empty()) {
-        APP_LOGE("QuickFixDeployer::ParseAppQuickFixInfos check multiple hqf sign info failed");
-        return ret;
-    }
     // parse hqf file to AppQuickFix
-    ret = checker.ParseAppQuickFixFiles(bundleFilePaths, infos);
+    ErrCode ret = checker.ParseAppQuickFixFiles(bundleFilePaths, infos);
     if ((ret != ERR_OK) || infos.empty()) {
         APP_LOGE("QuickFixDeployer::ParseAppQuickFixInfos parse AppQuickFixFiles failed");
         return ret;
-    }
-    // hqf file path
-    for (auto iter = infos.begin(); iter != infos.end(); ++iter) {
-        if (!iter->second.deployingAppqfInfo.hqfInfos.empty()) {
-            iter->second.deployingAppqfInfo.hqfInfos[0].hapFilePath = iter->first;
-        }
     }
     // check multiple AppQuickFix
     ret = checker.CheckAppQuickFixInfos(infos);
@@ -205,10 +198,33 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
         APP_LOGE("QuickFixDeployer check AppQuickFixInfos failed");
         return ret;
     }
+    const QuickFixType &quickFixType = infos.begin()->second.deployingAppqfInfo.type;
+    if (quickFixType == QuickFixType::UNKNOWN) {
+        APP_LOGE("error unknown quick fix type");
+        return ERR_APPEXECFWK_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
+    }
+    // hqf file path
+    for (auto iter = infos.begin(); iter != infos.end(); ++iter) {
+        if (!iter->second.deployingAppqfInfo.hqfInfos.empty()) {
+            iter->second.deployingAppqfInfo.hqfInfos[0].hapFilePath = iter->first;
+        } else {
+            return ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED;
+        }
+    }
+    // hot reload does not require signature verification and so files
+    if (quickFixType == QuickFixType::HOT_RELOAD) {
+        return ERR_OK;
+    }
     // check multiple native so
     ret = checker.CheckMultiNativeSo(infos);
     if (ret != ERR_OK) {
         APP_LOGE("QuickFixDeployer check native so with installed bundle failed");
+        return ret;
+    }
+    // parse signature info
+    ret = checker.CheckMultipleHapsSignInfo(bundleFilePaths, hapVerifyRes);
+    if (ret != ERR_OK) {
+        APP_LOGE("QuickFixDeployer::ParseAppQuickFixInfos check multiple hqf sign info failed");
         return ret;
     }
     return ERR_OK;
@@ -216,14 +232,24 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
 
 ErrCode QuickFixDeployer::CheckAppQuickFixInfosWithInstalledBundle(
     const std::unordered_map<std::string, AppQuickFix> &infos,
-    const Security::Verify::ProvisionInfo &provisionInfo,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
     BundleInfo &bundleInfo)
 {
+    if (infos.empty()) {
+        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+    }
     QuickFixChecker checker;
-    ErrCode ret = checker.CheckAppQuickFixInfosWithInstalledBundle(infos, provisionInfo, bundleInfo);
+    ErrCode ret = checker.CheckAppQuickFixInfosWithInstalledBundle(infos, bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("CheckAppQuickFixInfos check AppQuickFixInfos with installed bundle failed");
         return ret;
+    }
+
+    if (!hapVerifyRes.empty() && (infos.begin()->second.deployingAppqfInfo.type != QuickFixType::HOT_RELOAD)) {
+        ret = checker.CheckSignatureInfo(bundleInfo, hapVerifyRes[0].GetProvisionInfo());
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
     return ERR_OK;
 }
@@ -238,9 +264,6 @@ ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::strin
     AppQuickFix appQuickFix = infos.begin()->second;
     // copy deployed app qf info
     appQuickFix.deployedAppqfInfo = oldAppQuickFix.deployedAppqfInfo;
-    if (appQuickFix.deployingAppqfInfo.versionCode == oldAppQuickFix.deployingAppqfInfo.versionCode) {
-        appQuickFix.deployingAppqfInfo = oldAppQuickFix.deployingAppqfInfo;
-    }
     newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
     QuickFixMark mark;
     mark.bundleName = appQuickFix.bundleName;

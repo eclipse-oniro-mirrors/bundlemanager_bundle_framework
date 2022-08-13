@@ -50,7 +50,7 @@ private:
 
     ErrCode CheckAppQuickFixInfosWithInstalledBundle(
         const std::unordered_map<std::string, AppQuickFix> &infos,
-        const Security::Verify::ProvisionInfo &provisionInfo,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         BundleInfo &bundleInfo);
 
     ErrCode CheckPatchVersionCode(
