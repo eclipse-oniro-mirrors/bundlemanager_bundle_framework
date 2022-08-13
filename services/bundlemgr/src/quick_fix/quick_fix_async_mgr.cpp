@@ -15,6 +15,8 @@
 
 #include "quick_fix_async_mgr.h"
 
+#include <cinttypes>
+
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
