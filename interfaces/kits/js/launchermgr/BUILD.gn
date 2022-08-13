@@ -25,7 +25,7 @@ ohos_shared_library("innerbundlemanager") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
-  sources = [ "js_launcher.cpp" ]
+  sources = []
 
   deps = [ "${common_path}:libappexecfwk_common" ]
 
@@ -39,6 +39,7 @@ ohos_shared_library("innerbundlemanager") {
     defines += [ "BUNDLE_FRAMEWORK_LAUNCHER" ]
     sources += [
       "bundle_status_callback.cpp",
+      "js_launcher.cpp",
       "js_launcher_mgr.cpp",
     ]
     external_deps += [
@@ -50,6 +51,8 @@ ohos_shared_library("innerbundlemanager") {
       "ipc:ipc_core",
       "samgr:samgr_proxy",
     ]
+  } else {
+    sources += [ "js_launcher_unsupported.cpp" ]
   }
 
   relative_install_dir = "module/bundle"

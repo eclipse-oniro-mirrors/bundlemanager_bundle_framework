@@ -24,10 +24,7 @@ ohos_shared_library("defaultappmanager") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-  sources = [
-    "js_default_app.cpp",
-    "native_module.cpp",
-  ]
+  sources = [ "native_module.cpp" ]
 
   deps = [ "${common_path}:libappexecfwk_common" ]
 
@@ -39,6 +36,7 @@ ohos_shared_library("defaultappmanager") {
   ]
 
   if (bundle_framework_default_app) {
+    sources += [ "js_default_app.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
     external_deps += [
       "ability_base:want",
@@ -47,6 +45,8 @@ ohos_shared_library("defaultappmanager") {
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
+  } else {
+    sources += [ "js_default_app_unsupported.cpp" ]
   }
 
   if (bundle_framework_graphics) {
