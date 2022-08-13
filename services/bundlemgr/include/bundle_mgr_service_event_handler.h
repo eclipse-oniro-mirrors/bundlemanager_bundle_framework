@@ -419,16 +419,17 @@ private:
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
     bool OTAEnable();
-    void UpdatePreInstallAttributes(
+    void UpdatePreInstallPrivilegeCapability(
         const std::string &appDir, const std::string &bundleName);
     bool OTAInstallSystemBundle(const std::string &filePath,
         Constants::AppType appType, bool recoverable, bool removable);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateBundleRemovableAndRecovable(
         const std::string &appDir, const std::string &bundleName);
-    void UpdateAllPreInstallPrivilegeCapability();
-    void UpdatePreInstallPrivilegeCapability(const std::string &bundleName);
-    void UpdatePreInstallPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
+    void UpdateAllPrivilegeCapability(bool otaChecked);
+    bool IsPreInstallApp(const std::string &bundleName);
+    void UpdatePrivilegeCapability(const std::string &bundleName);
+    void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
     void ReInstallPreInstallByBundleName(const std::string &bundleName);
     bool IsSingletonChange(
         const std::string &bundleName, const BundleInfo &hasInstalledInfo);

@@ -1631,18 +1631,11 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
     baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
+    UpdatePrivilegeCapability(applicationInfo);
 }
 
-void InnerBundleInfo::UpdatePreInstallPrivilegeCapability(
-    bool isPreInstall, const ApplicationInfo &applicationInfo)
+void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
-#ifdef USE_PRE_BUNDLE_PROFILE
-    if (!isPreInstall) {
-        APP_LOGW("newInfo is not preInstall, not update preInstall privilege capability");
-        return;
-    }
-#endif
-
     baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
     baseApplicationInfo_->singleton = applicationInfo.singleton;
     baseApplicationInfo_->bootable = applicationInfo.bootable;

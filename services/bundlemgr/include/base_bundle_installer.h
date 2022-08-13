@@ -498,8 +498,6 @@ private:
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
-    void UpdataNewInfosPrivilegeCapabilityFromOldInfo(
-        bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

@@ -162,6 +162,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: install failed due to check hap hash param failed.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_APP_SIGNATURE_INCOMPATIBLE,
+        "error: install failed due to appSignature incompatible.",
+    },
+    {
         IStatusReceiver::ERR_INSTALL_PARAM_ERROR,
         "error: install param error.",
     },

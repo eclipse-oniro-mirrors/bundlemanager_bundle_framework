@@ -250,8 +250,6 @@ bool BundleDataMgr::AddNewModuleInfo(
         if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
-            oldInfo.UpdatePreInstallPrivilegeCapability(
-                newInfo.IsPreInstallApp(), newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
@@ -372,8 +370,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
-            oldInfo.UpdatePreInstallPrivilegeCapability(
-                newInfo.IsPreInstallApp(), newInfo.GetBaseApplicationInfo());
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
@@ -3034,10 +3030,10 @@ void BundleDataMgr::UpdateBundleRemovableAndRecovable(
     SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
 
-void BundleDataMgr::UpdatePreInstallPrivilegeCapability(
+void BundleDataMgr::UpdatePrivilegeCapability(
     const std::string &bundleName, const ApplicationInfo &appInfo)
 {
-    APP_LOGD("UpdatePreInstallPrivilegeCapability %{public}s", bundleName.c_str());
+    APP_LOGD("UpdatePrivilegeCapability %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return;
@@ -3050,7 +3046,7 @@ void BundleDataMgr::UpdatePreInstallPrivilegeCapability(
         return;
     }
 
-    infoItem->second.UpdatePreInstallPrivilegeCapability(true, appInfo);
+    infoItem->second.UpdatePrivilegeCapability(appInfo);
 }
 
 int32_t BundleDataMgr::GetDisposedStatus(const std::string &bundleName)

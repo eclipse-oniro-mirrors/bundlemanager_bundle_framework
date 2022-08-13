@@ -38,7 +38,7 @@ declare_args() {
   hicollie_enable = true
   hisysevent_enable = true
   bms_rdb_enable = false
-  use_pre_bundle_profile = false
+  use_pre_bundle_profile = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {

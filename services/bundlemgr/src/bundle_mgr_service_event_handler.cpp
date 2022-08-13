@@ -208,7 +208,6 @@ void BMSEventHandler::AfterBmsStart()
     ClearCache();
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
-        ClearPreInstallCache();
     }
 }
 
@@ -243,7 +242,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         APP_LOGI("No OTA detection");
 #ifdef USE_PRE_BUNDLE_PROFILE
         if (LoadPreInstallProFile()) {
-            UpdateAllPreInstallPrivilegeCapability();
+            UpdateAllPrivilegeCapability(false);
         }
 #endif
         return;
@@ -251,6 +250,10 @@ void BMSEventHandler::BundleRebootStartEvent()
 
     APP_LOGI("OTA detection");
     OnBundleRebootStart();
+#ifdef USE_PRE_BUNDLE_PROFILE
+    // Update common app privilege capability
+    UpdateAllPrivilegeCapability(true);
+#endif
     needNotifyBundleScanStatus_ = true;
 }
 
@@ -981,6 +984,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             APP_LOGD("Force reinstall(%{public}s) when singleton changes.", bundleName.c_str());
             if (!OTAInstallSystemBundle(scanPathIter, appType, recoverable, removable)) {
                 APP_LOGE("Reinstall(%{public}s) failed when singleton changes", bundleName.c_str());
+                UpdatePreInstallPrivilegeCapability(scanPathIter, bundleName);
             }
 
             continue;
@@ -1029,13 +1033,13 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         if (filePaths.empty()) {
-            UpdatePreInstallAttributes(scanPathIter, bundleName);
+            UpdatePreInstallPrivilegeCapability(scanPathIter, bundleName);
             continue;
         }
 
         if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
-            UpdatePreInstallAttributes(scanPathIter, bundleName);
+            UpdatePreInstallPrivilegeCapability(scanPathIter, bundleName);
         }
     }
 }
@@ -1369,19 +1373,26 @@ bool BMSEventHandler::OTAEnable()
     return true;
 }
 
-void BMSEventHandler::UpdatePreInstallAttributes(
+void BMSEventHandler::UpdatePreInstallPrivilegeCapability(
     const std::string &bundleDir, const std::string &bundleName)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
     UpdateBundleRemovableAndRecovable(bundleDir, bundleName);
-    UpdatePreInstallPrivilegeCapability(bundleName);
+    UpdatePrivilegeCapability(bundleName);
 #endif
 }
 
 #ifdef USE_PRE_BUNDLE_PROFILE
-void BMSEventHandler::UpdateAllPreInstallPrivilegeCapability()
+void BMSEventHandler::UpdateAllPrivilegeCapability(bool otaChecked)
 {
     for (const auto &preBundleConfigInfo : installListCapabilities_) {
+        // When OTA has checked, preInstall app has been updated privilege properties
+        if (otaChecked && IsPreInstallApp(preBundleConfigInfo.bundleName)) {
+            APP_LOGI("app(%{public}s) is preinstall app and not required update.",
+                preBundleConfigInfo.bundleName.c_str());
+            continue;
+        }
+
         bool isSingletonChange = false;
         if (IsSingletonChange(preBundleConfigInfo, isSingletonChange) && isSingletonChange) {
             APP_LOGI("app(%{public}s) singleton changed.", preBundleConfigInfo.bundleName.c_str());
@@ -1389,8 +1400,13 @@ void BMSEventHandler::UpdateAllPreInstallPrivilegeCapability()
             continue;
         }
 
-        UpdatePreInstallPrivilegeCapability(preBundleConfigInfo);
+        UpdatePrivilegeCapability(preBundleConfigInfo);
     }
+}
+
+bool BMSEventHandler::IsPreInstallApp(const std::string &bundleName)
+{
+    return loadExistData_.find(bundleName) != loadExistData_.end();
 }
 
 void BMSEventHandler::ReInstallPreInstallByBundleName(const std::string &bundleName)
@@ -1426,15 +1442,15 @@ void BMSEventHandler::UpdateBundleRemovableAndRecovable(
     dataMgr->UpdateBundleRemovableAndRecovable(bundleName, removable, recovable);
 }
 
-void BMSEventHandler::UpdatePreInstallPrivilegeCapability(const std::string &bundleName)
+void BMSEventHandler::UpdatePrivilegeCapability(const std::string &bundleName)
 {
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = bundleName;
     GetPreInstallCapability(preBundleConfigInfo);
-    UpdatePreInstallPrivilegeCapability(preBundleConfigInfo);
+    UpdatePrivilegeCapability(preBundleConfigInfo);
 }
 
-void BMSEventHandler::UpdatePreInstallPrivilegeCapability(
+void BMSEventHandler::UpdatePrivilegeCapability(
     const PreBundleConfigInfo &preBundleConfigInfo)
 {
     auto &bundleName = preBundleConfigInfo.bundleName;
@@ -1471,7 +1487,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
         appInfo.allowCommonEvent.emplace_back(event);
     }
 
-    dataMgr->UpdatePreInstallPrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
+    dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 
 bool BMSEventHandler::MatchSignature(

@@ -220,7 +220,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         SetEntryInstallationFree(packInfo, newInfo);
         CollectProvisionInfo(provisionInfo, appPrivilegeCapability, newInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
-        CollectPreBundleInfo(checkParam, newInfo);
+        if ((result = GetPrivilegeCapability(checkParam, newInfo)) != ERR_OK) {
+            APP_LOGE("install failed due to appSignature incompatible");
+            return result;
+        }
 #endif
         if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
@@ -260,26 +263,15 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 }
 
-void BundleInstallChecker::CollectPreBundleInfo(
+ErrCode BundleInstallChecker::GetPrivilegeCapability(
     const InstallCheckParam &checkParam, InnerBundleInfo &newInfo)
 {
-    if (!BMSEventHandler::HasPreInstallProfile()) {
-        return;
-    }
-
-    // reset privilege attributes
-    newInfo.SetKeepAlive(false);
-    newInfo.SetSingleton(false);
-    if (!newInfo.IsPreInstallApp()) {
-        return;
-    }
-
     newInfo.SetRemovable(checkParam.removable);
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
     BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
     bool ret = true;
-    if (!preBundleConfigInfo.appSignature.empty() && !newInfo.GetCertificateFingerprint().empty()) {
+    if (!preBundleConfigInfo.appSignature.empty()) {
         ret = std::find(
             preBundleConfigInfo.appSignature.begin(),
             preBundleConfigInfo.appSignature.end(),
@@ -289,7 +281,7 @@ void BundleInstallChecker::CollectPreBundleInfo(
 
     if (!ret) {
         APP_LOGW("appSignature is incompatible");
-        return;
+        return ERR_APPEXECFWK_INSTALL_APP_SIGNATURE_INCOMPATIBLE;
     }
 
     newInfo.SetKeepAlive(preBundleConfigInfo.keepAlive);
@@ -298,6 +290,7 @@ void BundleInstallChecker::CollectPreBundleInfo(
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
+    return ERR_OK;
 }
 
 ErrCode BundleInstallChecker::ParseBundleInfo(
