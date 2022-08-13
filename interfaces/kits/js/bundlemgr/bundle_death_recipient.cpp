@@ -15,6 +15,7 @@
 
 #include "bundle_death_recipient.h"
 
+#include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "status_receiver_interface.h"
 
@@ -23,24 +24,33 @@ namespace AppExecFwk {
 namespace {
     const std::string STRING_FAIL = "[BUNDLER_MANAGER_SERVICE_UNAVAILABLE]";
 }
-BundleDeathRecipient::BundleDeathRecipient(const sptr<StatusReceiverHost>& statusReceiver)
-    : statusReceiver_(statusReceiver)
+BundleDeathRecipient::BundleDeathRecipient(const sptr<StatusReceiverHost> &statusReceiver,
+    const sptr<QuickFixStatusCallbackHost> &callback) : statusReceiver_(statusReceiver), quickFixCallback_(callback)
 {
 }
 
 BundleDeathRecipient::~BundleDeathRecipient()
 {
     statusReceiver_ = nullptr;
+    quickFixCallback_ = nullptr;
 }
 
-void BundleDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
+void BundleDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject> &remote)
 {
     APP_LOGD("BundleManagerService is died");
-    if (statusReceiver_ == nullptr) {
-        APP_LOGI("statusReceiver_ is nullptr");
-        return;
+    if (statusReceiver_ != nullptr) {
+        APP_LOGD("call installer callback");
+        statusReceiver_->OnFinished(IStatusReceiver::ERR_FAILED_SERVICE_DIED, STRING_FAIL);
     }
-    statusReceiver_->OnFinished(IStatusReceiver::ERR_FAILED_SERVICE_DIED, STRING_FAIL);
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    if (quickFixCallback_ != nullptr) {
+        APP_LOGD("call quickFix callback");
+        quickFixCallback_->OnPatchDeployed(DeployQuickFixResult());
+        quickFixCallback_->OnPatchSwitched(SwitchQuickFixResult());
+        quickFixCallback_->OnPatchDeleted(DeleteQuickFixResult());
+    }
+#endif
+    return;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

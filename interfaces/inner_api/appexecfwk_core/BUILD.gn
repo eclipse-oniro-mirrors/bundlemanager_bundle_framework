@@ -98,6 +98,7 @@ ohos_shared_library("appexecfwk_core") {
     sources += [
       "src/quick_fix/quick_fix_manager_host.cpp",
       "src/quick_fix/quick_fix_manager_proxy.cpp",
+      "src/quick_fix/quick_fix_result_info.cpp",
       "src/quick_fix/quick_fix_status_callback_host.cpp",
       "src/quick_fix/quick_fix_status_callback_proxy.cpp",
     ]

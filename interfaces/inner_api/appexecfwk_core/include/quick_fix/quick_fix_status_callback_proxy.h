@@ -27,7 +27,13 @@ public:
     explicit QuickFixStatusCallbackProxy(const sptr<IRemoteObject> &object);
     virtual ~QuickFixStatusCallbackProxy() override;
 
+    virtual void OnPatchDeployed(const DeployQuickFixResult &result) override;
+    virtual void OnPatchSwitched(const SwitchQuickFixResult &result) override;
+    virtual void OnPatchDeleted(const DeleteQuickFixResult &result) override;
+
 private:
+    bool SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply);
+
     static inline BrokerDelegator<QuickFixStatusCallbackProxy> delegator_;
 };
 }

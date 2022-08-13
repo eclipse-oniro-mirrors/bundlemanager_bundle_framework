@@ -31,6 +31,8 @@ private:
     ErrCode CreateCommandMap() override;
     ErrCode CreateMessageMap() override;
     ErrCode Init() override;
+    void CreateQuickFixMsgMap(std::unordered_map<int32_t, std::string> &quickFixMsgMap);
+    std::string GetQuickFixResMsg(int32_t code);
 
     ErrCode RunAsHelpCommand();
     ErrCode RunAsCheckCommand();
