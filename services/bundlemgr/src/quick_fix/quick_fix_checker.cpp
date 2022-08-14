@@ -16,7 +16,6 @@
 #include "quick_fix_checker.h"
 
 #include "bundle_install_checker.h"
-#include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "patch_parser.h"
 
@@ -92,22 +91,10 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
     return ERR_OK;
 }
 
-ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
-    const std::unordered_map<std::string, AppQuickFix> &infos,
-    BundleInfo &bundleInfo)
+ErrCode QuickFixChecker::CheckWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
 {
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    if (bms == nullptr) {
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
-    }
-    std::shared_ptr<BundleDataMgr> dataMgr = bms->GetDataMgr();
-    if ((dataMgr == nullptr) || infos.empty()) {
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
-    }
-    // check bundleName is exists
-    const auto &appQuickFix = infos.begin()->second;
-    if (!dataMgr->GetBundleInfo(appQuickFix.bundleName, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO,
-        bundleInfo, Constants::ANY_USERID)) {
+    // check bundleName
+    if (appQuickFix.bundleName != bundleInfo.name) {
         return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
     // check versionCode and versionName
@@ -121,13 +108,14 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
     }
     bool isDebug = bundleInfo.applicationInfo.debug &&
         (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+    APP_LOGD("application isDebug: %{public}d", isDebug);
     // hot reload does not require versionName and so files
     if (qfInfo.type == QuickFixType::HOT_RELOAD) {
         if (!isDebug) {
             return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE;
         }
         if (bundleInfo.appqfInfo.type == QuickFixType::PATCH) {
-            return ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED,
+            return ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED;
         }
         return ERR_OK;
     }
@@ -139,10 +127,14 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
     }
     if ((!qfInfo.cpuAbi.empty() && !bundleInfo.applicationInfo.cpuAbi.empty()) &&
         (qfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
+        APP_LOGE("qfInfo.cpuAbi: %{public}s, applicationInfo.cpuAbi: %{public}s", qfInfo.cpuAbi.c_str(),
+            bundleInfo.applicationInfo.cpuAbi.c_str());
         return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
     }
     if ((!qfInfo.nativeLibraryPath.empty() && !bundleInfo.applicationInfo.nativeLibraryPath.empty()) &&
         (qfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
+        APP_LOGE("qfInfo.nativeLibraryPath: %{public}s, applicationInfo.nativeLibraryPath: %{public}s",
+            qfInfo.nativeLibraryPath.c_str(), bundleInfo.applicationInfo.nativeLibraryPath.c_str());
         return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
     }
     return ERR_OK;

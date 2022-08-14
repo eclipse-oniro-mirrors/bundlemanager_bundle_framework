@@ -48,10 +48,12 @@ private:
     ErrCode ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
         const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix);
 
-    ErrCode CheckAppQuickFixInfosWithInstalledBundle(
-        const std::unordered_map<std::string, AppQuickFix> &infos,
-        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        BundleInfo &bundleInfo);
+    ErrCode GetBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
+
+    ErrCode CheckWithInstalledBundle(
+        const AppQuickFix &appQuickFix,
+        const BundleInfo &bundleInfo,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     ErrCode CheckPatchVersionCode(
         const AppQuickFix &newAppQuickFix,
@@ -66,8 +68,8 @@ private:
     ErrCode ApplyDiffPatch(
         const std::string &bundleName,
         const std::string &libraryPath,
-        const std::string &diffSoPath,
-        const std::string &newPath);
+        const std::string &diffFilePath,
+        const std::string &newSoPath);
 
     ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
 

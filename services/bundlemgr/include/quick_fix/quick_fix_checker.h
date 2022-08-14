@@ -42,9 +42,7 @@ public:
     ErrCode CheckMultiNativeSo(
         std::unordered_map<std::string, AppQuickFix> &infos);
 
-    ErrCode CheckAppQuickFixInfosWithInstalledBundle(
-        const std::unordered_map<std::string, AppQuickFix> &infos,
-        BundleInfo &bundleInfo);
+    ErrCode CheckWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 
     ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
         const Security::Verify::ProvisionInfo &provisionInfo);
