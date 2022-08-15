@@ -37,6 +37,14 @@ namespace AppExecFwk {
             return false;                                                 \
         }                                                                 \
     } while (0)
+
+#define WRITE_PARCEL_AND_RETURN(type, parcel, data)                       \
+    do {                                                                  \
+        if (!(parcel).Write##type(data)) {                                \
+            APP_LOGE("fail to write %{public}s type into parcel", #type); \
+            return;                                                       \
+        }                                                                 \
+    } while (0)
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_PARCEL_MACRO_H
