@@ -131,6 +131,8 @@ public:
     virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath) override;
 
+    virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) override;
+
 private:
     ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
