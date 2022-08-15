@@ -17,12 +17,22 @@ group("test_bundle") {
 
   deps += [
     # deps file
+    "backupTest:backupTest",
     "defaultAppTest:defaultAppTest",
+    "fifth_right:fifth_right",
     "first_right:first_right",
     "first_right_with_diff_moduleName:first_right_with_diff_moduleName",
     "first_right_with_diff_moduleType:first_right_with_diff_moduleType",
+    "fourth_right:fourth_right",
     "resourceManagerTest:resourceManagerTest",
+    "rightTest:rightTest",
+    "rightTest1:rightTest1",
     "sandboxTest:sandboxTest",
+    "second_right:second_right",
     "second_right_with_same_moduleName:second_right_with_same_moduleName",
+    "versionTest1:versionTest1",
+    "versionTest2:versionTest2",
+    "versionTest3:versionTest3",
+    "wrong_bundle_name:wrong_bundle_name",
   ]
 }
