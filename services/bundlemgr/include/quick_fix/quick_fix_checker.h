@@ -38,12 +38,16 @@ public:
     ErrCode CheckMultiNativeSo(
         std::unordered_map<std::string, AppQuickFix> &infos);
 
-    ErrCode CheckWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
+    ErrCode CheckPatchWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
+
+    ErrCode CheckHotReloadWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 
     ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
         const Security::Verify::ProvisionInfo &provisionInfo);
 
 private:
+    ErrCode CheckCommonWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
+
     ErrCode CheckModuleNameExist(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, AppQuickFix> &infos);
 
