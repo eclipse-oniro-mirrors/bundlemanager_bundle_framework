@@ -16,9 +16,7 @@
 #include "quick_fix_checker.h"
 
 #include "bundle_install_checker.h"
-#include "bundle_mgr_service.h"
 #include "bundle_util.h"
-#include "patch_parser.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -31,34 +29,6 @@ ErrCode QuickFixChecker::CheckMultipleHapsSignInfo(
     APP_LOGD("Check multiple haps signInfo");
     BundleInstallChecker checker;
     return checker.CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
-}
-
-ErrCode QuickFixChecker::ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix)
-{
-    if (patchPath.empty()) {
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
-    }
-    PatchParser parse;
-    return parse.ParsePatchInfo(patchPath, appQuickFix);
-}
-
-ErrCode QuickFixChecker::ParseAppQuickFixFiles(
-    const std::vector<std::string> &filePaths,
-    std::unordered_map<std::string, AppQuickFix> &appQuickFixs)
-{
-    APP_LOGD("Parse quick fix files start.");
-    ErrCode result = ERR_OK;
-    for (size_t index = 0; index < filePaths.size(); ++index) {
-        AppQuickFix appQuickFix;
-        result = ParseAppQuickFix(filePaths[index], appQuickFix);
-        if (result != ERR_OK) {
-            APP_LOGE("quick fix parse failed %{public}d", result);
-            return result;
-        }
-        appQuickFixs.emplace(filePaths[index], appQuickFix);
-    }
-    APP_LOGD("Parse quick fix files end.");
-    return result;
 }
 
 ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::string, AppQuickFix> &infos)
@@ -84,52 +54,81 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
         if (appQuickFix.deployingAppqfInfo.versionName != info.second.deployingAppqfInfo.versionName) {
             return ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME;
         }
+        if (appQuickFix.deployingAppqfInfo.type != info.second.deployingAppqfInfo.type) {
+            return ERR_APPEXECFWK_QUICK_FIX_PATCH_TYPE_NOT_SAME;
+        }
     }
     APP_LOGD("Check quick fix files end.");
     return ERR_OK;
 }
 
-ErrCode QuickFixChecker::CheckAppQuickFixInfosWithInstalledBundle(
-    const std::unordered_map<std::string, AppQuickFix> &infos,
-    const Security::Verify::ProvisionInfo &provisionInfo,
-    BundleInfo &bundleInfo)
+ErrCode QuickFixChecker::CheckPatchWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
 {
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    if (bms == nullptr) {
-        APP_LOGE("failed due to bms is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+    ErrCode ret = CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
+    if (ret != ERR_OK) {
+        return ret;
     }
-    std::shared_ptr<BundleDataMgr> dataMgr = bms->GetDataMgr();
-    if ((dataMgr == nullptr) || infos.empty()) {
-        APP_LOGE("failed due to dataMgr is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+    bool isDebug = bundleInfo.applicationInfo.debug &&
+        (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+    APP_LOGD("application isDebug: %{public}d", isDebug);
+    if (isDebug && (bundleInfo.appqfInfo.type == QuickFixType::HOT_RELOAD)) {
+        // patch and hot reload can not both exist
+        return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
     }
-    // check bundleName is exists
-    const auto &qfInfo = infos.begin()->second;
-    if (!dataMgr->GetBundleInfo(qfInfo.bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
-        bundleInfo, Constants::ANY_USERID)) {
-        APP_LOGE("error: bundleName %{public}s does not exist!", qfInfo.bundleName.c_str());
+    if (bundleInfo.versionName != appQuickFix.versionName) {
+        return ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME;
+    }
+    const auto &qfInfo = appQuickFix.deployingAppqfInfo;
+    if ((!qfInfo.cpuAbi.empty() && !bundleInfo.applicationInfo.cpuAbi.empty()) &&
+        (qfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
+        APP_LOGE("qfInfo.cpuAbi: %{public}s, applicationInfo.cpuAbi: %{public}s", qfInfo.cpuAbi.c_str(),
+            bundleInfo.applicationInfo.cpuAbi.c_str());
+        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+    }
+    if ((!qfInfo.nativeLibraryPath.empty() && !bundleInfo.applicationInfo.nativeLibraryPath.empty()) &&
+        (qfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
+        APP_LOGE("qfInfo.nativeLibraryPath: %{public}s, applicationInfo.nativeLibraryPath: %{public}s",
+            qfInfo.nativeLibraryPath.c_str(), bundleInfo.applicationInfo.nativeLibraryPath.c_str());
+        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixChecker::CheckHotReloadWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
+{
+    ErrCode ret = CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    bool isDebug = bundleInfo.applicationInfo.debug &&
+        (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+    APP_LOGD("application isDebug: %{public}d", isDebug);
+    if (!isDebug) {
+        return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE;
+    }
+    if (bundleInfo.appqfInfo.type == QuickFixType::PATCH) {
+        // patch and hot reload can not both exist
+        return ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixChecker::CheckCommonWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
+{
+    // check bundleName
+    if (appQuickFix.bundleName != bundleInfo.name) {
         return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
     // check versionCode and versionName
-    if (bundleInfo.versionCode != qfInfo.versionCode) {
+    if (bundleInfo.versionCode != appQuickFix.versionCode) {
         return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME;
     }
-    if (bundleInfo.versionName != qfInfo.versionName) {
-        return ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME;
+    const auto &qfInfo = appQuickFix.deployingAppqfInfo;
+    if (qfInfo.versionCode <= bundleInfo.appqfInfo.versionCode) {
+        APP_LOGE("qhf version code should be greater than the original");
+        return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_ERROR;
     }
-    // check cpuAbi
-    if (!qfInfo.deployingAppqfInfo.cpuAbi.empty() &&
-        (qfInfo.deployingAppqfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
-        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
-    }
-    // check library path
-    if (!qfInfo.deployingAppqfInfo.nativeLibraryPath.empty() &&
-        (qfInfo.deployingAppqfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
-        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
-    }
-    // check signature info
-    return CheckSignatureInfo(bundleInfo, provisionInfo);
+    return ERR_OK;
 }
 
 ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,
@@ -184,6 +183,7 @@ ErrCode QuickFixChecker::CheckMultiNativeSo(
         }
         if (!qfInfo.nativeLibraryPath.empty()) {
             if ((nativeLibraryPath != qfInfo.nativeLibraryPath) || (cpuAbi != qfInfo.cpuAbi)) {
+                APP_LOGE("check native so with installed bundle failed");
                 return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
             }
         }

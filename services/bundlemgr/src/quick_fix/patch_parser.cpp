@@ -26,6 +26,9 @@ namespace AppExecFwk {
 ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &appQuickFix) const
 {
     APP_LOGD("Parse patch.json from %{private}s", pathName.c_str());
+    if (pathName.empty()) {
+        return ERR_APPEXECFWK_PARSE_NO_PROFILE;
+    }
     PatchExtractor patchExtractor(pathName);
     if (!patchExtractor.Init()) {
         APP_LOGE("patch extractor init failed");
@@ -45,6 +48,26 @@ ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &ap
         APP_LOGE("transform stream to appQuickFix failed %{public}d", ret);
         return ret;
     }
+    return ERR_OK;
+}
+
+ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
+    std::unordered_map<std::string, AppQuickFix> &appQuickFixs) const
+{
+    APP_LOGD("Parse quick fix files start.");
+    if (filePaths.empty()) {
+        return ERR_APPEXECFWK_PARSE_NO_PROFILE;
+    }
+    for (size_t index = 0; index < filePaths.size(); ++index) {
+        AppQuickFix appQuickFix;
+        ErrCode result = ParsePatchInfo(filePaths[index], appQuickFix);
+        if (result != ERR_OK) {
+            APP_LOGE("quick fix parse failed %{public}d", result);
+            return result;
+        }
+        appQuickFixs.emplace(filePaths[index], appQuickFix);
+    }
+    APP_LOGD("Parse quick fix files end.");
     return ERR_OK;
 }
 } // namespace AppExecFwk

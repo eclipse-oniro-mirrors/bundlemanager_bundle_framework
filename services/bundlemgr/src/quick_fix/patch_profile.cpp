@@ -86,7 +86,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_NAME,
         app.versionName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
@@ -102,7 +102,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_NAME,
         app.patchVersionName,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
 }
@@ -131,7 +131,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES,
         module.deviceTypes,
         JsonType::ARRAY,
-        true,
+        false,
         parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -139,7 +139,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH,
         module.originalModuleHash,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
 }
@@ -173,6 +173,7 @@ QuickFixType GetQuickFixType(const std::string &type)
     if (type == BUNDLE_PATCH_TYPE_HOT_RELOAD) {
         return QuickFixType::HOT_RELOAD;
     }
+    APP_LOGW("GetQuickFixType: unknow quick fix type");
     return QuickFixType::UNKNOWN;
 }
 
@@ -302,7 +303,9 @@ ErrCode PatchProfile::TransformTo(
         return ret;
     }
     PatchProfileReader::ToPatchInfo(patchJson, appQuickFix);
-    if (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo)) {
+    // hot reload does not process so files
+    if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
+        (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
         APP_LOGE("ParseNativeSo failed");
         return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
     }

@@ -42,16 +42,30 @@ private:
 
     ErrCode ParseAndCheckAppQuickFixInfos(
         const std::vector<std::string> &bundleFilePaths,
-        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, AppQuickFix> &infos);
 
     ErrCode ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
         const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix);
 
-    ErrCode CheckAppQuickFixInfosWithInstalledBundle(
-        const std::unordered_map<std::string, AppQuickFix> &infos,
-        const Security::Verify::ProvisionInfo &provisionInfo,
-        BundleInfo &bundleInfo);
+    ErrCode GetBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
+
+    ErrCode ProcessPatchDeployStart(
+        const std::vector<std::string> bundleFilePaths,
+        const BundleInfo &bundleInfo,
+        std::unordered_map<std::string, AppQuickFix> &infos);
+
+    ErrCode ProcessHotReloadDeployStart(
+        const BundleInfo &bundleInfo,
+        const std::unordered_map<std::string, AppQuickFix> &infos);
+
+    ErrCode ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath);
+
+    ErrCode ProcessHotReloadDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath);
+
+    ErrCode CheckWithInstalledBundle(
+        const AppQuickFix &appQuickFix,
+        const BundleInfo &bundleInfo,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     ErrCode CheckPatchVersionCode(
         const AppQuickFix &newAppQuickFix,
@@ -66,8 +80,8 @@ private:
     ErrCode ApplyDiffPatch(
         const std::string &bundleName,
         const std::string &libraryPath,
-        const std::string &diffSoPath,
-        const std::string &newPath);
+        const std::string &diffFilePath,
+        const std::string &newSoPath);
 
     ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
 
