@@ -2164,7 +2164,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0100, Function | MediumTest | Le
         EXPECT_TRUE(queryResult);
 
         EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle1");
-        EXPECT_EQ(hapModuleInfo.moduleName, "testability");
+        EXPECT_EQ(hapModuleInfo.moduleName, "testability1");
         EXPECT_EQ(hapModuleInfo.description, "");
         EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "tvcar");
 
@@ -2280,7 +2280,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0300, Function | MediumTest | Le
         bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
         EXPECT_TRUE(queryResult);
         EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle3");
-        EXPECT_EQ(hapModuleInfo.moduleName, "testability");
+        EXPECT_EQ(hapModuleInfo.moduleName, "testability3");
         resvec.clear();
 
         Uninstall(appName, resvec);
