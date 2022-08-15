@@ -1466,6 +1466,7 @@ bool ToApplicationInfo(
 
     applicationInfo.enabled = true;
     applicationInfo.multiProjects = app.multiProjects;
+    applicationInfo.process = app.bundleName;
     return true;
 }
 
@@ -1726,12 +1727,10 @@ bool ToInnerModuleInfo(
 
     innerModuleInfo.mainAbility = moduleJson.module.mainElement;
     innerModuleInfo.srcEntrance = moduleJson.module.srcEntrance;
-    if (transformParam.appPrivilegeCapability.allowMultiProcess) {
-        if (!moduleJson.module.process.empty()) {
-            innerModuleInfo.process = moduleJson.module.process;
-        } else {
-            innerModuleInfo.process = moduleJson.app.bundleName;
-        }
+    if (transformParam.appPrivilegeCapability.allowMultiProcess && !moduleJson.module.process.empty()) {
+        innerModuleInfo.process = moduleJson.module.process;
+    } else {
+        innerModuleInfo.process = moduleJson.app.bundleName;
     }
 
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
