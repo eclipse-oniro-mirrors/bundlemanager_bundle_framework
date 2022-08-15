@@ -109,8 +109,8 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         return ret;
     }
     const AppQuickFix &appQuickFix = infos.begin()->second;
-    const AppQuickFix &oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
     bool isExist = quickFixDataMgr_->QueryInnerAppQuickFix(appQuickFix.bundleName, oldInnerAppQuickFix);
+    const AppQuickFix &oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
     // exist and type same need to check version code
     if (isExist && (appQuickFix.deployingAppqfInfo.type == oldAppQuickFix.deployingAppqfInfo.type)) {
         // 2. check current app quick fix version code
@@ -126,13 +126,13 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         return ret;
     }
     // 4. check with installed bundle
-    if(appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) {
+    if (appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) {
         ret = ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
         if (ret != ERR_OK) {
             APP_LOGE("ProcessPatchDeployStart failed, errcode:%{public}d", ret);
             return ret;
         }
-    } else if(appQuickFix.deployingAppqfInfo.type == QuickFixType::HOT_RELOAD) {
+    } else if (appQuickFix.deployingAppqfInfo.type == QuickFixType::HOT_RELOAD) {
         ret = ProcessHotReloadDeployStart(bundleInfo, infos);
         if (ret != ERR_OK) {
             APP_LOGE("ProcessPatchDeployStart failed, errcode:%{public}d", ret);
