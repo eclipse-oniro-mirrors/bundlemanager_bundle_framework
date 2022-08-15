@@ -16,6 +16,9 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_RESULT_INFO_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_RESULT_INFO_H
 
+#include <string>
+#include <vector>
+
 #include "parcel.h"
 #include "quick_fix/appqf_info.h"
 
@@ -28,6 +31,7 @@ struct DeployQuickFixResult : public Parcelable {
     uint32_t patchVersionCode = 0; // patch version code
     bool isSoContained = false;
     QuickFixType type = QuickFixType::UNKNOWN;
+    std::vector<std::string> moduleNames;
 
     DeployQuickFixResult() = default;
     virtual ~DeployQuickFixResult() = default;

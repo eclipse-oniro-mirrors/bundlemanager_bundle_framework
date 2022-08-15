@@ -29,7 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixChecker {
 public:
-    ErrCode CheckMultipleHapsSignInfo(
+    ErrCode CheckMultipleHqfsSignInfo(
         const std::vector<std::string> &bundlePaths,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
@@ -38,7 +38,8 @@ public:
     ErrCode CheckMultiNativeSo(
         std::unordered_map<std::string, AppQuickFix> &infos);
 
-    ErrCode CheckPatchWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
+    ErrCode CheckPatchWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo,
+        const Security::Verify::ProvisionInfo &provisionInfo);
 
     ErrCode CheckHotReloadWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 

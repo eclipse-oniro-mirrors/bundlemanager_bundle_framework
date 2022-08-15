@@ -27,6 +27,10 @@ bool DeployQuickFixResult::ReadFromParcel(Parcel &parcel)
     patchVersionCode = parcel.ReadUint32();
     isSoContained = parcel.ReadBool();
     type = static_cast<QuickFixType>(parcel.ReadInt32());
+    int32_t moduleNameSize = parcel.ReadInt32();
+    for (int32_t  index = 0; index < moduleNameSize; ++index) {
+        moduleNames.emplace_back(parcel.ReadString());
+    }
     return true;
 }
 
@@ -38,6 +42,10 @@ bool DeployQuickFixResult::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, patchVersionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSoContained);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleNames.size());
+    for (const auto &name : moduleNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, name);
+    }
     return true;
 }
 
