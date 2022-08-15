@@ -44,9 +44,9 @@ constexpr const char* BUNDLE_PATCH_TYPE_HOT_RELOAD = "hotreload";
 thread_local int32_t parseResult = 0;
 struct App {
     std::string bundleName;
-    int32_t versionCode = 0;
+    uint32_t versionCode = 0;
     std::string versionName;
-    int32_t patchVersionCode = 0;
+    uint32_t patchVersionCode = 0;
     std::string patchVersionName;
 };
 
@@ -73,7 +73,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_CODE,
         app.versionCode,
@@ -89,7 +89,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_CODE,
         app.patchVersionCode,
