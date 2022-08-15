@@ -1569,7 +1569,7 @@ public:
     std::string GetModuleTypeByPackage(const std::string &packageName) const;
 
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
-    void UpdatePreInstallAttribute(bool isPreInstall, const ApplicationInfo &applicationInfo);
+    void UpdateRemovable(bool isPreInstall, bool removable);
 
 private:
     void GetBundleWithAbilities(

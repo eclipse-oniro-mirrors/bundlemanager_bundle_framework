@@ -244,12 +244,6 @@ void BMSEventHandler::BundleRebootStartEvent()
     }
 #endif
 
-    if (!needRebootOta_ && !OTAEnable()) {
-        APP_LOGI("No OTA detection");
-        return;
-    }
-
-    APP_LOGI("OTA detection");
     OnBundleRebootStart();
     needNotifyBundleScanStatus_ = true;
 }
@@ -1019,7 +1013,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
         if (filePaths.empty()) {
 #ifdef USE_PRE_BUNDLE_PROFILE
-            UpdatePreInstallAttribute(scanPathIter, bundleName);
+            UpdateRemovable(bundleName, removable);
+            UpdateRecoverable(bundleName, recoverable);
 #endif
             continue;
         }
@@ -1027,7 +1022,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
 #ifdef USE_PRE_BUNDLE_PROFILE
-            UpdatePreInstallAttribute(scanPathIter, bundleName);
+            UpdateRemovable(bundleName, removable);
+            UpdateRecoverable(bundleName, recoverable);
 #endif
         }
     }
@@ -1350,14 +1346,8 @@ bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConf
     return true;
 }
 
-bool BMSEventHandler::OTAEnable()
-{
-    return true;
-}
-
 #ifdef USE_PRE_BUNDLE_PROFILE
-void BMSEventHandler::UpdatePreInstallAttribute(
-    const std::string &bundleDir, const std::string &bundleName)
+void BMSEventHandler::UpdateRemovable(const std::string &bundleName, bool removable)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -1365,10 +1355,18 @@ void BMSEventHandler::UpdatePreInstallAttribute(
         return;
     }
 
-    ApplicationInfo appInfo;
-    appInfo.removable = IsPreInstallRemovable(bundleDir);
-    bool recovable = IsPreInstallRecoverable(bundleDir);
-    dataMgr->UpdatePreInstallAttribute(bundleName, appInfo, recovable);
+    dataMgr->UpdateRemovable(bundleName, removable);
+}
+
+void BMSEventHandler::UpdateRecoverable(const std::string &bundleName, bool recoverable)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    dataMgr->UpdateRecoverable(bundleName, recoverable);
 }
 
 void BMSEventHandler::UpdateAllPrivilegeCapability()
@@ -1383,7 +1381,7 @@ void BMSEventHandler::UpdatePrivilegeCapability(
 {
     auto &bundleName = preBundleConfigInfo.bundleName;
     InnerBundleInfo innerBundleInfo;
-    if (!GetInnerBundleInfo(bundleName, innerBundleInfo)) {
+    if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGW("App(%{public}s) is not installed.", bundleName.c_str());
         return;
     }
@@ -1391,12 +1389,6 @@ void BMSEventHandler::UpdatePrivilegeCapability(
     if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint())) {
         APP_LOGW("App(%{public}s) signature verify failed", bundleName.c_str());
         return;
-    }
-
-    bool isSingletonChange = (preBundleConfigInfo.singleton != innerBundleInfo.IsSingleton());
-    if (isSingletonChange) {
-        APP_LOGI("app(%{public}s) singleton changed.", preBundleConfigInfo.bundleName.c_str());
-        HandleSingletonChanged(preBundleConfigInfo.bundleName);
     }
 
     UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
@@ -1412,13 +1404,6 @@ bool BMSEventHandler::MatchSignature(
 
     return std::find(configInfo.appSignature.begin(),
         configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
-}
-
-void BMSEventHandler::HandleSingletonChanged(const std::string &bundleName)
-{
-    APP_LOGI("HandleSingletonChanged app(%{public}s).", bundleName.c_str());
-    SystemBundleInstaller installer;
-    installer.HandleSingletonChanged(bundleName);
 }
 
 void BMSEventHandler::UpdateTrustedPrivilegeCapability(
@@ -1443,7 +1428,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 
-bool BMSEventHandler::GetInnerBundleInfo(
+bool BMSEventHandler::FetchInnerBundleInfo(
     const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -1452,7 +1437,7 @@ bool BMSEventHandler::GetInnerBundleInfo(
         return false;
     }
 
-    return dataMgr->GetInnerBundleInfoWithNoMutex(bundleName, innerBundleInfo);
+    return dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
 }
 #endif
 }  // namespace AppExecFwk

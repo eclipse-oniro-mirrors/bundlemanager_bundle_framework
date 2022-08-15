@@ -121,16 +121,5 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
 
     return true;
 }
-
-bool SystemBundleInstaller::HandleSingletonChanged(const std::string &bundleName)
-{
-    ErrCode result = HandleSingletonChangedByBundleName(bundleName);
-    if (result != ERR_OK) {
-        APP_LOGE("HandleSingletonChanged fail, error: %{public}d", result);
-        return false;
-    }
-
-    return true;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS
