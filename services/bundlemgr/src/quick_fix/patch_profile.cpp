@@ -304,7 +304,7 @@ ErrCode PatchProfile::TransformTo(
     }
     PatchProfileReader::ToPatchInfo(patchJson, appQuickFix);
     // hot reload does not process so files
-    if ((appQuickFix.deployingAppqfInfo.type != QuickFixType::HOT_RELOAD) &&
+    if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
         APP_LOGE("ParseNativeSo failed");
         return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;

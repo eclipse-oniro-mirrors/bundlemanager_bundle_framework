@@ -17,7 +17,6 @@
 
 #include "bundle_install_checker.h"
 #include "bundle_util.h"
-#include "patch_parser.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -30,34 +29,6 @@ ErrCode QuickFixChecker::CheckMultipleHapsSignInfo(
     APP_LOGD("Check multiple haps signInfo");
     BundleInstallChecker checker;
     return checker.CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
-}
-
-ErrCode QuickFixChecker::ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix)
-{
-    if (patchPath.empty()) {
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
-    }
-    PatchParser parse;
-    return parse.ParsePatchInfo(patchPath, appQuickFix);
-}
-
-ErrCode QuickFixChecker::ParseAppQuickFixFiles(
-    const std::vector<std::string> &filePaths,
-    std::unordered_map<std::string, AppQuickFix> &appQuickFixs)
-{
-    APP_LOGD("Parse quick fix files start.");
-    ErrCode result = ERR_OK;
-    for (size_t index = 0; index < filePaths.size(); ++index) {
-        AppQuickFix appQuickFix;
-        result = ParseAppQuickFix(filePaths[index], appQuickFix);
-        if (result != ERR_OK) {
-            APP_LOGE("quick fix parse failed %{public}d", result);
-            return result;
-        }
-        appQuickFixs.emplace(filePaths[index], appQuickFix);
-    }
-    APP_LOGD("Parse quick fix files end.");
-    return result;
 }
 
 ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::string, AppQuickFix> &infos)
@@ -101,10 +72,14 @@ ErrCode QuickFixChecker::CheckWithInstalledBundle(const AppQuickFix &appQuickFix
     if (bundleInfo.versionCode != appQuickFix.versionCode) {
         return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME;
     }
+    const auto &qfInfo = appQuickFix.deployingAppqfInfo;
+    if (qfInfo.versionCode <= bundleInfo.appqfInfo.versionCode) {
+        APP_LOGE("qhf version code should be greater than the original");
+        return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_ERROR;
+    }
     bool isDebug = bundleInfo.applicationInfo.debug &&
         (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
     APP_LOGD("application isDebug: %{public}d", isDebug);
-    const auto &qfInfo = appQuickFix.deployingAppqfInfo;
     // hot reload does not require versionName and so files
     if (qfInfo.type == QuickFixType::HOT_RELOAD) {
         if (!isDebug) {
@@ -113,18 +88,10 @@ ErrCode QuickFixChecker::CheckWithInstalledBundle(const AppQuickFix &appQuickFix
         if (bundleInfo.appqfInfo.type == QuickFixType::PATCH) {
             return ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED;
         }
-        if (qfInfo.versionCode <= bundleInfo.appqfInfo.versionCode) {
-            APP_LOGE("qhf version code should be greater than the original");
-            return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_ERROR;
-        }
         return ERR_OK;
     }
     if (isDebug && (bundleInfo.appqfInfo.type == QuickFixType::HOT_RELOAD)) {
         return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
-    }
-    if (qfInfo.versionCode <= bundleInfo.appqfInfo.versionCode) {
-        APP_LOGE("qhf version code should be greater than the original");
-        return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_ERROR;
     }
     if (bundleInfo.versionName != appQuickFix.versionName) {
         return ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME;

@@ -33,10 +33,6 @@ public:
         const std::vector<std::string> &bundlePaths,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
-    ErrCode ParseAppQuickFixFiles(
-        const std::vector<std::string> &patchFilePaths,
-        std::unordered_map<std::string, AppQuickFix> &infos);
-
     ErrCode CheckAppQuickFixInfos(const std::unordered_map<std::string, AppQuickFix> &infos);
 
     ErrCode CheckMultiNativeSo(
@@ -48,8 +44,6 @@ public:
         const Security::Verify::ProvisionInfo &provisionInfo);
 
 private:
-    ErrCode ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix);
-
     ErrCode CheckModuleNameExist(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, AppQuickFix> &infos);
 

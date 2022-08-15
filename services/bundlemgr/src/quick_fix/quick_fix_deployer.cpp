@@ -21,6 +21,7 @@
 #include "bundle_util.h"
 #include "installd_client.h"
 #include "patch_extractor.h"
+#include "patch_parser.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -109,11 +110,15 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         return ret;
     }
     const AppQuickFix &appQuickFix = infos.begin()->second;
+    const AppQuickFix &oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
     bool isExist = quickFixDataMgr_->QueryInnerAppQuickFix(appQuickFix.bundleName, oldInnerAppQuickFix);
-    // 2. check current app quick fix version code
-    ret = isExist ? CheckPatchVersionCode(appQuickFix, oldInnerAppQuickFix.GetAppQuickFix()) : ERR_OK;
-    if (ret != ERR_OK) {
-        return ret;
+    // exist and type same need to check version code
+    if (isExist && (appQuickFix.deployingAppqfInfo.type == oldAppQuickFix.deployingAppqfInfo.type)) {
+        // 2. check current app quick fix version code
+        ret = CheckPatchVersionCode(appQuickFix, oldAppQuickFix);
+        if (ret != ERR_OK) {
+            return ret;
+        }
     }
     // 3. check bundleName exist
     BundleInfo bundleInfo;
@@ -200,13 +205,14 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
     std::unordered_map<std::string, AppQuickFix> &infos)
 {
-    QuickFixChecker checker;
     // parse hqf file to AppQuickFix
-    ErrCode ret = checker.ParseAppQuickFixFiles(bundleFilePaths, infos);
-    if ((ret != ERR_OK) || infos.empty()) {
+    PatchParser patchParser;
+    ErrCode ret = patchParser.ParsePatchInfo(bundleFilePaths, infos);
+    if ((ret != ERR_OK)) {
         APP_LOGE("parse AppQuickFixFiles failed");
         return ret;
     }
+    QuickFixChecker checker;
     // check multiple AppQuickFix
     ret = checker.CheckAppQuickFixInfos(infos);
     if (ret != ERR_OK) {
@@ -320,10 +326,6 @@ ErrCode QuickFixDeployer::CheckPatchVersionCode(
     const AppqfInfo &newInfo = newAppQuickFix.deployingAppqfInfo;
     const AppqfInfo &oldInfoDeployed = oldAppQuickFix.deployedAppqfInfo;
     const AppqfInfo &oldInfoDeploying = oldAppQuickFix.deployingAppqfInfo;
-    // type is different
-    if ((newInfo.type != oldInfoDeploying.type)) {
-        return ERR_OK;
-    }
     if ((newInfo.versionCode > oldInfoDeployed.versionCode) &&
         (newInfo.versionCode > oldInfoDeploying.versionCode)) {
         return ERR_OK;
