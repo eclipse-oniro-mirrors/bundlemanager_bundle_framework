@@ -28,7 +28,7 @@ bool DeployQuickFixResult::ReadFromParcel(Parcel &parcel)
     isSoContained = parcel.ReadBool();
     type = static_cast<QuickFixType>(parcel.ReadInt32());
     int32_t moduleNameSize = parcel.ReadInt32();
-    for (int32_t  index = 0; index < moduleNameSize; ++index) {
+    for (int32_t index = 0; index < moduleNameSize; ++index) {
         moduleNames.emplace_back(parcel.ReadString());
     }
     return true;

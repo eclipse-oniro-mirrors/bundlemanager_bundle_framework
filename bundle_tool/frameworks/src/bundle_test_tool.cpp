@@ -48,24 +48,32 @@ const int32_t INDEX_OFFSET = 2;
 // quick fix error code
 const int32_t ERR_APPEXECFWK_FEATURE_IS_NOT_SUPPORTED = 801;
 // quick fix error message
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR = "error: install internal error.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR = "error: param error.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED = "error: profile parse failed.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_SAME = "error: not same bundle name.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME = "error: not same version code.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME = "error: not same version name.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME = "error: not same patch version name.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME = "error: not same patch version name.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE = "error: patch so incompatible.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST = "error: bundle name is not existed.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST = "error: module name is not existed.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_SIGNATURE_INFO_NOT_SAME = "error: signature is not existed.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED = "error: extract diff files failed.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_APPLY_DIFF_PATCH_FAILED = "error: apply diff patch failed.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_UNKOWN = "error: unknown.";
-const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED = "feature is not supported.";
-const std::string MSG_ERR_APPEXECFWK_OPERATION_TIME_OUT = "error: quick fix operation time out.";
-const std::string MSG_ERR_APPEXECFWK_FAILED_SERVICE_DIED = "error: bundleMgr service is dead.";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR = "error: install internal error.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR = "error: param error.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED = "error: profile parse failed.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_SAME = "error: not same bundle name.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME = "error: not same version code.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME = "error: not same version name.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME = "error: not same patch version name.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME = "error: not same patch version name.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_TYPE_NOT_SAME = "error: not same patch type.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE = "error: unknown quick fix type.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE = "error: patch so incompatible.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME = "error: same moduleName.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST = "error: bundle name is not existed.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST = "error: module name is not existed.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_SIGNATURE_INFO_NOT_SAME = "error: signature is not existed.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED = "error: extract diff files failed.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_APPLY_DIFF_PATCH_FAILED = "error: apply diff patch failed.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_UNKOWN = "error: unknown.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED = "feature is not supported.\n";
+const std::string MSG_ERR_APPEXECFWK_OPERATION_TIME_OUT = "error: quick fix operation time out.\n";
+const std::string MSG_ERR_APPEXECFWK_FAILED_SERVICE_DIED = "error: bundleMgr service is dead.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE =
+    "error: hotreload not support release bundle.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED = "error: patch type already existed.\n";
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED = "error: hotreload type already existed.\n";
+
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
@@ -332,6 +340,8 @@ void BundleTestTool::CreateQuickFixMsgMap(std::unordered_map<int32_t, std::strin
             MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME },
         { ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME,
             MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME },
+        { ERR_APPEXECFWK_QUICK_FIX_PATCH_TYPE_NOT_SAME, MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_TYPE_NOT_SAME },
+        { ERR_APPEXECFWK_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE, MSG_ERR_APPEXECFWK_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE },
         { ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE, MSG_ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE },
         { ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST, MSG_ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST },
         { ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST, MSG_ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST },
@@ -340,7 +350,13 @@ void BundleTestTool::CreateQuickFixMsgMap(std::unordered_map<int32_t, std::strin
         { ERR_APPEXECFWK_QUICK_FIX_APPLY_DIFF_PATCH_FAILED, MSG_ERR_APPEXECFWK_QUICK_FIX_APPLY_DIFF_PATCH_FAILED },
         { ERR_APPEXECFWK_FEATURE_IS_NOT_SUPPORTED, MSG_ERR_APPEXECFWK_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED },
         { ERR_APPEXECFWK_OPERATION_TIME_OUT, MSG_ERR_APPEXECFWK_OPERATION_TIME_OUT },
-        { ERR_APPEXECFWK_FAILED_SERVICE_DIED, MSG_ERR_APPEXECFWK_FAILED_SERVICE_DIED }
+        { ERR_APPEXECFWK_FAILED_SERVICE_DIED, MSG_ERR_APPEXECFWK_FAILED_SERVICE_DIED },
+        { ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE,
+            MSG_ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE },
+        { ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED, MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED },
+        { ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED,
+            MSG_ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED },
+        { ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME, MSG_ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME }
     };
 }
 

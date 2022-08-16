@@ -73,7 +73,7 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
         const std::string &moduleName = info.second.deployingAppqfInfo.hqfInfos[0].moduleName;
         if (moduleNames.find(moduleName) != moduleNames.end()) {
             APP_LOGE("error: moduleName %{public}s is already exist", moduleName.c_str());
-            return ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_ALREADY_EXISTED;
+            return ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME;
         }
         moduleNames.insert(moduleName);
     }
