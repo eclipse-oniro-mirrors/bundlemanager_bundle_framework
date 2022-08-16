@@ -40,7 +40,8 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
     }
 
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
-    std::shared_ptr<IQuickFix> deployer = std::make_shared<QuickFixDeployer>(bundleFilePaths, quickFixDataMgr);
+    std::shared_ptr<IQuickFix> deployer = std::make_shared<QuickFixDeployer>(bundleFilePaths, quickFixDataMgr,
+        statusCallback_);
     deployer->Execute();
 
     // callback operation
