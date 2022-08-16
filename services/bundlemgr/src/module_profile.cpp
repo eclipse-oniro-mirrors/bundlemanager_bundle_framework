@@ -1845,6 +1845,22 @@ bool ToInnerBundleInfo(
             innerModuleInfo.label = extensionInfo.label;
             innerModuleInfo.labelId = extensionInfo.labelId;
         }
+
+        if (transformParam.isPreInstallApp && !applicationInfo.isLauncherApp) {
+            for (const auto &skill : extension.skills) {
+                bool isEntryAction = std::find(skill.actions.cbegin(), skill.actions.cend(),
+                    Constants::INTENT_ACTION_HOME) != skill.actions.cend();
+                bool isEntryEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
+                    Constants::INTENT_ENTITY_HOME) != skill.entities.cend();
+                bool isLauncherEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
+                    Constants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.cend();
+                if (isEntryAction && isEntryEntity && isLauncherEntity) {
+                    applicationInfo.isLauncherApp = true;
+                    break;
+                }
+            }
+        }
+
         std::string key;
         key.append(moduleJson.app.bundleName).append(".")
             .append(moduleJson.module.name).append(".").append(extension.name);
