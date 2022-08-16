@@ -7238,7 +7238,7 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value)
     napi_value nFullscreen;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FULLSCREEN), &nFullscreen));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULLSCREEN", nFullscreen));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULL_SCREEN", nFullscreen));
 
     napi_value nSplit;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::SPLIT), &nSplit));
