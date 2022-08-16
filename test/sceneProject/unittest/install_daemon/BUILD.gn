@@ -11,14 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("unittest_hap") {
+group("install_daemon") {
   testonly = true
   deps = []
 
   deps += [
     # deps file
-    "bundle_kit:bundle_kit",
-    "install_daemon:install_daemon",
-    "test_bundle:test_bundle",
+    "right:right",
   ]
 }

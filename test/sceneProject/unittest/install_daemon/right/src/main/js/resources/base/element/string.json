@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "MainAbility_desc",
+      "value": "MainAbility_desc"
+    },
+    {
+      "name": "mainability_description",
+      "value": "mainability_description"
+    },
+    {
+      "name": "MainAbility_label",
+      "value": "MainAbility_label"
+    }
+  ]
+}
