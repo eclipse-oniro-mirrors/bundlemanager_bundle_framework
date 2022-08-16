@@ -1574,6 +1574,10 @@ public:
 
     std::string GetModuleTypeByPackage(const std::string &packageName) const;
 
+    AppqfInfo GetAppqfInfo() const;
+
+    void SetAppqfInfo(const AppqfInfo &appqfInfo);
+
 private:
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;

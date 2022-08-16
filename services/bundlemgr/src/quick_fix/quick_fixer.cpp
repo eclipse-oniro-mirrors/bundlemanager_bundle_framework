@@ -18,7 +18,7 @@
 #include <cinttypes>
 
 #include "app_log_wrapper.h"
-#include "quick_fix_async_mgr.h"
+#include "quick_fix_mgr.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_deployer.h"
 #include "quick_fix_switcher.h"
@@ -56,9 +56,13 @@ void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
     }
 
     std::shared_ptr<IQuickFix> switcher = std::make_shared<QuickFixSwitcher>(bundleName, enable);
-    switcher->Execute();
+    auto ret = switcher->Execute();
 
     // callback operation
+    SwitchQuickFixResult result;
+    result.resultCode = ret;
+    result.bundleName = bundleName;
+    statusCallback_->OnPatchSwitched(result);
     SendRemoveEvent();
 }
 
@@ -70,9 +74,13 @@ void QuickFixer::DeleteQuickFix(const std::string &bundleName)
     }
 
     std::shared_ptr<IQuickFix> deleter = std::make_shared<QuickFixDeleter>(bundleName);
-    deleter->Execute();
+    auto ret = deleter->Execute();
 
     // callback operation
+    DeleteQuickFixResult result;
+    result.resultCode = ret;
+    result.bundleName = bundleName;
+    statusCallback_->OnPatchDeleted(result);
     SendRemoveEvent();
 }
 
@@ -80,7 +88,7 @@ void QuickFixer::SendRemoveEvent() const
 {
     if (auto handler = handler_.lock()) {
         APP_LOGD("SendRemoveEvent begin");
-        handler->SendEvent(InnerEvent::Get(QuickFixAsyncMgr::MessageId::REMOVE_QUICK_FIXER, quickFixerId_));
+        handler->SendEvent(InnerEvent::Get(QuickFixMgr::MessageId::REMOVE_QUICK_FIXER, quickFixerId_));
         return;
     }
     APP_LOGE("fail to remove %{public}" PRId64 " quickFixer due to handler is expired", quickFixerId_);
