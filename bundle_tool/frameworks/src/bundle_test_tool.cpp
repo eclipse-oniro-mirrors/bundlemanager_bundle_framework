@@ -355,7 +355,12 @@ ErrCode BundleTestTool::CheckOperation(int userId, std::string deviceId, std::st
     std::string moduleName, std::string abilityName)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    sptr<BundleToolCallbackStub> bundleToolCallbackStub = new(std::nothrow) BundleToolCallbackStub(cv_);
+    sptr<BundleToolCallbackStub> bundleToolCallbackStub =
+        new(std::nothrow) BundleToolCallbackStub(cv_, mutex_, dataReady_);
+    if (bundleToolCallbackStub == nullptr) {
+        APP_LOGE("bundleToolCallbackStub is null");
+        return OHOS::ERR_INVALID_VALUE;
+    }
     APP_LOGI("CheckAbilityEnableInstall param: userId:%{public}d, bundleName:%{public}s, moduleName:%{public}s," \
         "abilityName:%{public}s", userId, bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     AAFwk::Want want;
@@ -366,7 +371,8 @@ ErrCode BundleTestTool::CheckOperation(int userId, std::string deviceId, std::st
         return OHOS::ERR_OK;
     }
     APP_LOGI("CheckAbilityEnableInstall wait");
-    cv_.wait(lock);
+    cv_.wait(lock, [this] { return dataReady_; });
+    dataReady_ = false;
     return OHOS::ERR_OK;
 }
 

@@ -51,6 +51,7 @@ private:
 
     std::condition_variable cv_;
     std::mutex mutex_;
+    bool dataReady_ {false};
 
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;

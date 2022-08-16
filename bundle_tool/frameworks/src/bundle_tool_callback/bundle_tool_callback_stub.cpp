@@ -25,6 +25,7 @@ int32_t BundleToolCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     APP_LOGI("bundle mgr callback onReceived message, the message code is %{public}u", code);
+    std::unique_lock<std::mutex> lock(mutex_);
     std::u16string descriptor = BundleToolCallbackStub::GetDescriptor();
     std::u16string token = data.ReadInterfaceToken();
     if (descriptor != token) {
@@ -36,6 +37,7 @@ int32_t BundleToolCallbackStub::OnRemoteRequest(
     int32_t missionId = data.ReadInt32();
     APP_LOGI("BundleToolCallbackStub: resultCode:%{public}d, versionCode:%{public}d, missionId:%{public}d",
         resultCode, versionCode, missionId);
+    dataReady_ = true;
     cv_.notify_all();
     return ERR_OK;
 }
