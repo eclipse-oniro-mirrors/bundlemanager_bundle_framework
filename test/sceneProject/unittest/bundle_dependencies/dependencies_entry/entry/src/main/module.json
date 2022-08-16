@@ -1,0 +1,45 @@
+{
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "deliveryWithInstall": true,
+        "dependencies": [
+            "entry_A",
+            "entry_B"
+        ],
+        "description": "$string:entry_desc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "default"
+        ],
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "name": "entry",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "uiSyntax": "ets",
+        "virtualMachine": "ark"
+    }
+}

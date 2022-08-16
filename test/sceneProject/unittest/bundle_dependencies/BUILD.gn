@@ -11,13 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("unittest_hap") {
+group("bundle_dependencies") {
   testonly = true
   deps = []
 
   deps += [
     # deps file
-    "bundle_dependencies:bundle_dependencies",
-    "test_bundle:test_bundle",
+    "dependencies_entry:dependencies_entry",
+    "dependencies_entry_A:dependencies_entry_A",
+    "dependencies_entry_B:dependencies_entry_B",
+    "dependencies_entry_C:dependencies_entry_C",
   ]
 }
