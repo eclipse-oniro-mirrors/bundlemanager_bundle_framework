@@ -2635,5 +2635,15 @@ std::string InnerBundleInfo::GetModuleTypeByPackage(const std::string &packageNa
     }
     return it->second.distro.moduleType;
 }
+
+AppqfInfo InnerBundleInfo::GetAppqfInfo() const
+{
+    return baseBundleInfo_->appqfInfo;
+}
+
+void InnerBundleInfo::SetAppqfInfo(const AppqfInfo &appqfInfo)
+{
+    baseBundleInfo_->appqfInfo = appqfInfo;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
