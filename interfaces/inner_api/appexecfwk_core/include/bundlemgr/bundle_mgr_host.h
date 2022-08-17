@@ -549,6 +549,10 @@ private:
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    ErrCode HandleGetAppControlProxy(MessageParcel &data, MessageParcel &reply);
+#endif
+
     ErrCode HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply);
 
 private:
