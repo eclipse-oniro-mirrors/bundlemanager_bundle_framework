@@ -2071,11 +2071,11 @@ bool ToApplicationInfo(
     applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
     applicationInfo.distributedNotificationEnabled = true;
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
-    if (transformParam.appPrivilegeCapability.allowMultiProcess) {
+    if (transformParam.appPrivilegeCapability.allowMultiProcess
+        && !configJson.deveicConfig.defaultDevice.process.empty()) {
         applicationInfo.process = configJson.deveicConfig.defaultDevice.process;
-        if (applicationInfo.process.empty()) {
-            applicationInfo.process = applicationInfo.bundleName;
-        }
+    } else {
+        applicationInfo.process = applicationInfo.bundleName;
     }
 
     auto it = find(configJson.module.supportedModes.begin(),

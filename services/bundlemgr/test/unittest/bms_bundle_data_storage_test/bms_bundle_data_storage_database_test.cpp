@@ -524,6 +524,14 @@ protected:
                     "allowCommonEvent": []
                 },
                 "compatibleVersion": 8,
+                "appqfInfo": {
+                    "cpuAbi": "",
+                    "hqfInfos": [],
+                    "nativeLibraryPath": "",
+                    "type": 0,
+                    "versionCode": 0,
+                    "versionName": ""
+                },
                 "cpuAbi": "",
                 "defPermissions": [
                 ],

@@ -118,6 +118,7 @@ constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";
+constexpr const char* HOT_RELOAD_PATH = "hotreload_";
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;

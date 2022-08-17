@@ -28,16 +28,6 @@
         src="res" />
     </preparer>
   </target>
-  <target name="BmsBundleAccessTokenIdTest">
-  <preparer>
-      <option name="push" value="test_bundle/bmsAccessTokentest1.hap -> /data/test/resource/bms/accesstoken_bundle/"
-        src="res" />
-      <option name="push" value="test_bundle/bmsAccessTokentest2.hap -> /data/test/resource/bms/accesstoken_bundle/"
-        src="res" />
-      <option name="push" value="test_bundle/bmsAccessTokentest3.hap -> /data/test/resource/bms/accesstoken_bundle/"
-        src="res" />
-    </preparer>
-  </target>
   <target name="BmsBundleParserTest">
   <preparer>
       <option name="push" value="parse_bundle/break_zip.hap -> /data/test/resource/bms/parse_bundle/" src="res" />

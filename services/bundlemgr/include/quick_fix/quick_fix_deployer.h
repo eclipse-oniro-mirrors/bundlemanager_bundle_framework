@@ -19,13 +19,15 @@
 #include "quick_fix_checker.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_interface.h"
+#include "quick_fix/quick_fix_status_callback_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
     QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
-        std::shared_ptr<QuickFixDataMgr> &quickFixDataMgr);
+        const std::shared_ptr<QuickFixDataMgr> &quickFixDataMgr,
+        const sptr<IQuickFixStatusCallback> &statusCallback);
 
     virtual ~QuickFixDeployer() = default;
 
@@ -42,16 +44,23 @@ private:
 
     ErrCode ParseAndCheckAppQuickFixInfos(
         const std::vector<std::string> &bundleFilePaths,
-        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, AppQuickFix> &infos);
 
     ErrCode ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
         const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix);
 
-    ErrCode CheckAppQuickFixInfosWithInstalledBundle(
-        const std::unordered_map<std::string, AppQuickFix> &infos,
-        const Security::Verify::ProvisionInfo &provisionInfo,
-        BundleInfo &bundleInfo);
+    ErrCode GetBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
+
+    ErrCode ProcessPatchDeployStart(
+        const std::vector<std::string> bundleFilePaths,
+        const BundleInfo &bundleInfo,
+        std::unordered_map<std::string, AppQuickFix> &infos);
+
+    ErrCode ProcessHotReloadDeployStart(const BundleInfo &bundleInfo, const AppQuickFix &appQuickFix);
+
+    ErrCode ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath);
+
+    ErrCode ProcessHotReloadDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath);
 
     ErrCode CheckPatchVersionCode(
         const AppQuickFix &newAppQuickFix,
@@ -63,16 +72,14 @@ private:
         const std::string &targetPath,
         const AppqfInfo &appQfInfo);
 
-    ErrCode ApplyDiffPatch(
-        const std::string &bundleName,
-        const std::string &libraryPath,
-        const std::string &diffSoPath,
-        const std::string &newPath);
-
     ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
+
+    void ToDeployQuickFixResult(const AppQuickFix &appQuickFix);
 
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
+    sptr<IQuickFixStatusCallback> statusCallback_ = nullptr;
+    DeployQuickFixResult deployQuickFixResult_;
 };
 } // AppExecFwk
 } // OHOS

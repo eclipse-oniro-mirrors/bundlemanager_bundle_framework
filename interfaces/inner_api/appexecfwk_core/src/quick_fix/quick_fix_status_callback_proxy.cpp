@@ -18,6 +18,9 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "ipc_types.h"
+#include "parcel.h"
+#include "parcel_macro.h"
+#include "quick_fix_status_callback_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -30,6 +33,56 @@ QuickFixStatusCallbackProxy::QuickFixStatusCallbackProxy(const sptr<IRemoteObjec
 QuickFixStatusCallbackProxy::~QuickFixStatusCallbackProxy()
 {
     APP_LOGI("destroy QuickFixStatusCallbackProxy.");
+}
+
+void QuickFixStatusCallbackProxy::OnPatchDeployed(const DeployQuickFixResult &result)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
+    WRITE_PARCEL_AND_RETURN(Parcelable, data, &result);
+    if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_DEPLOYED, data, reply)) {
+        APP_LOGE("fail to OnPatchDeployed due to transact command fail");
+    }
+}
+
+void QuickFixStatusCallbackProxy::OnPatchSwitched(const SwitchQuickFixResult &result)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
+    WRITE_PARCEL_AND_RETURN(Parcelable, data, &result);
+    if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_SWITCHED, data, reply)) {
+        APP_LOGE("fail to OnPatchSwitched due to transact command fail");
+    }
+}
+
+void QuickFixStatusCallbackProxy::OnPatchDeleted(const DeleteQuickFixResult &result)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
+    WRITE_PARCEL_AND_RETURN(Parcelable, data, &result);
+    if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_DELETED, data, reply)) {
+        APP_LOGE("fail to OnPatchDeleted due to transact command fail");
+    }
+}
+
+bool QuickFixStatusCallbackProxy::SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
+        return false;
+    }
+    int32_t result = remote->SendRequest(code, data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        return false;
+    }
+    return true;
 }
 } // AppExecFwk
 } // OHOS

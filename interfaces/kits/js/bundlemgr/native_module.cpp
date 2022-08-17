@@ -100,7 +100,7 @@ static napi_value Init(napi_env env, napi_value exports)
 
     napi_value nSupportWindowMode  = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nSupportWindowMode));
-    CreateSupportWindowModesObject(env, nBundleFlag);
+    CreateSupportWindowModesObject(env, nSupportWindowMode);
     /*
      * Propertise define
      */
