@@ -16,14 +16,17 @@
 #ifndef NAPI_JS_DEFAULT_APP_H
 #define NAPI_JS_DEFAULT_APP_H
 
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "bundle_info.h"
+#include "want.h"
+#endif
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 struct DefaultAppInfo {
     explicit DefaultAppInfo(napi_env napiEnv);
     ~DefaultAppInfo();
@@ -40,6 +43,7 @@ struct DefaultAppInfo {
     napi_deferred deferred = nullptr;
     napi_ref callback = nullptr;
 };
+#endif
 
 napi_value IsDefaultApplication(napi_env env, napi_callback_info info);
 napi_value GetDefaultApplication(napi_env env, napi_callback_info info);

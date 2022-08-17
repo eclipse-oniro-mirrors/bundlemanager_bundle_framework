@@ -17,12 +17,23 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_QUICK_FIX_STATUS_CALLBACK_INTERFACE_H
 
 #include "iremote_broker.h"
+#include "quick_fix_result_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class IQuickFixStatusCallback : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.QuickFixStatusCallback");
+
+    virtual void OnPatchDeployed(const DeployQuickFixResult &result) = 0;
+    virtual void OnPatchSwitched(const SwitchQuickFixResult &result) = 0;
+    virtual void OnPatchDeleted(const DeleteQuickFixResult &result) = 0;
+
+    enum Message : uint32_t {
+        ON_PATCH_DEPLOYED = 1,
+        ON_PATCH_SWITCHED = 2,
+        ON_PATCH_DELETED = 3
+    };
 };
 } // AppExecFwk
 } // OHOS

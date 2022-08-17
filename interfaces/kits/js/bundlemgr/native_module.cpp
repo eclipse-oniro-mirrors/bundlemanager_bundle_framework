@@ -133,9 +133,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getNameForUid", GetNameForUid),
         DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfo),
         DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
         DECLARE_NAPI_FUNCTION("getAbilityIcon", GetAbilityIcon),
-#endif
         DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
         DECLARE_NAPI_FUNCTION("getProfileByAbility", GetProfileByAbility),

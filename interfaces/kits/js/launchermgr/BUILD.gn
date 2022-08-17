@@ -25,26 +25,35 @@ ohos_shared_library("innerbundlemanager") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
-  sources = [
-    "bundle_status_callback.cpp",
-    "js_launcher.cpp",
-    "js_launcher_mgr.cpp",
-  ]
+  sources = []
 
   deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
-    "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "common_event_service:cesfwk_core",
-    "common_event_service:cesfwk_innerkits",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
     "napi:ace_napi",
-    "samgr:samgr_proxy",
   ]
+
+  if (bundle_framework_launcher) {
+    defines += [ "BUNDLE_FRAMEWORK_LAUNCHER" ]
+    sources += [
+      "bundle_status_callback.cpp",
+      "js_launcher.cpp",
+      "js_launcher_mgr.cpp",
+    ]
+    external_deps += [
+      "ability_base:want",
+      "bundle_framework:appexecfwk_base",
+      "bundle_framework:appexecfwk_core",
+      "common_event_service:cesfwk_core",
+      "common_event_service:cesfwk_innerkits",
+      "ipc:ipc_core",
+      "samgr:samgr_proxy",
+    ]
+  } else {
+    sources += [ "js_launcher_unsupported.cpp" ]
+  }
 
   relative_install_dir = "module/bundle"
   subsystem_name = "bundlemanager"

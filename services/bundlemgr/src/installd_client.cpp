@@ -238,5 +238,10 @@ ErrCode InstalldClient::ApplyDiffPatch(const std::string &oldSoPath, const std::
     }
     return CallService(&IInstalld::ApplyDiffPatch, oldSoPath, diffFilePath, newSoPath);
 }
+
+ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
+{
+    return CallService(&IInstalld::IsExistDir, dir, isExist);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

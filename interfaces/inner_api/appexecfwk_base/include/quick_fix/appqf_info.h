@@ -24,11 +24,18 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class QuickFixType {
+    UNKNOWN = 0,
+    PATCH = 1,
+    HOT_RELOAD = 2
+};
+
 struct AppqfInfo : public Parcelable {
-    int32_t versionCode = 0; // quick fix version code
+    uint32_t versionCode = 0; // quick fix version code
     std::string versionName; // quick fix version name
     std::string cpuAbi; // quick fix abi
     std::string nativeLibraryPath; // quick fix so path
+    QuickFixType type = QuickFixType::UNKNOWN; // quick fix type
     std::vector<HqfInfo> hqfInfos;
 
     bool ReadFromParcel(Parcel &parcel);

@@ -15,27 +15,18 @@
 
 #include "installd/installd_permission_mgr.h"
 
-#include "accesstoken_kit.h"
 #include "app_log_wrapper.h"
 #include "ipc_skeleton.h"
 
-using namespace OHOS::Security;
 namespace OHOS {
 namespace AppExecFwk {
-bool InstalldPermissionMgr::VerifyCallingPermission(const std::string &name)
+bool InstalldPermissionMgr::VerifyCallingPermission(int32_t uid)
 {
-    APP_LOGD("VerifyCallingPermission name %{public}s", name.c_str());
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    APP_LOGD("callerToken : %{private}u", callerToken);
-    AccessToken::NativeTokenInfo tokenInfo;
-    int32_t ret = AccessToken::AccessTokenKit::GetNativeTokenInfo(callerToken, tokenInfo);
-    if ((ret == AccessToken::AccessTokenKitRet::RET_SUCCESS) && (tokenInfo.processName == name)) {
-        APP_LOGD("VerifyCallingPermission succeed, name:%{public}s, processName: %{public}s", name.c_str(),
-            tokenInfo.processName.c_str());
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid == uid) {
         return true;
     }
-    APP_LOGE("VerifyCallingPermission failed, name:%{public}s, processName: %{public}s", name.c_str(),
-        tokenInfo.processName.c_str());
+    APP_LOGE("VerifyCallingPermission failed, uid = %{public}d, calling uid = %{public}d", uid, callingUid);
     return false;
 }
 } // AppExecFwk

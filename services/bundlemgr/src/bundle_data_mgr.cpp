@@ -3253,5 +3253,29 @@ std::vector<sptr<IBundleStatusCallback>> BundleDataMgr::GetCallBackList() const
 {
     return callbackList_;
 }
+
+bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo)
+{
+    APP_LOGD("to update info:%{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("update info fail, empty bundle name");
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundle info is not existed");
+        return false;
+    }
+
+    if (dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        bundleInfos_.at(bundleName) = innerBundleInfo;
+        return true;
+    }
+    APP_LOGE("to update info:%{public}s failed", bundleName.c_str());
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -22,13 +22,13 @@
             "components": [
                 "ability_base",
                 "bundle_framework",
+                "c_utils",
                 "hiviewdfx_hilog_native",
                 "init",
                 "ipc",
                 "os_account",
                 "resource_management",
-                "samgr",
-                "utils_base"
+                "samgr"
             ],
             "third_party": []
         },

@@ -26,18 +26,17 @@
 #include "napi/native_node_api.h"
 
 using namespace OHOS::AppExecFwk;
-
 namespace {
 const std::string REGISTERCALLBACK = "BundleStatusChange";
 const std::string UNREGISTERCALLBACK = "BundleStatusChange";
 constexpr int32_t NAPI_RETURN_ZERO = 0;
-constexpr int32_t NAPI_RETURN_ONE = 1;
 constexpr int32_t OPERATION_SUCESS = 0;
 constexpr int32_t OPERATION_FAILED = 1;
 constexpr int32_t OPERATION_TYPE_MIAMATCH = 2;
 constexpr int32_t INDEX_ONE = 1;
 constexpr int32_t INDEX_TWO = 2;
 constexpr int32_t INDEX_THREE = 3;
+constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 
 struct AsyncHandleBundleContext {

@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../../appexecfwk.gni")
 import("../bundletool.gni")
 
 config("tools_bm_config") {
@@ -106,6 +107,11 @@ ohos_source_set("tools_test_bm_source_set") {
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]
+
+  if (bundle_framework_quick_fix) {
+    defines = [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
+    sources += [ "src/quick_fix_status_callback_host_impl.cpp" ]
+  }
 
   part_name = "bundle_tool"
 }

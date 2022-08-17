@@ -1860,6 +1860,10 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
     }
+    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_APPQF_INFO)
+        != GET_BUNDLE_WITH_APPQF_INFO) {
+        bundleInfo.appqfInfo = AppqfInfo();
+    }
     GetBundleWithAbilities(flags, bundleInfo, userId);
     GetBundeleWithExtension(flags, bundleInfo, userId);
     return true;
@@ -2644,6 +2648,16 @@ std::string InnerBundleInfo::GetModuleTypeByPackage(const std::string &packageNa
         return Constants::EMPTY_STRING;
     }
     return it->second.distro.moduleType;
+}
+
+AppqfInfo InnerBundleInfo::GetAppqfInfo() const
+{
+    return baseBundleInfo_->appqfInfo;
+}
+
+void InnerBundleInfo::SetAppqfInfo(const AppqfInfo &appqfInfo)
+{
+    baseBundleInfo_->appqfInfo = appqfInfo;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

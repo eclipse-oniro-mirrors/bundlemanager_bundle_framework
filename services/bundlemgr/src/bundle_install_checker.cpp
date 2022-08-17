@@ -218,6 +218,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         }
 
         SetEntryInstallationFree(packInfo, newInfo);
+        result = CheckMainElement(newInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
         CollectProvisionInfo(provisionInfo, appPrivilegeCapability, newInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
         GetPrivilegeCapability(checkParam, newInfo);
@@ -254,10 +258,11 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
     newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
     newInfo.SetAppProvisionType(GetAppProvisionType(provisionInfo.type));
-
+#ifdef USE_PRE_BUNDLE_PROFILE
     newInfo.SetUserDataClearable(appPrivilegeCapability.userDataClearable);
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
+#endif
 }
 
 void BundleInstallChecker::GetPrivilegeCapability(
@@ -318,7 +323,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
 
 void BundleInstallChecker::SetEntryInstallationFree(
     const BundlePackInfo &bundlePackInfo,
-    InnerBundleInfo &innrBundleInfo)
+    InnerBundleInfo &innerBundleInfo)
 {
     APP_LOGI("SetEntryInstallationFree start");
     if (!bundlePackInfo.GetValid()) {
@@ -331,10 +336,10 @@ void BundleInstallChecker::SetEntryInstallationFree(
         return module.distro.moduleType == "entry" && module.distro.installationFree;
     });
     if (installationFree) {
-        APP_LOGI("install or upddate hm service");
+        APP_LOGI("install or update hm service");
     }
 
-    innrBundleInfo.SetEntryInstallationFree(installationFree);
+    innerBundleInfo.SetEntryInstallationFree(installationFree);
     APP_LOGI("SetEntryInstallationFree end");
 }
 
@@ -569,6 +574,19 @@ bool BundleInstallChecker::IsContainModuleName(const InnerBundleInfo &newInfo, c
         return false;
     }
     return (find(moduleVec.cbegin(), moduleVec.cend(), moduleName) == moduleVec.cend()) ? false : true;
+}
+
+ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
+{
+    const std::map<std::string, InnerModuleInfo> &innerModuleInfos = info.GetInnerModuleInfos();
+    if (innerModuleInfos.empty()) {
+        return ERR_OK;
+    }
+    if (info.GetEntryInstallationFree() && innerModuleInfos.cbegin()->second.mainAbility.empty()) {
+        APP_LOGE("atomic service's mainElement can't be empty.");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

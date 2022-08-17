@@ -21,7 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class InstalldPermissionMgr {
 public:
-    static bool VerifyCallingPermission(const std::string &permissionName);
+    static bool VerifyCallingPermission(int32_t uid);
 };
 } // AppExecFwk
 } // OHOS

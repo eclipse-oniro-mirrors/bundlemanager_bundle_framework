@@ -705,6 +705,8 @@ public:
     bool FetchInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
+    bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
+
 private:
     /**
      * @brief Init transferStates.

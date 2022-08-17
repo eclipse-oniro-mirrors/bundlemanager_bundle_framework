@@ -18,69 +18,69 @@
 #include <cinttypes>
 
 #include "app_log_wrapper.h"
-#include "quick_fix_async_mgr.h"
-#include "quick_fix_data_mgr.h"
+#include "quick_fix_mgr.h"
+#include "quick_fix_deleter.h"
+#include "quick_fix_deployer.h"
+#include "quick_fix_switcher.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 QuickFixer::QuickFixer(const int64_t quickFixerId, const std::shared_ptr<EventHandler> &handler,
     const sptr<IQuickFixStatusCallback> &statusCallback) : quickFixerId_(quickFixerId), handler_(handler),
-    statusCallback_(statusCallback) {}
+    statusCallback_(statusCallback)
+{
+    APP_LOGI("enter QuickFixer");
+}
 
 void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
 {
     APP_LOGI("DeployQuickFix start");
-    if (bundleFilePaths.empty()) {
-        APP_LOGE("DeployQuickFix wrong parms");
-        return;
-    }
     if (statusCallback_ == nullptr) {
         APP_LOGE("DeployQuickFix failed due to nullptr statusCallback");
-        return;
-    }
-    auto res = DelayedSingleton<QuickFixDataMgr>::GetInstance()->DeployQuickFix(bundleFilePaths);
-    if (res != ERR_OK) {
-        APP_LOGE("DeployQuickFix failed");
     }
 
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    std::shared_ptr<IQuickFix> deployer = std::make_shared<QuickFixDeployer>(bundleFilePaths, quickFixDataMgr,
+        statusCallback_);
+    deployer->Execute();
+
+    // callback operation
     SendRemoveEvent();
 }
 
-void QuickFixer::SwitchQuickFix(const std::string &bundleName)
+void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
 {
     APP_LOGI("SwitchQuickFix start");
-    if (bundleName.empty()) {
-        APP_LOGE("SwitchQuickFix wrong parms");
-        return;
-    }
     if (statusCallback_ == nullptr) {
         APP_LOGE("SwitchQuickFix failed due to nullptr statusCallback");
-        return;
-    }
-    auto res = DelayedSingleton<QuickFixDataMgr>::GetInstance()->SwitchQuickFix(bundleName);
-    if (res != ERR_OK) {
-        APP_LOGE("SwitchQuickFix failed");
     }
 
+    std::shared_ptr<IQuickFix> switcher = std::make_shared<QuickFixSwitcher>(bundleName, enable);
+    auto ret = switcher->Execute();
+
+    // callback operation
+    SwitchQuickFixResult result;
+    result.resultCode = ret;
+    result.bundleName = bundleName;
+    statusCallback_->OnPatchSwitched(result);
     SendRemoveEvent();
 }
 
 void QuickFixer::DeleteQuickFix(const std::string &bundleName)
 {
     APP_LOGI("DeleteQuickFix start");
-    if (bundleName.empty()) {
-        APP_LOGE("DeleteQuickFix wrong parms");
-        return;
-    }
     if (statusCallback_ == nullptr) {
         APP_LOGE("DeleteQuickFix failed due to nullptr statusCallback");
-        return;
-    }
-    auto res =  DelayedSingleton<QuickFixDataMgr>::GetInstance()->DeleteQuickFix(bundleName);
-    if (res != ERR_OK) {
-        APP_LOGE("DeleteQuickFix failed");
     }
 
+    std::shared_ptr<IQuickFix> deleter = std::make_shared<QuickFixDeleter>(bundleName);
+    auto ret = deleter->Execute();
+
+    // callback operation
+    DeleteQuickFixResult result;
+    result.resultCode = ret;
+    result.bundleName = bundleName;
+    statusCallback_->OnPatchDeleted(result);
     SendRemoveEvent();
 }
 
@@ -88,7 +88,7 @@ void QuickFixer::SendRemoveEvent() const
 {
     if (auto handler = handler_.lock()) {
         APP_LOGD("SendRemoveEvent begin");
-        handler->SendEvent(InnerEvent::Get(QuickFixAsyncMgr::MessageId::REMOVE_QUICK_FIXER, quickFixerId_));
+        handler->SendEvent(InnerEvent::Get(QuickFixMgr::MessageId::REMOVE_QUICK_FIXER, quickFixerId_));
         return;
     }
     APP_LOGE("fail to remove %{public}" PRId64 " quickFixer due to handler is expired", quickFixerId_);

@@ -67,6 +67,10 @@ constexpr int32_t OPERATION_FAILED = 1;
 constexpr int32_t INVALID_PARAM = 2;
 constexpr int32_t PARAM_TYPE_ERROR = 1;
 constexpr int32_t UNDEFINED_ERROR = -1;
+#ifndef BUNDLE_FRAMEWORK_GRAPHICS
+constexpr int32_t UNSUPPORTED_FEATURE_ERRCODE = 801;
+const std::string UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
+#endif
 enum class InstallErrorCode {
     SUCCESS = 0,
     STATUS_INSTALL_FAILURE = 1,
@@ -6033,6 +6037,46 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
     callbackPtr.release();
     return promise;
 }
+#else
+napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGS_SIZE_FOUR;
+    napi_value argv[ARGS_SIZE_FOUR] = { 0 };
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
+
+    napi_ref callback = nullptr;
+    if (argc > PARAM0) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[argc - PARAM1], &valueType);
+        if (valueType == napi_function) {
+            napi_create_reference(env, argv[argc - PARAM1], NAPI_RETURN_ONE, &callback);
+        }
+    }
+    napi_value promise = nullptr;
+    napi_deferred deferred = nullptr;
+    if (callback == nullptr) {
+        napi_create_promise(env, &deferred, &promise);
+    } else {
+        napi_get_undefined(env, &promise);
+    }
+
+    napi_value result[ARGS_SIZE_TWO] = { 0 };
+    napi_create_int32(env, UNSUPPORTED_FEATURE_ERRCODE, &result[PARAM0]);
+    napi_create_string_utf8(env, UNSUPPORTED_FEATURE_MESSAGE.c_str(),
+        NAPI_AUTO_LENGTH, &result[PARAM1]);
+    if (callback) {
+        napi_value callbackTemp = nullptr;
+        napi_value placeHolder = nullptr;
+        napi_get_reference_value(env, callback, &callbackTemp);
+        napi_call_function(env, nullptr, callbackTemp,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder);
+    } else {
+        napi_reject_deferred(env, deferred, result[PARAM0]);
+    }
+    return promise;
+}
 #endif
 
 static bool InnerGetNameForUid(int32_t uid, std::string &bundleName)
@@ -7195,7 +7239,7 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value)
     napi_value nFullscreen;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FULLSCREEN), &nFullscreen));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULLSCREEN", nFullscreen));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULL_SCREEN", nFullscreen));
 
     napi_value nSplit;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::SPLIT), &nSplit));

@@ -18,6 +18,7 @@
 
 #include <set>
 #include <string>
+#include <unordered_map>
 
 #include "appexecfwk_errors.h"
 #include "quick_fix/app_quick_fix.h"
@@ -27,6 +28,9 @@ namespace AppExecFwk {
 class PatchParser {
 public:
     ErrCode ParsePatchInfo(const std::string &pathName, AppQuickFix &appQuickFix) const;
+
+    ErrCode ParsePatchInfo(const std::vector<std::string> &filePaths,
+        std::unordered_map<std::string, AppQuickFix> &appQuickFixs) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

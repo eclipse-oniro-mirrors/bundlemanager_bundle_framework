@@ -28,19 +28,16 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
-
 namespace {
 constexpr int32_t NO_ERROR = 0;
 constexpr int32_t PARAM_TYPE_ERROR = 1;
 constexpr int32_t EXECUTE_ERROR = 2;
-
+constexpr int32_t NAPI_RETURN_ZERO = 0;
+constexpr size_t ARGS_SIZE_FOUR = 4;
 constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
-constexpr size_t ARGS_SIZE_FOUR = 4;
-
-constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 

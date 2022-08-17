@@ -17,6 +17,9 @@ group("test_bundle") {
 
   deps += [
     # deps file
+    "bmsAccessTokentest1:bmsAccessTokentest1",
+    "bmsAccessTokentest2:bmsAccessTokentest2",
+    "bmsAccessTokentest3:bmsAccessTokentest3",
     "defaultAppTest:defaultAppTest",
     "first_right:first_right",
     "first_right_with_diff_moduleName:first_right_with_diff_moduleName",

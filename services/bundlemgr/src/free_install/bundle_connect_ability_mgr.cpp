@@ -30,9 +30,9 @@ namespace AppExecFwk {
 namespace {
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
-const std::string FREE_INSTLL_CALLING_APP_ID = "freeInstallCallingAppId";
-const std::string FREE_INSTLL_CALLING_BUNDLENAMES = "freeInstallCallingBundleNames";
-const std::string FREE_INSTALL_CALLINGUID = "freeInstallCallingUid";
+const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
+const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
+const std::string PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
 const std::string DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
 const std::string DEFAULT_VERSION = "1";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
@@ -588,13 +588,13 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.abilityName = abilityName;
     targetAbilityInfo->targetInfo.callingUid = IPCSkeleton::GetCallingUid();
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
-    std::string callingAppId = want.GetStringParam(FREE_INSTLL_CALLING_APP_ID);
+    std::string callingAppId = want.GetStringParam(PARAM_FREEINSTALL_APPID);
     if (!callingAppId.empty()) {
         callingAppids.push_back(callingAppId);
     }
-    callingBundleNames = want.GetStringArrayParam(FREE_INSTLL_CALLING_BUNDLENAMES);
+    callingBundleNames = want.GetStringArrayParam(PARAM_FREEINSTALL_BUNDLENAMES);
     if (callingAppids.empty() && callingBundleNames.empty()) {
-        int32_t callingUid = want.GetIntParam(FREE_INSTALL_CALLINGUID, IPCSkeleton::GetCallingUid());
+        int32_t callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
         this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
     }
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;

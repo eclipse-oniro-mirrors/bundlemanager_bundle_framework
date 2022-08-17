@@ -26,17 +26,16 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class QuickFixAsyncMgr : public EventHandler {
+class QuickFixMgr : public EventHandler {
 public:
-    explicit QuickFixAsyncMgr(const std::shared_ptr<EventRunner> &runner);
-    virtual ~QuickFixAsyncMgr() override;
+    explicit QuickFixMgr(const std::shared_ptr<EventRunner> &runner);
+    virtual ~QuickFixMgr() override;
 
     virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
     bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback);
-    bool SwitchQuickFix(const std::string &bundleName,
+    bool SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback);
-
     bool DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback);
 
@@ -52,7 +51,7 @@ private:
     // map key will use timestamp.
     std::unordered_map<int64_t, std::shared_ptr<QuickFixer>> quickFixer_;
 
-    DISALLOW_COPY_AND_MOVE(QuickFixAsyncMgr);
+    DISALLOW_COPY_AND_MOVE(QuickFixMgr);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

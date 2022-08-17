@@ -140,6 +140,8 @@ public:
     ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath);
 
+    ErrCode IsExistDir(const std::string &dir, bool &isExist);
+
 private:
     /**
      * @brief Get the installd proxy object.

@@ -39,6 +39,7 @@
                 "common",
                 "common_event_service",
                 "config_policy",
+                "c_utils",
                 "device_manager",
                 "device_info_manager",
                 "device_usage_statistics",
@@ -64,7 +65,6 @@
                 "samgr",
                 "selinux",
                 "syscap_codec",
-                "utils_base",
                 "zlib"
             ],
             "third_party": [
