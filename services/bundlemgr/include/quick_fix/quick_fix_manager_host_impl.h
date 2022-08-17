@@ -18,7 +18,7 @@
 
 #include <atomic>
 
-#include "quick_fix_async_mgr.h"
+#include "quick_fix_mgr.h"
 #include "quick_fix_manager_host.h"
 
 namespace OHOS {
@@ -40,8 +40,9 @@ public:
     virtual bool CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
 
 private:
-    void Init();
-    std::shared_ptr<QuickFixAsyncMgr> quickFixAsyncMgr_ = nullptr;
+    bool GetQuickFixMgr();
+
+    std::shared_ptr<QuickFixMgr> quickFixMgr_ = nullptr;
     std::atomic<uint32_t> id_ = 0;
 };
 } // AppExecFwk

@@ -24,6 +24,9 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "datetime_ex.h"
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+#include "app_control_manager_host_impl.h"
+#endif
 #include "perf_profile.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
@@ -211,6 +214,16 @@ bool BundleMgrService::Init()
     }
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (appControlManagerHostImpl_ == nullptr) {
+        appControlManagerHostImpl_ = new (std::nothrow) AppControlManagerHostImpl();
+        if (appControlManagerHostImpl_ == nullptr) {
+            APP_LOGE("create appControlManagerHostImpl failed.");
+            return false;
+        }
+    }
+#endif
+
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (quickFixManagerHostImpl_ == nullptr) {
         quickFixManagerHostImpl_ = new (std::nothrow) QuickFixManagerHostImpl();
@@ -284,6 +297,13 @@ sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
 sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
 {
     return defaultAppHostImpl_;
+}
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+sptr<IAppControlMgr> BundleMgrService::GetAppControlProxy() const
+{
+    return appControlManagerHostImpl_;
 }
 #endif
 

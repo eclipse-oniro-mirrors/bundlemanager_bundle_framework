@@ -99,12 +99,6 @@
               src="res"/>
       <option name="push" value="test_bundle/sixteenth_right.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/first_diff_release_type.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-        <option name="push" value="test_bundle/first_right_compCode.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-      <option name="push" value="test_bundle/first_diff_minCompCode.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/twelfth_right.hap -> /data/test/resource/bms/install_bundle/test1/"
               src="res"/>
       <option name="push" value="test_bundle/second_backup_right.hap -> /data/test/resource/bms/install_bundle/test4/"

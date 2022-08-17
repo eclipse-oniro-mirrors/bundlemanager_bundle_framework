@@ -1662,6 +1662,13 @@ sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 }
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+sptr<IAppControlMgr> BundleMgrHostImpl::GetAppControlProxy()
+{
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetAppControlProxy();
+}
+#endif
+
 sptr<IQuickFixManager> BundleMgrHostImpl::GetQuickFixManagerProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX

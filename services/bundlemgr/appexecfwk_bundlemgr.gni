@@ -96,10 +96,16 @@ quick_fix = [
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_data_mgr.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_host_impl.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fixer.cpp",
-  "${services_path}/bundlemgr/src/quick_fix/quick_fix_async_mgr.cpp",
+  "${services_path}/bundlemgr/src/quick_fix/quick_fix_mgr.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_deployer.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_switcher.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_deleter.cpp",
+]
+
+app_control = [
+  "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+  "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+  "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
 ]
 
 if (bms_rdb_enable) {

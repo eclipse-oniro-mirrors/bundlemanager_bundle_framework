@@ -73,7 +73,7 @@ const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BU
     "error: hotreload not support release bundle.\n";
 const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED = "error: patch type already existed.\n";
 const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED = "error: hotreload type already existed.\n";
-
+const std::string MSG_ERR_APPEXECFWK_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO = "error: no patch info in bundleInfo.\n";
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
@@ -356,7 +356,9 @@ void BundleTestTool::CreateQuickFixMsgMap(std::unordered_map<int32_t, std::strin
         { ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED, MSG_ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED },
         { ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED,
             MSG_ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED },
-        { ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME, MSG_ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME }
+        { ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME, MSG_ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME },
+        { ERR_APPEXECFWK_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO,
+            MSG_ERR_APPEXECFWK_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO}
     };
 }
 
