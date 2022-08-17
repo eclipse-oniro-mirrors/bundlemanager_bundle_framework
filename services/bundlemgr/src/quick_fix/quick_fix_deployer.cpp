@@ -358,7 +358,7 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     // hqf file path
     for (auto iter = infos.begin(); iter != infos.end(); ++iter) {
         if (!iter->second.deployingAppqfInfo.hqfInfos.empty()) {
-            iter->second.deployingAppqfInfo.hqfInfos[0].hapFilePath = iter->first;
+            iter->second.deployingAppqfInfo.hqfInfos[0].hqfFilePath = iter->first;
         } else {
             return ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED;
         }
@@ -453,12 +453,12 @@ ErrCode QuickFixDeployer::ExtractDiffFiles(const std::string &targetPath,
         return ERR_OK;
     }
     for (const auto &hqf : appQfInfo.hqfInfos) {
-        if (hqf.hapFilePath.empty()) {
-            APP_LOGE("error: hapFilePath is empty");
+        if (hqf.hqfFilePath.empty()) {
+            APP_LOGE("error: hqfFilePath is empty");
             return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
         }
         // extract so to targetPath
-        ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hapFilePath, targetPath, appQfInfo.cpuAbi);
+        ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, targetPath, appQfInfo.cpuAbi);
         if (ret != ERR_OK) {
             APP_LOGE("error: ExtractDiffFiles failed");
             return ret;
@@ -482,17 +482,17 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
         path.push_back(Constants::FILE_SEPARATOR_CHAR);
     }
     for (HqfInfo &info : appQuickFix.deployingAppqfInfo.hqfInfos) {
-        if (info.hapFilePath.empty()) {
-            APP_LOGE("error hapFilePath is empty");
+        if (info.hqfFilePath.empty()) {
+            APP_LOGE("error hqfFilePath is empty");
             return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + Constants::QUICK_FIX_FILE_SUFFIX;
-        ErrCode ret = InstalldClient::GetInstance()->MoveFile(info.hapFilePath, realPath);
+        ErrCode ret = InstalldClient::GetInstance()->MoveFile(info.hqfFilePath, realPath);
         if (ret != ERR_OK) {
             APP_LOGE("error MoveFile failed");
             return ret;
         }
-        info.hapFilePath = realPath;
+        info.hqfFilePath = realPath;
         mark.moduleName = info.moduleName;
     }
     mark.status = QuickFixStatus::DEPLOY_END;
