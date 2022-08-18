@@ -1070,11 +1070,18 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         uninstallModuleVec_.emplace_back(modulePackage_);
     }
 
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
+        APP_LOGE("Singleton not allow changed");
+        return ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE;
+    }
+#else
     if (oldInfo.IsSingleton() && !newInfo.IsSingleton()) {
         singletonState_ = SingletonState::SINGLETON_TO_NON;
     } else if (!oldInfo.IsSingleton() && newInfo.IsSingleton()) {
         singletonState_ = SingletonState::NON_TO_SINGLETON;
     }
+#endif
 
     APP_LOGD("ProcessBundleUpdateStatus with bundleName %{public}s and packageName %{public}s",
         newInfo.GetBundleName().c_str(), modulePackage_.c_str());

@@ -224,7 +224,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         }
         CollectProvisionInfo(provisionInfo, appPrivilegeCapability, newInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
-        CollectPreBundleInfo(checkParam, newInfo);
+        GetPrivilegeCapability(checkParam, newInfo);
 #endif
         if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
@@ -265,26 +265,15 @@ void BundleInstallChecker::CollectProvisionInfo(
 #endif
 }
 
-void BundleInstallChecker::CollectPreBundleInfo(
+void BundleInstallChecker::GetPrivilegeCapability(
     const InstallCheckParam &checkParam, InnerBundleInfo &newInfo)
 {
-    if (!BMSEventHandler::HasPreInstallProfile()) {
-        return;
-    }
-
-    // reset privilege attributes
-    newInfo.SetKeepAlive(false);
-    newInfo.SetSingleton(false);
-    if (!newInfo.IsPreInstallApp()) {
-        return;
-    }
-
     newInfo.SetRemovable(checkParam.removable);
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
     BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
     bool ret = true;
-    if (!preBundleConfigInfo.appSignature.empty() && !newInfo.GetCertificateFingerprint().empty()) {
+    if (!preBundleConfigInfo.appSignature.empty()) {
         ret = std::find(
             preBundleConfigInfo.appSignature.begin(),
             preBundleConfigInfo.appSignature.end(),

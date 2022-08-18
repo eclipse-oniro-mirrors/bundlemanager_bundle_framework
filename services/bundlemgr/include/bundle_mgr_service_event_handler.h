@@ -418,6 +418,15 @@ private:
 
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
+#ifdef USE_PRE_BUNDLE_PROFILE
+    void UpdateRemovable(const std::string &bundleName, bool removable);
+    void UpdateRecoverable(const std::string &bundleName, bool recoverable);
+    void UpdateAllPrivilegeCapability();
+    void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
+    bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
+    void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
+    bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+#endif
 
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;

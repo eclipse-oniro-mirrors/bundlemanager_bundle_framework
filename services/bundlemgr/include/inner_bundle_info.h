@@ -1577,6 +1577,8 @@ public:
     AppqfInfo GetAppqfInfo() const;
 
     void SetAppqfInfo(const AppqfInfo &appqfInfo);
+    void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
+    void UpdateRemovable(bool isPreInstall, bool removable);
 
 private:
     void GetBundleWithAbilities(

@@ -1601,9 +1601,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->iconResource = applicationInfo.iconResource;
     baseApplicationInfo_->labelResource = applicationInfo.labelResource;
     baseApplicationInfo_->descriptionResource = applicationInfo.descriptionResource;
-
-    baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
-    baseApplicationInfo_->removable = applicationInfo.removable;
     baseApplicationInfo_->singleton = applicationInfo.singleton;
     baseApplicationInfo_->userDataClearable = applicationInfo.userDataClearable;
     baseApplicationInfo_->accessible = applicationInfo.accessible;
@@ -1632,12 +1629,29 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
     baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
+    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
+    baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
+    UpdatePrivilegeCapability(applicationInfo);
+}
+
+void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
+{
+    baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
     baseApplicationInfo_->bootable = applicationInfo.bootable;
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
-    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
-    baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+}
+
+void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (!isPreInstall) {
+        return;
+    }
+#endif
+
+    baseApplicationInfo_->removable = removable;
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)

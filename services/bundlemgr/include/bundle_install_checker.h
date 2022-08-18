@@ -124,7 +124,7 @@ private:
         const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &newInfo);
 
-    void CollectPreBundleInfo(
+    void GetPrivilegeCapability(
         const InstallCheckParam &checkParam, InnerBundleInfo &newInfo);
 
     void ParseAppPrivilegeCapability(

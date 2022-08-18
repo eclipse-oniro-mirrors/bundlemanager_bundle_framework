@@ -77,9 +77,6 @@ void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
 
 void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
 {
-#ifdef USE_PRE_BUNDLE_PROFILE
-    BMSEventHandler::LoadPreInstallProFile();
-#endif
     if (!BundlePermissionMgr::Init()) {
         APP_LOGW("BundlePermissionMgr::Init failed");
     }
@@ -137,9 +134,6 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
     BundlePermissionMgr::UnInit();
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
-#endif
-#ifdef USE_PRE_BUNDLE_PROFILE
-    BMSEventHandler::ClearPreInstallCache();
 #endif
 #ifdef BMS_RDB_ENABLE
         RdbDataManager::ClearCache();
