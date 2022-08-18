@@ -40,7 +40,7 @@ ErrCode QuickFixDeployer::Execute()
 
 ErrCode QuickFixDeployer::DeployQuickFix()
 {
-    if (patchPaths_.empty() || ((GetQuickFixDataMgr() != ERR_OK))) {
+    if (patchPaths_.empty() || (GetQuickFixDataMgr() != ERR_OK)) {
         APP_LOGE("DeployQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }

@@ -39,7 +39,7 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
         APP_LOGE("DeployQuickFix failed due to nullptr statusCallback");
     }
 
-    std::shared_ptr<QuickFixDeployer> deployer = std::make_shared<QuickFixDeployer>(bundleFilePaths);
+    std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(bundleFilePaths);
     auto ret = deployer->Execute();
 
     // callback operation
@@ -56,7 +56,7 @@ void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
         APP_LOGE("SwitchQuickFix failed due to nullptr statusCallback");
     }
 
-    std::shared_ptr<IQuickFix> switcher = std::make_shared<QuickFixSwitcher>(bundleName, enable);
+    std::unique_ptr<IQuickFix> switcher = std::make_unique<QuickFixSwitcher>(bundleName, enable);
     auto ret = switcher->Execute();
 
     // callback operation
@@ -74,7 +74,7 @@ void QuickFixer::DeleteQuickFix(const std::string &bundleName)
         APP_LOGE("DeleteQuickFix failed due to nullptr statusCallback");
     }
 
-    std::shared_ptr<IQuickFix> deleter = std::make_shared<QuickFixDeleter>(bundleName);
+    std::unique_ptr<IQuickFix> deleter = std::make_unique<QuickFixDeleter>(bundleName);
     auto ret = deleter->Execute();
 
     // callback operation

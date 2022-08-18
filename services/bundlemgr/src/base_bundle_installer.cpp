@@ -572,9 +572,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (isModuleUpdate_) {
         APP_LOGD("module update, quick fix old patch need to delete, bundleName:%{public}s", bundleName_.c_str());
-        auto quickFixSwitcher = std::make_shared<QuickFixSwitcher>(bundleName_, false);
+        auto quickFixSwitcher = std::make_unique<QuickFixSwitcher>(bundleName_, false);
         quickFixSwitcher->Execute();
-        auto quickFixDeleter = std::make_shared<QuickFixDeleter>(bundleName_);
+        auto quickFixDeleter = std::make_unique<QuickFixDeleter>(bundleName_);
         quickFixDeleter->Execute();
     }
 #endif
