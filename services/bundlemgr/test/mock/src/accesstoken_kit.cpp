@@ -27,7 +27,8 @@ AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const H
     return token;
 }
 
-int AccessTokenKit::UpdateHapToken(AccessTokenID tokenID, const std::string& appIDDesc, const HapPolicyParams& policy)
+int AccessTokenKit::UpdateHapToken(AccessTokenID tokenID, const std::string& appIDDesc,
+    int32_t apiVersion, const HapPolicyParams& policy)
 {
     return 0;
 }

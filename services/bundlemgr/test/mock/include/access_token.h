@@ -114,6 +114,7 @@ public:
     int instIndex;
     std::string appIDDesc;
     int dlpType;
+    int32_t apiVersion;
 };
 
 class HapPolicyParams final {
