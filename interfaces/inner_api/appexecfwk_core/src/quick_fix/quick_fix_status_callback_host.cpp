@@ -70,7 +70,7 @@ void QuickFixStatusCallbackHost::HandleOnPatchDeployed(MessageParcel &data, Mess
     std::unique_ptr<DeployQuickFixResult> resPtr(data.ReadParcelable<DeployQuickFixResult>());
     if (resPtr == nullptr) {
         APP_LOGE("read DeployQuickFixResult failed");
-        deployQuickFixRes.resultCode = ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        deployQuickFixRes.resultCode = ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         OnPatchDeployed(deployQuickFixRes);
         return;
     }
@@ -86,7 +86,7 @@ void QuickFixStatusCallbackHost::HandleOnPatchSwitched(MessageParcel &data, Mess
     std::unique_ptr<SwitchQuickFixResult> resPtr(data.ReadParcelable<SwitchQuickFixResult>());
     if (resPtr == nullptr) {
         APP_LOGE("read SwitchQuickFixResult failed");
-        switchQuickFixRes.resultCode = ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        switchQuickFixRes.resultCode = ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         OnPatchSwitched(switchQuickFixRes);
         return;
     }
@@ -102,7 +102,7 @@ void QuickFixStatusCallbackHost::HandleOnPatchDeleted(MessageParcel &data, Messa
     std::unique_ptr<DeleteQuickFixResult> resPtr(data.ReadParcelable<DeleteQuickFixResult>());
     if (resPtr == nullptr) {
         APP_LOGE("read DeleteQuickFixResult failed");
-        deleteQuickFixRes.resultCode = ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        deleteQuickFixRes.resultCode = ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         OnPatchDeleted(deleteQuickFixRes);
         return;
     }
