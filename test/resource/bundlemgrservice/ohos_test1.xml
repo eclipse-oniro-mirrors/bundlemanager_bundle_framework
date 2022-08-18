@@ -121,16 +121,6 @@
               src="res"/>
     </preparer>
   </target>
-  <target name="BmsInstallDaemonTest">
-    <preparer>
-     <option name="push" value="install_daemon/right.hap -> /data/test/resource/bms/install_daemon/" src="res" />
-    </preparer>
-  </target>
-  <target name="BmsBundleKitServiceTest">
-    <preparer>
-     <option name="push" value="bundle_kit/test.hap -> /data/test/resource/bms/bundle_kit/" src="res" />
-    </preparer>
-  </target>
   <target name="BmsBundleDependenciesTest">
   <preparer>
      <option name="push" value="bundle_dependencies/dependencies_entry.hap -> /data/test/resource/bms/dependencies/" src="res" />
