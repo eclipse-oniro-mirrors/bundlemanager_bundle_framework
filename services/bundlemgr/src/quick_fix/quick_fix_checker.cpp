@@ -44,36 +44,36 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
     for (const auto &info : infos) {
         if (appQuickFix.bundleName != info.second.bundleName) {
             APP_LOGE("error: appQuickFix bundleName not same");
-            return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME;
         }
         if (appQuickFix.versionCode != info.second.versionCode) {
             APP_LOGE("error: appQuickFix versionCode not same");
-            return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME;
         }
         if (appQuickFix.versionName != info.second.versionName) {
             APP_LOGE("error: appQuickFix versionName not same");
-            return ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME;
         }
         if (appQuickFix.deployingAppqfInfo.versionCode != info.second.deployingAppqfInfo.versionCode) {
             APP_LOGE("error: appQuickFix patchVersionCode not same");
-            return ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME;
         }
         if (appQuickFix.deployingAppqfInfo.versionName != info.second.deployingAppqfInfo.versionName) {
             APP_LOGE("error: appQuickFix patchVersionName not same");
-            return ERR_APPEXECFWK_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME;
         }
         if (appQuickFix.deployingAppqfInfo.type != info.second.deployingAppqfInfo.type) {
             APP_LOGE("error: QuickFixType not same");
-            return ERR_APPEXECFWK_QUICK_FIX_PATCH_TYPE_NOT_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_TYPE_NOT_SAME;
         }
         if (info.second.deployingAppqfInfo.hqfInfos.empty()) {
             APP_LOGE("error: hqfInfo is empty, moduleName does not exist");
-            return ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
         }
         const std::string &moduleName = info.second.deployingAppqfInfo.hqfInfos[0].moduleName;
         if (moduleNames.find(moduleName) != moduleNames.end()) {
             APP_LOGE("error: moduleName %{public}s is already exist", moduleName.c_str());
-            return ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME;
         }
         moduleNames.insert(moduleName);
     }
@@ -94,25 +94,25 @@ ErrCode QuickFixChecker::CheckPatchWithInstalledBundle(const AppQuickFix &appQui
     if (isDebug && (bundleInfo.appqfInfo.type == QuickFixType::HOT_RELOAD)) {
         // patch and hot reload can not both exist
         APP_LOGE("error: hot reload type already existed, hot reload and patch type can not both exist");
-        return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
     }
     if (bundleInfo.versionName != appQuickFix.versionName) {
         APP_LOGE("error: versionName not same, appQuickFix: %{public}s, bundleInfo: %{public}s",
             appQuickFix.versionName.c_str(), bundleInfo.versionName.c_str());
-        return ERR_APPEXECFWK_QUICK_FIX_VERSION_NAME_NOT_SAME;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME;
     }
     const auto &qfInfo = appQuickFix.deployingAppqfInfo;
     if ((!qfInfo.cpuAbi.empty() && !bundleInfo.applicationInfo.cpuAbi.empty()) &&
         (qfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
         APP_LOGE("qfInfo.cpuAbi: %{public}s, applicationInfo.cpuAbi: %{public}s", qfInfo.cpuAbi.c_str(),
             bundleInfo.applicationInfo.cpuAbi.c_str());
-        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
     }
     if ((!qfInfo.nativeLibraryPath.empty() && !bundleInfo.applicationInfo.nativeLibraryPath.empty()) &&
         (qfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
         APP_LOGE("qfInfo.nativeLibraryPath: %{public}s, applicationInfo.nativeLibraryPath: %{public}s",
             qfInfo.nativeLibraryPath.c_str(), bundleInfo.applicationInfo.nativeLibraryPath.c_str());
-        return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
     }
     ret = CheckSignatureInfo(bundleInfo, provisionInfo);
     if (ret != ERR_OK) {
@@ -133,12 +133,12 @@ ErrCode QuickFixChecker::CheckHotReloadWithInstalledBundle(const AppQuickFix &ap
     APP_LOGD("application isDebug: %{public}d", isDebug);
     if (!isDebug) {
         APP_LOGE("error: hot reload type does not support release bundle");
-        return ERR_APPEXECFWK_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE;
     }
     if (bundleInfo.appqfInfo.type == QuickFixType::PATCH) {
         // patch and hot reload can not both exist
         APP_LOGE("error: patch type already existed, hot reload and patch can not both exist");
-        return ERR_APPEXECFWK_QUICK_FIX_PATCH_ALREADY_EXISTED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_ALREADY_EXISTED;
     }
     return ERR_OK;
 }
@@ -149,19 +149,19 @@ ErrCode QuickFixChecker::CheckCommonWithInstalledBundle(const AppQuickFix &appQu
     if (appQuickFix.bundleName != bundleInfo.name) {
         APP_LOGE("error: bundleName not same, appQuickBundleName: %{public}s, bundleInfo name: %{public}s",
             appQuickFix.bundleName.c_str(), bundleInfo.name.c_str());
-        return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
     // check versionCode and versionName
     if (bundleInfo.versionCode != appQuickFix.versionCode) {
         APP_LOGE("error: versionCode not same, appQuickFix: %{public}u, bundleInfo: %{public}u",
             appQuickFix.versionCode, bundleInfo.versionCode);
-        return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_NOT_SAME;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME;
     }
     const auto &qfInfo = appQuickFix.deployingAppqfInfo;
     if (qfInfo.versionCode <= bundleInfo.appqfInfo.versionCode) {
         APP_LOGE("qhf version code %{public}u should be greater than the original %{public}u",
             qfInfo.versionCode, bundleInfo.appqfInfo.versionCode);
-        return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR;
     }
     return ERR_OK;
 }
@@ -171,14 +171,14 @@ ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,
 {
     for (const auto &info : infos) {
         if (info.second.deployingAppqfInfo.hqfInfos.empty()) {
-            return ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST;
         }
         auto iter = std::find(bundleInfo.moduleNames.begin(), bundleInfo.moduleNames.end(),
             info.second.deployingAppqfInfo.hqfInfos[0].moduleName);
         if (iter == bundleInfo.moduleNames.end()) {
             APP_LOGE("error: moduleName %{public}s does not exist",
                 info.second.deployingAppqfInfo.hqfInfos[0].moduleName.c_str());
-            return ERR_APPEXECFWK_QUICK_FIX_MODULE_NAME_NOT_EXIST;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST;
         }
     }
     return ERR_OK;
@@ -192,7 +192,7 @@ ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
         (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl)) {
             APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
                 bundleInfo.name.c_str());
-            return ERR_APPEXECFWK_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
         }
     return ERR_OK;
 }
@@ -219,7 +219,7 @@ ErrCode QuickFixChecker::CheckMultiNativeSo(
         if (!qfInfo.nativeLibraryPath.empty()) {
             if ((nativeLibraryPath != qfInfo.nativeLibraryPath) || (cpuAbi != qfInfo.cpuAbi)) {
                 APP_LOGE("check native so with installed bundle failed");
-                return ERR_APPEXECFWK_QUICK_FIX_SO_INCOMPATIBLE;
+                return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
             }
         }
     }

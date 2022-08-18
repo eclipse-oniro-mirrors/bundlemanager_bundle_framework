@@ -53,7 +53,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
     ErrCode code = DeleteAppInstallControlRule(callingName, controlRuleType, userId);
     if (code != ERR_OK) {
         APP_LOGW("DeleteAppInstallControlRule failed.");
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     std::vector<NativeRdb::ValuesBucket> valuesBuckets;
     for (auto appid : appIds) {
@@ -68,7 +68,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
         APP_LOGE("BatchInsert failed.");
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     APP_LOGD("BatchInsert num:%{public}lld.", insertNum);
     return ERR_OK;
@@ -86,7 +86,7 @@ ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &cal
         if (!ret) {
             APP_LOGE("DeleteAppInstallControlRule callingName:%{public}s appid:%{public}s userId:%{public}d failed.",
                 callingName.c_str(), appid.c_str(), userId);
-            return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+            return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
         }
     }
     return ERR_OK;
@@ -103,7 +103,7 @@ ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &cal
     if (!ret) {
         APP_LOGE("DeleteData callingName:%{public}s controlRuleType:%{public}s failed.",
             callingName.c_str(), controlRuleType.c_str());
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
 }
@@ -118,20 +118,20 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("GetAppInstallControlRule failed.");
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     do {
         std::string appId;
         ret = absSharedResultSet->GetString(APP_ID_INDEX, appId);
         if (ret != NativeRdb::E_OK) {
             APP_LOGE("GetString appId failed, ret: %{public}d", ret);
-            return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+            return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
         }
         appIds.push_back(appId);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
