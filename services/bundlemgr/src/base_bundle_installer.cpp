@@ -23,6 +23,11 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+#include "quick_fix/quick_fix_data_mgr.h"
+#include "quick_fix/quick_fix_switcher.h"
+#include "quick_fix/quick_fix_deleter.h"
+#endif
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -202,6 +207,13 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     if (result == ERR_OK) {
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
         DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+#endif
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+        std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+        if (quickFixDataMgr != nullptr) {
+            APP_LOGD("DeleteInnerAppQuickFix when bundleName :%{public}s uninstall", bundleName.c_str());
+            quickFixDataMgr->DeleteInnerAppQuickFix(bundleName);
+        }
 #endif
     }
 
@@ -562,6 +574,15 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (installParam.installFlag == InstallFlag::FREE_INSTALL) {
         DelayedSingleton<BundleMgrService>::GetInstance()->GetAgingMgr()->Start(
             BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
+    }
+#endif
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    if (isModuleUpdate_) {
+        APP_LOGD("module update, quick fix old patch need to delete, bundleName:%{public}s", bundleName_.c_str());
+        auto quickFixSwitcher = std::make_shared<QuickFixSwitcher>(bundleName_, false);
+        quickFixSwitcher->Execute();
+        auto quickFixDeleter = std::make_shared<QuickFixDeleter>(bundleName_);
+        quickFixDeleter->Execute();
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
@@ -1294,7 +1315,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("SetDirApl failed");
         return ret;
     }
-
+    isModuleUpdate_ = true;
     return ERR_OK;
 }
 

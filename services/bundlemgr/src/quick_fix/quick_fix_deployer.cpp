@@ -26,21 +26,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
-    const std::shared_ptr<QuickFixDataMgr> &quickFixDataMgr,
-    const sptr<IQuickFixStatusCallback> &statusCallback) : patchPaths_(bundleFilePaths),
-    quickFixDataMgr_(quickFixDataMgr), statusCallback_(statusCallback)
-{}
+QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths) : patchPaths_(bundleFilePaths)
+{
+    quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+}
 
 ErrCode QuickFixDeployer::Execute()
 {
-    if (statusCallback_ == nullptr) {
-        APP_LOGE("QuickFixDeployer statusCallback_ is nullptr");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
-    }
     ErrCode ret = DeployQuickFix();
-    deployQuickFixResult_.resultCode = ret;
-    statusCallback_->OnPatchDeployed(deployQuickFixResult_);
     if (ret != ERR_OK) {
         APP_LOGE("QuickFixDeployer errcode %{public}d", ret);
     }
@@ -497,6 +490,11 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
     innerAppQuickFix.SetAppQuickFix(appQuickFix);
     APP_LOGD("MoveHqfFiles end.");
     return ERR_OK;
+}
+
+DeployQuickFixResult QuickFixDeployer::GetDeployQuickFixResult() const
+{
+    return deployQuickFixResult_;
 }
 } // AppExecFwk
 } // OHOS
