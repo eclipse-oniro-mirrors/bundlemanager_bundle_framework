@@ -32,11 +32,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
-constexpr int32_t NO_ERROR = 0;
-constexpr size_t ARGS_TWO = 2;
+constexpr size_t ARGS_ONE = 1;
 constexpr size_t ARGS_MAX_COUNT = 10;
-constexpr int32_t PARAM0 = 0;
-constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM3 = 3;
 }
 
@@ -394,16 +391,6 @@ napi_value ZipFilePromise(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackIn
         [](napi_env env, napi_status status, void *data) {
             APP_LOGI("NAPI_ZipFile_Promise, main event thread complete.");
             AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-
-            if (asyncCallbackInfo->executeResult != 0) {
-                napi_deferred deferred;
-                napi_value promise = 0;
-                NAPI_CALL_RETURN_VOID(env, napi_create_promise(env, &deferred, &promise));
-                napi_value result = nullptr;
-                napi_create_int32(env, asyncCallbackInfo->executeResult, &result);
-                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, deferred, result));
-            }
-
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;
@@ -686,16 +673,6 @@ napi_value UnzipFilePromise(napi_env env, AsyncZipCallbackInfo *asyncZipCallback
         [](napi_env env, napi_status status, void *data) {
             APP_LOGI("NAPI_UnzipFile_Promise, main event thread complete.");
             AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-
-            if (asyncCallbackInfo->executeResult != 0) {
-                napi_deferred deferred;
-                napi_value promise = 0;
-                NAPI_CALL_RETURN_VOID(env, napi_create_promise(env, &deferred, &promise));
-                napi_value result = nullptr;
-                napi_create_int32(env, asyncCallbackInfo->executeResult, &result);
-                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, deferred, result));
-            }
-
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;
@@ -707,6 +684,7 @@ napi_value UnzipFilePromise(napi_env env, AsyncZipCallbackInfo *asyncZipCallback
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
 }
+
 napi_value UnzipFileAsync(napi_env env, napi_value *args, size_t argcAsync, AsyncZipCallbackInfo *asyncZipCallbackInfo)
 {
     APP_LOGI("%{public}s, asyncCallback.", __func__);
@@ -771,13 +749,11 @@ void ZipFileAsyncExecute(napi_env env, void *data)
         zipCallBackInfo->isCallBack = true;
         ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
     };
-    if (!Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
+    Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
         FilePath(asyncCallbackInfo->aceCallback->param.dest),
         asyncCallbackInfo->aceCallback->param.options,
         zipCallBack,
-        false)) {
-        asyncCallbackInfo->executeResult = -1;
-    }
+        false);
     APP_LOGI("NAPI_ZipFile_Async_Execute, worker pool thread execute end.");
 }
 
@@ -806,13 +782,11 @@ void ZipFilePromiseExecute(napi_env env, void *data)
         zipCallBackInfo->isCallBack = false;
         ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
     };
-    if (!Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
+    Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
         FilePath(asyncCallbackInfo->aceCallback->param.dest),
         asyncCallbackInfo->aceCallback->param.options,
         zipCallBack,
-        false)) {
-        asyncCallbackInfo->executeResult = -1;
-    }
+        false);
     APP_LOGI("NAPI_ZipFile_Promise_Execute, worker pool thread execute end.");
 }
 
@@ -842,12 +816,10 @@ void UnzipFileAsyncExecute(napi_env env, void *data)
         zipCallBackInfo->isCallBack = true;
         ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
     };
-    if (!Unzip(FilePath(asyncCallbackInfo->aceCallback->param.src),
+    Unzip(FilePath(asyncCallbackInfo->aceCallback->param.src),
         FilePath(asyncCallbackInfo->aceCallback->param.dest),
         asyncCallbackInfo->aceCallback->param.options,
-        unZipCallBack)) {
-        asyncCallbackInfo->executeResult = -1;
-    }
+        unZipCallBack);
     APP_LOGI("NAPI_UnzipFile_Async_Execute, worker pool thread execute end.");
 }
 // UnzipFile Promise
@@ -875,12 +847,10 @@ void UnzipFilePromiseExecute(napi_env env, void *data)
         zipCallBackInfo->isCallBack = false;
         ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
     };
-    if (!Unzip(FilePath(asyncCallbackInfo->aceCallback->param.src),
+    Unzip(FilePath(asyncCallbackInfo->aceCallback->param.src),
         FilePath(asyncCallbackInfo->aceCallback->param.dest),
         asyncCallbackInfo->aceCallback->param.options,
-        unZipCallBack)) {
-        asyncCallbackInfo->executeResult = -1;
-    }
+        unZipCallBack);
     APP_LOGI("NAPI_UnzipFile_Promise_Execute, worker pool thread execute end.");
 }
 
@@ -889,34 +859,32 @@ void ZipAndUnzipFileAsyncCallBackInnerJsThread(uv_work_t *work)
     if (work == nullptr) {
         return;
     }
-    // JS Thread
     ZlibCallbackInfo *asyncCallbackInfo = (ZlibCallbackInfo *)work->data;
     if (asyncCallbackInfo == nullptr) {
         return;
     }
-    napi_value result[ARGS_TWO] = {0};
-    // callback result
-    napi_create_int32(asyncCallbackInfo->env, (int32_t)asyncCallbackInfo->callbackResult, &result[PARAM1]);
+    napi_value result[ARGS_ONE] = {0};
+    NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env,
+        napi_create_int32(asyncCallbackInfo->env, (int32_t)asyncCallbackInfo->callbackResult, &result[0]));
     APP_LOGI("%{public}s called, callbackResult =%{public}d", __func__, asyncCallbackInfo->callbackResult);
-
     if (asyncCallbackInfo->isCallBack) {
         napi_value callback = 0;
-        napi_value undefined = 0;
-        // callback(err, data)  errorInfo->error_code
-        result[PARAM0] = GetCallbackErrorValue(asyncCallbackInfo->env, NO_ERROR);
-        // get callback
-        napi_get_reference_value(asyncCallbackInfo->env, asyncCallbackInfo->callback, &callback);
-        napi_get_undefined(asyncCallbackInfo->env, &undefined);
-        // call callback
-        napi_value jsResult = 0;
-        napi_call_function(asyncCallbackInfo->env, undefined, callback, ARGS_TWO, &result[PARAM0], &jsResult);
-        // free data
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_get_reference_value(asyncCallbackInfo->env,
+            asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_call_function(asyncCallbackInfo->env, nullptr,
+            callback, sizeof(result) / sizeof(result[0]), result, &placeHolder));
         if (asyncCallbackInfo->callback != nullptr) {
             napi_delete_reference(asyncCallbackInfo->env, asyncCallbackInfo->callback);
         }
     } else {
-        // promise
-        napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result[PARAM1]);
+        if (asyncCallbackInfo->callbackResult == 0) {
+            NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_resolve_deferred(asyncCallbackInfo->env,
+                asyncCallbackInfo->deferred, result[0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_reject_deferred(asyncCallbackInfo->env,
+                asyncCallbackInfo->deferred, result[0]));
+        }
     }
     if (asyncCallbackInfo != nullptr) {
         delete asyncCallbackInfo;
