@@ -52,7 +52,6 @@ const std::string BUNDLE_DATA_DIR2 = "/data/app/el1/100/database/";
 const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/";
 const std::string ACCESS_TOKEN_ID = "accessTokenId";
-const time_t TIME_OUT_SECONDS_FIVE = 5;
 const int32_t TIMEOUT = 10;
 const int32_t DEFAULT_USERID = 100;
 const int32_t DLP_TYPE_1 = 1;
@@ -516,62 +515,6 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest005, TestSize.Level
 }
 
 /**
- * @tc.number: InstallSandboxAppTest006
- * @tc.name: InstallSandboxApp
- * @tc.desc: Test the interface of InstallSandboxApp
- * @tc.require: AR000GNT9D
- */
-HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest006, TestSize.Level1)
-{
-    auto name = std::string("InstallSandboxAppTest006");
-    GTEST_LOG_(INFO) << name << " start";
-    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
-    std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
-
-    // subscribe common event
-    Want wantTest;
-    wantTest.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_ADDED);
-    CommonEventData commonEventData(wantTest);
-
-    MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_ADDED);
-    CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    auto subscriberPtr = std::make_shared<CommonEventSubscriberTest>(subscribeInfo);
-    EXPECT_EQ(CommonEventManager::SubscribeCommonEvent(subscriberPtr), true);
-
-    mtx_.lock();
-    struct tm startTime = {0};
-    EXPECT_EQ(OHOS::GetSystemCurrentTime(&startTime), true);
-
-    BundleMgrClient bundleMgrClient;
-    int32_t appIndex = 0;
-    ErrCode ret = bundleMgrClient.InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, DEFAULT_USERID, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(appIndex, 1);
-
-    struct tm doingTime = {0};
-    int64_t seconds = 0;
-    while (!mtx_.try_lock()) {
-        EXPECT_EQ(OHOS::GetSystemCurrentTime(&doingTime), true);
-        seconds = OHOS::GetSecondsBetween(startTime, doingTime);
-        if (seconds >= TIME_OUT_SECONDS_FIVE) {
-            break;
-        }
-    }
-    mtx_.unlock();
-    EXPECT_TRUE(g_ReceivedInstallSandbox);
-    EXPECT_EQ(CommonEventManager::UnSubscribeCommonEvent(subscriberPtr), true);
-
-    std::string uninstallMsg;
-    UninstallBundle(BUNDLE_NAME, uninstallMsg);
-    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-
-    GTEST_LOG_(INFO) << name << " end";
-}
-
-/**
  * @tc.number: UninstallSandboxAppTest001
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
@@ -728,66 +671,6 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest004, TestSize.Lev
     EXPECT_EQ(res, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, 1);
     CheckPathAreNonExisted(BUNDLE_NAME, 2);
-
-    std::string uninstallMsg;
-    UninstallBundle(BUNDLE_NAME, uninstallMsg);
-    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-
-    GTEST_LOG_(INFO) << name << " end";
-}
-
-/**
- * @tc.number: UninstallSandboxAppTest005
- * @tc.name: InstallSandboxApp
- * @tc.desc: Test the interface of InstallSandboxApp
- * @tc.require: AR000GNT9D
- */
-HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest005, TestSize.Level1)
-{
-    auto name = std::string("UninstallSandboxAppTest005");
-    GTEST_LOG_(INFO) << name << " start";
-    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
-    std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
-
-    // subscribe common event
-    Want wantTest;
-    wantTest.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_REMOVED);
-    CommonEventData commonEventData(wantTest);
-
-    MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_REMOVED);
-    CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    auto subscriberPtr = std::make_shared<CommonEventSubscriberTest>(subscribeInfo);
-
-    EXPECT_EQ(CommonEventManager::SubscribeCommonEvent(subscriberPtr), true);
-
-    mtx_.lock();
-    struct tm startTime = {0};
-    EXPECT_EQ(OHOS::GetSystemCurrentTime(&startTime), true);
-
-    BundleMgrClient bundleMgrClient;
-    int32_t appIndex = 0;
-    auto ret = bundleMgrClient.InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, DEFAULT_USERID, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(1, appIndex);
-
-    auto res = bundleMgrClient.UninstallSandboxApp(BUNDLE_NAME, 1, DEFAULT_USERID);
-    EXPECT_EQ(res, ERR_OK);
-
-    struct tm doingTime = {0};
-    int64_t seconds = 0;
-    while (!mtx_.try_lock()) {
-        EXPECT_EQ(OHOS::GetSystemCurrentTime(&doingTime), true);
-        seconds = OHOS::GetSecondsBetween(startTime, doingTime);
-        if (seconds >= TIME_OUT_SECONDS_FIVE) {
-            break;
-        }
-    }
-    mtx_.unlock();
-    EXPECT_TRUE(g_RceivedUninstallSandbox);
-    EXPECT_EQ(CommonEventManager::UnSubscribeCommonEvent(subscriberPtr), true);
 
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
