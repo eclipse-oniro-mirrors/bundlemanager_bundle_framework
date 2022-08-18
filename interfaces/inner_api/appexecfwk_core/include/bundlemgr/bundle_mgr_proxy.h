@@ -671,6 +671,7 @@ public:
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     virtual sptr<IAppControlMgr> GetAppControlProxy() override;
 #endif
+    virtual ErrCode SetDebugMode(bool isDebug) override;
 
 private:
     /**

@@ -24,6 +24,11 @@ namespace AppExecFwk {
 class BundleVerifyMgr {
 public:
     static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+    static void EnableDebug();
+    static void DisableDebug();
+
+private:
+    static bool isDebug_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
