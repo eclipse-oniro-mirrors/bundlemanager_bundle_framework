@@ -37,6 +37,14 @@ QuickFixStatusCallbackHostlmpl::~QuickFixStatusCallbackHostlmpl()
 void QuickFixStatusCallbackHostlmpl::OnPatchDeployed(const DeployQuickFixResult &result)
 {
     APP_LOGD("on Patch deployed bundleName is %{public}s", result.bundleName.c_str());
+    APP_LOGD("on Patch deployed bundle version code is %{public}u", result.bundleVersionCode);
+    APP_LOGD("on Patch deployed patch version code is %{public}u", result.patchVersionCode);
+    APP_LOGD("on Patch deployed isSoContained is %{public}d", result.isSoContained);
+    APP_LOGD("on Patch deployed patch type is %{public}d", static_cast<int32_t>(result.type));
+    for (const auto &name : result.moduleNames) {
+        APP_LOGD("on Patch deployed moduleName is %{public}s", name.c_str());
+    }
+    APP_LOGD("on Patch deployed errcode is %{public}d", result.resultCode);
     resultPromise_.set_value(result.resultCode);
 }
 

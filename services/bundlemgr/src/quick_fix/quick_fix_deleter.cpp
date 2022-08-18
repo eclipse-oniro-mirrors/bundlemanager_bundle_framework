@@ -101,7 +101,7 @@ ErrCode QuickFixDeleter::ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickF
     APP_LOGD("patch path is %{public}s", patchPath.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(patchPath) != ERR_OK) {
         APP_LOGE("RemoveDir patch path or hot reload path failed");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_SO_PATH_FAILED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_PATH_FAILED;
     }
 
     return ERR_OK;

@@ -281,7 +281,8 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
     if (ret != ERR_OK) {
-        return ret;
+        APP_LOGE("error: creat patch path failed, errcode %{public}d", ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
     if (!appQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
         const std::string &libraryPath = appQuickFix.deployingAppqfInfo.nativeLibraryPath;
@@ -293,7 +294,6 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         ret = InstalldClient::GetInstance()->IsExistDir(oldSoPath, pathExist);
         if (!pathExist && (ret == ERR_OK)) {
             APP_LOGD("bundleName: %{public}s no so path", appQuickFix.bundleName.c_str());
-            deployQuickFixResult_.isSoContained = false;
             return ERR_OK;
         }
         // extract diff so, diff so path
@@ -308,13 +308,9 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         std::string newSoPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
         if (ret != ERR_OK) {
-            APP_LOGE("ApplyDiffPatch failed, bundleName:%{public}s", appQuickFix.bundleName.c_str());
-            return ret;
-        }
-        ret = InstalldClient::GetInstance()->IsExistDir(newSoPath, deployQuickFixResult_.isSoContained);
-        if (ret != ERR_OK) {
-            APP_LOGW("InstalldClient::IsExistDir failed, errcode: %{public}d", ret);
-            deployQuickFixResult_.isSoContained = true;
+            APP_LOGE("ApplyDiffPatch failed, bundleName:%{public}s, errcode: %{public}d",
+                appQuickFix.bundleName.c_str(), ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
         }
     }
     return ERR_OK;
@@ -327,7 +323,8 @@ ErrCode QuickFixDeployer::ProcessHotReloadDeployEnd(const AppQuickFix &appQuickF
         std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
     if (ret != ERR_OK) {
-        return ret;
+        APP_LOGE("error: creat hotreload path failed, errcode %{public}d", ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
     return ERR_OK;
 }
@@ -340,8 +337,8 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     PatchParser patchParser;
     ErrCode ret = patchParser.ParsePatchInfo(bundleFilePaths, infos);
     if ((ret != ERR_OK) || infos.empty()) {
-        APP_LOGE("parse AppQuickFixFiles failed");
-        return ret;
+        APP_LOGE("parse AppQuickFixFiles failed, errcode %{public}d", ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     QuickFixChecker checker;
     // check multiple AppQuickFix
@@ -460,8 +457,8 @@ ErrCode QuickFixDeployer::ExtractDiffFiles(const std::string &targetPath,
         // extract so to targetPath
         ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, targetPath, appQfInfo.cpuAbi);
         if (ret != ERR_OK) {
-            APP_LOGE("error: ExtractDiffFiles failed");
-            return ret;
+            APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
     }
     APP_LOGD("ExtractDiffFiles end.");
@@ -489,8 +486,8 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
         std::string realPath = path + info.moduleName + Constants::QUICK_FIX_FILE_SUFFIX;
         ErrCode ret = InstalldClient::GetInstance()->MoveFile(info.hqfFilePath, realPath);
         if (ret != ERR_OK) {
-            APP_LOGE("error MoveFile failed");
-            return ret;
+            APP_LOGE("error MoveFile failed, errcode: %{public}d", ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
         }
         info.hqfFilePath = realPath;
         mark.moduleName = info.moduleName;
