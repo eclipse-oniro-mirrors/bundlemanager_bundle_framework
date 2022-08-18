@@ -45,6 +45,39 @@ namespace AppExecFwk {
 namespace {
 // param
 const int32_t INDEX_OFFSET = 2;
+// quick fix error code
+const int32_t ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED = 801;
+// quick fix error message
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR = "error: install internal error.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR = "error: param error.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED = "error: profile parse failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME = "error: not same bundle name.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME = "error: not same version code.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME = "error: not same version name.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME =
+    "error: not same patch version name.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME =
+    "error: not same patch version name.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_TYPE_NOT_SAME = "error: not same patch type.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE = "error: unknown quick fix type.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE = "error: patch so incompatible.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME = "error: same moduleName.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST = "error: bundle name is not existed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST = "error: module name is not existed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME = "error: signature is not existed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED = "error: extract diff files failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED = "error: apply diff patch failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN = "error: unknown.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED = "feature is not supported.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_OPERATION_TIME_OUT = "error: quick fix operation time out.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_FAILED_SERVICE_DIED = "error: bundleMgr service is dead.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE =
+    "error: hotreload not support release bundle.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_ALREADY_EXISTED = "error: patch type already existed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED =
+    "error: hotreload type already existed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO =
+    "error: no patch info in bundleInfo.\n";
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
@@ -297,6 +330,45 @@ ErrCode BundleTestTool::Init()
     return result;
 }
 
+void BundleTestTool::CreateQuickFixMsgMap(std::unordered_map<int32_t, std::string> &quickFixMsgMap)
+{
+    quickFixMsgMap = {
+        { ERR_OK, Constants::EMPTY_STRING },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_TYPE_NOT_SAME, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_TYPE_NOT_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED },
+        { ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED },
+        { ERR_APPEXECFWK_OPERATION_TIME_OUT, MSG_ERR_BUNDLEMANAGER_OPERATION_TIME_OUT },
+        { ERR_APPEXECFWK_FAILED_SERVICE_DIED, MSG_ERR_BUNDLEMANAGER_FAILED_SERVICE_DIED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_ALREADY_EXISTED, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_ALREADY_EXISTED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO}
+    };
+}
+
 ErrCode BundleTestTool::RunAsHelpCommand()
 {
     resultReceiver_.append(HELP_MSG);
@@ -308,7 +380,12 @@ ErrCode BundleTestTool::CheckOperation(int userId, std::string deviceId, std::st
     std::string moduleName, std::string abilityName)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    sptr<BundleToolCallbackStub> bundleToolCallbackStub = new(std::nothrow) BundleToolCallbackStub(cv_);
+    sptr<BundleToolCallbackStub> bundleToolCallbackStub =
+        new(std::nothrow) BundleToolCallbackStub(cv_, mutex_, dataReady_);
+    if (bundleToolCallbackStub == nullptr) {
+        APP_LOGE("bundleToolCallbackStub is null");
+        return OHOS::ERR_INVALID_VALUE;
+    }
     APP_LOGI("CheckAbilityEnableInstall param: userId:%{public}d, bundleName:%{public}s, moduleName:%{public}s," \
         "abilityName:%{public}s", userId, bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     AAFwk::Want want;
@@ -319,7 +396,8 @@ ErrCode BundleTestTool::CheckOperation(int userId, std::string deviceId, std::st
         return OHOS::ERR_OK;
     }
     APP_LOGI("CheckAbilityEnableInstall wait");
-    cv_.wait(lock);
+    cv_.wait(lock, [this] { return dataReady_; });
+    dataReady_ = false;
     return OHOS::ERR_OK;
 }
 
@@ -1127,7 +1205,7 @@ ErrCode BundleTestTool::RunAsDeployQuickFix()
 
     int32_t deployResult = DeployQuickFix(quickFixPaths);
     resultReceiver_ = (deployResult == OHOS::ERR_OK) ? STRING_DEPLOY_QUICK_FIX_OK : STRING_DEPLOY_QUICK_FIX_NG;
-    resultReceiver_ += GetMessageFromCode(deployResult);
+    resultReceiver_ += GetQuickFixResMsg(deployResult);
 
     return result;
 }
@@ -1200,7 +1278,7 @@ ErrCode BundleTestTool::RunAsSwitchQuickFix()
     }
     int32_t switchResult = SwitchQuickFix(bundleName, enable);
     resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
-    resultReceiver_ += GetMessageFromCode(switchResult);
+    resultReceiver_ += GetQuickFixResMsg(switchResult);
 
     return result;
 }
@@ -1249,7 +1327,7 @@ ErrCode BundleTestTool::RunAsDeleteQuickFix()
     }
     int32_t switchResult = DeleteQuickFix(bundleName);
     resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
-    resultReceiver_ += GetMessageFromCode(switchResult);
+    resultReceiver_ += GetQuickFixResMsg(switchResult);
 
     return result;
 }
@@ -1272,21 +1350,27 @@ ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixP
     sptr<QuickFixStatusCallbackHostlmpl> callback(new (std::nothrow) QuickFixStatusCallbackHostlmpl());
     if (callback == nullptr || bundleMgrProxy_ == nullptr) {
         APP_LOGE("callback or bundleMgrProxy is null");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(nullptr, callback));
+    if (recipient == nullptr) {
+        APP_LOGE("recipient is null");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    bundleMgrProxy_->AsObject()->AddDeathRecipient(recipient);
     auto quickFixProxy = bundleMgrProxy_->GetQuickFixManagerProxy();
     if (quickFixProxy == nullptr) {
         APP_LOGE("quickFixProxy is null");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     if (!quickFixProxy->DeployQuickFix(pathVec, callback)) {
         APP_LOGE("DeployQuickFix failed");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    return ERR_OK;
+    return callback->GetResultCode();
 #else
-    return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    return ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED;
 #endif
 }
 
@@ -1297,12 +1381,18 @@ ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t en
     sptr<QuickFixStatusCallbackHostlmpl> callback(new (std::nothrow) QuickFixStatusCallbackHostlmpl());
     if (callback == nullptr || bundleMgrProxy_ == nullptr) {
         APP_LOGE("callback or bundleMgrProxy is null");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(nullptr, callback));
+    if (recipient == nullptr) {
+        APP_LOGE("recipient is null");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    bundleMgrProxy_->AsObject()->AddDeathRecipient(recipient);
     auto quickFixProxy = bundleMgrProxy_->GetQuickFixManagerProxy();
     if (quickFixProxy == nullptr) {
         APP_LOGE("quickFixProxy is null");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     if (enable != 0 && enable != 1) {
         APP_LOGE("enable is wrong");
@@ -1311,11 +1401,11 @@ ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t en
     bool enableFlag = (enable == 0) ? false : true;
     if (!quickFixProxy->SwitchQuickFix(bundleName, enableFlag, callback)) {
         APP_LOGE("SwitchQuickFix failed");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    return ERR_OK;
+    return callback->GetResultCode();
 #else
-    return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    return ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED;
 #endif
 }
 
@@ -1326,21 +1416,37 @@ ErrCode BundleTestTool::DeleteQuickFix(const std::string &bundleName)
     sptr<QuickFixStatusCallbackHostlmpl> callback(new (std::nothrow) QuickFixStatusCallbackHostlmpl());
     if (callback == nullptr || bundleMgrProxy_ == nullptr) {
         APP_LOGE("callback or bundleMgrProxy is null");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(nullptr, callback));
+    if (recipient == nullptr) {
+        APP_LOGE("recipient is null");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    bundleMgrProxy_->AsObject()->AddDeathRecipient(recipient);
     auto quickFixProxy = bundleMgrProxy_->GetQuickFixManagerProxy();
     if (quickFixProxy == nullptr) {
         APP_LOGE("quickFixProxy is null");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     if (!quickFixProxy->DeleteQuickFix(bundleName, callback)) {
         APP_LOGE("DeleteQuickFix failed");
-        return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    return ERR_OK;
+    return callback->GetResultCode();
 #else
-    return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
+    return ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED;
 #endif
+}
+
+std::string BundleTestTool::GetQuickFixResMsg(int32_t code)
+{
+    std::unordered_map<int32_t, std::string> quickFixMsgMap;
+    CreateQuickFixMsgMap(quickFixMsgMap);
+    if (quickFixMsgMap.find(code) != quickFixMsgMap.end()) {
+        return quickFixMsgMap.at(code);
+    }
+    return MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN;
 }
 } // AppExecFwk
 } // OHOS

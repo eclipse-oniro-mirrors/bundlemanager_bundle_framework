@@ -25,7 +25,7 @@ namespace AppExecFwk {
 struct HqfInfo : public Parcelable {
     std::string moduleName;
     std::string hapSha256;
-    std::string hapFilePath;
+    std::string hqfFilePath;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

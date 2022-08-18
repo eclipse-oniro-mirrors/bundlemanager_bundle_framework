@@ -303,6 +303,23 @@ ErrCode InstalldProxy::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     return TransactInstalldCmd(IInstalld::Message::APPLY_DIFF_PATCH, data, reply, option);
 }
 
+ErrCode InstalldProxy::IsExistDir(const std::string &dir, bool &isExist)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(IInstalld::Message::IS_EXIST_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    isExist = reply.ReadBool();
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

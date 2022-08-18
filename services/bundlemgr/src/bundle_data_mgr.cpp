@@ -250,6 +250,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdateRemovable(
+                newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
@@ -370,6 +372,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdateRemovable(
+                newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
@@ -2996,6 +3000,84 @@ bool BundleDataMgr::SetDisposedStatus(const std::string &bundleName, int32_t sta
         APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
         return false;
     }
+    return true;
+}
+
+void BundleDataMgr::UpdateRemovable(
+    const std::string &bundleName, bool removable)
+{
+    APP_LOGD("UpdateRemovable %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    infoItem->second.UpdateRemovable(true, removable);
+    SaveInnerBundleInfo(infoItem->second);
+}
+
+void BundleDataMgr::UpdateRecoverable(
+    const std::string &bundleName, bool recoverable)
+{
+    APP_LOGD("UpdateRecoverable %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGE("can not find preBundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    preInstallBundleInfo.SetRecoverable(recoverable);
+    SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
+void BundleDataMgr::UpdatePrivilegeCapability(
+    const std::string &bundleName, const ApplicationInfo &appInfo)
+{
+    APP_LOGD("UpdatePrivilegeCapability %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    infoItem->second.UpdatePrivilegeCapability(appInfo);
+}
+
+bool BundleDataMgr::FetchInnerBundleInfo(
+    const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
+{
+    APP_LOGD("FetchInnerBundleInfo %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    innerBundleInfo = infoItem->second;
     return true;
 }
 

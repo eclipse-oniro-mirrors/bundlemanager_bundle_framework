@@ -20,17 +20,20 @@
 
 #include "iremote_object.h"
 #include "status_receiver_host.h"
+#include "quick_fix_status_callback_host.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BundleDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    explicit BundleDeathRecipient(const sptr<StatusReceiverHost>& statusReceiver);
+    BundleDeathRecipient(const sptr<StatusReceiverHost> &statusReceiver,
+        const sptr<QuickFixStatusCallbackHost> &callback = nullptr);
     virtual ~BundleDeathRecipient();
-    virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
+    virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject> &remote) override;
 
 private:
-    sptr<StatusReceiverHost> statusReceiver_;
+    sptr<StatusReceiverHost> statusReceiver_ = nullptr;
+    sptr<QuickFixStatusCallbackHost> quickFixCallback_ = nullptr;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

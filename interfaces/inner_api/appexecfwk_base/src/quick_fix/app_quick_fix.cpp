@@ -51,7 +51,7 @@ void from_json(const nlohmann::json &jsonObject, AppQuickFix &appQuickFix)
         JsonType::STRING, false, parseResult,
         ArrayType::NOT_ARRAY);
 
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
         APP_QUICK_FIX_VERSION_CODE, appQuickFix.versionCode,
         JsonType::NUMBER, false, parseResult,
         ArrayType::NOT_ARRAY);
@@ -75,7 +75,7 @@ void from_json(const nlohmann::json &jsonObject, AppQuickFix &appQuickFix)
 bool AppQuickFix::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
-    versionCode = parcel.ReadInt32();
+    versionCode = parcel.ReadUint32();
     versionName = Str16ToStr8(parcel.ReadString16());
     std::unique_ptr<AppqfInfo> deployedAppqfInfoPtr(parcel.ReadParcelable<AppqfInfo>());
     if (!deployedAppqfInfoPtr) {
@@ -96,7 +96,7 @@ bool AppQuickFix::ReadFromParcel(Parcel &parcel)
 bool AppQuickFix::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &deployedAppqfInfo);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &deployingAppqfInfo);

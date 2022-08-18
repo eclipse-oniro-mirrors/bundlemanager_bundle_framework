@@ -18,6 +18,8 @@ group("unittest_hap") {
   deps += [
     # deps file
     "bundle_dependencies:bundle_dependencies",
+    "bundle_kit:bundle_kit",
+    "install_daemon:install_daemon",
     "test_bundle:test_bundle",
   ]
 }

@@ -29,32 +29,28 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixChecker {
 public:
-    ErrCode CheckMultipleHapsSignInfo(
+    ErrCode CheckMultipleHqfsSignInfo(
         const std::vector<std::string> &bundlePaths,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
-
-    ErrCode ParseAppQuickFixFiles(
-        const std::vector<std::string> &patchFilePaths,
-        std::unordered_map<std::string, AppQuickFix> &infos);
 
     ErrCode CheckAppQuickFixInfos(const std::unordered_map<std::string, AppQuickFix> &infos);
 
     ErrCode CheckMultiNativeSo(
         std::unordered_map<std::string, AppQuickFix> &infos);
 
-    ErrCode CheckAppQuickFixInfosWithInstalledBundle(
-        const std::unordered_map<std::string, AppQuickFix> &infos,
-        const Security::Verify::ProvisionInfo &provisionInfo,
-        BundleInfo &bundleInfo);
+    ErrCode CheckPatchWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo,
+        const Security::Verify::ProvisionInfo &provisionInfo);
 
-private:
-    ErrCode ParseAppQuickFix(const std::string &patchPath, AppQuickFix &appQuickFix);
-
-    ErrCode CheckModuleNameExist(const BundleInfo &bundleInfo,
-        const std::unordered_map<std::string, AppQuickFix> &infos);
+    ErrCode CheckHotReloadWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 
     ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
         const Security::Verify::ProvisionInfo &provisionInfo);
+
+private:
+    ErrCode CheckCommonWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
+
+    ErrCode CheckModuleNameExist(const BundleInfo &bundleInfo,
+        const std::unordered_map<std::string, AppQuickFix> &infos);
 
     std::string GetAppDistributionType(const Security::Verify::AppDistType &type);
 

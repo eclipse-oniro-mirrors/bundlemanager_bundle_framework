@@ -33,6 +33,13 @@ public:
     bool QueryData(const std::string &key, std::string &value);
     bool QueryAllData(std::map<std::string, std::string> &datas);
 
+    bool BatchInsert(int64_t &outInsertNum, const std::vector<NativeRdb::ValuesBucket> &valuesBuckets);
+    bool UpdateData(const NativeRdb::ValuesBucket &valuesBucket,
+        const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+    bool DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+    std::shared_ptr<NativeRdb::AbsSharedResultSet> QueryData(
+        const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
 

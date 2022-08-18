@@ -3374,6 +3374,7 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_TYPE_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_CONFLICT";
@@ -7238,7 +7239,7 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value)
     napi_value nFullscreen;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FULLSCREEN), &nFullscreen));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULLSCREEN", nFullscreen));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULL_SCREEN", nFullscreen));
 
     napi_value nSplit;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::SPLIT), &nSplit));

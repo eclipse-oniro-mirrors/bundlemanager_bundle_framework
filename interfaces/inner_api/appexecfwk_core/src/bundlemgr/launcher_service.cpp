@@ -139,10 +139,16 @@ bool LauncherService::GetAbilityList(
         return false;
     }
 
+    if (bundleInfo.applicationInfo.hideDesktopIcon) {
+        APP_LOGW("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
+        return false;
+    }
+
     for (auto &ability : abilityInfos) {
         if (ability.bundleName != bundleName || !ability.enabled) {
             continue;
         }
+
         LauncherAbilityInfo info;
         info.applicationInfo = ability.applicationInfo;
         info.labelId = ability.labelId;
@@ -183,6 +189,12 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
         if (ability.applicationInfo.isLauncherApp || !ability.enabled) {
             continue;
         }
+
+        if (ability.applicationInfo.hideDesktopIcon) {
+            APP_LOGW("Bundle(%{public}s) hide desktop icon", ability.bundleName.c_str());
+            continue;
+        }
+
         LauncherAbilityInfo info;
         BundleInfo bundleInfo;
         BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
@@ -214,21 +226,30 @@ bool LauncherService::GetAbilityInfo(const Want &want, const int userId, Launche
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+
     ElementName element = want.GetElement();
     if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
         APP_LOGE("GetAbilityInfo elementName is empty");
         return false;
     }
+
     AbilityInfo abilityInfo;
     if (!iBundleMgr->QueryAbilityInfo(want, abilityInfo)) {
         APP_LOGE("Query AbilityInfo failed");
         return false;
     }
+
     if (!abilityInfo.enabled) {
         APP_LOGE("Query AbilityInfo is disabled");
         return false;
     }
+
     std::string bundleName = element.GetBundleName();
+    if (abilityInfo.applicationInfo.hideDesktopIcon) {
+        APP_LOGW("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
+        return false;
+    }
+
     int32_t iconId;
     ApplicationInfo appInfo;
     ApplicationFlag flag = ApplicationFlag::GET_BASIC_APPLICATION_INFO;

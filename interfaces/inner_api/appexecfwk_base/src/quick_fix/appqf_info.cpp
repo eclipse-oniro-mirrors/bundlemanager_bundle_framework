@@ -29,6 +29,7 @@ const std::string APP_QF_INFO_VERSION_NAME = "versionName";
 const std::string APP_QF_INFO_CPU_ABI = "cpuAbi";
 const std::string APP_QF_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string APP_QF_INFO_HQF_INFOS = "hqfInfos";
+const std::string APP_QF_INFO_TYPE = "type";
 }
 
 void to_json(nlohmann::json &jsonObject, const AppqfInfo &appqfInfo)
@@ -38,6 +39,7 @@ void to_json(nlohmann::json &jsonObject, const AppqfInfo &appqfInfo)
         {APP_QF_INFO_VERSION_NAME, appqfInfo.versionName},
         {APP_QF_INFO_CPU_ABI, appqfInfo.cpuAbi},
         {APP_QF_INFO_NATIVE_LIBRARY_PATH, appqfInfo.nativeLibraryPath},
+        {APP_QF_INFO_TYPE, appqfInfo.type},
         {APP_QF_INFO_HQF_INFOS, appqfInfo.hqfInfos}
     };
 }
@@ -46,7 +48,7 @@ void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
         APP_QF_INFO_VERSION_CODE, appqfInfo.versionCode,
         JsonType::NUMBER, false, parseResult,
         ArrayType::NOT_ARRAY);
@@ -66,6 +68,11 @@ void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo)
         JsonType::STRING, false, parseResult,
         ArrayType::NOT_ARRAY);
 
+    GetValueIfFindKey<QuickFixType>(jsonObject, jsonObjectEnd,
+        APP_QF_INFO_TYPE, appqfInfo.type,
+        JsonType::NUMBER, false, parseResult,
+        ArrayType::NOT_ARRAY);
+
     GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject, jsonObjectEnd,
         APP_QF_INFO_HQF_INFOS, appqfInfo.hqfInfos,
         JsonType::ARRAY, false, parseResult,
@@ -74,10 +81,11 @@ void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo)
 
 bool AppqfInfo::ReadFromParcel(Parcel &parcel)
 {
-    versionCode = parcel.ReadInt32();
+    versionCode = parcel.ReadUint32();
     versionName = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
+    type = static_cast<QuickFixType>(parcel.ReadInt32());
     int32_t hqfSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hqfSize);
     for (auto i = 0; i < hqfSize; i++) {
@@ -93,10 +101,11 @@ bool AppqfInfo::ReadFromParcel(Parcel &parcel)
 
 bool AppqfInfo::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hqfInfos.size());
     for (auto &hqfInfo : hqfInfos) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hqfInfo);

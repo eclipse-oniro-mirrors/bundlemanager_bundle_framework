@@ -28,6 +28,7 @@ declare_args() {
   bundle_framework_launcher = true
   bundle_framework_sandbox_app = true
   bundle_framework_quick_fix = true
+  bundle_framework_app_control = false
 
   ability_runtime_enable = true
   account_enable = true
@@ -37,7 +38,7 @@ declare_args() {
   global_i18n_enable = true
   hicollie_enable = true
   hisysevent_enable = true
-  bms_rdb_enable = false
+  bms_rdb_enable = true
   use_pre_bundle_profile = false
 
   if (defined(global_parts_info) &&
@@ -93,20 +94,25 @@ declare_args() {
       !defined(global_parts_info.distributeddatamgr_relational_store)) {
     bms_rdb_enable = false
   }
-
-  print("bundle_framework_graphics = " + "$bundle_framework_graphics")
-  print("bundle_framework_free_install = " + "$bundle_framework_free_install")
-  print("bundle_framework_default_app = " + "$bundle_framework_default_app")
-  print("bundle_framework_launcher = " + "$bundle_framework_launcher")
-  print("bundle_framework_sandbox_app = " + "$bundle_framework_sandbox_app")
-  print("bundle_framework_quick_fix = " + "$bundle_framework_quick_fix")
-  print("ability_runtime_enable = " + "$ability_runtime_enable")
-  print("account_enable = " + "$account_enable")
-  print("configpolicy_enable = " + "$configpolicy_enable")
-  print("device_manager_enable = " + "$device_manager_enable")
-  print("global_resmgr_enable = " + "$global_resmgr_enable")
-  print("hicollie_enable = " + "$hicollie_enable")
-  print("support_jsapi = " + "$support_jsapi")
-  print("hisysevent_enable = " + "$hisysevent_enable")
-  print("bms_rdb_enable = " + "$bms_rdb_enable")
 }
+
+if (!bms_rdb_enable) {
+  bundle_framework_app_control = false
+}
+
+print("bundle_framework_graphics = " + "$bundle_framework_graphics")
+print("bundle_framework_free_install = " + "$bundle_framework_free_install")
+print("bundle_framework_default_app = " + "$bundle_framework_default_app")
+print("bundle_framework_launcher = " + "$bundle_framework_launcher")
+print("bundle_framework_sandbox_app = " + "$bundle_framework_sandbox_app")
+print("bundle_framework_quick_fix = " + "$bundle_framework_quick_fix")
+print("bundle_framework_app_control = " + "$bundle_framework_app_control")
+print("ability_runtime_enable = " + "$ability_runtime_enable")
+print("account_enable = " + "$account_enable")
+print("configpolicy_enable = " + "$configpolicy_enable")
+print("device_manager_enable = " + "$device_manager_enable")
+print("global_resmgr_enable = " + "$global_resmgr_enable")
+print("hicollie_enable = " + "$hicollie_enable")
+print("support_jsapi = " + "$support_jsapi")
+print("hisysevent_enable = " + "$hisysevent_enable")
+print("bms_rdb_enable = " + "$bms_rdb_enable")
