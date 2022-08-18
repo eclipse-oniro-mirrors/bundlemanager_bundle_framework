@@ -208,13 +208,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
         DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
 #endif
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-        std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
-        if (quickFixDataMgr != nullptr) {
-            APP_LOGD("DeleteInnerAppQuickFix when bundleName :%{public}s uninstall", bundleName.c_str());
-            quickFixDataMgr->DeleteInnerAppQuickFix(bundleName);
-        }
-#endif
     }
 
     SendBundleSystemEvent(
@@ -775,6 +768,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     enableGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    if (quickFixDataMgr != nullptr) {
+        APP_LOGD("DeleteInnerAppQuickFix when bundleName :%{public}s uninstall", bundleName.c_str());
+        quickFixDataMgr->DeleteInnerAppQuickFix(bundleName);
+    }
+#endif
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
     return ERR_OK;
 }

@@ -27,9 +27,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths) : patchPaths_(bundleFilePaths)
-{
-    quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
-}
+{}
 
 ErrCode QuickFixDeployer::Execute()
 {
@@ -42,7 +40,7 @@ ErrCode QuickFixDeployer::Execute()
 
 ErrCode QuickFixDeployer::DeployQuickFix()
 {
-    if (patchPaths_.empty() || (quickFixDataMgr_ == nullptr)) {
+    if (patchPaths_.empty() || ((GetQuickFixDataMgr() != ERR_OK))) {
         APP_LOGE("DeployQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
@@ -99,7 +97,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix)
 {
     APP_LOGD("ToDeployStartStatus start.");
-    if (quickFixDataMgr_ == nullptr) {
+    if (GetQuickFixDataMgr() != ERR_OK) {
         APP_LOGE("error: quickFixDataMgr_ is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
@@ -227,7 +225,7 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     const InnerAppQuickFix &oldInnerAppQuickFix)
 {
     APP_LOGD("ToDeployEndStatus start.");
-    if (quickFixDataMgr_ == nullptr) {
+    if ((GetQuickFixDataMgr() != ERR_OK)) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // create patch path
@@ -423,7 +421,7 @@ ErrCode QuickFixDeployer::CheckPatchVersionCode(
 
 ErrCode QuickFixDeployer::SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
-    if (quickFixDataMgr_ == nullptr) {
+    if ((GetQuickFixDataMgr() != ERR_OK)) {
         APP_LOGE("error: quickFixDataMgr_ is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
@@ -461,7 +459,7 @@ ErrCode QuickFixDeployer::ExtractDiffFiles(const std::string &targetPath,
 ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath)
 {
     APP_LOGD("MoveHqfFiles start.");
-    if (targetPath.empty() || (quickFixDataMgr_ == nullptr)) {
+    if (targetPath.empty() || (GetQuickFixDataMgr() != ERR_OK)) {
         APP_LOGE("MoveHqfFiles params error");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
@@ -495,6 +493,18 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
 DeployQuickFixResult QuickFixDeployer::GetDeployQuickFixResult() const
 {
     return deployQuickFixResult_;
+}
+
+ErrCode QuickFixDeployer::GetQuickFixDataMgr()
+{
+    if (quickFixDataMgr_ == nullptr) {
+        quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+        if (quickFixDataMgr_ == nullptr) {
+            APP_LOGE("quickFixDataMgr_ is nullptr");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+    }
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

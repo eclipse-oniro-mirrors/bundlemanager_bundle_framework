@@ -71,9 +71,9 @@ const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED =
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR =
     "error: quick fix version code require greater than original hqf.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE = "error: no this quick fix info in database.\n";
-const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS = "error: wrong quick fix status";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS = "error: wrong quick fix status.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO =
-    "error: cannot obtain the bundleInfo from data mgr";
+    "error: cannot obtain the bundleInfo from data mgr.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_PATH_FAILED = "error: quick fix remove path failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED = "error: extract diff files failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED = "error: apply diff patch failed.\n";
