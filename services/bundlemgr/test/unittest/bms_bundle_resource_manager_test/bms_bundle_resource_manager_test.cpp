@@ -161,10 +161,11 @@ void BmsBundleResourceManagerTest::StartBundleService()
 }
 
 /**
- * @tc.number: GetStringById_001
- * @tc.name: test the getStringById
+ * @tc.name: GetStringById_001
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.getStringById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetStringById_001, Function | SmallTest | Level0)
 {
@@ -175,10 +176,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_001, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetStringById_002
- * @tc.name: test the getStringById
+ * @tc.name: GetStringById_002
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.getStringById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetStringById_002, Function | SmallTest | Level0)
 {
@@ -192,10 +194,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_002, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetStringById_003
- * @tc.name: test the getStringById
+ * @tc.name: GetStringById_003
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.getStringById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetStringById_003, Function | SmallTest | Level0)
 {
@@ -207,10 +210,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_003, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetStringById_004
- * @tc.name: test the getStringById
+ * @tc.name: GetStringById_004
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.getStringById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetStringById_004, Function | SmallTest | Level0)
 {
@@ -222,10 +226,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_004, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetStringById_005
- * @tc.name: test the getStringById
+ * @tc.name: GetStringById_005
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.getStringById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetStringById_005, Function | SmallTest | Level0)
 {
@@ -237,10 +242,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_005, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetStringById_006
- * @tc.name: test the getStringById
+ * @tc.name: GetStringById_006
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.getStringById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetStringById_006, Function | SmallTest | Level0)
 {
@@ -252,10 +258,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_006, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetIconById_001
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_001
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_001, Function | SmallTest | Level0)
 {
@@ -266,10 +273,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_001, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_002
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_002
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_002, Function | SmallTest | Level0)
 {
@@ -281,10 +289,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_002, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_003
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_003
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_003, Function | SmallTest | Level0)
 {
@@ -296,10 +305,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_003, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_004
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_004
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_004, Function | SmallTest | Level0)
 {
@@ -311,10 +321,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_004, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_005
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_005
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_005, Function | SmallTest | Level0)
 {
@@ -326,10 +337,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_005, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_007
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_007
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_006, Function | SmallTest | Level0)
 {
@@ -341,10 +353,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_006, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_008
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_008
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_007, Function | SmallTest | Level0)
 {
@@ -356,10 +369,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_007, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_009
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_009
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_008, Function | SmallTest | Level0)
 {
@@ -371,10 +385,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_008, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_009
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_009
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_009, Function | SmallTest | Level0)
 {
@@ -386,10 +401,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_009, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetIconById_0010
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_0010
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0010, Function | SmallTest | Level0)
 {
@@ -401,10 +417,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0010, Function | SmallTest | 
 }
 
 /**
- * @tc.number: GetIconById_0011
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_0011
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0011, Function | SmallTest | Level0)
 {
@@ -415,10 +432,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0011, Function | SmallTest | 
 }
 
 /**
- * @tc.number: GetIconById_0012
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_0012
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0012, Function | SmallTest | Level0)
 {
@@ -429,10 +447,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0012, Function | SmallTest | 
 }
 
 /**
- * @tc.number: GetIconById_0013
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_0013
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0013, Function | SmallTest | Level0)
 {
@@ -443,10 +462,11 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0013, Function | SmallTest | 
 }
 
 /**
- * @tc.number: GetIconById_0014
- * @tc.name: test the GetIconById
+ * @tc.name: GetIconById_0014
+ * @tc.type: FUNC
  * @tc.desc: 1.install the hap
  *           2.GetIconById
+ * @tc.require: issueI5MZ4C
  */
 HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0014, Function | SmallTest | Level0)
 {
