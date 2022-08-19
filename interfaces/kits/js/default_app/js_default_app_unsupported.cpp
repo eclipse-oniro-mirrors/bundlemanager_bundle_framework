@@ -28,6 +28,7 @@ constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
+constexpr size_t ARGS_SIZE_FOUR = 4;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 
@@ -90,8 +91,8 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
 
 napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
 {
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
+    size_t argc = ARGS_SIZE_FOUR;
+    napi_value argv[ARGS_SIZE_FOUR] = {nullptr};
     napi_value thisArg = nullptr;
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
