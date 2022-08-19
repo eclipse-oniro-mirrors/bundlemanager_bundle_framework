@@ -55,7 +55,7 @@ const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME = "error:
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME = "error: not same version code.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME = "error: not same version name.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME =
-    "error: not same patch version name.\n";
+    "error: not same patch version code.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME =
     "error: not same patch version name.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_TYPE_NOT_SAME = "error: not same patch type.\n";
@@ -65,6 +65,16 @@ const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME = "error: sam
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST = "error: bundle name is not existed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST = "error: module name is not existed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME = "error: signature is not existed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_ADD_HQF_FAILED = "error: quick fix add hqf failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED =
+    "error: quick fix save innerAppQuickFix failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR =
+    "error: quick fix version code require greater than original hqf.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE = "error: no this quick fix info in database.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS = "error: wrong quick fix status.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO =
+    "error: cannot obtain the bundleInfo from data mgr.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_PATH_FAILED = "error: quick fix remove path failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED = "error: extract diff files failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED = "error: apply diff patch failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN = "error: unknown.\n";
@@ -85,6 +95,8 @@ const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR =
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR = "error: parcel error for setting debug mode.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR = "error: send request error.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED = "error: uid check failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED = "error: quick fix move hqf file failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED = "error: quick fix create path failed.\n";
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
@@ -398,7 +410,21 @@ void BundleTestTool::CreateQuickFixMsgMap(std::unordered_map<int32_t, std::strin
         { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR, MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR },
         { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR,
             MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR },
-        { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED, MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED }
+        { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED, MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_ADD_HQF_FAILED, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_ADD_HQF_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_PATH_FAILED,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_PATH_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED }
     };
 }
 

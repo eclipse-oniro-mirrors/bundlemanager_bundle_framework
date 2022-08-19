@@ -25,16 +25,18 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
-    QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
-        const std::shared_ptr<QuickFixDataMgr> &quickFixDataMgr,
-        const sptr<IQuickFixStatusCallback> &statusCallback);
+    explicit QuickFixDeployer(const std::vector<std::string> &bundleFilePaths);
 
     virtual ~QuickFixDeployer() = default;
 
     virtual ErrCode Execute() override;
 
+    DeployQuickFixResult GetDeployQuickFixResult() const;
+
 private:
     ErrCode DeployQuickFix();
+
+    ErrCode GetQuickFixDataMgr();
 
     ErrCode ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
         InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix);
@@ -78,7 +80,6 @@ private:
 
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
-    sptr<IQuickFixStatusCallback> statusCallback_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
 };
 } // AppExecFwk
