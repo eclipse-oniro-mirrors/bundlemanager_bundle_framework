@@ -78,6 +78,13 @@ const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED =
     "error: hotreload type already existed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO =
     "error: no patch info in bundleInfo.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INVALID_PARAM =
+    "error: invalid param for setting debug mode.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR =
+    "error: internal error for setting debug mode.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR = "error: parcel error for setting debug mode.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR = "error: send request error.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED = "error: uid check failed.\n";
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
@@ -92,7 +99,8 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "              density and icon id\n"
                              "  deployQuickFix      deploy a quick fix patch of an already installed bundle\n"
                              "  switchQuickFix      switch a quick fix patch of an already installed bundle\n"
-                             "  deleteQuickFix      delete a quick fix patch of an already installed bundle\n";
+                             "  deleteQuickFix      delete a quick fix patch of an already installed bundle\n"
+                             "  setDebugMode        enable signature debug mode\n";
 
 const std::string HELP_MSG_GET_REMOVABLE =
     "usage: bundle_test_tool getrm <options>\n"
@@ -196,6 +204,14 @@ const std::string HELP_MSG_DELETE_QUICK_FIX =
     "  -h, --help                             list available commands\n"
     "  -n, --bundle-name  <bundle-name>       specify bundleName of the patch\n";
 
+const std::string HELP_MSG_SET_DEBUG_MODE =
+    "usage: bundle_test_tool setDebugMode <options>\n"
+    "eg:bundle_test_tool setDebugMode -e <0/1>\n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -e, --enable  <enable>                 enable signature debug mode, 1 represents enable debug mode and 0\n"
+    "                                         represents disable debug mode\n";
+
 const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n";
 
@@ -226,6 +242,9 @@ const std::string STRING_SWITCH_QUICK_FIX_OK = "switch quick fix successfully\n"
 const std::string STRING_SWITCH_QUICK_FIX_NG = "switch quick fix failed\n";
 const std::string STRING_DELETE_QUICK_FIX_OK = "delete quick fix successfully\n";
 const std::string STRING_DELETE_QUICK_FIX_NG = "delete quick fix failed\n";
+
+const std::string STRING_SET_DEBUG_MODE_OK = "set debug mode successfully\n";
+const std::string STRING_SET_DEBUG_MODE_NG = "set debug mode failed\n";
 
 const std::string GET_RM = "getrm";
 const std::string SET_RM = "setrm";
@@ -274,6 +293,13 @@ const struct option LONG_OPTIONS_QUICK_FIX[] = {
     {"enable", required_argument, nullptr, 'e'},
     {nullptr, 0, nullptr, 0},
 };
+
+const std::string SHORT_OPTIONS_DEBUG_MODE = "he:";
+const struct option LONG_OPTIONS_DEBUG_MODE[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"enable", required_argument, nullptr, 'e'},
+    {nullptr, 0, nullptr, 0},
+};
 }  // namespace
 
 BundleTestTool::BundleTestTool(int argc, char *argv[]) : ShellCommand(argc, argv, TOOL_NAME)
@@ -296,7 +322,8 @@ ErrCode BundleTestTool::CreateCommandMap()
         {"getIcon", std::bind(&BundleTestTool::RunAsGetIconCommand, this)},
         {"deployQuickFix", std::bind(&BundleTestTool::RunAsDeployQuickFix, this)},
         {"switchQuickFix", std::bind(&BundleTestTool::RunAsSwitchQuickFix, this)},
-        {"deleteQuickFix", std::bind(&BundleTestTool::RunAsDeleteQuickFix, this)}
+        {"deleteQuickFix", std::bind(&BundleTestTool::RunAsDeleteQuickFix, this)},
+        {"setDebugMode", std::bind(&BundleTestTool::RunAsSetDebugMode, this)}
     };
 
     return OHOS::ERR_OK;
@@ -315,7 +342,7 @@ ErrCode BundleTestTool::Init()
     ErrCode result = OHOS::ERR_OK;
     if (bundleMgrProxy_ == nullptr) {
         bundleMgrProxy_ = BundleCommandCommon::GetBundleMgrProxy();
-        if (bundleMgrProxy_) {
+        if (bundleMgrProxy_ != nullptr) {
             if (bundleInstallerProxy_ == nullptr) {
                 bundleInstallerProxy_ = bundleMgrProxy_->GetBundleInstaller();
             }
@@ -365,7 +392,13 @@ void BundleTestTool::CreateQuickFixMsgMap(std::unordered_map<int32_t, std::strin
             MSG_ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED },
         { ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME, MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME },
         { ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO,
-            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO}
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO },
+        { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INVALID_PARAM, MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INVALID_PARAM },
+        { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR, MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR },
+        { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR, MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR },
+        { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR,
+            MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR },
+        { ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED, MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED }
     };
 }
 
@@ -1205,7 +1238,7 @@ ErrCode BundleTestTool::RunAsDeployQuickFix()
 
     int32_t deployResult = DeployQuickFix(quickFixPaths);
     resultReceiver_ = (deployResult == OHOS::ERR_OK) ? STRING_DEPLOY_QUICK_FIX_OK : STRING_DEPLOY_QUICK_FIX_NG;
-    resultReceiver_ += GetQuickFixResMsg(deployResult);
+    resultReceiver_ += GetResMsg(deployResult);
 
     return result;
 }
@@ -1278,7 +1311,7 @@ ErrCode BundleTestTool::RunAsSwitchQuickFix()
     }
     int32_t switchResult = SwitchQuickFix(bundleName, enable);
     resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
-    resultReceiver_ += GetQuickFixResMsg(switchResult);
+    resultReceiver_ += GetResMsg(switchResult);
 
     return result;
 }
@@ -1327,7 +1360,7 @@ ErrCode BundleTestTool::RunAsDeleteQuickFix()
     }
     int32_t switchResult = DeleteQuickFix(bundleName);
     resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
-    resultReceiver_ += GetQuickFixResMsg(switchResult);
+    resultReceiver_ += GetResMsg(switchResult);
 
     return result;
 }
@@ -1439,7 +1472,7 @@ ErrCode BundleTestTool::DeleteQuickFix(const std::string &bundleName)
 #endif
 }
 
-std::string BundleTestTool::GetQuickFixResMsg(int32_t code)
+std::string BundleTestTool::GetResMsg(int32_t code)
 {
     std::unordered_map<int32_t, std::string> quickFixMsgMap;
     CreateQuickFixMsgMap(quickFixMsgMap);
@@ -1447,6 +1480,70 @@ std::string BundleTestTool::GetQuickFixResMsg(int32_t code)
         return quickFixMsgMap.at(code);
     }
     return MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN;
+}
+
+ErrCode BundleTestTool::RunAsSetDebugMode()
+{
+    int32_t result = OHOS::ERR_OK;
+    int32_t option = -1;
+    int32_t counter = 0;
+    int32_t enable = -1;
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_DEBUG_MODE.c_str(), LONG_OPTIONS_DEBUG_MODE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+
+        if (option == -1 || option == '?') {
+            if (counter == 1 && strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            if (optopt == 'e') {
+                // 'bundle_test_tool setDebugMode -e' with no argument
+                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            break;
+        }
+
+        if (option == 'e' && OHOS::StrToInt(optarg, enable)) {
+            APP_LOGD("'bundle_test_tool setDebugMode -e %{public}s'", argv_[optind - 1]);
+            continue;
+        }
+        result = OHOS::ERR_INVALID_VALUE;
+        break;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_SET_DEBUG_MODE);
+        return result;
+    }
+    ErrCode setResult = SetDebugMode(enable);
+    if (setResult == OHOS::ERR_OK) {
+        resultReceiver_ = STRING_SET_DEBUG_MODE_OK;
+    } else {
+        resultReceiver_ = STRING_SET_DEBUG_MODE_NG + GetResMsg(setResult);
+    }
+    return setResult;
+}
+
+ErrCode BundleTestTool::SetDebugMode(int32_t debugMode)
+{
+    if (debugMode != 0 && debugMode != 1) {
+        APP_LOGE("SetDebugMode param is invalid");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INVALID_PARAM;
+    }
+    bool enable = debugMode == 0 ? false : true;
+    if (bundleMgrProxy_ == nullptr) {
+        APP_LOGE("bundleMgrProxy_ is nullptr");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR;
+    }
+    return bundleMgrProxy_->SetDebugMode(enable);
 }
 } // AppExecFwk
 } // OHOS

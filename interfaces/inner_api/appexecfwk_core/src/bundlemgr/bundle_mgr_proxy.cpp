@@ -2866,6 +2866,26 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
     return quickFixManagerProxy;
 }
 
+ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isDebug)) {
+        APP_LOGE("fail to SetDebugMode due to write bundleName fail");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::SET_DEBUG_MODE, data, reply)) {
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR;
+    }
+
+    return reply.ReadInt32();
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

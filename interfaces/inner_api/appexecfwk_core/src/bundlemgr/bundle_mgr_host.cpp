@@ -187,6 +187,7 @@ void BundleMgrHost::init()
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
 #endif
+    funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2111,6 +2112,22 @@ ErrCode BundleMgrHost::HandleGetMediaFileDescriptor(MessageParcel &data, Message
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     close(fd);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetDebugMode(MessageParcel &data, MessageParcel &reply)
+{
+    APP_LOGI("start to process HandleSetDebugMode message");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    bool enable = data.ReadBool();
+    auto ret = SetDebugMode(enable);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDebugMode failed");
+    }
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -26,6 +26,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
+#include "bundle_verify_mgr.h"
 #include "directory_ex.h"
 #include "distributed_bms_proxy.h"
 #include "element_name.h"
@@ -1759,6 +1760,21 @@ void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)
         return;
     }
     commonEventMgr->NotifyBundleStatus(installRes, nullptr);
+}
+
+ErrCode BundleMgrHostImpl::SetDebugMode(bool isDebug)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::ROOT_UID) {
+        APP_LOGE("invalid calling uid %{public}d to set debug mode", callingUid);
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED;
+    }
+    if (isDebug) {
+        BundleVerifyMgr::EnableDebug();
+    } else {
+        BundleVerifyMgr::DisableDebug();
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
