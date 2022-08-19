@@ -26,23 +26,11 @@ namespace AppExecFwk {
 QuickFixManagerHostImpl::QuickFixManagerHostImpl()
 {
     APP_LOGI("create QuickFixManagerHostImpl");
-    Init();
 }
 
 QuickFixManagerHostImpl::~QuickFixManagerHostImpl()
 {
     APP_LOGI("destory QuickFixManagerHostImpl");
-}
-
-void QuickFixManagerHostImpl::Init()
-{
-    APP_LOGI("Init begin");
-    auto quickFixerRunner = EventRunner::Create(Constants::QUICK_FIX_MGR);
-    if (!quickFixerRunner) {
-        APP_LOGE("create quickFixer runner fail");
-        return;
-    }
-    quickFixAsyncMgr_ = std::make_shared<QuickFixAsyncMgr>(quickFixerRunner);
 }
 
 bool QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
@@ -53,12 +41,12 @@ bool QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bun
         APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix wrong parms");
         return false;
     }
-    if (quickFixAsyncMgr_ == nullptr) {
-        APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix quickFixerAsyncMgr is nullptr");
+    if (!GetQuickFixMgr()) {
+        APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix quickFixerMgr is nullptr");
         return false;
     }
 
-    return quickFixAsyncMgr_->DeployQuickFix(bundleFilePaths, statusCallback);
+    return quickFixMgr_->DeployQuickFix(bundleFilePaths, statusCallback);
 }
 
 bool QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, bool enable,
@@ -69,12 +57,12 @@ bool QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, bool
         APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix wrong parms");
         return false;
     }
-    if (quickFixAsyncMgr_ == nullptr) {
-        APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix quickFixerAsyncMgr is nullptr");
+    if (!GetQuickFixMgr()) {
+        APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix quickFixerMgr is nullptr");
         return false;
     }
 
-    return quickFixAsyncMgr_->SwitchQuickFix(bundleName, enable, statusCallback);
+    return quickFixMgr_->SwitchQuickFix(bundleName, enable, statusCallback);
 }
 
 bool QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
@@ -85,12 +73,12 @@ bool QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
         APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix wrong parms");
         return false;
     }
-    if (quickFixAsyncMgr_ == nullptr) {
-        APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix quickFixerAsyncMgr is nullptr");
+    if (!GetQuickFixMgr()) {
+        APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix quickFixerMgr is nullptr");
         return false;
     }
 
-    return quickFixAsyncMgr_->DeleteQuickFix(bundleName, statusCallback);
+    return quickFixMgr_->DeleteQuickFix(bundleName, statusCallback);
 }
 
 bool QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
@@ -104,7 +92,7 @@ bool QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd,
         APP_LOGE("not quick fix file.");
         return false;
     }
-    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_, true);
+    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_);
     if (tmpDir.empty()) {
         APP_LOGE("create tmp dir failed.");
         return false;
@@ -114,6 +102,19 @@ bool QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd,
         APP_LOGE("create file descriptor failed.");
         BundleUtil::DeleteDir(tmpDir);
         return false;
+    }
+    return true;
+}
+
+bool QuickFixManagerHostImpl::GetQuickFixMgr()
+{
+    if (quickFixMgr_ == nullptr) {
+        auto quickFixerRunner = EventRunner::Create(Constants::QUICK_FIX_MGR);
+        if (quickFixerRunner == nullptr) {
+            APP_LOGE("create quickFixer runner fail");
+            return false;
+        }
+        quickFixMgr_ = std::make_shared<QuickFixMgr>(quickFixerRunner);
     }
     return true;
 }

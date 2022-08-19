@@ -23,6 +23,11 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+#include "quick_fix/quick_fix_data_mgr.h"
+#include "quick_fix/quick_fix_switcher.h"
+#include "quick_fix/quick_fix_deleter.h"
+#endif
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -564,6 +569,15 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
             BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
     }
 #endif
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    if (isModuleUpdate_) {
+        APP_LOGD("module update, quick fix old patch need to delete, bundleName:%{public}s", bundleName_.c_str());
+        auto quickFixSwitcher = std::make_unique<QuickFixSwitcher>(bundleName_, false);
+        quickFixSwitcher->Execute();
+        auto quickFixDeleter = std::make_unique<QuickFixDeleter>(bundleName_);
+        quickFixDeleter->Execute();
+    }
+#endif
     OnSingletonChange(installParam.noSkipsKill);
     return result;
 }
@@ -754,6 +768,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     enableGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    if (quickFixDataMgr != nullptr) {
+        APP_LOGD("DeleteInnerAppQuickFix when bundleName :%{public}s uninstall", bundleName.c_str());
+        quickFixDataMgr->DeleteInnerAppQuickFix(bundleName);
+    }
+#endif
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
     return ERR_OK;
 }
@@ -1070,11 +1091,18 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         uninstallModuleVec_.emplace_back(modulePackage_);
     }
 
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
+        APP_LOGE("Singleton not allow changed");
+        return ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE;
+    }
+#else
     if (oldInfo.IsSingleton() && !newInfo.IsSingleton()) {
         singletonState_ = SingletonState::SINGLETON_TO_NON;
     } else if (!oldInfo.IsSingleton() && newInfo.IsSingleton()) {
         singletonState_ = SingletonState::NON_TO_SINGLETON;
     }
+#endif
 
     APP_LOGD("ProcessBundleUpdateStatus with bundleName %{public}s and packageName %{public}s",
         newInfo.GetBundleName().c_str(), modulePackage_.c_str());
@@ -1287,7 +1315,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("SetDirApl failed");
         return ret;
     }
-
+    isModuleUpdate_ = true;
     return ERR_OK;
 }
 

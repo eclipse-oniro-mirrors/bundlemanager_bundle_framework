@@ -25,7 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct AppQuickFix : public Parcelable {
     std::string bundleName; // original bundle name
-    int32_t versionCode = 0; // original bundle version code
+    uint32_t versionCode = 0; // original bundle version code
     std::string versionName; // original bundle version name
 
     AppqfInfo deployedAppqfInfo; // deployed quick fix patch

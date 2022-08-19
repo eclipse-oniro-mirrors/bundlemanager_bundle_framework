@@ -29,7 +29,8 @@ namespace AppExecFwk {
  */
 class BundleToolCallbackStub : public IRemoteStub<IBundleToolCallback> {
 public:
-    BundleToolCallbackStub(std::condition_variable &cv): cv_(cv)
+    BundleToolCallbackStub(std::condition_variable &cv, std::mutex &mutex, bool &dataReady)
+        : cv_(cv), mutex_(mutex), dataReady_(dataReady)
     {
     }
     virtual ~BundleToolCallbackStub() = default;
@@ -39,6 +40,8 @@ private:
     DISALLOW_COPY_AND_MOVE(BundleToolCallbackStub);
 
     std::condition_variable &cv_;
+    std::mutex &mutex_;
+    bool &dataReady_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -27,7 +27,14 @@ public:
     QuickFixStatusCallbackHostlmpl();
     virtual ~QuickFixStatusCallbackHostlmpl() override;
 
+    virtual void OnPatchDeployed(const DeployQuickFixResult &result) override;
+    virtual void OnPatchSwitched(const SwitchQuickFixResult &result) override;
+    virtual void OnPatchDeleted(const DeleteQuickFixResult &result) override;
+    int32_t GetResultCode() const;
+
 private:
+    mutable std::promise<int32_t> resultPromise_;
+
     DISALLOW_COPY_AND_MOVE(QuickFixStatusCallbackHostlmpl);
 };
 }  // namespace AppExecFwk

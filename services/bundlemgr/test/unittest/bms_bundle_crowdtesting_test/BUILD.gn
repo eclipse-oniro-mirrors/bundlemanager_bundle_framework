@@ -62,6 +62,8 @@ ohos_unittest("BmsBundleCrowdtestingTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/bundle_dependencies/dependencies_entry_B:dependencies_entry_B",
+    "${appexecfwk_path}/test/sceneProject/unittest/bundle_dependencies/dependencies_entry_C:dependencies_entry_C",
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
   ]

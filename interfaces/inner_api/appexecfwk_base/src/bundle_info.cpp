@@ -71,6 +71,7 @@ const std::string REQUESTPERMISSION_ABILITIES = "abilities";
 const std::string REQUESTPERMISSION_ABILITY = "ability";
 const std::string REQUESTPERMISSION_WHEN = "when";
 const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
+const std::string BUNDLE_INFO_APPQF_INFO = "appqfInfo";
 }
 
 bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)
@@ -263,6 +264,13 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
         reqPermissionDetails.emplace_back(*requestPermission);
     }
 
+    std::unique_ptr<AppqfInfo> qfInfo(parcel.ReadParcelable<AppqfInfo>());
+    if (!qfInfo) {
+        APP_LOGE("ReadParcelable<AppqfInfo> failed");
+        return false;
+    }
+    appqfInfo = *qfInfo;
+
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     seInfo = Str16ToStr8(parcel.ReadString16());
     label = Str16ToStr8(parcel.ReadString16());
@@ -365,6 +373,8 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     for (auto &reqPermissionDetail : reqPermissionDetails) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &reqPermissionDetail);
     }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appqfInfo);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(seInfo));
@@ -525,7 +535,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_MODULE_DIRS, bundleInfo.moduleDirs},
         {BUNDLE_INFO_MODULE_RES_PATHS, bundleInfo.moduleResPaths},
         {BUNDLE_INFO_SINGLETON, bundleInfo.singleton},
-        {BUNDLE_INFO_APP_INDEX, bundleInfo.appIndex}
+        {BUNDLE_INFO_APP_INDEX, bundleInfo.appIndex},
+        {BUNDLE_INFO_APPQF_INFO, bundleInfo.appqfInfo}
     };
 }
 
@@ -866,6 +877,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         BUNDLE_INFO_APP_INDEX,
         bundleInfo.appIndex,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AppqfInfo>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_APPQF_INFO,
+        bundleInfo.appqfInfo,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

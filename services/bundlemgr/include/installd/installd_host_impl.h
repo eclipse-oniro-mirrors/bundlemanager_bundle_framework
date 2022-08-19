@@ -130,6 +130,8 @@ public:
     virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath) override;
 
+    virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
 };

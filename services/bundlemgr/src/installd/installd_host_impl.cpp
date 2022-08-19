@@ -488,7 +488,7 @@ ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const st
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::ExtractDiffFiles(filePath, targetPath, cpuAbi)) {
-        return ERR_APPEXECFWK_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
     }
     return ERR_OK;
 }
@@ -505,8 +505,18 @@ ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath)) {
-        return ERR_APPEXECFWK_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::IsExistDir(const std::string &dir, bool &isExist)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    isExist = InstalldOperator::IsExistDir(dir);
     return ERR_OK;
 }
 }  // namespace AppExecFwk

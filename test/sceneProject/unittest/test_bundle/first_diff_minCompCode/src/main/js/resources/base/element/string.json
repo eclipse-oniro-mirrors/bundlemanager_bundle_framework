@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "entry_MainAbility_entry",
+      "value": "entry_MainAbility_entry"
+    },
+    {
+      "name": "mainability_description",
+      "value": "JS_Phone_Empty Feature Ability"
+    },
+    {
+      "name": "l2jsdemo_MainAbility",
+      "value":"l2jsdemo_MainAbility"
+    }
+  ]
+}

@@ -208,7 +208,6 @@ void BMSEventHandler::AfterBmsStart()
     ClearCache();
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
-        ClearPreInstallCache();
     }
 }
 
@@ -239,6 +238,12 @@ void BMSEventHandler::BundleBootStartEvent()
 
 void BMSEventHandler::BundleRebootStartEvent()
 {
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (LoadPreInstallProFile()) {
+        UpdateAllPrivilegeCapability();
+    }
+#endif
+
     OnBundleRebootStart();
     needNotifyBundleScanStatus_ = true;
 }
@@ -739,9 +744,9 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
         InnerProcessBootPreBundleProFileInstall(userId);
         return;
     }
-#endif
-
+#else
     ProcessBootBundleInstallFromScan(userId);
+#endif
 }
 
 void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
@@ -891,9 +896,9 @@ void BMSEventHandler::ProcessRebootBundleInstall()
         ProcessReBootPreBundleProFileInstall();
         return;
     }
-#endif
-
+#else
     ProcessRebootBundleInstallFromScan();
+#endif
 }
 
 void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
@@ -1007,11 +1012,19 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         if (filePaths.empty()) {
+#ifdef USE_PRE_BUNDLE_PROFILE
+            UpdateRemovable(bundleName, removable);
+            UpdateRecoverable(bundleName, recoverable);
+#endif
             continue;
         }
 
         if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
+#ifdef USE_PRE_BUNDLE_PROFILE
+            UpdateRemovable(bundleName, removable);
+            UpdateRecoverable(bundleName, recoverable);
+#endif
         }
     }
 }
@@ -1332,5 +1345,100 @@ bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConf
     preBundleConfigInfo = *iter;
     return true;
 }
+
+#ifdef USE_PRE_BUNDLE_PROFILE
+void BMSEventHandler::UpdateRemovable(const std::string &bundleName, bool removable)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    dataMgr->UpdateRemovable(bundleName, removable);
+}
+
+void BMSEventHandler::UpdateRecoverable(const std::string &bundleName, bool recoverable)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    dataMgr->UpdateRecoverable(bundleName, recoverable);
+}
+
+void BMSEventHandler::UpdateAllPrivilegeCapability()
+{
+    for (const auto &preBundleConfigInfo : installListCapabilities_) {
+        UpdatePrivilegeCapability(preBundleConfigInfo);
+    }
+}
+
+void BMSEventHandler::UpdatePrivilegeCapability(
+    const PreBundleConfigInfo &preBundleConfigInfo)
+{
+    auto &bundleName = preBundleConfigInfo.bundleName;
+    InnerBundleInfo innerBundleInfo;
+    if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGW("App(%{public}s) is not installed.", bundleName.c_str());
+        return;
+    }
+
+    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint())) {
+        APP_LOGW("App(%{public}s) signature verify failed", bundleName.c_str());
+        return;
+    }
+
+    UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
+}
+
+bool BMSEventHandler::MatchSignature(
+    const PreBundleConfigInfo &configInfo, const std::string &signature)
+{
+    if (configInfo.appSignature.empty()) {
+        APP_LOGW("appSignature is empty");
+        return true;
+    }
+
+    return std::find(configInfo.appSignature.begin(),
+        configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
+}
+
+void BMSEventHandler::UpdateTrustedPrivilegeCapability(
+    const PreBundleConfigInfo &preBundleConfigInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    ApplicationInfo appInfo;
+    appInfo.keepAlive = preBundleConfigInfo.keepAlive;
+    appInfo.singleton = preBundleConfigInfo.singleton;
+    appInfo.bootable = preBundleConfigInfo.bootable;
+    appInfo.runningResourcesApply = preBundleConfigInfo.runningResourcesApply;
+    appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
+    for (const auto &event : preBundleConfigInfo.allowCommonEvent) {
+        appInfo.allowCommonEvent.emplace_back(event);
+    }
+
+    dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
+}
+
+bool BMSEventHandler::FetchInnerBundleInfo(
+    const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    return dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS

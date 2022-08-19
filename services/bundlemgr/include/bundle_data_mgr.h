@@ -698,6 +698,12 @@ public:
 
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
+    void UpdateRemovable(const std::string &bundleName, bool removable);
+    void UpdateRecoverable(const std::string &bundleName, bool recoverable);
+    void UpdatePrivilegeCapability(
+        const std::string &bundleName, const ApplicationInfo &appInfo);
+    bool FetchInnerBundleInfo(
+        const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 

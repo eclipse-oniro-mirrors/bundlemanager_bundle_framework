@@ -33,11 +33,15 @@ private:
     ErrCode SwitchQuickFix();
     ErrCode EnableQuickFix(const std::string &bundleName);
     ErrCode DisableQuickFix(const std::string &bundleName);
-    ErrCode InnerSwitchQuickFix(const std::string &bundleName, const InnerAppQuickFix &innerAppQuickFix);
+    ErrCode InnerSwitchQuickFix(const std::string &bundleName, const InnerAppQuickFix &innerAppQuickFix, bool enable);
     InnerAppQuickFix CreateInnerAppqf(const InnerBundleInfo &innerBundleInfo, const QuickFixStatus &status);
+    ErrCode GetDataMgr();
+    ErrCode GetQuickFixDataMgr();
 
     std::string bundleName_;
     bool enable_ = false;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS

@@ -23,6 +23,7 @@
 #include "bundle_info.h"
 #include "common_event_info.h"
 #include "common_profile.h"
+#include "distributed_bundle_info.h"
 #include "extension_ability_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
@@ -31,7 +32,6 @@
 #include "json_util.h"
 #include "shortcut_info.h"
 #include "want.h"
-#include "distributed_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1136,6 +1136,11 @@ public:
     std::optional<InnerModuleInfo> GetInnerModuleInfoByModuleName(const std::string &moduleName) const;
 
     void GetModuleNames(std::vector<std::string> &moduleNames) const;
+
+    const std::map<std::string, InnerModuleInfo> &GetInnerModuleInfos() const
+    {
+        return innerModuleInfos_;
+    }
     /**
      * @brief Fetch all innerModuleInfos, can be modify.
      */
@@ -1568,6 +1573,12 @@ public:
     std::string GetModuleNameByPackage(const std::string &packageName) const;
 
     std::string GetModuleTypeByPackage(const std::string &packageName) const;
+
+    AppqfInfo GetAppqfInfo() const;
+
+    void SetAppqfInfo(const AppqfInfo &appqfInfo);
+    void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
+    void UpdateRemovable(bool isPreInstall, bool removable);
 
 private:
     void GetBundleWithAbilities(

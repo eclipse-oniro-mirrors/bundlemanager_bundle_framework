@@ -16,7 +16,7 @@
 #ifndef NAPI_JS_DEFAULT_APP_H
 #define NAPI_JS_DEFAULT_APP_H
 
-#if BUNDLE_FRAMEWORK_DEFAULT_APP
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "bundle_info.h"
 #include "want.h"
 #endif
@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-#if BUNDLE_FRAMEWORK_DEFAULT_APP
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 struct DefaultAppInfo {
     explicit DefaultAppInfo(napi_env napiEnv);
     ~DefaultAppInfo();
