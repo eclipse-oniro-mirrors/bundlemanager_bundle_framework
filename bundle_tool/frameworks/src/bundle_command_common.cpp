@@ -438,6 +438,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: moduleName is inconsistent.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE,
+        "error: singleton is incompatible with installed app.",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }

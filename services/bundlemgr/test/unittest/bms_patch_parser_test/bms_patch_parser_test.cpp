@@ -132,7 +132,7 @@ void BmsPatchParserTest::CheckProfileTypes(const nlohmann::json &checkedProfileJ
 /**
  * @tc.number: TestParse_0001
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test success
  */
@@ -159,7 +159,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0001, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0002
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when bundleName does not exist in the patch.json
  */
@@ -171,7 +171,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0002, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0003
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when versionCode does not exist in the patch.json
  */
@@ -183,7 +183,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0003, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0004
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch succeed when versionName does not exist in the patch.json
  */
@@ -195,7 +195,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0004, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0005
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when patchVersionCode does not exist in the patch.json
  */
@@ -208,7 +208,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0005, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0006
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch succeed when patchVersionName does not exist in the patch.json
  */
@@ -220,7 +220,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0006, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0007
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when name does not exist in the patch.json
  */
@@ -232,7 +232,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0007, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0008
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when type does not exist in the patch.json
  */
@@ -244,7 +244,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0008, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0009
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch succeed when deviceTypes does not exist in the patch.json
  */
@@ -256,7 +256,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0009, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0010
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch succeed when originalModuleHash does not exist in the patch.json
  */
@@ -268,7 +268,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0010, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0011
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when app does not exist in the patch.json
  */
@@ -288,7 +288,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0011, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0012
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when module does not exist in the patch.json
  */
@@ -308,7 +308,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0012, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0013
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when both app and module do not exist in the patch.json
  */
@@ -329,7 +329,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0013, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0014
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when app is not an object
  */
@@ -343,7 +343,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0014, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0015
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when module is not an object
  */
@@ -357,7 +357,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0015, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0016
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when bundlename is not a string
  */
@@ -371,7 +371,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0016, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0017
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when versionCode is not a number
  */
@@ -385,7 +385,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0017, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0018
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when versionName is not a string
  */
@@ -399,7 +399,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0018, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0019
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when patchVersionCode is not a number
  */
@@ -413,7 +413,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0019, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0020
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when versionName is not a string
  */
@@ -427,7 +427,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0020, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0021
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when name is not a string
  */
@@ -441,7 +441,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0021, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0022
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when type is not a string
  */
@@ -455,7 +455,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0022, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0023
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when deviceType is not a array
  */
@@ -469,7 +469,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0023, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0024
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when deviceType is a array but its arrayType is not string
  */
@@ -483,7 +483,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0024, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0025
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch succeed when deviceType is a array but it is NULL
  */
@@ -497,7 +497,7 @@ HWTEST_F(BmsPatchParserTest, TestParse_0025, Function | SmallTest | Level0)
 /**
  * @tc.number: TestParse_0026
  * @tc.name: parse patch package by patch.json
- * @tc.require: AR000HBO6
+ * @tc.require: issueI5MZ7R
  * @tc.desc: 1. system running normally
  *           2. test parse patch failed when originalModuleHash is not a string
  */

@@ -26,6 +26,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
+#include "bundle_verify_mgr.h"
 #include "directory_ex.h"
 #include "distributed_bms_proxy.h"
 #include "element_name.h"
@@ -904,7 +905,8 @@ bool BundleMgrHostImpl::DumpBundleInfo(
         BundleFlag::GET_BUNDLE_WITH_ABILITIES |
         BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
-        BundleFlag::GET_BUNDLE_WITH_HASH_VALUE, bundleInfo, userId)) {
+        BundleFlag::GET_BUNDLE_WITH_HASH_VALUE |
+        BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, bundleInfo, userId)) {
         APP_LOGE("get bundleInfo(%{public}s) failed", bundleName.c_str());
         return false;
     }
@@ -1661,6 +1663,13 @@ sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 }
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+sptr<IAppControlMgr> BundleMgrHostImpl::GetAppControlProxy()
+{
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetAppControlProxy();
+}
+#endif
+
 sptr<IQuickFixManager> BundleMgrHostImpl::GetQuickFixManagerProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -1751,6 +1760,21 @@ void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)
         return;
     }
     commonEventMgr->NotifyBundleStatus(installRes, nullptr);
+}
+
+ErrCode BundleMgrHostImpl::SetDebugMode(bool isDebug)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::ROOT_UID) {
+        APP_LOGE("invalid calling uid %{public}d to set debug mode", callingUid);
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED;
+    }
+    if (isDebug) {
+        BundleVerifyMgr::EnableDebug();
+    } else {
+        BundleVerifyMgr::DisableDebug();
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

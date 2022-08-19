@@ -55,5 +55,30 @@ ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult 
     }
     return HAP_VERIFY_ERR_MAP.at(ret);
 }
+
+bool BundleVerifyMgr::isDebug_ = false;
+
+void BundleVerifyMgr::EnableDebug()
+{
+    if (isDebug_) {
+        APP_LOGD("verify mode is already debug mode");
+        return;
+    }
+    if (!Security::Verify::EnableDebugMode()) {
+        APP_LOGE("start debug mode failed");
+        return;
+    }
+    isDebug_ = true;
+}
+
+void BundleVerifyMgr::DisableDebug()
+{
+    if (!isDebug_) {
+        APP_LOGD("verify mode is already signature mode");
+        return;
+    }
+    Security::Verify::DisableDebugMode();
+    isDebug_ = false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -46,7 +46,6 @@ constexpr const char* THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
 constexpr const char* THIRD_SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* THIRD_PARTY_APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-constexpr const char* QUICK_FIX_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service/quickFix";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
 constexpr const char* ASSETS_DIR = "assets";
@@ -118,6 +117,8 @@ const std::map<std::string, std::string> ABI_MAP = {
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
+constexpr const char* PATCH_PATH = "patch_";
+constexpr const char* HOT_RELOAD_PATH = "hotreload_";
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -184,6 +185,7 @@ constexpr uint8_t MAX_HAP_NUMBER = 128;
 
 // distributed database
 constexpr const char* APP_ID = "bundle_manager_service";
+constexpr const char* DISTRIBUTED_APP_ID = "distributed_bundle_manager_service";
 constexpr const char* STORE_ID = "installed_bundle_datas";
 constexpr const char* ABILITY_USAGE_STORE_ID = "ability_usage_datas";
 constexpr const char* PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";

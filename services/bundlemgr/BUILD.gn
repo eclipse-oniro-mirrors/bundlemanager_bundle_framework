@@ -40,6 +40,10 @@ config("rdb_config") {
   include_dirs = [ "include/rdb" ]
 }
 
+config("app_control_config") {
+  include_dirs = [ "include/app_control" ]
+}
+
 config("bundlemgr_parse_config") {
   include_dirs = [
     "//third_party/json/include",
@@ -312,6 +316,12 @@ ohos_shared_library("libbms") {
       "src/kvstore_death_recipient_callback.cpp",
       "src/preinstall_data_storage.cpp",
     ]
+  }
+
+  if (bundle_framework_app_control) {
+    configs += [ ":app_control_config" ]
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += app_control
   }
 
   subsystem_name = "bundlemanager"

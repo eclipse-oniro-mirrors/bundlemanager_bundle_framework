@@ -48,37 +48,14 @@ void QuickFixDataMgr::InitStatesMap()
     statesMap_ = {
         {QuickFixStatus::DEPLOY_START, QuickFixStatus::DEPLOY_END},
         {QuickFixStatus::DEPLOY_END, QuickFixStatus::SWITCH_START},
+        {QuickFixStatus::SWITCH_START, QuickFixStatus::SWITCH_START},
         {QuickFixStatus::SWITCH_START, QuickFixStatus::SWITCH_END},
+        {QuickFixStatus::SWITCH_START, QuickFixStatus::DEPLOY_END},
         {QuickFixStatus::SWITCH_END, QuickFixStatus::DELETE_START},
+        {QuickFixStatus::DELETE_START, QuickFixStatus::DELETE_START},
+        {QuickFixStatus::DELETE_START, QuickFixStatus::SWITCH_END},
         {QuickFixStatus::DELETE_START, QuickFixStatus::DELETE_END}
     };
-}
-
-ErrCode QuickFixDataMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
-{
-    if (bundleFilePaths.empty()) {
-        APP_LOGE("QuickFixDataMgr::DeployQuickFix wrong parms");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode QuickFixDataMgr::SwitchQuickFix(const std::string &bundleName)
-{
-    if (bundleName.empty()) {
-        APP_LOGE("QuickFixDataMgr::SwitchQuickFix wrong parms");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode QuickFixDataMgr::DeleteQuickFix(const std::string &bundleName)
-{
-    if (bundleName.empty()) {
-        APP_LOGE("QuickFixDataMgr::DeleteQuickFix wrong parms");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
-    }
-    return ERR_OK;
 }
 
 bool QuickFixDataMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
@@ -119,6 +96,39 @@ bool QuickFixDataMgr::DeleteInnerAppQuickFix(const std::string &bundleName)
         return false;
     }
     return quickFixManagerDb_->DeleteInnerAppQuickFix(bundleName);
+}
+
+bool QuickFixDataMgr::IsNextStatusExisted(const QuickFixStatus &curStatus, const QuickFixStatus &nextStatus)
+{
+    auto statusRange = statesMap_.equal_range(curStatus);
+    for (auto curIterator = statusRange.first; curIterator != statusRange.second; ++curIterator) {
+        if (curIterator->second == nextStatus) {
+            return true;
+        }
+    }
+    APP_LOGE("IsNextStatusExisted failed due to invalid curStatus %{public}d", curStatus);
+    return false;
+}
+
+bool QuickFixDataMgr::UpdateQuickFixStatus(const QuickFixStatus &nextStatus, InnerAppQuickFix &innerAppQuickFix)
+{
+    QuickFixMark fixMark = innerAppQuickFix.GetQuickFixMark();
+    if (fixMark.status == QuickFixStatus::DEFAULT_STATUS || nextStatus == QuickFixStatus::DEFAULT_STATUS) {
+        APP_LOGE("status is invalid");
+        return false;
+    }
+
+    // check next status to be updated
+    if (!IsNextStatusExisted(static_cast<QuickFixStatus>(fixMark.status), nextStatus)) {
+        APP_LOGE("next status %{public}d cannot be transferred by current status %{public}d", nextStatus,
+            fixMark.status);
+        return false;
+    }
+
+    fixMark.status = nextStatus;
+    innerAppQuickFix.SetQuickFixMark(fixMark);
+
+    return SaveInnerAppQuickFix(innerAppQuickFix);
 }
 } // OHOS
 } // AppExecFwk

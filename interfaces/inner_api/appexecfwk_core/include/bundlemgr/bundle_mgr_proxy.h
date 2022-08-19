@@ -668,6 +668,11 @@ public:
 
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    virtual sptr<IAppControlMgr> GetAppControlProxy() override;
+#endif
+    virtual ErrCode SetDebugMode(bool isDebug) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

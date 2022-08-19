@@ -31,6 +31,8 @@ private:
     ErrCode CreateCommandMap() override;
     ErrCode CreateMessageMap() override;
     ErrCode Init() override;
+    void CreateQuickFixMsgMap(std::unordered_map<int32_t, std::string> &quickFixMsgMap);
+    std::string GetResMsg(int32_t code);
 
     ErrCode RunAsHelpCommand();
     ErrCode RunAsCheckCommand();
@@ -46,9 +48,11 @@ private:
     ErrCode RunAsDeployQuickFix();
     ErrCode RunAsSwitchQuickFix();
     ErrCode RunAsDeleteQuickFix();
+    ErrCode RunAsSetDebugMode();
 
     std::condition_variable cv_;
     std::mutex mutex_;
+    bool dataReady_ {false};
 
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;
@@ -73,6 +77,7 @@ private:
     ErrCode SwitchQuickFix(const std::string &bundleName, int32_t enable);
     ErrCode DeleteQuickFix(const std::string &bundleName);
     ErrCode GetQuickFixPath(int32_t index, std::vector<std::string>& quickFixPaths) const;
+    ErrCode SetDebugMode(int32_t debugMode);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

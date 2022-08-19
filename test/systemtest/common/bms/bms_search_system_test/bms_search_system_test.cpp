@@ -1149,7 +1149,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2800, Function | MediumTest | Level1)
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_EQ(commonTool.VectorToStr(bundleInfo.hapModuleNames), "com.third.hiworld.example.h1");
-    EXPECT_EQ(commonTool.VectorToStr(bundleInfo.moduleNames), "testability");
+    EXPECT_EQ(commonTool.VectorToStr(bundleInfo.moduleNames), "testability1");
     TearDownTestCase();
     std::cout << "END BMS_Search_2800" << std::endl;
 }
@@ -1207,7 +1207,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3000, Function | MediumTest | Level1)
 
     bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
     EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle1");
-    EXPECT_EQ(hapModuleInfo.moduleName, "testability");
+    EXPECT_EQ(hapModuleInfo.moduleName, "testability1");
     EXPECT_TRUE(queryResult);
     TearDownTestCase();
     std::cout << "END BMS_Search_3000" << std::endl;

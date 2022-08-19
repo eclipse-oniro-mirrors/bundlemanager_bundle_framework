@@ -1,0 +1,116 @@
+{
+    "app": {
+        "apiVersion": {
+            "compatible": 5,
+            "releaseType": "Beta1",
+            "target": 5
+        },
+        "bundleName": "com.example.bmsaccesstoken1",
+        "vendor": "example",
+        "version": {
+            "code": 1,
+            "name": "1.0"
+        }
+    },
+    "deviceConfig": {},
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:mainability_description",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777218,
+                "isVisible": "true",
+                "label": "$string:app_name",
+                "labelId": 16777216,
+                "language": "js",
+                "launchType": "standard",
+                "metaData": {
+                    "customizeData": [
+                        {
+                            "name": "originWidgetName",
+                            "value": "com.weather.testWidget"
+                        }
+                    ]
+                },
+                "name": ".MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "type": "page"
+            }
+        ],
+        "definePermissions": [
+            {
+                "availableLevel": "normal",
+                "description": "ALPHA description",
+                "distributedSceneEnable": true,
+                "grantMode": "user_grant",
+                "label": "ALPHA label",
+                "name": "ohos.permission.ALPHA",
+                "provisionEnable": true
+            },
+            {
+                "availableLevel": "normal",
+                "description": "BETA description",
+                "distributedSceneEnable": true,
+                "grantMode": "system_grant",
+                "label": "BETA label",
+                "name": "ohos.permission.BETA",
+                "provisionEnable": true
+            }
+        ],
+        "deviceType": [
+            "default"
+        ],
+        "distro": {
+            "deliveryWithInstall": true,
+            "moduleName": "feature",
+            "moduleType": "feature",
+            "virtualMachine": "ark0.0.0.2"
+        },
+        "js": [
+            {
+                "name": "default",
+                "pages": [
+                    "pages/index/index"
+                ],
+                "window": {
+                    "autoDesignWidth": false,
+                    "designWidth": 720
+                }
+            }
+        ],
+        "name": ".MyApplication2",
+        "package": "com.example.bmsaccesstoken2",
+        "reqPermissions": [
+            {
+                "name": "ohos.permission.ALPHA",
+                "reason": "use ohos.permission.ALPHA"
+            },
+            {
+                "name": "ohos.permission.KEEP_BACKGROUND_RUNNING",
+                "reason": "use ohos.permission.KEEP_BACKGROUND_RUNNING"
+            },
+            {
+                "name": "ohos.permission.LOCATION_IN_BACKGROUND",
+                "reason": "use ohos.permission.LOCATION_IN_BACKGROUND"
+            },
+            {
+                "name": "ohos.permission.USE_BLUETOOTH",
+                "reason": "use ohos.permission.USE_BLUETOOTH"
+            },
+            {
+                "name": "ohos.permission.SYSTEM_FLOAT_WINDOW",
+                "reason": "use ohos.permission.SYSTEM_FLOAT_WINDOW"
+            }
+        ]
+    }
+}

@@ -184,6 +184,10 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_FILE_DESCRIPTOR, &BundleMgrHost::HandleGetMediaFileDescriptor);
     funcMap_.emplace(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, &BundleMgrHost::HandleGetQuickFixManagerProxy);
     funcMap_.emplace(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, &BundleMgrHost::HandleGetUdidByNetworkId);
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
+#endif
+    funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1812,6 +1816,24 @@ ErrCode BundleMgrHost::HandleGetDefaultAppProxy(MessageParcel &data, MessageParc
 }
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+ErrCode BundleMgrHost::HandleGetAppControlProxy(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IAppControlMgr> appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is nullptr.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(appControlProxy->AsObject())) {
+        APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+#endif
+
 ErrCode BundleMgrHost::HandleGetSandboxAbilityInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2090,6 +2112,22 @@ ErrCode BundleMgrHost::HandleGetMediaFileDescriptor(MessageParcel &data, Message
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     close(fd);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetDebugMode(MessageParcel &data, MessageParcel &reply)
+{
+    APP_LOGI("start to process HandleSetDebugMode message");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    bool enable = data.ReadBool();
+    auto ret = SetDebugMode(enable);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDebugMode failed");
+    }
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

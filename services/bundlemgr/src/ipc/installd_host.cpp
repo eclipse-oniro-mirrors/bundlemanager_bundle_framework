@@ -54,6 +54,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::GET_FILE_STAT, &InstalldHost::HandleGetFileStat);
     funcMap_.emplace(IInstalld::Message::EXTRACT_DIFF_FILES, &InstalldHost::HandleExtractDiffFiles);
     funcMap_.emplace(IInstalld::Message::APPLY_DIFF_PATCH, &InstalldHost::HandleApplyDiffPatch);
+    funcMap_.emplace(IInstalld::Message::IS_EXIST_DIR, &InstalldHost::HandleIsExistDir);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -268,6 +269,19 @@ bool InstalldHost::HandleApplyDiffPatch(MessageParcel &data, MessageParcel &repl
     std::string newSoPath = Str16ToStr8(data.ReadString16());
     ErrCode result = ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleIsExistDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string path = Str16ToStr8(data.ReadString16());
+    bool isExist = false;
+    ErrCode result = IsExistDir(path, isExist);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteBool(isExist)) {
+        APP_LOGE("fail to IsExistDir from reply");
+        return false;
+    }
     return true;
 }
 }  // namespace AppExecFwk

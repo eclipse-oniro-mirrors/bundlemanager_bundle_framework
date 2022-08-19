@@ -646,6 +646,10 @@ public:
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    virtual sptr<IAppControlMgr> GetAppControlProxy() override;
+#endif
+
     virtual ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
         AbilityInfo &info) override;
     virtual ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
@@ -662,6 +666,7 @@ public:
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
     virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
+    virtual ErrCode SetDebugMode(bool isDebug) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

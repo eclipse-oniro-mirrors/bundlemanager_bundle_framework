@@ -37,12 +37,12 @@ ohos_unittest("BmsBundleResourceManagerTest") {
     "${services_path}/bundlemgr/src/hidump_helper.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
   ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_clean_cache.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
@@ -64,6 +64,7 @@ ohos_unittest("BmsBundleResourceManagerTest") {
   deps = [
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/defaultAppTest:defaultAppTest",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/resourceManagerTest:resourceManagerTest",
   ]
   if (bundle_framework_graphics) {
     include_dirs += [

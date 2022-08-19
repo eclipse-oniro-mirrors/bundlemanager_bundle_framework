@@ -573,7 +573,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(info.apiReleaseType, "Beta2");
     EXPECT_EQ(info.keepAlive, true);
     EXPECT_EQ(info.removable, false);
-    EXPECT_EQ(info.userDataClearable, true);
+    EXPECT_EQ(info.userDataClearable, false);
     EXPECT_EQ(info.accessible, true);
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = SYSTEMFIEID_NAME;

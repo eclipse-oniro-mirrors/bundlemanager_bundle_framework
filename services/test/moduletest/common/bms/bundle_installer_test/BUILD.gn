@@ -47,13 +47,13 @@ ohos_moduletest("BmsBundleInstallerModuleTest") {
     "${services_path}/bundlemgr/src/hidump_helper.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
   ]
 
   sources += bundle_install_sources
 
   sources += [
+    "${services_path}/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/test/mock/src/system_ability_helper.cpp",
   ]

@@ -16,7 +16,9 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIXER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIXER_H
 
+#include "bundle_data_mgr.h"
 #include "event_handler.h"
+#include "quick_fix_data_mgr.h"
 #include "quick_fix_status_callback_interface.h"
 
 namespace OHOS {
@@ -28,7 +30,7 @@ public:
     ~QuickFixer() = default;
 
     void DeployQuickFix(const std::vector<std::string> &bundleFilePaths);
-    void SwitchQuickFix(const std::string &bundleName);
+    void SwitchQuickFix(const std::string &bundleName, bool enable);
     void DeleteQuickFix(const std::string &bundleName);
 
 private:

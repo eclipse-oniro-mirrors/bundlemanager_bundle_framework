@@ -218,9 +218,13 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         }
 
         SetEntryInstallationFree(packInfo, newInfo);
+        result = CheckMainElement(newInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
         CollectProvisionInfo(provisionInfo, appPrivilegeCapability, newInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
-        CollectPreBundleInfo(checkParam, newInfo);
+        GetPrivilegeCapability(checkParam, newInfo);
 #endif
         if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
@@ -261,26 +265,15 @@ void BundleInstallChecker::CollectProvisionInfo(
 #endif
 }
 
-void BundleInstallChecker::CollectPreBundleInfo(
+void BundleInstallChecker::GetPrivilegeCapability(
     const InstallCheckParam &checkParam, InnerBundleInfo &newInfo)
 {
-    if (!BMSEventHandler::HasPreInstallProfile()) {
-        return;
-    }
-
-    // reset privilege attributes
-    newInfo.SetKeepAlive(false);
-    newInfo.SetSingleton(false);
-    if (!newInfo.IsPreInstallApp()) {
-        return;
-    }
-
     newInfo.SetRemovable(checkParam.removable);
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
     BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
     bool ret = true;
-    if (!preBundleConfigInfo.appSignature.empty() && !newInfo.GetCertificateFingerprint().empty()) {
+    if (!preBundleConfigInfo.appSignature.empty()) {
         ret = std::find(
             preBundleConfigInfo.appSignature.begin(),
             preBundleConfigInfo.appSignature.end(),
@@ -330,7 +323,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
 
 void BundleInstallChecker::SetEntryInstallationFree(
     const BundlePackInfo &bundlePackInfo,
-    InnerBundleInfo &innrBundleInfo)
+    InnerBundleInfo &innerBundleInfo)
 {
     APP_LOGI("SetEntryInstallationFree start");
     if (!bundlePackInfo.GetValid()) {
@@ -343,10 +336,10 @@ void BundleInstallChecker::SetEntryInstallationFree(
         return module.distro.moduleType == "entry" && module.distro.installationFree;
     });
     if (installationFree) {
-        APP_LOGI("install or upddate hm service");
+        APP_LOGI("install or update hm service");
     }
 
-    innrBundleInfo.SetEntryInstallationFree(installationFree);
+    innerBundleInfo.SetEntryInstallationFree(installationFree);
     APP_LOGI("SetEntryInstallationFree end");
 }
 
@@ -581,6 +574,19 @@ bool BundleInstallChecker::IsContainModuleName(const InnerBundleInfo &newInfo, c
         return false;
     }
     return (find(moduleVec.cbegin(), moduleVec.cend(), moduleName) == moduleVec.cend()) ? false : true;
+}
+
+ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
+{
+    const std::map<std::string, InnerModuleInfo> &innerModuleInfos = info.GetInnerModuleInfos();
+    if (innerModuleInfos.empty()) {
+        return ERR_OK;
+    }
+    if (info.GetEntryInstallationFree() && innerModuleInfos.cbegin()->second.mainAbility.empty()) {
+        APP_LOGE("atomic service's mainElement can't be empty.");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

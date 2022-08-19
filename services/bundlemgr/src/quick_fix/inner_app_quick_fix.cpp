@@ -36,6 +36,11 @@ InnerAppQuickFix::InnerAppQuickFix()
 {
 }
 
+InnerAppQuickFix::InnerAppQuickFix(const AppQuickFix &appQuickFix, const QuickFixMark &mark)
+    : appQuickFix_(appQuickFix), quickFixMark_(mark)
+{
+}
+
 InnerAppQuickFix::~InnerAppQuickFix()
 {
 }
@@ -72,7 +77,7 @@ bool InnerAppQuickFix::RemoveHqfInfo(const std::string &moduleName)
         std::end(appQuickFix_.deployingAppqfInfo.hqfInfos),
         [moduleName] (const auto &item) { return item.moduleName == moduleName;});
     if (iter == appQuickFix_.deployingAppqfInfo.hqfInfos.end()) {
-        APP_LOGE("InnerAppQuickFix::RemoveHqfInfo failed due to find %{public}s", moduleName.c_str());
+        APP_LOGE("InnerAppQuickFix::RemoveHqfInfo failed due to %{public}s does not exist", moduleName.c_str());
         return false;
     }
     appQuickFix_.deployingAppqfInfo.hqfInfos.erase(iter);

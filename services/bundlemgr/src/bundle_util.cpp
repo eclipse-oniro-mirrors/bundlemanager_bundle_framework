@@ -46,7 +46,8 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         APP_LOGE("bundle file path invalid");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    if (!CheckFileType(bundlePath, Constants::INSTALL_FILE_SUFFIX)) {
+    if (!CheckFileType(bundlePath, Constants::INSTALL_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, Constants::QUICK_FIX_FILE_SUFFIX)) {
         APP_LOGE("file is not hap");
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
     }
@@ -301,10 +302,10 @@ void BundleUtil::RemoveHmdfsConfig(const std::string &bundleName)
     }
 }
 
-std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, bool isQuickFix)
+std::string BundleUtil::CreateInstallTempDir(uint32_t installerId)
 {
     std::time_t curTime = std::time(0);
-    std::string tempDir = isQuickFix ? Constants::QUICK_FIX_COPY_PATH : Constants::HAP_COPY_PATH;
+    std::string tempDir = Constants::HAP_COPY_PATH;
     tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
         std::to_string(installerId) + Constants::PATH_SEPARATOR;
     if (!OHOS::ForceCreateDirectory(tempDir)) {

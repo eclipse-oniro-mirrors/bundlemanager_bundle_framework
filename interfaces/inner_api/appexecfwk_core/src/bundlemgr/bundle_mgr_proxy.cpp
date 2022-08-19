@@ -2665,6 +2665,34 @@ sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 }
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get app control proxy due to write InterfaceToken failed.");
+        return nullptr;
+    }
+    if (!SendTransactCmd(IBundleMgr::Message::GET_APP_CONTROL_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IAppControlMgr> appControlProxy = iface_cast<IAppControlMgr>(object);
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is nullptr.");
+    }
+
+    return appControlProxy;
+}
+#endif
+
 ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
     AbilityInfo &info)
 {
@@ -2836,6 +2864,26 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
     }
 
     return quickFixManagerProxy;
+}
+
+ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isDebug)) {
+        APP_LOGE("fail to SetDebugMode due to write bundleName fail");
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::SET_DEBUG_MODE, data, reply)) {
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR;
+    }
+
+    return reply.ReadInt32();
 }
 
 template<typename T>

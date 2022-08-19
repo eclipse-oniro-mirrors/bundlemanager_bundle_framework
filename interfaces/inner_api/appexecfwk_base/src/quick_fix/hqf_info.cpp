@@ -25,7 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string HQF_INFO_HAP_SHA256 = "hapSha256";
-const std::string HQF_INFO_HAP_FILE_PATH = "hapFilePath";
+const std::string HQF_INFO_HQF_FILE_PATH = "hqfFilePath";
 }
 
 void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
@@ -33,7 +33,7 @@ void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
     jsonObject = nlohmann::json {
         {Constants::MODULE_NAME, hqfInfo.moduleName},
         {HQF_INFO_HAP_SHA256, hqfInfo.hapSha256},
-        {HQF_INFO_HAP_FILE_PATH, hqfInfo.hapFilePath}
+        {HQF_INFO_HQF_FILE_PATH, hqfInfo.hqfFilePath}
     };
 }
 
@@ -59,8 +59,8 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        HQF_INFO_HAP_FILE_PATH,
-        hqfInfo.hapFilePath,
+        HQF_INFO_HQF_FILE_PATH,
+        hqfInfo.hqfFilePath,
         JsonType::STRING,
         false,
         parseResult,
@@ -71,7 +71,7 @@ bool HqfInfo::ReadFromParcel(Parcel &parcel)
 {
     moduleName = Str16ToStr8(parcel.ReadString16());
     hapSha256 = Str16ToStr8(parcel.ReadString16());
-    hapFilePath = Str16ToStr8(parcel.ReadString16());
+    hqfFilePath = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -79,7 +79,7 @@ bool HqfInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapSha256));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapFilePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hqfFilePath));
     return true;
 }
 

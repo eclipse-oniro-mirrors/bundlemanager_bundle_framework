@@ -564,7 +564,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
             BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
     }
 #endif
-    OnSingletonChange();
+    OnSingletonChange(installParam.noSkipsKill);
     return result;
 }
 
@@ -721,6 +721,15 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
+    // reboot scan case will not kill the bundle
+    if (installParam.noSkipsKill) {
+        // kill the bundle process during uninstall.
+        if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
+            APP_LOGE("can not kill process");
+            return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
+        }
+    }
+
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -729,16 +738,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         APP_LOGE("uninstall already start");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-
-    // reboot scan case will not kill the bundle
-    if (installParam.noSkipsKill) {
-        // kill the bundle process during uninstall.
-        if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
-            APP_LOGE("can not kill process");
-            dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
-            return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
-        }
     }
 
     std::string packageName;
@@ -1071,11 +1070,18 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         uninstallModuleVec_.emplace_back(modulePackage_);
     }
 
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
+        APP_LOGE("Singleton not allow changed");
+        return ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE;
+    }
+#else
     if (oldInfo.IsSingleton() && !newInfo.IsSingleton()) {
         singletonState_ = SingletonState::SINGLETON_TO_NON;
     } else if (!oldInfo.IsSingleton() && newInfo.IsSingleton()) {
         singletonState_ = SingletonState::NON_TO_SINGLETON;
     }
+#endif
 
     APP_LOGD("ProcessBundleUpdateStatus with bundleName %{public}s and packageName %{public}s",
         newInfo.GetBundleName().c_str(), modulePackage_.c_str());
@@ -1997,7 +2003,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     sysEventInfo_.Reset();
 }
 
-void BaseBundleInstaller::OnSingletonChange()
+void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
 {
     if (singletonState_ == SingletonState::DEFAULT) {
         return;
@@ -2013,7 +2019,7 @@ void BaseBundleInstaller::OnSingletonChange()
     InstallParam installParam;
     installParam.needSendEvent = false;
     installParam.forceExecuted = true;
-    installParam.noSkipsKill = false;
+    installParam.noSkipsKill = noSkipsKill;
     if (singletonState_ == SingletonState::SINGLETON_TO_NON) {
         APP_LOGD("Bundle changes from singleton app to non singleton app");
         installParam.userId = Constants::DEFAULT_USERID;

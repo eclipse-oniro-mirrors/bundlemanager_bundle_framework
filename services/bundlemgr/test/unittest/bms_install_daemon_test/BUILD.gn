@@ -24,10 +24,14 @@ ohos_unittest("BmsInstallDaemonTest") {
   sources = [
     "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
   sources += install_daemon_sources
+
+  sources -=
+      [ "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp" ]
 
   sources += [ "bms_install_daemon_test.cpp" ]
 
@@ -37,7 +41,9 @@ ohos_unittest("BmsInstallDaemonTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/install_daemon/right:right",
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
     "${services_path}/bundlemgr:bundle_parser",
   ]
 

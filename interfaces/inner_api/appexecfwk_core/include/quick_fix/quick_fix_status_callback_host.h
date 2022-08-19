@@ -16,9 +16,10 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_STATUS_CALLBACK_HOST_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_STATUS_CALLBACK_HOST_H
 
+#include <unordered_map>
+
 #include "iremote_stub.h"
 #include "nocopyable.h"
-
 #include "quick_fix_status_callback_interface.h"
 
 namespace OHOS {
@@ -31,6 +32,14 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
+    void Init();
+    void HandleOnPatchDeployed(MessageParcel &data, MessageParcel &reply);
+    void HandleOnPatchSwitched(MessageParcel &data, MessageParcel &reply);
+    void HandleOnPatchDeleted(MessageParcel &data, MessageParcel &reply);
+
+    using QuickFixCallbackFunc = void (QuickFixStatusCallbackHost::*)(MessageParcel &, MessageParcel &);
+    std::unordered_map<uint32_t, QuickFixCallbackFunc> funcMap_;
+
     DISALLOW_COPY_AND_MOVE(QuickFixStatusCallbackHost);
 };
 }
