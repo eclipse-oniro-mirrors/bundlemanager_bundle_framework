@@ -44,9 +44,7 @@
       <option name="push" value="test_bundle/system_module.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/third_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/preview.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleUninstallerTest">
@@ -55,7 +53,6 @@
               src="res"/>
       <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/third_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleUpdaterTest">
@@ -64,7 +61,6 @@
               src="res"/>
       <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/third_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleVerifierTest">
@@ -73,7 +69,6 @@
               src="res"/>
       <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/third_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsMultipleBundleInstallerTest">
@@ -82,24 +77,17 @@
               src="res"/>
       <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/third_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/twelfth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
 
       <option name="push" value="test_bundle/eighth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/ninth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/tenth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/eleventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/second_backup_right.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-      <option name="push" value="test_bundle/thirteenth_right.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push" value="test_bundle/fourteenth_right.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push" value="test_bundle/fifteenth_right.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push" value="test_bundle/sixteenth_right.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-      <option name="push" value="test_bundle/twelfth_right.hap -> /data/test/resource/bms/install_bundle/test1/"
               src="res"/>
       <option name="push" value="test_bundle/second_backup_right.hap -> /data/test/resource/bms/install_bundle/test4/"
               src="res"/>
