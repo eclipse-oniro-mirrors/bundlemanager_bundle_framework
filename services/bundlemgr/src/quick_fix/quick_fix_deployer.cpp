@@ -26,21 +26,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
-    const std::shared_ptr<QuickFixDataMgr> &quickFixDataMgr,
-    const sptr<IQuickFixStatusCallback> &statusCallback) : patchPaths_(bundleFilePaths),
-    quickFixDataMgr_(quickFixDataMgr), statusCallback_(statusCallback)
+QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths) : patchPaths_(bundleFilePaths)
 {}
 
 ErrCode QuickFixDeployer::Execute()
 {
-    if (statusCallback_ == nullptr) {
-        APP_LOGE("QuickFixDeployer statusCallback_ is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
-    }
     ErrCode ret = DeployQuickFix();
-    deployQuickFixResult_.resultCode = ret;
-    statusCallback_->OnPatchDeployed(deployQuickFixResult_);
     if (ret != ERR_OK) {
         APP_LOGE("QuickFixDeployer errcode %{public}d", ret);
     }
@@ -49,9 +40,9 @@ ErrCode QuickFixDeployer::Execute()
 
 ErrCode QuickFixDeployer::DeployQuickFix()
 {
-    if (patchPaths_.empty() || (quickFixDataMgr_ == nullptr)) {
+    if (patchPaths_.empty() || (GetQuickFixDataMgr() != ERR_OK)) {
         APP_LOGE("DeployQuickFix wrong parms");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     std::vector<std::string> realFilePaths;
@@ -106,9 +97,9 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix)
 {
     APP_LOGD("ToDeployStartStatus start.");
-    if (quickFixDataMgr_ == nullptr) {
+    if (GetQuickFixDataMgr() != ERR_OK) {
         APP_LOGE("error: quickFixDataMgr_ is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     std::unordered_map<std::string, AppQuickFix> infos;
     // parse and check multi app quick fix info
@@ -142,7 +133,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         ret = ProcessHotReloadDeployStart(bundleInfo, appQuickFix);
     } else {
         APP_LOGE("unknown quick fix type");
-        return ERR_APPEXECFWK_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
     if (ret != ERR_OK) {
         APP_LOGE("Process Patch or HotReload DeployStart failed, errcode:%{public}d", ret);
@@ -186,7 +177,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
 {
     if (infos.empty()) {
         APP_LOGE("error: appQuickFix infos is empty");
-        return ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     QuickFixChecker checker;
     // check multiple cpuAbi and native library path
@@ -234,8 +225,8 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     const InnerAppQuickFix &oldInnerAppQuickFix)
 {
     APP_LOGD("ToDeployEndStatus start.");
-    if (quickFixDataMgr_ == nullptr) {
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+    if ((GetQuickFixDataMgr() != ERR_OK)) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // create patch path
     AppQuickFix newQuickFix = newInnerAppQuickFix.GetAppQuickFix();
@@ -251,7 +242,7 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
         ret = ProcessHotReloadDeployEnd(newQuickFix, newPatchPath);
     } else {
         APP_LOGE("error: unknown QuickFixType");
-        return ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     if (ret != ERR_OK) {
         APP_LOGE("Process Patch or HotReload DeployEnd failed, bundleName:%{public}s",
@@ -281,7 +272,8 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
     if (ret != ERR_OK) {
-        return ret;
+        APP_LOGE("error: creat patch path failed, errcode %{public}d", ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
     if (!appQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
         const std::string &libraryPath = appQuickFix.deployingAppqfInfo.nativeLibraryPath;
@@ -293,7 +285,6 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         ret = InstalldClient::GetInstance()->IsExistDir(oldSoPath, pathExist);
         if (!pathExist && (ret == ERR_OK)) {
             APP_LOGD("bundleName: %{public}s no so path", appQuickFix.bundleName.c_str());
-            deployQuickFixResult_.isSoContained = false;
             return ERR_OK;
         }
         // extract diff so, diff so path
@@ -308,13 +299,9 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         std::string newSoPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
         if (ret != ERR_OK) {
-            APP_LOGE("ApplyDiffPatch failed, bundleName:%{public}s", appQuickFix.bundleName.c_str());
-            return ret;
-        }
-        ret = InstalldClient::GetInstance()->IsExistDir(newSoPath, deployQuickFixResult_.isSoContained);
-        if (ret != ERR_OK) {
-            APP_LOGW("InstalldClient::IsExistDir failed, errcode: %{public}d", ret);
-            deployQuickFixResult_.isSoContained = true;
+            APP_LOGE("ApplyDiffPatch failed, bundleName:%{public}s, errcode: %{public}d",
+                appQuickFix.bundleName.c_str(), ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
         }
     }
     return ERR_OK;
@@ -327,7 +314,8 @@ ErrCode QuickFixDeployer::ProcessHotReloadDeployEnd(const AppQuickFix &appQuickF
         std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
     if (ret != ERR_OK) {
-        return ret;
+        APP_LOGE("error: creat hotreload path failed, errcode %{public}d", ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
     return ERR_OK;
 }
@@ -340,8 +328,8 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     PatchParser patchParser;
     ErrCode ret = patchParser.ParsePatchInfo(bundleFilePaths, infos);
     if ((ret != ERR_OK) || infos.empty()) {
-        APP_LOGE("parse AppQuickFixFiles failed");
-        return ret;
+        APP_LOGE("parse AppQuickFixFiles failed, errcode %{public}d", ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     QuickFixChecker checker;
     // check multiple AppQuickFix
@@ -353,14 +341,14 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     const QuickFixType &quickFixType = infos.begin()->second.deployingAppqfInfo.type;
     if (quickFixType == QuickFixType::UNKNOWN) {
         APP_LOGE("error unknown quick fix type");
-        return ERR_APPEXECFWK_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
     // hqf file path
     for (auto iter = infos.begin(); iter != infos.end(); ++iter) {
         if (!iter->second.deployingAppqfInfo.hqfInfos.empty()) {
             iter->second.deployingAppqfInfo.hqfInfos[0].hqfFilePath = iter->first;
         } else {
-            return ERR_APPEXECFWK_QUICK_FIX_PROFILE_PARSE_FAILED;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
         }
     }
     return ERR_OK;
@@ -371,18 +359,18 @@ ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInf
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bms == nullptr) {
         APP_LOGE("error: bms is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     std::shared_ptr<BundleDataMgr> dataMgr = bms->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("error: dataMgr is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // check bundleName is exists
     if (!dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO,
         bundleInfo, Constants::ANY_USERID)) {
         APP_LOGE("error: GetBundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
-        return ERR_APPEXECFWK_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
     return ERR_OK;
 }
@@ -392,7 +380,7 @@ ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::strin
 {
     if (infos.empty()) {
         APP_LOGE("error: appQuickFix is empty");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     AppQuickFix oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
     AppQuickFix appQuickFix = infos.begin()->second;
@@ -408,7 +396,7 @@ ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::strin
         const std::string &moduleName = quickFix.deployingAppqfInfo.hqfInfos[0].moduleName;
         if (!newInnerAppQuickFix.AddHqfInfo(quickFix)) {
             APP_LOGE("error: appQuickFix add hqf moduleName: %{public}s failed", moduleName.c_str());
-            return ERR_APPEXECFWK_QUICK_FIX_ADD_HQF_FAILED;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_ADD_HQF_FAILED;
         }
         mark.moduleName = moduleName;
     }
@@ -428,19 +416,19 @@ ErrCode QuickFixDeployer::CheckPatchVersionCode(
         return ERR_OK;
     }
     APP_LOGE("CheckPatchVersionCode failed, version code should be greater than the original");
-    return ERR_APPEXECFWK_QUICK_FIX_VERSION_CODE_ERROR;
+    return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR;
 }
 
 ErrCode QuickFixDeployer::SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
-    if (quickFixDataMgr_ == nullptr) {
+    if ((GetQuickFixDataMgr() != ERR_OK)) {
         APP_LOGE("error: quickFixDataMgr_ is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     if (!quickFixDataMgr_->SaveInnerAppQuickFix(innerAppQuickFix)) {
         APP_LOGE("bundleName: %{public}s, inner app quick fix save failed",
             innerAppQuickFix.GetAppQuickFix().bundleName.c_str());
-        return ERR_APPEXECFWK_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED;
     }
     return ERR_OK;
 }
@@ -454,14 +442,14 @@ ErrCode QuickFixDeployer::ExtractDiffFiles(const std::string &targetPath,
     }
     for (const auto &hqf : appQfInfo.hqfInfos) {
         if (hqf.hqfFilePath.empty()) {
-            APP_LOGE("error: hqfFilePath is empty");
-            return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+            APP_LOGE("error: hapFilePath is empty");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         // extract so to targetPath
         ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, targetPath, appQfInfo.cpuAbi);
         if (ret != ERR_OK) {
-            APP_LOGE("error: ExtractDiffFiles failed");
-            return ret;
+            APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
     }
     APP_LOGD("ExtractDiffFiles end.");
@@ -471,9 +459,9 @@ ErrCode QuickFixDeployer::ExtractDiffFiles(const std::string &targetPath,
 ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath)
 {
     APP_LOGD("MoveHqfFiles start.");
-    if (targetPath.empty() || (quickFixDataMgr_ == nullptr)) {
+    if (targetPath.empty() || (GetQuickFixDataMgr() != ERR_OK)) {
         APP_LOGE("MoveHqfFiles params error");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     QuickFixMark mark = innerAppQuickFix.GetQuickFixMark();
     AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
@@ -483,14 +471,14 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
     }
     for (HqfInfo &info : appQuickFix.deployingAppqfInfo.hqfInfos) {
         if (info.hqfFilePath.empty()) {
-            APP_LOGE("error hqfFilePath is empty");
-            return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+            APP_LOGE("error hapFilePath is empty");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + Constants::QUICK_FIX_FILE_SUFFIX;
         ErrCode ret = InstalldClient::GetInstance()->MoveFile(info.hqfFilePath, realPath);
         if (ret != ERR_OK) {
-            APP_LOGE("error MoveFile failed");
-            return ret;
+            APP_LOGE("error MoveFile failed, errcode: %{public}d", ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
         }
         info.hqfFilePath = realPath;
         mark.moduleName = info.moduleName;
@@ -499,6 +487,23 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
     innerAppQuickFix.SetQuickFixMark(mark);
     innerAppQuickFix.SetAppQuickFix(appQuickFix);
     APP_LOGD("MoveHqfFiles end.");
+    return ERR_OK;
+}
+
+DeployQuickFixResult QuickFixDeployer::GetDeployQuickFixResult() const
+{
+    return deployQuickFixResult_;
+}
+
+ErrCode QuickFixDeployer::GetQuickFixDataMgr()
+{
+    if (quickFixDataMgr_ == nullptr) {
+        quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+        if (quickFixDataMgr_ == nullptr) {
+            APP_LOGE("quickFixDataMgr_ is nullptr");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+    }
     return ERR_OK;
 }
 } // AppExecFwk

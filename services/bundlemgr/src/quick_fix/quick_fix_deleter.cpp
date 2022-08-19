@@ -41,21 +41,21 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
     APP_LOGI("DeleteQuickFix start");
     if (bundleName_.empty()) {
         APP_LOGE("InnerDeleteQuickFix failed due to empty bundleName");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     if (GetQuickFixDataMgr() != ERR_OK) {
         APP_LOGE("quickFixDataMgr is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerAppQuickFix innerAppQuickFix;
     if (!quickFixDataMgr_->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix)) {
         APP_LOGE("no patch in the db");
-        return ERR_APPEXECFWK_QUICK_FIX_NO_PATCH_IN_DATABASE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE;
     }
 
     if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix)) {
         APP_LOGE("update quickfix status %{public}d failed", QuickFixStatus::DELETE_START);
-        return ERR_APPEXECFWK_QUICK_FIX_INVALID_PATCH_STATUS;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
     }
 
     // to delete patch path
@@ -68,7 +68,7 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
     // to remove old patch info from db
     if (!quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName_)) {
         APP_LOGE("InnerDeleteQuickFix failed");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     return ERR_OK;
@@ -85,7 +85,7 @@ ErrCode QuickFixDeleter::ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickF
 
     if (appqfInfo.type == QuickFixType::UNKNOWN) {
         APP_LOGE("unknown quick fix type");
-        return ERR_APPEXECFWK_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
 
     std::string patchPath = Constants::BUNDLE_CODE_DIR;
@@ -101,7 +101,7 @@ ErrCode QuickFixDeleter::ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickF
     APP_LOGD("patch path is %{public}s", patchPath.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(patchPath) != ERR_OK) {
         APP_LOGE("RemoveDir patch path or hot reload path failed");
-        return ERR_APPEXECFWK_QUICK_FIX_REMOVE_PATCH_SO_PATH_FAILED;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_PATH_FAILED;
     }
 
     return ERR_OK;
@@ -113,7 +113,7 @@ ErrCode QuickFixDeleter::GetQuickFixDataMgr()
         quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
         if (quickFixDataMgr_ == nullptr) {
             APP_LOGE("quickFix dataMgr is nullptr");
-            return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }
     return ERR_OK;

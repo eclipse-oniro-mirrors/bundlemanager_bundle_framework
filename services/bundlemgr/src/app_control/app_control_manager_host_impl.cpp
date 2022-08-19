@@ -47,11 +47,11 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_APPEXECFWK_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
 }
@@ -62,7 +62,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const std::vector
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_APPEXECFWK_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppInstallControlRule(callingName, appIds, userId);
 }
@@ -75,11 +75,11 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_APPEXECFWK_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, userId);
 }
@@ -92,11 +92,11 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_APPEXECFWK_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_APPEXECFWK_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
 }

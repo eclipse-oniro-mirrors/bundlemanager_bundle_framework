@@ -516,6 +516,8 @@ private:
     // value is packageName for uninstalling
     bool isFeatureNeedUninstall_ = false;
     std::vector<std::string> uninstallModuleVec_;
+    // for quick fix
+    bool isModuleUpdate_ = false;
 
     int32_t userId_ = Constants::INVALID_USERID;
     bool hasInstalledInUser_ = false;

@@ -48,22 +48,22 @@ ErrCode QuickFixSwitcher::EnableQuickFix(const std::string &bundleName)
 {
     if (bundleName.empty()) {
         APP_LOGE("EnableQuickFix failed due to empty bundleName");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     // enable is true, obtain patch from db to replace the current patch
     if (GetQuickFixDataMgr() != ERR_OK) {
         APP_LOGE("quickFixDataMgr is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerAppQuickFix innerAppQuickFix;
     if (!quickFixDataMgr_->QueryInnerAppQuickFix(bundleName, innerAppQuickFix)) {
         APP_LOGE("no patch in the db");
-        return ERR_APPEXECFWK_QUICK_FIX_NO_PATCH_IN_DATABASE;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE;
     }
     // start to switch patch
     if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::SWITCH_START, innerAppQuickFix)) {
         APP_LOGE("update quickfix status %{public}d failed", QuickFixStatus::SWITCH_START);
-        return ERR_APPEXECFWK_QUICK_FIX_INVALID_PATCH_STATUS;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
     }
     // rollback quick fix in db
     ScopeGuard stateGuard([&] {
@@ -85,7 +85,7 @@ ErrCode QuickFixSwitcher::DisableQuickFix(const std::string &bundleName)
 {
     if (bundleName.empty()) {
         APP_LOGE("DisableQuickFix failed due to empty bundleName");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     InnerAppQuickFix innerAppQuickFix;
     return InnerSwitchQuickFix(bundleName, innerAppQuickFix, false);
@@ -97,30 +97,30 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
     APP_LOGD("InnerSwitchQuickFix start with bundleName: %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("InnerSwitchQuickFix failed due to empty bundleName");
-        return ERR_APPEXECFWK_QUICK_FIX_PARAM_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     if (GetDataMgr() != ERR_OK) {
         APP_LOGE("obtain data mgr failed");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
-        return ERR_APPEXECFWK_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }
 
     // utilize rbAppqfInfo to rollback
     AppqfInfo rbAppqfInfo = innerBundleInfo.GetAppqfInfo();
     if (!enable && rbAppqfInfo.hqfInfos.empty()) {
         APP_LOGE("no patch info to be disabled");
-        return ERR_APPEXECFWK_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO;
     }
     InnerAppQuickFix oldInnerAppQuickFix = CreateInnerAppqf(innerBundleInfo, QuickFixStatus::SWITCH_START);
     innerBundleInfo.SetAppqfInfo(innerAppQuickFix.GetAppQuickFix().deployedAppqfInfo);
     if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("update quickfix innerbundleInfo failed");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     // rollback inner bundle info in db and memory
@@ -131,11 +131,11 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
 
     if (GetQuickFixDataMgr() != ERR_OK) {
         APP_LOGE("quickFixDataMgr is nullptr");
-        return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::SWITCH_END, oldInnerAppQuickFix)) {
         APP_LOGE("update quickfix status %{public}d failed", QuickFixStatus::SWITCH_END);
-        return ERR_APPEXECFWK_QUICK_FIX_INVALID_PATCH_STATUS;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
     }
     dataMgr_->EnableBundle(bundleName);
     innerBundleInfoGuard.Dismiss();
@@ -163,7 +163,7 @@ ErrCode QuickFixSwitcher::GetQuickFixDataMgr()
         quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
         if (quickFixDataMgr_ == nullptr) {
             APP_LOGE("quickFixDataMgr_ is nullptr");
-            return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }
     return ERR_OK;
@@ -175,7 +175,7 @@ ErrCode QuickFixSwitcher::GetDataMgr()
         dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
         if (dataMgr_ == nullptr) {
             APP_LOGE("dataMgr_ is nullptr");
-            return ERR_APPEXECFWK_QUICK_FIX_INTERNAL_ERROR;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }
     return ERR_OK;

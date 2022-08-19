@@ -555,6 +555,8 @@ private:
 
     ErrCode HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleSetDebugMode(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
