@@ -157,6 +157,7 @@ AccessToken::AccessTokenID BundlePermissionMgr::CreateAccessTokenId(
     hapInfo.instIndex = innerBundleInfo.GetAppIndex();
     hapInfo.appIDDesc = innerBundleInfo.GetAppId();
     hapInfo.dlpType = dlpType;
+    hapInfo.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
     AccessToken::AccessTokenIDEx accessToken = AccessToken::AccessTokenKit::AllocHapToken(hapInfo, hapPolicy);
     APP_LOGD("BundlePermissionMgr::CreateAccessTokenId accessTokenId = %{public}u",
              accessToken.tokenIdExStruct.tokenID);
@@ -210,7 +211,8 @@ bool BundlePermissionMgr::UpdateDefineAndRequestPermissions(const Security::Acce
     hapPolicy.permList = newDefPermList;
     hapPolicy.permStateList = newPermissionStateList;
     std::string appId = newInfo.GetAppId();
-    int32_t ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenId, appId, hapPolicy);
+    int32_t ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenId, appId,
+        newInfo.GetBaseApplicationInfo().apiTargetVersion, hapPolicy);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("UpdateDefineAndRequestPermissions UpdateHapToken failed errcode: %{public}d", ret);
         return false;
@@ -326,7 +328,8 @@ bool BundlePermissionMgr::AddDefineAndRequestPermissions(const Security::AccessT
     hapPolicy.permList = newDefPermList;
     hapPolicy.permStateList = newPermissionStateList;
     std::string appId = innerBundleInfo.GetAppId();
-    int32_t ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenId, appId, hapPolicy);
+    int32_t ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenId, appId,
+        innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion, hapPolicy);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("BundlePermissionMgr::AddDefineAndRequestPermissions UpdateHapToken failed errcode: %{public}d", ret);
         return false;
