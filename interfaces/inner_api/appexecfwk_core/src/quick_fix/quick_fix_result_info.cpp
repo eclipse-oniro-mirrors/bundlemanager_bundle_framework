@@ -14,11 +14,23 @@
  */
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
+#include "nlohmann/json.hpp"
 #include "parcel_macro.h"
 #include "quick_fix_result_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string QUICK_FIX_RESULT_CODE = "resultCode";
+const std::string QUICK_FIX_BUNDLE_NAME = "bundleName";
+const std::string QUICK_FIX_BUNDLE_VERSION_CODE = "bundleVersionCode";
+const std::string QUICK_FIX_PATCH_VERSION_CODE = "patchVersionCode";
+const std::string QUICK_FIX_IS_SO_CONTAINED = "isSoContained";
+const std::string QUICK_FIX_TYPE = "type";
+const std::string QUICK_FIX_MODULE_NAME = "moduleNames";
+} // namespace
+
 bool DeployQuickFixResult::ReadFromParcel(Parcel &parcel)
 {
     resultCode = parcel.ReadInt32();
@@ -60,6 +72,30 @@ DeployQuickFixResult *DeployQuickFixResult::Unmarshalling(Parcel &parcel)
     return info;
 }
 
+std::string DeployQuickFixResult::ToString() const
+{
+    nlohmann::json deployResultJson = nlohmann::json {
+        { QUICK_FIX_RESULT_CODE, resultCode },
+        { QUICK_FIX_BUNDLE_NAME, bundleName },
+        { QUICK_FIX_BUNDLE_VERSION_CODE, bundleVersionCode },
+        { QUICK_FIX_PATCH_VERSION_CODE, patchVersionCode },
+        { QUICK_FIX_IS_SO_CONTAINED, isSoContained },
+        { QUICK_FIX_TYPE, static_cast<int32_t>(type) },
+        { QUICK_FIX_MODULE_NAME, moduleNames }
+    };
+    return deployResultJson.dump(Constants::DUMP_INDENT);
+}
+
+void DeployQuickFixResult::SetResCode(int32_t resCode)
+{
+    resultCode = resCode;
+}
+
+int32_t DeployQuickFixResult::GetResCode()
+{
+    return resultCode;
+}
+
 bool SwitchQuickFixResult::ReadFromParcel(Parcel &parcel)
 {
     resultCode = parcel.ReadInt32();
@@ -85,6 +121,25 @@ SwitchQuickFixResult *SwitchQuickFixResult::Unmarshalling(Parcel &parcel)
     return info;
 }
 
+std::string SwitchQuickFixResult::ToString() const
+{
+    nlohmann::json switchResultJson = nlohmann::json {
+        { QUICK_FIX_RESULT_CODE, resultCode },
+        { QUICK_FIX_BUNDLE_NAME, bundleName }
+    };
+    return switchResultJson.dump(Constants::DUMP_INDENT);
+}
+
+int32_t SwitchQuickFixResult::GetResCode()
+{
+    return resultCode;
+}
+
+void SwitchQuickFixResult::SetResCode(int32_t resCode)
+{
+    resultCode = resCode;
+}
+
 bool DeleteQuickFixResult::ReadFromParcel(Parcel &parcel)
 {
     resultCode = parcel.ReadInt32();
@@ -108,6 +163,25 @@ DeleteQuickFixResult *DeleteQuickFixResult::Unmarshalling(Parcel &parcel)
         info = nullptr;
     }
     return info;
+}
+
+std::string DeleteQuickFixResult::ToString() const
+{
+    nlohmann::json deleteResultJson = nlohmann::json {
+        { QUICK_FIX_RESULT_CODE, resultCode },
+        { QUICK_FIX_BUNDLE_NAME, bundleName }
+    };
+    return deleteResultJson.dump(Constants::DUMP_INDENT);
+}
+
+int32_t DeleteQuickFixResult::GetResCode()
+{
+    return resultCode;
+}
+
+void DeleteQuickFixResult::SetResCode(int32_t resCode)
+{
+    resultCode = resCode;
 }
 } // AppExecFwk
 } // OHOS

@@ -48,7 +48,7 @@ const int32_t INDEX_OFFSET = 2;
 // quick fix error code
 const int32_t ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED = 801;
 // quick fix error message
-const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR = "error: install internal error.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR = "error: quick fix internal error.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR = "error: param error.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED = "error: profile parse failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME = "error: not same bundle name.\n";
@@ -97,6 +97,9 @@ const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR = "err
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED = "error: uid check failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED = "error: quick fix move hqf file failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED = "error: quick fix create path failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_OLD_PATCH_OR_HOT_RELOAD_IN_DB =
+    "error: old patch or hot reload in db.\n";
+
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
                              "These are common bundle_test_tool commands list:\n"
@@ -424,7 +427,9 @@ void BundleTestTool::CreateQuickFixMsgMap(std::unordered_map<int32_t, std::strin
         { ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED,
             MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED },
         { ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED,
-            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED }
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED },
+        { ERR_BUNDLEMANAGER_QUICK_FIX_OLD_PATCH_OR_HOT_RELOAD_IN_DB,
+            MSG_ERR_BUNDLEMANAGER_QUICK_FIX_OLD_PATCH_OR_HOT_RELOAD_IN_DB }
     };
 }
 
@@ -1262,9 +1267,10 @@ ErrCode BundleTestTool::RunAsDeployQuickFix()
         return result;
     }
 
-    int32_t deployResult = DeployQuickFix(quickFixPaths);
-    resultReceiver_ = (deployResult == OHOS::ERR_OK) ? STRING_DEPLOY_QUICK_FIX_OK : STRING_DEPLOY_QUICK_FIX_NG;
-    resultReceiver_ += GetResMsg(deployResult);
+    std::shared_ptr<QuickFixResult> deployRes = nullptr;
+    result = DeployQuickFix(quickFixPaths, deployRes);
+    resultReceiver_ = (result == OHOS::ERR_OK) ? STRING_DEPLOY_QUICK_FIX_OK : STRING_DEPLOY_QUICK_FIX_NG;
+    resultReceiver_ += GetResMsg(result, deployRes);
 
     return result;
 }
@@ -1293,7 +1299,7 @@ ErrCode BundleTestTool::RunAsSwitchQuickFix()
     int32_t result = OHOS::ERR_OK;
     int32_t option = -1;
     int32_t counter = 0;
-    int32_t enable = 0;
+    int32_t enable = -1;
     std::string bundleName;
     while (true) {
         counter++;
@@ -1331,13 +1337,14 @@ ErrCode BundleTestTool::RunAsSwitchQuickFix()
         break;
     }
 
-    if (result != OHOS::ERR_OK) {
+    if ((result != OHOS::ERR_OK) || (bundleName.empty()) || (enable < 0) || (enable > 1)) {
         resultReceiver_.append(HELP_MSG_SWITCH_QUICK_FIX);
         return result;
     }
-    int32_t switchResult = SwitchQuickFix(bundleName, enable);
-    resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
-    resultReceiver_ += GetResMsg(switchResult);
+    std::shared_ptr<QuickFixResult> switchRes = nullptr;
+    result = SwitchQuickFix(bundleName, enable, switchRes);
+    resultReceiver_ = (result == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
+    resultReceiver_ += GetResMsg(result, switchRes);
 
     return result;
 }
@@ -1380,18 +1387,20 @@ ErrCode BundleTestTool::RunAsDeleteQuickFix()
         break;
     }
 
-    if (result != OHOS::ERR_OK) {
+    if ((result != OHOS::ERR_OK) || (bundleName.empty())) {
         resultReceiver_.append(HELP_MSG_SWITCH_QUICK_FIX);
         return result;
     }
-    int32_t switchResult = DeleteQuickFix(bundleName);
-    resultReceiver_ = (switchResult == OHOS::ERR_OK) ? STRING_SWITCH_QUICK_FIX_OK : STRING_SWITCH_QUICK_FIX_NG;
-    resultReceiver_ += GetResMsg(switchResult);
+    std::shared_ptr<QuickFixResult> deleteRes = nullptr;
+    result = DeleteQuickFix(bundleName, deleteRes);
+    resultReceiver_ = (result == OHOS::ERR_OK) ? STRING_DELETE_QUICK_FIX_OK : STRING_DELETE_QUICK_FIX_NG;
+    resultReceiver_ += GetResMsg(result, deleteRes);
 
     return result;
 }
 
-ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixPaths)
+ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixPaths,
+    std::shared_ptr<QuickFixResult> &quickFixRes)
 {
     std::set<std::string> realPathSet;
     for (const auto &quickFixPath : quickFixPaths) {
@@ -1427,13 +1436,15 @@ ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixP
         APP_LOGE("DeployQuickFix failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    return callback->GetResultCode();
+
+    return callback->GetResultCode(quickFixRes);
 #else
     return ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED;
 #endif
 }
 
-ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t enable)
+ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t enable,
+    std::shared_ptr<QuickFixResult> &quickFixRes)
 {
     APP_LOGD("SwitchQuickFix bundleName: %{public}s, enable: %{public}d", bundleName.c_str(), enable);
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -1453,22 +1464,19 @@ ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t en
         APP_LOGE("quickFixProxy is null");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    if (enable != 0 && enable != 1) {
-        APP_LOGE("enable is wrong");
-        return IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
-    }
     bool enableFlag = (enable == 0) ? false : true;
     if (!quickFixProxy->SwitchQuickFix(bundleName, enableFlag, callback)) {
         APP_LOGE("SwitchQuickFix failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    return callback->GetResultCode();
+    return callback->GetResultCode(quickFixRes);
 #else
     return ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED;
 #endif
 }
 
-ErrCode BundleTestTool::DeleteQuickFix(const std::string &bundleName)
+ErrCode BundleTestTool::DeleteQuickFix(const std::string &bundleName,
+    std::shared_ptr<QuickFixResult> &quickFixRes)
 {
     APP_LOGD("DeleteQuickFix bundleName: %{public}s", bundleName.c_str());
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -1492,7 +1500,7 @@ ErrCode BundleTestTool::DeleteQuickFix(const std::string &bundleName)
         APP_LOGE("DeleteQuickFix failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    return callback->GetResultCode();
+    return callback->GetResultCode(quickFixRes);
 #else
     return ERR_BUNDLEMANAGER_FEATURE_IS_NOT_SUPPORTED;
 #endif
@@ -1506,6 +1514,22 @@ std::string BundleTestTool::GetResMsg(int32_t code)
         return quickFixMsgMap.at(code);
     }
     return MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN;
+}
+
+std::string BundleTestTool::GetResMsg(int32_t code, const std::shared_ptr<QuickFixResult> &quickFixRes)
+{
+    std::string resMsg;
+    std::unordered_map<int32_t, std::string> quickFixMsgMap;
+    CreateQuickFixMsgMap(quickFixMsgMap);
+    if (quickFixMsgMap.find(code) != quickFixMsgMap.end()) {
+        resMsg += quickFixMsgMap.at(code);
+    } else {
+        resMsg += MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN;
+    }
+    if (code == OHOS::ERR_OK && quickFixRes != nullptr) {
+        resMsg += quickFixRes->ToString() + "\n";
+    }
+    return resMsg;
 }
 
 ErrCode BundleTestTool::RunAsSetDebugMode()

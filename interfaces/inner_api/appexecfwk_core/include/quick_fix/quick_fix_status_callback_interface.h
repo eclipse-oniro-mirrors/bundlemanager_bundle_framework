@@ -25,9 +25,9 @@ class IQuickFixStatusCallback : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.QuickFixStatusCallback");
 
-    virtual void OnPatchDeployed(const DeployQuickFixResult &result) = 0;
-    virtual void OnPatchSwitched(const SwitchQuickFixResult &result) = 0;
-    virtual void OnPatchDeleted(const DeleteQuickFixResult &result) = 0;
+    virtual void OnPatchDeployed(const std::shared_ptr<QuickFixResult> &result) = 0;
+    virtual void OnPatchSwitched(const std::shared_ptr<QuickFixResult> &result) = 0;
+    virtual void OnPatchDeleted(const std::shared_ptr<QuickFixResult> &result) = 0;
 
     enum Message : uint32_t {
         ON_PATCH_DEPLOYED = 1,

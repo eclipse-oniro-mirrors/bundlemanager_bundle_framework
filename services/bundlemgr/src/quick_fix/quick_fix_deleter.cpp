@@ -77,7 +77,22 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
 ErrCode QuickFixDeleter::ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickFix)
 {
     APP_LOGI("start to delete patch dir");
-    const auto &appqfInfo = innerAppQuickFix.GetAppQuickFix().deployedAppqfInfo;
+    std::string bundleName = innerAppQuickFix.GetAppQuickFix().bundleName;
+    auto res = InnerDeletePatchDir(innerAppQuickFix.GetAppQuickFix().deployedAppqfInfo, bundleName);
+    if (res != ERR_OK) {
+        APP_LOGE("delete patch dir of deployedAppqfInfo failed");
+        return res;
+    }
+    res = InnerDeletePatchDir(innerAppQuickFix.GetAppQuickFix().deployingAppqfInfo, bundleName);
+    if (res != ERR_OK) {
+        APP_LOGE("delete patch dir of deployingAppqfInfo failed");
+        return res;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeleter::InnerDeletePatchDir(const AppqfInfo &appqfInfo, const std::string &bundleName)
+{
     if (appqfInfo.hqfInfos.empty()) {
         APP_LOGD("no patch info in bundleInfo");
         return ERR_OK;
@@ -90,12 +105,12 @@ ErrCode QuickFixDeleter::ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickF
 
     std::string patchPath = Constants::BUNDLE_CODE_DIR;
     if (appqfInfo.type == QuickFixType::PATCH) {
-        patchPath += Constants::PATH_SEPARATOR + innerAppQuickFix.GetAppQuickFix().bundleName +
-            Constants::PATH_SEPARATOR + Constants::PATCH_PATH + std::to_string(appqfInfo.versionCode);
+        patchPath += Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
+            std::to_string(appqfInfo.versionCode);
     }
     if (appqfInfo.type == QuickFixType::HOT_RELOAD) {
-        patchPath += Constants::PATH_SEPARATOR + innerAppQuickFix.GetAppQuickFix().bundleName +
-            Constants::PATH_SEPARATOR + Constants::HOT_RELOAD_PATH + std::to_string(appqfInfo.versionCode);
+        patchPath += Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR + Constants::HOT_RELOAD_PATH +
+            std::to_string(appqfInfo.versionCode);
     }
 
     APP_LOGD("patch path is %{public}s", patchPath.c_str());

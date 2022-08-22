@@ -35,34 +35,34 @@ QuickFixStatusCallbackProxy::~QuickFixStatusCallbackProxy()
     APP_LOGI("destroy QuickFixStatusCallbackProxy.");
 }
 
-void QuickFixStatusCallbackProxy::OnPatchDeployed(const DeployQuickFixResult &result)
+void QuickFixStatusCallbackProxy::OnPatchDeployed(const std::shared_ptr<QuickFixResult> &result)
 {
     MessageParcel data;
     MessageParcel reply;
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
-    WRITE_PARCEL_AND_RETURN(Parcelable, data, &result);
+    WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
     if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_DEPLOYED, data, reply)) {
         APP_LOGE("fail to OnPatchDeployed due to transact command fail");
     }
 }
 
-void QuickFixStatusCallbackProxy::OnPatchSwitched(const SwitchQuickFixResult &result)
+void QuickFixStatusCallbackProxy::OnPatchSwitched(const std::shared_ptr<QuickFixResult> &result)
 {
     MessageParcel data;
     MessageParcel reply;
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
-    WRITE_PARCEL_AND_RETURN(Parcelable, data, &result);
+    WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
     if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_SWITCHED, data, reply)) {
         APP_LOGE("fail to OnPatchSwitched due to transact command fail");
     }
 }
 
-void QuickFixStatusCallbackProxy::OnPatchDeleted(const DeleteQuickFixResult &result)
+void QuickFixStatusCallbackProxy::OnPatchDeleted(const std::shared_ptr<QuickFixResult> &result)
 {
     MessageParcel data;
     MessageParcel reply;
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
-    WRITE_PARCEL_AND_RETURN(Parcelable, data, &result);
+    WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
     if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_DELETED, data, reply)) {
         APP_LOGE("fail to OnPatchDeleted due to transact command fail");
     }

@@ -66,49 +66,46 @@ int QuickFixStatusCallbackHost::OnRemoteRequest(
 void QuickFixStatusCallbackHost::HandleOnPatchDeployed(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("start to process deployed patch callback message");
-    DeployQuickFixResult deployQuickFixRes;
-    std::unique_ptr<DeployQuickFixResult> resPtr(data.ReadParcelable<DeployQuickFixResult>());
+    std::shared_ptr<QuickFixResult> resPtr(data.ReadParcelable<DeployQuickFixResult>());
     if (resPtr == nullptr) {
         APP_LOGE("read DeployQuickFixResult failed");
-        deployQuickFixRes.resultCode = ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
-        OnPatchDeployed(deployQuickFixRes);
+        std::shared_ptr<QuickFixResult> deployRes = std::make_shared<DeployQuickFixResult>();
+        deployRes->SetResCode(ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+        OnPatchDeployed(deployRes);
         return;
     }
-    deployQuickFixRes = *resPtr;
 
-    OnPatchDeployed(deployQuickFixRes);
+    OnPatchDeployed(resPtr);
 }
 
 void QuickFixStatusCallbackHost::HandleOnPatchSwitched(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("start to process switched patch callback message");
-    SwitchQuickFixResult switchQuickFixRes;
-    std::unique_ptr<SwitchQuickFixResult> resPtr(data.ReadParcelable<SwitchQuickFixResult>());
+    std::shared_ptr<QuickFixResult> resPtr(data.ReadParcelable<SwitchQuickFixResult>());
     if (resPtr == nullptr) {
         APP_LOGE("read SwitchQuickFixResult failed");
-        switchQuickFixRes.resultCode = ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
-        OnPatchSwitched(switchQuickFixRes);
+        std::shared_ptr<QuickFixResult> switchRes = std::make_shared<SwitchQuickFixResult>();
+        switchRes->SetResCode(ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+        OnPatchSwitched(switchRes);
         return;
     }
-    switchQuickFixRes = *resPtr;
 
-    OnPatchSwitched(switchQuickFixRes);
+    OnPatchSwitched(resPtr);
 }
 
 void QuickFixStatusCallbackHost::HandleOnPatchDeleted(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("start to process deleted patch callback message");
-    DeleteQuickFixResult deleteQuickFixRes;
-    std::unique_ptr<DeleteQuickFixResult> resPtr(data.ReadParcelable<DeleteQuickFixResult>());
+    std::shared_ptr<DeleteQuickFixResult> resPtr(data.ReadParcelable<DeleteQuickFixResult>());
     if (resPtr == nullptr) {
         APP_LOGE("read DeleteQuickFixResult failed");
-        deleteQuickFixRes.resultCode = ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
-        OnPatchDeleted(deleteQuickFixRes);
+        std::shared_ptr<QuickFixResult> deleteRes = std::make_shared<DeleteQuickFixResult>();
+        deleteRes->SetResCode(ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+        OnPatchDeleted(deleteRes);
         return;
     }
-    deleteQuickFixRes = *resPtr;
 
-    OnPatchDeleted(deleteQuickFixRes);
+    OnPatchDeleted(resPtr);
 }
 } // AppExecFwk
 } // OHOS
