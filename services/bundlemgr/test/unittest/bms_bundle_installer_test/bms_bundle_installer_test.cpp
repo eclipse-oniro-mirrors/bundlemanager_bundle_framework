@@ -559,11 +559,11 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_TRUE(result);
     EXPECT_EQ(info.name, "com.query.test");
     EXPECT_EQ(info.description, "$string:description_application");
-    EXPECT_EQ(info.descriptionId, 1010);
+    EXPECT_EQ(info.descriptionId, 16777217);
     EXPECT_EQ(info.label, "$string:app_name");
     EXPECT_EQ(info.labelId, 16777216);
     EXPECT_EQ(info.iconPath, "$media:app_icon");
-    EXPECT_EQ(info.iconId, 16777217);
+    EXPECT_EQ(info.iconId, 16777228);
     EXPECT_EQ(info.entityType, "game");
     EXPECT_EQ(static_cast<uint32_t>(info.versionCode), 1);
     EXPECT_EQ(info.versionName, "1.0");
@@ -585,7 +585,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(hapModuleInfo.description, "$string:description_application");
     EXPECT_EQ(hapModuleInfo.mainAbility, "MainAbility");
     EXPECT_EQ(hapModuleInfo.process, "bba");
-    EXPECT_EQ(hapModuleInfo.virtualMachine, "ark");
+    EXPECT_EQ(hapModuleInfo.virtualMachine, "");
     EXPECT_EQ(hapModuleInfo.uiSyntax, "hml");
     EXPECT_EQ(hapModuleInfo.pages, "$profile:page_config");
     EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
@@ -596,7 +596,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(abilityInfos.name, "MainAbility");
     EXPECT_EQ(abilityInfos.srcEntrance, "./login/MyLoginAbility.ts");
     EXPECT_EQ(abilityInfos.description, "$string:description_main_ability");
-    EXPECT_EQ(abilityInfos.descriptionId, 3030);
+    EXPECT_EQ(abilityInfos.descriptionId, 16777219);
     EXPECT_EQ(hapModuleInfo.label, "Login");
 
     auto metadata = abilityInfos.metadata.front();
@@ -608,12 +608,12 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(extensionInfos.name, "FormName");
     EXPECT_EQ(extensionInfos.srcEntrance, "./form/MyForm.ts");
     EXPECT_EQ(extensionInfos.description, "$string:form_description");
-    EXPECT_EQ(extensionInfos.descriptionId, 7070);
+    EXPECT_EQ(extensionInfos.descriptionId, 16777221);
     EXPECT_EQ(extensionInfos.visible, true);
     EXPECT_EQ(extensionInfos.icon, "$media:icon");
-    EXPECT_EQ(extensionInfos.iconId, 16777223);
+    EXPECT_EQ(extensionInfos.iconId, 16777229);
     EXPECT_EQ(extensionInfos.label, "$string:extension_name");
-    EXPECT_EQ(extensionInfos.labelId, 6060);
+    EXPECT_EQ(extensionInfos.labelId, 16777220);
     EXPECT_EQ(extensionInfos.readPermission, "readPermission---");
     EXPECT_EQ(extensionInfos.writePermission, "writePermission---");
 
