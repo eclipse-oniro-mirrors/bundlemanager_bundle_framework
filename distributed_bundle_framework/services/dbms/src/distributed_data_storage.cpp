@@ -27,6 +27,8 @@ using namespace OHOS::DistributedKv;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string BMS_KV_BASE_DIR = "/data/service/el1/public/database/";
+const int32_t EL1 = 1;
 const int32_t MAX_TIMES = 600;              // 1min
 const int32_t SLEEP_INTERVAL = 100 * 1000;  // 100ms
 const int32_t FLAGS = BundleFlag::GET_BUNDLE_WITH_ABILITIES |
@@ -226,7 +228,9 @@ Status DistributedDataStorage::GetKvStore()
         .encrypt = false,
         .autoSync = true,
         .securityLevel = SecurityLevel::S1,
-        .kvStoreType = KvStoreType::SINGLE_VERSION
+        .kvStoreType = KvStoreType::SINGLE_VERSION,
+        .area = EL1,
+        .baseDir = BMS_KV_BASE_DIR + appId_.appId
     };
     Status status = dataManager_.GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
     if (status != Status::SUCCESS) {
