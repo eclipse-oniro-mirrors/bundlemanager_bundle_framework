@@ -108,9 +108,9 @@ const nlohmann::json CONFIG_JSON = R"(
                         "updateEnabled": true,
                         "scheduledUpdateTime": "21:05",
                         "updateDuration": 1,
-                        "defaultDimension": "1*2",
+                        "defaultDimension": "2*1",
                         "supportDimensions": [
-                            "1*2"
+                            "2*1"
                         ],
                         "landscapeLayouts": [
                             "$layout:ability_form"
@@ -969,6 +969,35 @@ HWTEST_F(BmsBundleParserTest, TestParse_2700, Function | SmallTest | Level1)
     )"_json;
     CheckProfileShortcut(errorShortcutJson);
 }
+
+/**
+ * @tc.name: TestParse_2800
+ * @tc.desc: 1. system running normally
+ *           2. test parsing failed when forms prop has empty in the config.json
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ3F
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_2800, Function | SmallTest | Level1)
+{
+    nlohmann::json formsJson = CONFIG_JSON;
+
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    profileFileBuffer << formsJson.dump();
+    
+    BundleExtractor bundleExtractor("");
+    AppPrivilegeCapability appPrivilegeCapability;
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    innerBundleInfo.GetFormsInfoByApp(formInfos);
+    int newSupportDimension = 5;
+    EXPECT_EQ(formInfos[0].supportDimensions[0], newSupportDimension);
+}
+
 /**
  * @tc.number: TestExtractByName_0100
  * @tc.name: extract file stream by file name from package
