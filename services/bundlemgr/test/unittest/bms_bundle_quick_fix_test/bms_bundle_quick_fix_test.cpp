@@ -44,7 +44,7 @@ using namespace OHOS::Security;
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
-const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
+const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hap";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 
@@ -52,10 +52,10 @@ const nlohmann::json PATCH_JSON = R"(
     {
         "app" : {
             "bundleName" : "com.example.bmsaccesstoken1",
-            "versionCode" : 1000000,
-            "versionName" : "1.0.0",
-            "patchVersionCode" : 1000000,
-            "patchVersionName" : "1.0.0"
+            "versionCode" : 1,
+            "versionName" : "1.0",
+            "patchVersionCode" : 1,
+            "patchVersionName" : "1.0"
         },
         "module" : {
             "name" : "entry",
@@ -660,7 +660,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
         BundleInfo bundleInfo;
         ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
-        bundleInfo.appqfInfo.versionCode = 200000;
+        bundleInfo.appqfInfo.versionCode = 2;
         QuickFixChecker checker;
         ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR);
