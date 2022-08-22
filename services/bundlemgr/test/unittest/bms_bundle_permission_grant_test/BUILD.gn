@@ -65,6 +65,11 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
   }
   deps = [
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission3:bmsGrantPermission3",
+    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
+    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
+    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
   ]
 
   if (bundle_framework_graphics) {
