@@ -30,7 +30,7 @@ public:
     ErrCode ParsePatchInfo(const std::string &pathName, AppQuickFix &appQuickFix) const;
 
     ErrCode ParsePatchInfo(const std::vector<std::string> &filePaths,
-        std::unordered_map<std::string, AppQuickFix> &appQuickFixs) const;
+        std::unordered_map<std::string, AppQuickFix> &appQuickFixes) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

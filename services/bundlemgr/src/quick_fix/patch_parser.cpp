@@ -52,7 +52,7 @@ ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &ap
 }
 
 ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
-    std::unordered_map<std::string, AppQuickFix> &appQuickFixs) const
+    std::unordered_map<std::string, AppQuickFix> &appQuickFixes) const
 {
     APP_LOGD("Parse quick fix files start.");
     if (filePaths.empty()) {
@@ -65,7 +65,7 @@ ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
             APP_LOGE("quick fix parse failed %{public}d", result);
             return result;
         }
-        appQuickFixs.emplace(filePaths[index], appQuickFix);
+        appQuickFixes.emplace(filePaths[index], appQuickFix);
     }
     APP_LOGD("Parse quick fix files end.");
     return ERR_OK;

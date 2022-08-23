@@ -28,13 +28,13 @@ public:
     QuickFixManagerRdb();
     ~QuickFixManagerRdb();
 
-    bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs) override;
+    bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes) override;
     bool QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix) override;
     bool SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix) override;
     bool DeleteInnerAppQuickFix(const std::string &bundleName) override;
 
 private:
-    bool GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs);
+    bool GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes);
     bool GetDataFromDb(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix);
     bool SaveDataToDb(const InnerAppQuickFix &innerAppQuickFix);
     bool DeleteDataFromDb(const std::string &bundleName);

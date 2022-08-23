@@ -35,10 +35,10 @@ QuickFixManagerRdb::~QuickFixManagerRdb()
     APP_LOGI("destroy QuickFixManagerRdb.");
 }
 
-bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
+bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
 {
     APP_LOGI("begin to QueryAllInnerAppQuickFix");
-    bool ret = GetAllDataFromDb(innerAppQuickFixs);
+    bool ret = GetAllDataFromDb(innerAppQuickFixes);
     if (!ret) {
         APP_LOGE("GetDataFromDb failed.");
         return false;
@@ -79,7 +79,7 @@ bool QuickFixManagerRdb::DeleteInnerAppQuickFix(const std::string &bundleName)
     return true;
 }
 
-bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
+bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
 {
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
@@ -100,7 +100,7 @@ bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix
             rdbDataManager_->DeleteData(iter->first);
             continue;
         }
-        innerAppQuickFixs.insert({iter->first, appQuickFix});
+        innerAppQuickFixes.insert({ iter->first, appQuickFix });
     }
     return true;
 }

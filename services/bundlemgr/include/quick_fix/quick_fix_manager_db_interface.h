@@ -27,7 +27,7 @@ public:
     IQuickFixManagerDb() = default;
     virtual ~IQuickFixManagerDb() = default;
 
-    virtual bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs) = 0;
+    virtual bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes) = 0;
 
     virtual bool QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix) = 0;
 
