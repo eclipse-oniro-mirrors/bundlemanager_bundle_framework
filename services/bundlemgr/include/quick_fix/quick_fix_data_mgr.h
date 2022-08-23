@@ -31,7 +31,7 @@ public:
     QuickFixDataMgr();
     ~QuickFixDataMgr();
 
-    bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs);
+    bool QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes);
 
     bool QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix);
 

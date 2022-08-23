@@ -29,10 +29,10 @@ QuickFixManagerRdb::QuickFixManagerRdb()
 QuickFixManagerRdb::~QuickFixManagerRdb()
 {}
 
-bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
+bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
 {
     APP_LOGI("begin to QueryAllInnerAppQuickFix");
-    bool ret = GetAllDataFromDb(innerAppQuickFixs);
+    bool ret = GetAllDataFromDb(innerAppQuickFixes);
     if (!ret) {
         APP_LOGE("GetDataFromDb failed.");
         return false;
@@ -73,9 +73,9 @@ bool QuickFixManagerRdb::DeleteInnerAppQuickFix(const std::string &bundleName)
     return true;
 }
 
-bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
+bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
 {
-    innerAppQuickFixs = INNER_APP_QUICK_FIX_INFOS;
+    innerAppQuickFixes = INNER_APP_QUICK_FIX_INFOS;
     return true;
 }
 

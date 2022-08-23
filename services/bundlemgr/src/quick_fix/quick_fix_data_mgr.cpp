@@ -58,14 +58,14 @@ void QuickFixDataMgr::InitStatesMap()
     };
 }
 
-bool QuickFixDataMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixs)
+bool QuickFixDataMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
         APP_LOGE("error quickFixManagerDb_ is nullptr.");
         return false;
     }
-    return quickFixManagerDb_->QueryAllInnerAppQuickFix(innerAppQuickFixs);
+    return quickFixManagerDb_->QueryAllInnerAppQuickFix(innerAppQuickFixes);
 }
 
 bool QuickFixDataMgr::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
