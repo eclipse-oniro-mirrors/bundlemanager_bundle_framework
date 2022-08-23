@@ -1,0 +1,63 @@
+{
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:icon",
+                "iconId": 16777222,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "startWindowBackground": "$color:white",
+                "startWindowBackgroundId": 16777221,
+                "startWindowIcon": "$media:icon",
+                "startWindowIconId": 16777222,
+                "visible": true
+            }
+        ],
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "default",
+            "tablet"
+        ],
+        "extensionAbilities": [
+            {
+                "name": "extensionAbility_A",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "",
+                "type": "preview"
+            }
+        ],
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "name": "entry",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "uiSyntax": "ets",
+        "virtualMachine": "ark"
+    }
+}

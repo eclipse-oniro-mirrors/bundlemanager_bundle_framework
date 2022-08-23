@@ -27,17 +27,13 @@
     <preparer>
       <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/system_module.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/preview.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleUninstallerTest">
     <preparer>
       <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
@@ -45,7 +41,6 @@
     <preparer>
       <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/update_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
@@ -53,7 +48,6 @@
     <preparer>
       <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
@@ -61,21 +55,10 @@
     <preparer>
       <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/seventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
 
-      <option name="push" value="test_bundle/eighth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/ninth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/eleventh_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/second_backup_right.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/fourteenth_right.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/fifteenth_right.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-      <option name="push" value="test_bundle/sixteenth_right.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-      <option name="push" value="test_bundle/second_backup_right.hap -> /data/test/resource/bms/install_bundle/test4/"
               src="res"/>
       <option name="push" value="update_service/higher_version_entry_service.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>

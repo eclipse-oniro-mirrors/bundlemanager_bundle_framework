@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "entry_MainAbility_entry",
+      "value": "label"
+    },
+    {
+      "name": "mainability_description",
+      "value": "description"
+    },
+    {
+      "name": "l1jsdemo_MainAbility",
+      "value": "label"
+    }
+  ]
+}
