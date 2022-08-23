@@ -45,7 +45,8 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
     // callback operation
     DeployQuickFixResult result = deployer->GetDeployQuickFixResult();
     result.resultCode = ret;
-    statusCallback_->OnPatchDeployed(result);
+    std::shared_ptr<QuickFixResult> deployRes = std::make_shared<DeployQuickFixResult>(result);
+    statusCallback_->OnPatchDeployed(deployRes);
     SendRemoveEvent();
 }
 
@@ -63,7 +64,8 @@ void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
     SwitchQuickFixResult result;
     result.resultCode = ret;
     result.bundleName = bundleName;
-    statusCallback_->OnPatchSwitched(result);
+    std::shared_ptr<QuickFixResult> switchRes = std::make_shared<SwitchQuickFixResult>(result);
+    statusCallback_->OnPatchSwitched(switchRes);
     SendRemoveEvent();
 }
 
@@ -81,7 +83,8 @@ void QuickFixer::DeleteQuickFix(const std::string &bundleName)
     DeleteQuickFixResult result;
     result.resultCode = ret;
     result.bundleName = bundleName;
-    statusCallback_->OnPatchDeleted(result);
+    std::shared_ptr<QuickFixResult> deleteRes = std::make_shared<DeleteQuickFixResult>(result);
+    statusCallback_->OnPatchDeleted(deleteRes);
     SendRemoveEvent();
 }
 

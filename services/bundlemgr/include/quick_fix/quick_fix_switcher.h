@@ -34,7 +34,8 @@ private:
     ErrCode EnableQuickFix(const std::string &bundleName);
     ErrCode DisableQuickFix(const std::string &bundleName);
     ErrCode InnerSwitchQuickFix(const std::string &bundleName, const InnerAppQuickFix &innerAppQuickFix, bool enable);
-    InnerAppQuickFix CreateInnerAppqf(const InnerBundleInfo &innerBundleInfo, const QuickFixStatus &status);
+    ErrCode CreateInnerAppqf(const InnerBundleInfo &innerBundleInfo, const QuickFixStatus &status, bool enable,
+        InnerAppQuickFix &innerAppQuickFix);
     ErrCode GetDataMgr();
     ErrCode GetQuickFixDataMgr();
 

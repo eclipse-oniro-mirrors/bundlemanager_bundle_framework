@@ -33,6 +33,7 @@ private:
     ErrCode Init() override;
     void CreateQuickFixMsgMap(std::unordered_map<int32_t, std::string> &quickFixMsgMap);
     std::string GetResMsg(int32_t code);
+    std::string GetResMsg(int32_t code, const std::shared_ptr<QuickFixResult> &quickFixRes);
 
     ErrCode RunAsHelpCommand();
     ErrCode RunAsCheckCommand();
@@ -73,9 +74,11 @@ private:
     ErrCode DumpSandboxBundleInfo(const std::string &bundleName, const int32_t appIndex, const int32_t userId,
         std::string &dumpResults);
     ErrCode StringToInt(std::string option, const std::string &commandName, int &temp, bool &result);
-    ErrCode DeployQuickFix(const std::vector<std::string> &quickFixPaths);
-    ErrCode SwitchQuickFix(const std::string &bundleName, int32_t enable);
-    ErrCode DeleteQuickFix(const std::string &bundleName);
+    ErrCode DeployQuickFix(const std::vector<std::string> &quickFixPaths,
+        std::shared_ptr<QuickFixResult> &quickFixRes);
+    ErrCode SwitchQuickFix(const std::string &bundleName, int32_t enable,
+        std::shared_ptr<QuickFixResult> &quickFixRes);
+    ErrCode DeleteQuickFix(const std::string &bundleName, std::shared_ptr<QuickFixResult> &quickFixRes);
     ErrCode GetQuickFixPath(int32_t index, std::vector<std::string>& quickFixPaths) const;
     ErrCode SetDebugMode(int32_t debugMode);
 };

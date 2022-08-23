@@ -24,7 +24,16 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-struct DeployQuickFixResult : public Parcelable {
+struct QuickFixResult : public Parcelable {
+    QuickFixResult() = default;
+    virtual ~QuickFixResult() = default;
+
+    virtual int32_t GetResCode() = 0;
+    virtual void SetResCode(int32_t resCode) = 0;
+    virtual std::string ToString() const = 0;
+};
+
+struct DeployQuickFixResult final : public QuickFixResult {
     int32_t resultCode = -1;
     std::string bundleName;
     uint32_t bundleVersionCode = 0; // bundle version code
@@ -35,28 +44,43 @@ struct DeployQuickFixResult : public Parcelable {
 
     DeployQuickFixResult() = default;
     virtual ~DeployQuickFixResult() = default;
+
+    virtual int32_t GetResCode() override;
+    virtual void SetResCode(int32_t resCode) override;
+    virtual std::string ToString() const override;
+
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static DeployQuickFixResult *Unmarshalling(Parcel &parcel);
 };
 
-struct SwitchQuickFixResult : public Parcelable {
+struct SwitchQuickFixResult final : public QuickFixResult {
     int32_t resultCode = -1;
     std::string bundleName;
 
     SwitchQuickFixResult() = default;
     virtual ~SwitchQuickFixResult() = default;
+
+    virtual int32_t GetResCode() override;
+    virtual void SetResCode(int32_t resCode) override;
+    virtual std::string ToString() const override;
+
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static SwitchQuickFixResult *Unmarshalling(Parcel &parcel);
 };
 
-struct DeleteQuickFixResult : public Parcelable {
+struct DeleteQuickFixResult final : public QuickFixResult {
     int32_t resultCode = -1;
     std::string bundleName;
 
     DeleteQuickFixResult() = default;
     virtual ~DeleteQuickFixResult() = default;
+
+    virtual int32_t GetResCode() override;
+    virtual void SetResCode(int32_t resCode) override;
+    virtual std::string ToString() const override;
+
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static DeleteQuickFixResult *Unmarshalling(Parcel &parcel);

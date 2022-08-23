@@ -18,6 +18,7 @@
 
 #include <future>
 
+#include "appexecfwk_errors.h"
 #include "quick_fix_status_callback_host.h"
 
 namespace OHOS {
@@ -27,13 +28,14 @@ public:
     QuickFixStatusCallbackHostlmpl();
     virtual ~QuickFixStatusCallbackHostlmpl() override;
 
-    virtual void OnPatchDeployed(const DeployQuickFixResult &result) override;
-    virtual void OnPatchSwitched(const SwitchQuickFixResult &result) override;
-    virtual void OnPatchDeleted(const DeleteQuickFixResult &result) override;
-    int32_t GetResultCode() const;
+    virtual void OnPatchDeployed(const std::shared_ptr<QuickFixResult> &result) override;
+    virtual void OnPatchSwitched(const std::shared_ptr<QuickFixResult> &result) override;
+    virtual void OnPatchDeleted(const std::shared_ptr<QuickFixResult> &result) override;
+
+    ErrCode GetResultCode(std::shared_ptr<QuickFixResult> &quickFixRes) const;
 
 private:
-    mutable std::promise<int32_t> resultPromise_;
+    mutable std::promise<std::shared_ptr<QuickFixResult>> quickFixPromise_;
 
     DISALLOW_COPY_AND_MOVE(QuickFixStatusCallbackHostlmpl);
 };

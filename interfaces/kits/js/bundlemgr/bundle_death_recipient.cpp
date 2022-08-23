@@ -37,7 +37,7 @@ BundleDeathRecipient::~BundleDeathRecipient()
 
 void BundleDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject> &remote)
 {
-    APP_LOGD("BundleManagerService is died");
+    APP_LOGE("BundleManagerService is died");
     if (statusReceiver_ != nullptr) {
         APP_LOGD("call installer callback");
         statusReceiver_->OnFinished(IStatusReceiver::ERR_FAILED_SERVICE_DIED, STRING_FAIL);
@@ -45,9 +45,9 @@ void BundleDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObjec
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (quickFixCallback_ != nullptr) {
         APP_LOGD("call quickFix callback");
-        quickFixCallback_->OnPatchDeployed(DeployQuickFixResult());
-        quickFixCallback_->OnPatchSwitched(SwitchQuickFixResult());
-        quickFixCallback_->OnPatchDeleted(DeleteQuickFixResult());
+        std::shared_ptr<QuickFixResult> deployRes = std::make_shared<DeployQuickFixResult>();
+        deployRes->SetResCode(ERR_APPEXECFWK_FAILED_SERVICE_DIED);
+        quickFixCallback_->OnPatchDeployed(deployRes);
     }
 #endif
     return;

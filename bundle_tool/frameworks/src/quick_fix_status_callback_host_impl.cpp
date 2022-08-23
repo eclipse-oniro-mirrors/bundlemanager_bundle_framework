@@ -15,7 +15,6 @@
 
 #include "quick_fix_status_callback_host_impl.h"
 
-#include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 
 namespace OHOS {
@@ -34,37 +33,30 @@ QuickFixStatusCallbackHostlmpl::~QuickFixStatusCallbackHostlmpl()
     APP_LOGI("destroy status callback instance");
 }
 
-void QuickFixStatusCallbackHostlmpl::OnPatchDeployed(const DeployQuickFixResult &result)
+void QuickFixStatusCallbackHostlmpl::OnPatchDeployed(const std::shared_ptr<QuickFixResult> &result)
 {
-    APP_LOGD("on Patch deployed bundleName is %{public}s, bundleVersionCode is %{public}u, "
-             "patchVersionCode is %{public}u, isSoContained is %{public}d, patch type is %{public}d, "
-             "deployed errcode is %{public}d",
-             result.bundleName.c_str(), result.bundleVersionCode,
-             result.patchVersionCode, result.isSoContained, static_cast<int32_t>(result.type), result.resultCode);
-    for (const auto &name : result.moduleNames) {
-        APP_LOGD("on Patch deployed moduleName is %{public}s", name.c_str());
-    }
-    resultPromise_.set_value(result.resultCode);
+    APP_LOGD("on Patch deployed result is %{public}s", result->ToString().c_str());
+    quickFixPromise_.set_value(result);
 }
 
-void QuickFixStatusCallbackHostlmpl::OnPatchSwitched(const SwitchQuickFixResult &result)
+void QuickFixStatusCallbackHostlmpl::OnPatchSwitched(const std::shared_ptr<QuickFixResult> &result)
 {
-    APP_LOGD("on Patch switched bundleName is %{public}s", result.bundleName.c_str());
-    resultPromise_.set_value(result.resultCode);
+    APP_LOGD("on Patch switched result is %{public}s", result->ToString().c_str());
+    quickFixPromise_.set_value(result);
 }
 
-void QuickFixStatusCallbackHostlmpl::OnPatchDeleted(const DeleteQuickFixResult &result)
+void QuickFixStatusCallbackHostlmpl::OnPatchDeleted(const std::shared_ptr<QuickFixResult> &result)
 {
-    APP_LOGD("on Patch deleted bundleName is %{public}s", result.bundleName.c_str());
-    resultPromise_.set_value(result.resultCode);
+    APP_LOGD("on Patch deleted result is %{public}s", result->ToString().c_str());
+    quickFixPromise_.set_value(result);
 }
 
-int32_t QuickFixStatusCallbackHostlmpl::GetResultCode() const
+ErrCode QuickFixStatusCallbackHostlmpl::GetResultCode(std::shared_ptr<QuickFixResult> &quickFixRes) const
 {
-    auto future = resultPromise_.get_future();
+    auto future = quickFixPromise_.get_future();
     if (future.wait_for(std::chrono::seconds(WAITTING_TIME)) == std::future_status::ready) {
-        int32_t resultCode = future.get();
-        return resultCode;
+        quickFixRes = future.get();
+        return quickFixRes->GetResCode();
     }
     return ERR_APPEXECFWK_OPERATION_TIME_OUT;
 }

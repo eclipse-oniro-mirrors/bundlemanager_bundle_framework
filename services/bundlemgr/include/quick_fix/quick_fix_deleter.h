@@ -31,6 +31,7 @@ public:
 private:
     ErrCode DeleteQuickFix();
     ErrCode ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickFix);
+    ErrCode InnerDeletePatchDir(const AppqfInfo &appqfInfo, const std::string &bundleName);
     ErrCode GetQuickFixDataMgr();
 
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
