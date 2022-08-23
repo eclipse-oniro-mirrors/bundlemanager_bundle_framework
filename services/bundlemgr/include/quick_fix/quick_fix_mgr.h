@@ -32,11 +32,11 @@ public:
     virtual ~QuickFixMgr() override;
 
     virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
-    bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+    ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback);
-    bool SwitchQuickFix(const std::string &bundleName, bool enable,
+    ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback);
-    bool DeleteQuickFix(const std::string &bundleName,
+    ErrCode DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback);
 
     enum MessageId : uint32_t {

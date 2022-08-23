@@ -24,6 +24,8 @@
 #include "file_ex.h"
 #include "if_system_ability_manager.h"
 
+#define private public
+
 using namespace OHOS::AppExecFwk;
 using namespace testing::ext;
 
@@ -115,8 +117,8 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function |
     std::vector<std::string> sourceFiles {FILE1_PATH, FILE2_PATH};
     CreateFiles(sourceFiles);
     std::vector<std::string> destFiles;
-    bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_TRUE(ret);
+    auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_OK);
     ASSERT_EQ(destFiles.size(), sourceFiles.size());
     EXPECT_TRUE(FileExists(destFiles[0]));
     EXPECT_TRUE(FileExists(destFiles[1]));
@@ -145,8 +147,8 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function |
     std::vector<std::string> sourceFiles {INVALID_FILE_SUFFIX_PATH};
     CreateFiles(sourceFiles);
     std::vector<std::string> destFiles;
-    bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_FALSE(ret);
+    auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     DeleteFiles(sourceFiles);
     APP_LOGI("end of BmsBundleQuickFixManager_0200.");
 }
@@ -164,8 +166,8 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0300, Function |
     ASSERT_NE(quickFixManagerProxy, nullptr);
     std::vector<std::string> sourceFiles {NOT_EXIST_FILE_PATH};
     std::vector<std::string> destFiles;
-    bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_FALSE(ret);
+    auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED);
     APP_LOGI("end of BmsBundleQuickFixManager_0300.");
 }
 
@@ -182,8 +184,8 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0400, Function |
     ASSERT_NE(quickFixManagerProxy, nullptr);
     std::vector<std::string> sourceFiles;
     std::vector<std::string> destFiles;
-    bool ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_FALSE(ret);
+    auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     APP_LOGI("end of BmsBundleQuickFixManager_0400.");
 }
 }

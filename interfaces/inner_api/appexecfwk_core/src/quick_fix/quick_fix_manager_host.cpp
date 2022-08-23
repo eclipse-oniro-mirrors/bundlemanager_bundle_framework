@@ -77,8 +77,8 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    bool ret = DeployQuickFix(bundleFilePaths, statusCallback);
-    if (!reply.WriteBool(ret)) {
+    auto ret = DeployQuickFix(bundleFilePaths, statusCallback);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -98,8 +98,8 @@ ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessagePa
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    bool ret = SwitchQuickFix(bundleName, enable, statusCallback);
-    if (!reply.WriteBool(ret)) {
+    auto ret = SwitchQuickFix(bundleName, enable, statusCallback);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -118,8 +118,8 @@ ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessagePa
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    bool ret = DeleteQuickFix(bundleName, statusCallback);
-    if (!reply.WriteBool(ret)) {
+    auto ret = DeleteQuickFix(bundleName, statusCallback);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -133,23 +133,23 @@ ErrCode QuickFixManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& 
     std::string fileName = data.ReadString();
     int32_t fd = -1;
     std::string path;
-    bool ret = CreateFd(fileName, fd, path);
-    if (!reply.WriteBool(ret)) {
+    auto ret = CreateFd(fileName, fd, path);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!ret) {
-        return ERR_OK;
-    }
-    if (!reply.WriteFileDescriptor(fd)) {
-        APP_LOGE("write fd failed.");
         close(fd);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!reply.WriteString(path)) {
-        APP_LOGE("write path failed.");
-        close(fd);
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        if (!reply.WriteFileDescriptor(fd)) {
+            APP_LOGE("write fd failed.");
+            close(fd);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!reply.WriteString(path)) {
+            APP_LOGE("write path failed.");
+            close(fd);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     close(fd);
     return ERR_OK;

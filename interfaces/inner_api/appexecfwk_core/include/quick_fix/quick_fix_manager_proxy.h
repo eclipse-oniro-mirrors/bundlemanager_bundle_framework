@@ -26,19 +26,20 @@ public:
     explicit QuickFixManagerProxy(const sptr<IRemoteObject> &object);
     virtual ~QuickFixManagerProxy();
 
-    virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+    virtual ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
-    virtual bool SwitchQuickFix(const std::string &bundleName, bool enable,
+    virtual ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
-    virtual bool DeleteQuickFix(const std::string &bundleName,
+    virtual ErrCode DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
-
-    virtual bool CopyFiles(const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles) override;
 
 private:
-    virtual bool CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
+    virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
+    virtual ErrCode CopyFiles(const std::vector<std::string> &sourceFiles,
+        std::vector<std::string> &destFiles) override;
+
     bool SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply);
     static inline BrokerDelegator<QuickFixManagerProxy> delegator_;
 };

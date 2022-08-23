@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_MANAGER_INTERFACE_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_MANAGER_INTERFACE_H
 
+#include "appexecfwk_errors.h"
 #include "quick_fix_status_callback_interface.h"
 #include "iremote_broker.h"
 
@@ -28,22 +29,21 @@ class IQuickFixManager : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.QuickFixManager");
 
-    virtual bool DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+    virtual ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
 
-    virtual bool SwitchQuickFix(const std::string &bundleName, bool enable,
+    virtual ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
 
-    virtual bool DeleteQuickFix(const std::string &bundleName,
+    virtual ErrCode DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
 
-    virtual bool CreateFd(const std::string &fileName, int32_t &fd, std::string &path) = 0;
+    virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) = 0;
 
-    virtual bool CopyFiles(const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
+    virtual ErrCode CopyFiles(const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
     {
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-
     enum Message : uint32_t {
         DEPLOY_QUICK_FIX = 0,
         SWITCH_QUICK_FIX = 1,

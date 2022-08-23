@@ -41,7 +41,7 @@ QuickFixManagerProxy::~QuickFixManagerProxy()
     APP_LOGI("destroy QuickFixManagerProxy.");
 }
 
-bool QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("begin to call DeployQuickFix.");
@@ -49,40 +49,40 @@ bool QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundle
 
     if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
         APP_LOGE("DeployQuickFix failed due to params error.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     std::vector<std::string> copyFilePaths;
-    bool ret = CopyFiles(bundleFilePaths, copyFilePaths);
-    if (!ret) {
-        APP_LOGE("copy files failed.");
-        return false;
+    auto ret = CopyFiles(bundleFilePaths, copyFilePaths);
+    if (ret != ERR_OK) {
+        APP_LOGE("copy files failed with errCode %{public}d", ret);
+        return ret;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteStringVector(copyFilePaths)) {
         APP_LOGE("write copyFilePaths failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(IQuickFixManager::Message::DEPLOY_QUICK_FIX, data, reply)) {
         APP_LOGE("SendRequest failed.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
 
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
-bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool enable,
+ErrCode QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool enable,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("begin to call SwitchQuickFix.");
@@ -90,37 +90,37 @@ bool QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool en
 
     if (bundleName.empty() || (statusCallback == nullptr)) {
         APP_LOGE("SwitchQuickFix failed due to params error.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("write bundleName failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(enable)) {
         APP_LOGE("write enable failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(IQuickFixManager::Message::SWITCH_QUICK_FIX, data, reply)) {
         APP_LOGE("SendRequest failed.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
 
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
-bool QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
+ErrCode QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("begin to call DeleteQuickFix.");
@@ -128,110 +128,110 @@ bool QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
 
     if (bundleName.empty() || (statusCallback == nullptr)) {
         APP_LOGE("DeleteQuickFix failed due to params error.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("write bundleName failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(IQuickFixManager::Message::DELETE_QUICK_FIX, data, reply)) {
         APP_LOGE("SendRequest failed.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
 
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
-bool QuickFixManagerProxy::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
+ErrCode QuickFixManagerProxy::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
 {
     APP_LOGD("begin to create fd.");
     if (fileName.empty()) {
         APP_LOGE("fileName is empty.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interface token failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(fileName)) {
         APP_LOGE("write fileName failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     if (!SendRequest(IQuickFixManager::Message::CREATE_FD, data, reply)) {
         APP_LOGE("send request failed.");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    bool ret = reply.ReadBool();
-    if (!ret) {
+    auto ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
         APP_LOGE("reply return false.");
-        return false;
+        return ret;
     }
     fd = reply.ReadFileDescriptor();
     if (fd < 0) {
         APP_LOGE("invalid fd.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_FD_FAILED;
     }
     path = reply.ReadString();
     if (path.empty()) {
         APP_LOGE("invalid path.");
         close(fd);
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_TARGET_DIR;
     }
     APP_LOGD("create fd success.");
-    return true;
+    return ERR_OK;
 }
 
-bool QuickFixManagerProxy::CopyFiles(
+ErrCode QuickFixManagerProxy::CopyFiles(
     const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
 {
     APP_LOGD("begin to copy files.");
     if (sourceFiles.empty()) {
         APP_LOGE("sourceFiles empty.");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     for (const std::string &path : sourceFiles) {
         std::string sourcePath;
         if (!PathToRealPath(path, sourcePath)) {
             APP_LOGE("to real path failed.");
-            return false;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED;
         }
         size_t pos = sourcePath.find_last_of(SEPARATOR);
         if (pos == std::string::npos) {
             APP_LOGE("invalid sourcePath.");
-            return false;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
         }
         std::string fileName = sourcePath.substr(pos + 1);
         if (fileName.empty()) {
             APP_LOGE("file name empty.");
-            return false;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
         }
         APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
         int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
         if (sourceFd < 0) {
             APP_LOGE("open file failed.");
-            return false;
+            return ERR_BUNDLEMANAGER_QUICK_FIX_OPEN_SOURCE_FILE_FAILED;
         }
         int32_t destFd = -1;
         std::string destPath;
-        bool ret = CreateFd(fileName, destFd, destPath);
-        if (!ret || destFd < 0 || destPath.empty()) {
+        auto ret = CreateFd(fileName, destFd, destPath);
+        if ((ret != ERR_OK) || (destFd < 0) || (destPath.empty())) {
             APP_LOGE("create fd failed.");
             close(sourceFd);
-            return false;
+            return ret;
         }
         char buffer[DEFAULT_BUFFER_SIZE] = {0};
         int offset = -1;
@@ -239,7 +239,7 @@ bool QuickFixManagerProxy::CopyFiles(
             if (write(destFd, buffer, offset) < 0) {
                 close(sourceFd);
                 close(destFd);
-                return false;
+                return ERR_BUNDLEMANAGER_QUICK_FIX_WRITE_FILE_FAILED;
             }
         }
         destFiles.emplace_back(destPath);
@@ -247,7 +247,7 @@ bool QuickFixManagerProxy::CopyFiles(
         close(destFd);
     }
     APP_LOGD("copy files success.");
-    return true;
+    return ERR_OK;
 }
 
 bool QuickFixManagerProxy::SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply)
