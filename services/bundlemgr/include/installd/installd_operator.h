@@ -171,6 +171,17 @@ public:
 
     static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath);
+
+    static void UnintHandle();
+
+private:
+    static bool InitHandle();
+
+    static bool ProcessApplyDiffPatchPath(const std::string &oldSoPath, const std::string &diffFilePath,
+        const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
+        std::vector<std::string> &diffFileNames);
+
+    static void *handle_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
