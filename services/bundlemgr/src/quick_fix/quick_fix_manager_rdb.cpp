@@ -100,7 +100,7 @@ bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix
             rdbDataManager_->DeleteData(iter->first);
             continue;
         }
-        innerAppQuickFixes.insert({iter->first, appQuickFix});
+        innerAppQuickFixes.insert({ iter->first, appQuickFix });
     }
     return true;
 }
