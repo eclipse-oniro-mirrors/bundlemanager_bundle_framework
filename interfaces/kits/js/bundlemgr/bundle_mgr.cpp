@@ -3540,7 +3540,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
                         &nResultMsg));
                     result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "Message", nResultMsg));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
                 }
                 NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
                 NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
@@ -3670,7 +3670,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
                         &nResultMsg));
                     result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "Message", nResultMsg));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
                 }
                 NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
                 NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
@@ -3830,7 +3830,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
                         &nResultMsg));
                     result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "Message", nResultMsg));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
                 }
                 NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
                 NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
