@@ -1651,10 +1651,18 @@ bool ToExtensionInfo(
     extensionInfo.description = extension.description;
     extensionInfo.descriptionId = extension.descriptionId;
     if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
-        extensionInfo.priority = extension.priority;
         extensionInfo.readPermission = extension.readPermission;
         extensionInfo.writePermission = extension.writePermission;
     }
+
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (transformParam.appPrivilegeCapability.allowQueryPriority) {
+#else
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
+#endif
+        extensionInfo.priority = extension.priority;
+    }
+
     extensionInfo.uri = extension.uri;
     extensionInfo.permissions = extension.permissions;
     extensionInfo.visible = extension.visible;
