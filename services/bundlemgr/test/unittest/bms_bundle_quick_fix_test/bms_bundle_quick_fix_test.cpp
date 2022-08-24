@@ -741,16 +741,12 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
  */
 HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0100, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
-
     BundleInfo result;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    bool ret = dataMgr->GetBundleInfo(EMPTY_STRING, BundleFlag::GET_BUNDLE_DEFAULT, result, USERID);
+    bool ret = dataMgr->GetBundleInfo(EMPTY_STRING, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
     EXPECT_FALSE(ret);
     EXPECT_EQ(EMPTY_STRING, result.name);
-
-    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -764,7 +760,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0100, Function | SmallTest | Level
 HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0200, Function | SmallTest | Level0)
 {
     BundleInfo bundleInfo;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    bool ret = GetBundleDataMgr()->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, bundleInfo, USERID);
     EXPECT_FALSE(ret);
     EXPECT_EQ(EMPTY_STRING, bundleInfo.name);
 }
@@ -782,7 +778,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0300, Function | SmallTest | Level
     AddInnerBundleInfo(BUNDLE_NAME);
 
     BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(BUNDLE_NAME_DEMO, BundleFlag::GET_BUNDLE_DEFAULT, result,
+    bool ret = GetBundleDataMgr()->GetBundleInfo(BUNDLE_NAME_DEMO, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result,
         USERID);
     EXPECT_FALSE(ret);
 
