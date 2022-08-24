@@ -2856,6 +2856,7 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids)
 {
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ is data is empty.");
         return false;
