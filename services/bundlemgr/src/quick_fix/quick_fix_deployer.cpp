@@ -98,7 +98,6 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
 {
     APP_LOGD("ToDeployStartStatus start.");
     if (GetQuickFixDataMgr() != ERR_OK) {
-        APP_LOGE("error: quickFixDataMgr_ is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     std::unordered_map<std::string, AppQuickFix> infos;
@@ -108,8 +107,12 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         return ret;
     }
     const AppQuickFix &appQuickFix = infos.begin()->second;
-    ToDeployQuickFixResult(appQuickFix);
     bool isExist = quickFixDataMgr_->QueryInnerAppQuickFix(appQuickFix.bundleName, oldInnerAppQuickFix);
+    const QuickFixMark &mark = oldInnerAppQuickFix.GetQuickFixMark();
+    if (isExist && (mark.status != QuickFixStatus::DEPLOY_START) && (mark.status != QuickFixStatus::DEPLOY_END)) {
+        APP_LOGE("error: wrong quick fix status, now status : %{public}d", mark.status);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_WRONG_QUICK_FIX_STATUS;
+    }
     const AppQuickFix &oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
     // exist and type same need to check version code
     if (isExist && (appQuickFix.deployingAppqfInfo.type == oldAppQuickFix.deployingAppqfInfo.type)) {
@@ -132,17 +135,14 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     } else if (appQuickFix.deployingAppqfInfo.type == QuickFixType::HOT_RELOAD) {
         ret = ProcessHotReloadDeployStart(bundleInfo, appQuickFix);
     } else {
-        APP_LOGE("unknown quick fix type");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
+        ret = ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
     if (ret != ERR_OK) {
-        APP_LOGE("Process Patch or HotReload DeployStart failed, errcode:%{public}d", ret);
         return ret;
     }
     // convert to InnerAppQuickFix
     ret = ToInnerAppQuickFix(infos, oldInnerAppQuickFix, newInnerAppQuickFix);
     if (ret != ERR_OK) {
-        APP_LOGE("ToInnerAppQuickFix failed, errcode: %{public}d", ret);
         return ret;
     }
     // save infos and update status DEPLOY_START
@@ -175,6 +175,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
     const BundleInfo &bundleInfo,
     std::unordered_map<std::string, AppQuickFix> &infos)
 {
+    APP_LOGD("ProcessPatchDeployStart start.");
     if (infos.empty()) {
         APP_LOGE("error: appQuickFix infos is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
@@ -205,6 +206,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
         APP_LOGE("check AppQuickFixInfos with installed bundle failed, errcode : %{public}d", ret);
         return ret;
     }
+    APP_LOGD("ProcessPatchDeployStart end.");
     return ERR_OK;
 }
 
@@ -212,12 +214,14 @@ ErrCode QuickFixDeployer::ProcessHotReloadDeployStart(
     const BundleInfo &bundleInfo,
     const AppQuickFix &appQuickFix)
 {
+    APP_LOGD("ProcessHotReloadDeployStart start.");
     QuickFixChecker checker;
     ErrCode ret = checker.CheckHotReloadWithInstalledBundle(appQuickFix, bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("check AppQuickFixInfos with installed bundle failed");
         return ret;
     }
+    APP_LOGD("ProcessHotReloadDeployStart end.");
     return ERR_OK;
 }
 
@@ -260,6 +264,7 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     if (ret != ERR_OK) {
         return ret;
     }
+    ToDeployQuickFixResult(newQuickFix);
     guardRemovePatchPath.Dismiss();
     APP_LOGD("ToDeployEndStatus end.");
     return ERR_OK;
@@ -378,6 +383,7 @@ ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInf
 ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
     const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix)
 {
+    APP_LOGD("ToInnerAppQuickFix start");
     if (infos.empty()) {
         APP_LOGE("error: appQuickFix is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
@@ -401,6 +407,7 @@ ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::strin
         mark.moduleName = moduleName;
     }
     newInnerAppQuickFix.SetQuickFixMark(mark);
+    APP_LOGD("ToInnerAppQuickFix end");
     return ERR_OK;
 }
 
@@ -500,7 +507,7 @@ ErrCode QuickFixDeployer::GetQuickFixDataMgr()
     if (quickFixDataMgr_ == nullptr) {
         quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
         if (quickFixDataMgr_ == nullptr) {
-            APP_LOGE("quickFixDataMgr_ is nullptr");
+            APP_LOGE("error: quickFixDataMgr_ is nullptr");
             return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }

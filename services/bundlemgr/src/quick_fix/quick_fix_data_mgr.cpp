@@ -47,7 +47,9 @@ void QuickFixDataMgr::InitStatesMap()
 {
     statesMap_ = {
         {QuickFixStatus::DEPLOY_START, QuickFixStatus::DEPLOY_END},
+        {QuickFixStatus::DEPLOY_START, QuickFixStatus::DELETE_START},
         {QuickFixStatus::DEPLOY_END, QuickFixStatus::SWITCH_START},
+        {QuickFixStatus::DEPLOY_END, QuickFixStatus::DELETE_START},
         {QuickFixStatus::SWITCH_START, QuickFixStatus::SWITCH_START},
         {QuickFixStatus::SWITCH_START, QuickFixStatus::SWITCH_END},
         {QuickFixStatus::SWITCH_START, QuickFixStatus::DEPLOY_END},
