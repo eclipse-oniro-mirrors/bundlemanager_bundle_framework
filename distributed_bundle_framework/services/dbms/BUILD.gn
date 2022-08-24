@@ -44,7 +44,7 @@ ohos_shared_library("libdbms") {
   deps = [
     "${common_path}:libappexecfwk_common",
     "${dbms_inner_api_path}:dbms_fwk",
-    "//third_party/libjpeg:libjpeg_static",
+    "//third_party/libjpeg-turbo:turbojpeg_static",
     "//third_party/libpng:libpng",
   ]
 
