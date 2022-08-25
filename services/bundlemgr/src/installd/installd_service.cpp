@@ -111,7 +111,7 @@ void InstalldService::Stop()
     SystemAbilityHelper::RemoveSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     // dlclose handle, use function ApplyPatch
-    InstalldOperator::UnintHandle();
+    InstalldOperator::UnInitHandle();
     APP_LOGI("installd service stop successfully");
 }
 }  // namespace AppExecFwk

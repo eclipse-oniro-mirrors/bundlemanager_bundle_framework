@@ -172,7 +172,7 @@ public:
     static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath);
 
-    static void UnintHandle();
+    static void UnInitHandle();
 
 private:
     static bool InitHandle();

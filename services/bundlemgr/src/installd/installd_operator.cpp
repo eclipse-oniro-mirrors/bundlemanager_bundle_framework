@@ -606,12 +606,12 @@ bool InstalldOperator::InitHandle()
     return true;
 }
 
-void InstalldOperator::UnintHandle()
+void InstalldOperator::UnInitHandle()
 {
     if (handle_ != nullptr) {
         dlclose(handle_);
         handle_ = nullptr;
-        APP_LOGD("InstalldOperator::UnintHandle, err:%{public}s", dlerror());
+        APP_LOGD("InstalldOperator::UnInitHandle, err:%{public}s", dlerror());
     }
 }
 
@@ -664,15 +664,23 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
         APP_LOGE("ApplyDiffPatch ProcessApplyDiffPatchPath failed");
         return false;
     }
+    std::string realOldSoPath;
+    std::string realDiffFilePath;
+    std::string realNewSoPath;
+    if (!PathToRealPath(oldSoPath, realOldSoPath) || !PathToRealPath(diffFilePath, realDiffFilePath) ||
+        !PathToRealPath(newSoPath, realNewSoPath)) {
+        APP_LOGE("ApplyDiffPatch Path is not real path");
+        return false;
+    }
     // dlopen so
     if (!InitHandle()) {
         APP_LOGE("ApplyDiffPatch dlopen failed");
         return false;
     }
-    auto ApplyPatch = reinterpret_cast<int32_t(*)(const std::string, const std::string, const std::string)>(
+    auto applyPatch = reinterpret_cast<int32_t(*)(const std::string, const std::string, const std::string)>(
         dlsym(handle_, APPLY_PATCH_FUNCTION_NAME));
-    if (ApplyPatch == nullptr) {
-        APP_LOGE("ApplyDiffPatch failed to get ApplyPatch err:%{public}s", dlerror());
+    if (applyPatch == nullptr) {
+        APP_LOGE("ApplyDiffPatch failed to get applyPatch err:%{public}s", dlerror());
         return false;
     }
     std::vector<std::string> newSoList;
@@ -682,13 +690,13 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
         APP_LOGD("ApplyDiffPatch soName: %{public}s, diffName: %{public}s", soFileName.c_str(), diffFileName.c_str());
         auto iter = find(oldSoFileNames.begin(), oldSoFileNames.end(), soFileName);
         if (iter != oldSoFileNames.end()) {
-            std::string oldSoFilePath = oldSoPath + Constants::PATH_SEPARATOR + soFileName;
-            std::string diffPath = diffFilePath + Constants::PATH_SEPARATOR + diffFileName;
-            std::string newSoFilePath = newSoPath + Constants::PATH_SEPARATOR + soFileName;
-            int32_t ret = ApplyPatch(diffPath, oldSoFilePath, newSoFilePath);
-            APP_LOGD("ApplyDiffPatch failed, diffPath:%{private}s, oldPath:%{private}s, newPath:%{private}s, "
-                     "errcode: %{public}d", diffPath.c_str(), oldSoFilePath.c_str(), newSoFilePath.c_str(), ret);
+            std::string oldSoFilePath = realOldSoPath + Constants::PATH_SEPARATOR + soFileName;
+            std::string diffPath = realDiffFilePath + Constants::PATH_SEPARATOR + diffFileName;
+            std::string newSoFilePath = realNewSoPath + Constants::PATH_SEPARATOR + soFileName;
+            int32_t ret = applyPatch(diffPath, oldSoFilePath, newSoFilePath);
             if (ret != ERR_OK) {
+                APP_LOGE("ApplyDiffPatch failed, diffPath:%{private}s, oldPath:%{private}s, newPath:%{private}s, "
+                         "errcode: %{public}d", diffPath.c_str(), oldSoFilePath.c_str(), newSoFilePath.c_str(), ret);
                 for (const auto &file : newSoList) {
                     DeleteDir(file);
                 }
