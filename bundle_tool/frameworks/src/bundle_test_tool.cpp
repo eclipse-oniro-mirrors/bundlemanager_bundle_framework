@@ -88,6 +88,19 @@ const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED =
     "error: hotreload type already existed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO =
     "error: no patch info in bundleInfo.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED = "error: quick fix move hqf file failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED = "error: quick fix create path failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_OLD_PATCH_OR_HOT_RELOAD_IN_DB =
+    "error: old patch or hot reload in db.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED = "error: send request failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED = "error: obtain realpath failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH = "error: input invalid path.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_OPEN_SOURCE_FILE_FAILED = "error: open source file failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_FD_FAILED = "error: create file descriptor failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_TARGET_DIR = "error: invalid designated target dir\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_TARGET_DIR_FAILED = "error: create target dir failed.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED = "error: quick fix permission denied.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_WRITE_FILE_FAILED = "error: write file to target dir failed.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INVALID_PARAM =
     "error: invalid param for setting debug mode.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR =
@@ -95,10 +108,6 @@ const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR =
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR = "error: parcel error for setting debug mode.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR = "error: send request error.\n";
 const std::string MSG_ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED = "error: uid check failed.\n";
-const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED = "error: quick fix move hqf file failed.\n";
-const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED = "error: quick fix create path failed.\n";
-const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_OLD_PATCH_OR_HOT_RELOAD_IN_DB =
-    "error: old patch or hot reload in db.\n";
 
 static const std::string TOOL_NAME = "bundle_test_tool";
 static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>\n"
@@ -1431,10 +1440,10 @@ ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixP
         APP_LOGE("quickFixProxy is null");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-
-    if (!quickFixProxy->DeployQuickFix(pathVec, callback)) {
+    auto res = quickFixProxy->DeployQuickFix(pathVec, callback);
+    if (res != ERR_OK) {
         APP_LOGE("DeployQuickFix failed");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        return res;
     }
 
     return callback->GetResultCode(quickFixRes);
@@ -1465,9 +1474,10 @@ ErrCode BundleTestTool::SwitchQuickFix(const std::string &bundleName, int32_t en
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     bool enableFlag = (enable == 0) ? false : true;
-    if (!quickFixProxy->SwitchQuickFix(bundleName, enableFlag, callback)) {
+    auto res = quickFixProxy->SwitchQuickFix(bundleName, enableFlag, callback);
+    if (res != ERR_OK) {
         APP_LOGE("SwitchQuickFix failed");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        return res;
     }
     return callback->GetResultCode(quickFixRes);
 #else
@@ -1496,9 +1506,10 @@ ErrCode BundleTestTool::DeleteQuickFix(const std::string &bundleName,
         APP_LOGE("quickFixProxy is null");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    if (!quickFixProxy->DeleteQuickFix(bundleName, callback)) {
+    auto res = quickFixProxy->DeleteQuickFix(bundleName, callback);
+    if (res != ERR_OK) {
         APP_LOGE("DeleteQuickFix failed");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        return res;
     }
     return callback->GetResultCode(quickFixRes);
 #else

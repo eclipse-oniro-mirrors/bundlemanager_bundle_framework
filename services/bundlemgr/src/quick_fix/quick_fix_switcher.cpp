@@ -109,7 +109,7 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
         APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }
-    dataMgr_->EnableBundle(bundleName);
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName_); });
     // utilize rbAppqfInfo to rollback
     AppqfInfo rbAppqfInfo = innerBundleInfo.GetAppqfInfo();
     if (!enable && rbAppqfInfo.hqfInfos.empty()) {

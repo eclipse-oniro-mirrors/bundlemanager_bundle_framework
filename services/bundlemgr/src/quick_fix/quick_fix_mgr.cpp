@@ -44,14 +44,14 @@ void QuickFixMgr::ProcessEvent(const InnerEvent::Pointer &event)
     APP_LOGW("the eventId is not supported");
 }
 
-bool QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("DeployQuickFix begin");
     auto quickFixer = CreateQuickFixer(statusCallback);
     if (quickFixer == nullptr) {
         APP_LOGE("DeployQuickFix failed due to nullptr quick fixer");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     auto task = [quickFixer, bundleFilePaths] {
@@ -60,17 +60,17 @@ bool QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths
 
     ThreadPool &installersPool = DelayedSingleton<BundleMgrService>::GetInstance()->GetThreadPool();
     installersPool.AddTask(task);
-    return true;
+    return ERR_OK;
 }
 
-bool QuickFixMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
+ErrCode QuickFixMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("SwitchQuickFix begin");
     auto quickFixer = CreateQuickFixer(statusCallback);
     if (quickFixer == nullptr) {
         APP_LOGE("SwitchQuickFix failed due to nullptr quick fixer");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     auto task = [quickFixer, bundleName, enable] {
@@ -79,17 +79,17 @@ bool QuickFixMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
 
     ThreadPool &installersPool = DelayedSingleton<BundleMgrService>::GetInstance()->GetThreadPool();
     installersPool.AddTask(task);
-    return true;
+    return ERR_OK;
 }
 
-bool QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
+ErrCode QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     APP_LOGI("DeleteQuickFix begin");
     auto quickFixer = CreateQuickFixer(statusCallback);
     if (quickFixer == nullptr) {
         APP_LOGE("DeleteQuickFix failed due to nullptr quick fixer");
-        return false;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     auto task = [quickFixer, bundleName] {
@@ -98,7 +98,7 @@ bool QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
 
     ThreadPool &installersPool = DelayedSingleton<BundleMgrService>::GetInstance()->GetThreadPool();
     installersPool.AddTask(task);
-    return true;
+    return ERR_OK;
 }
 
 std::shared_ptr<QuickFixer> QuickFixMgr::CreateQuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback)
