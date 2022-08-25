@@ -27,7 +27,8 @@ namespace OHOS {
     {
         Parcel dataMessageParcel;
         ApplicationInfo applicationInfo;
-        applicationInfo.bundleName = reinterpret_cast<const char*>(data);
+        std::string bundlename (reinterpret_cast<const char*>(data), size);
+        applicationInfo.bundleName = bundlename;
         auto application = ApplicationInfo::Unmarshalling(dataMessageParcel);
         return application != nullptr;
         ApplicationInfo oldApplicationInfo;
