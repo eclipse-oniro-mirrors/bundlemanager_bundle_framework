@@ -33,7 +33,8 @@ const char NAME[] = "name";
             return false;
         }
         nlohmann::json infoJson;
-        infoJson[NAME] = reinterpret_cast<const char*>(data);
+        std::string name (reinterpret_cast<const char*>(data), size);
+        infoJson[NAME] = name;
         ApplicationInfo applicationInfo = infoJson;
         return !applicationInfo.name.empty();
     }

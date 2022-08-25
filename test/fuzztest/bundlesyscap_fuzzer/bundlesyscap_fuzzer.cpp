@@ -24,7 +24,8 @@
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
-        return HasSystemCapability(reinterpret_cast<const char*>(data));
+        std::string info (reinterpret_cast<const char*>(data), size);
+        return HasSystemCapability(info.c_str());
     }
 }
 
