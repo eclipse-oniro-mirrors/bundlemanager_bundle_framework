@@ -46,12 +46,12 @@ ohos_unittest("BmsBundleQuickFixManagerTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "distributed_bundle_framework:dbms_fwk",
-    "distributeddatamgr:distributeddata_inner",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

@@ -310,7 +310,7 @@ ohos_shared_library("libbms") {
       "src/rdb/rdb_data_manager.cpp",
     ]
   } else {
-    external_deps += [ "distributeddatamgr:distributeddata_inner" ]
+    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "src/bundle_data_storage_database.cpp",
       "src/kvstore_death_recipient_callback.cpp",
