@@ -28,8 +28,6 @@ namespace {
 const std::string STRING_BUNDLE_PATH = "/data/test/resource/bm/pageAbilityBundleForUninstall.hap";
 const std::string STRING_BUNDLE_NAME = "com.ohos.tools.pageAbilityBundleForUninstall";
 const std::string STRING_BUNDLE_NAME_INVALID = STRING_BUNDLE_NAME + ".invalid";
-const std::string STRING_MODULE_NAME = "com.ohos.tools.pageAbilityForUninstall";
-const std::string STRING_MODULE_NAME_INVALID = STRING_MODULE_NAME + ".invalid";
 const std::string UNINSTALL_FALSE = "error: uninstall missing installed bundle.";
 }  // namespace
 
@@ -82,43 +80,6 @@ HWTEST_F(BmCommandUninstallSystemTest, Bm_Command_Uninstall_SystemTest_0200, Fun
 {
     // uninstall an invalid bundle
     std::string command = "bm uninstall -n " + STRING_BUNDLE_NAME_INVALID;
-    std::string commandResult = ToolSystemTest::ExecuteCommand(command);
-
-    EXPECT_EQ(commandResult, STRING_UNINSTALL_BUNDLE_NG + "\n" + UNINSTALL_FALSE + "\n");
-}
-
-/**
- * @tc.number: Bm_Command_Uninstall_SystemTest_0300
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm uninstall -n <bundle-name> -m <module-name>" command.
- */
-HWTEST_F(BmCommandUninstallSystemTest, Bm_Command_Uninstall_SystemTest_0300, Function | MediumTest | Level1)
-{
-    // uninstall the bundle
-    ToolSystemTest::UninstallBundle(STRING_BUNDLE_NAME);
-
-    // install the bundle
-    ToolSystemTest::InstallBundle(STRING_BUNDLE_PATH, true);
-
-    // uninstall an invalid bundle
-    std::string command = "bm uninstall -n " + STRING_BUNDLE_NAME + " -m " + STRING_MODULE_NAME;
-    std::string commandResult = ToolSystemTest::ExecuteCommand(command);
-
-    EXPECT_EQ(commandResult, STRING_UNINSTALL_BUNDLE_OK + "\n");
-
-    // uninstall the bundle
-    ToolSystemTest::UninstallBundle(STRING_BUNDLE_NAME);
-}
-
-/**
- * @tc.number: Bm_Command_Uninstall_SystemTest_0400
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm uninstall -n <bundle-name> -m <module-name>" command.
- */
-HWTEST_F(BmCommandUninstallSystemTest, Bm_Command_Uninstall_SystemTest_0400, Function | MediumTest | Level1)
-{
-    // uninstall an invalid module
-    std::string command = "bm uninstall -n " + STRING_BUNDLE_NAME + " -m " + STRING_MODULE_NAME_INVALID;
     std::string commandResult = ToolSystemTest::ExecuteCommand(command);
 
     EXPECT_EQ(commandResult, STRING_UNINSTALL_BUNDLE_NG + "\n" + UNINSTALL_FALSE + "\n");
