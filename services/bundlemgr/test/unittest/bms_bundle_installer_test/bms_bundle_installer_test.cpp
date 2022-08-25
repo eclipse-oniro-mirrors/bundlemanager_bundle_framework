@@ -651,11 +651,11 @@ HWTEST_F(BmsBundleInstallerTest, BackupExtension_0100, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: PREVIEWExtension_0100
- * @tc.name: test the preview type
+ * @tc.name: PREVIEWExtension_0100
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000HDAM7
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, PREVIEWExtension_0100, Function | SmallTest | Level0)
 {
@@ -681,11 +681,11 @@ HWTEST_F(BmsBundleInstallerTest, PREVIEWExtension_0100, Function | SmallTest | L
 }
 
 /**
- * @tc.number: THUMBNAILExtension_0100
- * @tc.name: test the thumbnail type
+ * @tc.name: THUMBNAILExtension_0100
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000HDAM7
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, THUMBNAILExtension_0100, Function | SmallTest | Level0)
 {
@@ -824,11 +824,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0400, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_0500
- * @tc.name: test the preview type
+ * @tc.name: QueryExtensionAbilityInfos_0500
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0AM6
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0500, Function | SmallTest | Level0)
 {
@@ -855,11 +855,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0500, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_0600
- * @tc.name: test the backup type
+ * @tc.name: QueryExtensionAbilityInfos_0600
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0AM6
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0600, Function | SmallTest | Level0)
 {
@@ -878,11 +878,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0600, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_0700
- * @tc.name: test the backup type
+ * @tc.name: QueryExtensionAbilityInfos_0700
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000HDAM7
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0700, Function | SmallTest | Level0)
 {
@@ -907,11 +907,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0700, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_0800
- * @tc.name: test the backup type
+ * @tc.name: QueryExtensionAbilityInfos_0800
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000HDAM7
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0800, Function | SmallTest | Level0)
 {
@@ -937,11 +937,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0800, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_0900
- * @tc.name: test the thumbnail type
+ * @tc.name: QueryExtensionAbilityInfos_0900
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0AM6
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0900, Function | SmallTest | Level0)
 {
@@ -968,11 +968,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0900, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_1000
- * @tc.name: test the thumbnail type
+ * @tc.name: QueryExtensionAbilityInfos_1000
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0AM6
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1000, Function | SmallTest | Level0)
 {
@@ -991,11 +991,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1000, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_1100
- * @tc.name: test the thumbnail type
+ * @tc.name: QueryExtensionAbilityInfos_1100
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000HDAM7
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1100, Function | SmallTest | Level0)
 {
@@ -1020,11 +1020,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1100, Function | Sma
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfos_1200
- * @tc.name: test the thumbnail type
+ * @tc.name: QueryExtensionAbilityInfos_1200
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000HDAM7
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1200, Function | SmallTest | Level0)
 {
