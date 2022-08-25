@@ -735,7 +735,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
  * @tc.number: GetBundleInfo_0100
  * Function: GetBundleInfo
  * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MI0Q
+ * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
              2.get bundle info failed with empty bundle name
  */
@@ -754,7 +754,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0100, Function | SmallTest | Level
  * @tc.number: GetBundleInfo_0200
  * Function: GetBundleInfo
  * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MI0Q
+ * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally and without any bundle
  *           2.get bundle info failed with no bundle in system
  */
@@ -771,7 +771,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0200, Function | SmallTest | Level
  * @tc.number: GetBundleInfo_0300
  * Function: GetBundleInfo
  * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MI0Q
+ * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normal
  *           2.get bundle info failed
  */
@@ -791,7 +791,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0300, Function | SmallTest | Level
  * @tc.number: GetBundleInfo_0400
  * Function: GetBundleInfo
  * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MI0Q
+ * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
  *           2.get AppqfInfo successfully
  */
@@ -813,7 +813,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0400, Function | SmallTest | Level
  * @tc.number: GetBundleInfo_0500
  * Function: GetBundleInfo
  * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MI0Q
+ * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
  *           2.get empty AppqfInfo
  */
