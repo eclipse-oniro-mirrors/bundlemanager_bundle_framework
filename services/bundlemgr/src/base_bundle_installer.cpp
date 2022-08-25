@@ -1337,7 +1337,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleDiffFile(const InnerBundleInfo &old
     if (!isFeatureNeedUninstall_ && !nativeLibraryPath.empty() && !appQfInfo.nativeLibraryPath.empty()) {
         const std::string moduleName = modulePackage_;
         auto iter = find_if(appQfInfo.hqfInfos.begin(), appQfInfo.hqfInfos.end(),
-            [moduleName](const auto &hqfInfo) {
+            [&moduleName](const auto &hqfInfo) {
             return hqfInfo.moduleName == moduleName;
         });
         if (iter != appQfInfo.hqfInfos.end()) {

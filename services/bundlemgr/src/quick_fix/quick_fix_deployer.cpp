@@ -96,7 +96,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
 ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
     InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix)
 {
-    APP_LOGD("ToDeployStartStatus start.");
+    APP_LOGI("ToDeployStartStatus start.");
     if (GetQuickFixDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
@@ -111,7 +111,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     const QuickFixMark &mark = oldInnerAppQuickFix.GetQuickFixMark();
     if (isExist && (mark.status != QuickFixStatus::DEPLOY_START) && (mark.status != QuickFixStatus::DEPLOY_END)) {
         APP_LOGE("error: wrong quick fix status, now status : %{public}d", mark.status);
-        return ERR_BUNDLEMANAGER_QUICK_FIX_WRONG_QUICK_FIX_STATUS;
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
     }
     const AppQuickFix &oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
     // exist and type same need to check version code
@@ -151,7 +151,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
         APP_LOGE("SaveAppQuickFix failed, errcode: %{public}d", ret);
         return ret;
     }
-    APP_LOGD("ToDeployStartStatus end.");
+    APP_LOGI("ToDeployStartStatus end.");
     return ERR_OK;
 }
 
@@ -175,7 +175,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
     const BundleInfo &bundleInfo,
     std::unordered_map<std::string, AppQuickFix> &infos)
 {
-    APP_LOGD("ProcessPatchDeployStart start.");
+    APP_LOGI("ProcessPatchDeployStart start.");
     if (infos.empty()) {
         APP_LOGE("error: appQuickFix infos is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
@@ -206,7 +206,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
         APP_LOGE("check AppQuickFixInfos with installed bundle failed, errcode : %{public}d", ret);
         return ret;
     }
-    APP_LOGD("ProcessPatchDeployStart end.");
+    APP_LOGI("ProcessPatchDeployStart end.");
     return ERR_OK;
 }
 
@@ -214,21 +214,21 @@ ErrCode QuickFixDeployer::ProcessHotReloadDeployStart(
     const BundleInfo &bundleInfo,
     const AppQuickFix &appQuickFix)
 {
-    APP_LOGD("ProcessHotReloadDeployStart start.");
+    APP_LOGI("ProcessHotReloadDeployStart start.");
     QuickFixChecker checker;
     ErrCode ret = checker.CheckHotReloadWithInstalledBundle(appQuickFix, bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("check AppQuickFixInfos with installed bundle failed");
         return ret;
     }
-    APP_LOGD("ProcessHotReloadDeployStart end.");
+    APP_LOGI("ProcessHotReloadDeployStart end.");
     return ERR_OK;
 }
 
 ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFix,
     const InnerAppQuickFix &oldInnerAppQuickFix)
 {
-    APP_LOGD("ToDeployEndStatus start.");
+    APP_LOGI("ToDeployEndStatus start.");
     if ((GetQuickFixDataMgr() != ERR_OK)) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
@@ -266,7 +266,7 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     }
     ToDeployQuickFixResult(newQuickFix);
     guardRemovePatchPath.Dismiss();
-    APP_LOGD("ToDeployEndStatus end.");
+    APP_LOGI("ToDeployEndStatus end.");
     return ERR_OK;
 }
 
