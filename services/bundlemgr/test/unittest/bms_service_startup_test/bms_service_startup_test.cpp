@@ -158,3 +158,20 @@ HWTEST_F(BmsServiceStartupTest, GetBundleInstaller_0100, Function | SmallTest | 
     EXPECT_NE(nullptr, installer);
     bms->OnStop();
 }
+
+/**
+* @tc.number: GuardAgainst_001
+* @tc.name: Guard against install infos lossed strategy
+* @tc.desc: 1. the service is not initialized
+* @tc.require: issueI56WA0
+*/
+HWTEST_F(BmsServiceStartupTest, GuardAgainst_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    bool ready = bms->IsServiceReady();
+    EXPECT_EQ(false, ready);
+    bms->OnStart();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    ready = bms->IsServiceReady();
+    EXPECT_EQ(true, ready);
+}

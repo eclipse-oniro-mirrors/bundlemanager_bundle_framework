@@ -268,6 +268,10 @@ void BundleInstallChecker::CollectProvisionInfo(
 void BundleInstallChecker::GetPrivilegeCapability(
     const InstallCheckParam &checkParam, InnerBundleInfo &newInfo)
 {
+    // Reset privilege capability
+    newInfo.SetKeepAlive(false);
+    newInfo.SetSingleton(false);
+
     newInfo.SetRemovable(checkParam.removable);
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();

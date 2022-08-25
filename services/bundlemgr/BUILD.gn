@@ -139,6 +139,11 @@ ohos_source_set("bundle_parser") {
     "ipc:ipc_single",
   ]
 
+  defines = []
+  if (use_pre_bundle_profile) {
+    defines += [ "USE_PRE_BUNDLE_PROFILE" ]
+  }
+
   part_name = "bundle_framework"
 }
 

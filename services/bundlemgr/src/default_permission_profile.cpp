@@ -24,7 +24,7 @@ static const std::string PERMISSIONS_PROFILE_KEY_BUNDLENAME = "bundleName";
 static const std::string PERMISSIONS_PROFILE_KEY_PERMISSIONS = "permissions";
 static const std::string PERMISSIONS_PROFILE_KEY_NAME = "name";
 static const std::string PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE = "userCancellable";
-static const std::string PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "appSignature";
+static const std::string PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "app_signature";
 }
 thread_local int32_t parseResult;
 

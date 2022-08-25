@@ -36,7 +36,7 @@ const std::string SINGLETON = "singleton";
 const std::string BOOTABLE = "bootable";
 const std::string ALLOW_COMMON_EVENT = "allowCommonEvent";
 const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
-const std::string APP_SIGNATURE = "appSignature";
+const std::string APP_SIGNATURE = "app_signature";
 const std::string ASSOCIATED_WAKE_UP = "associatedWakeUp";
 const std::string RESOURCES_PATH = "/app/ohos.global.systemres";
 }
