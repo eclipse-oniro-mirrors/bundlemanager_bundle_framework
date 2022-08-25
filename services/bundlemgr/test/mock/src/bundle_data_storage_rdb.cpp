@@ -24,7 +24,9 @@ namespace AppExecFwk {
 static std::map<std::string, InnerBundleInfo> INNER_BUNDLE_INFOS;
 
 BundleDataStorageRdb::BundleDataStorageRdb()
-{}
+{
+    INNER_BUNDLE_INFOS.emplace("test.placeholder", InnerBundleInfo());
+}
 
 BundleDataStorageRdb::~BundleDataStorageRdb()
 {}
@@ -32,7 +34,7 @@ BundleDataStorageRdb::~BundleDataStorageRdb()
 bool BundleDataStorageRdb::LoadAllData(std::map<std::string, InnerBundleInfo> &infos)
 {
     infos = INNER_BUNDLE_INFOS;
-    return !infos.empty();
+    return true;
 }
 
 bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
