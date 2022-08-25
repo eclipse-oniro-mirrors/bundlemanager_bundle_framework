@@ -89,7 +89,7 @@ void BmsRdbDataManagerTest::CloseDb()
  * @tc.desc: 1.insert data
  *           2.query data
  *           3.delete data
- * @tc.require: SR000H0F45
+ * @tc.require: issueI56W8B
  */
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0100, Function | SmallTest | Level1)
 {
@@ -124,7 +124,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0100, Function | SmallTest | Leve
  * @tc.name: insert queryAll
  * @tc.desc: 1.insert data
  *           2.queryAll data
- * @tc.require: SR000H0F45
+ * @tc.require: issueI56W8B
  */
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0200, Function | SmallTest | Level1)
 {
@@ -154,7 +154,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0200, Function | SmallTest | Leve
  * @tc.name: save and delete
  * @tc.desc: 1.SaveStorageBundleInfo
  *           2.DeleteStorageBundleInfo
- * @tc.require: SR000H0F45
+ * @tc.require: issueI56W8B
  */
 HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0100, Function | SmallTest | Level1)
 {
@@ -175,7 +175,7 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0100, Function | SmallTest 
  * @tc.number: BundleDataStorageRdb_0200
  * @tc.name: LoadAllData
  * @tc.desc: 1.LoadAllData
- * @tc.require: SR000H0F45
+ * @tc.require: issueI56W8B
  */
 HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0200, Function | SmallTest | Level1)
 {
@@ -210,7 +210,7 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0200, Function | SmallTest 
  * @tc.name: save and delete
  * @tc.desc: 1.SavePreInstallStorageBundleInfo
  *           2.DeletePreInstallStorageBundleInfo
- * @tc.require: SR000H0F45
+ * @tc.require: issueI56W8B
  */
 HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0100, Function | SmallTest | Level1)
 {
@@ -229,7 +229,7 @@ HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0100, Function | SmallT
  * @tc.number: PreInstallDataStorageRdb_0200
  * @tc.name: LoadAllPreInstallBundleInfos
  * @tc.desc: 1.LoadAllPreInstallBundleInfos
- * @tc.require: SR000H0F45
+ * @tc.require: issueI56WB8
  */
 HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0200, Function | SmallTest | Level1)
 {
@@ -258,7 +258,7 @@ HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0200, Function | SmallT
  * @tc.desc: 1.SetDefaultApplicationInfo
  *           2.GetDefaultApplicationInfo
  *           3.DeleteDefaultApplicationInfos
- * @tc.require: SR000H0F45
+ * @tc.require: issueI56W8B
  */
 HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0100, Function | SmallTest | Level1)
 {
