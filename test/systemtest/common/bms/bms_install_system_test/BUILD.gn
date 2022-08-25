@@ -24,6 +24,7 @@ ohos_systemtest("BmsInstallSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${common_path}:libappexecfwk_common",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
@@ -41,7 +42,7 @@ ohos_systemtest("BmsInstallSystemTest") {
     "samgr:samgr_proxy",
   ]
   resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrsst/ohos_test.xml"
+      "${appexecfwk_path}/test/resource/bundlemgrsst/ohos_test1.xml"
 }
 
 group("systemtest") {

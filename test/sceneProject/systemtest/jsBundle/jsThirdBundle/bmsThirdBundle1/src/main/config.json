@@ -1,0 +1,147 @@
+{
+    "app": {
+        "apiVersion": {
+            "compatible": 4,
+            "releaseType": "Beta1",
+            "target": 5
+        },
+        "bundleName": "com.example.third1",
+        "vendor": "example",
+        "version": {
+            "code": 1,
+            "name": "1.0"
+        }
+    },
+    "deviceConfig": {
+        "default": {
+            "debug": true
+        }
+    },
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:mainability_description",
+                "descriptionId": 16777217,
+                "form": {
+                    "defaultHeight": 100,
+                    "defaultWidth": 200,
+                    "formEntity": [
+                        "homeScreen",
+                        "searchbox"
+                    ],
+                    "minHeight": 50,
+                    "minWidth": 100
+                },
+                "forms": [
+                    {
+                        "colorMode": "light",
+                        "deepLink": "ability://com.example.myapplication.fa/.MainAbility",
+                        "defaultDimension": "1*2",
+                        "description": " JS1 Form",
+                        "isDefault": true,
+                        "jsComponentName": "JS_name1",
+                        "metaData": {
+                            "customizeData": [
+                                {
+                                    "name": "originWidgetName1",
+                                    "value": "com.openharmony.weather.testWidget1"
+                                }
+                            ]
+                        },
+                        "name": "Form_JS1",
+                        "scheduledUpateTime": "21:55",
+                        "supportDimensions": [
+                            "1*2",
+                            "2*2",
+                            "2*4"
+                        ],
+                        "type": "JS",
+                        "updateDuration": 1,
+                        "updateEnabled": true
+                    }
+                ],
+                "icon": "$media:icon",
+                "iconId": 16777218,
+                "label": "$string:app_name",
+                "labelId": 16777216,
+                "launchType": "standard",
+                "metaData": {
+                    "customizeData": [
+                        {
+                            "extra": "$string:mainability_description",
+                            "name": "Data1",
+                            "value": "float"
+                        }
+                    ],
+                    "parameters": [
+                        {
+                            "description": "$string:mainability_description",
+                            "descriptionId": 16777217,
+                            "name": "Data1",
+                            "type": "float"
+                        }
+                    ],
+                    "results": [
+                        {
+                            "description": "$string:mainability_description",
+                            "descriptionId": 16777217,
+                            "name": "Data1",
+                            "type": "float"
+                        }
+                    ]
+                },
+                "name": "com.example.third1.MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "type": "page",
+                "visible": true
+            }
+        ],
+        "colorMode": "light",
+        "deviceType": [
+            "default"
+        ],
+        "distro": {
+            "deliveryWithInstall": true,
+            "moduleName": "entry",
+            "moduleType": "entry"
+        },
+        "js": [
+            {
+                "name": "default",
+                "pages": [
+                    "pages/index/index"
+                ],
+                "window": {
+                    "autoDesignWidth": false,
+                    "designWidth": 720
+                }
+            }
+        ],
+        "name": "com.example.third1.BmsThirdBundle1",
+        "package": "com.example.third1",
+        "shortcuts": [
+            {
+                "icon": "$media:icon",
+                "iconId": 16777218,
+                "intents": [
+                    {
+                        "targetBundle": "com.example.third1",
+                        "targetClass": "com.example.third1.MainAbility"
+                    }
+                ],
+                "label": "$string:app_name",
+                "labelId": 16777216,
+                "shortcutId": "id.third1"
+            }
+        ]
+    }
+}

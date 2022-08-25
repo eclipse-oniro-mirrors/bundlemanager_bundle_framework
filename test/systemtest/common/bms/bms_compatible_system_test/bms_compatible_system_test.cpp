@@ -227,7 +227,7 @@ static void CheckCompatibleAbilityInfo(
     EXPECT_EQ(compatibleAbilityInfo.type, AbilityType::PAGE);
     EXPECT_EQ(compatibleAbilityInfo.orientation, DisplayOrientation::UNSPECIFIED);
     EXPECT_EQ(compatibleAbilityInfo.launchMode, LaunchMode::STANDARD);
-    EXPECT_EQ(commonTool.VectorToStr(compatibleAbilityInfo.deviceTypes), "phone");
+    EXPECT_EQ(commonTool.VectorToStr(compatibleAbilityInfo.deviceTypes), "default");
     EXPECT_FALSE(compatibleAbilityInfo.supportPipMode);
     EXPECT_EQ(compatibleAbilityInfo.bundleName, bundleName);
     EXPECT_EQ(compatibleAbilityInfo.formEntity, FORM_NUM);
@@ -738,8 +738,8 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0100, Function | Med
         EXPECT_NE(bundleMgrProxy, nullptr);
     }
     std::vector<CommonEventInfo> commonEventInfos;
-    EXPECT_FALSE(bundleMgrProxy->GetAllCommonEventInfo("BMS_TESTCOMMONEVNET_THIRD2", commonEventInfos));
-    EXPECT_TRUE(commonEventInfos.size() == 0);
+    EXPECT_TRUE(bundleMgrProxy->GetAllCommonEventInfo("BMS_TESTCOMMONEVNET_THIRD2", commonEventInfos));
+    EXPECT_FALSE(commonEventInfos.size() == 0);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0100";

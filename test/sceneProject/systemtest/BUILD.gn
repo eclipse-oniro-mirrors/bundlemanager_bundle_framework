@@ -14,4 +14,9 @@
 group("systemtest_hap") {
   testonly = true
   deps = []
+
+  deps += [
+    # deps file
+    "jsBundle/jsThirdBundle:jsThirdBundle",
+  ]
 }
