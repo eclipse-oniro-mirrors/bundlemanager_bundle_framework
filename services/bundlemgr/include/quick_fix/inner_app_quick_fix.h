@@ -39,7 +39,6 @@ enum QuickFixStatus : int32_t {
 
 struct QuickFixMark {
     std::string bundleName;
-    std::string moduleName;
     int32_t status = QuickFixStatus::DEFAULT_STATUS;
 };
 

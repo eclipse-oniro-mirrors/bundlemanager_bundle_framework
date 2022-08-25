@@ -404,7 +404,6 @@ ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::strin
             APP_LOGE("error: appQuickFix add hqf moduleName: %{public}s failed", moduleName.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_ADD_HQF_FAILED;
         }
-        mark.moduleName = moduleName;
     }
     newInnerAppQuickFix.SetQuickFixMark(mark);
     APP_LOGD("ToInnerAppQuickFix end");
@@ -488,7 +487,6 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
             return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
         }
         info.hqfFilePath = realPath;
-        mark.moduleName = info.moduleName;
     }
     mark.status = QuickFixStatus::DEPLOY_END;
     innerAppQuickFix.SetQuickFixMark(mark);

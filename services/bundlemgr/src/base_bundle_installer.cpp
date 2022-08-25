@@ -1333,14 +1333,19 @@ ErrCode BaseBundleInstaller::ProcessNewModuleDiffFile(const InnerBundleInfo &old
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     const AppqfInfo &appQfInfo = oldInfo.GetAppqfInfo();
-    if (!isFeatureNeedUninstall_ && !newInfo.GetBaseApplicationInfo().nativeLibraryPath.empty()
-        && !appQfInfo.nativeLibraryPath.empty()) {
+    const std::string &nativeLibraryPath = newInfo.GetBaseApplicationInfo().nativeLibraryPath;
+    if (!isFeatureNeedUninstall_ && !nativeLibraryPath.empty() && !appQfInfo.nativeLibraryPath.empty()) {
         const std::string moduleName = modulePackage_;
         auto iter = find_if(appQfInfo.hqfInfos.begin(), appQfInfo.hqfInfos.end(),
             [moduleName](const auto &hqfInfo) {
             return hqfInfo.moduleName == moduleName;
         });
         if (iter != appQfInfo.hqfInfos.end()) {
+            if (nativeLibraryPath != appQfInfo.nativeLibraryPath) {
+                APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
+                         nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
+                return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+            }
             const std::string tempDiffPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
                 bundleName_ + Constants::TMP_SUFFIX;
             ScopeGuard removeDiffPath([tempDiffPath] { InstalldClient::GetInstance()->RemoveDir(tempDiffPath); });
@@ -1354,7 +1359,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleDiffFile(const InnerBundleInfo &old
                 Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
             std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
                 Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-                std::to_string(appQfInfo.versionCode);
+                std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
             ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, newSoPath, tempDiffPath);
             if (ret != ERR_OK) {
                 APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);
