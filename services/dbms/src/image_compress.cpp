@@ -98,6 +98,7 @@ double ImageCompress::CalRatio(std::string fileName)
     FILE* file = fopen(fileName.c_str(), "rb");
     if (!file) {
         APP_LOGE("ImageCompress: CalRatio %{public}s is unavailable", fileName.c_str());
+        return -1.0;
     }
     if (fseek(file, 0L, SEEK_END) != 0) {
         fclose(file);
@@ -123,7 +124,8 @@ bool ImageCompress::NeedCompress(std::string fileName)
     }
     FILE* file = fopen(fileName.c_str(), "rb");
     if (!file) {
-        APP_LOGE("ImageCompress: CalRatio %{public}s is unavailable", fileName.c_str());
+        APP_LOGE("ImageCompress: NeedCompress file %{public}s is unavailable", fileName.c_str());
+        return false;
     }
     if (fseek(file, 0L, SEEK_END) != 0) {
         fclose(file);
