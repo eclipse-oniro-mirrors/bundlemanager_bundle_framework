@@ -144,7 +144,6 @@ void to_json(nlohmann::json &jsonObject, const QuickFixMark &quickFixMark)
 {
     jsonObject = nlohmann::json {
         {Constants::BUNDLE_NAME, quickFixMark.bundleName},
-        {Constants::MODULE_NAME, quickFixMark.moduleName},
         {QUICK_FIX_MARK_STATUS, quickFixMark.status}
     };
 }
@@ -156,14 +155,6 @@ void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark)
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         quickFixMark.bundleName,
-        JsonType::STRING,
-        false,
-        ProfileReader::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Constants::MODULE_NAME,
-        quickFixMark.moduleName,
         JsonType::STRING,
         false,
         ProfileReader::parseResult,

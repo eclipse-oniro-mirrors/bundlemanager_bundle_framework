@@ -498,6 +498,7 @@ private:
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
+    ErrCode ProcessNewModuleDiffFile(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -517,7 +518,7 @@ private:
     bool isFeatureNeedUninstall_ = false;
     std::vector<std::string> uninstallModuleVec_;
     // for quick fix
-    bool isModuleUpdate_ = false;
+    bool needDeleteQuickFixInfo_ = false;
 
     int32_t userId_ = Constants::INVALID_USERID;
     bool hasInstalledInUser_ = false;

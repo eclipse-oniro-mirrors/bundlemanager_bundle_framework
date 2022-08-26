@@ -518,7 +518,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0009, Function | SmallTest
     AppQuickFix appQuickFix = CreateAppQuickFix(object);
     QuickFixMark mark;
     mark.bundleName = appQuickFix.bundleName;
-    mark.moduleName = appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName;
     mark.status = QuickFixStatus::DEPLOY_START;
     InnerAppQuickFix innerAppQuickFix(appQuickFix, mark);
 
