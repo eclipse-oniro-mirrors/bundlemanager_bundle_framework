@@ -402,12 +402,6 @@ private:
      */
     void ClearCache();
     /**
-     * @brief Judge whether the preInstall app can be recovered.
-     * @param path Indicates the path.
-     * @return Returns true if the preInstall is recovable; returns false otherwise.
-     */
-    bool IsPreInstallRecoverable(const std::string &path);
-    /**
      * @brief Judge whether the preInstall app can be removable.
      * @param path Indicates the path.
      * @return Returns true if the preInstall is removable; returns false otherwise.

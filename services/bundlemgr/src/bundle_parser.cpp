@@ -231,8 +231,7 @@ ErrCode BundleParser::ParsePreInstallConfig(
 
 ErrCode BundleParser::ParsePreUnInstallConfig(
     const std::string &configFile,
-    std::set<std::string> &uninstallList,
-    std::set<std::string> &recoverList) const
+    std::set<std::string> &uninstallList) const
 {
     APP_LOGD("Parse PreUnInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
@@ -242,7 +241,7 @@ ErrCode BundleParser::ParsePreUnInstallConfig(
     }
 
     PreBundleProfile preBundleProfile;
-    return preBundleProfile.TransformTo(jsonBuf, uninstallList, recoverList);
+    return preBundleProfile.TransformTo(jsonBuf, uninstallList);
 }
 
 ErrCode BundleParser::ParsePreInstallAbilityConfig(

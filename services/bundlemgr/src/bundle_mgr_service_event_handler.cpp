@@ -46,7 +46,6 @@ const std::string MODULE_PREFIX = "module_";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
-std::set<std::string> recoverList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 bool hasLoadPreInstallProFile_ = false;
 
@@ -511,7 +510,6 @@ void BMSEventHandler::ClearPreInstallCache()
 
     installList_.clear();
     uninstallList_.clear();
-    recoverList_.clear();
     installListCapabilities_.clear();
     hasLoadPreInstallProFile_ = false;
 }
@@ -548,7 +546,7 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
     bundleParser.ParsePreInstallConfig(
         dir + Constants::INSTALL_LIST_CONFIG, installList_);
     bundleParser.ParsePreUnInstallConfig(
-        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_, recoverList_);
+        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
         dir + Constants::INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
 }
@@ -1261,29 +1259,6 @@ bool BMSEventHandler::ParseHapFiles(
     }
 
     return true;
-}
-
-bool BMSEventHandler::IsPreInstallRecoverable(const std::string &path)
-{
-#ifdef USE_PRE_BUNDLE_PROFILE
-    if (!HasPreInstallProfile()) {
-        return true;
-    }
-
-    if (!hasLoadPreInstallProFile_) {
-        APP_LOGE("Not load preInstall proFile or release.");
-        return false;
-    }
-
-    if (path.empty() || recoverList_.empty()) {
-        APP_LOGE("path or recoverList is empty.");
-        return false;
-    }
-
-    return recoverList_.find(path) != recoverList_.end();
-#else
-    return true;
-#endif
 }
 
 bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
