@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "installd_client.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -48,29 +49,34 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerAppQuickFix innerAppQuickFix;
+    // 1. query quick fix info form db
     if (!quickFixDataMgr_->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix)) {
         APP_LOGE("no patch in the db");
         return ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE;
     }
-
+    // 2. update quick fix status
     if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix)) {
         APP_LOGE("update quickfix status %{public}d failed", QuickFixStatus::DELETE_START);
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
     }
+    // 3. utilize stateGuard to rollback quick fix info status in db
+    ScopeGuard stateGuard([&] {
+        quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::SWITCH_END, innerAppQuickFix);
+    });
 
-    // to delete patch path
+    // 4. to delete patch path
     ErrCode errCode = ToDeletePatchDir(innerAppQuickFix);
     if (errCode != ERR_OK) {
         APP_LOGE("ToDeletePatchDir failed");
         return errCode;
     }
 
-    // to remove old patch info from db
+    // 5. to remove old patch info from db
     if (!quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName_)) {
         APP_LOGE("InnerDeleteQuickFix failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-
+    stateGuard.Dismiss();
     return ERR_OK;
 }
 

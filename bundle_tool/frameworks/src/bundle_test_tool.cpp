@@ -1346,7 +1346,7 @@ ErrCode BundleTestTool::RunAsSwitchQuickFix()
         break;
     }
 
-    if ((result != OHOS::ERR_OK) || (bundleName.empty()) || (enable < 0) || (enable > 1)) {
+    if ((result != OHOS::ERR_OK) || (enable < 0) || (enable > 1)) {
         resultReceiver_.append(HELP_MSG_SWITCH_QUICK_FIX);
         return result;
     }
@@ -1396,7 +1396,7 @@ ErrCode BundleTestTool::RunAsDeleteQuickFix()
         break;
     }
 
-    if ((result != OHOS::ERR_OK) || (bundleName.empty())) {
+    if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_SWITCH_QUICK_FIX);
         return result;
     }
