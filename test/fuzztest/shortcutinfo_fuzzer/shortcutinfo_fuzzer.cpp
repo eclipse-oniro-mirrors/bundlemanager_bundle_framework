@@ -30,7 +30,8 @@ namespace OHOS {
         }
         Parcel dataMessageParcel;
         ShortcutInfo oldShortcutInfo;
-        oldShortcutInfo.bundleName = reinterpret_cast<const char*>(data);
+        std::string bundlename (reinterpret_cast<const char*>(data), size);
+        oldShortcutInfo.bundleName = bundlename;
         if (!oldShortcutInfo.Marshalling(dataMessageParcel)) {
             return false;
         }

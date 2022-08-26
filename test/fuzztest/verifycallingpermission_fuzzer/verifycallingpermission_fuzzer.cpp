@@ -55,7 +55,8 @@ namespace OHOS {
             return false;
         }
 
-        bundleMgr->VerifyCallingPermission(reinterpret_cast<const char*>(data));
+        std::string info (reinterpret_cast<const char*>(data), size);
+        bundleMgr->VerifyCallingPermission(info);
         return true;
     }
 }
