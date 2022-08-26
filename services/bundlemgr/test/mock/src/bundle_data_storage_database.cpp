@@ -27,7 +27,9 @@ namespace OHOS {
 static std::map<std::string, InnerBundleInfo> INNER_BUNDLE_INFOS;
 namespace AppExecFwk {
 BundleDataStorageDatabase::BundleDataStorageDatabase()
-{}
+{
+    INNER_BUNDLE_INFOS.emplace("test.placeholder", InnerBundleInfo());
+}
 
 BundleDataStorageDatabase::~BundleDataStorageDatabase()
 {}
