@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("../../../../../appexecfwk.gni")
 
-ohos_hap("bmsThirdBundle4") {
+ohos_hap("stbmsThirdBundle4") {
   hap_profile = "./src/main/config.json"
   hap_name = "bmsThirdBundle4"
   subsystem_name = "bundlemanager"
