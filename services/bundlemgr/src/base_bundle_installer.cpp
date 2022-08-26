@@ -329,10 +329,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             preInstallBundleInfo.AddBundlePath(item.first);
         }
 #ifdef USE_PRE_BUNDLE_PROFILE
-    preInstallBundleInfo.SetRecoverable(installParam.recoverable);
     preInstallBundleInfo.SetRemovable(installParam.removable);
 #else
-    preInstallBundleInfo.SetRecoverable(true);
     preInstallBundleInfo.SetRemovable(newInfos.begin()->second.IsRemovable());
 #endif
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
@@ -985,18 +983,12 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             APP_LOGE("recover failed due to not system app");
             return ERR_APPEXECFWK_RECOVER_GET_BUNDLEPATH_ERROR;
         }
-
-        if (!preInstallBundleInfo.IsRecoverable()) {
-            APP_LOGE("recover failed due to recover is not allowed.");
-            return ERR_APPEXECFWK_RECOVER_NOT_ALLOWED;
-        }
     }
 
     APP_LOGD("Get preInstall bundlePath success.");
     std::vector<std::string> pathVec { preInstallBundleInfo.GetBundlePaths() };
     auto innerInstallParam = installParam;
     innerInstallParam.isPreInstallApp = true;
-    innerInstallParam.recoverable = preInstallBundleInfo.IsRecoverable();
     innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
     return ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
 }

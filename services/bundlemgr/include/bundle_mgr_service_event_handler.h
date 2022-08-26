@@ -367,14 +367,12 @@ private:
      * @brief OTA Install system app and system vendor bundles.
      * @param filePaths Indicates the filePaths.
      * @param appType Indicates the bundle type.
-     * @param recoverable Indicates the bundle type.
      * @param removable Indicates the bundle type.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     bool OTAInstallSystemBundle(
         const std::vector<std::string> &filePaths,
         Constants::AppType appType,
-        bool recoverable,
         bool removable);
     /**
      * @brief Used to determine whether the module has been installed. If the installation has
@@ -420,7 +418,6 @@ private:
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
-    void UpdateRecoverable(const std::string &bundleName, bool recoverable);
     void UpdateAllPrivilegeCapability();
     void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
     bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);

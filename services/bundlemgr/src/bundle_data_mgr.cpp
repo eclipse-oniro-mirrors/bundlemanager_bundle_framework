@@ -3024,25 +3024,6 @@ void BundleDataMgr::UpdateRemovable(
     SaveInnerBundleInfo(infoItem->second);
 }
 
-void BundleDataMgr::UpdateRecoverable(
-    const std::string &bundleName, bool recoverable)
-{
-    APP_LOGD("UpdateRecoverable %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return;
-    }
-
-    PreInstallBundleInfo preInstallBundleInfo;
-    if (!GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-        APP_LOGE("can not find preBundle %{public}s", bundleName.c_str());
-        return;
-    }
-
-    preInstallBundleInfo.SetRecoverable(recoverable);
-    SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
-}
-
 void BundleDataMgr::UpdatePrivilegeCapability(
     const std::string &bundleName, const ApplicationInfo &appInfo)
 {
