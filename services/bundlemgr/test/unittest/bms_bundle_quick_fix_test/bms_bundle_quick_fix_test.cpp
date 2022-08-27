@@ -28,6 +28,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "json_constants.h"
+#include "mock_quick_fix_callback.h"
 #include "mock_status_receiver.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_deployer.h"
@@ -47,6 +48,7 @@ const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string BUNDLE_NAME_DEMO = "com.example.demo.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hap";
 const std::string HAP_FILE_PATH2 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest3.hap";
+const std::string HQF_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hqf";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string QUICK_FIX_ABI = "arms";
@@ -113,6 +115,7 @@ public:
     AppQuickFix CreateAppQuickFix(const nlohmann::json &object);
     void StartInstalldService() const;
     void StartBundleService();
+    sptr<IQuickFixManager> GetQuickFixManagerProxy();
 
 private:
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
@@ -323,6 +326,25 @@ AppQuickFix BmsBundleQuickFixTest::CreateAppQuickFix(const nlohmann::json &objec
     return appQuickFix;
 }
 
+sptr<IQuickFixManager> BmsBundleQuickFixTest::GetQuickFixManagerProxy()
+{
+    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        APP_LOGE("GetSystemAbilityManager failed.");
+        return nullptr;
+    }
+    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (bundleMgrSa == nullptr) {
+        APP_LOGE("GetSystemAbility failed.");
+        return nullptr;
+    }
+    auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+    if (bundleMgr == nullptr) {
+        APP_LOGE("iface_cast failed.");
+        return nullptr;
+    }
+    return bundleMgr->GetQuickFixManagerProxy();
+}
 /**
  * @tc.number: BmsBundleQuickFixTest_0001
  * Function: CheckAppQuickFixInfos
@@ -658,7 +680,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0013, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0014
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5L
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0014, Function | SmallTest | Level0)
@@ -688,7 +710,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0014, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0015
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5L
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0015, Function | SmallTest | Level0)
@@ -719,7 +741,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0015, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0016
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5D
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest | Level0)
@@ -750,7 +772,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0017
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckHotReloadWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5D
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0017, Function | SmallTest | Level0)
@@ -780,7 +802,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0017, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0018
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckHotReloadWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ7R
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0018, Function | SmallTest | Level0)
@@ -810,7 +832,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0018, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0019
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckHotReloadWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ7R
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0019, Function | SmallTest | Level0)
@@ -1028,6 +1050,87 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0025, Function | SmallTest
         bool ret = quickFixMgr->QueryInnerAppQuickFix(BUNDLE_NAME, innerAppQuickFix);
         EXPECT_FALSE(ret);
     }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0026
+ * Function: GetDeployQuickFixResult
+ * @tc.name: test GetDeployQuickFixResult
+ * @tc.require: issueI5N7AD
+ * @tc.desc: deploy hqf, GetDeployQuickFixResult.
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0026, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        // parse patch.json
+        nlohmann::json object = PATCH_JSON;
+        AppQuickFix appQuickFix = CreateAppQuickFix(object);
+        deployer->ToDeployQuickFixResult(appQuickFix);
+        DeployQuickFixResult result = deployer->GetDeployQuickFixResult();
+        EXPECT_EQ(result.bundleName, appQuickFix.bundleName);
+        EXPECT_EQ(result.bundleVersionCode, appQuickFix.versionCode);
+        EXPECT_EQ(result.patchVersionCode, appQuickFix.deployingAppqfInfo.versionCode);
+    }
+
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0027
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: empty path, DeployQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0027, Function | SmallTest | Level0)
+{
+    auto quickFixProxy= GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    std::vector<std::string> path;
+    ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0028
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: not hqf file, DeployQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0028, Function | SmallTest | Level0)
+{
+    auto quickFixProxy= GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    std::vector<std::string> path {HAP_FILE_PATH1};
+    ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0029
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: not exist hqf file, DeployQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0029, Function | SmallTest | Level0)
+{
+    auto quickFixProxy= GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    std::vector<std::string> path {HQF_FILE_PATH1};
+    ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED);
 }
 
 /**
