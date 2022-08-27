@@ -668,15 +668,16 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     const std::string &newSoPath)
 {
     APP_LOGI("ApplyDiffPatch start");
-    std::vector<std::string> oldSoFileNames;
-    std::vector<std::string> diffFileNames;
+    std::vector<std::string> oldSoFileNames, diffFileNames;
+    if (InstalldOperator::IsDirEmpty(oldSoPath) || InstalldOperator::IsDirEmpty(diffFilePath)) {
+        APP_LOGD("oldSoPath or diffFilePath is empty, not require ApplyPatch");
+        return ERR_OK;
+    }
     if (!ProcessApplyDiffPatchPath(oldSoPath, diffFilePath, newSoPath, oldSoFileNames, diffFileNames)) {
         APP_LOGE("ApplyDiffPatch ProcessApplyDiffPatchPath failed");
         return false;
     }
-    std::string realOldSoPath;
-    std::string realDiffFilePath;
-    std::string realNewSoPath;
+    std::string realOldSoPath, realDiffFilePath, realNewSoPath;
     if (!PathToRealPath(oldSoPath, realOldSoPath) || !PathToRealPath(diffFilePath, realDiffFilePath) ||
         !PathToRealPath(newSoPath, realNewSoPath)) {
         APP_LOGE("ApplyDiffPatch Path is not real path");
@@ -684,7 +685,6 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     }
     void *handle = nullptr;
     if (!OpenHandle(&handle)) {
-        APP_LOGE("ApplyDiffPatch dlopen failed");
         return false;
     }
     auto applyPatch = reinterpret_cast<ApplyPatch>(dlsym(handle, APPLY_PATCH_FUNCTION_NAME));
