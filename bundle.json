@@ -105,7 +105,8 @@
                         "bundlemgr/bundle_status_callback_proxy.h",
                         "bundlemgr/bundle_stream_installer_proxy.h",
                         "bundlemgr/bundle_user_mgr_proxy.h",
-                        "bundlemgr/clean_cache_callback_proxy.h"
+                        "bundlemgr/clean_cache_callback_proxy.h",
+                        "bundlemgr/bundle_mgr_client_impl.h"
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core:appexecfwk_core"
