@@ -1325,7 +1325,18 @@ ErrCode BaseBundleInstaller::ProcessNewModuleDiffFile(const InnerBundleInfo &old
     const InnerBundleInfo &newInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    const AppqfInfo &appQfInfo = oldInfo.GetAppqfInfo();
+    APP_LOGI("ProcessNewModuleDiffFile start, moduleName: %{public}s", modulePackage_.c_str());
+    AppqfInfo appQfInfo = oldInfo.GetAppqfInfo();
+    if (appQfInfo.hqfInfos.empty()) {
+        std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+        if (quickFixDataMgr != nullptr) {
+            InnerAppQuickFix innerAppQuickFix;
+            if (!quickFixDataMgr->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix)) {
+                return ERR_OK;
+            }
+            appQfInfo = innerAppQuickFix.GetAppQuickFix().deployingAppqfInfo;
+        }
+    }
     const std::string &nativeLibraryPath = newInfo.GetBaseApplicationInfo().nativeLibraryPath;
     if (!isFeatureNeedUninstall_ && !nativeLibraryPath.empty() && !appQfInfo.nativeLibraryPath.empty()) {
         const std::string moduleName = modulePackage_;
@@ -1353,13 +1364,14 @@ ErrCode BaseBundleInstaller::ProcessNewModuleDiffFile(const InnerBundleInfo &old
             std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
                 Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
                 std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
-            ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, newSoPath, tempDiffPath);
+            ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath);
             if (ret != ERR_OK) {
                 APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);
                 return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
             }
         }
     }
+    APP_LOGI("ProcessNewModuleDiffFile end.");
 #endif
     return ERR_OK;
 }
