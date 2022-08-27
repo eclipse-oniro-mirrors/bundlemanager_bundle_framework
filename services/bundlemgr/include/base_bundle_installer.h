@@ -459,6 +459,7 @@ private:
         int32_t userId) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
+    void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     uint32_t CreateAccessTokenId(const InnerBundleInfo &info);
     ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
     ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);

@@ -67,7 +67,7 @@ public:
 private:
     ErrCode Connect();
     void OnDeath();
-    bool ConvertResourcePath(const std::string &bundleName, std::string &resPath) const;
+    bool ConvertResourcePath(const std::string &bundleName, std::string &resPath, bool isCompressed) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,
         const std ::string &resourcePath, bool isCompressed, std::vector<std::string> &profileInfos) const;
 #ifdef GLOBAL_RESMGR_ENABLE

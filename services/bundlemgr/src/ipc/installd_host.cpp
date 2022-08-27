@@ -55,6 +55,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::EXTRACT_DIFF_FILES, &InstalldHost::HandleExtractDiffFiles);
     funcMap_.emplace(IInstalld::Message::APPLY_DIFF_PATCH, &InstalldHost::HandleApplyDiffPatch);
     funcMap_.emplace(IInstalld::Message::IS_EXIST_DIR, &InstalldHost::HandleIsExistDir);
+    funcMap_.emplace(IInstalld::Message::IS_DIR_EMPTY, &InstalldHost::HandleIsDirEmpty);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -280,6 +281,19 @@ bool InstalldHost::HandleIsExistDir(MessageParcel &data, MessageParcel &reply)
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         APP_LOGE("fail to IsExistDir from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleIsDirEmpty(MessageParcel &data, MessageParcel &reply)
+{
+    std::string dir = Str16ToStr8(data.ReadString16());
+    bool isDirEmpty = false;
+    ErrCode result = IsDirEmpty(dir, isDirEmpty);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteBool(isDirEmpty)) {
+        APP_LOGE("write isDirEmpty failed");
         return false;
     }
     return true;

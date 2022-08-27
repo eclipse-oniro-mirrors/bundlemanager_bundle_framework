@@ -563,6 +563,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 
     SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
+    RemoveEmptyDirs(newInfos);
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     APP_LOGD("finish ProcessBundleInstall bundlePath install touch off aging");
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -1523,6 +1524,20 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info) co
             info.GetBundleName().c_str(), result);
     }
     return result;
+}
+
+void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    for (const auto &item : infos) {
+        const InnerBundleInfo &info = item.second;
+        std::string moduleDir = info.GetAppCodePath() + Constants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+        bool isDirEmpty = false;
+        InstalldClient::GetInstance()->IsDirEmpty(moduleDir, isDirEmpty);
+        if (isDirEmpty) {
+            APP_LOGD("remove empty dir : %{public}s", moduleDir.c_str());
+            InstalldClient::GetInstance()->RemoveDir(moduleDir);
+        }
+    }
 }
 
 ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(

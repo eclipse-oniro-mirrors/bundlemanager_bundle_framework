@@ -243,5 +243,10 @@ ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
 {
     return CallService(&IInstalld::IsExistDir, dir, isExist);
 }
+
+ErrCode InstalldClient::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
+{
+    return CallService(&IInstalld::IsDirEmpty, dir, isDirEmpty);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
