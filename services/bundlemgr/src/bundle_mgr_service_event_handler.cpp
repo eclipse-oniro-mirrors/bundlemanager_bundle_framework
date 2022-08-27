@@ -46,7 +46,6 @@ const std::string MODULE_PREFIX = "module_";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
-std::set<std::string> recoverList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 bool hasLoadPreInstallProFile_ = false;
 
@@ -387,10 +386,9 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
     GetPreInstallDir(preInstallDirs);
     for (const auto &preInstallDir : preInstallDirs) {
         std::vector<std::string> filePaths { preInstallDir };
-        bool recoverable = IsPreInstallRecoverable(preInstallDir);
         bool removable = IsPreInstallRemovable(preInstallDir);
         if (!OTAInstallSystemBundle(
-            filePaths, Constants::AppType::SYSTEM_APP, recoverable, removable)) {
+            filePaths, Constants::AppType::SYSTEM_APP, removable)) {
             APP_LOGE("Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
             continue;
         }
@@ -512,7 +510,6 @@ void BMSEventHandler::ClearPreInstallCache()
 
     installList_.clear();
     uninstallList_.clear();
-    recoverList_.clear();
     installListCapabilities_.clear();
     hasLoadPreInstallProFile_ = false;
 }
@@ -549,7 +546,7 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
     bundleParser.ParsePreInstallConfig(
         dir + Constants::INSTALL_LIST_CONFIG, installList_);
     bundleParser.ParsePreUnInstallConfig(
-        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_, recoverList_);
+        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
         dir + Constants::INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
 }
@@ -814,7 +811,6 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.isPreInstallApp = true;
     installParam.noSkipsKill = false;
     installParam.needSendEvent = false;
-    installParam.recoverable = IsPreInstallRecoverable(preScanInfo.bundleDir);
     installParam.removable = preScanInfo.removable;
     installParam.needSavePreInstallInfo = true;
     SystemBundleInstaller installer;
@@ -832,7 +828,6 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.isPreInstallApp = true;
     installParam.noSkipsKill = false;
     installParam.needSendEvent = false;
-    installParam.recoverable = true;
     installParam.removable = false;
     installParam.needSavePreInstallInfo = true;
     SystemBundleInstaller installer;
@@ -936,7 +931,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
     for (auto &scanPathIter : scanPathList) {
         APP_LOGD("reboot scan bundle path: %{public}s ", scanPathIter.c_str());
-        bool recoverable = IsPreInstallRecoverable(scanPathIter);
         bool removable = IsPreInstallRemovable(scanPathIter);
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
@@ -952,7 +946,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             APP_LOGD("OTA Install new bundle(%{public}s) by path(%{private}s).",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
-            if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
+            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                 APP_LOGE("OTA Install new bundle(%{public}s) error.", bundleName.c_str());
             }
 
@@ -1014,16 +1008,14 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         if (filePaths.empty()) {
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
-            UpdateRecoverable(bundleName, recoverable);
 #endif
             continue;
         }
 
-        if (!OTAInstallSystemBundle(filePaths, appType, recoverable, removable)) {
+        if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
-            UpdateRecoverable(bundleName, recoverable);
 #endif
         }
     }
@@ -1166,7 +1158,6 @@ bool BMSEventHandler::HasModuleSavedInPreInstalledDb(
 bool BMSEventHandler::OTAInstallSystemBundle(
     const std::vector<std::string> &filePaths,
     Constants::AppType appType,
-    bool recoverable,
     bool removable)
 {
     if (filePaths.empty()) {
@@ -1179,7 +1170,6 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.noSkipsKill = false;
     installParam.needSendEvent = false;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-    installParam.recoverable = recoverable;
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
     SystemBundleInstaller installer;
@@ -1271,29 +1261,6 @@ bool BMSEventHandler::ParseHapFiles(
     return true;
 }
 
-bool BMSEventHandler::IsPreInstallRecoverable(const std::string &path)
-{
-#ifdef USE_PRE_BUNDLE_PROFILE
-    if (!HasPreInstallProfile()) {
-        return true;
-    }
-
-    if (!hasLoadPreInstallProFile_) {
-        APP_LOGE("Not load preInstall proFile or release.");
-        return false;
-    }
-
-    if (path.empty() || recoverList_.empty()) {
-        APP_LOGE("path or recoverList is empty.");
-        return false;
-    }
-
-    return recoverList_.find(path) != recoverList_.end();
-#else
-    return true;
-#endif
-}
-
 bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
@@ -1356,17 +1323,6 @@ void BMSEventHandler::UpdateRemovable(const std::string &bundleName, bool remova
     }
 
     dataMgr->UpdateRemovable(bundleName, removable);
-}
-
-void BMSEventHandler::UpdateRecoverable(const std::string &bundleName, bool recoverable)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return;
-    }
-
-    dataMgr->UpdateRecoverable(bundleName, recoverable);
 }
 
 void BMSEventHandler::UpdateAllPrivilegeCapability()

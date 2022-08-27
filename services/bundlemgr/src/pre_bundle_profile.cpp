@@ -100,9 +100,11 @@ ErrCode PreBundleProfile::TransformTo(
             return parseResult;
         }
 
-        if (std::find(scanInfos.begin(), scanInfos.end(), preScanInfo) != scanInfos.end()) {
-            APP_LOGE("preScanInfo(%{public}s) has exit", preScanInfo.ToString().c_str());
-            continue;
+        APP_LOGD("preScanInfo(%{public}s)", preScanInfo.ToString().c_str());
+        auto iter = std::find(scanInfos.begin(), scanInfos.end(), preScanInfo);
+        if (iter != scanInfos.end()) {
+            APP_LOGD("Replace old preScanInfo(%{public}s)", preScanInfo.bundleDir.c_str());
+            scanInfos.erase(iter);
         }
 
         scanInfos.insert(preScanInfo);
@@ -113,8 +115,7 @@ ErrCode PreBundleProfile::TransformTo(
 
 ErrCode PreBundleProfile::TransformTo(
     const nlohmann::json &jsonBuf,
-    std::set<std::string> &uninstallList,
-    std::set<std::string> &recoverList) const
+    std::set<std::string> &uninstallList) const
 {
     APP_LOGD("transform jsonBuf to bundleNames");
     if (jsonBuf.is_discarded()) {
@@ -149,7 +150,7 @@ ErrCode PreBundleProfile::TransformTo(
         ArrayType::STRING);
     for (const auto &name : names) {
         APP_LOGD("recover bundleName %{public}s", name.c_str());
-        recoverList.insert(name);
+        uninstallList.erase(name);
     }
 
     return parseResult;
@@ -260,9 +261,12 @@ ErrCode PreBundleProfile::TransformTo(
             return parseResult;
         }
 
-        if (preBundleConfigInfos.find(preBundleConfigInfo) != preBundleConfigInfos.end()) {
-            APP_LOGE("preBundleConfigInfo(%{public}s) has exit", preBundleConfigInfo.ToString().c_str());
-            continue;
+        APP_LOGD("preBundleConfigInfo(%{public}s)", preBundleConfigInfo.ToString().c_str());
+        auto iter = preBundleConfigInfos.find(preBundleConfigInfo);
+        if (iter != preBundleConfigInfos.end()) {
+            APP_LOGD("Replace old preBundleConfigInfo(%{public}s)",
+                preBundleConfigInfo.bundleName.c_str());
+            preBundleConfigInfos.erase(iter);
         }
 
         preBundleConfigInfos.insert(preBundleConfigInfo);

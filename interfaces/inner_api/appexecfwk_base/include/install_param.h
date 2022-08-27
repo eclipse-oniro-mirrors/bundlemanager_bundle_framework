@@ -47,7 +47,6 @@ struct InstallParam : public Parcelable {
     bool needSavePreInstallInfo = false;
     bool isPreInstallApp = false;
     bool removable = true;
-    bool recoverable = false;
     // should force uninstall when delete userinfo.
     bool forceExecuted  = false;
     // OTA upgrade skips the killing process
