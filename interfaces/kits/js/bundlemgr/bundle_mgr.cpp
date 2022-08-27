@@ -15,6 +15,7 @@
 #include "bundle_mgr.h"
 
 #include <string>
+#include <unordered_map>
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
@@ -107,6 +108,9 @@ enum class UpgradeFlag {
 const std::string PERMISSION_CHANGE = "permissionChange";
 const std::string ANY_PERMISSION_CHANGE = "anyPermissionChange";
 
+const std::string GET_APPLICATION_INFO = "getApplicationInfo";
+const std::string GET_BUNDLE_INFO = "getBundleInfo";
+
 const std::vector<int32_t> PACKINFO_FLAGS = {
     BundlePackFlag::GET_PACK_INFO_ALL,
     BundlePackFlag::GET_PACKAGES,
@@ -127,6 +131,7 @@ struct PermissionsKey {
 };
 
 static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
+static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::mutex bundleMgrMutex_;
 static sptr<BundleMgrDeathRecipient> bundleMgrDeathRecipient(new (std::nothrow) BundleMgrDeathRecipient());
 }  // namespace
@@ -156,7 +161,6 @@ AsyncWorkData::~AsyncWorkData()
         asyncWork = nullptr;
     }
 }
-
 napi_ref thread_local g_classBundleInstaller;
 
 static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr()
@@ -183,6 +187,24 @@ static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr()
         }
     }
     return bundleMgr_;
+}
+
+static napi_value GetUndefinedValue(napi_env env)
+{
+    napi_value jsObject;
+    NAPI_CALL(env, napi_get_undefined(env,  &jsObject));
+    return jsObject;
+}
+
+static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, Query &query, napi_value jsObject)
+{
+    if (uid != callingUid) {
+        return;
+    }
+    APP_LOGD("put applicationInfo to cache");
+    napi_ref cacheApplicationInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheApplicationInfo));
+    cache[query] = cacheApplicationInfo;
 }
 
 static bool CheckIsSystemApp()
@@ -1228,11 +1250,11 @@ static napi_value ParseInt(napi_env env, int &param, napi_value args)
 {
     napi_valuetype valuetype = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
-    APP_LOGI("valuetype=%{public}d.", valuetype);
+    APP_LOGD("valuetype=%{public}d.", valuetype);
     NAPI_ASSERT(env, valuetype == napi_number, "Wrong argument type. int32 expected.");
     int32_t value = 0;
     napi_get_value_int32(env, args, &value);
-    APP_LOGI("param=%{public}d.", value);
+    APP_LOGD("param=%{public}d.", value);
     param = value;
     // create result code
     napi_value result = nullptr;
@@ -1719,7 +1741,7 @@ static napi_value ParseString(napi_env env, std::string &param, napi_value args)
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
     NAPI_ASSERT(env, valuetype == napi_string, "Wrong argument type. String expected.");
     param = GetStringFromNAPI(env, args);
-    APP_LOGI("param=%{public}s.", param.c_str());
+    APP_LOGD("param=%{public}s.", param.c_str());
     // create result code
     napi_value result;
     status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
@@ -1864,6 +1886,62 @@ napi_value GetAbilityInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
+napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetApplicationInfoSync call");
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
+    APP_LOGD("argc = [%{public}zu]", argc);
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[i], &valueType);
+        if ((i == 0) && (valueType == napi_string)) {
+            ParseString(env, bundleName, argv[i]);
+        } else if ((i == ARGS_SIZE_ONE) && valueType == napi_number) {
+            ParseInt(env, flags, argv[i]);
+        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_number)) {
+            ParseInt(env, userId, argv[i]);
+        } else {
+            APP_LOGE("parameter is invalid");
+            return GetUndefinedValue(env);
+        }
+    }
+
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    napi_value nApplicationInfo = nullptr;
+    auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId));
+    if (item != cache.end()) {
+        APP_LOGD("getApplicationInfo param from cache");
+        NAPI_CALL(env,
+            napi_get_reference_value(env, item->second, &nApplicationInfo));
+        return nApplicationInfo;
+    }
+    auto iBundleMgr = GetBundleMgr();
+    if (!iBundleMgr) {
+        APP_LOGE("can not get iBundleMgr");
+        return GetUndefinedValue(env);
+    }
+    AppExecFwk::ApplicationInfo appInfo;
+    bool ret = iBundleMgr->GetApplicationInfo(bundleName, flags, userId, appInfo);
+    if (!ret) {
+        APP_LOGE("GetApplicationInfo failed");
+        return GetUndefinedValue(env);
+    }
+    NAPI_CALL(env, napi_create_object(env, &nApplicationInfo));
+    ConvertApplicationInfo(env, nApplicationInfo, appInfo);
+    Query query = Query(bundleName, GET_APPLICATION_INFO, flags, userId);
+    CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, nApplicationInfo);
+    return nApplicationInfo;
+}
+
 /**
  * Promise and async callback
  */
@@ -1883,7 +1961,6 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<AsyncApplicationInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, argv[i], &valueType);
@@ -2497,6 +2574,64 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
     return promise;
 }
 
+napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetBundleInfoSync call");
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
+    APP_LOGD("argc = [%{public}zu]", argc);
+    std::string bundleName;
+    int32_t flags;
+    BundleOptions bundleOptions;
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
+        if ((i == PARAM0) && (valueType == napi_string)) {
+            ParseString(env, bundleName, argv[i]);
+        } else if ((i == PARAM1) && valueType == napi_number) {
+            ParseInt(env, flags, argv[i]);
+        } else if ((i == PARAM2) && (valueType == napi_object)) {
+            bool ret = ParseBundleOptions(env, bundleOptions, argv[i]);
+            if (!ret) {
+                APP_LOGE("ParseBundleOptions failed");
+                return GetUndefinedValue(env);
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            return GetUndefinedValue(env);
+        }
+    }
+    if (bundleOptions.userId == Constants::UNSPECIFIED_USERID) {
+        bundleOptions.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    napi_value nBundleInfo = nullptr;
+    auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, bundleOptions.userId));
+    if (item != cache.end()) {
+        APP_LOGD("GetBundleInfo param from cache");
+        NAPI_CALL(env,
+            napi_get_reference_value(env, item->second, &nBundleInfo));
+        return nBundleInfo;
+    }
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return GetUndefinedValue(env);
+    }
+    BundleInfo bundleInfo;
+    bool ret = iBundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, bundleOptions.userId);
+    if (!ret) {
+        return GetUndefinedValue(env);
+    }
+    NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
+    ConvertBundleInfo(env, nBundleInfo, bundleInfo);
+    Query query = Query(bundleName, GET_BUNDLE_INFO, flags, bundleOptions.userId);
+    CheckToCache(env, bundleInfo.applicationInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    return nBundleInfo;
+}
+
 /**
  * Promise and async callback
  */
@@ -2578,11 +2713,11 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
                 }
             }
             if (asyncCallbackInfo->deferred) {
-              if (asyncCallbackInfo->ret) {
-                  NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-              } else {
-                  NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-              }
+                if (asyncCallbackInfo->ret) {
+                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+                } else {
+                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+                }
             } else {
                 napi_value callback = nullptr;
                 napi_value placeHolder = nullptr;
