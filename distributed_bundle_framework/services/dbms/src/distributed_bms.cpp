@@ -276,6 +276,13 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
         APP_LOGE("DistributedBms GetStringById failed");
         return ERR_APPEXECFWK_FAILED_GET_RESOURCEMANAGER;
     }
+    bool isCompressed = false; // to do : !abilityInfo.hapPath.empty()
+    // hap is compressed status
+    if (isCompressed) {
+        APP_LOGD("DistributedBms GetAbilityInfo label:%{public}s", remoteAbilityInfo.label.c_str());
+        return OHOS::NO_ERROR;
+    }
+    // hap is decompressed status
     std::string iconPath;
     OHOS::Global::Resource::RState iconPathErrval =
         resourceManager->GetMediaById(static_cast<uint32_t>(abilityInfo.iconId), iconPath);

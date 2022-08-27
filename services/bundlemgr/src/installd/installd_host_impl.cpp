@@ -519,5 +519,15 @@ ErrCode InstalldHostImpl::IsExistDir(const std::string &dir, bool &isExist)
     isExist = InstalldOperator::IsExistDir(dir);
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    isDirEmpty = InstalldOperator::IsDirEmpty(dir);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

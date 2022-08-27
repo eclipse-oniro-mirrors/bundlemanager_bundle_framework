@@ -132,6 +132,8 @@ public:
 
     virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) override;
 
+    virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
 };

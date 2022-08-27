@@ -42,6 +42,12 @@ public:
      */
     static bool IsExistDir(const std::string &path);
     /**
+     * @brief Check whether a directory is empty.
+     * @param dir Indicates the directory path to be checked.
+     * @return Returns true if the directory is empty; returns false otherwise.
+     */
+    static bool IsDirEmpty(const std::string &dir);
+    /**
      * @brief Make a new directory including the parent path if not exist.
      * @param path Indicates the directory path to be checked.
      * @param isReadByOthers Indicates the directory whether read by other users.

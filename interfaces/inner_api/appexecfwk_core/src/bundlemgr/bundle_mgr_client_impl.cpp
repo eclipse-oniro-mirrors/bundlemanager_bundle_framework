@@ -35,6 +35,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
+const std::string PRE_INSTALL_PATH = "/system";
 } // namespace
 
 BundleMgrClientImpl::BundleMgrClientImpl()
@@ -158,7 +159,7 @@ bool BundleMgrClientImpl::GetProfileFromExtension(const ExtensionAbilityInfo &ex
     APP_LOGD("get extension config file from extension dir begin");
     bool isCompressed = false;
     std::string resPath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
-    if (!ConvertResourcePath(extensionInfo.bundleName, resPath)) {
+    if (!ConvertResourcePath(extensionInfo.bundleName, resPath, isCompressed)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
@@ -177,7 +178,7 @@ bool BundleMgrClientImpl::GetProfileFromAbility(const AbilityInfo &abilityInfo, 
     APP_LOGD("get ability config file from ability begin");
     bool isCompressed = false;
     std::string resPath = isCompressed ? abilityInfo.hapPath : abilityInfo.resourcePath;
-    if (!ConvertResourcePath(abilityInfo.bundleName, resPath)) {
+    if (!ConvertResourcePath(abilityInfo.bundleName, resPath, isCompressed)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
@@ -196,7 +197,7 @@ bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, 
     APP_LOGD("get hap module config file from hap begin");
     bool isCompressed = false;
     std::string resPath = isCompressed ? hapModuleInfo.hapPath : hapModuleInfo.resourcePath;
-    if (!ConvertResourcePath(hapModuleInfo.bundleName, resPath)) {
+    if (!ConvertResourcePath(hapModuleInfo.bundleName, resPath, isCompressed)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
@@ -209,11 +210,16 @@ bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, 
     return GetResConfigFile(innerHapModuleInfo, metadataName, profileInfos);
 }
 
-bool BundleMgrClientImpl::ConvertResourcePath(const std::string &bundleName, std::string &resPath) const
+bool BundleMgrClientImpl::ConvertResourcePath(
+    const std::string &bundleName, std::string &resPath, bool isCompressed) const
 {
     if (resPath.empty()) {
         APP_LOGE("res path is empty");
         return false;
+    }
+    if (isCompressed && (resPath.find(PRE_INSTALL_PATH) == 0)) {
+        APP_LOGD("no need to convert to sandbox path");
+        return true;
     }
     std::string innerStr = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
     if (resPath.find(innerStr) == std::string::npos) {

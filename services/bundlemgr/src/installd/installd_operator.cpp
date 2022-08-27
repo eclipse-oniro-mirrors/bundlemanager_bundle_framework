@@ -77,6 +77,11 @@ bool InstalldOperator::IsExistDir(const std::string &path)
     return S_ISDIR(buf.st_mode);
 }
 
+bool InstalldOperator::IsDirEmpty(const std::string &dir)
+{
+    return OHOS::IsEmptyFolder(dir);
+}
+
 bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthers)
 {
     if (!OHOS::ForceCreateDirectory(path)) {
