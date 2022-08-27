@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <gtest/gtest.h>
 
 #include <fstream>
@@ -174,4 +176,70 @@ HWTEST_F(BmsServiceStartupTest, GuardAgainst_001, Function | SmallTest | Level0)
     std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     ready = bms->IsServiceReady();
     EXPECT_EQ(true, ready);
+}
+
+/**
+* @tc.number: GuardAgainst_002
+* @tc.name: Guard against install infos lossed strategy
+* @tc.desc: 1. ScanAndAnalyzeUserDatas
+* @tc.require: issueI56WA0
+*/
+HWTEST_F(BmsServiceStartupTest, GuardAgainst_002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
+    handler->ScanAndAnalyzeUserDatas(innerBundleUserInfoMaps);
+    EXPECT_EQ(true, innerBundleUserInfoMaps.empty());
+}
+
+/**
+* @tc.number: GuardAgainst_003
+* @tc.name: Guard against install infos lossed strategy
+* @tc.desc: 1. ScanAndAnalyzeInstallInfos
+* @tc.require: issueI56WA0
+*/
+HWTEST_F(BmsServiceStartupTest, GuardAgainst_003, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    handler->ScanAndAnalyzeInstallInfos(installInfos);
+    EXPECT_EQ(false, installInfos.empty());
+}
+
+/**
+* @tc.number: PreInstall_001
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. GetBundleDirFromScan
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::list<std::string> bundleDirs;
+    handler->GetBundleDirFromScan(bundleDirs);
+    EXPECT_EQ(false, bundleDirs.empty());
+}
+
+/**
+* @tc.number: PreInstall_002
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. LoadPreInstallProFile
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    handler->ClearPreInstallCache();
+    bool ret = handler->LoadPreInstallProFile();
+    EXPECT_EQ(true, ret);
+    ret = BMSEventHandler::HasPreInstallProfile();
+    EXPECT_EQ(true, ret);
 }
