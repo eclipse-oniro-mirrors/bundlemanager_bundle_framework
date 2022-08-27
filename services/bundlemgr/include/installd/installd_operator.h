@@ -173,9 +173,9 @@ public:
         const std::string &newSoPath);
 
 private:
-    static bool OpenHandle(void *handle);
+    static bool OpenHandle(void **handle);
 
-    static void CloseHandle(void *handle);
+    static void CloseHandle(void **handle);
 
     static bool ProcessApplyDiffPatchPath(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
