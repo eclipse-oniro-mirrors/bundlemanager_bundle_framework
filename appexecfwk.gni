@@ -28,7 +28,8 @@ declare_args() {
   bundle_framework_launcher = true
   bundle_framework_sandbox_app = true
   bundle_framework_quick_fix = true
-  bundle_framework_app_control = false
+  bundle_framework_app_control = true
+  distributed_bundle_framework = true
 
   ability_runtime_enable = true
   account_enable = true
@@ -107,6 +108,7 @@ print("bundle_framework_launcher = " + "$bundle_framework_launcher")
 print("bundle_framework_sandbox_app = " + "$bundle_framework_sandbox_app")
 print("bundle_framework_quick_fix = " + "$bundle_framework_quick_fix")
 print("bundle_framework_app_control = " + "$bundle_framework_app_control")
+print("distributed_bundle_framework = " + "$distributed_bundle_framework")
 print("ability_runtime_enable = " + "$ability_runtime_enable")
 print("account_enable = " + "$account_enable")
 print("configpolicy_enable = " + "$configpolicy_enable")

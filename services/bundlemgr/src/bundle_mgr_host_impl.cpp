@@ -28,7 +28,9 @@
 #include "bundle_util.h"
 #include "bundle_verify_mgr.h"
 #include "directory_ex.h"
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
+#endif
 #include "element_name.h"
 #include "if_system_ability_manager.h"
 #include "installd_client.h"
@@ -1198,12 +1200,17 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 {
     APP_LOGD("start GetDistributedBundleInfo, networkId : %{public}s, bundleName : %{public}s",
         networkId.c_str(), bundleName.c_str());
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     auto distributedBundleMgr = GetDistributedBundleMgrService();
     if (distributedBundleMgr == nullptr) {
         APP_LOGE("DistributedBundleMgrService is nullptr");
         return false;
     }
     return distributedBundleMgr->GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
+#else
+    APP_LOGW("DISTRIBUTED_BUNDLE_FRAMEWORK is false");
+    return false;
+#endif
 }
 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32_t &flag, const int32_t &userId,
@@ -1292,6 +1299,7 @@ const std::shared_ptr<BundleDataMgr> BundleMgrHostImpl::GetDataMgrFromService()
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 }
 
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrService()
 {
     auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -1303,6 +1311,7 @@ const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrServ
         saMgr->CheckSystemAbility(OHOS::DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     return OHOS::iface_cast<IDistributedBms>(remoteObject);
 }
+#endif
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrHostImpl::GetConnectAbilityMgrFromService()
