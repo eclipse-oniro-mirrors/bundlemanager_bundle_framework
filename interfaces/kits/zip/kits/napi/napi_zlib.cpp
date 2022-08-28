@@ -25,6 +25,7 @@
 #include "napi_zlib_common.h"
 #include "zip.h"
 #include "zip_utils.h"
+#include "zlib_callback_info.h"
 
 using namespace OHOS::AppExecFwk;
 
@@ -32,7 +33,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
-constexpr size_t ARGS_ONE = 1;
 constexpr size_t ARGS_MAX_COUNT = 10;
 constexpr int32_t PARAM3 = 3;
 }
@@ -58,22 +58,13 @@ constexpr int32_t PARAM3 = 3;
         return ret;                                                                                               \
     }
 
-void ZipFileAsyncExecute(napi_env env, void *data);
-void ZipFilePromiseExecute(napi_env env, void *data);
-void UnzipFileAsyncExecute(napi_env env, void *data);
-void UnzipFilePromiseExecute(napi_env env, void *data);
+void ZipFileExecute(napi_env env, void *data);
+void UnzipFileExecute(napi_env env, void *data);
 napi_value UnwrapZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc);
 napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc);
 napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackInfo *asyncZipCallbackInfo);
 napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value args);
 bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg);
-napi_value ZipFileAsync(napi_env env, napi_value *args, size_t argcAsync, AsyncZipCallbackInfo *asyncZipCallbackInfo);
-napi_value UnzipFileAsync(
-    napi_env env, napi_value *args, size_t argcAsync, AsyncZipCallbackInfo *asyncZipCallbackInfo);
-void ZipAndUnzipFileAsyncCallBack(const std::shared_ptr<ZlibCallbackInfo> &zipAceCallbackInfo, int result);
-napi_value ZipFilePromise(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo);
-napi_value UnzipFilePromise(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo);
-void ZipAndUnzipFileAsyncCallBackInnerJsThread(uv_work_t *work, int status);
 
 /**
  * @brief FlushType data initialization.
@@ -85,7 +76,7 @@ void ZipAndUnzipFileAsyncCallBackInnerJsThread(uv_work_t *work, int status);
  */
 napi_value FlushTypeInit(napi_env env, napi_value exports)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGD("%{public}s called.", __func__);
     const int FLUSH_TYPE_NO_FLUSH = 0;
     const int FLUSH_TYPE_PARTIAL_FLUSH = 1;
     const int FLUSH_TYPE_SYNC_FLUSH = 2;
@@ -121,7 +112,7 @@ napi_value FlushTypeInit(napi_env env, napi_value exports)
  */
 napi_value CompressLevelInit(napi_env env, napi_value exports)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGD("%{public}s called.", __func__);
     const int COMPRESS_LEVEL_NO_COMPRESSION = 0;
     const int COMPRESS_LEVEL_BEST_SPEED = 1;
     const int COMPRESS_LEVEL_BEST_COMPRESSION = 9;
@@ -151,7 +142,7 @@ napi_value CompressLevelInit(napi_env env, napi_value exports)
  */
 napi_value CompressStrategyInit(napi_env env, napi_value exports)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGD("%{public}s called.", __func__);
     const int COMPRESS_STRATEGY_DEFAULT_STRATEGY = 0;
     const int COMPRESS_STRATEGY_FILTERED = 1;
     const int COMPRESS_STRATEGY_HUFFMAN_ONLY = 2;
@@ -183,7 +174,7 @@ napi_value CompressStrategyInit(napi_env env, napi_value exports)
  */
 napi_value MemLevelInit(napi_env env, napi_value exports)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGD("%{public}s called.", __func__);
     const int MEM_LEVEL_MIN = 1;
     const int MEM_LEVEL_DEFAULT = 8;
     const int MEM_LEVEL_MAX = 9;
@@ -211,7 +202,7 @@ napi_value MemLevelInit(napi_env env, napi_value exports)
  */
 napi_value ErrorCodeInit(napi_env env, napi_value exports)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGD("%{public}s called.", __func__);
 
     const int ERROR_CODE_OK = 0;
     const int ERROR_CODE_STREAM_END = 1;
@@ -253,7 +244,7 @@ napi_value ErrorCodeInit(napi_env env, napi_value exports)
  */
 napi_value ZlibInit(napi_env env, napi_value exports)
 {
-    APP_LOGI("%{public}s,called", __func__);
+    APP_LOGD("%{public}s,called", __func__);
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("zipFile", NAPI_ZipFile),
@@ -267,7 +258,7 @@ napi_value ZlibInit(napi_env env, napi_value exports)
 
 AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGD("%{public}s called.", __func__);
     napi_status ret;
     napi_value global = 0;
     const napi_extended_error_info *errorInfo = nullptr;
@@ -283,7 +274,7 @@ AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
 
     AsyncZipCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncZipCallbackInfo {
         .asyncWork = nullptr,
-        .aceCallback = nullptr,
+        .zlibCallbackInfo = nullptr,
     };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("%{public}s asyncCallbackInfo is null", __func__);
@@ -293,120 +284,9 @@ AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
     return asyncCallbackInfo;
 }
 
-/**
- * @brief Zlib NAPI method : zipFile.
- *
- * @param env The environment that the Node-API call is invoked under.
- * @param info The callback info passed into the callback function.
- *
- * @return The return value from NAPI C++ to JS for the module.
- */
-napi_value NAPI_ZipFile(napi_env env, napi_callback_info info)
-{
-    APP_LOGI("%{public}s,called env=%{public}p", __func__, env);
-    napi_value args[ARGS_MAX_COUNT] = {nullptr};
-    napi_value ret = 0;
-    size_t argcAsync = 4;
-    const size_t argcPromise = 3;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
-        APP_LOGE("%{public}s, Wrong argument count.", __func__);
-        return nullptr;
-    }
-
-    AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
-    if (asyncZipCallbackInfo == nullptr) {
-        return nullptr;
-    }
-
-    ret = ZipFileWrap(env, info, asyncZipCallbackInfo);
-    if (ret == nullptr) {
-        if (asyncZipCallbackInfo != nullptr) {
-            delete asyncZipCallbackInfo;
-            asyncZipCallbackInfo = nullptr;
-        }
-    }
-
-    return ret;
-}
-
-napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackInfo *asyncZipCallbackInfo)
-{
-    APP_LOGI("%{public}s,called", __func__);
-    napi_value args[ARGS_MAX_COUNT] = {nullptr};
-    napi_value ret = 0;
-    size_t argcAsync = 4;
-    const size_t argcPromise = 3;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
-        APP_LOGE("%{public}s, Wrong argument count.", __func__);
-        return nullptr;
-    }
-    CallZipUnzipParam param;
-    if (UnwrapZipParam(param, env, args, argcAsync) == nullptr) {
-        APP_LOGE("%{public}s, call unwrapWant failed.", __func__);
-        return nullptr;
-    }
-
-    asyncZipCallbackInfo->aceCallback = std::make_shared<ZlibCallbackInfo>();
-    if (asyncZipCallbackInfo->aceCallback == nullptr) {
-        APP_LOGE("%{public}s, call param failed.", __func__);
-        return nullptr;
-    }
-
-    asyncZipCallbackInfo->aceCallback->param = param;
-    asyncZipCallbackInfo->aceCallback->env = env;
-    if (argcAsync > PARAM3) {
-        ret = ZipFileAsync(env, args, argcAsync, asyncZipCallbackInfo);
-    } else {
-        ret = ZipFilePromise(env, asyncZipCallbackInfo);
-    }
-    return ret;
-}
-
-napi_value ZipFilePromise(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
-{
-    APP_LOGI("%{public}s, promise.", __func__);
-    if (asyncZipCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncZipCallbackInfo is nullptr.", __func__);
-        return nullptr;
-    }
-
-    if (asyncZipCallbackInfo->aceCallback == nullptr) {
-        APP_LOGE("%{public}s, asyncZipCallbackInfo callback is nullptr.", __func__);
-        return nullptr;
-    }
-
-    napi_value resourceName = 0;
-    NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName));
-    napi_deferred deferred;
-    napi_value promise = 0;
-    NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
-    asyncZipCallbackInfo->aceCallback->deferred = deferred;
-    napi_create_async_work(
-        env,
-        nullptr,
-        resourceName,
-        ZipFilePromiseExecute,
-        [](napi_env env, napi_status status, void *data) {
-            APP_LOGI("NAPI_ZipFile_Promise, main event thread complete.");
-            AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-            napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-            APP_LOGI("NAPI_ZipFile_Promise, main event thread complete end.");
-        },
-        (void *)asyncZipCallbackInfo,
-        &asyncZipCallbackInfo->asyncWork);
-
-    napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
-    APP_LOGI("%{public}s, promise end.", __func__);
-    return promise;
-}
-
 napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv)
 {
-    APP_LOGI("%{public}s,called", __func__);
+    APP_LOGD("%{public}s,called", __func__);
     // unwrap the param[0]
     napi_valuetype valueType = napi_valuetype::napi_undefined;
     napi_status rev = napi_typeof(env, argv, &valueType);
@@ -440,7 +320,7 @@ napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv)
 
 bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGD("%{public}s called.", __func__);
 
     if (!IsTypeForNapiValue(env, arg, napi_object)) {
         return false;
@@ -494,7 +374,7 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
 
 napi_value UnwrapZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc)
 {
-    APP_LOGI("%{public}s,called", __func__);
+    APP_LOGD("%{public}s,called", __func__);
     size_t argcPromise = 3;
     if (argc < argcPromise) {
         APP_LOGI("%{public}s called, param count is wrong", __func__);
@@ -526,7 +406,7 @@ napi_value UnwrapZipParam(CallZipUnzipParam &param, napi_env env, napi_value *ar
 
 napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc)
 {
-    APP_LOGI("%{public}s,called", __func__);
+    APP_LOGD("%{public}s,called", __func__);
     size_t argcPromise = 3;
     if (argc < argcPromise) {
         return nullptr;
@@ -546,54 +426,88 @@ napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *
     NAPI_CALL_BASE(env, napi_create_int32(env, 0, &ret), nullptr);
     return ret;
 }
+
 /**
- * @brief ZipFileAsync
+ * @brief Zlib NAPI method : zipFile.
  *
- * @param param Indicates the parameters saved the parse result.
  * @param env The environment that the Node-API call is invoked under.
- * @param args Indicates the arguments passed into the callback.
+ * @param info The callback info passed into the callback function.
  *
  * @return The return value from NAPI C++ to JS for the module.
  */
-napi_value ZipFileAsync(napi_env env, napi_value *args, size_t argcAsync, AsyncZipCallbackInfo *asyncZipCallbackInfo)
+napi_value NAPI_ZipFile(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("%{public}s, asyncCallback.", __func__);
-    if (args == nullptr || asyncZipCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncZipCallbackInfo == nullptr.", __func__);
+    APP_LOGD("%{public}s,called env=%{public}p", __func__, env);
+    napi_value args[ARGS_MAX_COUNT] = {nullptr};
+    napi_value ret = 0;
+    size_t argcAsync = 4;
+    const size_t argcPromise = 3;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
+    if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
+        APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
-    napi_value resourceName = 0;
-    NAPI_CALL_BASE(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName), nullptr);
+
+    AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
+    if (asyncZipCallbackInfo == nullptr) {
+        return nullptr;
+    }
+
+    ret = ZipFileWrap(env, info, asyncZipCallbackInfo);
+    return ret;
+}
+
+napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackInfo *asyncZipCallbackInfo)
+{
+    APP_LOGD("%{public}s,called", __func__);
+    napi_value args[ARGS_MAX_COUNT] = {nullptr};
+    size_t argcAsync = 4;
+    const size_t argcPromise = 3;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
+    if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
+        APP_LOGE("%{public}s, Wrong argument count.", __func__);
+        return nullptr;
+    }
+    CallZipUnzipParam param;
+    if (UnwrapZipParam(param, env, args, argcAsync) == nullptr) {
+        APP_LOGE("%{public}s, call unwrapWant failed.", __func__);
+        return nullptr;
+    }
+    napi_value promise = nullptr;
+    asyncZipCallbackInfo->param = param;
 
     if (argcAsync > PARAM3) {
         napi_valuetype valuetype = napi_undefined;
         NAPI_CALL_BASE(env, napi_typeof(env, args[PARAM3], &valuetype), nullptr);
         if (valuetype == napi_function) {
-            // resultCallback: AsyncCallback<ZipRestult>
-            napi_create_reference(env, args[PARAM3], 1, &asyncZipCallbackInfo->aceCallback->callback);
+            napi_ref callbackRef = nullptr;
+            napi_get_undefined(env,  &promise);
+            napi_create_reference(env, args[PARAM3], 1, &callbackRef);
+            asyncZipCallbackInfo->zlibCallbackInfo =
+                std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
         } else {
             APP_LOGE("%{public}s, args[3] error. It should be a function type.", __func__);
             return nullptr;
         }
+    } else {
+        napi_deferred deferred;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncZipCallbackInfo->zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>(env, nullptr, deferred, false);
     }
-    napi_create_async_work(
-        env,
-        nullptr,
-        resourceName,
-        ZipFileAsyncExecute,
+    napi_value resourceName = 0;
+    NAPI_CALL_BASE(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName), nullptr);
+    napi_create_async_work(env, nullptr, resourceName,
+        ZipFileExecute,
         [](napi_env env, napi_status status, void *data) {
-            APP_LOGI("NAPI_ZipFile_callback, main event thread complete.");
             AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
             delete asyncCallbackInfo;
+            asyncCallbackInfo = nullptr;
         },
         (void *)asyncZipCallbackInfo,
         &asyncZipCallbackInfo->asyncWork);
-
     napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
-    napi_value result = 0;
-    napi_get_null(env, &result);
-    return result;
+    return promise;
 }
 
 /**
@@ -606,346 +520,111 @@ napi_value ZipFileAsync(napi_env env, napi_value *args, size_t argcAsync, AsyncZ
  */
 napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("%{public}s,called", __func__);
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
-    napi_value ret = 0;
-    size_t argcAsync = 4;
-    const size_t argcPromise = 3;
+    size_t argcAsync = 4, argcPromise = 3;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
     if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
-    // parse param
     CallZipUnzipParam param;
     if (UnwrapUnZipParam(param, env, args, argcAsync) == nullptr) {
         APP_LOGE("%{public}s, call unwrap param failed.", __func__);
         return nullptr;
     }
-
     AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
     if (asyncZipCallbackInfo == nullptr) {
         return nullptr;
     }
-
-    asyncZipCallbackInfo->aceCallback = std::make_shared<ZlibCallbackInfo>();
-    if (asyncZipCallbackInfo->aceCallback == nullptr) {
-        APP_LOGE("%{public}s, call param failed.", __func__);
-        return nullptr;
-    }
-
-    asyncZipCallbackInfo->aceCallback->param = param;
-    asyncZipCallbackInfo->aceCallback->env = env;
-    if (argcAsync > PARAM3) {
-        ret = UnzipFileAsync(env, args, argcAsync, asyncZipCallbackInfo);
-    } else {
-        ret = UnzipFilePromise(env, asyncZipCallbackInfo);
-    }
-    if (ret == nullptr) {
-        APP_LOGE("%{public}s,ret == nullptr", __func__);
-        if (asyncZipCallbackInfo != nullptr) {
-            napi_delete_async_work(env, asyncZipCallbackInfo->asyncWork);
-            delete asyncZipCallbackInfo;
-            asyncZipCallbackInfo = nullptr;
-        }
-    }
-    APP_LOGI("%{public}s,end", __func__);
-    return ret;
-}
-napi_value UnzipFilePromise(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
-{
-    APP_LOGI("%{public}s, promise.", __func__);
-    if (asyncZipCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncZipCallbackInfo is nullptr.", __func__);
-        return nullptr;
-    }
-    napi_value resourceName = 0;
-    NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName));
-    napi_deferred deferred;
-    napi_value promise = 0;
-    NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
-    asyncZipCallbackInfo->aceCallback->deferred = deferred;
-    napi_create_async_work(
-        env,
-        nullptr,
-        resourceName,
-        UnzipFilePromiseExecute,
-        [](napi_env env, napi_status status, void *data) {
-            APP_LOGI("NAPI_UnzipFile_Promise, main event thread complete.");
-            AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-            napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-            APP_LOGI("NAPI_UnzipFile_Promise, main event thread complete end.");
-        },
-        (void *)asyncZipCallbackInfo,
-        &asyncZipCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
-    APP_LOGI("%{public}s, promise end.", __func__);
-    return promise;
-}
-
-napi_value UnzipFileAsync(napi_env env, napi_value *args, size_t argcAsync, AsyncZipCallbackInfo *asyncZipCallbackInfo)
-{
-    APP_LOGI("%{public}s, asyncCallback.", __func__);
-    if (args == nullptr || asyncZipCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, param == nullptr.", __func__);
-        return nullptr;
-    }
-    napi_value resourceName = 0;
-    napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName);
+    asyncZipCallbackInfo->param = param;
+    napi_value promise = nullptr;
     if (argcAsync > PARAM3) {
         napi_valuetype valuetype = napi_undefined;
         NAPI_CALL_BASE(env, napi_typeof(env, args[PARAM3], &valuetype), nullptr);
         if (valuetype == napi_function) {
-            // resultCallback: AsyncCallback<ZipRestult>
-            napi_create_reference(env, args[PARAM3], 1, &asyncZipCallbackInfo->aceCallback->callback);
+            napi_ref callbackRef = nullptr;
+            napi_get_undefined(env,  &promise);
+            napi_create_reference(env, args[PARAM3], 1, &callbackRef);
+            asyncZipCallbackInfo->zlibCallbackInfo =
+                std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
         } else {
             APP_LOGE("%{public}s, args[3] error. It should be a function type.", __func__);
             return nullptr;
         }
+    } else {
+        napi_deferred deferred;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncZipCallbackInfo->zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>(env, nullptr, deferred, false);
     }
-    napi_create_async_work(
-        env,
-        nullptr,
-        resourceName,
-        UnzipFileAsyncExecute,
+    napi_value resourceName = 0;
+    NAPI_CALL_BASE(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName), nullptr);
+    napi_create_async_work(env, nullptr, resourceName, UnzipFileExecute,
         [](napi_env env, napi_status status, void *data) {
-            APP_LOGI("NAPI_UnzipFile, main event thread complete.");
             AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
             delete asyncCallbackInfo;
+            asyncCallbackInfo = nullptr;
         },
-        (void *)asyncZipCallbackInfo,
-        &asyncZipCallbackInfo->asyncWork);
-
+        (void *)asyncZipCallbackInfo, &asyncZipCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
-    napi_value result = 0;
-    napi_get_null(env, &result);
-    return result;
+    return promise;
 }
-// ZipFile callback
-void ZipFileAsyncExecute(napi_env env, void *data)
+
+// ZipFile Promise
+void ZipFileExecute(napi_env env, void *data)
 {
-    APP_LOGI("NAPI_ZipFile_Async_Execute, worker pool thread execute.");
+    APP_LOGD("NAPI_ZipFile_Promise_Execute, worker pool thread execute.");
     AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("NAPI_ZipFile_Async_Execute, input info parameters error.");
         return;
     }
-
-    if (asyncCallbackInfo->aceCallback == nullptr) {
-        APP_LOGE("NAPI_ZipFile_Async_Execute, input callback parameters error.");
-        asyncCallbackInfo->executeResult = -1;
-        return;
-    }
-
-    auto zipCallBack = [zipCallBackInfo = asyncCallbackInfo->aceCallback](int result) {
-        if (zipCallBackInfo == nullptr) {
-            APP_LOGE("NAPI_ZipFile_Async_Execute, task callbackInfo parameters error.");
-            return;
-        }
-
-        zipCallBackInfo->isCallBack = true;
-        ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
-    };
-    Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
-        FilePath(asyncCallbackInfo->aceCallback->param.dest),
-        asyncCallbackInfo->aceCallback->param.options,
-        zipCallBack,
-        false);
-    APP_LOGI("NAPI_ZipFile_Async_Execute, worker pool thread execute end.");
-}
-
-// ZipFile Promise
-void ZipFilePromiseExecute(napi_env env, void *data)
-{
-    APP_LOGI("NAPI_ZipFile_Promise_Execute, worker pool thread execute.");
-    AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("NAPI_ZipFile_Promise_Execute, input info parameters error.");
         return;
     }
 
-    if (asyncCallbackInfo->aceCallback == nullptr) {
+    if (asyncCallbackInfo->zlibCallbackInfo == nullptr) {
         APP_LOGE("NAPI_ZipFile_Promise_Execute, input callback parameters error.");
         asyncCallbackInfo->executeResult = -1;
         return;
     }
 
-    auto zipCallBack = [zipCallBackInfo = asyncCallbackInfo->aceCallback](int result) {
-        if (zipCallBackInfo == nullptr) {
-            APP_LOGE("NAPI_ZipFile_Promise_Execute, task callbackInfo parameters error.");
-            return;
-        }
-
-        zipCallBackInfo->isCallBack = false;
-        ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
-    };
-    Zip(FilePath(asyncCallbackInfo->aceCallback->param.src),
-        FilePath(asyncCallbackInfo->aceCallback->param.dest),
-        asyncCallbackInfo->aceCallback->param.options,
+    auto zipCallBack = [](int result) {};
+    Zip(asyncCallbackInfo->param.src,
+        asyncCallbackInfo->param.dest,
         zipCallBack,
-        false);
-    APP_LOGI("NAPI_ZipFile_Promise_Execute, worker pool thread execute end.");
+        false,
+        asyncCallbackInfo->zlibCallbackInfo);
+    APP_LOGD("NAPI_ZipFile_Promise_Execute, worker pool thread execute end.");
 }
 
-// UnzipFile callback
-void UnzipFileAsyncExecute(napi_env env, void *data)
+void UnzipFileExecute(napi_env env, void *data)
 {
-    APP_LOGI("NAPI_UnzipFile_Async_Execute, worker pool thread execute.");
-    AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-    // Unzip
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("NAPI_UnzipFile_Async_Execute, input info parameters error.");
-        return;
-    }
-
-    if (asyncCallbackInfo->aceCallback == nullptr) {
-        APP_LOGE("NAPI_UnzipFile_Async_Execute, input callback parameters error.");
-        asyncCallbackInfo->executeResult = -1;
-        return;
-    }
-
-    auto unZipCallBack = [zipCallBackInfo = asyncCallbackInfo->aceCallback](int result) {
-        if (zipCallBackInfo == nullptr) {
-            APP_LOGE("NAPI_UnzipFile_Async_Execute, task callbackInfo parameters error.");
-            return;
-        }
-
-        zipCallBackInfo->isCallBack = true;
-        ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
-    };
-    Unzip(FilePath(asyncCallbackInfo->aceCallback->param.src),
-        FilePath(asyncCallbackInfo->aceCallback->param.dest),
-        asyncCallbackInfo->aceCallback->param.options,
-        unZipCallBack);
-    APP_LOGI("NAPI_UnzipFile_Async_Execute, worker pool thread execute end.");
-}
-// UnzipFile Promise
-void UnzipFilePromiseExecute(napi_env env, void *data)
-{
-    APP_LOGI("NAPI_UnzipFile_Promise_Execute, worker pool thread execute.");
+    APP_LOGD("NAPI_UnzipFile_Promise_Execute, worker pool thread execute.");
     AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("NAPI_UnzipFile_Promise_Execute, input info parameters error.");
         return;
     }
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("NAPI_UnzipFile_Promise_Execute, input info parameters error.");
+        return;
+    }
 
-    if (asyncCallbackInfo->aceCallback == nullptr) {
+    if (asyncCallbackInfo->zlibCallbackInfo == nullptr) {
         APP_LOGE("NAPI_UnzipFile_Promise_Execute, input callback parameters error.");
         asyncCallbackInfo->executeResult = -1;
         return;
     }
 
-    auto unZipCallBack = [zipCallBackInfo = asyncCallbackInfo->aceCallback](int result) {
-        if (zipCallBackInfo == nullptr) {
-            APP_LOGE("NAPI_UnzipFile_Promise_Execute, task callbackInfo parameters error.");
-            return;
-        }
-
-        zipCallBackInfo->isCallBack = false;
-        ZipAndUnzipFileAsyncCallBack(zipCallBackInfo, result);
-    };
-    Unzip(FilePath(asyncCallbackInfo->aceCallback->param.src),
-        FilePath(asyncCallbackInfo->aceCallback->param.dest),
-        asyncCallbackInfo->aceCallback->param.options,
-        unZipCallBack);
-    APP_LOGI("NAPI_UnzipFile_Promise_Execute, worker pool thread execute end.");
-}
-
-void ZipAndUnzipFileAsyncCallBackInnerJsThread(uv_work_t *work)
-{
-    if (work == nullptr) {
-        return;
-    }
-    ZlibCallbackInfo *asyncCallbackInfo = (ZlibCallbackInfo *)work->data;
-    if (asyncCallbackInfo == nullptr) {
-        return;
-    }
-    napi_value result[ARGS_ONE] = {0};
-    NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env,
-        napi_create_int32(asyncCallbackInfo->env, (int32_t)asyncCallbackInfo->callbackResult, &result[0]));
-    APP_LOGI("%{public}s called, callbackResult =%{public}d", __func__, asyncCallbackInfo->callbackResult);
-    if (asyncCallbackInfo->isCallBack) {
-        napi_value callback = 0;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_get_reference_value(asyncCallbackInfo->env,
-            asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_call_function(asyncCallbackInfo->env, nullptr,
-            callback, sizeof(result) / sizeof(result[0]), result, &placeHolder));
-        if (asyncCallbackInfo->callback != nullptr) {
-            napi_delete_reference(asyncCallbackInfo->env, asyncCallbackInfo->callback);
-        }
-    } else {
-        if (asyncCallbackInfo->callbackResult == 0) {
-            NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_resolve_deferred(asyncCallbackInfo->env,
-                asyncCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_reject_deferred(asyncCallbackInfo->env,
-                asyncCallbackInfo->deferred, result[0]));
-        }
-    }
-    if (asyncCallbackInfo != nullptr) {
-        delete asyncCallbackInfo;
-        asyncCallbackInfo = nullptr;
-    }
-    if (work != nullptr) {
-        delete work;
-        work = nullptr;
-    }
-}
-
-void ZipAndUnzipFileAsyncCallBack(const std::shared_ptr<ZlibCallbackInfo> &zipAceCallbackInfo, int result)
-{
-    if (zipAceCallbackInfo == nullptr) {
-        return;
-    }
-    APP_LOGI("%{public}s,called env=%{public}p, result=%{public}d", __func__, zipAceCallbackInfo->env, result);
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(zipAceCallbackInfo->env, &loop);
-    if (loop == nullptr) {
-        APP_LOGE("%{public}s, work == nullptr.", __func__);
-        return;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        APP_LOGE("%{public}s, work == nullptr.", __func__);
-        return;
-    }
-    ZlibCallbackInfo *asyncCallbackInfo = new (std::nothrow) ZlibCallbackInfo();
-    if (asyncCallbackInfo == nullptr) {
-        delete work;
-        work = nullptr;
-        return;
-    }
-    *asyncCallbackInfo = *zipAceCallbackInfo;
-    asyncCallbackInfo->callbackResult = result;
-    work->data = (void *)asyncCallbackInfo;
-    int rev = uv_queue_work(
-        loop,
-        work,
-        [](uv_work_t *work) {},
-        [](uv_work_t *work, int status) {
-            APP_LOGI("ZipAndUnzipFileAsyncCallBack, uv_queue_work");
-            ZipAndUnzipFileAsyncCallBackInnerJsThread(work);
-            APP_LOGI("ZipAndUnzipFileAsyncCallBack, uv_queue_work end.");
-        });
-    if (rev != napi_ok) {
-        if (asyncCallbackInfo->isCallBack) {
-            if (asyncCallbackInfo->callback != nullptr) {
-                napi_delete_reference(asyncCallbackInfo->env, asyncCallbackInfo->callback);
-            }
-        }
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        }
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
-    }
+    auto unZipCallBack = [](int result) {};
+    Unzip(asyncCallbackInfo->param.src,
+        asyncCallbackInfo->param.dest,
+        asyncCallbackInfo->param.options,
+        unZipCallBack,
+        asyncCallbackInfo->zlibCallbackInfo);
+    APP_LOGD("NAPI_UnzipFile_Promise_Execute, worker pool thread execute end.");
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
