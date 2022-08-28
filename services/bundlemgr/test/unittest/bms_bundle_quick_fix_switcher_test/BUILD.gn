@@ -20,7 +20,7 @@ module_output_path = "bundle_framework/bundlemgrservice"
 ohos_unittest("BmsBundleQuickFixSwitcherTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = ["//third_party/jsoncpp/include" ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
@@ -65,7 +65,7 @@ ohos_unittest("BmsBundleQuickFixSwitcherTest") {
   }
   deps = [
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right"
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
   ]
 
   if (bundle_framework_graphics) {
@@ -150,7 +150,8 @@ ohos_unittest("BmsBundleQuickFixSwitcherTest") {
       "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
       "${services_path}/bundlemgr/test/mock/src/quick_fix_manager_rdb.cpp",
     ]
-    sources -= [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
+    sources -=
+        [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
   } else {
     external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
@@ -165,6 +166,6 @@ group("unittest") {
   testonly = true
 
   if (ability_runtime_enable) {
-    deps = [":BmsBundleQuickFixSwitcherTest"]
+    deps = [ ":BmsBundleQuickFixSwitcherTest" ]
   }
 }
