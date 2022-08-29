@@ -39,7 +39,8 @@ namespace OHOS {
             std::cout<< "fopen hap error!";
         }
 
-        retCode = fputs(reinterpret_cast<const char*>(data), pFile);
+        std::string info (reinterpret_cast<const char*>(data), size);
+        retCode = fputs(info.c_str(), pFile);
         if (retCode != FILE_RETURN_SUCCESS) {
             return false;
         }
