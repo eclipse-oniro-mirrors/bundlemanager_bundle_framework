@@ -113,6 +113,8 @@ ErrCode QuickFixSwitcher::DisableQuickFix(const std::string &bundleName)
     ScopeGuard stateGuard([&] {
         if (isExisted) {
             quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DEPLOY_END, innerAppQuickFix);
+        } else {
+            quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName);
         }
     });
 

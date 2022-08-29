@@ -275,4 +275,10 @@
         src="res" />
     </preparer>
   </target>
+  <target name="BmsBundleQuickFixSwitcherTest">
+    <preparer>
+      <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/quick_fix/"
+        src="res" />
+    </preparer>
+  </target>
 </configuration>
