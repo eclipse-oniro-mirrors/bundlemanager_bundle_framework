@@ -58,7 +58,6 @@ ohos_source_set("tools_bm_source_set") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
-    "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]
 
@@ -104,7 +103,6 @@ ohos_source_set("tools_test_bm_source_set") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
-    "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]
 
