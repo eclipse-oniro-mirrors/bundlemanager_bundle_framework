@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include <chrono>
 #include <gtest/gtest.h>
 
 #include "bundle_data_mgr.h"
@@ -25,7 +24,6 @@
 #include "inner_app_quick_fix.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
-#include "installd_client.h"
 #include "quick_fix_data_mgr.h"
 #include "mock_quick_fix_callback.h"
 #include "mock_status_receiver.h"
