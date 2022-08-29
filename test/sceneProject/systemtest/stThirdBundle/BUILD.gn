@@ -18,7 +18,13 @@ group("stThirdBundle") {
   deps += [
     # deps file
     "bmsThirdBundle1:stbmsThirdBundle1",
+    "bmsThirdBundle13:stbmsThirdBundle13",
+    "bmsThirdBundle17:stbmsThirdBundle17",
     "bmsThirdBundle2:stbmsThirdBundle2",
+    "bmsThirdBundle24:stbmsThirdBundle24",
+    "bmsThirdBundle25:stbmsThirdBundle25",
+    "bmsThirdBundle26:stbmsThirdBundle26",
+    "bmsThirdBundles1:stbmsThirdBundles1",
     "bmsThirdBundle4:stbmsThirdBundle4",
     "bmsThirdBundle5:stbmsThirdBundle5",
     "bmsThirdBundle6:stbmsThirdBundle6",
