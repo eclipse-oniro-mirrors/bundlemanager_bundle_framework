@@ -1198,8 +1198,7 @@ bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
 bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
     DistributedBundleInfo &distributedBundleInfo)
 {
-    APP_LOGD("start GetDistributedBundleInfo, networkId : %{public}s, bundleName : %{public}s",
-        networkId.c_str(), bundleName.c_str());
+    APP_LOGD("start GetDistributedBundleInfo, bundleName : %{public}s", bundleName.c_str());
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     auto distributedBundleMgr = GetDistributedBundleMgrService();
     if (distributedBundleMgr == nullptr) {
