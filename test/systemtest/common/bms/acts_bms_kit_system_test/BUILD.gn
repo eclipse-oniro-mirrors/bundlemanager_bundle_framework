@@ -28,6 +28,7 @@ ohos_systemtest("ActsBmsKitSystemTest") {
   deps = [
     "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
+    "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle10:stbmsThirdBundle10",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle2:stbmsThirdBundle2",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle4:stbmsThirdBundle4",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle6:stbmsThirdBundle6",
