@@ -28,6 +28,7 @@ ohos_systemtest("BmsUninstallSystemTest") {
     "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/systemtest/stSystemBundle/bmsSystemBundle1:bmsSystemBundle1",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
+    "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle13:stbmsThirdBundle13",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle4:stbmsThirdBundle4",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle5:stbmsThirdBundle5",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle6:stbmsThirdBundle6",
