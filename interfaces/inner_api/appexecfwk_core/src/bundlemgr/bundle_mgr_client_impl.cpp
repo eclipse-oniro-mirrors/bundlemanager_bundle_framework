@@ -333,14 +333,14 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
     // hap is compressed status, get file content.
     if (isCompressed) {
         APP_LOGD("compressed status.");
-        std::unique_ptr<uint8_t[]> fileBufferPtr;
-        size_t len = 0;
         std::string fileName;
-        if (resMgr->GetProfileDataByName(profileName.c_str(), len, fileName, fileBufferPtr) != SUCCESS) {
+        std::unique_ptr<uint8_t[]> fileContentPtr = nullptr;
+        size_t len = 0;
+        if (resMgr->GetProfileDataByName(profileName.c_str(), len, fileName, fileContentPtr) != SUCCESS) {
             APP_LOGE("GetProfileDataByName failed");
             return false;
         }
-        if (fileBufferPtr == nullptr || len == 0 || fileName.empty()) {
+        if (fileContentPtr == nullptr || len == 0 || fileName.empty()) {
             APP_LOGE("invalid data");
             return false;
         }
@@ -348,7 +348,7 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
             APP_LOGE("invalid suffix");
             return false;
         }
-        std::string rawData(fileBufferPtr.get(), fileBufferPtr.get() + len);
+        std::string rawData(fileContentPtr.get(), fileContentPtr.get() + len);
         nlohmann::json profileJson = nlohmann::json::parse(rawData, nullptr, false);
         if (profileJson.is_discarded()) {
             APP_LOGE("bad profile file");
