@@ -11,14 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("test_hap") {
+group("bm_tool") {
   testonly = true
   deps = []
 
   deps += [
     # deps file
-    "systemtest:systemtest_hap",
-    "tools:tooltest_hap",
-    "unittest:unittest_hap",
+    "pageAbilityBundleForInstall:pageAbilityBundleForInstall",
+    "pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
   ]
 }
