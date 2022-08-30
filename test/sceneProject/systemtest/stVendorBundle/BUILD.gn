@@ -11,15 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("systemtest_hap") {
+group("stVendorBundle") {
   testonly = true
   deps = []
 
   deps += [
     # deps file
-    "jsBundle/jsThirdBundle:jsThirdBundle",
-    "stSystemBundle:stSystemBundle",
-    "stThirdBundle:stThirdBundle",
-    "stVendorBundle:stVendorBundle",
+    "bmsVendorBundle1:bmsVendorBundle1",
   ]
 }

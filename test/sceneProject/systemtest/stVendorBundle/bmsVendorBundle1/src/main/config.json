@@ -1,0 +1,52 @@
+{
+    "app":{
+        "bundleName": "com.vendor.hiworld.examplev1",
+        "vendor": "example",
+        "version": {
+            "code": 1,
+            "name": "1.0"
+        },
+       "apiVersion": {
+          "compatible": 3,
+          "target": 3
+       }
+    },
+    "deviceConfig": {
+        "default": {
+        }
+    },
+    "module": {
+        "package":"com.vendor.hiworld.example.h1",
+        "name":"bmsVendorBundle1",
+        "deviceType": [
+            "default"
+        ],
+        "distro": {
+            "deliveryWithInstall": true,
+            "moduleName": "testability",
+            "moduleType": "entry"
+        },
+        "abilities": [{
+            "name": "bmsVendorBundle_A1",
+            "icon": "$media:snowball",
+            "label": "bmsVendorBundle_A1 Ability",
+            "launchType": "singleton",
+            "orientation": "unspecified",
+            "type": "page",
+            "visible": true
+            }
+        ],
+        "js": [
+            {
+                "pages": [
+                    "pages/index/index"
+                ],
+                "name": "default",
+                "window": {
+                    "designWidth": 720,
+                    "autoDesignWidth": true
+                }
+            }
+        ]
+    }
+}
