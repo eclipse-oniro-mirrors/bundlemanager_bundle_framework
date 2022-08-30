@@ -1362,7 +1362,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
     });
     if (iter != appQfInfo.hqfInfos.end()) {
         if (nativeLibraryPath != appQfInfo.nativeLibraryPath) {
-            APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
+            APP_LOGE("error: nativeLibraryPath not same, newInfo: %{private}s, hqf: %{private}s",
                      nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
         }
