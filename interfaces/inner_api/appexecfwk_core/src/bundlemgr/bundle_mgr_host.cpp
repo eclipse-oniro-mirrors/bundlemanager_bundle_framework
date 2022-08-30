@@ -181,7 +181,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_EXTENSION_INFOS,
         &BundleMgrHost::HandleGetSandboxExtAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, &BundleMgrHost::HandleGetSandboxHapModuleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_FILE_DESCRIPTOR, &BundleMgrHost::HandleGetMediaFileDescriptor);
+    funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_DATA, &BundleMgrHost::HandleGetMediaData);
     funcMap_.emplace(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, &BundleMgrHost::HandleGetQuickFixManagerProxy);
     funcMap_.emplace(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, &BundleMgrHost::HandleGetUdidByNetworkId);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
@@ -2090,30 +2090,52 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetMediaFileDescriptor(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
     std::string moduleName = data.ReadString();
 
-    APP_LOGI("HandleGetMediaFileDescriptor:%{public}s, %{public}s, %{public}s", bundleName.c_str(),
+    APP_LOGI("HandleGetMediaData:%{public}s, %{public}s, %{public}s", bundleName.c_str(),
         abilityName.c_str(), moduleName.c_str());
-    int32_t fd = GetMediaFileDescriptor(bundleName, moduleName, abilityName);
-    bool result = fd < 0 ? false : true;
-    if (!reply.WriteBool(result)) {
-        if (result) {
-            close(fd);
-        }
-        APP_LOGE("write failed");
+    std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
+    size_t len = 0;
+    ErrCode ret = GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (result && !reply.WriteFileDescriptor(fd)) {
-        APP_LOGE("fd write failed");
-        close(fd);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (mediaDataPtr == nullptr || len == 0) {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    // write ashMem
+    sptr<Ashmem> ashMem = Ashmem::CreateAshmem((__func__ + std::to_string(AllocatAshmemNum())).c_str(), len);
+    if (ashMem == nullptr) {
+        APP_LOGE("CreateAshmem failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    close(fd);
+    if (!ashMem->MapReadAndWriteAshmem()) {
+        APP_LOGE("MapReadAndWriteAshmem failed");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t offset = 0;
+    if (!ashMem->WriteToAshmem(mediaDataPtr.get(), len, offset)) {
+        APP_LOGE("MapReadAndWriteAshmem failed");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel *messageParcel = &reply;
+    if (messageParcel == nullptr || !messageParcel->WriteAshmem(ashMem)) {
+        APP_LOGE("WriteAshmem failed");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ClearAshmem(ashMem);
     return ERR_OK;
 }
 

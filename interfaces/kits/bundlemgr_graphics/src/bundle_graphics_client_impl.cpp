@@ -52,12 +52,12 @@ sptr<IBundleMgr> BundleGraphicsClientImpl::GetBundleMgr()
     return bundleMgr_;
 }
 
-std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::LoadImageFile(int32_t fd)
+std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::LoadImageFile(const uint8_t *data, size_t len)
 {
     APP_LOGI("begin LoadImageFile");
     uint32_t errorCode = 0;
     Media::SourceOptions opts;
-    std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(fd, opts, errorCode);
+    std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(data, len, opts, errorCode);
     if (errorCode != 0) {
         APP_LOGE("failed to create image source err is %{public}d", errorCode);
         return nullptr;
@@ -82,18 +82,18 @@ std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::GetAbilityPixelMapIco
         APP_LOGE("can not get iBundleMgr");
         return nullptr;
     }
-
-    auto fd = iBundleMgr->GetMediaFileDescriptor(bundleName, moduleName, abilityName);
-    if (fd < 0) {
+    std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
+    size_t len = 0;
+    ErrCode ret = iBundleMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
+    if (ret != ERR_OK || mediaDataPtr == nullptr || len == 0) {
+        APP_LOGE("get media data failed");
         return nullptr;
     }
-    auto pixelMapPtr = LoadImageFile(fd);
+    auto pixelMapPtr = LoadImageFile(mediaDataPtr.get(), len);
     if (pixelMapPtr == nullptr) {
         APP_LOGE("loadImageFile failed");
-        close(fd);
         return nullptr;
     }
-    close(fd);
     return pixelMapPtr;
 }
 }  // AppExecFwk

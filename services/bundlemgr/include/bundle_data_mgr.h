@@ -686,8 +686,8 @@ public:
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
-    int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) const;
+    bool GetMediaData(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const;
 
     std::shared_mutex &GetStatusCallbackMutex();
 

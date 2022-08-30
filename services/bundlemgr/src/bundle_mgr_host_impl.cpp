@@ -1742,22 +1742,22 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
     return sandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, requestUserId, info);
 }
 
-int32_t BundleMgrHostImpl::GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName)
+ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
 {
-    APP_LOGI("start to get file fd");
-    int32_t fd = -1;
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
-        return fd;
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return fd;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    fd = dataMgr->GetMediaFileDescriptor(bundleName, moduleName, abilityName);
-    return fd;
+    if (!dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len)) {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return ERR_OK;
 }
 
 void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)

@@ -537,7 +537,7 @@ private:
 
     ErrCode HandleGetSandboxHapModuleInfo(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetMediaFileDescriptor(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetMediaData(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetStringById(MessageParcel &data, MessageParcel &reply);
 

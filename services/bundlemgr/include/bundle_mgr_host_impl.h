@@ -659,8 +659,8 @@ public:
     virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &info) override;
 
-    virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) override;
+    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) override;
 
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
     virtual std::string GetStringById(

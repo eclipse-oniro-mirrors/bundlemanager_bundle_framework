@@ -2808,7 +2808,7 @@ std::string BundleDataMgr::GetIconById(
         return Constants::EMPTY_STRING;
     }
     std::string base64;
-    OHOS::Global::Resource::RState errValue = resourceManager->GetMediaBase64ByIdData(resId, density, base64);
+    OHOS::Global::Resource::RState errValue = resourceManager->GetMediaBase64DataById(resId, density, base64);
     if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
         APP_LOGE("GetIconById failed");
         return Constants::EMPTY_STRING;
@@ -2835,7 +2835,7 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
         std::string moduleResPath;
         if (moduleName.empty() || moduleName == hapModuleInfo.moduleName) {
-            moduleResPath = hapModuleInfo.resourcePath;
+            moduleResPath = hapModuleInfo.hapPath.empty() ? hapModuleInfo.resourcePath : hapModuleInfo.hapPath;
         }
         if (!moduleResPath.empty()) {
             APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{private}s", moduleResPath.c_str());
@@ -3184,46 +3184,39 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
 }
 #endif
 
-int32_t BundleDataMgr::GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName) const
+bool BundleDataMgr::GetMediaData(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const
 {
-    APP_LOGI("begin to GetMediaFileDescriptor.");
-    int32_t fd = -1;
+    APP_LOGI("begin to GetMediaData.");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
-        return fd;
+        return false;
     }
-    APP_LOGD("GetMediaFileDescriptor %{public}s", bundleName.c_str());
+    APP_LOGD("GetMediaData %{public}s", bundleName.c_str());
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-        return fd;
+        return false;
     }
     auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId());
     if (!ability) {
         APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
-        return fd;
+        return false;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, moduleName, GetUserId());
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
-        return fd;
+        return false;
     }
-    std::string iconPath;
-    OHOS::Global::Resource::RState iconPathErrval =
-        resourceManager->GetMediaById(static_cast<uint32_t>((*ability).iconId), iconPath);
-    if (iconPathErrval != OHOS::Global::Resource::RState::SUCCESS) {
-        APP_LOGE("GetMediaById iconPath failed");
-        return fd;
+    OHOS::Global::Resource::RState ret =
+        resourceManager->GetMediaDataById(static_cast<uint32_t>((*ability).iconId), len, mediaDataPtr);
+    if (ret != OHOS::Global::Resource::RState::SUCCESS || mediaDataPtr == nullptr || len == 0) {
+        APP_LOGE("GetMediaDataById failed");
+        return false;
     }
-    APP_LOGD("GetMediaById iconPath: %{public}s", iconPath.c_str());
-    fd = BundleUtil::CreateFileDescriptorForReadOnly(iconPath, 0);
-    if (fd < 0) {
-        APP_LOGE("create file descriptor failed");
-    }
-    return fd;
+    return true;
 }
 
 std::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()
