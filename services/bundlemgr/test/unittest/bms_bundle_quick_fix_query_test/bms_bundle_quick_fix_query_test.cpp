@@ -55,7 +55,7 @@ public:
     void MockInstallBundleInfo();
     void MockUninstallBundleInfo() const;
     void MockDeployQuickFix() const;
-    void MockSwitchQuickFix(bool Enable);
+    void MockSwitchQuickFix(bool enable);
     void MockDeleteQuickFix() const;
     void CheckAppqfInfo(const BundleInfo &bundleInfo) const;
     void CheckAppqfInfoEmpty(const BundleInfo &bundleInfo) const;
@@ -163,7 +163,6 @@ void BmsBundleQuickFixQueryTest::MockUninstallBundleInfo() const
 
 void BmsBundleQuickFixQueryTest::MockSwitchQuickFix(bool enable)
 {
-
     if (!enable) {
         appqfInfo = AppqfInfo();
     }
@@ -379,6 +378,5 @@ HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0900, Function | SmallTest | 
 
     MockUninstallBundleInfo();
 }
-
 }
 }
