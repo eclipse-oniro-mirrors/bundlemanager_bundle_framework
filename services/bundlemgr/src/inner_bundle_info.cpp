@@ -1636,7 +1636,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
 
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
-    baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
+    SetKeepAlive(applicationInfo.keepAlive);
     baseApplicationInfo_->bootable = applicationInfo.bootable;
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;

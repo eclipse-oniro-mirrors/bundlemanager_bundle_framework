@@ -1507,6 +1507,7 @@ public:
     void SetKeepAlive(bool keepAlive)
     {
         baseApplicationInfo_->keepAlive = keepAlive;
+        baseBundleInfo_->isKeepAlive = keepAlive;
     }
 
     void SetSingleton(bool singleton)
