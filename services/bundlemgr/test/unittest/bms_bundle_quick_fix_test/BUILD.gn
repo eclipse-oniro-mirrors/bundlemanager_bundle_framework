@@ -45,6 +45,7 @@ ohos_unittest("BmsBundleQuickFixTest") {
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_clean_cache.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_quick_fix_callback.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]

@@ -1201,12 +1201,11 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             "add module %{public}s to innerBundleInfo %{public}s failed", modulePackage_.c_str(), bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    result = ProcessNewModuleDiffFile(oldInfo, newInfo);
-    if (result != ERR_OK) {
-        // hqf extract diff file or apply diff patch failed does not affect the hap installation.
-        APP_LOGW("ProcessNewModuleDiffFile failed, errcode:%{public}d", result);
-    }
     moduleGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    // hqf extract diff file or apply diff patch failed does not affect the hap installation
+    ProcessHqfInfo(oldInfo, newInfo);
+#endif
     return ERR_OK;
 }
 
@@ -1321,43 +1320,70 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessNewModuleDiffFile(const InnerBundleInfo &oldInfo,
+void BaseBundleInstaller::ProcessHqfInfo(const InnerBundleInfo &oldInfo,
     const InnerBundleInfo &newInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    const AppqfInfo &appQfInfo = oldInfo.GetAppqfInfo();
+    APP_LOGI("ProcessHqfInfo start, bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
+        modulePackage_.c_str());
+    AppqfInfo appQfInfo = oldInfo.GetAppqfInfo();
     const std::string &nativeLibraryPath = newInfo.GetBaseApplicationInfo().nativeLibraryPath;
-    if (!isFeatureNeedUninstall_ && !nativeLibraryPath.empty() && !appQfInfo.nativeLibraryPath.empty()) {
-        const std::string moduleName = modulePackage_;
-        auto iter = find_if(appQfInfo.hqfInfos.begin(), appQfInfo.hqfInfos.end(),
-            [&moduleName](const auto &hqfInfo) {
-            return hqfInfo.moduleName == moduleName;
-        });
-        if (iter != appQfInfo.hqfInfos.end()) {
-            if (nativeLibraryPath != appQfInfo.nativeLibraryPath) {
-                APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
-                         nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
-                return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
-            }
-            const std::string tempDiffPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
-                bundleName_ + Constants::TMP_SUFFIX;
-            ScopeGuard removeDiffPath([tempDiffPath] { InstalldClient::GetInstance()->RemoveDir(tempDiffPath); });
-            ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(iter->hqfFilePath,
-                tempDiffPath, appQfInfo.cpuAbi);
-            if (ret != ERR_OK) {
-                APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
-                return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
-            }
-            std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-                Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
-            std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-                Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-                std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
-            ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, newSoPath, tempDiffPath);
-            if (ret != ERR_OK) {
-                APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);
-                return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
-            }
+    ErrCode ret = ERR_OK;
+    if (!isFeatureNeedUninstall_ && !appQfInfo.hqfInfos.empty()) {
+        ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("ProcessHqfInfo failed, errcode: %{public}d", ret);
+    }
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    InnerAppQuickFix innerAppQuickFix;
+    if ((quickFixDataMgr != nullptr) && (!quickFixDataMgr->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix))) {
+        return;
+    }
+    appQfInfo = innerAppQuickFix.GetAppQuickFix().deployingAppqfInfo;
+    ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("ProcessHqfInfo failed, errcode: %{public}d", ret);
+    }
+    APP_LOGI("ProcessHqfInfo end");
+#endif
+}
+
+ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath) const
+{
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    if (appQfInfo.nativeLibraryPath.empty() || nativeLibraryPath.empty()) {
+        return ERR_OK;
+    }
+    const std::string moduleName = modulePackage_;
+    auto iter = find_if(appQfInfo.hqfInfos.begin(), appQfInfo.hqfInfos.end(),
+        [&moduleName](const auto &hqfInfo) {
+        return hqfInfo.moduleName == moduleName;
+    });
+    if (iter != appQfInfo.hqfInfos.end()) {
+        if (nativeLibraryPath != appQfInfo.nativeLibraryPath) {
+            APP_LOGE("error: nativeLibraryPath not same, newInfo: %{private}s, hqf: %{private}s",
+                     nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+        }
+        const std::string tempDiffPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+            bundleName_ + Constants::TMP_SUFFIX;
+        ScopeGuard removeDiffPath([tempDiffPath] { InstalldClient::GetInstance()->RemoveDir(tempDiffPath); });
+        ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(iter->hqfFilePath,
+            tempDiffPath, appQfInfo.cpuAbi);
+        if (ret != ERR_OK) {
+            APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
+        }
+        std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
+            Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
+        std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
+            Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
+            std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
+        ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath);
+        if (ret != ERR_OK) {
+            APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
         }
     }
 #endif

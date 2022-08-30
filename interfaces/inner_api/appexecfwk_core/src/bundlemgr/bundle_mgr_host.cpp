@@ -1334,6 +1334,10 @@ ErrCode BundleMgrHost::HandleGetDistributedBundleInfo(MessageParcel &data, Messa
 {
     std::string networkId = data.ReadString();
     std::string bundleName = data.ReadString();
+    if (networkId.empty() || bundleName.empty()) {
+        APP_LOGE("networkId or bundleName is invalid");
+        return ERR_INVALID_VALUE;
+    }
     DistributedBundleInfo distributedBundleInfo;
     bool ret = GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
     if (!reply.WriteBool(ret)) {
@@ -1744,12 +1748,11 @@ ErrCode BundleMgrHost::HandleGetStringById(MessageParcel &data, MessageParcel &r
     int32_t userId = data.ReadInt32();
     APP_LOGD("GetStringById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), resId);
-    std::string label = Constants::EMPTY_STRING;
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("fail to GetStringById due to params empty");
-    } else {
-        label = GetStringById(bundleName, moduleName, resId, userId);
+        return ERR_INVALID_VALUE;
     }
+    std::string label = GetStringById(bundleName, moduleName, resId, userId);
     if (!reply.WriteString(label)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1767,12 +1770,11 @@ ErrCode BundleMgrHost::HandleGetIconById(MessageParcel &data, MessageParcel &rep
     int32_t userId = data.ReadInt32();
     APP_LOGD("GetStringById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d, density:%{public}d",
         bundleName.c_str(), moduleName.c_str(), resId, density);
-    std::string label = Constants::EMPTY_STRING;
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("fail to GetStringById due to params empty");
-    } else {
-        label = GetIconById(bundleName, moduleName, resId, density, userId);
+        return ERR_INVALID_VALUE;
     }
+    std::string label = GetIconById(bundleName, moduleName, resId, density, userId);
     if (!reply.WriteString(label)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
