@@ -31,7 +31,6 @@ constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
-constexpr const char* PROFILE_FILE_SUFFIX = ".json";
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
 constexpr const char* FILE_UNDERLINE = "_";

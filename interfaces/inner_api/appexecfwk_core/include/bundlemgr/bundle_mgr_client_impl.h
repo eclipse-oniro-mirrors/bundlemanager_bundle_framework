@@ -75,8 +75,7 @@ private:
     bool GetResFromResMgr(const std::string &resName, const std::shared_ptr<Global::Resource::ResourceManager> &resMgr,
         bool isCompressed, std::vector<std::string> &profileInfos) const;
 #endif
-    bool IsSuffixValid(const std::string &filePath, const std::string &suffix) const;
-    bool IsFileExisted(const std::string &filePath, const std::string &suffix) const;
+    bool IsFileExisted(const std::string &filePath) const;
     bool TransformFileToJsonString(const std::string &resPath, std::string &profile) const;
 
 private:

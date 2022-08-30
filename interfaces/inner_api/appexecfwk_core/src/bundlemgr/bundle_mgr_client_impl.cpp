@@ -333,19 +333,14 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
     // hap is compressed status, get file content.
     if (isCompressed) {
         APP_LOGD("compressed status.");
-        std::string fileName;
         std::unique_ptr<uint8_t[]> fileContentPtr = nullptr;
         size_t len = 0;
-        if (resMgr->GetProfileDataByName(profileName.c_str(), len, fileName, fileContentPtr) != SUCCESS) {
+        if (resMgr->GetProfileDataByName(profileName.c_str(), len, fileContentPtr) != SUCCESS) {
             APP_LOGE("GetProfileDataByName failed");
             return false;
         }
-        if (fileContentPtr == nullptr || len == 0 || fileName.empty()) {
+        if (fileContentPtr == nullptr || len == 0) {
             APP_LOGE("invalid data");
-            return false;
-        }
-        if (!IsSuffixValid(fileName, Constants::PROFILE_FILE_SUFFIX)) {
-            APP_LOGE("invalid suffix");
             return false;
         }
         std::string rawData(fileContentPtr.get(), fileContentPtr.get() + len);
@@ -373,29 +368,10 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
 }
 #endif
 
-bool BundleMgrClientImpl::IsSuffixValid(const std::string &filePath, const std::string &suffix) const
-{
-    auto position = filePath.rfind('.');
-    if (position == std::string::npos) {
-        APP_LOGE("filePath no suffix");
-        return false;
-    }
-    std::string suffixStr = filePath.substr(position);
-    if (LowerStr(suffixStr) != suffix) {
-        APP_LOGE("file is not json");
-        return false;
-    }
-    return true;
-}
-
-bool BundleMgrClientImpl::IsFileExisted(const std::string &filePath, const std::string &suffix) const
+bool BundleMgrClientImpl::IsFileExisted(const std::string &filePath) const
 {
     if (filePath.empty()) {
         APP_LOGE("the file is not existed due to empty file path");
-        return false;
-    }
-
-    if (!IsSuffixValid(filePath, suffix)) {
         return false;
     }
 
@@ -408,7 +384,7 @@ bool BundleMgrClientImpl::IsFileExisted(const std::string &filePath, const std::
 
 bool BundleMgrClientImpl::TransformFileToJsonString(const std::string &resPath, std::string &profile) const
 {
-    if (!IsFileExisted(resPath, Constants::PROFILE_FILE_SUFFIX)) {
+    if (!IsFileExisted(resPath)) {
         APP_LOGE("the file is not existed");
         return false;
     }
