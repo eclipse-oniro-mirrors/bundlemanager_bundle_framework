@@ -103,7 +103,7 @@ private:
      * @attention This function will get all exist common userId.
      * @return Returns all exist common userId
      */
-    std::set<int32_t> GetExistsCommonUserIs();
+    std::set<int32_t> GetExistsCommonUserIds();
 
 private:
     const int64_t installerId_ = 0;
