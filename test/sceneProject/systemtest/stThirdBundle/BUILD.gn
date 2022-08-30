@@ -20,6 +20,7 @@ group("stThirdBundle") {
     "bmsThirdBundle1:stbmsThirdBundle1",
     "bmsThirdBundle10:stbmsThirdBundle10",
     "bmsThirdBundle2:stbmsThirdBundle2",
+    "bmsThirdBundle3:stbmsThirdBundle3",
     "bmsThirdBundle4:stbmsThirdBundle4",
     "bmsThirdBundle41:stbmsThirdBundle41",
     "bmsThirdBundle42:stbmsThirdBundle42",
@@ -31,5 +32,9 @@ group("stThirdBundle") {
     "bmsThirdBundle7:stbmsThirdBundle7",
     "bmsThirdBundle8:stbmsThirdBundle8",
     "bmsThirdBundle9:stbmsThirdBundle9",
+    "e23Test:e23Test",
+    "e3Test:e3Test",
+    "e4Test:e4Test",
+    "e5Test:e5Test",
   ]
 }

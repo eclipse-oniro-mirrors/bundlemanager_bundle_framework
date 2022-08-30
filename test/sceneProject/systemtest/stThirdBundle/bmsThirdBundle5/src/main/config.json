@@ -1,23 +1,22 @@
 {
-    "app":{
+    "app": {
         "bundleName": "com.third.hiworld.example1",
         "vendor": "example",
         "version": {
             "code": 1,
             "name": "1.0"
         },
-       "apiVersion": {
-          "compatible": 3,
-          "target": 3
-       }
-    },
-    "deviceConfig": {
-        "default": {
+        "apiVersion": {
+            "compatible": 3,
+            "target": 3
         }
     },
+    "deviceConfig": {
+        "default": {}
+    },
     "module": {
-        "package":"com.third.hiworld.example.h2",
-        "name":"bmsThirdBundle5",
+        "package": "com.third.hiworld.example.h2",
+        "name": "bmsThirdBundle5",
         "deviceType": [
             "tv",
             "car"
@@ -27,14 +26,15 @@
             "moduleName": "testability5",
             "moduleType": "feature"
         },
-        "abilities": [{
-            "name": "bmsThirdBundle_A1",
-            "icon": "$media:snowball",
-            "label": "bmsThirdBundle_A1 Ability",
-            "launchType": "singleton",
-            "orientation": "unspecified",
-            "type": "page",
-            "visible": true
+        "abilities": [
+            {
+                "name": "bmsThirdBundle_A1",
+                "icon": "$media:snowball",
+                "label": "bmsThirdBundle_A1 Ability",
+                "launchType": "singleton",
+                "orientation": "unspecified",
+                "type": "page",
+                "visible": true
             },
             {
                 "name": "bmsThirdBundle_A2",
