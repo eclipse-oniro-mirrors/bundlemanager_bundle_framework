@@ -22,6 +22,7 @@
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_info.h"
 #include "mock_status_receiver.h"
+#include "quick_fix_data_mgr.h"
 
 
 using namespace testing::ext;
@@ -54,6 +55,7 @@ public:
     void TearDown();
     void MockInstallBundleInfo();
     void MockUninstallBundleInfo() const;
+    void GenerateInnerQuickFixInfo(InnerAppQuickFix &innerQuickFixInfo) const;
     void MockDeployQuickFix() const;
     void MockSwitchQuickFix(bool enable);
     void MockDeleteQuickFix() const;
@@ -65,6 +67,7 @@ private:
     InnerBundleInfo innerBundleInfo;
     AppqfInfo appqfInfo;
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
 };
 
 BmsBundleQuickFixQueryTest::BmsBundleQuickFixQueryTest()
@@ -161,6 +164,18 @@ void BmsBundleQuickFixQueryTest::MockUninstallBundleInfo() const
     EXPECT_TRUE(finishRet);
 }
 
+void BmsBundleQuickFixQueryTest::GenerateInnerQuickFixInfo(InnerAppQuickFix &innerQuickFixInfo) const
+{
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    appQuickFix.versionCode = QUICK_FIX_VERSION_CODE;
+    appQuickFix.versionName = QUICK_FIX_VERSION_NAME;
+    appQuickFix.deployedAppqfInfo = appqfInfo;
+    appQuickFix.deployingAppqfInfo = appqfInfo;
+
+    innerQuickFixInfo.SetAppQuickFix(appQuickFix);
+}
+
 void BmsBundleQuickFixQueryTest::MockSwitchQuickFix(bool enable)
 {
     if (!enable) {
@@ -170,10 +185,20 @@ void BmsBundleQuickFixQueryTest::MockSwitchQuickFix(bool enable)
 }
 
 void BmsBundleQuickFixQueryTest::MockDeployQuickFix() const
-{}
+{
+    InnerAppQuickFix innerQuickFixInfo;
+    GenerateInnerQuickFixInfo(innerQuickFixInfo);
+    EXPECT_NE(quickFixDataMgr_, nullptr) << "the quickFixDataMgr_ is nullptr";
+    bool ret = quickFixDataMgr_->SaveInnerAppQuickFix(innerQuickFixInfo);
+    EXPECT_TRUE(ret);
+}
 
 void BmsBundleQuickFixQueryTest::MockDeleteQuickFix() const
-{}
+{
+    EXPECT_NE(quickFixDataMgr_, nullptr) << "the quickFixDataMgr_ is nullptr";
+    bool ret = quickFixDataMgr_->DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
 
 /**
  * @tc.number: GetBundleInfo_0100
