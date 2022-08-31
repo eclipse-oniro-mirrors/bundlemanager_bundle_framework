@@ -644,8 +644,8 @@ public:
     virtual bool CheckAbilityEnableInstall(
         const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback) override;
 
-    virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) override;
+    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) override;
 
     virtual std::string GetStringById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId) override;
@@ -717,6 +717,7 @@ private:
     template <typename T>
     bool GetParcelableInfosFromAshmem(
         IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+    ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
 };
 

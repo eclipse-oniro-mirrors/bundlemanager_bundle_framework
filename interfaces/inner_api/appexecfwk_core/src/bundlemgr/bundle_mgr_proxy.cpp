@@ -2792,52 +2792,77 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
     return GetParcelableInfoWithErrCode<HapModuleInfo>(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, data, info);
 }
 
-int32_t BundleMgrProxy::GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName)
+ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get file fd of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
-    int32_t fd = -1;
+    APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
-        APP_LOGE("fail to GetMediaFileDescriptor due to params empty");
-        return fd;
+        APP_LOGE("fail to GetMediaData due to params empty");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetMediaFileDescriptor due to write InterfaceToken fail");
-        return fd;
+        APP_LOGE("fail to GetMediaData due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetMediaFileDescriptor due to write bundleName fail");
-        return fd;
+        APP_LOGE("fail to GetMediaData due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetMediaFileDescriptor due to write abilityName fail");
-        return fd;
+        APP_LOGE("fail to GetMediaData due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(moduleName)) {
-        APP_LOGE("fail to GetMediaFileDescriptor due to write abilityName fail");
-        return fd;
+        APP_LOGE("fail to GetMediaData due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_MEDIA_FILE_DESCRIPTOR, data, reply)) {
+    if (!SendTransactCmd(IBundleMgr::Message::GET_MEDIA_DATA, data, reply)) {
         APP_LOGE("SendTransactCmd result false");
-        return fd;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return fd;
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error : %{public}d", ret);
+        return ret;
     }
+    return GetMediaDataFromAshMem(reply, mediaDataPtr, len);
+}
 
-    int sharedFd = reply.ReadFileDescriptor();
-    if (sharedFd < 0) {
-        APP_LOGE("fail to get file fd");
-        return fd;
+ErrCode BundleMgrProxy::GetMediaDataFromAshMem(
+    MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
+{
+    sptr<Ashmem> ashMem = reply.ReadAshmem();
+    if (ashMem == nullptr) {
+        APP_LOGE("Ashmem is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    fd = dup(sharedFd);
-    close(sharedFd);
-    return fd;
+    if (!ashMem->MapReadOnlyAshmem()) {
+        APP_LOGE("MapReadOnlyAshmem failed");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t ashMemSize = ashMem->GetAshmemSize();
+    int32_t offset = 0;
+    const uint8_t* ashDataPtr = reinterpret_cast<const uint8_t*>(ashMem->ReadFromAshmem(ashMemSize, offset));
+    if (ashDataPtr == nullptr) {
+        APP_LOGE("ashDataPtr is nullptr");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    len = static_cast<size_t>(ashMemSize);
+    mediaDataPtr = std::make_unique<uint8_t[]>(len);
+    if (memcpy_s(mediaDataPtr.get(), len, ashDataPtr, len) != 0) {
+        mediaDataPtr.reset();
+        len = 0;
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ClearAshmem(ashMem);
+    return ERR_OK;
 }
 
 sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()

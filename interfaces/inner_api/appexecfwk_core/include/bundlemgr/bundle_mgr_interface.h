@@ -944,10 +944,10 @@ public:
         return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
     }
 
-    virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName)
+    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
     {
-        return 0;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy()
@@ -1065,7 +1065,7 @@ public:
         GET_SANDBOX_APP_ABILITY_INFO,
         GET_SANDBOX_APP_EXTENSION_INFOS,
         GET_SANDBOX_MODULE_INFO,
-        GET_MEDIA_FILE_DESCRIPTOR,
+        GET_MEDIA_DATA,
         GET_QUICK_FIX_MANAGER_PROXY,
         GET_STRING_BY_ID,
         GET_ICON_BY_ID,
