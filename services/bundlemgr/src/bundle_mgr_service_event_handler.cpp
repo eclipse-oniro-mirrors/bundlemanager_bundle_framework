@@ -1355,7 +1355,7 @@ bool BMSEventHandler::MatchSignature(
 {
     if (configInfo.appSignature.empty()) {
         APP_LOGW("appSignature is empty");
-        return true;
+        return false;
     }
 
     return std::find(configInfo.appSignature.begin(),
