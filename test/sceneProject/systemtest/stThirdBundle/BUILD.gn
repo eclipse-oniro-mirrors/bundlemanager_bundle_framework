@@ -37,5 +37,9 @@ group("stThirdBundle") {
     "bmsThirdBundle8:stbmsThirdBundle8",
     "bmsThirdBundle9:stbmsThirdBundle9",
     "bmsThirdBundles1:stbmsThirdBundles1",
+    "e23Test:e23Test",
+    "e3Test:e3Test",
+    "e4Test:e4Test",
+    "e5Test:e5Test",
   ]
 }

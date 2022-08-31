@@ -1,0 +1,185 @@
+{
+    "app": {
+        "bundleName": "com.third.hiworld.example1",
+        "vendor": "example",
+        "version": {
+            "code": -1,
+            "name": "1.0"
+        },
+        "apiVersion": {
+            "compatible": 3,
+            "target": 3,
+            "releaseType": "Release"
+        }
+    },
+    "deviceConfig": {
+        "default": {
+            "process": "com.huawei.hiworld.example1",
+            "directLaunch": false,
+            "supportBackup": false,
+            "network": {
+                "CleartextTraffic": true,
+                "securityConfig": {
+                    "domainSettings": {
+                        "cleartextPermitted": true,
+                        "domains": [
+                            {
+                                "subDomains": true,
+                                "name": "example.ohos.com"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "module": {
+        "package": "com.third.hiworld.example.h1",
+        "name": "bmsThirdBundle1",
+        "description": "$string:description_application",
+        "deviceType": [
+            "tv",
+            "car"
+        ],
+        "distro": {
+            "deliveryWithInstall": true,
+            "moduleName": "testability",
+            "moduleType": "entry",
+            "installationFree": true
+        },
+        "abilities": [
+            {
+                "name": "bmsThirdBundle_A1",
+                "description": "himusic main ability",
+                "icon": "$media:ic_launcher",
+                "label": "bmsThirdBundle_A1 Ability",
+                "launchType": "standard",
+                "orientation": "unspecified",
+                "permissions": [],
+                "visible": true,
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ],
+                        "uris": [
+                            {
+                                "scheme": "http",
+                                "host": "www.xxx.com",
+                                "port": "8080",
+                                "path": "query/student/name",
+                                "type": "text"
+                            }
+                        ]
+                    }
+                ],
+                "directLaunch": false,
+                "configChanges": [
+                    "locale",
+                    "layout",
+                    "fontSize",
+                    "orientation"
+                ],
+                "type": "page",
+                "formsEnabled": false,
+                "formEnabled": false
+            }
+        ],
+        "metaData": {
+            "parameters": [
+                {
+                    "name": "string",
+                    "type": "Float",
+                    "description": "$string:parameters_description"
+                }
+            ],
+            "results": [
+                {
+                    "name": "string",
+                    "type": "Float",
+                    "description": "$string:results_description"
+                }
+            ],
+            "customizeData": [
+                {
+                    "name": "string",
+                    "value": "string",
+                    "extra": "$string:customizeData_description"
+                }
+            ]
+        },
+        "shortcuts": [
+            {
+                "shortcutId": "id",
+                "label": "$string:shortcut",
+                "icon": "$media:icon",
+                "intents": [
+                    {
+                        "targetBundle": "com.huawei.hiworld.himusic",
+                        "targetClass": "com.huawei.hiworld.himusic.entry.MainAbility"
+                    }
+                ]
+            }
+        ],
+        "js": [
+            {
+                "name": "default",
+                "pages": [
+                    "pages/index/index",
+                    "pages/detail/detail"
+                ],
+                "window": {
+                    "designWidth": 750,
+                    "autoDesignWidth": false
+                },
+                "type": "form"
+            }
+        ],
+        "commonEvents": [
+            {
+                "name": ".MainAbility",
+                "permission": "string",
+                "data": [
+                    "string",
+                    "string"
+                ],
+                "type": [
+                    "string",
+                    "string"
+                ],
+                "events": [
+                    "string",
+                    "string"
+                ]
+            }
+        ],
+        "reqPermissions": [
+            {
+                "name": "ohos.permission.CAMERA",
+                "reason": "$string:permreason_camera",
+                "usedScene": {
+                    "ability": [
+                        "com.mycamera.Ability",
+                        "com.mycamera.AbilityBackground"
+                    ],
+                    "when": "always"
+                }
+            }
+        ],
+        "defPermissions": [
+            {
+                "name": "com.myability.permission.MYPERMISSION",
+                "grantMode": "system_grant",
+                "availableScope": [
+                    "signature"
+                ]
+            }
+        ],
+        "reqCapabilities": [
+            "video_support"
+        ]
+    }
+}
