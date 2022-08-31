@@ -11,14 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("test_hap") {
+group("tooltest_hap") {
   testonly = true
   deps = []
 
   deps += [
     # deps file
-    "systemtest:systemtest_hap",
-    "tools:tooltest_hap",
-    "unittest:unittest_hap",
+    "bm:bm_tool",
   ]
 }

@@ -11,14 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("test_hap") {
-  testonly = true
-  deps = []
+import("//build/ohos.gni")
+import("../../../../appexecfwk.gni")
 
-  deps += [
-    # deps file
-    "systemtest:systemtest_hap",
-    "tools:tooltest_hap",
-    "unittest:unittest_hap",
+ohos_copy("copy_ohos_test") {
+  sources = [ "./ohos_test.xml" ]
+  outputs = [
+    "$root_out_dir/tests/systemtest/bundle_tool/tools/resource/ohos_test.xml",
   ]
 }
