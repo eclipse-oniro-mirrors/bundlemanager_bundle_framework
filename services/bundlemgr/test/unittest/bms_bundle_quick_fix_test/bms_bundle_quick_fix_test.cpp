@@ -57,7 +57,6 @@ const uint32_t QUICK_FIX_VERSION_CODE = 1;
 const uint32_t BUNDLE_VERSION_CODE = 1;
 const std::string QUICK_FIX_VERSION_NAME = "1.0";
 const std::string BUNDLE_VERSION_NAME = "1.0";
-const std::string EMPTY_STRING = "";
 const std::string PROVISION_TYPE_DEBUG = "debug";
 const std::string PROVISION_TYPE_RELEASE = "release";
 
@@ -108,7 +107,6 @@ public:
     void AddInnerBundleInfo(const std::string bundleName, const std::string provisionType = PROVISION_TYPE_RELEASE,
         QuickFixType type = QuickFixType::PATCH);
     void UninstallBundleInfo(const std::string bundleName);
-    void CheckAppqfInfo(const BundleInfo &bundleInfo) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<QuickFixDeployer> GetQuickFixDeployer();
     const std::shared_ptr<QuickFixDataMgr> GetQuickFixDataMgr() const;
@@ -270,15 +268,6 @@ void BmsBundleQuickFixTest::UninstallBundleInfo(const std::string bundleName)
     EXPECT_TRUE(startRet);
     EXPECT_TRUE(finishRet);
 }
-
-void BmsBundleQuickFixTest::CheckAppqfInfo(const BundleInfo &bundleInfo) const
-{
-    EXPECT_EQ(QUICK_FIX_VERSION_CODE, bundleInfo.appqfInfo.versionCode);
-    EXPECT_EQ(QUICK_FIX_VERSION_NAME, bundleInfo.appqfInfo.versionName);
-    EXPECT_EQ(QUICK_FIX_ABI, bundleInfo.appqfInfo.cpuAbi);
-    EXPECT_EQ(QUICK_FIX_SO_PATH, bundleInfo.appqfInfo.nativeLibraryPath);
-}
-
 
 void BmsBundleQuickFixTest::StartInstalldService() const
 {
@@ -1131,108 +1120,5 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0029, Function | SmallTest
     std::vector<std::string> path {HQF_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED);
-}
-
-/**
- * @tc.number: GetBundleInfo_0100
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
-             2.get bundle info failed with empty bundle name
- */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0100, Function | SmallTest | Level0)
-{
-    BundleInfo result;
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    bool ret = dataMgr->GetBundleInfo(
-        EMPTY_STRING, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_FALSE(ret);
-    EXPECT_EQ(EMPTY_STRING, result.name);
-}
-
-/**
- * @tc.number: GetBundleInfo_0200
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally and without any bundle
- *           2.get bundle info failed with no bundle in system
- */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0200, Function | SmallTest | Level0)
-{
-    BundleInfo bundleInfo;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, bundleInfo, USERID);
-    EXPECT_FALSE(ret);
-    EXPECT_EQ(EMPTY_STRING, bundleInfo.name);
-}
-
-/**
- * @tc.number: GetBundleInfo_0300
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normal
- *           2.get bundle info failed
- */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0300, Function | SmallTest | Level1)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME_DEMO, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_FALSE(ret);
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: GetBundleInfo_0400
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
- *           2.get AppqfInfo successfully
- */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0400, Function | SmallTest | Level1)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfo(result);
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: GetBundleInfo_0500
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
- *           2.get empty AppqfInfo
- */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0500, Function | SmallTest | Level1)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, result, USERID);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(BUNDLE_NAME, result.name);
-    EXPECT_EQ(0, result.appqfInfo.versionCode);
-    EXPECT_EQ(EMPTY_STRING, result.appqfInfo.versionName);
-    EXPECT_EQ(EMPTY_STRING, result.appqfInfo.cpuAbi);
-    EXPECT_EQ(EMPTY_STRING, result.appqfInfo.nativeLibraryPath);
-
-    UninstallBundleInfo(BUNDLE_NAME);
 }
 } // OHOS
