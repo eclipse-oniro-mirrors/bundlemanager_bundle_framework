@@ -36,6 +36,7 @@ ohos_systemtest("ActsBmsKitSystemTest") {
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle25:stbmsThirdBundle25",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle26:stbmsThirdBundle26",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle28:stbmsThirdBundle28",
+    "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle3:stbmsThirdBundle3",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle4:stbmsThirdBundle4",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle6:stbmsThirdBundle6",
     "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle7:stbmsThirdBundle7",
