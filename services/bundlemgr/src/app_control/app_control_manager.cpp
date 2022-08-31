@@ -83,7 +83,7 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId)
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
         return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    return appControlManagerDb_->DeleteDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId);    
+    return appControlManagerDb_->DeleteDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId);
 }
 
 ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want)
@@ -93,7 +93,7 @@ ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& wan
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
         return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    return appControlManagerDb_->GetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);    
+    return appControlManagerDb_->GetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
 }
 }
 }

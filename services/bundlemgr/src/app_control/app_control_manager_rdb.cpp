@@ -140,7 +140,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName, 
+ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     const std::string &controlRuleType, const std::string &appId, const Want &want)
 {
     APP_LOGI("rdb begin to SetDisposedStatus");
@@ -148,7 +148,7 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     if (code != ERR_OK) {
         APP_LOGW("DeleteDisposedStatus failed.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
-    }    
+    }
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(CALLING_NAME, callingName);
     valuesBucket.PutString(APP_CONTROL_LIST, controlRuleType);
@@ -163,7 +163,7 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingName, 
+ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingName,
     const std::string &controlRuleType, const std::string &appId)
 {
     APP_LOGI("rdb begin to DeleteDisposedStatus");
@@ -175,12 +175,12 @@ ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingNam
     if (!ret) {
         APP_LOGE("DeleteDisposedStatus callingName:%{public}s controlRuleType:%{public}s appId:%{public}s failed.",
             callingName.c_str(), controlRuleType.c_str(), appId.c_str());
-        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;        
+        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName, 
+ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
     const std::string &controlRuleType, const std::string &appId, Want &want)
 {
     APP_LOGI("rdb begin to GetDisposedStatus");
@@ -206,7 +206,7 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     want = *Want::FromString(wantString);
-    return ERR_OK;    
+    return ERR_OK;
 }
 }
 }

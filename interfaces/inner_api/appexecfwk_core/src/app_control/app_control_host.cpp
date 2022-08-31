@@ -137,8 +137,8 @@ ErrCode AppControlHost::HandleSetDisposedStatus(MessageParcel& data, MessageParc
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<Want> failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;        
-    }   
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     int32_t ret = SetDisposedStatus(appId, *want);
     if (ret != ERR_OK) {
         APP_LOGE("HandleSetDisposedStatus failed");
@@ -167,7 +167,7 @@ ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParc
         if (!reply.WriteParcelable(&want)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
-        }        
+        }
     }
     return ret;
 }

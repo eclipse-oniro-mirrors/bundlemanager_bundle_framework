@@ -182,7 +182,7 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
     }
     if (GetParcelableInfo<Want>(IAppControlMgr::Message::GET_DISPOSED_STATUS, data, want) != ERR_OK) {
         APP_LOGE("fail to GetDisposedStatus want from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;    
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
@@ -247,7 +247,7 @@ ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, Message
     std::unique_ptr<T> info(reply.ReadParcelable<T>());
     if (info == nullptr) {
         APP_LOGE("ReadParcelable failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;    
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     parcelableInfo = *info;
     APP_LOGI("GetParcelableInfo success.");
