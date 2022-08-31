@@ -23,7 +23,9 @@ config("bundlemgr_common_config") {
     "include/distributed_manager",
     "include/quick_fix",
     "include/sandbox_app",
+    "//base/powermgr/power_manager/interfaces/innerkits/native/include",
     "//utils/system/safwk/native/include",
+    "../../interfaces/inner_api/appexecfwk_base/include",
   ]
 
   if (bundle_framework_free_install) {
@@ -257,7 +259,6 @@ ohos_shared_library("libbms") {
       "battery_manager:batterysrv_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
-      "power_manager:powermgr_client",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
@@ -319,7 +320,6 @@ ohos_shared_library("libbms") {
       "src/rdb/rdb_data_manager.cpp",
     ]
   } else {
-    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "src/bundle_data_storage_database.cpp",
       "src/kvstore_death_recipient_callback.cpp",
@@ -359,7 +359,6 @@ ohos_executable("installs") {
   ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
