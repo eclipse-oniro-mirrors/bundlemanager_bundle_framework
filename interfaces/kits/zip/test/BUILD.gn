@@ -29,6 +29,7 @@ ohos_unittest("zip_test") {
   module_out_path = module_output_path
 
   sources = [
+    "../kits/napi/zlib_callback_info.cpp",
     "../src/file_path.cpp",
     "../src/zip.cpp",
     "../src/zip_internal.cpp",
@@ -56,6 +57,7 @@ ohos_unittest("zip_test") {
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
   ]
 }
 
