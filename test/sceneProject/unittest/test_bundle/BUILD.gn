@@ -32,6 +32,7 @@ group("test_bundle") {
     "first_right_compCode:first_right_compCode",
     "first_right_with_diff_moduleName:first_right_with_diff_moduleName",
     "first_right_with_diff_moduleType:first_right_with_diff_moduleType",
+    "fourteenth_right:fourteenth_right",
     "fourth_right:fourth_right",
     "ninth_right:ninth_right",
     "previewTest:previewTest",
