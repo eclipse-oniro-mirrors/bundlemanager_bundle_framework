@@ -14,19 +14,12 @@
  * limitations under the License.
  -->
 <configuration ver="2.0">
-  <target name="BmsUninstallSystemTest">
-    <preparer>
-      <option name="push" value="stVendorBundle/bmsVendorBundle1.hap -> /system/app/" src="res" />
-    </preparer>
-  </target>
   <target name="BmsInstallSystemTest">
     <preparer>
       <option name="push" value="stThirdBundle/bmsThirdBundle3.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle11.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle12.rpk -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle14.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle27.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle28.rpk -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundleNoSign.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e6.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e12.hap -> /data/test/bms_bundle/" src="res" />
@@ -38,10 +31,8 @@
     <preparer>
       <option name="push" value="stThirdBundle/bmsThirdBundle3.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle11.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle12.rpk -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle14.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle27.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle28.rpk -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
   <target name="BundleMgrClientSystemTest">
