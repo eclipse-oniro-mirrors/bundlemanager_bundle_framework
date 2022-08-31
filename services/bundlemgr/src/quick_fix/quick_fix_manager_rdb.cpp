@@ -40,7 +40,7 @@ bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerApp
     APP_LOGI("begin to QueryAllInnerAppQuickFix");
     bool ret = GetAllDataFromDb(innerAppQuickFixes);
     if (!ret) {
-        APP_LOGE("GetDataFromDb failed.");
+        APP_LOGE("GetAllDataFromDb failed.");
         return false;
     }
     return true;
@@ -95,7 +95,7 @@ bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix
     for (auto iter = values.begin(); iter != values.end(); ++iter) {
         nlohmann::json jsonObject = nlohmann::json::parse(iter->second, nullptr, false);
         InnerAppQuickFix appQuickFix;
-        if (jsonObject.is_discarded() && (appQuickFix.FromJson(jsonObject) != ERR_OK)) {
+        if (jsonObject.is_discarded() || (appQuickFix.FromJson(jsonObject) != ERR_OK)) {
             APP_LOGE("error key : %{public}s", iter->first.c_str());
             rdbDataManager_->DeleteData(iter->first);
             continue;

@@ -33,6 +33,9 @@ public:
 
     DeployQuickFixResult GetDeployQuickFixResult() const;
 
+    ErrCode ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFix,
+        const InnerAppQuickFix &oldInnerAppQuickFix);
+
 private:
     ErrCode DeployQuickFix();
 
@@ -40,9 +43,6 @@ private:
 
     ErrCode ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
         InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix);
-
-    ErrCode ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFix,
-        const InnerAppQuickFix &oldInnerAppQuickFix);
 
     ErrCode ParseAndCheckAppQuickFixInfos(
         const std::vector<std::string> &bundleFilePaths,
