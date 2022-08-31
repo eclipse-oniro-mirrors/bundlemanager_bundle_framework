@@ -74,6 +74,21 @@ bool RdbDataManager::InsertData(const std::string &key, const std::string &value
     return ret == NativeRdb::E_OK;
 }
 
+bool RdbDataManager::InsertData(const NativeRdb::ValuesBucket &valuesBucket)
+{
+    APP_LOGD("InsertData start");
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return false;
+    }
+
+    int64_t rowId = -1;
+    auto ret = rdbStore->InsertWithConflictResolution(
+        rowId, bmsRdbConfig_.tableName, valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    return ret == NativeRdb::E_OK;
+}
+
 bool RdbDataManager::BatchInsert(int64_t &outInsertNum, const std::vector<NativeRdb::ValuesBucket> &valuesBuckets)
 {
     APP_LOGD("BatchInsert start");

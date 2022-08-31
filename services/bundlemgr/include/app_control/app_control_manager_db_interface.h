@@ -36,6 +36,12 @@ public:
         const std::string &controlRuleType, int32_t userId) = 0;
     virtual ErrCode GetAppInstallControlRule(const std::string &callingName,
         const std::string &controlRuleType, int32_t userId, std::vector<std::string> &appIds) = 0;
+    virtual ErrCode SetDisposedStatus(const std::string &callingName ,
+        const std::string &controlRuleType, const std::string &appId, const Want& want) = 0;
+    virtual ErrCode DeleteDisposedStatus(const std::string &callingName,
+        const std::string &controlRuleType, const std::string &appId) = 0;
+    virtual ErrCode GetDisposedStatus(const std::string &callingNmae,
+        const std::string &controlRuleType, const std::string &appId, Want& want) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

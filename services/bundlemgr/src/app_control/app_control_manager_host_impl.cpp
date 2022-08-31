@@ -31,7 +31,7 @@ AppControlManagerHostImpl::AppControlManagerHostImpl()
     ruleTypeMap_ = {
         {AppInstallControlRuleType::DISALLOWED_UNINSTALL, AppControlConstants::APP_DISALLOWED_UNINSTALL},
         {AppInstallControlRuleType::DISALLOWED_INSTALL, AppControlConstants::APP_DISALLOWED_INSTALL},
-        {AppInstallControlRuleType::ALLOWED_INSTALL, AppControlConstants::APP_ALLOWED_INSTALL}
+        {AppInstallControlRuleType::ALLOWED_INSTALL, AppControlConstants::APP_ALLOWED_INSTALL},
     };
 }
 
@@ -99,6 +99,36 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
+}
+
+ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
+{
+    APP_LOGD("host begin to SetDisposedStatus");
+    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
+{
+    APP_LOGD("host begin to DeleteDisposedStatus");
+    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
+{
+    APP_LOGE("host begin to GetDisposedStatus");
+    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
 }
 
 std::string AppControlManagerHostImpl::GetCallingName()

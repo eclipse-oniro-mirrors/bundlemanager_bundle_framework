@@ -18,9 +18,12 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "ipc_types.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+using Want = OHOS::AAFwk::Want;
+
 AppControlProxy::AppControlProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IAppControlMgr>(object)
 {
     APP_LOGD("create AppControlProxy.");
@@ -128,6 +131,62 @@ ErrCode AppControlProxy::GetAppInstallControlRule(
     return GetParcelableInfos(IAppControlMgr::Message::GET_APP_INSTALL_CONTROL_RULE, data, appIds);
 }
 
+ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)
+{
+    APP_LOGI("proxy begin to SetDisposedStatus.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("write want failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::SET_DISPOSED_STATUS, data, reply);
+}
+
+ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
+{
+    APP_LOGI("proxy begin to DeleteDisposedStatus.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::DELETE_DISPOSED_STATUS, data, reply);
+}
+
+ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
+{
+    APP_LOGI("proxy begin to GetDisposedStatus.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (GetParcelableInfo<Want>(IAppControlMgr::Message::GET_DISPOSED_STATUS, data, want) != ERR_OK) {
+        APP_LOGE("fail to GetDisposedStatus want from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;    
+    }
+    return ERR_OK;
+}
+
 bool AppControlProxy::WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data)
 {
     if (!data.WriteInt32(stringVector.size())) {
@@ -174,6 +233,25 @@ int32_t AppControlProxy::SendRequest(IAppControlMgr::Message code, MessageParcel
         APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
     }
     return result;
+}
+
+template<typename T>
+ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, MessageParcel& data, T& parcelableInfo)
+{
+    MessageParcel reply;
+    int32_t ret = SendRequest(code, data, reply);
+    if (ret != NO_ERROR) {
+        APP_LOGE("get return error=%{public}d from host", ret);
+        return ret;
+    }
+    std::unique_ptr<T> info(reply.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;    
+    }
+    parcelableInfo = *info;
+    APP_LOGI("GetParcelableInfo success.");
+    return NO_ERROR;
 }
 } // AppExecFwk
 } // OHOS
