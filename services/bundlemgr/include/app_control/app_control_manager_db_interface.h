@@ -25,6 +25,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class IAppControlManagerDb {
 public:
+    using Want = OHOS::AAFwk::Want;
+
     IAppControlManagerDb() = default;
     virtual ~IAppControlManagerDb() = default;
 
