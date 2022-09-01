@@ -51,7 +51,6 @@ const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/"
 const std::string INVALID_PATH = "/install_bundle/";
 const std::string RIGHT_BUNDLE = "right.hap";
 const std::string INVALID_BUNDLE = "nonfile.hap";
-const std::string FORMAT_ERROR_BUNDLE = "format_error_profile.hap";
 const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
@@ -344,27 +343,12 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0400, Function | SmallTest | Leve
 
 /**
  * @tc.number: SystemInstall_0500
- * @tc.name: test the error format bundle file can't be installed
- * @tc.desc: 1.the system bundle format is error
- *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
- */
-HWTEST_F(BmsBundleInstallerTest, SystemInstall_0500, Function | SmallTest | Level0)
-{
-    std::string errorFormat = RESOURCE_ROOT_PATH + FORMAT_ERROR_BUNDLE;
-    bool result = InstallSystemBundle(errorFormat);
-    EXPECT_FALSE(result) << "the wrong format file install success";
-    CheckFileNonExist();
-}
-
-/**
- * @tc.number: SystemInstall_0600
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
  *           2.the system bundle can't be installed and the result is fail
  * @tc.require: AR000GHLL7
  */
-HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, SystemInstall_0500, Function | SmallTest | Level0)
 {
     std::string bundleFile = INVALID_PATH + RIGHT_BUNDLE;
     bool result = InstallSystemBundle(bundleFile);
@@ -373,13 +357,13 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: SystemInstall_0700
+ * @tc.number: SystemInstall_0600
  * @tc.name: test the install will fail when installd service has error
  * @tc.desc: 1.the installd service has error
  *           2.the install result is fail
  * @tc.require: AR000GHLL7
  */
-HWTEST_F(BmsBundleInstallerTest, SystemInstall_0700, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Level0)
 {
     StopInstalldService();
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;

@@ -65,8 +65,6 @@
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/fifth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/fourth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/system_module.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
@@ -89,8 +87,6 @@
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/fifth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/fourth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
@@ -113,8 +109,6 @@
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/fifth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/update_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/fourth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
@@ -133,8 +127,6 @@
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/fifth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/fourth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
@@ -153,8 +145,6 @@
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/fifth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/fourth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/right1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
