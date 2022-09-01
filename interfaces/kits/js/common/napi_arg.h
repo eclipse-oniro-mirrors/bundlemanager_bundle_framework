@@ -26,7 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class NapiArg {
 public:
-    NapiArg(napi_env env_, napi_callback_info info_): env(env_), info(info_) {}
+    NapiArg(napi_env env, napi_callback_info info): env_(env), info_(info) {}
     ~NapiArg() {}
 
     bool Init(size_t expectedArgc);
@@ -35,8 +35,6 @@ public:
 
     size_t GetArgc() const;
 
-    void SetArgc(size_t argc_);
-
     napi_value GetThisArg() const;
 
     napi_value GetArgv(size_t pos) const;
@@ -44,11 +42,11 @@ public:
     napi_value operator[](size_t pos) const;
 
 private:
-    napi_env env = nullptr;
-    napi_callback_info info = nullptr;
-    size_t argc = 0;
-    std::unique_ptr<napi_value[]> argv = { nullptr };
-    napi_value thisArg = nullptr;
+    napi_env env_ = nullptr;
+    napi_callback_info info_ = nullptr;
+    size_t argc_ = 0;
+    std::unique_ptr<napi_value[]> argv_ = { nullptr };
+    napi_value thisArg_ = nullptr;
 };
 }
 }

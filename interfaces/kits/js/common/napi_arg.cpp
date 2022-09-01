@@ -19,64 +19,81 @@ namespace OHOS {
 namespace AppExecFwk {
 bool NapiArg::Init(size_t expectedArgc)
 {
-    argc = expectedArgc;
-    argv = std::make_unique<napi_value[]>(expectedArgc);
-    napi_value thisArg_ = nullptr;
-    napi_status status = napi_get_cb_info(env, info, &argc, argv.get(), &thisArg_, nullptr);
+    argc_ = 0;
+    argv_.reset();
+    size_t argc;
+    napi_value thisArg;
+    // get argc first, in case of argv overflow
+    napi_status status = napi_get_cb_info(env_, info_, &argc, nullptr, &thisArg, nullptr);
     if (status != napi_ok) {
-        APP_LOGE("Cannot get num of func args for %{public}d", status);
+        APP_LOGE("Cannot get number of func args for %{public}d", status);
         return false;
     }
-    if (argc != expectedArgc) {
-        APP_LOGE("Incorrect number of arguments for %{public}d", status);
-        return false;
-    } else {
+    if (argc == 0) {
+        thisArg_ = thisArg;
         return true;
     }
-}
-
-bool NapiArg::Init(size_t minArgc, size_t maxArgc)
-{
-    SetArgc(0);
-    argv.reset();
-    size_t argc_;
-    napi_value thisArg_;
-    napi_status status = napi_get_cb_info(env, info, &argc_, nullptr, &thisArg_, nullptr);
-    if (status != napi_ok) {
-        APP_LOGE("Cannot get num of func args for %{public}d", status);
-        return false;
-    }
-    if (argc_) {
-        argv = std::make_unique<napi_value[]>(argc_);
-        status = napi_get_cb_info(env, info, &argc_, argv.get(), &thisArg_, nullptr);
+    if (argc == expectedArgc) {
+        argv_ = std::make_unique<napi_value[]>(argc);
+        status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisArg, nullptr);
         if (status != napi_ok) {
             APP_LOGE("Cannot get func args for %{public}d", status);
             return false;
         }
+    } else {
+        APP_LOGE("Incorrect number of arguments");
+        return false;
     }
-    argc = argc_;
-    thisArg = thisArg_;
+    argc_ = argc;
+    thisArg_ = thisArg;
+    return true;
+}
+
+bool NapiArg::Init(size_t minArgc, size_t maxArgc)
+{
+    argc_ = 0;
+    argv_.reset();
+    size_t argc;
+    napi_value thisArg;
+    // get argc first, in case of argv overflow
+    napi_status status = napi_get_cb_info(env_, info_, &argc, nullptr, &thisArg, nullptr);
+    if (status != napi_ok) {
+        APP_LOGE("Cannot get num of func args for %{public}d", status);
+        return false;
+    }
+    if (argc == 0) {
+        thisArg_ = thisArg;
+        return true;
+    }
+    if (argc >= minArgc && argc <= maxArgc) {
+        argv_ = std::make_unique<napi_value[]>(argc);
+        status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisArg, nullptr);
+        if (status != napi_ok) {
+            APP_LOGE("Cannot get func args for %{public}d", status);
+            return false;
+        }
+    } else {
+        APP_LOGE("Incorrect number of arguments");
+        return false;
+    }
+    argc_ = argc;
+    thisArg_ = thisArg;
     return true;
 }
 
 size_t NapiArg::GetArgc() const
 {
-    return argc;
-}
-
-void NapiArg::SetArgc(size_t argc_)
-{
-    argc = argc_;
+    return argc_;
 }
 
 napi_value NapiArg::GetThisArg() const
 {
-    return thisArg;
+    return thisArg_;
 }
 
 napi_value NapiArg::GetArgv(size_t pos) const
 {
-    return (pos < argc) ? argv[pos] : nullptr;
+    return (pos < argc_) ? argv_[pos] : nullptr;
 }
 
 napi_value NapiArg::operator[](size_t pos) const

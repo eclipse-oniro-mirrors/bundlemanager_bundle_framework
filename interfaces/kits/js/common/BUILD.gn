@@ -14,12 +14,8 @@
 import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
-ohos_shared_library("napi_common") {
-  include_dirs = [
-    "//third_party/node/src",
-    "//third_party/libuv/include",
-    "//utils/system/safwk/native/inlcude",
-  ]
+ohos_shared_library("bundle_napi_common") {
+  include_dirs = [ "//third_party/node/src" ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
@@ -34,12 +30,9 @@ ohos_shared_library("napi_common") {
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "napi:ace_napi",
-    "safwk:system_ability_fwk",
   ]
 
   subsystem_name = "bundlemanager"

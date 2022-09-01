@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
 group("napi_common") {
-  deps = [ "common:napi_common" ]
+  deps = [ "common:bundle_napi_common" ]
 }
 
 group("napi_packages") {

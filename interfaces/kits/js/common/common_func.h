@@ -28,13 +28,43 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 
-void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want);
+napi_value ParseInt(napi_env env, int &param, napi_value args);
 
 std::string GetStringFromNAPI(napi_env env, napi_value value);
 
-void ParseString(napi_env env, napi_value value, std::string& result);
+bool ParseString(napi_env env, napi_value value, std::string& result);
 
-void ParseElementName(napi_env env, napi_value args, Want &want);
+napi_value ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args);
+
+void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want);
+
+bool ParseElementName(napi_env env, napi_value args, Want &want);
+
+template<typename T>
+napi_value AsyncCallNativeMethod(napi_env env,
+                                 T *asyncCallbackInfo,
+                                 std::string methodName,
+                                 void (*execFunc)(napi_env, void *),
+                                 void (*completeFunc)(napi_env, napi_status, void *))
+{
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    napi_value promise = nullptr;
+    if (asyncCallbackInfo->callback == nullptr) {
+        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
+    } else {
+        NAPI_CALL(env, napi_get_undefined(env, &promise));
+    }
+    napi_value resource = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, methodName.c_str(), NAPI_AUTO_LENGTH, &resource));
+    NAPI_CALL(env, napi_create_async_work(
+        env, nullptr, resource, execFunc, completeFunc,
+        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    return promise;
+}
 }
 }
 #endif
