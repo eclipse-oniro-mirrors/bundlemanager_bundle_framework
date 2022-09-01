@@ -1537,7 +1537,7 @@ std::string BundleTestTool::GetResMsg(int32_t code, const std::shared_ptr<QuickF
     } else {
         resMsg += MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN;
     }
-    if (code == OHOS::ERR_OK && quickFixRes != nullptr) {
+    if (quickFixRes != nullptr) {
         resMsg += quickFixRes->ToString() + "\n";
     }
     return resMsg;

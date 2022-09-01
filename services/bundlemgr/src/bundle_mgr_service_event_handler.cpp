@@ -36,6 +36,9 @@
 #include "perf_profile.h"
 #include "status_receiver_host.h"
 #include "system_bundle_installer.h"
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+#include "quick_fix_boot_scanner.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -199,6 +202,9 @@ void BMSEventHandler::OnBmsStarting()
 
 void BMSEventHandler::AfterBmsStart()
 {
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
+#endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
