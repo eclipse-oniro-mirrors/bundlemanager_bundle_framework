@@ -223,6 +223,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right_compCode:first_right_compCode",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right_with_diff_moduleName:first_right_with_diff_moduleName",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right_with_diff_moduleType:first_right_with_diff_moduleType",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/fourteenth_right:fourteenth_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/fourth_right:fourth_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/ninth_right:ninth_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",

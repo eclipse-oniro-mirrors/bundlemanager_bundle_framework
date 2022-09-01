@@ -56,10 +56,6 @@
       <option name="push" value="test_bundle/format_error_profile.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push" value="test_bundle/sixth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-
-      <option name="push" value="test_bundle/fourteenth_right.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-              src="res"/>
       <option name="push" value="update_service/higher_version_entry_service.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push" value="update_service/higher_version_feature_service.hap -> /data/test/resource/bms/install_bundle/"
