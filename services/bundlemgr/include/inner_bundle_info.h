@@ -1576,10 +1576,6 @@ public:
 
     std::string GetModuleTypeByPackage(const std::string &packageName) const;
 
-    AppqfInfo GetAppqfInfo() const;
-
-    void SetAppqfInfo(const AppqfInfo &appqfInfo);
-
     AppQuickFix GetAppQuickFix() const;
 
     void SetAppQuickFix(const AppQuickFix &appQuickFix);

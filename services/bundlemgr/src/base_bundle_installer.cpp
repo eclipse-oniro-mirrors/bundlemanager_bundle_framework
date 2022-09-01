@@ -573,7 +573,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (needDeleteQuickFixInfo_) {
         APP_LOGD("module update, quick fix old patch need to delete, bundleName:%{public}s", bundleName_.c_str());
-        if (!oldInfo.GetAppqfInfo().hqfInfos.empty()) {
+        if (!oldInfo.GetAppQuickFix().deployedAppqfInfo.hqfInfos.empty()) {
             APP_LOGD("InnerBundleInfo quickFixInfo need disable, bundleName:%{public}s", bundleName_.c_str());
             auto quickFixSwitcher = std::make_unique<QuickFixSwitcher>(bundleName_, false);
             quickFixSwitcher->Execute();
@@ -1326,7 +1326,7 @@ void BaseBundleInstaller::ProcessHqfInfo(const InnerBundleInfo &oldInfo,
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     APP_LOGI("ProcessHqfInfo start, bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
         modulePackage_.c_str());
-    AppqfInfo appQfInfo = oldInfo.GetAppqfInfo();
+    AppqfInfo appQfInfo = oldInfo.GetAppQuickFix().deployedAppqfInfo;
     const std::string &nativeLibraryPath = newInfo.GetBaseApplicationInfo().nativeLibraryPath;
     ErrCode ret = ERR_OK;
     if (!isFeatureNeedUninstall_ && !appQfInfo.hqfInfos.empty()) {
