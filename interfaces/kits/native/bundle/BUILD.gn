@@ -33,6 +33,7 @@ ohos_shared_library("bundle_ndk") {
   include_dirs = [
     "${common_path}/log/include",
     "${inner_api_path}/appexecfwk_base/include",
+    "${inner_api_path}/appexecfwk_base/include/quick_fix",
     "//third_party/json/include",
   ]
   defines = [
@@ -45,6 +46,9 @@ ohos_shared_library("bundle_ndk") {
     "${inner_api_path}/appexecfwk_base/src/compatible_application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/extension_ability_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/module_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/quick_fix/app_quick_fix.cpp",
+    "${inner_api_path}/appexecfwk_base/src/quick_fix/appqf_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/quick_fix/hqf_info.cpp",
     "src/bundle_mgr_proxy_native.cpp",
     "src/native_interface_bundle.cpp",
   ]

@@ -356,6 +356,27 @@ protected:
                 "apiReleaseType": "Beta1",
                 "apiTargetVersion": 8,
                 "appPrivilegeLevel": "normal",
+                "appQuickFix": {
+                    "bundleName": "",
+                    "versionCode": 0,
+                    "versionName": "",
+                    "deployedAppqfInfo": {
+                        "cpuAbi": "",
+                        "hqfInfos": [],
+                        "nativeLibraryPath": "",
+                        "type": 0,
+                        "versionCode": 0,
+                        "versionName": ""
+                    },
+                    "deployingAppqfInfo": {
+                        "cpuAbi": "",
+                        "hqfInfos": [],
+                        "nativeLibraryPath": "",
+                        "type": 0,
+                        "versionCode": 0,
+                        "versionName": ""
+                    }
+                },
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
