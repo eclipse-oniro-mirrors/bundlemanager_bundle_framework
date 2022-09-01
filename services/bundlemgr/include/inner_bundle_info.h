@@ -30,6 +30,7 @@
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_user_info.h"
 #include "json_util.h"
+#include "quick_fix/app_quick_fix.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -1578,6 +1579,11 @@ public:
     AppqfInfo GetAppqfInfo() const;
 
     void SetAppqfInfo(const AppqfInfo &appqfInfo);
+
+    AppQuickFix GetAppQuickFix() const;
+
+    void SetAppQuickFix(const AppQuickFix &appQuickFix);
+
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
 

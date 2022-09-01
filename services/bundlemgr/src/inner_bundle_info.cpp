@@ -2659,5 +2659,15 @@ void InnerBundleInfo::SetAppqfInfo(const AppqfInfo &appqfInfo)
 {
     baseBundleInfo_->appqfInfo = appqfInfo;
 }
+
+AppQuickFix InnerBundleInfo::GetAppQuickFix() const
+{
+    return baseApplicationInfo_->appQuickFix;
+}
+
+void InnerBundleInfo::SetAppQuickFix(const AppQuickFix &appQuickFix)
+{
+    baseApplicationInfo_->appQuickFix = appQuickFix;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
