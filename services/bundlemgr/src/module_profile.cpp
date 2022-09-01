@@ -124,7 +124,6 @@ const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MA
     {"unspecified", DisplayOrientation::UNSPECIFIED},
     {"landscape", DisplayOrientation::LANDSCAPE},
     {"portrait", DisplayOrientation::PORTRAIT},
-    {"followrecent", DisplayOrientation::FOLLOWRECENT},
     {"landscape_inverted", DisplayOrientation::LANDSCAPE_INVERTED},
     {"portrait_inverted", DisplayOrientation::PORTRAIT_INVERTED},
     {"auto_rotation", DisplayOrientation::AUTO_ROTATION},
