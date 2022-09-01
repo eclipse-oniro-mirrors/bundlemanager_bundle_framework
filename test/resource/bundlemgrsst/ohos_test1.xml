@@ -14,21 +14,6 @@
  * limitations under the License.
  -->
 <configuration ver="2.0">
-  <target name="BmsInstallSystemTest">
-    <preparer>
-      <option name="push" value="stThirdBundle/bmsThirdBundle11.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle14.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle27.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundleNoSign.hap -> /data/test/bms_bundle/" src="res" />
-    </preparer>
-  </target>
-  <target name="ActsBmsKitSystemTest">
-    <preparer>
-      <option name="push" value="stThirdBundle/bmsThirdBundle11.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle14.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/bmsThirdBundle27.hap -> /data/test/bms_bundle/" src="res" />
-    </preparer>
-  </target>
   <target name="BundleMgrClientSystemTest">
     <preparer>
     <option name="push" value="BundleClient/bundleClient1.hap -> /data/test/bms_bundle/" src="res" />
