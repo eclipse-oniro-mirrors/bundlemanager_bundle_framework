@@ -179,7 +179,7 @@ public:
     static void Install(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
     static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec);
-    static sptr<IBundleMgr> GetBundleMgrProxy();
+    static sptr<BundleMgrProxy> GetBundleMgrProxy();
     static sptr<IBundleInstaller> GetInstallerProxy();
     bool QueryJsonFile(const std::string &bundleName) const;
 };
@@ -191,7 +191,7 @@ void BmsSearchSystemTest::SetUpTestCase()
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -203,7 +203,7 @@ void BmsSearchSystemTest::SetUpTestCase()
 void BmsSearchSystemTest::TearDownTestCase()
 {
     CommonTool commonTool;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     std::string bundleName = BASE_BUNDLE_NAME + "1";
     std::vector<std::string> resvec;
     Uninstall(bundleName, resvec);
@@ -218,7 +218,7 @@ void BmsSearchSystemTest::SetUp()
 void BmsSearchSystemTest::TearDown()
 {}
 
-sptr<IBundleMgr> BmsSearchSystemTest::GetBundleMgrProxy()
+sptr<BundleMgrProxy> BmsSearchSystemTest::GetBundleMgrProxy()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -234,12 +234,12 @@ sptr<IBundleMgr> BmsSearchSystemTest::GetBundleMgrProxy()
     }
 
     APP_LOGI("get bundle manager proxy success.");
-    return iface_cast<IBundleMgr>(remoteObject);
+    return iface_cast<BundleMgrProxy>(remoteObject);
 }
 
 sptr<IBundleInstaller> BmsSearchSystemTest::GetInstallerProxy()
 {
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         return nullptr;
@@ -321,7 +321,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0100, Function | MediumTest | Level1)
     TearDownTestCase();
     SetUpTestCase();
     CommonTool commonTool;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -359,7 +359,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0200, Function | MediumTest | Level1)
     std::cout << "START BMS_SEARCH_0200" << std::endl;
     std::string appName = BASE_BUNDLE_NAME + "1";
     SetUpTestCase();
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -395,7 +395,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0300, Function | MediumTest | Level2)
     std::string appName = BASE_BUNDLE_NAME + "1";
     SetUpTestCase();
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -423,7 +423,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0400, Function | MediumTest | Level1)
     SetUpTestCase();
 
     std::string appName = BASE_BUNDLE_NAME + "1";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -453,7 +453,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0500, Function | MediumTest | Level1)
     SetUpTestCase();
 
     CommonTool commonTool;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -484,7 +484,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0600, Function | MediumTest | Level2)
     std::string appName = BASE_BUNDLE_NAME + "1";
     SetUpTestCase();
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -515,7 +515,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0700, Function | MediumTest | Level1)
     SetUpTestCase();
 
     BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -543,7 +543,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0800, Function | MediumTest | Level1)
     SetUpTestCase();
 
     BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -580,7 +580,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_0900, Function | MediumTest | Level2)
     SetUpTestCase();
 
     BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -607,7 +607,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1000, Function | MediumTest | Level1)
     std::string bundleName = BASE_BUNDLE_NAME + "1";
     SetUpTestCase();
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -633,7 +633,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1100, Function | MediumTest | Level2)
     std::string bundleName = BASE_BUNDLE_NAME + "1";
     SetUpTestCase();
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -660,7 +660,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1200, Function | MediumTest | Level1)
     std::string appName = BASE_BUNDLE_NAME + "1";
     SetUpTestCase();
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -731,7 +731,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1400, Function | MediumTest | Level1)
     std::cout << "START BMS_Search_1400" << std::endl;
 
     CommonTool commonTool;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -783,7 +783,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1400, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_1500, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_1500" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -806,7 +806,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1600, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_1600" << std::endl;
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -862,7 +862,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1600, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_1700, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_1700" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -886,7 +886,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1800, Function | MediumTest | Level1)
     std::cout << "START BMS_Search_1800" << std::endl;
     CommonTool commonTool;
     std::vector<std::string> resvec;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     for (int i = INDEX_SEVEN; i < INDEX_NINE; i++) {
         std::string installResult;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
@@ -931,7 +931,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1900, Function | MediumTest | Level1)
     SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     std::vector<int> gids;
     bool getGidsResult = bundleMgrProxy->GetBundleGids(appName, gids);
     EXPECT_FALSE(getGidsResult);
@@ -953,7 +953,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2000, Function | MediumTest | Level1)
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle1_A1";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     bool result = bundleMgrProxy->HasSystemCapability(abilityName);
     EXPECT_TRUE(result);
@@ -969,7 +969,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2000, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2100, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_2100" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool result = bundleMgrProxy->IsSafeMode();
     EXPECT_TRUE(result);
     std::cout << "END BMS_Search_2100" << std::endl;
@@ -988,7 +988,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2200, Function | MediumTest | Level1)
     SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle1_A1";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     std::string result = bundleMgrProxy->GetAppType(appName);
     EXPECT_EQ(result, "");
@@ -1004,7 +1004,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2200, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_2300, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_2300" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     std::vector<std::string> systemCaps = {"bmsSystemBundle_A1"};
     bool result = bundleMgrProxy->GetSystemAvailableCapabilities(systemCaps);
     EXPECT_TRUE(result);
@@ -1028,7 +1028,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2400, Function | MediumTest | Level1)
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
 
     CommonTool commonTool;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
     bool queryResult = QueryJsonFile(appName);
@@ -1056,7 +1056,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2500, Function | MediumTest | Level1)
     std::cout << "START BMS_Search_2500" << std::endl;
     SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     std::vector<BundleInfo> bundleInfos;
     bool result = bundleMgrProxy->QueryKeepAliveBundleInfos(bundleInfos);
@@ -1079,7 +1079,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2600, Function | MediumTest | Level1)
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "MainAbility";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     std::vector<PermissionDef> permissionDefs;
     std::string result = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
@@ -1103,7 +1103,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2700, Function | MediumTest | Level1)
     std::string abilityName = "bmsThirdBundle_A1";
 
     CommonTool commonTool;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     Want want;
     ElementName name;
@@ -1137,7 +1137,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2800, Function | MediumTest | Level1)
     std::string appName = BASE_BUNDLE_NAME + "1";
 
     CommonTool commonTool;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -1167,7 +1167,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2900, Function | MediumTest | Level1)
     SetUpTestCase();
     std::string appName = BASE_BUNDLE_NAME + "1";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -1198,7 +1198,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3000, Function | MediumTest | Level1)
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle1_A1";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = appName;
@@ -1225,7 +1225,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3000, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_3100, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_3100" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
@@ -1261,7 +1261,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3100, Function | MediumTest | Level1)
 HWTEST_F(BmsSearchSystemTest, BMS_Search_3200, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Search_3200" << std::endl;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
