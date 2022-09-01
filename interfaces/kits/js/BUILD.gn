@@ -14,6 +14,10 @@
 import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
+group("napi_common") {
+  deps = [ "common:napi_common" ]
+}
+
 group("napi_packages") {
   deps = []
   if (support_jsapi) {
