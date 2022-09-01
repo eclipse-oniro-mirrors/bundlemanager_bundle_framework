@@ -161,7 +161,7 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
     }
     // 6. update innerBundleInfo in memory cache and db
     AppQuickFix newAppQuickFix = innerAppQuickFix.GetAppQuickFix();
-    newAppQuickFix.deployedAppqfInfo = innerAppQuickFix.GetAppQuickFix().deployingAppqfInfo;
+    newAppQuickFix.deployedAppqfInfo = innerAppQuickFix.GetAppQuickFix().deployedAppqfInfo;
     newAppQuickFix.deployingAppqfInfo = AppqfInfo();
     innerBundleInfo.SetAppQuickFix(newAppQuickFix);
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
