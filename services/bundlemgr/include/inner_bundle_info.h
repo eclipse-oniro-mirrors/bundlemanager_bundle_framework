@@ -1513,6 +1513,7 @@ public:
     void SetSingleton(bool singleton)
     {
         baseApplicationInfo_->singleton = singleton;
+        baseBundleInfo_->singleton = singleton;
     }
 
     void SetBootable(bool bootable)
