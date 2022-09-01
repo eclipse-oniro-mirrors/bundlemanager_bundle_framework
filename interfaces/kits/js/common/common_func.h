@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef COMMON_PARSE_FUNC_H
-#define COMMON_PARSE_FUNC_H
+#ifndef COMMON_FUNC_H
+#define COMMON_FUNC_H
 
 #include <vector>
 
