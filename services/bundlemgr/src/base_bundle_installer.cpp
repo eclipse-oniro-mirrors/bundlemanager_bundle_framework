@@ -2004,6 +2004,10 @@ bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t u
     }
     std::set<std::string> set;
     for (const std::string &currentUriPrefix : currentUriPrefixList) {
+        if (currentUriPrefix == Constants::DATA_ABILITY_URI_PREFIX) {
+            APP_LOGE("uri format invalid");
+            return false;
+        }
         if (!set.insert(currentUriPrefix).second) {
             APP_LOGE("current module contains duplicate uriPrefix, verify uriPrefix failed");
             APP_LOGE("bundleName : %{public}s, moduleName : %{public}s, uriPrefix : %{public}s",
