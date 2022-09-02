@@ -248,6 +248,8 @@ void BmsMultipleInstallerTest::CheckModuleFileExist() const
         auto moduleDataExist = access((BUNDLE_DATA_DIR + "/" + BUNDLE_DATA_DIR_PAGENAME[i]).c_str(), F_OK);
         EXPECT_EQ(moduleDataExist, 0);
     }
+    int codeDirExist = access((BUNDLE_CODE_DIR).c_str(), F_OK);
+    EXPECT_EQ(codeDirExist, 0);
 }
 
 void BmsMultipleInstallerTest::CheckModuleFileNonExist(const std::string &packageName) const
