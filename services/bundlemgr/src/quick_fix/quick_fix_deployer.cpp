@@ -379,7 +379,7 @@ ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInf
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // check bundleName is exists
-    if (!dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO,
+    if (!dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
         bundleInfo, Constants::ANY_USERID)) {
         APP_LOGE("error: GetBundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;

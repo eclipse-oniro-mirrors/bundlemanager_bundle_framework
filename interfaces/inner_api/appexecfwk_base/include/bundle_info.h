@@ -27,7 +27,6 @@
 #include "hap_module_info.h"
 #include "message_parcel.h"
 
-#include "quick_fix/appqf_info.h"
 namespace OHOS {
 namespace AppExecFwk {
 enum BundleFlag {
@@ -41,8 +40,6 @@ enum BundleFlag {
     GET_BUNDLE_WITH_EXTENSION_INFO = 0x00000020,
     // get bundle info include hash value
     GET_BUNDLE_WITH_HASH_VALUE = 0x00000030,
-    // get bundle info include appqf_info
-    GET_BUNDLE_WITH_APPQF_INFO = 0x00000080,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {
@@ -110,8 +107,6 @@ struct BundleInfo : public Parcelable {
     std::vector<std::string> defPermissions;
     std::vector<int32_t> reqPermissionStates;
     std::vector<RequestPermission> reqPermissionDetails;
-    
-    AppqfInfo appqfInfo;
 
     // unused
     std::string cpuAbi;
