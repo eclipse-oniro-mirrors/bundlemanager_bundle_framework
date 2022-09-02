@@ -128,6 +128,21 @@ ErrCode AppControlProxy::GetAppInstallControlRule(
     return GetParcelableInfos(IAppControlMgr::Message::GET_APP_INSTALL_CONTROL_RULE, data, appIds);
 }
 
+ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)
+{
+    return 0;
+}
+
+ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
+{
+    return 0;
+}
+
+ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
+{
+    return 0;
+}
+
 bool AppControlProxy::WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data)
 {
     if (!data.WriteInt32(stringVector.size())) {
