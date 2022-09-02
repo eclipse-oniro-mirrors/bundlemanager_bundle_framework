@@ -122,7 +122,7 @@ public:
     void StopInstalldService() const;
     void StopBundleService();
     void ClearBundleInfo(const std::string &bundleName) const;
-    void CheckModuleFileExist(const std::string &packageName) const;
+    void CheckModuleFileExist() const;
     void CheckModuleFileNonExist(const std::string &packageName) const;
     void IsContainModuleInfo(const BundleInfo &info, const std::string &packageName1) const;
 
@@ -241,15 +241,13 @@ void BmsMultipleInstallerTest::CheckFileNonExist() const
     EXPECT_NE(bundleDataExist, 0) << "the bundle data dir exists: " << BUNDLE_DATA_DIR;
 }
 
-void BmsMultipleInstallerTest::CheckModuleFileExist(const std::string &packageName) const
+void BmsMultipleInstallerTest::CheckModuleFileExist() const
 {
     for (unsigned long i = 0; i < BUNDLE_DATA_DIR_PAGENAME.size(); i++)
     {
         auto moduleDataExist = access((BUNDLE_DATA_DIR + "/" + BUNDLE_DATA_DIR_PAGENAME[i]).c_str(), F_OK);
         EXPECT_EQ(moduleDataExist, 0);
     }
-    int moduleCodeExist = access((BUNDLE_CODE_DIR + "/" + packageName).c_str(), F_OK);
-    EXPECT_EQ(moduleCodeExist, 0);
 }
 
 void BmsMultipleInstallerTest::CheckModuleFileNonExist(const std::string &packageName) const
@@ -816,8 +814,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1600, Function | SmallTes
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
 
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     BundleInfo info;
     auto result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, info, USERID);
@@ -848,8 +845,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1700, Function | SmallTes
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
 
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_THIRD);
+    CheckModuleFileExist();
 
     BundleInfo info;
     auto result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, info, USERID);
@@ -899,8 +895,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1900, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     BundleInfo info;
     auto result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, info, USERID);
@@ -930,8 +925,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2000, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_THIRD);
+    CheckModuleFileExist();
 
     BundleInfo info;
     auto result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, info, USERID);
@@ -1518,7 +1512,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4600, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_DIFFERENT_RELEASE_TYPE;
     filePaths.clear();
@@ -1544,7 +1538,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4700, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_EIGHTH;
     filePaths.clear();
@@ -1589,7 +1583,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_DIFFERENT_COMPATIBLE_VERSION_CODE;
     filePaths.clear();
@@ -1615,7 +1609,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5000, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_ELEVENTH;
     filePaths.clear();
@@ -1641,7 +1635,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_NINTH;
     filePaths.clear();
@@ -1667,8 +1661,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
-
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_TENTH;
     filePaths.clear();
@@ -1694,7 +1687,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5300, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_DIFFERENT_MODULE_NAME;
     filePaths.clear();
@@ -1720,7 +1713,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5400, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_DIFFERENT_MODULE_TYPE;
     filePaths.clear();
@@ -1746,7 +1739,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5500, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::string secondBundleFile = RESOURCE_ROOT_PATH + SECOND_SAME_WITH_MODULE_NAME;
     filePaths.clear();
@@ -1774,7 +1767,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0100, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_SECOND;
@@ -1802,7 +1795,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0200, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FOURTH;
@@ -1830,7 +1823,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0300, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_THIRTEENTH;
@@ -1857,7 +1850,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0400, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1885,7 +1878,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0500, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FOURTEENTH;
@@ -1913,7 +1906,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0600, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIFTEENTH;
@@ -1940,7 +1933,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0700, Function | Small
     firstFilePaths.emplace_back(firstBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1968,7 +1961,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0800, Function | Small
     firstFilePaths.emplace_back(firstBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FOURTEENTH;
@@ -1998,7 +1991,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0900, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIFTEENTH;
@@ -2026,7 +2019,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1000, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_SECOND;
@@ -2053,7 +2046,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1100, Function | Small
     firstFilePaths.emplace_back(firstBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FOURTH;
@@ -2081,7 +2074,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1200, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_THIRTEENTH;
@@ -2109,14 +2102,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1300, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_TWELFTH;
     secondFilePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(secondFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
-    CheckModuleFileExist(PACKAGE_NAME_THIRD);
+    CheckModuleFileExist();
 
     ClearBundleInfo(BUNDLE_NAME);
 }
@@ -2139,7 +2132,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1400, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_SIXTEENTH;
@@ -2168,7 +2161,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1500, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_THIRTEENTH;
@@ -2195,8 +2188,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1600, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -2225,8 +2217,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1700, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FOURTEENTH;
@@ -2254,8 +2245,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1800, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_SECOND;
@@ -2282,8 +2272,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1900, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FOURTH;
@@ -2310,15 +2299,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2000, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_TWELFTH;
     secondFilePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(secondFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
-    CheckModuleFileExist(PACKAGE_NAME_THIRD);
+    CheckModuleFileExist();
 
     ClearBundleInfo(BUNDLE_NAME);
 }
@@ -2339,8 +2327,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2100, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_SIXTEENTH;
@@ -2367,8 +2354,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2200, Function | Small
     ErrCode installRes = InstallThirdPartyMultipleBundles(firstFilePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(PACKAGE_NAME_SECOND);
-    CheckModuleFileExist(PACKAGE_NAME_FIRST);
+    CheckModuleFileExist();
 
     std::vector<std::string> secondFilePaths;
     std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_THIRTEENTH;
