@@ -34,7 +34,7 @@ class BundleMgrHostImpl : public BundleMgrHost {
 public:
     BundleMgrHostImpl()
     {
-        auto myRunner = EventRunner::Create(true);
+        auto myRunner = EventRunner::Create(BUNDLE_MGR_THREAD);
         handler_ = std::make_shared<BMSEventHandler>(myRunner);
     }
     virtual ~BundleMgrHostImpl() {}
@@ -694,7 +694,10 @@ private:
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     bool GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo);
+    
+private:
     std::shared_ptr<BMSEventHandler> handler_;
+    const std::string BUNDLE_MGR_THREAD = "bundle_mgr_thread";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
