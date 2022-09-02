@@ -30,6 +30,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "directory_ex.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -134,6 +135,9 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         // handle native so
         if (IsNativeSo(entryName, targetSoPath, cpuAbi)) {
             ExtractTargetFile(extractor, entryName, targetSoPath, cpuAbi);
+            continue;
+        }
+        if (system::GetBoolParameter(Constants::COMPRESS_PROPERTY, false)) {
             continue;
         }
         const std::string dir = GetPathDir(entryName);
