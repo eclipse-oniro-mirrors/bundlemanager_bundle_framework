@@ -18,11 +18,13 @@
 
 #include "app_control_interface.h"
 #include "iremote_proxy.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class AppControlProxy : public IRemoteProxy<IAppControlMgr> {
 public:
+    using Want = AAFwk::Want;
     explicit AppControlProxy(const sptr<IRemoteObject>& object);
     virtual ~AppControlProxy();
 
@@ -34,6 +36,10 @@ public:
         const AppInstallControlRuleType controlRuleType, int32_t userId) override;
     virtual ErrCode GetAppInstallControlRule(
         const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds) override;
+
+    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want);
+    virtual ErrCode DeleteDisposedStatus(const std::string &appId);
+    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want);
 
 private:
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);
