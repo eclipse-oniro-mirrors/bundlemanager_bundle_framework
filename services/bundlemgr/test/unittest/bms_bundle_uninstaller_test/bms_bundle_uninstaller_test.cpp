@@ -50,8 +50,6 @@ const std::string BUNDLE_DATA_DIR2 = "/data/app/el1/100/database/com.example.l3j
 const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
-const std::string MODULE_CODE_DIR1 = "/data/app/el1/bundle/public/com.example.l3jsdemo/com.example.l3jsdemo";
-const std::string MODULE_CODE_DIR2 = "/data/app/el1/bundle/public/com.example.l3jsdemo/com.example.l2jsdemo";
 const std::string RESOURCE_TEST_PATH = "/data/test/resource/bms/install_bundle/test/";
 const std::string DB_FILE_PATH = "/data/bundlemgr";
 const int32_t INVALID_USERID = 0;
@@ -73,7 +71,6 @@ public:
     ErrCode UninstallBundle(const std::string &bundleName, int32_t userId) const;
     ErrCode UninstallModule(const std::string &bundleName, const std::string &modulePackage, int32_t userId) const;
     void CheckFileExist() const;
-    void CheckModuleFileExist(const std::string&codePath) const;
     void CheckFileNonExist() const;
     void CheckModuleFileNonExist(const std::string&codePath) const;
     void StopInstalldService() const;
@@ -177,12 +174,6 @@ void BmsBundleUninstallerTest::CheckFileExist() const
 
     int bundleCodeExist = access(BUNDLE_CODE_DIR.c_str(), F_OK);
     EXPECT_EQ(bundleCodeExist, 0);
-}
-
-void BmsBundleUninstallerTest::CheckModuleFileExist(const std::string&codePath) const
-{
-    int moduleCodeExist = access(codePath.c_str(), F_OK);
-    EXPECT_EQ(moduleCodeExist, 0);
 }
 
 void BmsBundleUninstallerTest::CheckFileNonExist() const
@@ -358,8 +349,6 @@ HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0300, Function | SmallTest |
     ErrCode installRes = InstallMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(MODULE_CODE_DIR1);
-    CheckModuleFileExist(MODULE_CODE_DIR2);
 
     ErrCode result = UninstallBundle(BUNDLE_NAME, INVALID_USERID);
     EXPECT_NE(result, ERR_OK);
@@ -381,8 +370,6 @@ HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0400, Function | SmallTest |
     ErrCode installRes = InstallMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(MODULE_CODE_DIR1);
-    CheckModuleFileExist(MODULE_CODE_DIR2);
 
     ErrCode result = UninstallBundle(BUNDLE_NAME, USERID);
     EXPECT_EQ(result, ERR_OK);
@@ -467,8 +454,6 @@ HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0600, Function | SmallTest |
     ErrCode installRes = InstallMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
-    CheckModuleFileExist(MODULE_CODE_DIR1);
-    CheckModuleFileExist(MODULE_CODE_DIR2);
 
     installRes = UninstallModule(BUNDLE_NAME, MODULE_PACKAGE1, USERID);
     EXPECT_EQ(installRes, ERR_OK);

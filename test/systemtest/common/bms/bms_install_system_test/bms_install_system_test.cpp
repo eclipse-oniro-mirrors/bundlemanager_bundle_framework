@@ -513,80 +513,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0500, Function | MediumTest | Level1)
 }
 
 /**
- * @tc.number: BMS_Install_0600
- * @tc.name: test the installation of abnormal bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there are two abnormal bundles
- *           2.install the bundles
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0600, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_0600" << std::endl;
-    std::string installMsg;
-    std::vector<std::string> bundlePaths = {
-        THIRD_BUNDLE_PATH + "bmsThirdBundle12.rpk", THIRD_BUNDLE_PATH + "bmsThirdBundle11.hap"};
-    std::vector<std::string> bundleNames = {THIRD_BASE_BUNDLE_NAME + "12", THIRD_BASE_BUNDLE_NAME + "11"};
-    std::vector<std::string> errorCodes = {
-        "Failure[ERR_INSTALL_INVALID_HAP_NAME]", "Failure[ERR_INSTALL_PARSE_NO_PROFILE]"};
-
-    int32_t size = bundlePaths.size();
-    for (int i = 0; i < size; i++) {
-        InstallBundle(bundlePaths[i], InstallFlag::NORMAL, installMsg);
-        EXPECT_EQ(installMsg, errorCodes[i]);
-        CheckFileNonExist(bundleNames[i]);
-    }
-
-    std::vector<BundleInfo> bundleInfos;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
-
-    bool isSubStrExist = false;
-    for (auto iter = bundleInfos.begin(); iter != bundleInfos.end(); iter++) {
-        for (std::string bundleName : bundleNames) {
-            isSubStrExist = IsSubStr(iter->name, bundleName);
-            EXPECT_FALSE(isSubStrExist);
-        }
-    }
-    std::cout << "END BMS_Install_0600" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_0700
- * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,which have no bundlename
- *                    in config.json
- *           2.install the bundle
- *           3.install the bundle once again
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0700, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_0700" << std::endl;
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle14.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "14";
-
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_0700" << std::endl;
-}
-
-/**
  * @tc.number: BMS_Install_0800
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.install a third-party bundle,which is not exist
@@ -603,24 +529,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0800, Function | MediumTest | Level2)
     InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Failure[MSG_ERR_INSTALL_FILE_PATH_INVALID]");
     std::cout << "END BMS_Install_0800" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_0900
- * @tc.name:  test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle without signa
- *           2.install the bundle
- *           3.check the bundle info
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0900, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_0900" << std::endl;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundleNoSign.hap";
-    std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[MSG_ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE]");
-
-    std::cout << "END BMS_Install_0900" << std::endl;
 }
 
 /**
@@ -1205,34 +1113,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2700, Function | MediumTest | Level2)
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
     std::cout << "END BMS_Install_2700" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_2800
- * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose modulename is null
- *             in config.json
- *           2.install the bundle
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2800, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_2800" << std::endl;
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle14.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_2800" << std::endl;
 }
 
 /**
@@ -1835,60 +1715,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0100, Function | MediumTest
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     std::cout << "END BMS_BundleDataStorage_0100" << std::endl;
-}
-
-/**
- * @tc.number: BMS_BundleDataStorage_0200
- * @tc.name: test the bundle info storage
- * @tc.desc: 1.under '/data/test/bms_bundle',there are two third-party bundles,
- *             one is normal,the other doesn't have the 'config.json' file
- *           2.install the bundle
- *           3.GetBundleInfo
- */
-HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0200, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_BundleDataStorage_0200" << std::endl;
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-
-    bool isGetInfoSuccess =
-        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-    EXPECT_TRUE(isGetInfoSuccess);
-
-    EXPECT_EQ(bundleInfo.name, "com.third.hiworld.example1");
-    EXPECT_EQ(bundleInfo.vendor, "example");
-    EXPECT_EQ(bundleInfo.versionName, "1.0");
-    uint32_t versionCode = 1;
-    EXPECT_EQ(bundleInfo.versionCode, versionCode);
-    EXPECT_GE(bundleInfo.uid, Constants::BASE_APP_UID);
-    EXPECT_GE(bundleInfo.gid, Constants::BASE_APP_UID);
-
-    bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle11.hap";
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_NO_PROFILE]");
-
-    std::string eBundleName = THIRD_BASE_BUNDLE_NAME + "11";
-    CheckFileNonExist(eBundleName);
-
-    isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(eBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(isGetInfoSuccess);
-
-    std::string uninstallMsg;
-    UninstallBundle(bundleName, uninstallMsg);
-    std::cout << "END BMS_BundleDataStorage_0200" << std::endl;
 }
 
 /**
