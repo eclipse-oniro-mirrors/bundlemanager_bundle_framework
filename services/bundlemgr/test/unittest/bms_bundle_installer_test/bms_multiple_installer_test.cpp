@@ -325,7 +325,7 @@ void BmsMultipleInstallerTest::ClearBundleInfo(const std::string &bundleName) co
  * @tc.name: test the right third party bundle file can be installed
  * @tc.desc: 1.the third party bundle file exists
  *           2.the third party bundle can be installed successfully and can get the bundle info
- * @tc.require: AR000GJ4KF
+ * @tc.require: SR000H00TF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | Level0)
 {
@@ -333,6 +333,9 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest 
     ErrCode result = InstallThirdPartyBundle(bundleFile);
     EXPECT_EQ(result, ERR_OK);
     CheckFileExist();
+    std::string hapPath = BUNDLE_CODE_DIR + "/entry.hap";
+    int ret = access(hapPath.c_str(), F_OK);
+    EXPECT_EQ(ret, 0);
     ClearBundleInfo(BUNDLE_NAME);
 }
 
@@ -341,7 +344,7 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest 
  * @tc.name: test the wrong third party bundle file can't be installed
  * @tc.desc: 1.the third party bundle file don't exists
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
+ * @tc.require: AR000H0365
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0200, Function | SmallTest | Level0)
 {
