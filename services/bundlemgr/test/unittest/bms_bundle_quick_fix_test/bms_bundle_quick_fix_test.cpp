@@ -228,7 +228,6 @@ void BmsBundleQuickFixTest::AddInnerBundleInfo(const std::string bundleName,
     deployedAppqfInfo.cpuAbi = QUICK_FIX_ABI;
     deployedAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
     deployedAppqfInfo.type = type;
-    bundleInfo.appqfInfo= deployedAppqfInfo;
     bundleInfo.versionCode = BUNDLE_VERSION_CODE;
     bundleInfo.versionName = BUNDLE_VERSION_NAME;
 
