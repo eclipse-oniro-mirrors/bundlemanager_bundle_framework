@@ -30,7 +30,6 @@ ohos_shared_library("libdbms") {
     "src/distributed_bms.cpp",
     "src/distributed_bms_host.cpp",
     "src/distributed_data_storage.cpp",
-    "src/image_buffer.cpp",
     "src/image_compress.cpp",
   ]
 
@@ -60,6 +59,7 @@ ohos_shared_library("libdbms") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
+    "multimedia_image_standard:image_native",
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
