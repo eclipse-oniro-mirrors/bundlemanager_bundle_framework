@@ -25,7 +25,7 @@ class AppControlProxy : public IRemoteProxy<IAppControlMgr> {
 public:
     explicit AppControlProxy(const sptr<IRemoteObject>& object);
     virtual ~AppControlProxy();
-
+    // for app install control rule
     virtual ErrCode AddAppInstallControlRule(const std::vector<std::string> &appIds,
         const AppInstallControlRuleType controlRuleType, int32_t userId) override;
     virtual ErrCode DeleteAppInstallControlRule(const std::vector<std::string> &appIds,
@@ -34,9 +34,18 @@ public:
         const AppInstallControlRuleType controlRuleType, int32_t userId) override;
     virtual ErrCode GetAppInstallControlRule(
         const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds) override;
+    // for app running control rule
+    virtual ErrCode AddAppRunningControlRule(
+        const std::vector<AppRunningControlRuleParam> &controlRule, int32_t userId) override;
+    virtual ErrCode DeleteAppRunningControlRule(
+        const std::vector<AppRunningControlRuleParam> &controlRule, int32_t userId) override;
+    virtual ErrCode DeleteAppRunningControlRule(int32_t userId) override;
+    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) override;
 
 private:
-    bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);
+    template<typename T>
+    bool WriteParcelableVector(const std::vector<T> &parcelableVector, MessageParcel &data);
+    bool WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &data);
     int32_t GetParcelableInfos(
         IAppControlMgr::Message code, MessageParcel &data, std::vector<std::string> &stringVector);
 

@@ -35,6 +35,14 @@ public:
         int32_t userId) override;
     virtual ErrCode GetAppInstallControlRule(const std::string &callingName,
         const std::string &controlRuleType, int32_t userId, std::vector<std::string> &appIds) override;
+
+    virtual ErrCode AddAppRunningControlRule(const std::string &callingName,
+        const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId) override;
+    virtual ErrCode DeleteAppRunningControlRule(const std::string &callingName,
+        const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId) override;
+    virtual ErrCode DeleteAppRunningControlRule(const std::string &callingName, int32_t userId) override;
+    virtual ErrCode GetAppRunningControlRule(const std::string &callingName,
+        int32_t userId, std::vector<std::string> &appIds) override;
 private:
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 };

@@ -58,5 +58,29 @@ ErrCode AppControlManager::GetAppInstallControlRule(const std::string &callingNa
     APP_LOGD("GetAppInstallControlRule");
     return appControlManagerDb_->GetAppInstallControlRule(callingName, controlRuleType, userId, appIds);
 }
+
+ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingName,
+    const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId)
+{
+    APP_LOGD("AddAppRunningControlRule");
+    return appControlManagerDb_->AddAppRunningControlRule(callingName, controlRule, userId);
+}
+
+ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName,
+    const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId)
+{
+    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRule, userId);
+}
+
+ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName, int32_t userId)
+{
+    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, userId);
+}
+
+ErrCode AppControlManager::GetAppRunningControlRule(
+    const std::string &callingName, int32_t userId, std::vector<std::string> &appIds)
+{
+    return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
+}
 }
 }

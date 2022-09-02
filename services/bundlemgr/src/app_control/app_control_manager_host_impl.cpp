@@ -101,6 +101,62 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
 }
 
+ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
+    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+{
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+    }
+    std::vector<InnerAppRunningControlRule> innerControlRules;
+    for (auto &ruleParam : controlRuleParam) {
+        InnerAppRunningControlRule controlRule(ruleParam,
+            AppRunningControlRuleType::DISALLOWED_RUNNING_FROM_ENTERPRISE_MGR);
+        innerControlRules.emplace_back(controlRule);
+    }
+
+    return appControlManager_->AddAppRunningControlRule(callingName, innerControlRules, userId);
+}
+
+ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(
+    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+{
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+    }
+    std::vector<InnerAppRunningControlRule> innerControlRules;
+    for (auto &ruleParam : controlRuleParam) {
+        InnerAppRunningControlRule controlRule(ruleParam,
+            AppRunningControlRuleType::DISALLOWED_RUNNING_FROM_ENTERPRISE_MGR);
+        innerControlRules.emplace_back(controlRule);
+    }
+
+    return appControlManager_->DeleteAppRunningControlRule(callingName, innerControlRules, userId);
+}
+
+ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
+{
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+    }
+    return appControlManager_->DeleteAppRunningControlRule(callingName, userId);
+}
+
+ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
+{
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+    }
+    return appControlManager_->GetAppRunningControlRule(callingName, userId, appIds);
+}
+
 std::string AppControlManagerHostImpl::GetCallingName()
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();

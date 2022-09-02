@@ -33,7 +33,7 @@ AppControlHost::~AppControlHost()
 }
 
 int AppControlHost::OnRemoteRequest(
-    uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     APP_LOGI("AppControlHost OnRemoteRequest, message code : %{public}u", code);
     std::u16string descriptor = AppControlHost::GetDescriptor();
@@ -52,6 +52,14 @@ int AppControlHost::OnRemoteRequest(
             return HandleCleanAppInstallControlRule(data, reply);
         case IAppControlMgr::Message::GET_APP_INSTALL_CONTROL_RULE:
             return HandleGetAppInstallControlRule(data, reply);
+        case IAppControlMgr::Message::ADD_APP_RUNNING_CONTROL_RULE:
+            return HandleAddAppRunningControlRule(data, reply);
+        case IAppControlMgr::Message::DELETE_APP_RUNNING_CONTROL_RULE:
+            return HandleDeleteAppRunningControlRule(data, reply);
+        case IAppControlMgr::Message::CLEAN_APP_RUNNING_CONTROL_RULE:
+            return HandleCleanAppRunningControlRule(data, reply);
+        case IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE:
+            return HandleGetAppRunningControlRule(data, reply);
         default:
             APP_LOGW("AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -66,7 +74,7 @@ ErrCode AppControlHost::HandleAddAppInstallControlRule(MessageParcel& data, Mess
         APP_LOGE("HandleAddAppInstallControlRule parameter is invalid");
         return ERR_INVALID_VALUE;
     }
-    for (size_t i = 0; i < appIdSize; i++) {
+    for (int32_t i = 0; i < appIdSize; i++) {
         appIds.emplace_back(data.ReadString());
     }
     AppInstallControlRuleType controlRuleType = static_cast<AppInstallControlRuleType>(data.ReadInt32());
@@ -86,7 +94,7 @@ ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, M
         APP_LOGE("HandleDeleteAppInstallControlRule parameter is invalid");
         return ERR_INVALID_VALUE;
     }
-    for (size_t i = 0; i < appIdSize; i++) {
+    for (int32_t i = 0; i < appIdSize; i++) {
         appIds.emplace_back(data.ReadString());
     }
     int32_t userId = data.ReadInt32();
@@ -125,6 +133,54 @@ ErrCode AppControlHost::HandleGetAppInstallControlRule(MessageParcel& data, Mess
     return ERR_OK;
 }
 
+ErrCode AppControlHost::HandleAddAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<AppRunningControlRuleParam> controlRuleParam;
+    if (!ReadParcelableVector(data, controlRuleParam)) {
+        APP_LOGE("read controlRuleParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    return AddAppRunningControlRule(controlRuleParam, userId);
+}
+
+ErrCode AppControlHost::HandleDeleteAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<AppRunningControlRuleParam> controlRuleParam;
+    if (!ReadParcelableVector(data, controlRuleParam)) {
+        APP_LOGE("read controlRuleParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    return DeleteAppRunningControlRule(controlRuleParam, userId);
+}
+
+ErrCode AppControlHost::HandleCleanAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t userId = data.ReadInt32();
+    int32_t ret = DeleteAppRunningControlRule(userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleCleanAppInstallControlRule failed");
+    }
+    return ret;
+}
+
+ErrCode AppControlHost::HandleGetAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t userId = data.ReadInt32();
+    std::vector<std::string> appIds;
+    int32_t ret = GetAppRunningControlRule(userId, appIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleGetAppRunningControlRule failed");
+        return ret;
+    }
+    if (!WriteParcelableVector(appIds, reply)) {
+        APP_LOGE("write appIds failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 bool AppControlHost::WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &reply)
 {
     if (!reply.WriteInt32(stringVector.size())) {
@@ -138,6 +194,22 @@ bool AppControlHost::WriteParcelableVector(const std::vector<std::string> &strin
             return false;
         }
     }
+    return true;
+}
+
+template<typename T>
+bool AppControlHost::ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos)
+{
+    int32_t infoSize = data.ReadInt32();
+    for (int32_t i = 0; i < infoSize; i++) {
+        std::unique_ptr<T> info(data.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("read parcelable infos failed");
+            return false;
+        }
+        parcelableInfos.emplace_back(*info);
+    }
+    APP_LOGD("read parcelable infos success");
     return true;
 }
 } // AppExecFwk

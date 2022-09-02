@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "app_control_interface.h"
+#include "inner_app_running_control_rule.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,6 +37,14 @@ public:
         const std::string &controlRuleType, int32_t userId) = 0;
     virtual ErrCode GetAppInstallControlRule(const std::string &callingName,
         const std::string &controlRuleType, int32_t userId, std::vector<std::string> &appIds) = 0;
+
+    virtual ErrCode AddAppRunningControlRule(const std::string &callingName,
+        const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId) = 0;
+    virtual ErrCode DeleteAppRunningControlRule(const std::string &callingName,
+        const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId) = 0;
+    virtual ErrCode DeleteAppRunningControlRule(const std::string &callingName, int32_t userId) = 0;
+    virtual ErrCode GetAppRunningControlRule(const std::string &callingName,
+        int32_t userId, std::vector<std::string> &appIds) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS
