@@ -181,7 +181,9 @@ void BmsBundleQuickFixQueryTest::MockSwitchQuickFix(bool enable)
     if (!enable) {
         appqfInfo = AppqfInfo();
     }
-    innerBundleInfo.SetAppqfInfo(appqfInfo);
+    BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
+    bundleInfo.appqfInfo = appqfInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
 }
 
 void BmsBundleQuickFixQueryTest::MockDeployQuickFix() const

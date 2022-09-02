@@ -2650,16 +2650,6 @@ std::string InnerBundleInfo::GetModuleTypeByPackage(const std::string &packageNa
     return it->second.distro.moduleType;
 }
 
-AppqfInfo InnerBundleInfo::GetAppqfInfo() const
-{
-    return baseBundleInfo_->appqfInfo;
-}
-
-void InnerBundleInfo::SetAppqfInfo(const AppqfInfo &appqfInfo)
-{
-    baseBundleInfo_->appqfInfo = appqfInfo;
-}
-
 AppQuickFix InnerBundleInfo::GetAppQuickFix() const
 {
     return baseApplicationInfo_->appQuickFix;
