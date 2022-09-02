@@ -35,7 +35,6 @@ constexpr int32_t NO_ERROR = 0;
 constexpr int32_t PARAM_TYPE_ERROR = 401;
 constexpr int32_t SYSTEM_ABILITY_ERROR = 600101;
 
-constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
@@ -52,7 +51,7 @@ static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
     auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         APP_LOGE("systemAbilityManager is null.");
-        return nullptr;        
+        return nullptr;
     }
     auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (bundleMgrSa == nullptr) {
@@ -86,8 +85,7 @@ static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return SYSTEM_ABILITY_ERROR;
     }
-    APP_LOGI("begin to innerGetDisposedStatus");
-    return AppControlProxy->GetDisposedStatus(appId, disposedWant);
+    return NO_ERROR; // 内部实现pr中修改
 }
 
 static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& disposedWant)
@@ -97,8 +95,7 @@ static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return SYSTEM_ABILITY_ERROR;
     }
-    APP_LOGI("begin to innerSetDisposedStatus");
-    return AppControlProxy->SetDisposedStatus(appId, disposedWant);
+    return NO_ERROR; // 内部实现pr中修改
 }
 
 static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
@@ -108,12 +105,12 @@ static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
         APP_LOGE("AppControlProxy is null.");
         return SYSTEM_ABILITY_ERROR;
     }
-    return AppControlProxy->DeleteDisposedStatus(appId);
+    return NO_ERROR; // 内部实现pr中修改
 }
 
 void SetDisposedStatusExec(napi_env env, void *data)
 {
-    DisposedStatus *asyncCallbackInfo = (DisposedStatus *)data;
+    DisposedStatus *asyncCallbackInfo = static_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo->err == NO_ERROR) {
         asyncCallbackInfo->err = InnerSetDisposedStatus(env, asyncCallbackInfo->appId,
             asyncCallbackInfo->want);
@@ -123,26 +120,28 @@ void SetDisposedStatusExec(napi_env env, void *data)
 
 void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
 {
-    DisposedStatus *asyncCallbackInfo = (DisposedStatus *)data;
+    DisposedStatus *asyncCallbackInfo = static_cast<DisposedStatus *>(data);
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
-    if (asyncCallbackInfo->err != NO_ERROR) {
-        APP_LOGE("SetDisposedStatus err = %{public}d", asyncCallbackInfo->err);
-    }
     napi_value result[1] = {0};
     if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("SetDisposedStatus err = %{public}d", asyncCallbackInfo->err);
         NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
             &result[0]));
     }
     if (asyncCallbackInfo->deferred) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
-        NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        if (asyncCallbackInfo->err != NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
     } else {
         napi_value callback = nullptr;
         napi_value placeHolder = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
         NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
             sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }    
+    }
 }
 
 napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
@@ -173,7 +172,8 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
             asyncCallbackInfo->err = PARAM_TYPE_ERROR;
         }
     }
-    auto promise = AsyncCallNativeMethod<DisposedStatus>(env, asyncCallbackInfo, "SetDisposedStatus", SetDisposedStatusExec, SetDisposedStatusComplete);
+    auto promise = AsyncCallNativeMethod<DisposedStatus>(
+        env, asyncCallbackInfo, "SetDisposedStatus", SetDisposedStatusExec, SetDisposedStatusComplete);
     callbackPtr.release();
     APP_LOGI("call SetDisposedStatus done.");
     return promise;
@@ -181,7 +181,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
 
 void DeleteDisposedStatusExec(napi_env env, void *data)
 {
-    DisposedStatus *asyncCallbackInfo = (DisposedStatus *)data;
+    DisposedStatus *asyncCallbackInfo = static_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo->err == NO_ERROR) {
         asyncCallbackInfo->err = InnerDeleteDisposedStatus(env, asyncCallbackInfo->appId);
     }
@@ -189,7 +189,7 @@ void DeleteDisposedStatusExec(napi_env env, void *data)
 
 void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
 {
-    DisposedStatus *asyncCallbackInfo = (DisposedStatus *)data;
+    DisposedStatus *asyncCallbackInfo = static_cast<DisposedStatus *>(data);
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     napi_value result[1] = {0};
     if (asyncCallbackInfo->err != NO_ERROR) {
@@ -201,6 +201,8 @@ void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
         if (asyncCallbackInfo->err == NO_ERROR) {
             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
         }
     } else {
         napi_value callback = nullptr;
@@ -238,7 +240,8 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
             APP_LOGE("DeleteDisposedStatus arg err! pos:%{public}u, type:%{public}d", i, valueType);
         }
     }
-    auto promise = AsyncCallNativeMethod<DisposedStatus>(env, asyncCallbackInfo, "DeleteDisposedStatus", DeleteDisposedStatusExec, DeleteDisposedStatusComplete);
+    auto promise = AsyncCallNativeMethod<DisposedStatus>(
+        env, asyncCallbackInfo, "DeleteDisposedStatus", DeleteDisposedStatusExec, DeleteDisposedStatusComplete);
     callbackPtr.release();
     APP_LOGI("call DeleteDisposedStatus done.");
     return promise;
@@ -246,7 +249,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
 
 void GetDisposedStatusExec(napi_env env, void *data)
 {
-    DisposedStatus *asyncCallbackInfo = (DisposedStatus *)data;
+    DisposedStatus *asyncCallbackInfo = static_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo->err == NO_ERROR) {
         asyncCallbackInfo->err = InnerGetDisposedStatus(env, asyncCallbackInfo->appId,
             asyncCallbackInfo->want);
@@ -255,7 +258,7 @@ void GetDisposedStatusExec(napi_env env, void *data)
 
 void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
 {
-    DisposedStatus *asyncCallbackInfo = (DisposedStatus *) data;
+    DisposedStatus *asyncCallbackInfo = static_cast<DisposedStatus *>(data);
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     napi_value result[2] = {0};
     if (asyncCallbackInfo->err != NO_ERROR) {
@@ -309,7 +312,8 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
             APP_LOGE("GetDisposedStatus arg err! pos:%{public}u, type:%{public}d", i, valueType);
         }
     }
-    auto promise = AsyncCallNativeMethod<DisposedStatus>(env, asyncCallbackInfo, "GetDisposedStatus", GetDisposedStatusExec, GetDisposedStatusComplete);
+    auto promise = AsyncCallNativeMethod<DisposedStatus>(
+        env, asyncCallbackInfo, "GetDisposedStatus", GetDisposedStatusExec, GetDisposedStatusComplete);
     callbackPtr.release();
     APP_LOGI("call GetDisposedStatus done.");
     return promise;
