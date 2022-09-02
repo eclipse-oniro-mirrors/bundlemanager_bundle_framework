@@ -1860,10 +1860,6 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
     }
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_APPQF_INFO)
-        != GET_BUNDLE_WITH_APPQF_INFO) {
-        bundleInfo.appqfInfo = AppqfInfo();
-    }
     GetBundleWithAbilities(flags, bundleInfo, userId);
     GetBundeleWithExtension(flags, bundleInfo, userId);
     return true;
