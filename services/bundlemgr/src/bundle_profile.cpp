@@ -46,7 +46,7 @@ const std::map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
     {"unspecified", DisplayOrientation::UNSPECIFIED},
     {"landscape", DisplayOrientation::LANDSCAPE},
     {"portrait", DisplayOrientation::PORTRAIT},
-    {"followrecent", DisplayOrientation::FOLLOWRECENT}
+    {"followRecent", DisplayOrientation::FOLLOWRECENT}
 };
 const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},

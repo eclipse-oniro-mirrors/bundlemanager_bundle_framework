@@ -1,0 +1,28 @@
+{
+  "string": [
+    {
+      "name": "description_application",
+      "value": "bmsfirstright"
+    },
+    {
+      "name": "parameters_description",
+      "value": "JS_Phone_Empty Feature Ability"
+    },
+    {
+      "name": "results_description",
+      "value": "JS_Phone_Empty Feature Ability"
+    },
+    {
+      "name": "customizeData_description",
+      "value": "JS_Phone_Empty Feature Ability"
+    },
+    {
+      "name": "shortcut",
+      "value": "JS_Phone_Empty Feature Ability"
+    },
+    {
+      "name": "permreason_camera",
+      "value": "JS_Phone_Empty Feature Ability"
+    }
+  ]
+}

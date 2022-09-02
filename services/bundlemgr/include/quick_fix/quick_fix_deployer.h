@@ -41,6 +41,8 @@ private:
 
     ErrCode GetQuickFixDataMgr();
 
+    ErrCode SaveToInnerBundleInfo(const InnerAppQuickFix &newInnerAppQuickFix);
+
     ErrCode ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
         InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix);
 

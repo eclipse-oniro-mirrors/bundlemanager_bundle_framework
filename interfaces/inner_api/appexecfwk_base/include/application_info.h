@@ -23,6 +23,7 @@
 #include "bundle_constants.h"
 #include "module_info.h"
 #include "parcel.h"
+#include "quick_fix/app_quick_fix.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -191,6 +192,8 @@ struct ApplicationInfo : public Parcelable {
     std::vector<std::string> targetBundleList;
 
     std::string fingerprint;
+    // quick fix info
+    AppQuickFix appQuickFix;
 
     // unused
     std::string icon;

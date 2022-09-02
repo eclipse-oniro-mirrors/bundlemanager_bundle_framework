@@ -27,6 +27,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "json_serializer.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -96,6 +97,7 @@ const std::string APPLICATION_LABEL_RESOURCE = "labelResource";
 const std::string APPLICATION_DESCRIPTION_RESOURCE = "descriptionResource";
 const std::string APPLICATION_MULTI_PROJECTS = "multiProjects";
 const std::string APPLICATION_CROWDTEST_DEADLINE = "crowdtestDeadline";
+const std::string APPLICATION_APP_QUICK_FIX = "appQuickFix";
 const std::string RESOURCE_ID = "id";
 }
 
@@ -356,6 +358,12 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     isCompressNativeLibs = parcel.ReadBool();
     signatureKey = Str16ToStr8(parcel.ReadString16());
     multiProjects = parcel.ReadBool();
+    std::unique_ptr<AppQuickFix> appQuickFixPtr(parcel.ReadParcelable<AppQuickFix>());
+    if (appQuickFixPtr == nullptr) {
+        APP_LOGE("ReadParcelable<AppQuickFixPtr> failed");
+        return false;
+    }
+    appQuickFix = *appQuickFixPtr;
     return true;
 }
 
@@ -485,6 +493,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(signatureKey));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, multiProjects);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appQuickFix);
     return true;
 }
 
@@ -625,6 +634,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DESCRIPTION_RESOURCE, applicationInfo.descriptionResource},
         {APPLICATION_MULTI_PROJECTS, applicationInfo.multiProjects},
         {APPLICATION_CROWDTEST_DEADLINE, applicationInfo.crowdtestDeadline},
+        {APPLICATION_APP_QUICK_FIX, applicationInfo.appQuickFix},
     };
 }
 
@@ -1149,6 +1159,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         APPLICATION_CROWDTEST_DEADLINE,
         applicationInfo.crowdtestDeadline,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AppQuickFix>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_QUICK_FIX,
+        applicationInfo.appQuickFix,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

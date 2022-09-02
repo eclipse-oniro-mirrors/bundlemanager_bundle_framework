@@ -62,9 +62,7 @@
       <option name="push" value="stThirdBundle/e4.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e5.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e6.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/e12.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e21.hap -> /data/test/bms_bundle/" src="res" />
-      <option name="push" value="stThirdBundle/e22.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/e23.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
