@@ -78,6 +78,9 @@ void BundleDataStorageDatabase::SaveEntries(
         if (!isBundleValid) {
             continue;
         }
+        // reset privilege capability when load info from db
+        ApplicationInfo applicationInfo;
+        innerBundleInfo.UpdatePrivilegeCapability(applicationInfo);
         infos.emplace(innerBundleInfo.GetBundleName(), innerBundleInfo);
         // database update
         std::string key = item.key.ToString();
