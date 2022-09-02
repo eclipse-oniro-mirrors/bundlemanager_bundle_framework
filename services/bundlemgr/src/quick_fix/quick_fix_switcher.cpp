@@ -113,6 +113,8 @@ ErrCode QuickFixSwitcher::DisableQuickFix(const std::string &bundleName)
     ScopeGuard stateGuard([&] {
         if (isExisted) {
             quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DEPLOY_END, innerAppQuickFix);
+        } else {
+            quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName);
         }
     });
 
@@ -135,7 +137,6 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
     }
 
     if (GetDataMgr() != ERR_OK) {
-        APP_LOGE("obtain data mgr failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;
@@ -145,9 +146,9 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName_); });
-    // utilize rbAppqfInfo to rollback
-    AppqfInfo rbAppqfInfo = innerBundleInfo.GetAppqfInfo();
-    if (!enable && rbAppqfInfo.hqfInfos.empty()) {
+    // utilize appQuickFix to rollback
+    AppQuickFix oldAppQuickFix = innerBundleInfo.GetAppQuickFix();
+    if (!enable && oldAppQuickFix.deployedAppqfInfo.hqfInfos.empty()) {
         APP_LOGE("no patch info to be disabled");
         return ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO;
     }
@@ -159,7 +160,11 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
         return errCode;
     }
     // 6. update innerBundleInfo in memory cache and db
-    innerBundleInfo.SetAppqfInfo(innerAppQuickFix.GetAppQuickFix().deployedAppqfInfo);
+    AppQuickFix newAppQuickFix = innerAppQuickFix.GetAppQuickFix();
+    newAppQuickFix.deployedAppqfInfo = innerAppQuickFix.GetAppQuickFix().deployedAppqfInfo;
+    newAppQuickFix.deployingAppqfInfo = AppqfInfo();
+    innerBundleInfo.SetAppQuickFix(newAppQuickFix);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("update quickfix innerbundleInfo failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
@@ -167,12 +172,11 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
 
     // 7. utilize innerBundleInfoGuard to rollback inner bundle info in db and memory cache
     ScopeGuard innerBundleInfoGuard([&] {
-        innerBundleInfo.SetAppqfInfo(rbAppqfInfo);
+        innerBundleInfo.SetAppQuickFix(oldAppQuickFix);
         dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo);
     });
 
     if (GetQuickFixDataMgr() != ERR_OK) {
-        APP_LOGE("quickFixDataMgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // 8. update quick fix info status of SWITCH_END
@@ -197,19 +201,23 @@ ErrCode QuickFixSwitcher::CreateInnerAppqf(const InnerBundleInfo &innerBundleInf
     }
     auto res = quickFixDataMgr_->QueryInnerAppQuickFix(bundleName, innerAppqf);
     // old patch or reload in db will lead failure to create innerAppqf
-    if (res && !innerAppqf.GetAppQuickFix().deployedAppqfInfo.hqfInfos.empty()) {
+    const auto &appQf = innerAppqf.GetAppQuickFix();
+    if (res && !appQf.deployedAppqfInfo.hqfInfos.empty()) {
         APP_LOGE("CreateInnerAppqf failed due to some old patch or hot reload in db");
         return ERR_BUNDLEMANAGER_QUICK_FIX_OLD_PATCH_OR_HOT_RELOAD_IN_DB;
     }
 
     AppQuickFix appQuickFix;
     appQuickFix.bundleName = bundleName;
-    appQuickFix.deployedAppqfInfo = innerBundleInfo.GetAppqfInfo();
+    appQuickFix.versionName = appQf.versionName;
+    appQuickFix.versionCode = appQf.versionCode;
+    appQuickFix.deployedAppqfInfo = innerBundleInfo.GetAppQuickFix().deployedAppqfInfo;
 
     if (!enable && res) {
-        appQuickFix.deployingAppqfInfo = innerAppqf.GetAppQuickFix().deployingAppqfInfo;
+        appQuickFix.deployingAppqfInfo = appQf.deployingAppqfInfo;
     }
     QuickFixMark fixMark;
+    fixMark.bundleName = bundleName;
     fixMark.status = enable ? QuickFixStatus::SWITCH_ENABLE_START : QuickFixStatus::SWITCH_DISABLE_START;
     innerAppQuickFix.SetAppQuickFix(appQuickFix);
     innerAppQuickFix.SetQuickFixMark(fixMark);

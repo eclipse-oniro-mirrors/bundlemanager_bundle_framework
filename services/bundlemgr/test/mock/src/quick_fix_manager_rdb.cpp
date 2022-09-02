@@ -91,17 +91,16 @@ bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, InnerAppQu
 
 bool QuickFixManagerRdb::SaveDataToDb(const InnerAppQuickFix &innerAppQuickFix)
 {
-    INNER_APP_QUICK_FIX_INFOS.emplace(innerAppQuickFix.GetAppQuickFix().bundleName, innerAppQuickFix);
+    INNER_APP_QUICK_FIX_INFOS[innerAppQuickFix.GetAppQuickFix().bundleName] = innerAppQuickFix;
     return true;
 }
 
 bool QuickFixManagerRdb::DeleteDataFromDb(const std::string &bundleName)
 {
-    auto iter = INNER_APP_QUICK_FIX_INFOS.find(bundleName);
-    if (iter == INNER_APP_QUICK_FIX_INFOS.end()) {
+    auto ret = INNER_APP_QUICK_FIX_INFOS.erase(bundleName);
+    if (ret == 0) {
         return false;
     }
-    INNER_APP_QUICK_FIX_INFOS.erase(iter);
     return true;
 }
 } // namespace AppExecFwk

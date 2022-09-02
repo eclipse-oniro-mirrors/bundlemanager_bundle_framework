@@ -23,7 +23,9 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_service_event_handler.h"
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_interface.h"
+#endif
 #include "inner_bundle_user_info.h"
 
 namespace OHOS {
@@ -657,8 +659,8 @@ public:
     virtual ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &info) override;
 
-    virtual int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) override;
+    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) override;
 
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
     virtual std::string GetStringById(
@@ -670,7 +672,9 @@ public:
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     const OHOS::sptr<IDistributedBms> GetDistributedBundleMgrService();
+#endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleConnectAbilityMgr> GetConnectAbilityMgrFromService();
 #endif

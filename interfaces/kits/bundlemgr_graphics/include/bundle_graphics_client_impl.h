@@ -35,7 +35,7 @@ public:
 
 private:
     sptr<IBundleMgr> GetBundleMgr();
-    std::shared_ptr<Media::PixelMap> LoadImageFile(int32_t fd);
+    std::shared_ptr<Media::PixelMap> LoadImageFile(const uint8_t *data, size_t len);
     int32_t CreateFileDescriptor(const std::string &filePath);
 
     OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;

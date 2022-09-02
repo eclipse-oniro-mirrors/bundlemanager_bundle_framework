@@ -489,50 +489,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0300, Function | MediumTest | Level
 }
 
 /**
- * @tc.number: GetBundleInfo_0400
- * @tc.name: test query bundle information
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal hap
- *           2.install the hap
- *           3.query bundleInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0400, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleInfo_0400" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle27.hap";
-        std::string appName = BASE_BUNDLE_NAME + "4";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Failure[ERR_INSTALL_PARSE_NO_PROFILE]") << "Success!";
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        BundleInfo bundleInfo;
-        bool getInfoResult =
-            bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
-        EXPECT_FALSE(getInfoResult);
-
-        if (getInfoResult) {
-            APP_LOGI("GetBundleInfo_0400 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleInfo_0400 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleInfo_0400" << std::endl;
-}
-
-/**
  * @tc.number: GetBundleInfo_0500
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -1819,48 +1775,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0300, Function | MediumTest | Level2)
 }
 
 /**
- * @tc.number: GetAppType_0400
- * @tc.name: test GetAppType interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap without config.json
- *           2.install the hap
- *           3.call GetAppType
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAppType_0400, Function | MediumTest | Level2)
-{
-    std::cout << "START GetAppType_0400" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle27.hap";
-        std::string appName = BASE_BUNDLE_NAME + "4";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_NE(installResult, "Success");
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string appType = bundleMgrProxy->GetAppType(appName);
-        EXPECT_EQ(appType, Constants::EMPTY_STRING);
-
-        if (std::strcmp(appType.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
-            APP_LOGI("GetAppType_0400 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetAppType_0400 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetAppType_0400" << std::endl;
-}
-
-/**
  * @tc.number: GetAppType_0500
  * @tc.name: test GetAppType interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap with invalid suffix
@@ -2042,49 +1956,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0400, Function | MediumTest | Lev
     }
     EXPECT_TRUE(result);
     std::cout << "END GetAbilityLabel_0400" << std::endl;
-}
-
-/**
- * @tc.number: GetAbilityLabel_0500
- * @tc.name: test GetAbilityLabel interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap without config.json
- *           2.install the hap
- *           3.call GetAbilityLabel
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0500, Function | MediumTest | Level2)
-{
-    std::cout << "START GetAbilityLabel_0500" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle27.hap";
-        std::string appName = BASE_BUNDLE_NAME + "4";
-        std::string abilityName = "MainAbility";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_NE(installResult, "Success");
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
-        EXPECT_EQ(abilityLabel, Constants::EMPTY_STRING);
-
-        if (std::strcmp(abilityLabel.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
-            APP_LOGI("GetAbilityLabel_0500 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetAbilityLabel_0500 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetAbilityLabel_0500" << std::endl;
 }
 
 /**
@@ -2354,53 +2225,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0400, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: GetHapModuleInfo_0500
- * @tc.name: test GetHapModuleInfo interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap without config.json file
- *           2.install the hap
- *           3.call GetHapModuleInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0500, Function | MediumTest | Level2)
-{
-    std::cout << "START GetHapModuleInfo_0500" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle27.hap";
-        std::string appName = BASE_BUNDLE_NAME + "4";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_NE(installResult, "Success");
-
-        AbilityInfo abilityInfo;
-        abilityInfo.bundleName = appName;
-        abilityInfo.package = BASE_BUNDLE_NAME + ".h1";
-        HapModuleInfo hapModuleInfo;
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
-        EXPECT_FALSE(queryResult);
-
-        if (queryResult) {
-            APP_LOGI("GetHapModuleInfo_0600 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetHapModuleInfo_0500 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetHapModuleInfo_0500" << std::endl;
-}
-
-/**
  * @tc.number: GetHapModuleInfo_0600
  * @tc.name: test GetHapModuleInfo interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap with invalid suffix
@@ -2499,54 +2323,6 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0100, Function | MediumTest | Level1)
     }
     EXPECT_TRUE(result);
     std::cout << "END Callback_0100" << std::endl;
-}
-
-/**
- * @tc.number: Callback_0200
- * @tc.name: 1.test RegisterBundleStatusCallback interface
- *           2.test UnregisterBundleStatusCallback interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal hap
- *           2.call RegisterBundleStatusCallback
- *           3.install the hap
- *           4.call UnregisterBundleStatusCallback
- */
-HWTEST_F(ActsBmsKitSystemTest, Callback_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START Callback_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle11.hap";
-        std::string appName = BASE_BUNDLE_NAME + "11";
-
-        CommonTool commonTool;
-        sptr<BundleStatusCallbackImpl> bundleStatusCallback = (new (std::nothrow) BundleStatusCallbackImpl());
-        EXPECT_NE(bundleStatusCallback, nullptr);
-        bundleStatusCallback->SetBundleName(appName);
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bundleMgrProxy->RegisterBundleStatusCallback(bundleStatusCallback);
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_NE(installResult, "Success");
-        bool unRegResult = bundleMgrProxy->UnregisterBundleStatusCallback();
-        EXPECT_TRUE(unRegResult);
-
-        if (!unRegResult) {
-            APP_LOGI("Callback_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("Callback_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END Callback_0200" << std::endl;
 }
 
 /**
@@ -3442,87 +3218,6 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0200, Function | MediumTest | Level1)
     }
     EXPECT_TRUE(result);
     std::cout << "Errors_0200" << std::endl;
-}
-
-/**
- * @tc.number: Errors_0300
- * @tc.name: test error hap
- * @tc.desc: 1.under '/data/test/bms_bundle',there exists an error hap
- *           2.install the hap
- *           3.get ERR_INSTALL_PARSE_PROFILE_MISSING_PROP
- */
-HWTEST_F(ActsBmsKitSystemTest, Errors_0300, Function | MediumTest | Level1)
-{
-    std::cout << "Errors_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle14.hap";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-
-        resvec.clear();
-        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
-        installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-
-        std::string bundleName = BASE_BUNDLE_NAME + "14";
-
-        BundleInfo bundleInfo;
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-        EXPECT_FALSE(getInfoResult);
-        if (getInfoResult) {
-            APP_LOGI("Errors_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("Errors_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "Errors_0300" << std::endl;
-}
-
-/**
- * @tc.number: Errors_0400
- * @tc.name: test error hap
- * @tc.desc: 1.under '/data/test/bms_bundle',there exists an error hap
- *           2.install the hap
- *           3.get ERR_INSTALL_PARSE_NO_PROFILE
- */
-HWTEST_F(ActsBmsKitSystemTest, Errors_0400, Function | MediumTest | Level1)
-{
-    std::cout << "Errors_0400" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle11.hap";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Failure[ERR_INSTALL_PARSE_NO_PROFILE]");
-        if (std::strcmp(installResult.c_str(), "Success") == 0) {
-            APP_LOGI("Errors_0400 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("Errors_0400 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "Errors_0400" << std::endl;
 }
 
 /**

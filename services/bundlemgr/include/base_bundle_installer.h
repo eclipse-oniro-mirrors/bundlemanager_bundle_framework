@@ -26,6 +26,7 @@
 #include "bundle_install_checker.h"
 #include "event_report.h"
 #include "install_param.h"
+#include "quick_fix/appqf_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -459,6 +460,7 @@ private:
         int32_t userId) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
+    void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     uint32_t CreateAccessTokenId(const InnerBundleInfo &info);
     ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
     ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
@@ -498,7 +500,8 @@ private:
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
-    ErrCode ProcessNewModuleDiffFile(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
+    void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
+    ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

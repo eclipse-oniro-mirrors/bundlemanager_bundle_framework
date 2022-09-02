@@ -20,5 +20,6 @@ group("systemtest_hap") {
     "jsBundle/jsThirdBundle:jsThirdBundle",
     "stSystemBundle:stSystemBundle",
     "stThirdBundle:stThirdBundle",
+    "stVendorBundle:stVendorBundle",
   ]
 }

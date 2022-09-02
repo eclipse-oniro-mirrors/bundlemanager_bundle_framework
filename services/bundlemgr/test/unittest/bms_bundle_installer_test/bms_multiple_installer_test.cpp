@@ -71,7 +71,6 @@ const std::string RIGHT_BUNDLE_FIFTEENTH = "fifteenth_right.hap";
 const std::string RIGHT_BUNDLE_SIXTEENTH = "sixteenth_right.hap";
 const std::string RIGHT_BUNDLE_TWELFTH = "twelfth_right.hap";
 const std::string INVALID_BUNDLE = "nonfile.hap";
-const std::string FORMAT_ERROR_BUNDLE = "format_error_profile.hap";
 const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string RIGHT_DIFFERENT_RELEASE_TYPE = "first_diff_release_type.hap";
 const std::string RIGHT_COMPATIBLE_VERSION_CODE = "first_right_compCode.hap";
@@ -383,27 +382,12 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0400, Function | SmallTest 
 
 /**
  * @tc.number: ThirdPartyInstall_0500
- * @tc.name: test the error format bundle file can't be installed
- * @tc.desc: 1.the third party bundle format is error
- *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
- */
-HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0500, Function | SmallTest | Level0)
-{
-    std::string errorFormat = RESOURCE_ROOT_PATH + FORMAT_ERROR_BUNDLE;
-    ErrCode result = InstallThirdPartyBundle(errorFormat);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_NO_PROFILE);
-    CheckFileNonExist();
-}
-
-/**
- * @tc.number: ThirdPartyInstall_0600
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
  *           2.the third party bundle can't be installed and the result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0600, Function | SmallTest | Level0)
+HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0500, Function | SmallTest | Level0)
 {
     std::string bundleFile = INVALID_PATH + RIGHT_BUNDLE;
     ErrCode result = InstallThirdPartyBundle(bundleFile);
@@ -412,13 +396,13 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0600, Function | SmallTest 
 }
 
 /**
- * @tc.number: ThirdPartyInstall_0700
+ * @tc.number: ThirdPartyInstall_0600
  * @tc.name: test the install will fail when installd service has error
  * @tc.desc: 1.the installd service has error
  *           2.the install result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0700, Function | SmallTest | Level0)
+HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0600, Function | SmallTest | Level0)
 {
     StopInstalldService();
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
@@ -624,29 +608,12 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0500, Function | SmallTes
 
 /**
  * @tc.number: MultipleHapsInstall_0600
- * @tc.name: test the error format bundle file can't be installed
- * @tc.desc: 1.the third party bundle format is error
- *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0600, Function | SmallTest | Level0)
-{
-    std::vector<std::string> filePaths;
-    std::string errorFormat = RESOURCE_ROOT_PATH + FORMAT_ERROR_BUNDLE;
-    filePaths.emplace_back(errorFormat);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_PARSE_NO_PROFILE);
-    CheckFileNonExist();
-}
-
-/**
- * @tc.number: MultipleHapsInstall_0700
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
  *           2.the third party bundle can't be installed and the result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0700, Function | SmallTest | Level0)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0600, Function | SmallTest | Level0)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = INVALID_PATH + RIGHT_BUNDLE_FIRST;
@@ -657,13 +624,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0700, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_0800
+ * @tc.number: MultipleHapsInstall_0700
  * @tc.name: test the install will fail when installd service has error
  * @tc.desc: 1.the installd service has error
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0800, Function | SmallTest | Level0)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0700, Function | SmallTest | Level0)
 {
     StopInstalldService();
     std::vector<std::string> filePaths;
@@ -675,13 +642,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0800, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_0900
+ * @tc.number: MultipleHapsInstall_0800
  * @tc.name: test to install haps with different bundleName in the input file path array
  * @tc.desc: 1.the bundleName is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0900, Function | SmallTest | Level0)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0800, Function | SmallTest | Level0)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_SECOND;
@@ -694,13 +661,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0900, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1000
+ * @tc.number: MultipleHapsInstall_0900
  * @tc.name: test to install haps with different version code in the input file path array
  * @tc.desc: 1.the version code is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1000, Function | SmallTest | Level0)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0900, Function | SmallTest | Level0)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -713,13 +680,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1000, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1100
+ * @tc.number: MultipleHapsInstall_1000
  * @tc.name: test to install haps with different version name in the input file path array
  * @tc.desc: 1.the version name is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1100, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1000, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -732,13 +699,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1100, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1200
+ * @tc.number: MultipleHapsInstall_1100
  * @tc.name: test to install haps with different releaseType target in the input file path array
  * @tc.desc: 1.the releaseType target is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1100, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -751,13 +718,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1300
+ * @tc.number: MultipleHapsInstall_1200
  * @tc.name: test to install haps with different releaseType compatible in the input file path array
  * @tc.desc: 1.the releaseType compatible is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1300, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -770,13 +737,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1300, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1400
+ * @tc.number: MultipleHapsInstall_1300
  * @tc.name: test to install haps with different vendor in the input file path array
  * @tc.desc: 1.the vendor is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1400, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1300, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -789,13 +756,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1400, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1500
+ * @tc.number: MultipleHapsInstall_1400
  * @tc.name: test to install haps which contain more than one entry hap in the array
  * @tc.desc: 1.there are more than one entry hap in the array
  *           2.the installation is failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1500, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1400, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -807,13 +774,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1500, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1600
+ * @tc.number: MultipleHapsInstall_1500
  * @tc.name: test to install haps which contain same feature hap in the array
  * @tc.desc: 1.there are two same feature haps in the array
  *           2.the installation is failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1600, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1500, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -827,13 +794,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1600, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1700
+ * @tc.number: MultipleHapsInstall_1600
  * @tc.name: test to install haps with valid paths in the input file path array
  * @tc.desc: 1.the vaild paths in the input file path array
  *           2.the installation result is successful
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1700, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1600, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -859,13 +826,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1700, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1800
+ * @tc.number: MultipleHapsInstall_1700
  * @tc.name: test to install haps which contain some feature haps in the array
  * @tc.desc: 1.there are two different feature haps in the array
  *           2.the installation is failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1800, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1700, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -892,13 +859,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1800, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1900
+ * @tc.number: MultipleHapsInstall_1800
  * @tc.name: test to install haps which contain invalid path in the array.
  * @tc.desc: 1.there is an invalid path in the array.
  *           2.the installation is failed.
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1900, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1800, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -911,7 +878,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1900, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2000
+ * @tc.number: MultipleHapsInstall_1900
  * @tc.name: test to install haps when one direction in the array.
  * @tc.desc: 1.the haps are placed under a same direction and put the direction in the array.
  *           2.the hap files under this direction are valid.
@@ -919,7 +886,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1900, Function | SmallTes
  *           4.the installation result is successful.
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2000, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1900, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -942,7 +909,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2000, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2100
+ * @tc.number: MultipleHapsInstall_2000
  * @tc.name: test to install haps when one direction in the array.
  * @tc.desc: 1.the haps are placed under a same direction and put the direction in the array.
  *           2.the hap files under this direction are valid.
@@ -950,7 +917,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2000, Function | SmallTes
  *           4.the installation result is successful.
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2100, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2000, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -973,13 +940,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2100, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2200
+ * @tc.number: MultipleHapsInstall_2100
  * @tc.name: test to install haps when one valid hap path and one direction in the array
  * @tc.desc: 1.one hap path and one direction are placed in the array
  *           2.the installation result is failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2200, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2100, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -992,13 +959,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2200, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2300
+ * @tc.number: MultipleHapsInstall_2200
  * @tc.name: test to install haps when one direction in the array
  * @tc.desc: 1.one direction are placed in the array, there is on invalid hap file under the direction.
  *           2.the installation result is failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2300, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2200, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_TEST2_PATH;
@@ -1009,13 +976,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2300, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2400
+ * @tc.number: MultipleHapsInstall_2300
  * @tc.name: test to install haps when one direction in the array
  * @tc.desc: 1.more than one entry hap under the direction.
  *           2.the installation result is failed.
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2400, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2300, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_TEST3_PATH;
@@ -1026,13 +993,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2400, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2500
+ * @tc.number: MultipleHapsInstall_2400
  * @tc.name: test to install haps when one direction in the array
  * @tc.desc: 1.same feature haps under the direction.
  *           2.the installation result is failed.
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2500, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2400, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -1044,13 +1011,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2500, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2600
+ * @tc.number: MultipleHapsInstall_2500
  * @tc.name: test to install haps with some of them having no sign info
  * @tc.desc: 1.sixth_rigth.hap has no sign info in the haps
  *           2.the installation result is failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2500, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -1060,7 +1027,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTes
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE);
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME);
     CheckFileNonExist();
 
     ApplicationInfo info;
@@ -1069,13 +1036,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2700
+ * @tc.number: MultipleHapsInstall_2600
  * @tc.name: test to install haps with different sign info in the input file path array
  * @tc.desc: 1.the sign info is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2700, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
@@ -1088,13 +1055,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2700, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2800
+ * @tc.number: MultipleHapsInstall_2700
  * @tc.name: test to install haps with different releaseType in the input file path array
  * @tc.desc: 1.the releaseType is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2800, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2700, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1104,6 +1071,30 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2800, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME);
     CheckFileNonExist();
+}
+
+/**
+ * @tc.number: MultipleHapsInstall_2800
+ * @tc.name: test to install service and application simultaneously
+ * @tc.desc: 1.the bundle type are different in the input file path array
+ *           2.the installation result is fail
+ * @tc.require: AR000GJ4KF
+ */
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2800, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    std::string firstBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
+    filePaths.emplace_back(firstBundleFile);
+    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    std::string secondBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_APPLICATION;
+    filePaths.clear();
+    filePaths.emplace_back(secondBundleFile);
+    installRes = InstallThirdPartyMultipleBundles(filePaths, false);
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_TYPE_ERROR);
+
+    ClearBundleInfo(SERVICE_BUNDLE_NAME);
 }
 
 /**
@@ -1121,7 +1112,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2900, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_APPLICATION;
+    std::string secondBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_APPLICATION;
     filePaths.clear();
     filePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(filePaths, false);
@@ -1140,12 +1131,12 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2900, Function | SmallTes
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3000, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
+    std::string firstBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_APPLICATION;
     filePaths.emplace_back(firstBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_APPLICATION;
+    std::string secondBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
     filePaths.clear();
     filePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(filePaths, false);
@@ -1164,30 +1155,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3000, Function | SmallTes
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3100, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_APPLICATION;
-    filePaths.emplace_back(firstBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_OK);
-
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
-    filePaths.clear();
-    filePaths.emplace_back(secondBundleFile);
-    installRes = InstallThirdPartyMultipleBundles(filePaths, false);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_TYPE_ERROR);
-
-    ClearBundleInfo(SERVICE_BUNDLE_NAME);
-}
-
-/**
- * @tc.number: MultipleHapsInstall_3200
- * @tc.name: test to install service and application simultaneously
- * @tc.desc: 1.the bundle type are different in the input file path array
- *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3200, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_APPLICATION;
     filePaths.emplace_back(firstBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
@@ -1203,13 +1170,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3200, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_3300
+ * @tc.number: MultipleHapsInstall_3200
  * @tc.name: test to install service
  * @tc.desc: 1.install entry service without service installed
  *           2.entry service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3300, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3200, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
@@ -1221,13 +1188,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3300, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_3400
+ * @tc.number: MultipleHapsInstall_3300
  * @tc.name: test to install service
  * @tc.desc: 1.install feature service without service installed
  *           2.feature service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3400, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3300, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
@@ -1239,14 +1206,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3400, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_3500
+ * @tc.number: MultipleHapsInstall_3400
  * @tc.name: test to install service
  * @tc.desc: 1.update entry service with entry service installed
  *           2.updated entry service has higher version than the installed entry service
  *           .entry service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3500, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3400, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
@@ -1264,14 +1231,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3500, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_3600
+ * @tc.number: MultipleHapsInstall_3500
  * @tc.name: test to install service
  * @tc.desc: 1.update entry service with entry service installed
  *           2.updated entry service has same version than the installed entry service
  *           3.entry service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3600, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3500, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
@@ -1286,14 +1253,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3600, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_3700
+ * @tc.number: MultipleHapsInstall_3600
  * @tc.name: test to install service
  * @tc.desc: 1.update entry service with entry service installed
  *           2.updated entry service has lower version than the installed entry service
  *           3.entry service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3700, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3600, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
@@ -1311,14 +1278,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3700, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_3800
+ * @tc.number: MultipleHapsInstall_3700
  * @tc.name: test to install service
  * @tc.desc: 1.update feature service with entry service installed
  *           2.updated feature service has same version than the installed entry service
  *           3.feature service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3800, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3700, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
@@ -1336,14 +1303,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3800, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_3900
+ * @tc.number: MultipleHapsInstall_3800
  * @tc.name: test to install service
  * @tc.desc: 1.update feature service with entry service installed
  *           2.updated feature service has higher version than the installed entry service
  *           3.feature service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3900, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3800, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
@@ -1361,14 +1328,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3900, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4000
+ * @tc.number: MultipleHapsInstall_3900
  * @tc.name: test to install service
  * @tc.desc: 1.update feature service with entry service installed
  *           2.updated feature service has lower version with the installed entry service
  *           3.feature service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4000, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_3900, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_ENTRY_SERVICE;
@@ -1386,14 +1353,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4000, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4100
+ * @tc.number: MultipleHapsInstall_4000
  * @tc.name: test to install service
  * @tc.desc: 1.update entry service with feature service installed
  *           2.updated entry service has same version with the installed feature service
  *           3.entry service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4100, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4000, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
@@ -1411,14 +1378,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4100, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4200
+ * @tc.number: MultipleHapsInstall_4100
  * @tc.name: test to install service
  * @tc.desc: 1.update entry service with feature service installed
  *           2.updated entry service has higher version than the installed feature service
  *           3.entry service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4200, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4100, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
@@ -1436,14 +1403,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4200, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4300
+ * @tc.number: MultipleHapsInstall_4200
  * @tc.name: test to install service
  * @tc.desc: 1.update entry service with feature service installed
  *           2.updated entry service has lower version with the installed feature service
  *           3.entry service install failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4300, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4200, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
@@ -1461,14 +1428,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4300, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4400
+ * @tc.number: MultipleHapsInstall_4300
  * @tc.name: test to install service
  * @tc.desc: 1.update feature service with feature service installed
  *           2.updated feature service has same version with the installed feature service
  *           3.feature service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4400, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4300, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
@@ -1483,14 +1450,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4400, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4500
+ * @tc.number: MultipleHapsInstall_4400
  * @tc.name: test to install service
  * @tc.desc: 1.update feature service with feature service installed
  *           2.updated feature service has higher version with the installed feature service
  *           3.feature service install successfully
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4500, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4400, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
@@ -1508,14 +1475,14 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4500, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4600
+ * @tc.number: MultipleHapsInstall_4500
  * @tc.name: test to install service
  * @tc.desc: 1.update feature service with feature service installed
  *           2.updated feature service has lower version with the installed feature service
  *           3.feature service install failed
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4600, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4500, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + SAME_VERSION_FEATURE_SERVICE;
@@ -1534,13 +1501,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4600, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4700
+ * @tc.number: MultipleHapsInstall_4600
  * @tc.name: test to install haps with different releaseType in the different input file path array
  * @tc.desc: 1.the releaseType is differnet in the different input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4700, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4600, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1560,13 +1527,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4700, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4800
+ * @tc.number: MultipleHapsInstall_4700
  * @tc.name: test to install haps with different version name in the different input file path array
  * @tc.desc: 1.the version name is differnet in the different input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4800, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4700, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1586,13 +1553,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4800, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4900
+ * @tc.number: MultipleHapsInstall_4800
  * @tc.name: test to install haps with different minCompatibleVersionCode in the input file path array
  * @tc.desc: 1.the minCompatibleVersionCode is differnet in the input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4800, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_COMPATIBLE_VERSION_CODE;
@@ -1605,13 +1572,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5000
+ * @tc.number: MultipleHapsInstall_4900
  * @tc.name: test to install haps with different minCompatibleVersionCode in the different input file path array
  * @tc.desc: 1.the minCompatibleVersionCode is differnet in the different input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5000, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_COMPATIBLE_VERSION_CODE;
@@ -1631,13 +1598,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5000, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5100
+ * @tc.number: MultipleHapsInstall_5000
  * @tc.name: test to install haps with different vendor in the different input file path array
  * @tc.desc: 1.the vendor is differnet in the input different file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5000, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1657,13 +1624,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5200
+ * @tc.number: MultipleHapsInstall_5100
  * @tc.name: test to install haps with different releaseType target in the different input file path array
  * @tc.desc: 1.the releaseType target is differnet in the different input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1683,13 +1650,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5300
+ * @tc.number: MultipleHapsInstall_5200
  * @tc.name: test to install haps with different releaseType compatible in the different input file path array
  * @tc.desc: 1.the releaseType compatible is differnet in the different input file path array
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5300, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1710,13 +1677,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5300, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5400
+ * @tc.number: MultipleHapsInstall_5300
  * @tc.name: test to install haps with same moduelName
  * @tc.desc: 1.the moduleName is different in the same packageName hap
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5400, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5300, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1736,13 +1703,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5400, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5500
+ * @tc.number: MultipleHapsInstall_5400
  * @tc.name: test to install haps with same moduelName
  * @tc.desc: 1.the moduleType is different in the same packageName hap
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5500, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5400, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
@@ -1762,13 +1729,13 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5500, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5600
+ * @tc.number: MultipleHapsInstall_5500
  * @tc.name: test to install haps with same moduelName
  * @tc.desc: 1.the moduleName is same in the different packageName hap
  *           2.the installation result is fail
  * @tc.require: AR000GJ4KF
  */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5600, Function | SmallTest | Level1)
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5500, Function | SmallTest | Level1)
 {
     std::vector<std::string> filePaths;
     std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;

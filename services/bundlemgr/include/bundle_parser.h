@@ -62,13 +62,11 @@ public:
      * @brief Parse bundleNames by the configFile.
      * @param configFile Indicates the path of configFile.
      * @param uninstallList Indicates the uninstallList.
-     * @param recoverList Indicates the recoverList.
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
     ErrCode ParsePreUnInstallConfig(
         const std::string &configFile,
-        std::set<std::string> &uninstallList,
-        std::set<std::string> &recoverList) const;
+        std::set<std::string> &uninstallList) const;
     /**
      * @brief Parse PreBundleConfigInfo by the configFile.
      * @param configFile Indicates the path of configFile.

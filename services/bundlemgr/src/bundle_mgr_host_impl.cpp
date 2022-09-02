@@ -28,7 +28,9 @@
 #include "bundle_util.h"
 #include "bundle_verify_mgr.h"
 #include "directory_ex.h"
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
+#endif
 #include "element_name.h"
 #include "if_system_ability_manager.h"
 #include "installd_client.h"
@@ -905,8 +907,7 @@ bool BundleMgrHostImpl::DumpBundleInfo(
         BundleFlag::GET_BUNDLE_WITH_ABILITIES |
         BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
-        BundleFlag::GET_BUNDLE_WITH_HASH_VALUE |
-        BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, bundleInfo, userId)) {
+        BundleFlag::GET_BUNDLE_WITH_HASH_VALUE, bundleInfo, userId)) {
         APP_LOGE("get bundleInfo(%{public}s) failed", bundleName.c_str());
         return false;
     }
@@ -1196,14 +1197,18 @@ bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
 bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
     DistributedBundleInfo &distributedBundleInfo)
 {
-    APP_LOGD("start GetDistributedBundleInfo, networkId : %{public}s, bundleName : %{public}s",
-        networkId.c_str(), bundleName.c_str());
+    APP_LOGD("start GetDistributedBundleInfo, bundleName : %{public}s", bundleName.c_str());
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     auto distributedBundleMgr = GetDistributedBundleMgrService();
     if (distributedBundleMgr == nullptr) {
         APP_LOGE("DistributedBundleMgrService is nullptr");
         return false;
     }
     return distributedBundleMgr->GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
+#else
+    APP_LOGW("DISTRIBUTED_BUNDLE_FRAMEWORK is false");
+    return false;
+#endif
 }
 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32_t &flag, const int32_t &userId,
@@ -1292,6 +1297,7 @@ const std::shared_ptr<BundleDataMgr> BundleMgrHostImpl::GetDataMgrFromService()
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 }
 
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrService()
 {
     auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -1303,6 +1309,7 @@ const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrServ
         saMgr->CheckSystemAbility(OHOS::DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     return OHOS::iface_cast<IDistributedBms>(remoteObject);
 }
+#endif
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrHostImpl::GetConnectAbilityMgrFromService()
@@ -1734,22 +1741,22 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
     return sandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, requestUserId, info);
 }
 
-int32_t BundleMgrHostImpl::GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName)
+ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
 {
-    APP_LOGI("start to get file fd");
-    int32_t fd = -1;
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
-        return fd;
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return fd;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    fd = dataMgr->GetMediaFileDescriptor(bundleName, moduleName, abilityName);
-    return fd;
+    if (!dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len)) {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return ERR_OK;
 }
 
 void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)

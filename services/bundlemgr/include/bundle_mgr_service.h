@@ -134,18 +134,21 @@ protected:
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
 private:
-    /**
-     * @brief Initialize the bundle manager service context.
-     * @return Returns true if initialized successfully; returns false otherwise.
-     */
     bool Init();
-    /**
-     * @brief Clean the context of this bundle manager service.
-     * @return
-     */
     void SelfClean();
 
-    void BmsStart();
+    void InitThreadPool();
+    bool InitBundleMgrHost();
+    bool InitBundleInstaller();
+    void InitBundleDataMgr();
+    bool InitBundleUserMgr();
+    bool InitBundleEventHandler();
+    void InitDeviceManager();
+    void InitHidumpHelper();
+    void InitFreeInstall();
+    bool InitDefaultApp();
+    bool InitAppControl();
+    bool InitQuickFixManager();
 
 private:
     bool ready_ = false;
@@ -181,6 +184,14 @@ private:
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixManagerHostImpl> quickFixManagerHostImpl_;
 #endif
+
+#define CHECK_INIT_RESULT(result, errmsg)                                         \
+    do {                                                                          \
+        if (!(result)) {                                                          \
+            APP_LOGE(errmsg);                                                     \
+            return result;                                                        \
+        }                                                                         \
+    } while (0)
 
     DISALLOW_COPY_AND_MOVE(BundleMgrService);
 };

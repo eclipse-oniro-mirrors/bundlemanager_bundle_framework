@@ -31,6 +31,7 @@ ohos_systemtest("BmsCompatibleSystemTest") {
     "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle4:bmsThirdBundle4",
     "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle5:bmsThirdBundle5",
     "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle6:bmsThirdBundle6",
+    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundleDataAbility:bmsThirdBundleDataAbility",
     "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:libbms",

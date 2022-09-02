@@ -142,6 +142,8 @@ public:
 
     ErrCode IsExistDir(const std::string &dir, bool &isExist);
 
+    ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty);
+
 private:
     /**
      * @brief Get the installd proxy object.

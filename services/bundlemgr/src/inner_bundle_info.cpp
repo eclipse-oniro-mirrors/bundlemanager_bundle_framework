@@ -1636,7 +1636,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
 
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
-    baseApplicationInfo_->keepAlive = applicationInfo.keepAlive;
+    SetKeepAlive(applicationInfo.keepAlive);
     baseApplicationInfo_->bootable = applicationInfo.bootable;
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
@@ -1859,10 +1859,6 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
             APP_LOGE("get request permission state failed");
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
-    }
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_APPQF_INFO)
-        != GET_BUNDLE_WITH_APPQF_INFO) {
-        bundleInfo.appqfInfo = AppqfInfo();
     }
     GetBundleWithAbilities(flags, bundleInfo, userId);
     GetBundeleWithExtension(flags, bundleInfo, userId);
@@ -2650,14 +2646,14 @@ std::string InnerBundleInfo::GetModuleTypeByPackage(const std::string &packageNa
     return it->second.distro.moduleType;
 }
 
-AppqfInfo InnerBundleInfo::GetAppqfInfo() const
+AppQuickFix InnerBundleInfo::GetAppQuickFix() const
 {
-    return baseBundleInfo_->appqfInfo;
+    return baseApplicationInfo_->appQuickFix;
 }
 
-void InnerBundleInfo::SetAppqfInfo(const AppqfInfo &appqfInfo)
+void InnerBundleInfo::SetAppQuickFix(const AppQuickFix &appQuickFix)
 {
-    baseBundleInfo_->appqfInfo = appqfInfo;
+    baseApplicationInfo_->appQuickFix = appQuickFix;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

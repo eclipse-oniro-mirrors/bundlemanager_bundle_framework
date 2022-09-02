@@ -70,7 +70,6 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
         APP_LOGE("BatchInsert failed.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    APP_LOGD("BatchInsert num:%{public}lld.", insertNum);
     return ERR_OK;
 }
 

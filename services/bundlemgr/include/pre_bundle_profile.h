@@ -39,13 +39,11 @@ public:
      * @brief Transform the jsonBuf to bundleNames.
      * @param jsonBuf Indicates the jsonBuf.
      * @param uninstallList Indicates the uninstallList.
-     * @param recoverList Indicates the recoverList.
      * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
      */
     ErrCode TransformTo(
         const nlohmann::json &jsonBuf,
-        std::set<std::string> &uninstallList,
-        std::set<std::string> &recoverList) const;
+        std::set<std::string> &uninstallList) const;
     /**
      * @brief Transform the jsonBuf to preBundleConfigInfos.
      * @param jsonBuf Indicates the jsonBuf.

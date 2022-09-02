@@ -40,7 +40,7 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
     ErrCode resultCode = ERR_OK;
     if (installParam.userId == Constants::ALL_USERID) {
         auto userInstallParam = installParam;
-        for (auto userId : GetExistsCommonUserIs()) {
+        for (auto userId : GetExistsCommonUserIds()) {
             userInstallParam.userId = userId;
             userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
             resultCode = InstallBundle(
@@ -51,8 +51,9 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
         resultCode = InstallBundle(
             bundleFilePath, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
-
-    SaveHapToInstallPath(installParam.streamInstallMode);
+    if (resultCode == ERR_OK) {
+        SaveHapToInstallPath(installParam.streamInstallMode);
+    }
     statusReceiver_->OnFinished(resultCode, "");
     SendRemoveEvent();
 }
@@ -62,7 +63,7 @@ void BundleInstaller::Recover(const std::string &bundleName, const InstallParam 
     ErrCode resultCode = ERR_OK;
     if (installParam.userId == Constants::ALL_USERID) {
         auto userInstallParam = installParam;
-        for (auto userId : GetExistsCommonUserIs()) {
+        for (auto userId : GetExistsCommonUserIds()) {
             userInstallParam.userId = userId;
             userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
             resultCode = BaseBundleInstaller::Recover(bundleName, userInstallParam);
@@ -81,7 +82,7 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
     ErrCode resultCode = ERR_OK;
     if (installParam.userId == Constants::ALL_USERID) {
         auto userInstallParam = installParam;
-        for (auto userId : GetExistsCommonUserIs()) {
+        for (auto userId : GetExistsCommonUserIds()) {
             userInstallParam.userId = userId;
             userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
             resultCode = InstallBundle(
@@ -91,8 +92,9 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
     } else {
         resultCode = InstallBundle(bundleFilePaths, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
-
-    SaveHapToInstallPath(installParam.streamInstallMode);
+    if (resultCode == ERR_OK) {
+        SaveHapToInstallPath(installParam.streamInstallMode);
+    }
     statusReceiver_->OnFinished(resultCode, "");
     SendRemoveEvent();
 }
@@ -110,7 +112,7 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
     if (installParam.userId == Constants::ALL_USERID) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
-        for (auto userId : GetExistsCommonUserIs()) {
+        for (auto userId : GetExistsCommonUserIds()) {
             userInstallParam.userId = userId;
             resultCode = UninstallBundle(bundleName, userInstallParam);
             errCode.push_back(resultCode);
@@ -143,7 +145,7 @@ void BundleInstaller::Uninstall(
     if (installParam.userId == Constants::ALL_USERID) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
-        for (auto userId : GetExistsCommonUserIs()) {
+        for (auto userId : GetExistsCommonUserIds()) {
             userInstallParam.userId = userId;
             resultCode = UninstallBundle(bundleName, modulePackage, userInstallParam);
             errCode.push_back(resultCode);
@@ -188,7 +190,7 @@ void BundleInstaller::SendRemoveEvent() const
     }
 }
 
-std::set<int32_t> BundleInstaller::GetExistsCommonUserIs()
+std::set<int32_t> BundleInstaller::GetExistsCommonUserIds()
 {
     std::set<int32_t> userIds;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();

@@ -23,5 +23,6 @@ group("jsThirdBundle") {
     "bmsThirdBundle4:bmsThirdBundle4",
     "bmsThirdBundle5:bmsThirdBundle5",
     "bmsThirdBundle6:bmsThirdBundle6",
+    "bmsThirdBundleDataAbility:bmsThirdBundleDataAbility",
   ]
 }

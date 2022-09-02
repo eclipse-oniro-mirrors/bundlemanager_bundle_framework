@@ -28,6 +28,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "json_constants.h"
+#include "mock_quick_fix_callback.h"
 #include "mock_status_receiver.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_deployer.h"
@@ -47,6 +48,7 @@ const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string BUNDLE_NAME_DEMO = "com.example.demo.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hap";
 const std::string HAP_FILE_PATH2 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest3.hap";
+const std::string HQF_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hqf";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string QUICK_FIX_ABI = "arms";
@@ -55,7 +57,6 @@ const uint32_t QUICK_FIX_VERSION_CODE = 1;
 const uint32_t BUNDLE_VERSION_CODE = 1;
 const std::string QUICK_FIX_VERSION_NAME = "1.0";
 const std::string BUNDLE_VERSION_NAME = "1.0";
-const std::string EMPTY_STRING = "";
 const std::string PROVISION_TYPE_DEBUG = "debug";
 const std::string PROVISION_TYPE_RELEASE = "release";
 
@@ -106,13 +107,13 @@ public:
     void AddInnerBundleInfo(const std::string bundleName, const std::string provisionType = PROVISION_TYPE_RELEASE,
         QuickFixType type = QuickFixType::PATCH);
     void UninstallBundleInfo(const std::string bundleName);
-    void CheckAppqfInfo(const BundleInfo &bundleInfo) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<QuickFixDeployer> GetQuickFixDeployer();
     const std::shared_ptr<QuickFixDataMgr> GetQuickFixDataMgr() const;
     AppQuickFix CreateAppQuickFix(const nlohmann::json &object);
     void StartInstalldService() const;
     void StartBundleService();
+    sptr<IQuickFixManager> GetQuickFixManagerProxy();
 
 private:
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
@@ -221,11 +222,12 @@ void BmsBundleQuickFixTest::AddInnerBundleInfo(const std::string bundleName,
 {
     BundleInfo bundleInfo;
     bundleInfo.name = bundleName;
-    bundleInfo.appqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
-    bundleInfo.appqfInfo.versionName =  QUICK_FIX_VERSION_NAME;
-    bundleInfo.appqfInfo.cpuAbi = QUICK_FIX_ABI;
-    bundleInfo.appqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-    bundleInfo.appqfInfo.type = type;
+    AppqfInfo deployedAppqfInfo;
+    deployedAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    deployedAppqfInfo.versionName =  QUICK_FIX_VERSION_NAME;
+    deployedAppqfInfo.cpuAbi = QUICK_FIX_ABI;
+    deployedAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    deployedAppqfInfo.type = type;
     bundleInfo.versionCode = BUNDLE_VERSION_CODE;
     bundleInfo.versionName = BUNDLE_VERSION_NAME;
 
@@ -235,6 +237,7 @@ void BmsBundleQuickFixTest::AddInnerBundleInfo(const std::string bundleName,
         applicationInfo.debug = true;
         applicationInfo.appProvisionType = PROVISION_TYPE_DEBUG;
     }
+    applicationInfo.appQuickFix.deployedAppqfInfo = deployedAppqfInfo;
     applicationInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
     InnerBundleUserInfo userInfo;
     userInfo.bundleName = bundleName;
@@ -267,15 +270,6 @@ void BmsBundleQuickFixTest::UninstallBundleInfo(const std::string bundleName)
     EXPECT_TRUE(startRet);
     EXPECT_TRUE(finishRet);
 }
-
-void BmsBundleQuickFixTest::CheckAppqfInfo(const BundleInfo &bundleInfo) const
-{
-    EXPECT_EQ(QUICK_FIX_VERSION_CODE, bundleInfo.appqfInfo.versionCode);
-    EXPECT_EQ(QUICK_FIX_VERSION_NAME, bundleInfo.appqfInfo.versionName);
-    EXPECT_EQ(QUICK_FIX_ABI, bundleInfo.appqfInfo.cpuAbi);
-    EXPECT_EQ(QUICK_FIX_SO_PATH, bundleInfo.appqfInfo.nativeLibraryPath);
-}
-
 
 void BmsBundleQuickFixTest::StartInstalldService() const
 {
@@ -323,6 +317,25 @@ AppQuickFix BmsBundleQuickFixTest::CreateAppQuickFix(const nlohmann::json &objec
     return appQuickFix;
 }
 
+sptr<IQuickFixManager> BmsBundleQuickFixTest::GetQuickFixManagerProxy()
+{
+    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        APP_LOGE("GetSystemAbilityManager failed.");
+        return nullptr;
+    }
+    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (bundleMgrSa == nullptr) {
+        APP_LOGE("GetSystemAbility failed.");
+        return nullptr;
+    }
+    auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+    if (bundleMgr == nullptr) {
+        APP_LOGE("iface_cast failed.");
+        return nullptr;
+    }
+    return bundleMgr->GetQuickFixManagerProxy();
+}
 /**
  * @tc.number: BmsBundleQuickFixTest_0001
  * Function: CheckAppQuickFixInfos
@@ -658,7 +671,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0013, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0014
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5L
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0014, Function | SmallTest | Level0)
@@ -688,7 +701,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0014, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0015
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5L
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0015, Function | SmallTest | Level0)
@@ -719,7 +732,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0015, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0016
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5D
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest | Level0)
@@ -736,7 +749,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
         BundleInfo bundleInfo;
         ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
-        bundleInfo.appqfInfo.versionCode = 2;
+        bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.versionCode = 2;
         QuickFixChecker checker;
         ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR);
@@ -750,7 +763,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0017
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckHotReloadWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ5D
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0017, Function | SmallTest | Level0)
@@ -780,7 +793,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0017, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0018
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckHotReloadWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ7R
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0018, Function | SmallTest | Level0)
@@ -810,7 +823,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0018, Function | SmallTest
  * @tc.number: BmsBundleQuickFixTest_0019
  * Function: CheckCommonWithInstalledBundle
  * @tc.name: test CheckHotReloadWithInstalledBundle
- * @tc.require: issueI5N7AD
+ * @tc.require: issueI5MZ7R
  * @tc.desc: CheckCommonWithInstalledBundle
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0019, Function | SmallTest | Level0)
@@ -1031,105 +1044,83 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0025, Function | SmallTest
 }
 
 /**
- * @tc.number: GetBundleInfo_0100
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
-             2.get bundle info failed with empty bundle name
+ * @tc.number: BmsBundleQuickFixTest_0026
+ * Function: GetDeployQuickFixResult
+ * @tc.name: test GetDeployQuickFixResult
+ * @tc.require: issueI5N7AD
+ * @tc.desc: deploy hqf, GetDeployQuickFixResult.
  */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0100, Function | SmallTest | Level0)
-{
-    BundleInfo result;
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    bool ret = dataMgr->GetBundleInfo(
-        EMPTY_STRING, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_FALSE(ret);
-    EXPECT_EQ(EMPTY_STRING, result.name);
-}
-
-/**
- * @tc.number: GetBundleInfo_0200
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally and without any bundle
- *           2.get bundle info failed with no bundle in system
- */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0200, Function | SmallTest | Level0)
-{
-    BundleInfo bundleInfo;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, bundleInfo, USERID);
-    EXPECT_FALSE(ret);
-    EXPECT_EQ(EMPTY_STRING, bundleInfo.name);
-}
-
-/**
- * @tc.number: GetBundleInfo_0300
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normal
- *           2.get bundle info failed
- */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0026, Function | SmallTest | Level0)
 {
     AddInnerBundleInfo(BUNDLE_NAME);
 
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME_DEMO, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_FALSE(ret);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        // parse patch.json
+        nlohmann::json object = PATCH_JSON;
+        AppQuickFix appQuickFix = CreateAppQuickFix(object);
+        deployer->ToDeployQuickFixResult(appQuickFix);
+        DeployQuickFixResult result = deployer->GetDeployQuickFixResult();
+        EXPECT_EQ(result.bundleName, appQuickFix.bundleName);
+        EXPECT_EQ(result.bundleVersionCode, appQuickFix.versionCode);
+        EXPECT_EQ(result.patchVersionCode, appQuickFix.deployingAppqfInfo.versionCode);
+    }
 
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
- * @tc.number: GetBundleInfo_0400
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
- *           2.get AppqfInfo successfully
+ * @tc.number: BmsBundleQuickFixTest_0027
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: empty path, DeployQuickFix.
  */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0027, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfo(result);
-
-    UninstallBundleInfo(BUNDLE_NAME);
+    auto quickFixProxy= GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    std::vector<std::string> path;
+    ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
 /**
- * @tc.number: GetBundleInfo_0500
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
- *           2.get empty AppqfInfo
+ * @tc.number: BmsBundleQuickFixTest_0028
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: not hqf file, DeployQuickFix.
  */
-HWTEST_F(BmsBundleQuickFixTest, GetBundleInfo_0500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0028, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    auto quickFixProxy= GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    std::vector<std::string> path {HAP_FILE_PATH1};
+    ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
 
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, result, USERID);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(BUNDLE_NAME, result.name);
-    EXPECT_EQ(0, result.appqfInfo.versionCode);
-    EXPECT_EQ(EMPTY_STRING, result.appqfInfo.versionName);
-    EXPECT_EQ(EMPTY_STRING, result.appqfInfo.cpuAbi);
-    EXPECT_EQ(EMPTY_STRING, result.appqfInfo.nativeLibraryPath);
-
-    UninstallBundleInfo(BUNDLE_NAME);
+/**
+ * @tc.number: BmsBundleQuickFixTest_0029
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: not exist hqf file, DeployQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0029, Function | SmallTest | Level0)
+{
+    auto quickFixProxy= GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    std::vector<std::string> path {HQF_FILE_PATH1};
+    ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED);
 }
 } // OHOS

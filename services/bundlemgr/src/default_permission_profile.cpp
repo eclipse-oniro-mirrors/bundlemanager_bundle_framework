@@ -91,6 +91,14 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
                 parseResult = ERR_OK;
                 return ret;
             }
+
+            auto iter = defaultPermissions.find(defaultPermission);
+            if (iter != defaultPermissions.end()) {
+                APP_LOGD("Replace old defaultPermission(%{public}s)",
+                    defaultPermission.bundleName.c_str());
+                defaultPermissions.erase(iter);
+            }
+
             defaultPermissions.insert(defaultPermission);
         }
     }

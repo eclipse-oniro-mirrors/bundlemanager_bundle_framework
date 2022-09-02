@@ -686,8 +686,8 @@ public:
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
-    int32_t GetMediaFileDescriptor(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) const;
+    bool GetMediaData(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const;
 
     std::shared_mutex &GetStatusCallbackMutex();
 
@@ -699,7 +699,6 @@ public:
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
     void UpdateRemovable(const std::string &bundleName, bool removable);
-    void UpdateRecoverable(const std::string &bundleName, bool recoverable);
     void UpdatePrivilegeCapability(
         const std::string &bundleName, const ApplicationInfo &appInfo);
     bool FetchInnerBundleInfo(

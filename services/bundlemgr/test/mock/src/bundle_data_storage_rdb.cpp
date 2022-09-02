@@ -39,15 +39,15 @@ bool BundleDataStorageRdb::LoadAllData(std::map<std::string, InnerBundleInfo> &i
 
 bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
-    INNER_BUNDLE_INFOS.emplace(innerBundleInfo.GetBundleName(), innerBundleInfo);
+    INNER_BUNDLE_INFOS[innerBundleInfo.GetBundleName()] = innerBundleInfo;
     return true;
 }
 
 bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
-    auto iter = INNER_BUNDLE_INFOS.find(innerBundleInfo.GetBundleName());
-    if (iter != INNER_BUNDLE_INFOS.end()) {
-        INNER_BUNDLE_INFOS.erase(iter);
+    auto ret = INNER_BUNDLE_INFOS.erase(innerBundleInfo.GetBundleName());
+    if (ret == 0) {
+        return false;
     }
     return true;
 }

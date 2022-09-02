@@ -42,6 +42,12 @@ public:
      */
     static bool IsExistDir(const std::string &path);
     /**
+     * @brief Check whether a directory is empty.
+     * @param dir Indicates the directory path to be checked.
+     * @return Returns true if the directory is empty; returns false otherwise.
+     */
+    static bool IsDirEmpty(const std::string &dir);
+    /**
      * @brief Make a new directory including the parent path if not exist.
      * @param path Indicates the directory path to be checked.
      * @param isReadByOthers Indicates the directory whether read by other users.
@@ -172,16 +178,14 @@ public:
     static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath);
 
-    static void UnInitHandle();
-
 private:
-    static bool InitHandle();
+    static bool OpenHandle(void **handle);
+
+    static void CloseHandle(void **handle);
 
     static bool ProcessApplyDiffPatchPath(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
         std::vector<std::string> &diffFileNames);
-
-    static void *handle_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

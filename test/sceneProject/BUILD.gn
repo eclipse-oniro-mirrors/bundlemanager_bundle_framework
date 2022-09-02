@@ -18,6 +18,7 @@ group("test_hap") {
   deps += [
     # deps file
     "systemtest:systemtest_hap",
+    "tools:tooltest_hap",
     "unittest:unittest_hap",
   ]
 }

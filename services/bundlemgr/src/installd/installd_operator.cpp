@@ -30,6 +30,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "directory_ex.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -37,6 +38,7 @@ namespace {
 static const char LIB_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib/libdiff_patch_shared.z.so";
 static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patch_shared.z.so";
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
+using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
 static std::string HandleScanResult(
     const std::string &dir, const std::string &subName, ResultMode resultMode)
@@ -48,8 +50,6 @@ static std::string HandleScanResult(
     return dir + Constants::PATH_SEPARATOR + subName;
 }
 }
-
-void *InstalldOperator::handle_ = nullptr;
 
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
@@ -75,6 +75,11 @@ bool InstalldOperator::IsExistDir(const std::string &path)
         return false;
     }
     return S_ISDIR(buf.st_mode);
+}
+
+bool InstalldOperator::IsDirEmpty(const std::string &dir)
+{
+    return OHOS::IsEmptyFolder(dir);
 }
 
 bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthers)
@@ -130,6 +135,9 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         // handle native so
         if (IsNativeSo(entryName, targetSoPath, cpuAbi)) {
             ExtractTargetFile(extractor, entryName, targetSoPath, cpuAbi);
+            continue;
+        }
+        if (system::GetBoolParameter(Constants::COMPRESS_PROPERTY, false)) {
             continue;
         }
         const std::string dir = GetPathDir(entryName);
@@ -589,37 +597,42 @@ bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::
     return true;
 }
 
-bool InstalldOperator::InitHandle()
+bool InstalldOperator::OpenHandle(void **handle)
 {
-    if (handle_ != nullptr) {
-        return true;
+    APP_LOGI("InstalldOperator::OpenHandle start");
+    if (handle == nullptr) {
+        APP_LOGE("InstalldOperator::OpenHandle error handle is nullptr.");
+        return false;
     }
     if (IsExistDir(Constants::SYSTEM_LIB64)) {
-        handle_ = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+        *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     } else {
-        handle_ = dlopen(LIB_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+        *handle = dlopen(LIB_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     }
-    if (handle_ == nullptr) {
+    if (*handle == nullptr) {
         APP_LOGE("ApplyDiffPatch failed to open libdiff_patch_shared.z.so, err:%{public}s", dlerror());
         return false;
     }
+    APP_LOGI("InstalldOperator::OpenHandle end");
     return true;
 }
 
-void InstalldOperator::UnInitHandle()
+void InstalldOperator::CloseHandle(void **handle)
 {
-    if (handle_ != nullptr) {
-        dlclose(handle_);
-        handle_ = nullptr;
-        APP_LOGD("InstalldOperator::UnInitHandle, err:%{public}s", dlerror());
+    APP_LOGI("InstalldOperator::CloseHandle start");
+    if ((handle != nullptr) && (*handle != nullptr)) {
+        dlclose(*handle);
+        *handle = nullptr;
+        APP_LOGD("InstalldOperator::CloseHandle, err:%{public}s", dlerror());
     }
+    APP_LOGI("InstalldOperator::CloseHandle end");
 }
 
 bool InstalldOperator::ProcessApplyDiffPatchPath(
     const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath, std::vector<std::string> &oldSoFileNames, std::vector<std::string> &diffFileNames)
 {
-    APP_LOGD("ProcessApplyDiffPatchPath oldSoPath: %{private}s, diffFilePath: %{private}s, newSoPath: %{public}s",
+    APP_LOGI("ProcessApplyDiffPatchPath oldSoPath: %{private}s, diffFilePath: %{private}s, newSoPath: %{public}s",
         oldSoPath.c_str(), diffFilePath.c_str(), newSoPath.c_str());
     if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
         return false;
@@ -651,61 +664,60 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
             return false;
         }
     }
+    APP_LOGI("ProcessApplyDiffPatchPath end");
     return true;
 }
 
 bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath)
 {
-    APP_LOGD("ApplyDiffPatch start");
-    std::vector<std::string> oldSoFileNames;
-    std::vector<std::string> diffFileNames;
+    APP_LOGI("ApplyDiffPatch start");
+    std::vector<std::string> oldSoFileNames, diffFileNames;
+    if (InstalldOperator::IsDirEmpty(oldSoPath) || InstalldOperator::IsDirEmpty(diffFilePath)) {
+        APP_LOGD("oldSoPath or diffFilePath is empty, not require ApplyPatch");
+        return ERR_OK;
+    }
     if (!ProcessApplyDiffPatchPath(oldSoPath, diffFilePath, newSoPath, oldSoFileNames, diffFileNames)) {
         APP_LOGE("ApplyDiffPatch ProcessApplyDiffPatchPath failed");
         return false;
     }
-    std::string realOldSoPath;
-    std::string realDiffFilePath;
-    std::string realNewSoPath;
+    std::string realOldSoPath, realDiffFilePath, realNewSoPath;
     if (!PathToRealPath(oldSoPath, realOldSoPath) || !PathToRealPath(diffFilePath, realDiffFilePath) ||
         !PathToRealPath(newSoPath, realNewSoPath)) {
         APP_LOGE("ApplyDiffPatch Path is not real path");
         return false;
     }
-    // dlopen so
-    if (!InitHandle()) {
-        APP_LOGE("ApplyDiffPatch dlopen failed");
+    void *handle = nullptr;
+    if (!OpenHandle(&handle)) {
         return false;
     }
-    auto applyPatch = reinterpret_cast<int32_t(*)(const std::string, const std::string, const std::string)>(
-        dlsym(handle_, APPLY_PATCH_FUNCTION_NAME));
+    auto applyPatch = reinterpret_cast<ApplyPatch>(dlsym(handle, APPLY_PATCH_FUNCTION_NAME));
     if (applyPatch == nullptr) {
         APP_LOGE("ApplyDiffPatch failed to get applyPatch err:%{public}s", dlerror());
+        CloseHandle(&handle);
         return false;
     }
     std::vector<std::string> newSoList;
     for (const auto &diffFileName : diffFileNames) {
-        std::size_t pos = diffFileName.rfind(Constants::DIFF_SUFFIX);
-        std::string soFileName = diffFileName.substr(0, pos);
+        std::string soFileName = diffFileName.substr(0, diffFileName.rfind(Constants::DIFF_SUFFIX));
         APP_LOGD("ApplyDiffPatch soName: %{public}s, diffName: %{public}s", soFileName.c_str(), diffFileName.c_str());
-        auto iter = find(oldSoFileNames.begin(), oldSoFileNames.end(), soFileName);
-        if (iter != oldSoFileNames.end()) {
-            std::string oldSoFilePath = realOldSoPath + Constants::PATH_SEPARATOR + soFileName;
-            std::string diffPath = realDiffFilePath + Constants::PATH_SEPARATOR + diffFileName;
-            std::string newSoFilePath = realNewSoPath + Constants::PATH_SEPARATOR + soFileName;
-            int32_t ret = applyPatch(diffPath, oldSoFilePath, newSoFilePath);
+        if (find(oldSoFileNames.begin(), oldSoFileNames.end(), soFileName) != oldSoFileNames.end()) {
+            int32_t ret = applyPatch(realDiffFilePath + Constants::PATH_SEPARATOR + diffFileName,
+                                     realOldSoPath + Constants::PATH_SEPARATOR + soFileName,
+                                     realNewSoPath + Constants::PATH_SEPARATOR + soFileName);
             if (ret != ERR_OK) {
-                APP_LOGE("ApplyDiffPatch failed, diffPath:%{private}s, oldPath:%{private}s, newPath:%{private}s, "
-                         "errcode: %{public}d", diffPath.c_str(), oldSoFilePath.c_str(), newSoFilePath.c_str(), ret);
+                APP_LOGE("ApplyDiffPatch failed, applyPatch errcode: %{public}d", ret);
                 for (const auto &file : newSoList) {
                     DeleteDir(file);
                 }
+                CloseHandle(&handle);
                 return false;
             }
-            newSoList.emplace_back(newSoFilePath);
+            newSoList.emplace_back(realNewSoPath + Constants::PATH_SEPARATOR + soFileName);
         }
     }
-    APP_LOGD("ApplyDiffPatch end");
+    CloseHandle(&handle);
+    APP_LOGI("ApplyDiffPatch end");
     return true;
 }
 }  // namespace AppExecFwk

@@ -35,6 +35,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
+const std::string DATA_APP_PATH = "/data/app";
 } // namespace
 
 BundleMgrClientImpl::BundleMgrClientImpl()
@@ -107,7 +108,7 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
 bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
-    bool isCompressed = false;
+    bool isCompressed = !hapModuleInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? hapModuleInfo.hapPath : hapModuleInfo.resourcePath;
     if (!GetResProfileByMetadata(hapModuleInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
@@ -123,7 +124,7 @@ bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, c
 bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
-    bool isCompressed = false;
+    bool isCompressed = !extensionInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
     if (!GetResProfileByMetadata(extensionInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
@@ -139,7 +140,7 @@ bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extension
 bool BundleMgrClientImpl::GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
     std::vector<std::string> &profileInfos) const
 {
-    bool isCompressed = false;
+    bool isCompressed = !abilityInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? abilityInfo.hapPath : abilityInfo.resourcePath;
     if (!GetResProfileByMetadata(abilityInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
@@ -156,9 +157,9 @@ bool BundleMgrClientImpl::GetProfileFromExtension(const ExtensionAbilityInfo &ex
     const std::string &metadataName, std::vector<std::string> &profileInfos) const
 {
     APP_LOGD("get extension config file from extension dir begin");
-    bool isCompressed = false;
+    bool isCompressed = !extensionInfo.hapPath.empty();
     std::string resPath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
-    if (!ConvertResourcePath(extensionInfo.bundleName, resPath)) {
+    if (!ConvertResourcePath(extensionInfo.bundleName, resPath, isCompressed)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
@@ -175,9 +176,9 @@ bool BundleMgrClientImpl::GetProfileFromAbility(const AbilityInfo &abilityInfo, 
     std::vector<std::string> &profileInfos) const
 {
     APP_LOGD("get ability config file from ability begin");
-    bool isCompressed = false;
+    bool isCompressed = !abilityInfo.hapPath.empty();
     std::string resPath = isCompressed ? abilityInfo.hapPath : abilityInfo.resourcePath;
-    if (!ConvertResourcePath(abilityInfo.bundleName, resPath)) {
+    if (!ConvertResourcePath(abilityInfo.bundleName, resPath, isCompressed)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
@@ -194,9 +195,9 @@ bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, 
     std::vector<std::string> &profileInfos) const
 {
     APP_LOGD("get hap module config file from hap begin");
-    bool isCompressed = false;
+    bool isCompressed = !hapModuleInfo.hapPath.empty();
     std::string resPath = isCompressed ? hapModuleInfo.hapPath : hapModuleInfo.resourcePath;
-    if (!ConvertResourcePath(hapModuleInfo.bundleName, resPath)) {
+    if (!ConvertResourcePath(hapModuleInfo.bundleName, resPath, isCompressed)) {
         APP_LOGE("ConvertResourcePath failed %{public}s", resPath.c_str());
         return false;
     }
@@ -209,11 +210,16 @@ bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, 
     return GetResConfigFile(innerHapModuleInfo, metadataName, profileInfos);
 }
 
-bool BundleMgrClientImpl::ConvertResourcePath(const std::string &bundleName, std::string &resPath) const
+bool BundleMgrClientImpl::ConvertResourcePath(
+    const std::string &bundleName, std::string &resPath, bool isCompressed) const
 {
     if (resPath.empty()) {
         APP_LOGE("res path is empty");
         return false;
+    }
+    if (isCompressed && (resPath.find(DATA_APP_PATH) != 0)) {
+        APP_LOGD("no need to convert to sandbox path");
+        return true;
     }
     std::string innerStr = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
     if (resPath.find(innerStr) == std::string::npos) {
@@ -327,7 +333,24 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
     // hap is compressed status, get file content.
     if (isCompressed) {
         APP_LOGD("compressed status.");
-        return false;
+        std::unique_ptr<uint8_t[]> fileContentPtr = nullptr;
+        size_t len = 0;
+        if (resMgr->GetProfileDataByName(profileName.c_str(), len, fileContentPtr) != SUCCESS) {
+            APP_LOGE("GetProfileDataByName failed");
+            return false;
+        }
+        if (fileContentPtr == nullptr || len == 0) {
+            APP_LOGE("invalid data");
+            return false;
+        }
+        std::string rawData(fileContentPtr.get(), fileContentPtr.get() + len);
+        nlohmann::json profileJson = nlohmann::json::parse(rawData, nullptr, false);
+        if (profileJson.is_discarded()) {
+            APP_LOGE("bad profile file");
+            return false;
+        }
+        profileInfos.emplace_back(profileJson.dump());
+        return true;
     }
     // hap is decompressed status, get file path then read file.
     std::string resPath;
@@ -345,22 +368,10 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
 }
 #endif
 
-bool BundleMgrClientImpl::IsFileExisted(const std::string &filePath, const std::string &suffix) const
+bool BundleMgrClientImpl::IsFileExisted(const std::string &filePath) const
 {
     if (filePath.empty()) {
         APP_LOGE("the file is not existed due to empty file path");
-        return false;
-    }
-
-    auto position = filePath.rfind('.');
-    if (position == std::string::npos) {
-        APP_LOGE("filePath no suffix");
-        return false;
-    }
-
-    std::string suffixStr = filePath.substr(position);
-    if (LowerStr(suffixStr) != suffix) {
-        APP_LOGE("file is not json");
         return false;
     }
 
@@ -373,7 +384,7 @@ bool BundleMgrClientImpl::IsFileExisted(const std::string &filePath, const std::
 
 bool BundleMgrClientImpl::TransformFileToJsonString(const std::string &resPath, std::string &profile) const
 {
-    if (!IsFileExisted(resPath, Constants::PROFILE_FILE_SUFFIX)) {
+    if (!IsFileExisted(resPath)) {
         APP_LOGE("the file is not existed");
         return false;
     }

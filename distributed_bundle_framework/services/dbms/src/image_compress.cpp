@@ -477,7 +477,7 @@ int32_t ImageCompress::EncodeJPGFile(std::shared_ptr<ImageBuffer>& imageBuffer)
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
     unsigned char* outBuffer = nullptr;
-    size_t compressSize = 0;
+    unsigned long compressSize = 0;
     jpeg_mem_dest(&cinfo, &outBuffer, &compressSize);
     cinfo.image_width = imageBuffer->GetWidth();
     cinfo.image_height = imageBuffer->GetHeight();

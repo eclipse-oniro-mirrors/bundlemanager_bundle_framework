@@ -414,14 +414,14 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0200, Function | MediumTest | Level2)
 }
 
 /**
- * @tc.number: BMS_Install_0400
+ * @tc.number: BMS_Install_0300
  * @tc.name: test the installation of a big third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a big third-party bundle
  *           2.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0400, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_0300, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_0400" << std::endl;
+    std::cout << "START BMS_Install_0300" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle13.hap";
 
@@ -446,20 +446,20 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0400, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_0400" << std::endl;
+    std::cout << "END BMS_Install_0300" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_0500
+ * @tc.number: BMS_Install_0400
  * @tc.name: test the replacement of a third-party bundle,which has been installed in system
  * @tc.desc: 1.a third-party bundle has been installed in system
  *           2.under '/data/test/bms_bundle',there is a third-party bundle,whose version is lower than
  *                    the installed one
  *           3.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0500, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_0400, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_0500" << std::endl;
+    std::cout << "START BMS_Install_0400" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle9.hap";
     std::string installMsg;
 
@@ -476,20 +476,20 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0500, Function | MediumTest | Level2)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_0500" << std::endl;
+    std::cout << "END BMS_Install_0400" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_0600
+ * @tc.number: BMS_Install_0500
  * @tc.name: test the replacement of a third-party bundle ,which has been installed in system
  * @tc.desc: 1.a third-party bundle has been installed in system
  *           2.under '/data/test/bms_bundle',there is a third-party bundle,whose version is higher than
  *                    the installed bundle
  *           3.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0600, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_0500, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_0600" << std::endl;
+    std::cout << "START BMS_Install_0500" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
     std::string installMsg;
 
@@ -509,92 +509,18 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0600, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_0600" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_0700
- * @tc.name: test the installation of abnormal bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there are two abnormal bundles
- *           2.install the bundles
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0700, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_0700" << std::endl;
-    std::string installMsg;
-    std::vector<std::string> bundlePaths = {
-        THIRD_BUNDLE_PATH + "bmsThirdBundle12.rpk", THIRD_BUNDLE_PATH + "bmsThirdBundle11.hap"};
-    std::vector<std::string> bundleNames = {THIRD_BASE_BUNDLE_NAME + "12", THIRD_BASE_BUNDLE_NAME + "11"};
-    std::vector<std::string> errorCodes = {
-        "Failure[ERR_INSTALL_INVALID_HAP_NAME]", "Failure[ERR_INSTALL_PARSE_NO_PROFILE]"};
-
-    int32_t size = bundlePaths.size();
-    for (int i = 0; i < size; i++) {
-        InstallBundle(bundlePaths[i], InstallFlag::NORMAL, installMsg);
-        EXPECT_EQ(installMsg, errorCodes[i]);
-        CheckFileNonExist(bundleNames[i]);
-    }
-
-    std::vector<BundleInfo> bundleInfos;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos);
-
-    bool isSubStrExist = false;
-    for (auto iter = bundleInfos.begin(); iter != bundleInfos.end(); iter++) {
-        for (std::string bundleName : bundleNames) {
-            isSubStrExist = IsSubStr(iter->name, bundleName);
-            EXPECT_FALSE(isSubStrExist);
-        }
-    }
-    std::cout << "END BMS_Install_0700" << std::endl;
+    std::cout << "END BMS_Install_0500" << std::endl;
 }
 
 /**
  * @tc.number: BMS_Install_0800
  * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,which have no bundlename
- *                    in config.json
- *           2.install the bundle
- *           3.install the bundle once again
+ * @tc.desc: 1.install a third-party bundle,which is not exist
+ *           2.install the bundle once again
  */
 HWTEST_F(BmsInstallSystemTest, BMS_Install_0800, Function | MediumTest | Level2)
 {
     std::cout << "START BMS_Install_0800" << std::endl;
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle14.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "14";
-
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_0800" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_0900
- * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.install a third-party bundle,which is not exist
- *           2.install the bundle once again
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_0900, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_0900" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "notexist.hap";
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
@@ -602,37 +528,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0900, Function | MediumTest | Level2)
 
     InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Failure[MSG_ERR_INSTALL_FILE_PATH_INVALID]");
-    std::cout << "END BMS_Install_0900" << std::endl;
+    std::cout << "END BMS_Install_0800" << std::endl;
 }
 
 /**
  * @tc.number: BMS_Install_1000
- * @tc.name:  test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle without signa
- *           2.install the bundle
- *           3.check the bundle info
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_1000, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_1000" << std::endl;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundleNoSign.hap";
-    std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[MSG_ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE]");
-
-    std::cout << "END BMS_Install_1000" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_1100
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.there are two haps,whose type are entry and feature
  *           2.install the feature hap,and then install the entry hap
  *           3.check the bundle info
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_1100, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_1000, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_1100" << std::endl;
+    std::cout << "START BMS_Install_1000" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle5.hap";
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     std::string installMsg;
@@ -654,20 +562,48 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1100, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    std::cout << "END BMS_Install_1000" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_1100
+ * @tc.name: test the installation of a third-party bundle
+ * @tc.desc: 1.there is an app which includes a hap without an ability
+ *           2.install the bundle
+ *           3.check the bundle info
+ */
+HWTEST_F(BmsInstallSystemTest, BMS_Install_1100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_1100" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
+    std::string installMsg;
+
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
+
+    std::string version = "1.0";
+    CheckBundleInfo(version, bundleName);
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_1100" << std::endl;
 }
 
 /**
  * @tc.number: BMS_Install_1200
  * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.there is an app which includes a hap without an ability
+ * @tc.desc: 1.there is an app which includes a hap with an ability
  *           2.install the bundle
  *           3.check the bundle info
  */
 HWTEST_F(BmsInstallSystemTest, BMS_Install_1200, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Install_1200" << std::endl;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string installMsg;
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
@@ -688,14 +624,14 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1200, Function | MediumTest | Level1)
 /**
  * @tc.number: BMS_Install_1300
  * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.there is an app which includes a hap with an ability
+ * @tc.desc: 1.there is an app which includes a hap with two abilities
  *           2.install the bundle
  *           3.check the bundle info
  */
 HWTEST_F(BmsInstallSystemTest, BMS_Install_1300, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Install_1300" << std::endl;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
     std::string installMsg;
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
@@ -716,41 +652,13 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1300, Function | MediumTest | Level1)
 /**
  * @tc.number: BMS_Install_1400
  * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.there is an app which includes a hap with two abilities
+ * @tc.desc: 1.there is an app which includes two haps without an ability
  *           2.install the bundle
  *           3.check the bundle info
  */
 HWTEST_F(BmsInstallSystemTest, BMS_Install_1400, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Install_1400" << std::endl;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
-    std::string installMsg;
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-
-    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-
-    std::string version = "1.0";
-    CheckBundleInfo(version, bundleName);
-    std::string uninstallMsg;
-    UninstallBundle(bundleName, uninstallMsg);
-    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_1400" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_1500
- * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.there is an app which includes two haps without an ability
- *           2.install the bundle
- *           3.check the bundle info
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_1500, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Install_1500" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
     std::string installMsg;
 
@@ -770,13 +678,48 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1500, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    std::cout << "END BMS_Install_1400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_1500
+ * @tc.name: test the installation of a third-party bundle
+ * @tc.desc: 1.there is an app which includes two haps,the first has one ability,the other
+ *             doesn't any ability
+ *           2.install the bundle
+ *           3.check the bundle info
+ */
+HWTEST_F(BmsInstallSystemTest, BMS_Install_1500, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_1500" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
+    std::string installMsg;
+
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
+
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
+
+    modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
+
+    std::string version = "1.0";
+    CheckBundleInfo(version, bundleName);
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_1500" << std::endl;
 }
 
 /**
  * @tc.number: BMS_Install_1600
  * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.there is an app which includes two haps,the first has one ability,the other
+ * @tc.desc: 1.there is an app which includes two haps,the first has two abilities,the other
  *             doesn't any ability
  *           2.install the bundle
  *           3.check the bundle info
@@ -790,7 +733,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1600, Function | MediumTest | Level1)
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
-    bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
+    bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle5.hap";
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
@@ -811,7 +754,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1600, Function | MediumTest | Level1)
 /**
  * @tc.number: BMS_Install_1700
  * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.there is an app which includes two haps,the first has two abilities,the other
+ * @tc.desc: 1.there is an app which includes two haps,the first has an ability,the other
  *             doesn't any ability
  *           2.install the bundle
  *           3.check the bundle info
@@ -819,41 +762,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1600, Function | MediumTest | Level1)
 HWTEST_F(BmsInstallSystemTest, BMS_Install_1700, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Install_1700" << std::endl;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
-    std::string installMsg;
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
-
-    bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle5.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-
-    modulePackage = THIRD_BASE_BUNDLE_NAME + ".h2";
-
-    std::string version = "1.0";
-    CheckBundleInfo(version, bundleName);
-    std::string uninstallMsg;
-    UninstallBundle(bundleName, uninstallMsg);
-    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_1700" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_1800
- * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.there is an app which includes two haps,the first has an ability,the other
- *             doesn't any ability
- *           2.install the bundle
- *           3.check the bundle info
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_1800, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Install_1800" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string installMsg;
 
@@ -870,19 +778,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1800, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_1800" << std::endl;
+    std::cout << "END BMS_Install_1700" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_1900
+ * @tc.number: BMS_Install_1800
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.there is an app which includes two haps with an ability
  *           2.install the bundle
  *           3.check the bundle info
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_1900, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_1800, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_1900" << std::endl;
+    std::cout << "START BMS_Install_1800" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string installMsg;
 
@@ -904,20 +812,20 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1900, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_1900" << std::endl;
+    std::cout << "END BMS_Install_1800" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2000
+ * @tc.number: BMS_Install_1900
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.there is an app which includes two haps,the first has an ability,the other
  *             has two abilities
  *           2.install the bundle
  *           3.check the bundle info
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2000, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_1900, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_2000" << std::endl;
+    std::cout << "START BMS_Install_1900" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string installMsg;
 
@@ -940,20 +848,20 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2000, Function | MediumTest | Level1)
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
     
-    std::cout << "END BMS_Install_2000" << std::endl;
+    std::cout << "END BMS_Install_1900" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2100
+ * @tc.number: BMS_Install_2000
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.there are two haps,whose type is entry,the first has two abilities,the other
  *             doesn't have an ability
  *           2.install the bundle
  *           3.check the bundle info
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2100, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2000, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_2100" << std::endl;
+    std::cout << "START BMS_Install_2000" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
     std::string installMsg;
 
@@ -973,20 +881,20 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2100, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "START BMS_Install_2100" << std::endl;
+    std::cout << "START BMS_Install_2000" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2200
+ * @tc.number: BMS_Install_2100
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.there is an app which includes two haps,the first has two abilities,the other
  *             has an ability
  *           2.install the bundle
  *           3.check the bundle info
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2200, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2100, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_2200" << std::endl;
+    std::cout << "START BMS_Install_2100" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
     std::string installMsg;
 
@@ -1008,19 +916,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2200, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "START BMS_Install_2200" << std::endl;
+    std::cout << "START BMS_Install_2100" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2300
+ * @tc.number: BMS_Install_2200
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.there is an app which includes two haps with two abilities
  *           2.install the bundle
  *           3.check the bundle info
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2300, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2200, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_2300" << std::endl;
+    std::cout << "START BMS_Install_2200" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
     std::string installMsg;
 
@@ -1043,19 +951,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2300, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    std::cout << "END BMS_Install_2300" << std::endl;
+    std::cout << "END BMS_Install_2200" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2400
+ * @tc.number: BMS_Install_2300
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose module-abilities-name is null
  *             in config.json
  *           2.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2400, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2300, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_2400" << std::endl;
+    std::cout << "START BMS_Install_2300" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e23.hap";
 
@@ -1073,18 +981,18 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2400, Function | MediumTest | Level2)
     EXPECT_FALSE(getInfoResult);
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
-    std::cout << "END BMS_Install_2400" << std::endl;
+    std::cout << "END BMS_Install_2300" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2500
+ * @tc.number: BMS_Install_2400
  * @tc.name:  test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there are two third-party bundles
  *           2.install these bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2500, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2400, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_2500" << std::endl;
+    std::cout << "START BMS_Install_2400" << std::endl;
     std::string bundleName = "com.third.hiworld.example1";
     std::string installMsg;
     
@@ -1098,46 +1006,18 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2500, Function | MediumTest | Level2)
 
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
-    std::cout << "END BMS_Install_2500" << std::endl;
+    std::cout << "END BMS_Install_2400" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2600
- * @tc.name:  test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose module-distro-moduleName is null
- *              in config.json
- *           2.install these bundle
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2600, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_2600" << std::endl;
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "e22.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR]");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_2600" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_2700
+ * @tc.number: BMS_Install_2500
  * @tc.name:  test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a bundle with three abilities
  *           2.install these bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2700, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2500, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_2700" << std::endl;
+    std::cout << "START BMS_Install_2500" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle41.hap";
     std::string installMsg;
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
@@ -1177,18 +1057,18 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2700, Function | MediumTest | Level1)
 
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
-    std::cout << "END BMS_Install_2700" << std::endl;
+    std::cout << "END BMS_Install_2500" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2800
+ * @tc.number: BMS_Install_2600
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose bundlename is not according to
  * specification in config.json 2.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2800, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2600, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_2800" << std::endl;
+    std::cout << "START BMS_Install_2600" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e3.hap";
 
@@ -1204,19 +1084,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2800, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_2800" << std::endl;
+    std::cout << "END BMS_Install_2600" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_2900
+ * @tc.number: BMS_Install_2700
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose module-abilities-type is null
  *             in config.json
  *           2.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_2900, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2700, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_2900" << std::endl;
+    std::cout << "START BMS_Install_2700" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e21.hap";
 
@@ -1232,76 +1112,20 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2900, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_2900" << std::endl;
+    std::cout << "END BMS_Install_2700" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_3000
- * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose modulename is null
- *             in config.json
- *           2.install the bundle
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_3000, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_3000" << std::endl;
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle14.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_MISSING_PROP]");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_3000" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_3100
- * @tc.name: test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose module package is null
- *             in config.json
- *           2.install the bundle
- */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_3100, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_Install_3100" << std::endl;
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "e12.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR]");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_3100" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_3200
+ * @tc.number: BMS_Install_2900
  * @tc.name:  test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there are two third-party bundles
  *             with different app name
  *           2.install these bundle
  *           3.check results
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_3200, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_2900, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Install_3200" << std::endl;
+    std::cout << "START BMS_Install_2900" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string installMsg;
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
@@ -1323,19 +1147,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3200, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     UninstallBundle(bundleName2, uninstallMsg);
-    std::cout << "END BMS_Install_3200" << std::endl;
+    std::cout << "END BMS_Install_2900" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_3300
+ * @tc.number: BMS_Install_3000
  * @tc.name:  test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there are two third-party bundles
  *           2.the bundle which has the same bundleName and version as system bundle
  *           3.install these bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_3300, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_3000, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_3300" << std::endl;
+    std::cout << "START BMS_Install_3000" << std::endl;
     std::string bundleFilePath = SYSTEM_BUNDLE_PATH + "bmsSystemBundle1.hap";
     std::string bundleName = SYSTEM_BASE_BUNDLE_NAME + "s1";
     std::string message;
@@ -1353,19 +1177,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3300, Function | MediumTest | Level2)
 
     UninstallBundle(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
-    std::cout << "END BMS_Install_3300" << std::endl;
+    std::cout << "END BMS_Install_3000" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_3400
+ * @tc.number: BMS_Install_3100
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose versionCode is null
  *                    in config.json
  *           2.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_3400, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_3100, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_3400" << std::endl;
+    std::cout << "START BMS_Install_3100" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e4.hap";
 
@@ -1381,19 +1205,19 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3400, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_3400" << std::endl;
+    std::cout << "END BMS_Install_3100" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_3500
+ * @tc.number: BMS_Install_3200
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,which versionCode's type is not int
  *             in config.json
  *           2.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_3500, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_3200, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_3500" << std::endl;
+    std::cout << "START BMS_Install_3200" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e5.hap";
 
@@ -1409,24 +1233,24 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3500, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_3500" << std::endl;
+    std::cout << "END BMS_Install_3200" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Install_3600
+ * @tc.number: BMS_Install_3300
  * @tc.name: test the installation of a third-party bundle
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an abnormal bundle,whose versionCode is minus
  *             in config.json
  *           2.install the bundle
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_3600, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_3300, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_Install_3600" << std::endl;
+    std::cout << "START BMS_Install_3300" << std::endl;
     std::string installMsg;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e6.hap";
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_BAD_PROFILE]");
+    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR]");
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     BundleInfo bundleInfo;
@@ -1437,7 +1261,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3600, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
-    std::cout << "END BMS_Install_3600" << std::endl;
+    std::cout << "END BMS_Install_3300" << std::endl;
 }
 /**
  * @tc.number: BMS_InstallProgressInfo_0100
@@ -1592,14 +1416,14 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0100, Function | MediumTest 
 }
 
 /**
- * @tc.number: BMS_SystemAppInstall_0300
+ * @tc.number: BMS_SystemAppInstall_0200
  * @tc.name: test install abnormal system bundle,and check bundle info
  * @tc.desc: 1.under '/system/app',there are three bundles,one of them is normal,others are abnormal
  *           2.TriggerScan and check install result
  */
-HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0300, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0200, Function | MediumTest | Level2)
 {
-    std::cout << "START BMS_SystemAppInstall_0300" << std::endl;
+    std::cout << "START BMS_SystemAppInstall_0200" << std::endl;
     std::vector<std::string> bundleName = {SYSTEM_BASE_BUNDLE_NAME + "s3", SYSTEM_BASE_BUNDLE_NAME + "s4"};
     std::string normalSystemBundleName = SYSTEM_BASE_BUNDLE_NAME + "s1";
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
@@ -1638,7 +1462,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_SystemAppInstall_0300, Function | MediumTest 
 
     UninstallBundle(normalSystemBundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
-    std::cout << "END BMS_SystemAppInstall_0300" << std::endl;
+    std::cout << "END BMS_SystemAppInstall_0200" << std::endl;
 }
 
 /**
@@ -1891,60 +1715,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0100, Function | MediumTest
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     std::cout << "END BMS_BundleDataStorage_0100" << std::endl;
-}
-
-/**
- * @tc.number: BMS_BundleDataStorage_0200
- * @tc.name: test the bundle info storage
- * @tc.desc: 1.under '/data/test/bms_bundle',there are two third-party bundles,
- *             one is normal,the other doesn't have the 'config.json' file
- *           2.install the bundle
- *           3.GetBundleInfo
- */
-HWTEST_F(BmsInstallSystemTest, BMS_BundleDataStorage_0200, Function | MediumTest | Level2)
-{
-    std::cout << "START BMS_BundleDataStorage_0200" << std::endl;
-    BundleInfo bundleInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    std::string installMsg;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
-
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success");
-
-    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
-    std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
-
-    bool isGetInfoSuccess =
-        bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-    EXPECT_TRUE(isGetInfoSuccess);
-
-    EXPECT_EQ(bundleInfo.name, "com.third.hiworld.example1");
-    EXPECT_EQ(bundleInfo.vendor, "example");
-    EXPECT_EQ(bundleInfo.versionName, "1.0");
-    uint32_t versionCode = 1;
-    EXPECT_EQ(bundleInfo.versionCode, versionCode);
-    EXPECT_GE(bundleInfo.uid, Constants::BASE_APP_UID);
-    EXPECT_GE(bundleInfo.gid, Constants::BASE_APP_UID);
-
-    bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle11.hap";
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_NO_PROFILE]");
-
-    std::string eBundleName = THIRD_BASE_BUNDLE_NAME + "11";
-    CheckFileNonExist(eBundleName);
-
-    isGetInfoSuccess = bundleMgrProxy->GetBundleInfo(eBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
-    EXPECT_FALSE(isGetInfoSuccess);
-
-    std::string uninstallMsg;
-    UninstallBundle(bundleName, uninstallMsg);
-    std::cout << "END BMS_BundleDataStorage_0200" << std::endl;
 }
 
 /**

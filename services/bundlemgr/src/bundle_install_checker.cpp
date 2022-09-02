@@ -276,7 +276,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
     BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
-    bool ret = true;
+    bool ret = false;
     if (!preBundleConfigInfo.appSignature.empty()) {
         ret = std::find(
             preBundleConfigInfo.appSignature.begin(),

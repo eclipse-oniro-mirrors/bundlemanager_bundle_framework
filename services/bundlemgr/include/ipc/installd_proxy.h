@@ -133,6 +133,8 @@ public:
 
     virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) override;
 
+    virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) override;
+
 private:
     ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
