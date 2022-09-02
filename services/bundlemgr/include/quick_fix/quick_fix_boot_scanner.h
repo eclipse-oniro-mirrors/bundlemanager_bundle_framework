@@ -16,6 +16,10 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_BOOT_SCANNER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_BOOT_SCANNER_H
 
+#include <map>
+#include <vector>
+
+#include "bundle_data_mgr.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_state.h"
 #include "singleton.h"
@@ -33,9 +37,22 @@ public:
 
     ErrCode ProcessState();
 
+    void RestoreQuickFix();
+
 private:
+    void ObtainQuickFix(const std::vector<std::string> &fileDir);
+    bool ReprocessQuickFix(const std::string &quickFixPath, const std::string &bundleName);
+    bool GetApplicationInfo(const std::string &bundleName, const std::string &quickFixPath, ApplicationInfo &info);
+    bool ProcessWithBundleHasQuickFixInfo(const std::string &bundleName, const std::string &hqfPath,
+        int32_t quickFixVersion, int32_t fileVersion);
+
     std::shared_ptr<QuickFixState> state_ = nullptr;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
+    // key is bundleName
+    // value is versionCode --- hqfDir
+    std::map<std::string, std::pair<int32_t, std::string>> quickFixInfoMap_;
+    std::vector<std::string> invalidQuickFixDir_;
 };
 } // AppExecFwk
 } // OHOS

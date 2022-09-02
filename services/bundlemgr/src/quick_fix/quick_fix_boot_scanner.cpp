@@ -17,9 +17,16 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_info.h"
+#include "bundle_mgr_service.h"
+#include "bundle_util.h"
 #include "inner_app_quick_fix.h"
+#include "installd_client.h"
+#include "quick_fix_deleter.h"
 #include "quick_fix_delete_state.h"
+#include "quick_fix_deployer.h"
 #include "quick_fix_deploy_state.h"
+#include "quick_fix_switcher.h"
 #include "quick_fix_switch_state.h"
 
 namespace OHOS {
@@ -37,6 +44,7 @@ void QuickFixBootScanner::ProcessQuickFixBootUp()
     auto ret = quickFixDataMgr_->QueryAllInnerAppQuickFix(quickFixInfoMap);
     if (!ret || quickFixInfoMap.empty()) {
         APP_LOGW("no quick fix info in db");
+        RestoreQuickFix();
         return;
     }
 
@@ -78,6 +86,178 @@ ErrCode QuickFixBootScanner::ProcessState()
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     return state_->Process();
+}
+
+void QuickFixBootScanner::RestoreQuickFix()
+{
+    APP_LOGI("start to RestoreQuickFix");
+    std::vector<std::string> dirVec;
+    if (InstalldClient::GetInstance()->ObtainQuickFixFileDir(Constants::BUNDLE_CODE_DIR, dirVec) != ERR_OK) {
+        APP_LOGE("RestoreQuickFix failed due to obtained quick fix file dir failed");
+        return;
+    }
+    ObtainQuickFix(dirVec);
+
+    if (quickFixInfoMap_.empty()) {
+        APP_LOGW("no quick fix info in quickFixInfoMap_");
+        return;
+    }
+    for (const auto &quickFix : quickFixInfoMap_) {
+        ApplicationInfo appInfo;
+        // 1. no bundleInfo, then to remove the quick fix file
+        if (!GetApplicationInfo(quickFix.first, quickFix.second.second, appInfo)) {
+            APP_LOGW("appInfo is no existed, the quick info file need to be deleted");
+            continue;
+        }
+        // 2. no quick fix info in appInfo, quick fix need to deploy, switch and delete again
+        const auto &qfInfo = appInfo.appQuickFix.deployedAppqfInfo;
+        if (qfInfo.hqfInfos.empty()) {
+            APP_LOGD("no quikc fix info in the appInfo and reprocess the quick fix");
+            if (!ReprocessQuickFix(quickFix.second.second, quickFix.first)) {
+                APP_LOGE("ReprocessQuickFix failed");
+            }
+            continue;
+        }
+        // 3. appInfo contain quick fix info, there need to check the quick fix info version with the
+        //    quick fix file version code
+        APP_LOGD("appInfo contains quick fix info");
+        int32_t quickFixVersion = qfInfo.versionCode;
+        if (!ProcessWithBundleHasQuickFixInfo(quickFix.first, quickFix.second.second, quickFixVersion,
+            quickFix.second.first)) {
+            APP_LOGE("ProcessWithBundleHasQuickFixInfo failed");
+        }
+    }
+
+    if (!invalidQuickFixDir_.empty()) {
+        for_each(invalidQuickFixDir_.begin(), invalidQuickFixDir_.end(), [](const auto &dir) {
+            InstalldClient::GetInstance()->RemoveDir(dir);
+        });
+    }
+    APP_LOGI("calling RestoreQuickFix successfully");
+}
+
+void QuickFixBootScanner::ObtainQuickFix(const std::vector<std::string> &fileDir)
+{
+    APP_LOGI("start to ObtainQuickFixInfo");
+    if (fileDir.empty()) {
+        APP_LOGW("no quick fix file");
+        return;
+    }
+    for (const auto &fileStr : fileDir) {
+        APP_LOGD("ObtainQuickFixInfo fileStr is %{public}s", fileStr.c_str());
+        size_t underlinePos = fileStr.rfind(Constants::FILE_UNDERLINE);
+        if (underlinePos == std::string::npos) {
+            APP_LOGE("ObtainQuickFixInfo failed due to invalid dir");
+            invalidQuickFixDir_.emplace_back(fileStr);
+            continue;
+        }
+        int32_t versionCode;
+        bool ret = StrToInt(fileStr.substr(underlinePos + 1), versionCode);
+        if (!ret) {
+            APP_LOGE("ObtainQuickFixInfo failed due to invalid versionCode in dir");
+            invalidQuickFixDir_.emplace_back(fileStr);
+            continue;
+        }
+        APP_LOGD("versionCode of the quick fix file is %{public}d", versionCode);
+        size_t firstPos = fileStr.rfind(Constants::PATH_SEPARATOR);
+        if (firstPos == std::string::npos) {
+            APP_LOGE("ObtainQuickFixInfo failed due to invalid dir");
+            invalidQuickFixDir_.emplace_back(fileStr);
+            continue;
+        }
+        size_t secondPos = fileStr.rfind(Constants::PATH_SEPARATOR, firstPos - 1);
+        if (secondPos == std::string::npos) {
+            APP_LOGE("ObtainQuickFixInfo failed due to invalid dir");
+            invalidQuickFixDir_.emplace_back(fileStr);
+            continue;
+        }
+        std::string bundleName = fileStr.substr(secondPos + 1, firstPos - secondPos - 1);
+        APP_LOGD("bundleName of the quick fix file is %{public}s", bundleName.c_str());
+        auto bundleIter = quickFixInfoMap_.find(bundleName);
+        if (bundleIter == quickFixInfoMap_.end()) {
+            std::pair<int32_t, std::string> innerPair { versionCode, fileStr };
+            quickFixInfoMap_.emplace(bundleName, innerPair);
+            continue;
+        }
+        if (bundleIter->second.first < versionCode) {
+            invalidQuickFixDir_.emplace_back(bundleIter->second.second);
+            quickFixInfoMap_[bundleName] = { versionCode, fileStr };
+        }
+    }
+    return;
+}
+
+bool QuickFixBootScanner::ReprocessQuickFix(const std::string &quickFixPath, const std::string &bundleName)
+{
+    APP_LOGD("start to ReprocessQuickFix with bundleName %{public}s", bundleName.c_str());
+    std::string destinationDir = Constants::HAP_COPY_PATH;
+    destinationDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_RDB_TABLE_NAME + Constants::TMP_SUFFIX;
+    if (!BundleUtil::CreateDir(destinationDir)) {
+        APP_LOGE("create dir failed");
+        return false;
+    }
+    if (InstalldClient::GetInstance()->CopyFiles(quickFixPath, destinationDir) != ERR_OK) {
+        APP_LOGE("RestoreQuickFix failed due to copy quick fix files failed");
+        return false;
+    }
+
+    std::vector<std::string> pathVec { destinationDir };
+    std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(pathVec);
+    auto ret = deployer->Execute();
+    if (ret != ERR_OK) {
+        APP_LOGE("deploy failed");
+        return false;
+    }
+    std::unique_ptr<IQuickFix> switcher = std::make_unique<QuickFixSwitcher>(bundleName, true);
+    ret = switcher->Execute();
+    if (ret != ERR_OK) {
+        APP_LOGE("switch failed");
+        return false;
+    }
+    std::unique_ptr<IQuickFix> deleter = std::make_unique<QuickFixDeleter>(bundleName);
+    ret = deleter->Execute();
+    if (ret != ERR_OK) {
+        APP_LOGE("delete failed");
+        return false;
+    }
+    return true;
+}
+
+bool QuickFixBootScanner::GetApplicationInfo(const std::string &bundleName, const std::string &quickFixPath,
+    ApplicationInfo &info)
+{
+    if (dataMgr_ == nullptr) {
+        dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr_ == nullptr) {
+            APP_LOGE("dataMgr_ is nullptr");
+            return false;
+        }
+    }
+    if (!dataMgr_->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, Constants::ANY_USERID,
+        info)) {
+        APP_LOGW("application info is no existed, the quick info file need to be deleted");
+        invalidQuickFixDir_.emplace_back(quickFixPath);
+        return false;
+    }
+    return true;
+}
+
+bool QuickFixBootScanner::ProcessWithBundleHasQuickFixInfo(const std::string &bundleName, const std::string &hqfPath,
+    int32_t quickFixVersion, int32_t fileVersion)
+{
+    if (quickFixVersion == fileVersion) {
+        APP_LOGD("same version code between quick fix file and quick fix info");
+    } else if (quickFixVersion < fileVersion) {
+        if (!ReprocessQuickFix(hqfPath, bundleName)) {
+            APP_LOGE("ReprocessQuickFix failed");
+            return false;
+        }
+    } else {
+        invalidQuickFixDir_.emplace_back(hqfPath);
+        APP_LOGW("invalid the quick fix file dir");
+        return false;
+    }
+    return true;
 }
 } // AppExecFwk
 } // OHOS

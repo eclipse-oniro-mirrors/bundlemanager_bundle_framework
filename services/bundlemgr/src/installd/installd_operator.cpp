@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -718,6 +719,62 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     }
     CloseHandle(&handle);
     APP_LOGI("ApplyDiffPatch end");
+    return true;
+}
+
+bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &fileVec)
+{
+    std::filesystem::path dirStr(dir);
+    if (!std::filesystem::exists(dirStr)) {
+        APP_LOGE("pathStr is not existed");
+        return false;
+    }
+    if (!is_directory(dirStr)) {
+        APP_LOGE("pathStr is not a directory");
+        return false;
+    }
+
+    std::filesystem::directory_iterator dirite(dirStr);
+    for (const auto &entry : dirite) {
+        // folder
+        if (entry.status().type() == std::filesystem::file_type::directory) {
+            std::string subdirStr = entry.path().string();
+            ObtainQuickFixFileDir(subdirStr, fileVec);
+        // file
+        } else if (entry.status().type() == std::filesystem::file_type::regular) {
+            std::string fileStr = entry.path().filename().string();
+            if (fileStr.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos) {
+                fileVec.emplace_back(dir);
+            }
+        }
+    }
+    return true;
+}
+
+bool InstalldOperator::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+{
+    APP_LOGD("sourceDir is %{public}s, destinationDir is %{public}s", sourceDir.c_str(), destinationDir.c_str());
+    if (sourceDir.empty() || destinationDir.empty()) {
+        APP_LOGE("Copy file failed due to sourceDir or destinationDir is empty");
+        return false;
+    }
+    std::filesystem::path dirSourceStr(sourceDir);
+    std::filesystem::path dirDesStr(destinationDir);
+    if (!std::filesystem::exists(dirSourceStr) || !is_directory(dirSourceStr) ||
+        !std::filesystem::exists(dirDesStr) || !is_directory(dirDesStr)) {
+        APP_LOGE("dirSourceStr or dirDesStr is invalid");
+        return false;
+    }
+    std::filesystem::directory_iterator diriter(sourceDir);
+    for (const auto &entry : diriter) {
+        if (entry.status().type() == std::filesystem::file_type::regular) {
+            std::string fileStr = entry.path().filename().string();
+            std::string innerDesStr = destinationDir + Constants::PATH_SEPARATOR + fileStr;
+            if (CopyFile(sourceDir + Constants::PATH_SEPARATOR + fileStr, innerDesStr)) {
+                ChangeFileAttr(innerDesStr, Constants::FOUNDATION_UID, Constants::BMS_GID);
+            }
+        }
+    }
     return true;
 }
 }  // namespace AppExecFwk
