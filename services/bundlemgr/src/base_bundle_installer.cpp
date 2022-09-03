@@ -1361,6 +1361,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         return hqfInfo.moduleName == moduleName;
     });
     if (iter != appQfInfo.hqfInfos.end()) {
+        // appQfInfo.nativeLibraryPath may be start with patch_versionCode
         if (nativeLibraryPath != appQfInfo.nativeLibraryPath) {
             APP_LOGE("error: nativeLibraryPath not same, newInfo: %{private}s, hqf: %{private}s",
                      nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
@@ -1376,10 +1377,10 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
         std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-            Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
+            Constants::PATH_SEPARATOR + nativeLibraryPath;
         std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
             Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-            std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
+            std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath);
         if (ret != ERR_OK) {
             APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);

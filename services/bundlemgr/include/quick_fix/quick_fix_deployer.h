@@ -80,6 +80,8 @@ private:
 
     void ToDeployQuickFixResult(const AppQuickFix &appQuickFix);
 
+    void ProcessNativeLibraryPath(const std::string &patchPath, InnerAppQuickFix &innerAppQuickFix);
+
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
