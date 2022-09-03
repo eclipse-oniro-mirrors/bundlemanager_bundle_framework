@@ -292,7 +292,6 @@ void BundleInstallChecker::GetPrivilegeCapability(
 
     newInfo.SetKeepAlive(preBundleConfigInfo.keepAlive);
     newInfo.SetSingleton(preBundleConfigInfo.singleton);
-    newInfo.SetBootable(preBundleConfigInfo.bootable);
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
