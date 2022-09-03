@@ -1362,7 +1362,13 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
     });
     if (iter != appQfInfo.hqfInfos.end()) {
         // appQfInfo.nativeLibraryPath may be start with patch_versionCode
-        if (nativeLibraryPath != appQfInfo.nativeLibraryPath) {
+        std::string hqfLibraryPath = appQfInfo.nativeLibraryPath;
+        size_t lenA = nativeLibraryPath.size();
+        size_t lenB = appQfInfo.nativeLibraryPath.size();
+        if (lenB > lenA) {
+            hqfLibraryPath = hqfLibraryPath.substr(lenB - lenA, lenA);
+        }
+        if (hqfLibraryPath != nativeLibraryPath) {
             APP_LOGE("error: nativeLibraryPath not same, newInfo: %{private}s, hqf: %{private}s",
                      nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
