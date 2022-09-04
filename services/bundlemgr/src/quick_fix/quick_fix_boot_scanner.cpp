@@ -254,10 +254,24 @@ bool QuickFixBootScanner::ProcessWithBundleHasQuickFixInfo(const std::string &bu
         }
     } else {
         invalidQuickFixDir_.emplace_back(hqfPath);
-        APP_LOGW("invalid the quick fix file dir");
+        // remove the quick fix info from memory cache and db
+        Inner
+    return true;BundleInfo innerBundleInfo;
+        if ((dataMgr_ == nullptr) || (!dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo))) {
+            APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
+            return false;
+        }
+        AppQuickFix appQuickFix;
+        innerBundleInfo.SetAppQuickFix(appQuickFix);
+        innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        dataMgr_->EnableBundle(bundleName);
+        if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("update quickfix innerbundleInfo failed");
+            return false;
+        }
+        APP_LOGW("invalid the quick fix file dir and quick fix info needs to be remove");
         return false;
     }
-    return true;
 }
 } // AppExecFwk
 } // OHOS
