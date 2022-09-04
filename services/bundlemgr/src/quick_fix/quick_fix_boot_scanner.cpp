@@ -71,6 +71,7 @@ void QuickFixBootScanner::ProcessQuickFixBootUp()
         }
         state_.reset();
     }
+    RemoveInvalidDir();
     APP_LOGI("process quick fix boot up completely");
 }
 
@@ -80,7 +81,7 @@ void QuickFixBootScanner::SetQuickFixState(const std::shared_ptr<QuickFixState> 
     state_ = state;
 }
 
-ErrCode QuickFixBootScanner::ProcessState()
+ErrCode QuickFixBootScanner::ProcessState() const
 {
     if (state_ == nullptr) {
         APP_LOGE("state_ is nullptr");
@@ -97,7 +98,7 @@ void QuickFixBootScanner::RestoreQuickFix()
         APP_LOGE("RestoreQuickFix failed due to obtained quick fix file dir failed");
         return;
     }
-    ObtainQuickFix(dirVec);
+    ProcessQuickFixDir(dirVec);
 
     if (quickFixInfoMap_.empty()) {
         APP_LOGW("no quick fix info in quickFixInfoMap_");
@@ -129,15 +130,11 @@ void QuickFixBootScanner::RestoreQuickFix()
         }
     }
 
-    if (!invalidQuickFixDir_.empty()) {
-        for_each(invalidQuickFixDir_.begin(), invalidQuickFixDir_.end(), [](const auto &dir) {
-            InstalldClient::GetInstance()->RemoveDir(dir);
-        });
-    }
+    RemoveInvalidDir();
     APP_LOGI("calling RestoreQuickFix successfully");
 }
 
-void QuickFixBootScanner::ObtainQuickFix(const std::vector<std::string> &fileDir)
+void QuickFixBootScanner::ProcessQuickFixDir(const std::vector<std::string> &fileDir)
 {
     APP_LOGI("start to ObtainQuickFixInfo");
     if (fileDir.empty()) {
@@ -188,11 +185,11 @@ void QuickFixBootScanner::ObtainQuickFix(const std::vector<std::string> &fileDir
     return;
 }
 
-bool QuickFixBootScanner::ReprocessQuickFix(const std::string &quickFixPath, const std::string &bundleName)
+bool QuickFixBootScanner::ReprocessQuickFix(const std::string &quickFixPath, const std::string &bundleName) const
 {
     APP_LOGD("start to ReprocessQuickFix with bundleName %{public}s", bundleName.c_str());
     std::string destinationDir = Constants::HAP_COPY_PATH;
-    destinationDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_RDB_TABLE_NAME + Constants::TMP_SUFFIX;
+    destinationDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH + Constants::TMP_SUFFIX;
     if (!BundleUtil::CreateDir(destinationDir)) {
         APP_LOGE("create dir failed");
         return false;
@@ -272,6 +269,21 @@ bool QuickFixBootScanner::ProcessWithBundleHasQuickFixInfo(const std::string &bu
         APP_LOGI("invalid the quick fix file dir and quick fix info needs to be remove");
     }
     return true;
+}
+
+void QuickFixBootScanner::RemoveInvalidDir() const
+{
+    // remove invalid dir under install dir
+    if (!invalidQuickFixDir_.empty()) {
+        for_each(invalidQuickFixDir_.begin(), invalidQuickFixDir_.end(), [](const auto &dir) {
+            InstalldClient::GetInstance()->RemoveDir(dir);
+        });
+    }
+    // remove invalid temp install dir
+    std::string tempInstallDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::STRAM_INSTALL_PATH;
+    std::string tempQuickFixDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    BundleUtil::DeleteDir(tempInstallDir);
+    BundleUtil::DeleteDir(tempQuickFixDir);
 }
 } // AppExecFwk
 } // OHOS

@@ -35,16 +35,17 @@ public:
 
     void SetQuickFixState(const std::shared_ptr<QuickFixState> &state);
 
-    ErrCode ProcessState();
+    ErrCode ProcessState() const;
 
     void RestoreQuickFix();
 
 private:
-    void ObtainQuickFix(const std::vector<std::string> &fileDir);
-    bool ReprocessQuickFix(const std::string &quickFixPath, const std::string &bundleName);
+    void ProcessQuickFixDir(const std::vector<std::string> &fileDir);
+    bool ReprocessQuickFix(const std::string &quickFixPath, const std::string &bundleName) const;
     bool GetApplicationInfo(const std::string &bundleName, const std::string &quickFixPath, ApplicationInfo &info);
     bool ProcessWithBundleHasQuickFixInfo(const std::string &bundleName, const std::string &hqfPath,
         int32_t quickFixVersion, int32_t fileVersion);
+    void RemoveInvalidDir() const;
 
     std::shared_ptr<QuickFixState> state_ = nullptr;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;

@@ -92,7 +92,7 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
         APP_LOGE("not quick fix file.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
-    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_);
+    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_, DirType::QUICK_FIX_DIR);
     if (tmpDir.empty()) {
         APP_LOGE("create tmp dir failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_TARGET_DIR_FAILED;
