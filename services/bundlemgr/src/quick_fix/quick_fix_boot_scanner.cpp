@@ -21,6 +21,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "inner_app_quick_fix.h"
+#include "inner_bundle_info.h"
 #include "installd_client.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_delete_state.h"
@@ -255,8 +256,7 @@ bool QuickFixBootScanner::ProcessWithBundleHasQuickFixInfo(const std::string &bu
     } else {
         invalidQuickFixDir_.emplace_back(hqfPath);
         // remove the quick fix info from memory cache and db
-        Inner
-    return true;BundleInfo innerBundleInfo;
+        InnerBundleInfo innerBundleInfo;
         if ((dataMgr_ == nullptr) || (!dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo))) {
             APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
             return false;
@@ -269,9 +269,9 @@ bool QuickFixBootScanner::ProcessWithBundleHasQuickFixInfo(const std::string &bu
             APP_LOGE("update quickfix innerbundleInfo failed");
             return false;
         }
-        APP_LOGW("invalid the quick fix file dir and quick fix info needs to be remove");
-        return false;
+        APP_LOGI("invalid the quick fix file dir and quick fix info needs to be remove");
     }
+    return true;
 }
 } // AppExecFwk
 } // OHOS
