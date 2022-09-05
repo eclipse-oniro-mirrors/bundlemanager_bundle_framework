@@ -29,11 +29,11 @@ public:
     NapiArg(napi_env env, napi_callback_info info): env_(env), info_(info) {}
     ~NapiArg() {}
 
-    bool Init(size_t expectedArgc);
-
     bool Init(size_t minArgc, size_t maxArgc);
 
     size_t GetArgc() const;
+
+    size_t GetMaxArgc() const;
 
     napi_value GetThisArg() const;
 
@@ -45,6 +45,7 @@ private:
     napi_env env_ = nullptr;
     napi_callback_info info_ = nullptr;
     size_t argc_ = 0;
+    size_t maxArgc_ = 0;
     std::unique_ptr<napi_value[]> argv_ = { nullptr };
     napi_value thisArg_ = nullptr;
 };

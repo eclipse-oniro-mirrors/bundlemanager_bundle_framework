@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "app_log_wrapper.h"
+#include "bundle_mgr_interface.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -29,9 +30,13 @@ namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
 class CommonFunc {
 public:
+static napi_value WrapVoidToJS(napi_env env);
+
 static napi_value ParseInt(napi_env env, int &param, napi_value args);
 
 static std::string GetStringFromNAPI(napi_env env, napi_value value);
+
+static sptr<IBundleMgr> GetBundleMgr();
 
 static bool ParseString(napi_env env, napi_value value, std::string& result);
 

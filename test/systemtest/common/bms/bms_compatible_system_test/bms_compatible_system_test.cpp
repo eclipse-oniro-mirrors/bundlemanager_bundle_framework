@@ -75,11 +75,11 @@ public:
     static void Install(
         const std::vector<std::string> &bundleFilePaths, const InstallFlag installFlag, std::string &installMessage);
     static void Uninstall(const std::string &bundleName, std::string &installMessage);
-    static sptr<IBundleMgr> GetBundleMgrProxy();
+    static sptr<BundleMgrProxy> GetBundleMgrProxy();
     static sptr<IBundleInstaller> GetInstallerProxy();
 };
 
-sptr<IBundleMgr> BmsCompatibleSystemTest::GetBundleMgrProxy()
+sptr<BundleMgrProxy> BmsCompatibleSystemTest::GetBundleMgrProxy()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -95,12 +95,12 @@ sptr<IBundleMgr> BmsCompatibleSystemTest::GetBundleMgrProxy()
     }
 
     APP_LOGI("get bundle manager proxy success.");
-    return iface_cast<IBundleMgr>(remoteObject);
+    return iface_cast<BundleMgrProxy>(remoteObject);
 }
 
 sptr<IBundleInstaller> BmsCompatibleSystemTest::GetInstallerProxy()
 {
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         return nullptr;
@@ -266,7 +266,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0100, Function | Mediu
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -311,7 +311,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0200, Function | Mediu
     Install(bundleFilePath2, InstallFlag::REPLACE_EXISTING, message);
     EXPECT_EQ(message, "Success") << "install fail!";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -348,7 +348,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0300, Function | Mediu
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -391,7 +391,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0400, Function | Mediu
     Install(bundleFilePath2, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -432,7 +432,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0500, Function | Mediu
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -461,7 +461,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0600, Function | Mediu
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0600";
     std::string bundleName = "";
     std::string abilityName = "";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -495,7 +495,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0700, Function | Mediu
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -530,7 +530,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | Mediu
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -570,7 +570,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0900, Function | Mediu
     Install(bundleFilePath2, InstallFlag::REPLACE_EXISTING, message);
     EXPECT_EQ(message, "Success") << "install fail!";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -604,7 +604,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1000, Function | Mediu
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
 
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -627,7 +627,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1100, Function | Mediu
 {
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_1100";
     std::string bundleName = "";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -659,7 +659,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0100, Function | Med
     EXPECT_EQ(message, "Success") << "install fail!";
     std::string abilityUri = "dataability:///com.test.demo.dataability.UserADataAbility";
     AbilityInfo abilityInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_TRUE(false);
@@ -683,7 +683,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0200, Function | Med
     GTEST_LOG_(INFO) << "START BMS_QueryAbilityInfoByUri_0200";
     std::string abilityUri = "";
     AbilityInfo abilityInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_TRUE(false);
@@ -705,7 +705,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0300, Function | Med
     GTEST_LOG_(INFO) << "START BMS_QueryAbilityInfoByUri_0300";
     std::string abilityUri = "err://com.test.demo.weatherfa.UserADataAbility";
     AbilityInfo abilityInfo;
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_TRUE(false);
@@ -732,7 +732,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0100, Function | Med
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -760,7 +760,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetDebug_0100, Function | MediumTest | Lev
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -789,7 +789,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetDebug_0200, Function | MediumTest | Lev
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);
@@ -821,7 +821,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetDebug_0300, Function | MediumTest | Lev
     EXPECT_EQ(message, "Success") << "install fail!";
     Install(bundleFilePath2, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (bundleMgrProxy == nullptr) {
         GTEST_LOG_(INFO) << ("bundle mgr proxy is nullptr.");
         EXPECT_NE(bundleMgrProxy, nullptr);

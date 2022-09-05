@@ -24,6 +24,7 @@ namespace LIBZIP {
 namespace {
 const std::string SEPARATOR = "/";
 const std::regex FILE_PATH_REGEX("([0-9A-Za-z/+_=\\-\\(\\),.])+");
+const std::string ZIP_THREAD = "zip_thread";
 }  // namespace
 using namespace OHOS::AppExecFwk;
 
@@ -31,7 +32,7 @@ std::shared_ptr<EventHandler> g_handler = nullptr;
 void PostTask(const InnerEvent::Callback &callback)
 {
     if (g_handler == nullptr) {
-        auto runner = EventRunner::Create(true);
+        auto runner = EventRunner::Create(ZIP_THREAD);
         g_handler = std::make_shared<EventHandler>(runner);
     }
 

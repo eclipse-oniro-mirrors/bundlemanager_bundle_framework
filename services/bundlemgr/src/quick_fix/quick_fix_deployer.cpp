@@ -254,6 +254,10 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
             newQuickFix.bundleName.c_str());
         return ret;
     }
+    if (!newQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
+        // if so files exist, library path add patch_versionCode; if so files not exist, modify library path to empty.
+        ProcessNativeLibraryPath(newPatchPath, newInnerAppQuickFix);
+    }
     // move hqf files to new patch path
     ret = MoveHqfFiles(newInnerAppQuickFix, newPatchPath);
     if (ret != ERR_OK) {
@@ -275,6 +279,28 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     guardRemovePatchPath.Dismiss();
     APP_LOGI("ToDeployEndStatus end.");
     return ERR_OK;
+}
+
+void QuickFixDeployer::ProcessNativeLibraryPath(const std::string &patchPath, InnerAppQuickFix &innerAppQuickFix)
+{
+    AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
+    const std::string &libraryPath = appQuickFix.deployingAppqfInfo.nativeLibraryPath;
+    if (libraryPath.empty()) {
+        return;
+    }
+    bool isSoExist = false;
+    std::string soPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
+    if (InstalldClient::GetInstance()->IsExistDir(soPath, isSoExist) != ERR_OK) {
+        APP_LOGE("ProcessNativeLibraryPath InstalldClient IsExistDir failed");
+        return;
+    }
+    if (isSoExist) {
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = Constants::PATCH_PATH +
+            std::to_string(appQuickFix.deployingAppqfInfo.versionCode) + Constants::PATH_SEPARATOR + libraryPath;
+    } else {
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
+    }
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
 }
 
 ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath)

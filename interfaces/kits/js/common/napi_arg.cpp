@@ -17,38 +17,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-bool NapiArg::Init(size_t expectedArgc)
-{
-    argc_ = 0;
-    argv_.reset();
-    size_t argc;
-    napi_value thisArg;
-    // get argc first, in case of argv overflow
-    napi_status status = napi_get_cb_info(env_, info_, &argc, nullptr, &thisArg, nullptr);
-    if (status != napi_ok) {
-        APP_LOGE("Cannot get number of func args for %{public}d", status);
-        return false;
-    }
-    if (argc == 0) {
-        thisArg_ = thisArg;
-        return true;
-    }
-    if (argc == expectedArgc) {
-        argv_ = std::make_unique<napi_value[]>(argc);
-        status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisArg, nullptr);
-        if (status != napi_ok) {
-            APP_LOGE("Cannot get func args for %{public}d", status);
-            return false;
-        }
-    } else {
-        APP_LOGE("Incorrect number of arguments");
-        return false;
-    }
-    argc_ = argc;
-    thisArg_ = thisArg;
-    return true;
-}
-
 bool NapiArg::Init(size_t minArgc, size_t maxArgc)
 {
     argc_ = 0;
@@ -61,16 +29,15 @@ bool NapiArg::Init(size_t minArgc, size_t maxArgc)
         APP_LOGE("Cannot get num of func args for %{public}d", status);
         return false;
     }
-    if (argc == 0) {
-        thisArg_ = thisArg;
-        return true;
-    }
-    if (argc >= minArgc && argc <= maxArgc) {
-        argv_ = std::make_unique<napi_value[]>(argc);
-        status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisArg, nullptr);
-        if (status != napi_ok) {
-            APP_LOGE("Cannot get func args for %{public}d", status);
-            return false;
+    // argc larger than maxArgc is permitted, but we only use the first $maxArgc$ args
+    if (argc >= minArgc) {
+        if (argc != 0) {
+            argv_ = std::make_unique<napi_value[]>(argc);
+            status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisArg, nullptr);
+            if (status != napi_ok) {
+                APP_LOGE("Cannot get func args for %{public}d", status);
+                return false;
+            }
         }
     } else {
         APP_LOGE("Incorrect number of arguments");
@@ -78,12 +45,18 @@ bool NapiArg::Init(size_t minArgc, size_t maxArgc)
     }
     argc_ = argc;
     thisArg_ = thisArg;
+    maxArgc_ = (argc < maxArgc) ? argc : maxArgc;
     return true;
 }
 
 size_t NapiArg::GetArgc() const
 {
     return argc_;
+}
+
+size_t NapiArg::GetMaxArgc() const
+{
+    return maxArgc_;
 }
 
 napi_value NapiArg::GetThisArg() const

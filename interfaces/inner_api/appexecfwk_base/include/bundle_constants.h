@@ -65,6 +65,8 @@ constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_proper
 constexpr const char* COMPRESS_PROPERTY = "compress";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
+constexpr const char* STREAM_INSTALL_PATH = "stream_install";
+constexpr const char* QUICK_FIX_PATH = "quick_fix";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",

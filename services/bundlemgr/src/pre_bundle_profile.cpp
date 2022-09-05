@@ -33,7 +33,6 @@ const std::string PRIORITY = "priority";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string KEEP_ALIVE = "keepAlive";
 const std::string SINGLETON = "singleton";
-const std::string BOOTABLE = "bootable";
 const std::string ALLOW_COMMON_EVENT = "allowCommonEvent";
 const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
 const std::string APP_SIGNATURE = "app_signature";
@@ -207,14 +206,6 @@ ErrCode PreBundleProfile::TransformTo(
             jsonObjectEnd,
             SINGLETON,
             preBundleConfigInfo.singleton,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
-            jsonObjectEnd,
-            BOOTABLE,
-            preBundleConfigInfo.bootable,
             JsonType::BOOLEAN,
             false,
             parseResult,

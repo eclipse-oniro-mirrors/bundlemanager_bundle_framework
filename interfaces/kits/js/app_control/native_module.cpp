@@ -44,7 +44,7 @@ static napi_module app_control_module = {
     .nm_flags = 0,
     .nm_filename = nullptr,
     .nm_register_func = AppControlExport,
-    .nm_modname = "bundle.appControlManager",
+    .nm_modname = "bundle.appControl",
     .nm_priv = ((void *)0),
     .reserved = {0}
 };

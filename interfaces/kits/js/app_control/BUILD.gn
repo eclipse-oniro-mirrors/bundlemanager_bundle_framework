@@ -14,10 +14,9 @@
 import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
-ohos_shared_library("appcontrolmanager") {
+ohos_shared_library("appcontrol") {
   include_dirs = [
     "//third_party/node/src",
-    "//third_party/libuv/include",
     "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
   ]
   defines = [
@@ -29,8 +28,10 @@ ohos_shared_library("appcontrolmanager") {
     "native_module.cpp",
   ]
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
-  deps += [ "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common:bundle_napi_common" ]
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common:bundle_napi_common",
+  ]
 
   external_deps = [
     "ability_base:want",
@@ -38,10 +39,8 @@ ohos_shared_library("appcontrolmanager") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "napi:ace_napi",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
   ]
 
   relative_install_dir = "module/bundle"

@@ -17,6 +17,7 @@ group("systemtest_hap") {
 
   deps += [
     # deps file
+    "BundleClient:BundleClient",
     "jsBundle/jsThirdBundle:jsThirdBundle",
     "stSystemBundle:stSystemBundle",
     "stThirdBundle:stThirdBundle",

@@ -1517,11 +1517,6 @@ public:
         baseBundleInfo_->singleton = singleton;
     }
 
-    void SetBootable(bool bootable)
-    {
-        baseApplicationInfo_->bootable = bootable;
-    }
-
     void SetRunningResourcesApply(bool runningResourcesApply)
     {
         baseApplicationInfo_->runningResourcesApply = runningResourcesApply;

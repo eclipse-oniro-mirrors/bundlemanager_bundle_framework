@@ -174,6 +174,10 @@ public:
 
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) = 0;
 
+    virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) = 0;
+
+    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) = 0;
+
 protected:
     enum Message : uint32_t {
         CREATE_BUNDLE_DIR = 1,
@@ -195,7 +199,9 @@ protected:
         EXTRACT_DIFF_FILES,
         APPLY_DIFF_PATCH,
         IS_EXIST_DIR,
-        IS_DIR_EMPTY
+        IS_DIR_EMPTY,
+        OBTAIN_QUICK_FIX_DIR,
+        COPY_FILES
     };
 };
 
