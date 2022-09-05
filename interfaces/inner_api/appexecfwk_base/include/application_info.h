@@ -141,7 +141,6 @@ struct ApplicationInfo : public Parcelable {
     bool singleton = false;
     bool userDataClearable = true;
     bool accessible = false;
-    bool bootable = false;
     bool runningResourcesApply = false;
     bool associatedWakeUp = false;
     bool hideDesktopIcon = false;

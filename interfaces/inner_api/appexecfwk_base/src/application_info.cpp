@@ -52,7 +52,6 @@ const std::string APPLICATION_USER_DATA_CLEARABLE = "userDataClearable";
 const std::string APPLICATION_IS_SYSTEM_APP = "isSystemApp";
 const std::string APPLICATION_IS_LAUNCHER_APP = "isLauncherApp";
 const std::string APPLICATION_IS_FREEINSTALL_APP = "isFreeInstallApp";
-const std::string APPLICATION_BOOTABLE = "bootable";
 const std::string APPLICATION_RUNNING_RESOURCES_APPLY = "runningResourcesApply";
 const std::string APPLICATION_ASSOCIATED_WAKE_UP = "associatedWakeUp";
 const std::string APPLICATION_HIDE_DESKTOP_ICON = "hideDesktopIcon";
@@ -258,7 +257,6 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     isSystemApp = parcel.ReadBool();
     isLauncherApp = parcel.ReadBool();
     isFreeInstallApp = parcel.ReadBool();
-    bootable = parcel.ReadBool();
     runningResourcesApply = parcel.ReadBool();
     associatedWakeUp = parcel.ReadBool();
     hideDesktopIcon = parcel.ReadBool();
@@ -411,7 +409,6 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSystemApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLauncherApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isFreeInstallApp);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, bootable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, runningResourcesApply);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, associatedWakeUp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hideDesktopIcon);
@@ -590,7 +587,6 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_IS_SYSTEM_APP, applicationInfo.isSystemApp},
         {APPLICATION_IS_LAUNCHER_APP, applicationInfo.isLauncherApp},
         {APPLICATION_IS_FREEINSTALL_APP, applicationInfo.isFreeInstallApp},
-        {APPLICATION_BOOTABLE, applicationInfo.bootable},
         {APPLICATION_RUNNING_RESOURCES_APPLY, applicationInfo.runningResourcesApply},
         {APPLICATION_ASSOCIATED_WAKE_UP, applicationInfo.associatedWakeUp},
         {APPLICATION_HIDE_DESKTOP_ICON, applicationInfo.hideDesktopIcon},
@@ -806,14 +802,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_IS_FREEINSTALL_APP,
         applicationInfo.isFreeInstallApp,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_BOOTABLE,
-        applicationInfo.bootable,
         JsonType::BOOLEAN,
         false,
         parseResult,

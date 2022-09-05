@@ -1380,7 +1380,6 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     ApplicationInfo appInfo;
     appInfo.keepAlive = preBundleConfigInfo.keepAlive;
     appInfo.singleton = preBundleConfigInfo.singleton;
-    appInfo.bootable = preBundleConfigInfo.bootable;
     appInfo.runningResourcesApply = preBundleConfigInfo.runningResourcesApply;
     appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
     for (const auto &event : preBundleConfigInfo.allowCommonEvent) {

@@ -30,7 +30,6 @@ struct PreBundleConfigInfo {
     std::string bundleName;
     bool keepAlive = false;
     bool singleton = false;
-    bool bootable = false;
     bool runningResourcesApply = false;
     bool associatedWakeUp = false;
     std::vector<std::string> allowCommonEvent;
@@ -46,7 +45,6 @@ struct PreBundleConfigInfo {
         bundleName.clear();
         keepAlive = false;
         singleton = false;
-        bootable = false;
         runningResourcesApply = false;
         associatedWakeUp = false;
         allowCommonEvent.clear();
@@ -58,7 +56,6 @@ struct PreBundleConfigInfo {
         return "[ bundleName = " + bundleName
             + ", keepAlive = " + GetBoolStrVal(keepAlive)
             + ", singleton = " + GetBoolStrVal(singleton)
-            + ", bootable = " + GetBoolStrVal(bootable)
             + ", associatedWakeUp = " + GetBoolStrVal(associatedWakeUp)
             + ", runningResourcesApply = " + GetBoolStrVal(runningResourcesApply) + "]";
     }
