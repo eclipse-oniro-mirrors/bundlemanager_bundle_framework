@@ -1548,33 +1548,6 @@ bool BundleMgrProxy::DumpInfos(
     return true;
 }
 
-bool BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("fail to IsApplicationEnabled due to params empty");
-        return false;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to IsApplicationEnabled due to write InterfaceToken fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply)) {
-        APP_LOGE("fail to IsApplicationEnabled from server");
-        return false;
-    }
-    return reply.ReadBool();
-}
-
 bool BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1708,101 +1681,132 @@ bool BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
     return reply.ReadBool();
 }
 
-bool BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
+ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsApplicationEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    ErrCode ret = SendTransactCommand(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply);
+    if (ret != NO_ERROR) {
+        APP_LOGE("fail to IsApplicationEnabled from server errcode:%{public}d", ret);
+        return ret;
+    }
+    isEnable = reply.ReadBool();
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to SetApplicationEnabled due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetApplicationEnabled due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to SetApplicationEnabled due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(isEnable)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write isEnable fail");
-        return false;
+        APP_LOGE("fail to SetApplicationEnabled due to write isEnable fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write userId fail");
-        return false;
+        APP_LOGE("fail to SetApplicationEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_APPLICATION_ENABLED, data, reply)) {
-        APP_LOGE("fail to SetApplicationEnabled from server");
-        return false;
+    ErrCode ret = SendTransactCommand(IBundleMgr::Message::SET_APPLICATION_ENABLED, data, reply);
+    if (ret != NO_ERROR) {
+        APP_LOGE("fail to SetApplicationEnabled from server errcode:%{public}d", ret);
     }
-    return reply.ReadBool();
+    return ret;
 }
 
-bool BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo)
+ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to IsAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.name.empty()) {
         APP_LOGE("fail to IsAbilityEnabled due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to IsAbilityEnabled due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&abilityInfo)) {
         APP_LOGE("fail to IsAbilityEnabled due to write abilityInfo fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_ABILITY_ENABLED, data, reply)) {
-        APP_LOGE("fail to IsAbilityEnabled from server");
-        return false;
+    ErrCode ret = SendTransactCommand(IBundleMgr::Message::IS_ABILITY_ENABLED, data, reply);
+    if (ret != NO_ERROR) {
+        APP_LOGE("fail to IsAbilityEnabled from server errcode:%{public}d", ret);
+        return ret;
     }
-    return reply.ReadBool();
+    isEnable = reply.ReadBool();
+    return ERR_OK;
 }
 
-bool BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
+ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.name.empty()) {
         APP_LOGE("fail to SetAbilityEnabled due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetAbilityEnabled due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&abilityInfo)) {
         APP_LOGE("fail to SetAbilityEnabled due to write abilityInfo fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(isEnabled)) {
         APP_LOGE("fail to SetAbilityEnabled due to write isEnabled fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to SetAbilityEnabled due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_ABILITY_ENABLED, data, reply)) {
-        APP_LOGE("fail to SetAbilityEnabled from server");
-        return false;
+    ErrCode ret = SendTransactCommand(IBundleMgr::Message::SET_ABILITY_ENABLED, data, reply);
+    if (ret != NO_ERROR) {
+        APP_LOGE("fail to SetAbilityEnabled from server errcode:%{public}d", ret);
     }
-    return reply.ReadBool();
+    return ret;
 }
 
 bool BundleMgrProxy::GetAbilityInfo(
@@ -3225,6 +3229,22 @@ bool BundleMgrProxy::SendTransactCmd(IBundleMgr::Message code, MessageParcel &da
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::SendTransactCommand(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
+        return -1;
+    }
+    ErrCode result = remote->SendRequest(code, data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+    }
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

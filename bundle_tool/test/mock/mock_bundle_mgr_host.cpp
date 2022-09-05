@@ -48,20 +48,20 @@ bool MockBundleMgrHost::CleanBundleDataFiles(const std::string &bundleName, cons
     return true;
 }
 
-bool MockBundleMgrHost::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
+ErrCode MockBundleMgrHost::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     APP_LOGD("enter");
     APP_LOGD("bundleName: %{public}s", bundleName.c_str());
     APP_LOGD("isEnable: %{public}d", isEnable);
-    return true;
+    return ERR_OK;
 }
 
-bool MockBundleMgrHost::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnable, int32_t userId)
+ErrCode MockBundleMgrHost::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnable, int32_t userId)
 {
     APP_LOGD("enter");
     APP_LOGD("abilityName: %{public}s", abilityInfo.name.c_str());
     APP_LOGD("isEnable: %{public}d", isEnable);
-    return true;
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

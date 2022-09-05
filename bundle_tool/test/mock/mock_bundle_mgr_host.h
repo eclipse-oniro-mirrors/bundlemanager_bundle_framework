@@ -30,9 +30,9 @@ public:
     bool CleanBundleDataFiles(const std::string &bundleName, const int userId = 0);
     bool DumpInfos(
         const DumpFlag flag, const std::string &bundleName, int32_t userId, std::string &result);
-    bool SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+    ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    bool SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnable,
+    ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 };
 }  // namespace AppExecFwk

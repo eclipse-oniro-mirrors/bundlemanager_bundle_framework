@@ -320,8 +320,12 @@ bool LauncherService::IsBundleEnabled(const std::string &bundleName)
         APP_LOGE("bundleName is empty");
         return false;
     }
-
-    return iBundleMgr->IsApplicationEnabled(bundleName);
+    bool isEnable = false;
+    ErrCode ret = iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    if (ret != ERR_OK) {
+        return false;
+    }
+    return isEnable;
 }
 
 bool LauncherService::IsAbilityEnabled(const AbilityInfo &abilityInfo)
@@ -332,8 +336,12 @@ bool LauncherService::IsAbilityEnabled(const AbilityInfo &abilityInfo)
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-
-    return iBundleMgr->IsAbilityEnabled(abilityInfo);
+    bool isEnable = false;
+    ErrCode ret = iBundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
+    if (ret != ERR_OK) {
+        return false;
+    }
+    return isEnable;
 }
 
 bool LauncherService::GetShortcutInfos(

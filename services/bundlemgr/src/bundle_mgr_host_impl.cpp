@@ -972,17 +972,6 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
     return true;
 }
 
-bool BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName)
-{
-    APP_LOGD("start IsApplicationEnabled, bundleName : %{public}s", bundleName.c_str());
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
-    return dataMgr->IsApplicationEnabled(bundleName);
-}
-
 bool BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
 {
     auto dataMgr = GetDataMgrFromService();
@@ -1024,7 +1013,18 @@ bool BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
     return dataMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
 }
 
-bool BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
+ErrCode BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)
+{
+    APP_LOGD("start IsApplicationEnabled, bundleName : %{public}s", bundleName.c_str());
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return dataMgr->IsApplicationEnabled(bundleName, isEnable);
+}
+
+ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     APP_LOGD("SetApplicationEnabled begin");
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -1034,27 +1034,28 @@ bool BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, boo
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, true);
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to SetApplicationEnabled");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, true);
-        return false;
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
 
-    if (!dataMgr->SetApplicationEnabled(bundleName, isEnable, userId)) {
+    auto ret = dataMgr->SetApplicationEnabled(bundleName, isEnable, userId);
+    if (ret != ERR_OK) {
         APP_LOGE("Set application(%{public}s) enabled value faile.", bundleName.c_str());
         EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, true);
-        return false;
+        return ret;
     }
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, false);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     NotifyBundleEvents installRes = {
@@ -1066,21 +1067,21 @@ bool BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, boo
     };
     NotifyBundleStatus(installRes);
     APP_LOGD("SetApplicationEnabled finish");
-    return true;
+    return ERR_OK;
 }
 
-bool BundleMgrHostImpl::IsAbilityEnabled(const AbilityInfo &abilityInfo)
+ErrCode BundleMgrHostImpl::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     APP_LOGD("start IsAbilityEnabled");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    return dataMgr->IsAbilityEnabled(abilityInfo);
+    return dataMgr->IsAbilityEnabled(abilityInfo, isEnable);
 }
 
-bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
+ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
     APP_LOGD("start SetAbilityEnabled");
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -1091,7 +1092,7 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEvent(
             abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
     APP_LOGD("verify permission success, begin to SetAbilityEnabled");
@@ -1100,14 +1101,14 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
         APP_LOGE("DataMgr is nullptr");
         EventReport::SendComponentStateSysEvent(
             abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
-        return false;
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-
-    if (!dataMgr->SetAbilityEnabled(abilityInfo, isEnabled, userId)) {
+    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, isEnabled, userId);
+    if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed.", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEvent(
             abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
-        return false;
+        return ret;
     }
 
     EventReport::SendComponentStateSysEvent(
@@ -1115,7 +1116,7 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     NotifyBundleEvents installRes = {
@@ -1127,7 +1128,7 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
         .accessTokenId = innerBundleUserInfo.accessTokenId,
     };
     NotifyBundleStatus(installRes);
-    return true;
+    return ERR_OK;
 }
 
 sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
