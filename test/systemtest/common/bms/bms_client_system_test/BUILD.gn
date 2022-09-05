@@ -24,6 +24,7 @@ ohos_systemtest("BundleMgrClientSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${appexecfwk_path}/test/sceneProject/systemtest/BundleClient/bundleClient1:bundleClient1",
     "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${common_path}:libappexecfwk_common",
     "${services_path}/test/moduletest/utils:tool_common",
@@ -49,8 +50,6 @@ ohos_systemtest("BundleMgrClientSystemTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrsst/ohos_test1.xml"
 }
 
 group("systemtest") {

@@ -71,8 +71,6 @@ ohos_systemtest("BmsInstallSystemTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrsst/ohos_test1.xml"
 }
 
 group("systemtest") {
