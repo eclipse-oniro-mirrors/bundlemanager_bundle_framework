@@ -35,6 +35,7 @@ const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.calli
 const std::string PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
 const std::string DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
 const std::string DEFAULT_VERSION = "1";
+const std::string CONNECT_ABILITY_THREAD = "connect_ability_thread";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
 constexpr uint32_t BIT_ONE_FRONT_MODE = 0;
@@ -67,7 +68,7 @@ void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 
 void BundleConnectAbilityMgr::Init()
 {
-    runner_ = EventRunner::Create(true);
+    runner_ = EventRunner::Create(CONNECT_ABILITY_THREAD);
     if (runner_ == nullptr) {
         APP_LOGE("Create runner failed");
         return;
