@@ -257,7 +257,7 @@ public:
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.
      * @param userId Indicates the user ID.
      * @param abilityInfos Indicates the obtained AbilityInfos object.
-     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errorCode otherwise.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
      */
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;

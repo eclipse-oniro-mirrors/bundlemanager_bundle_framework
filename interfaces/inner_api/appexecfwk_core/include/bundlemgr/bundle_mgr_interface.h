@@ -357,10 +357,13 @@ public:
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.
      * @param userId Indicates the user ID.
      * @param abilityInfos Indicates the obtained AbilityInfos object.
-     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errorCode otherwise.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
      */
     virtual ErrCode QueryAbilityInfosV9(
-        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) = 0;
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     /**
      * @brief Query the AllAbilityInfos of list by the given userId.
      * @param userId Indicates the information of the user.
