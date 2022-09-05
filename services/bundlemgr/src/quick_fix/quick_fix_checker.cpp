@@ -151,17 +151,21 @@ ErrCode QuickFixChecker::CheckCommonWithInstalledBundle(const AppQuickFix &appQu
             appQuickFix.bundleName.c_str(), bundleInfo.name.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
-    // check versionCode and versionName
+    // check versionCode
     if (bundleInfo.versionCode != appQuickFix.versionCode) {
         APP_LOGE("error: versionCode not same, appQuickFix: %{public}u, bundleInfo: %{public}u",
             appQuickFix.versionCode, bundleInfo.versionCode);
         return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME;
     }
+    const auto &deployedAppqfInfo = bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo;
+    if (deployedAppqfInfo.hqfInfos.empty()) {
+        APP_LOGD("no patch used in bundleName: %{public}s", bundleInfo.name.c_str());
+        return ERR_OK;
+    }
     const auto &qfInfo = appQuickFix.deployingAppqfInfo;
-    uint32_t deployedPatchVersionCode = bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.versionCode;
-    if (qfInfo.versionCode <= deployedPatchVersionCode) {
+    if (qfInfo.versionCode <= deployedAppqfInfo.versionCode) {
         APP_LOGE("qhf version code %{public}u should be greater than the original %{public}u",
-            qfInfo.versionCode, deployedPatchVersionCode);
+            qfInfo.versionCode, deployedAppqfInfo.versionCode);
         return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR;
     }
     return ERR_OK;
