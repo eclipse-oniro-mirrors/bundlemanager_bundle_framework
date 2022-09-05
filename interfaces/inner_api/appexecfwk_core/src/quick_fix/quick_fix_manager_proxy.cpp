@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_file_util.h"
 #include "directory_ex.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
@@ -51,9 +52,13 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
         APP_LOGE("DeployQuickFix failed due to params error.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
+    std::vector<std::string> hqfFilePaths;
+    if (BundleFileUtil::CheckFilePath(bundleFilePaths, hqfFilePaths) != ERR_OK) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    }
 
     std::vector<std::string> copyFilePaths;
-    auto ret = CopyFiles(bundleFilePaths, copyFilePaths);
+    auto ret = CopyFiles(hqfFilePaths, copyFilePaths);
     if (ret != ERR_OK) {
         APP_LOGE("copy files failed with errCode %{public}d", ret);
         return ret;

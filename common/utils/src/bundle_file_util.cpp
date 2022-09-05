@@ -29,6 +29,7 @@
 
 namespace {
 const std::string INSTALL_FILE_SUFFIX = ".hap";
+const std::string QUICK_FIX_FILE_SUFFIX = ".hqf";
 const std::string PATH_SEPARATOR = "/";
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
@@ -45,8 +46,9 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
         APP_LOGE("bundle file path invalid");
         return false;
     }
-    if (!CheckFileType(bundlePath, INSTALL_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap");
+    if (!CheckFileType(bundlePath, INSTALL_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, QUICK_FIX_FILE_SUFFIX)) {
+        APP_LOGE("file is not hap or hqf");
         return false;
     }
     if (!PathToRealPath(bundlePath, realPath)) {
