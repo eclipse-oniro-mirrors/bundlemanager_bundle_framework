@@ -750,6 +750,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
         ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
         bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.versionCode = 2;
+        bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.hqfInfos.emplace_back(HqfInfo());
         QuickFixChecker checker;
         ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR);

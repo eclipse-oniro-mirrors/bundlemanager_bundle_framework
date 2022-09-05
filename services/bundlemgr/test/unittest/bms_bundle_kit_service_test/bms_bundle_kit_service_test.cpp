@@ -2293,7 +2293,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryKeepAliveBundleInfos_0200, Function | Sma
 {
     std::vector<BundleInfo> bundleInfos;
     bool ret = GetBundleDataMgr()->QueryKeepAliveBundleInfos(bundleInfos);
-    EXPECT_EQ(true, ret);
+    EXPECT_EQ(false, ret);
 }
 
 /**

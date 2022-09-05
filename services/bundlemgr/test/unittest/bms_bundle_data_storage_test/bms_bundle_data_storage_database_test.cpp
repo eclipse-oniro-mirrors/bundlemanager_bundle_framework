@@ -130,6 +130,27 @@ protected:
                         "versionName": "",
                         "appDistributionType": "none",
                         "appProvisionType": "release",
+                        "appQuickFix": {
+                            "bundleName": "",
+                            "deployedAppqfInfo": {
+                                "cpuAbi": "",
+                                "hqfInfos": [],
+                                "nativeLibraryPath": "",
+                                "type": 0,
+                                "versionCode": 0,
+                                "versionName": ""
+                            },
+                            "deployingAppqfInfo": {
+                                "cpuAbi": "",
+                                "hqfInfos": [],
+                                "nativeLibraryPath": "",
+                                "type": 0,
+                                "versionCode": 0,
+                                "versionName": ""
+                            },
+                            "versionCode": 0,
+                            "versionName": ""
+                        },
                         "crowdtestDeadline": -1,
                         "runningResourcesApply": false,
                         "associatedWakeUp": false,
@@ -446,6 +467,27 @@ protected:
                 "versionName": "1.0.0",
                 "appDistributionType": "none",
                 "appProvisionType": "release",
+                "appQuickFix": {
+                    "bundleName": "",
+                    "deployedAppqfInfo": {
+                        "cpuAbi": "",
+                        "hqfInfos": [],
+                        "nativeLibraryPath": "",
+                        "type": 0,
+                        "versionCode": 0,
+                        "versionName": ""
+                    },
+                    "deployingAppqfInfo": {
+                        "cpuAbi": "",
+                        "hqfInfos": [],
+                        "nativeLibraryPath": "",
+                        "type": 0,
+                        "versionCode": 0,
+                        "versionName": ""
+                    },
+                    "versionCode": 0,
+                    "versionName": ""
+                },
                 "crowdtestDeadline": -1,
                 "runningResourcesApply": false,
                 "associatedWakeUp": false,
@@ -534,6 +576,27 @@ protected:
                     "versionName": "",
                     "appDistributionType": "none",
                     "appProvisionType": "release",
+                    "appQuickFix": {
+                        "bundleName": "",
+                        "deployedAppqfInfo": {
+                            "cpuAbi": "",
+                            "hqfInfos": [],
+                            "nativeLibraryPath": "",
+                            "type": 0,
+                            "versionCode": 0,
+                            "versionName": ""
+                        },
+                        "deployingAppqfInfo": {
+                            "cpuAbi": "",
+                            "hqfInfos": [],
+                            "nativeLibraryPath": "",
+                            "type": 0,
+                            "versionCode": 0,
+                            "versionName": ""
+                        },
+                        "versionCode": 0,
+                        "versionName": ""
+                    },
                     "crowdtestDeadline": -1,
                     "runningResourcesApply": false,
                     "associatedWakeUp": false,
@@ -542,14 +605,6 @@ protected:
                     "allowCommonEvent": []
                 },
                 "compatibleVersion": 8,
-                "appqfInfo": {
-                    "cpuAbi": "",
-                    "hqfInfos": [],
-                    "nativeLibraryPath": "",
-                    "type": 0,
-                    "versionCode": 0,
-                    "versionName": ""
-                },
                 "cpuAbi": "",
                 "defPermissions": [
                 ],
