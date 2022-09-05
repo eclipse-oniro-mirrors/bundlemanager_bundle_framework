@@ -1121,6 +1121,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0029, Function | SmallTest
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     std::vector<std::string> path {HQF_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 } // OHOS

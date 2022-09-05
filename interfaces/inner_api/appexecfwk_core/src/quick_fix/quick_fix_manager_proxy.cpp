@@ -53,8 +53,9 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     std::vector<std::string> hqfFilePaths;
-    if (BundleFileUtil::CheckFilePath(bundleFilePaths, hqfFilePaths) != ERR_OK) {
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    if (!BundleFileUtil::CheckFilePath(bundleFilePaths, hqfFilePaths)) {
+        APP_LOGE("DeployQuickFix CheckFilePath failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     std::vector<std::string> copyFilePaths;
