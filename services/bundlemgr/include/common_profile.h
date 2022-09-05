@@ -96,6 +96,7 @@ constexpr const char* BUNDLE_MODULE_PROFILE_KEY_SUPPORTED_MODES = "supportedMode
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_REQ_CAPABILITIES = "reqCapabilities";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_SUPPORTED_REQ_CAPABILITIES = "reqCapabilities";
 constexpr const char* BUNDLE_MODULE_DEPENDENCIES = "dependencies";
+constexpr const char* BUNDLE_MODULE_PROFILE_KEY_IS_LIB_ISOLATED = "isLibIsolated";
 constexpr const char* MODULE_SUPPORTED_MODES_VALUE_DRIVE = "drive";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_DEVICE_TYPE = "deviceType";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_COLOR_MODE = "colorMode";
@@ -356,6 +357,7 @@ constexpr const char* MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* MODULE_DEFINE_PERMISSIONS = "definePermissions";
 constexpr const char* MODULE_DEPENDENCIES = "dependencies";
 constexpr const char* MODULE_COMPILE_MODE = "compileMode";
+constexpr const char* MODULE_IS_LIB_ISOLATED = "isLibIsolated";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";

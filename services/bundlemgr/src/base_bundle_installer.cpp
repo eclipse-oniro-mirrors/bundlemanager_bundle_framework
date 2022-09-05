@@ -1485,13 +1485,14 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
 {
     std::string targetSoPath;
-    std::string nativeLibraryPath = info.GetBaseApplicationInfo().nativeLibraryPath;
-    if (!nativeLibraryPath.empty()) {
+    std::string cpuAbi;
+    std::string nativeLibraryPath;
+    if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
             .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
             .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
     }
-    std::string cpuAbi = info.GetBaseApplicationInfo().cpuAbi;
+
     APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
     auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);

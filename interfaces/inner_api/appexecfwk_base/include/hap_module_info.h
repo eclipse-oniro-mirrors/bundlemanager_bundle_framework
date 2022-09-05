@@ -55,6 +55,9 @@ struct HapModuleInfo : public Parcelable {
     std::string hashValue;
     std::string hapPath;
     int supportedModes = 0;
+    bool isLibIsolated = false;
+    std::string nativeLibraryPath;
+    std::string cpuAbi;
 
     // quick fix hqf info
     HqfInfo hqfInfo;
