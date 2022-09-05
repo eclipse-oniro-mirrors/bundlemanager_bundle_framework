@@ -24,6 +24,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_host.h"
+#include "bundle_mgr_proxy.h"
 #include "directory_ex.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -192,6 +193,7 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+    static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::vector<std::string> &dependencies,
@@ -291,6 +293,25 @@ std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 std::shared_ptr<LauncherService> BmsBundleKitServiceTest::GetLauncherService() const
 {
     return launcherService_;
+}
+
+sptr<BundleMgrProxy> BmsBundleKitServiceTest::GetBundleMgrProxy()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        APP_LOGE("fail to get system ability mgr.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        APP_LOGE("fail to get bundle manager proxy.");
+        return nullptr;
+    }
+
+    APP_LOGI("get bundle manager proxy success.");
+    return iface_cast<BundleMgrProxy>(remoteObject);
 }
 
 void BmsBundleKitServiceTest::AddBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo) const
@@ -1103,6 +1124,29 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0600, Function | SmallTes
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true);
     EXPECT_TRUE(testRet);
     bool testRet1 = GetBundleDataMgr()->IsModuleRemovable("", "");
+    EXPECT_FALSE(testRet1);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CheckModuleRemovable_0700
+ * @tc.name: test can check module removable is able by empty bundle name
+ * @tc.desc: 1.system run normally
+ *           2.check the module removable successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true);
+    EXPECT_FALSE(testRet);
+    bool testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST);
     EXPECT_FALSE(testRet1);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -1959,6 +2003,27 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0500, Function | SmallT
 }
 
 /**
+ * @tc.number: GetLaunchWantForBundle_0600
+ * @tc.name: test can not get the launch want of a bundle which is not exist
+ * @tc.desc: 1.system run normally
+ *           2.get launch want failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool testRet = bundleMgrProxy->GetLaunchWantForBundle(BUNDLE_NAME_DEMO, want);
+    EXPECT_EQ(false, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetBundleList_0100
  * @tc.name: test can get all installed bundle names
  * @tc.desc: 1.system run normally
@@ -2168,6 +2233,29 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0300, Function | SmallTest | Level1)
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: DUMP_0400
+ * @tc.name: Dump empty bundle info for empty bundle name
+ * @tc.desc: 1.system run normally
+ *           2.dump with empty bundle name
+ */
+HWTEST_F(BmsBundleKitServiceTest, DUMP_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string emptyResult;
+    bool emptyRet = bundleMgrProxy->DumpInfos(
+        DumpFlag::DUMP_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, emptyResult);
+    EXPECT_FALSE(emptyRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
@@ -2525,6 +2613,29 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0600, Function | Small
 }
 
 /**
+ * @tc.number: CheckApplicationEnabled_0700
+ * @tc.name: test can check bundle status is enable by setting
+ * @tc.desc: 1.system run normally
+ *           2.check the bundle status successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool testRet = bundleMgrProxy->SetApplicationEnabled("", true);
+    EXPECT_FALSE(testRet);
+    bool testRet1 = bundleMgrProxy->IsApplicationEnabled("");
+    EXPECT_FALSE(testRet1);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetBundleInfosByMetaData_0100
  * @tc.name: test can get the bundle infos by metadata
  * @tc.desc: 1.system run normally
@@ -2723,6 +2834,31 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0700, Function | SmallTes
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true, true);
     CreateFileDir();
 
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool testRet = bundleMgrProxy->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    EXPECT_FALSE(testRet);
+
+    CleanFileDir();
+    CheckFileNonExist();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanBundleDataFiles_0800
+ * @tc.name: test can clean the bundle data files by bundle name
+ * @tc.desc: 1.system run normally
+ *           2.clean the bundle data files successfully
+ * @tc.require: AR000GJUJ8
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    CreateFileDir();
+
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool testRet = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID);
     EXPECT_TRUE(testRet);
@@ -2860,6 +2996,32 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1
     bool result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
     EXPECT_FALSE(result);
     CheckCacheExist();
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanCache_0800
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2. userDataClearable is false, isSystemApp is false
+ *           3.clean the cache files succeed
+ * @tc.require: SR000H00TH
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, true);
+    CreateFileDir();
+
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool result = bundleMgrProxy->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_FALSE(result);
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3363,6 +3525,34 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1200, Function | SmallTest
 }
 
 /**
+ * @tc.number: CheckAbilityEnabled_1300
+ * @tc.name: test can check ability status is disable by setting and can be enabled again
+ * @tc.desc: 1.system run normally
+ *           2.check the ability status successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, DEFAULT_USERID);
+    EXPECT_FALSE(testRet);
+    bool testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
+    EXPECT_FALSE(testRet1);
+    bool testRet2 = bundleMgrProxy->SetAbilityEnabled(abilityInfo, true, DEFAULT_USERID);
+    EXPECT_FALSE(testRet2);
+    bool testRet3 = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
+    EXPECT_FALSE(testRet3);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetFormInfoByModule_0100
  * @tc.name: test can  get the formInfo
  * @tc.desc: 1.system run normally
@@ -3588,6 +3778,35 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllFormInfo_0200, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: GetAllFormInfo_0300
+ * @tc.name: test can get all the formInfo
+ * @tc.desc: 1.system run normally
+ *           2.get forms by all the bundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllFormInfo_0301, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<FormInfo> formInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    auto result = bundleMgrProxy->GetAllFormsInfo(formInfos);
+    EXPECT_EQ(result, true);
+    EXPECT_TRUE(formInfos.empty());
+    for (const auto &info : formInfos) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            std::vector<FormInfo> formInfo;
+            formInfo.emplace_back(info);
+            CheckFormInfoTest(formInfo);
+            break;
+        }
+    }
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetShortcutInfos_0100
  * @tc.name: test can get shortcutInfo by bundleName
  * @tc.desc: 1.can get shortcutInfo
@@ -3670,7 +3889,26 @@ HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfos_0500, Function | SmallTest | 
     EXPECT_TRUE(shortcutInfos.empty());
 }
 
-
+/**
+ * @tc.number: GetShortcutInfos_0100
+ * @tc.name: test can get shortcutInfo by bundleName
+ * @tc.desc: 1.can get shortcutInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfos_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bundleMgrProxy->GetShortcutInfos(
+        BUNDLE_NAME_TEST, shortcutInfos);
+    EXPECT_TRUE(shortcutInfos.empty());
+    CheckShortcutInfoTest(shortcutInfos);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
 
 /**
  * @tc.number: Ability_0100
@@ -3851,6 +4089,26 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllCommonEventInfo_0500, Function | SmallTe
     std::vector<CommonEventInfo> commonEventInfos;
     GetBundleDataMgr()->GetAllCommonEventInfo(COMMON_EVENT_EVENT_NOT_EXISTS_KEY, commonEventInfos);
     EXPECT_TRUE(commonEventInfos.empty());
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAllCommonEventInfo_0100
+ * @tc.name: test can get CommonEventInfo by event key
+ * @tc.desc: 1.can get CommonEventInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllCommonEventInfo_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<CommonEventInfo> commonEventInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bundleMgrProxy->GetAllCommonEventInfo(COMMON_EVENT_EVENT_NOT_EXISTS_KEY, commonEventInfos);
+    EXPECT_TRUE(commonEventInfos.empty());
+    CheckCommonEventInfoTest(commonEventInfos);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -4387,5 +4645,22 @@ HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_003, Function | SmallTest | 
     int32_t status = GetBundleDataMgr()->GetDisposedStatus(BUNDLE_NAME_TEST);
     EXPECT_EQ(status, DISPOSED_STATUS);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetDisposedStatus_002
+ * @tc.name: test GetDisposedStatus
+ * @tc.desc: wrong bundleName, expect 0
+ * @tc.require: AR000H7N9D
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_0041, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    int32_t status = bundleMgrProxy->GetDisposedStatus("wrong");
+    EXPECT_EQ(status, 0);
 }
 }
