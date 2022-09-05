@@ -180,9 +180,14 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // 8. update quick fix info status of SWITCH_END
-    if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::SWITCH_END, oldInnerAppQuickFix)) {
-        APP_LOGE("update quickfix status %{public}d failed", QuickFixStatus::SWITCH_END);
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
+    auto appQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
+    if (appQuickFix.deployedAppqfInfo.hqfInfos.empty() && appQuickFix.deployingAppqfInfo.hqfInfos.empty()) {
+        quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName);
+    } else {
+        if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::SWITCH_END, oldInnerAppQuickFix)) {
+            APP_LOGE("update quickfix status %{public}d failed", QuickFixStatus::SWITCH_END);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
+        }
     }
     innerBundleInfoGuard.Dismiss();
     return ERR_OK;

@@ -19,7 +19,6 @@
 #include <cstdio>
 #include <dirent.h>
 #include <dlfcn.h>
-#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -724,30 +723,45 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
 
 bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &fileVec)
 {
-    std::filesystem::path dirStr(dir);
-    if (!std::filesystem::exists(dirStr)) {
-        APP_LOGE("pathStr is not existed");
-        return false;
-    }
-    if (!is_directory(dirStr)) {
-        APP_LOGE("pathStr is not a directory");
+    if (dir.empty()) {
+        APP_LOGE("ObtainQuickFixFileDir dir path invaild");
         return false;
     }
 
-    std::filesystem::directory_iterator dirite(dirStr);
-    for (const auto &entry : dirite) {
-        // folder
-        if (entry.status().type() == std::filesystem::file_type::directory) {
-            std::string subdirStr = entry.path().string();
-            ObtainQuickFixFileDir(subdirStr, fileVec);
-        // file
-        } else if (entry.status().type() == std::filesystem::file_type::regular) {
-            std::string fileStr = entry.path().filename().string();
-            if (fileStr.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos) {
+    std::string realPath = "";
+    if (!PathToRealPath(dir, realPath)) {
+        APP_LOGE("dir(%{public}s) is not real path", dir.c_str());
+        return false;
+    }
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        APP_LOGE("ObtainQuickFixFileDir open dir(%{public}s) fail", realPath.c_str());
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = dir + Constants::PATH_SEPARATOR + currentName;
+        struct stat s;
+        if (stat(curPath.c_str(), &s) == 0) {
+            // directory
+            if (s.st_mode & S_IFDIR) {
+                ObtainQuickFixFileDir(curPath, fileVec);
+            }
+
+            // file
+            if((s.st_mode & S_IFREG) && (currentName.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
                 fileVec.emplace_back(dir);
             }
         }
     }
+    closedir(directory);
     return true;
 }
 
@@ -758,23 +772,36 @@ bool InstalldOperator::CopyFiles(const std::string &sourceDir, const std::string
         APP_LOGE("Copy file failed due to sourceDir or destinationDir is empty");
         return false;
     }
-    std::filesystem::path dirSourceStr(sourceDir);
-    std::filesystem::path dirDesStr(destinationDir);
-    if (!std::filesystem::exists(dirSourceStr) || !is_directory(dirSourceStr) ||
-        !std::filesystem::exists(dirDesStr) || !is_directory(dirDesStr)) {
-        APP_LOGE("dirSourceStr or dirDesStr is invalid");
+
+    std::string realPath = "";
+    if (!PathToRealPath(sourceDir, realPath)) {
+        APP_LOGE("sourceDir(%{public}s) is not real path", sourceDir.c_str());
         return false;
     }
-    std::filesystem::directory_iterator diriter(sourceDir);
-    for (const auto &entry : diriter) {
-        if (entry.status().type() == std::filesystem::file_type::regular) {
-            std::string fileStr = entry.path().filename().string();
-            std::string innerDesStr = destinationDir + Constants::PATH_SEPARATOR + fileStr;
-            if (CopyFile(sourceDir + Constants::PATH_SEPARATOR + fileStr, innerDesStr)) {
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        APP_LOGE("CopyFiles open dir(%{public}s) fail", realPath.c_str());
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = sourceDir + Constants::PATH_SEPARATOR + currentName;
+        struct stat s;
+        if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
+            std::string innerDesStr = destinationDir + Constants::PATH_SEPARATOR + currentName;
+            if (CopyFile(curPath, innerDesStr)) {
                 ChangeFileAttr(innerDesStr, Constants::FOUNDATION_UID, Constants::BMS_GID);
             }
         }
     }
+    closedir(directory);
     return true;
 }
 }  // namespace AppExecFwk
