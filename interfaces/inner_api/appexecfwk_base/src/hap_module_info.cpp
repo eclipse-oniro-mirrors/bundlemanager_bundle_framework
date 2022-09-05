@@ -61,6 +61,7 @@ const std::string HAP_MODULE_INFO_DEPENDENCIES = "dependencies";
 const std::string HAP_MODULE_INFO_UPGRADE_FLAG = "upgradeFlag";
 const std::string HAP_MODULE_INFO_HAP_PATH = "hapPath";
 const std::string HAP_MODULE_INFO_COMPILE_MODE = "compileMode";
+const std::string HAP_MODULE_INFO_HQF_INFO = "hqfInfo";
 }
 
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
@@ -157,6 +158,12 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 
     upgradeFlag = parcel.ReadInt32();
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
+    std::unique_ptr<HqfInfo> hqfInfoPtr(parcel.ReadParcelable<HqfInfo>());
+    if (hqfInfoPtr == nullptr) {
+        APP_LOGE("ReadParcelable<HqfInfo> failed");
+        return false;
+    }
+    hqfInfo = *hqfInfoPtr;
     return true;
 }
 
@@ -243,6 +250,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, upgradeFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hqfInfo);
     return true;
 }
 
@@ -286,7 +294,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_EXTENSION_INFOS, hapModuleInfo.extensionInfos},
         {HAP_MODULE_INFO_META_DATA, hapModuleInfo.metadata},
         {HAP_MODULE_INFO_DEPENDENCIES, hapModuleInfo.dependencies},
-        {HAP_MODULE_INFO_COMPILE_MODE, hapModuleInfo.compileMode}
+        {HAP_MODULE_INFO_COMPILE_MODE, hapModuleInfo.compileMode},
+        {HAP_MODULE_INFO_HQF_INFO, hapModuleInfo.hqfInfo}
     };
 }
 
@@ -595,6 +604,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         HAP_MODULE_INFO_COMPILE_MODE,
         hapModuleInfo.compileMode,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<HqfInfo>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_HQF_INFO,
+        hapModuleInfo.hqfInfo,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

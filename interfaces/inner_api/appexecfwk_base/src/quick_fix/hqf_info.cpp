@@ -26,6 +26,7 @@ namespace AppExecFwk {
 namespace {
 const std::string HQF_INFO_HAP_SHA256 = "hapSha256";
 const std::string HQF_INFO_HQF_FILE_PATH = "hqfFilePath";
+const std::string HQF_INFO_TYPE = "type";
 }
 
 void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
@@ -33,7 +34,8 @@ void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
     jsonObject = nlohmann::json {
         {Constants::MODULE_NAME, hqfInfo.moduleName},
         {HQF_INFO_HAP_SHA256, hqfInfo.hapSha256},
-        {HQF_INFO_HQF_FILE_PATH, hqfInfo.hqfFilePath}
+        {HQF_INFO_HQF_FILE_PATH, hqfInfo.hqfFilePath},
+        {HQF_INFO_TYPE, hqfInfo.type}
     };
 }
 
@@ -65,6 +67,14 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<QuickFixType>(jsonObject,
+        jsonObjectEnd,
+        HQF_INFO_TYPE,
+        hqfInfo.type,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 bool HqfInfo::ReadFromParcel(Parcel &parcel)
@@ -72,6 +82,7 @@ bool HqfInfo::ReadFromParcel(Parcel &parcel)
     moduleName = Str16ToStr8(parcel.ReadString16());
     hapSha256 = Str16ToStr8(parcel.ReadString16());
     hqfFilePath = Str16ToStr8(parcel.ReadString16());
+    type = static_cast<QuickFixType>(parcel.ReadInt32());
     return true;
 }
 
@@ -80,6 +91,7 @@ bool HqfInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapSha256));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hqfFilePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
     return true;
 }
 
