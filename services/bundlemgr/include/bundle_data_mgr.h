@@ -150,6 +150,16 @@ public:
     bool QueryAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     /**
+     * @brief Query a AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfo of list.
+     * @return Returns ERR_OK if the AbilityInfo is successfully obtained; returns errCode otherwise.
+     */
+    ErrCode QueryAbilityInfosV9(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    /**
      * @brief Query all match launcher ability infos by given wants.
      * @param want Indicates the match infomation for abilities.
      * @param info Indicates the bundleInfo.

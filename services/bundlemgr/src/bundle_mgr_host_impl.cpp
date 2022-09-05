@@ -56,7 +56,7 @@ bool BundleMgrHostImpl::GetApplicationInfo(
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to GetApplicationInfo");
+    APP_LOGD("verify permission success, begin to GetApplicationInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -79,7 +79,7 @@ bool BundleMgrHostImpl::GetApplicationInfos(
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to GetApplicationInfos");
+    APP_LOGD("verify permission success, begin to GetApplicationInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -103,7 +103,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to GetBundleInfo");
+    APP_LOGD("verify permission success, begin to GetBundleInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -163,7 +163,7 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to GetBundleInfos");
+    APP_LOGD("verify permission success, begin to GetBundleInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -300,7 +300,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to QueryAbilityInfo");
+    APP_LOGD("verify permission success, begin to QueryAbilityInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -323,13 +323,30 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to QueryAbilityInfos");
+    APP_LOGD("verify permission success, begin to QueryAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
     return dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
+}
+
+ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
+    const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+{
+    APP_LOGD("start QueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
+        APP_LOGE("verify permission failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to QueryAbilityInfosV9");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
 }
 
 bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
@@ -339,7 +356,7 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to QueryAllAbilityInfos");
+    APP_LOGD("verify permission success, begin to QueryAllAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -453,7 +470,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
             APP_LOGE("parse bundle info failed, error: %{public}d", ret);
             return false;
         }
-        APP_LOGD("verify permission success, bgein to GetBundleArchiveInfo");
+        APP_LOGD("verify permission success, begin to GetBundleArchiveInfo");
         info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
         return true;
     } else {
@@ -504,7 +521,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &hap
         return false;
     }
     BundleUtil::DeleteDir(tempHapPath);
-    APP_LOGD("verify permission success, bgein to GetBundleArchiveInfo");
+    APP_LOGD("verify permission success, begin to GetBundleArchiveInfo");
     info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     return true;
 }
@@ -537,7 +554,7 @@ bool BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName, Wa
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to GetLaunchWantForBundle");
+    APP_LOGD("verify permission success, begin to GetLaunchWantForBundle");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1019,7 +1036,7 @@ bool BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, boo
         EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, true);
         return false;
     }
-    APP_LOGD("verify permission success, bgein to SetApplicationEnabled");
+    APP_LOGD("verify permission success, begin to SetApplicationEnabled");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1077,7 +1094,7 @@ bool BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
         return false;
     }
 
-    APP_LOGD("verify permission success, bgein to SetAbilityEnabled");
+    APP_LOGD("verify permission success, begin to SetAbilityEnabled");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1173,7 +1190,7 @@ bool BundleMgrHostImpl::GetShortcutInfos(
         APP_LOGE("verify permission failed");
         return false;
     }
-    APP_LOGD("verify permission success, bgein to GetShortcutInfos");
+    APP_LOGD("verify permission success, begin to GetShortcutInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");

@@ -90,6 +90,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS, &BundleMgrHost::HandleQueryAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM,
         &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
+    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, &BundleMgrHost::HandleQueryAbilityInfosV9);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, &BundleMgrHost::HandleQueryAllAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI, &BundleMgrHost::HandleQueryAbilityInfoByUri);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_BY_URI, &BundleMgrHost::HandleQueryAbilityInfosByUri);
@@ -641,6 +642,31 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosMutiparam(MessageParcel &data, Mes
     if (ret) {
         if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
             APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = QueryAbilityInfosV9(*want, flags, userId, abilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
+            APP_LOGE("writeParcelableVectorIntoAshmem failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }

@@ -252,6 +252,16 @@ public:
     virtual bool QueryAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
+     * @brief Query the AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode QueryAbilityInfosV9(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
+    /**
      * @brief Query the AbilityInfo of list for all service on launcher.
      * @param userId Indicates the information of the user.
      * @param abilityInfos Indicates the obtained AbilityInfos object.
@@ -707,16 +717,9 @@ private:
     template <typename T>
     ErrCode GetParcelableInfosWithErrCode(IBundleMgr::Message code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
-    /**
-     * @brief Send a command message and then get a vector of parcelable information objects from the reply Ashmem.
-     * @param code Indicates the message code to be sent.
-     * @param data Indicates the objects to be sent.
-     * @param parcelableInfos Indicates the vector objects to be got;
-     * @return Returns true if the vector get successfully; returns false otherwise.
-     */
+
     template <typename T>
-    bool GetParcelableInfosFromAshmem(
-        IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+    bool GetParcelableInfosFromAshmem(MessageParcel &reply, std::vector<T> &parcelableInfos);
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
 };
