@@ -30,7 +30,7 @@ constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 using Want = OHOS::AAFwk::Want;
 
-napi_value ParseInt(napi_env env, int &param, napi_value args)
+napi_value CommonFunc::ParseInt(napi_env env, int &param, napi_value args)
 {
     napi_valuetype valuetype = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
@@ -46,7 +46,7 @@ napi_value ParseInt(napi_env env, int &param, napi_value args)
     return result;
 }
 
-bool ParseString(napi_env env, napi_value value, std::string& result)
+bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result)
 {
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, value, &valueType);
@@ -68,7 +68,7 @@ bool ParseString(napi_env env, napi_value value, std::string& result)
     return true;
 }
 
-std::string GetStringFromNAPI(napi_env env, napi_value value)
+std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)
 {
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, value, &valueType);
@@ -92,7 +92,7 @@ std::string GetStringFromNAPI(napi_env env, napi_value value)
     return result;
 }
 
-napi_value ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args)
+napi_value CommonFunc::ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args)
 {
     APP_LOGD("begin to parse string array");
     bool isArray = false;
@@ -123,7 +123,7 @@ napi_value ParseStringArray(napi_env env, std::vector<std::string> &stringArray,
     return result;
 }
 
-void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want)
+void CommonFunc::ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want)
 {
     ElementName elementName = want.GetElement();
     napi_value nbundleName;
@@ -160,8 +160,7 @@ void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want)
     }
 }
 
-
-bool ParseElementName(napi_env env, napi_value args, Want &want)
+bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
 {
     APP_LOGD("begin to parse ElementName.");
     napi_valuetype valueType = napi_undefined;
