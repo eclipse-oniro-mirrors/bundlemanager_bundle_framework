@@ -1956,7 +1956,7 @@ bool ConvertFormInfo(FormInfo &formInfo, const ProfileReader::Forms &form)
     return true;
 }
 
-bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bundleExtractor)
+bool ParserNativeSo(const BundleExtractor &bundleExtractor, InnerBundleInfo &innerBundleInfo)
 {
     std::string abis = GetAbiList();
     std::vector<std::string> abiList;
@@ -1974,14 +1974,14 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
     if (!soExist) {
         APP_LOGD("so not exist");
         if (isDefault) {
-            applicationInfo.cpuAbi =
-                isSystemLib64Exist ? Constants::ARM64_V8A : Constants::ARM_EABI_V7A;
+            innerBundleInfo.SetCpuAbi(
+                isSystemLib64Exist ? Constants::ARM64_V8A : Constants::ARM_EABI_V7A);
             return true;
         }
 
         for (const auto &abi : abiList) {
             if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end()) {
-                applicationInfo.cpuAbi = abi;
+                innerBundleInfo.SetCpuAbi(abi);
                 return true;
             }
         }
@@ -1993,9 +1993,9 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
     if (isDefault) {
         if (isSystemLib64Exist) {
             if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM64_V8A)) {
-                applicationInfo.cpuAbi = Constants::ARM64_V8A;
-                applicationInfo.nativeLibraryPath =
-                    Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A);
+                innerBundleInfo.SetCpuAbi(Constants::ARM64_V8A);
+                innerBundleInfo.SetNativeLibraryPath(
+                    Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A));
                 return true;
             }
 
@@ -2003,16 +2003,16 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
         }
 
         if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI_V7A)) {
-            applicationInfo.cpuAbi = Constants::ARM_EABI_V7A;
-            applicationInfo.nativeLibraryPath =
-                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI_V7A);
+            innerBundleInfo.SetCpuAbi(Constants::ARM_EABI_V7A);
+            innerBundleInfo.SetNativeLibraryPath(
+                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI_V7A));
             return true;
         }
 
         if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI)) {
-            applicationInfo.cpuAbi = Constants::ARM_EABI;
-            applicationInfo.nativeLibraryPath =
-                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI);
+            innerBundleInfo.SetCpuAbi(Constants::ARM_EABI);
+            innerBundleInfo.SetNativeLibraryPath(
+                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI));
             return true;
         }
 
@@ -2023,8 +2023,8 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
         std::string libsPath;
         libsPath.append(Constants::LIBS).append(abi).append(Constants::PATH_SEPARATOR);
         if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && bundleExtractor.IsDirExist(libsPath)) {
-            applicationInfo.cpuAbi = abi;
-            applicationInfo.nativeLibraryPath = Constants::LIBS + Constants::ABI_MAP.at(abi);
+            innerBundleInfo.SetCpuAbi(abi);
+            innerBundleInfo.SetNativeLibraryPath(Constants::LIBS + Constants::ABI_MAP.at(abi));
             return true;
         }
     }
@@ -2087,13 +2087,6 @@ bool ToApplicationInfo(
         applicationInfo.supportedModes = 0;
     }
     applicationInfo.vendor = configJson.app.vendor;
-    // handle native so
-    if (!ParserNativeSo(applicationInfo, bundleExtractor)) {
-        APP_LOGE("Parser native so failed.");
-        return false;
-    }
-    APP_LOGD("nativeLibraryPath : %{private}s, cpuAbi : %{public}s",
-        applicationInfo.nativeLibraryPath.c_str(), applicationInfo.cpuAbi.c_str());
 
     // for SystemResource
     applicationInfo.iconId = configJson.app.iconId;
@@ -2480,6 +2473,10 @@ ErrCode BundleProfile::TransformTo(
     if (!ToInnerBundleInfo(
         configJson, bundleExtractor, appPrivilegeCapability, innerBundleInfo)) {
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    if (!ParserNativeSo(bundleExtractor, innerBundleInfo)) {
+        APP_LOGE("Parser native so failed.");
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
     }
     return ERR_OK;
 }
