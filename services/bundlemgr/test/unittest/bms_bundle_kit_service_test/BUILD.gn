@@ -156,9 +156,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
       "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
     ]
   }
-
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 ohos_unittest("BmsBundleGetWindowPropertiesTest") {
@@ -299,8 +296,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
       "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
     ]
   }
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {

@@ -66,8 +66,6 @@ ohos_unittest("BmsBundleParserTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {

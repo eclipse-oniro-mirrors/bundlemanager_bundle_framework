@@ -167,9 +167,6 @@ ohos_unittest("BmsBundleInstallerTest") {
       "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
     ]
   }
-
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 ohos_unittest("BmsMultipleBundleInstallerTest") {
@@ -337,9 +334,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
       "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
     ]
   }
-
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {
