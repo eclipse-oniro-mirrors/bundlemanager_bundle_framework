@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,16 +11,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- -->
-<configuration ver="2.0">
-  <target name="BundleMgrClientSystemTest">
-    <preparer>
-    <option name="push" value="BundleClient/bundleClient1.hap -> /data/test/bms_bundle/" src="res" />
-    </preparer>
-  </target>
-  <target name="BundleMgrSandboxAppSystemTest">
-    <preparer>
-    <option name="push" value="BundleClient/bundleClient1.hap -> /data/test/bms_bundle/" src="res" />
-    </preparer>
-  </target>
-</configuration>
+ */
+
+import AbilityStage from "@ohos.application.AbilityStage"
+
+export default class MyAbilityStage extends AbilityStage {
+    onCreate() {
+        console.log("[Demo] MyAbilityStage onCreate")
+	globalThis.stageOnCreateRun = 1;
+	globalThis.stageContext = this.context;
+    }
+}
