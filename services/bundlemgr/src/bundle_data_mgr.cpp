@@ -466,6 +466,13 @@ bool BundleDataMgr::QueryAbilityInfos(
     return true;
 }
 
+ErrCode BundleDataMgr::QueryAbilityInfosV9(
+    const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
+{
+    // to do
+    return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+}
+
 bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, int32_t appIndex) const
 {

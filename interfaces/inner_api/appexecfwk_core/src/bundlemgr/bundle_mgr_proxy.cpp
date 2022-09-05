@@ -191,9 +191,17 @@ bool BundleMgrProxy::GetApplicationInfos(
         return false;
     }
 
-    if (!GetParcelableInfosFromAshmem<ApplicationInfo>(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS,
-        data, appInfos)) {
-        APP_LOGE("fail to GetApplicationInfos from server");
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("host returns error");
+        return false;
+    }
+    if (!GetParcelableInfosFromAshmem<ApplicationInfo>(reply, appInfos)) {
+        APP_LOGE("failed to GetApplicationInfos from server");
         return false;
     }
     return true;
@@ -359,8 +367,16 @@ bool BundleMgrProxy::GetBundleInfos(
         return false;
     }
 
-    if (!GetParcelableInfosFromAshmem<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_INFOS, data, bundleInfos)) {
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("host returns error");
+        return false;
+    }
+    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
         APP_LOGE("fail to GetBundleInfos from server");
         return false;
     }
@@ -386,8 +402,16 @@ bool BundleMgrProxy::GetBundleInfos(
         return false;
     }
 
-    if (!GetParcelableInfosFromAshmem<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS, data, bundleInfos)) {
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("host returns error");
+        return false;
+    }
+    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
         APP_LOGE("fail to GetBundleInfos from server");
         return false;
     }
@@ -831,12 +855,59 @@ bool BundleMgrProxy::QueryAbilityInfos(
         return false;
     }
 
-    if (!GetParcelableInfosFromAshmem<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM,
-                                                   data, abilityInfos)) {
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("host returns error");
+        return false;
+    }
+    if (!GetParcelableInfosFromAshmem<AbilityInfo>(reply, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos mutiparam from server");
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::QueryAbilityInfosV9(
+    const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("write want failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("write flags failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply errCode : %{public}d", ret);
+        return ret;
+    }
+    if (!GetParcelableInfosFromAshmem<AbilityInfo>(reply, abilityInfos)) {
+        APP_LOGE("getParcelableInfosFromAshmem failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
@@ -856,7 +927,16 @@ bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std:
         return false;
     }
 
-    if (!GetParcelableInfosFromAshmem<AbilityInfo>(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, data, abilityInfos)) {
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("host returns error");
+        return false;
+    }
+    if (!GetParcelableInfosFromAshmem<AbilityInfo>(reply, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos from server");
         return false;
     }
@@ -3009,20 +3089,9 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
 }
 
 template <typename T>
-bool BundleMgrProxy::GetParcelableInfosFromAshmem(
-    IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos)
+bool BundleMgrProxy::GetParcelableInfosFromAshmem(MessageParcel &reply, std::vector<T> &parcelableInfos)
 {
     APP_LOGD("Get parcelable vector from ashmem");
-    MessageParcel reply;
-    if (!SendTransactCmd(code, data, reply)) {
-        return false;
-    }
-
-    if (!reply.ReadBool()) {
-        APP_LOGE("ReadParcelableInfo failed");
-        return false;
-    }
-
     int32_t infoSize = reply.ReadInt32();
     sptr<Ashmem> ashmem = reply.ReadAshmem();
     if (ashmem == nullptr) {

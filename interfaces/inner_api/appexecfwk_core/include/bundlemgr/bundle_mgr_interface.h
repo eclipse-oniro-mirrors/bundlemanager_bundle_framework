@@ -352,6 +352,16 @@ public:
         return false;
     }
     /**
+     * @brief Query the AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errorCode otherwise.
+     */
+    virtual ErrCode QueryAbilityInfosV9(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) = 0;
+    /**
      * @brief Query the AllAbilityInfos of list by the given userId.
      * @param userId Indicates the information of the user.
      * @param abilityInfos Indicates the obtained AbilityInfos object.
@@ -1072,6 +1082,7 @@ public:
         GET_UDID_BY_NETWORK_ID,
         GET_APP_CONTROL_PROXY,
         SET_DEBUG_MODE,
+        QUERY_ABILITY_INFOS_V9,
     };
 };
 }  // namespace AppExecFwk
