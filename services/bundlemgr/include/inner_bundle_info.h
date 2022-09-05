@@ -31,6 +31,7 @@
 #include "inner_bundle_user_info.h"
 #include "json_util.h"
 #include "quick_fix/app_quick_fix.h"
+#include "quick_fix/hqf_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -1576,6 +1577,10 @@ public:
 
     void SetAppQuickFix(const AppQuickFix &appQuickFix);
 
+    std::vector<HqfInfo> GetQuickFixHqfInfos() const;
+
+    void SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos);
+
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
 
@@ -1628,6 +1633,8 @@ private:
 
     // SandBox App Persistent Info
     std::vector<SandboxAppPersistentInfo> sandboxPersistentInfo_;
+    // quick fix hqf info
+    std::vector<HqfInfo> hqfInfos_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

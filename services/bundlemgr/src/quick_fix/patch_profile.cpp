@@ -188,6 +188,7 @@ void ToPatchInfo(PatchJson &patchJson, AppQuickFix &appQuickFix)
     HqfInfo hqfInfo;
     hqfInfo.moduleName = patchJson.module.name;
     hqfInfo.hapSha256 = patchJson.module.originalModuleHash;
+    hqfInfo.type = GetQuickFixType(patchJson.module.type);
     appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
 }
 }

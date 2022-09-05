@@ -21,6 +21,7 @@
 #include "ability_info.h"
 #include "extension_ability_info.h"
 #include "parcel.h"
+#include "quick_fix/hqf_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -54,6 +55,9 @@ struct HapModuleInfo : public Parcelable {
     std::string hashValue;
     std::string hapPath;
     int supportedModes = 0;
+
+    // quick fix hqf info
+    HqfInfo hqfInfo;
 
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceTypes;

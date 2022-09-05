@@ -24,12 +24,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class QuickFixType {
-    UNKNOWN = 0,
-    PATCH = 1,
-    HOT_RELOAD = 2
-};
-
 struct AppqfInfo : public Parcelable {
     uint32_t versionCode = 0; // quick fix version code
     std::string versionName; // quick fix version name

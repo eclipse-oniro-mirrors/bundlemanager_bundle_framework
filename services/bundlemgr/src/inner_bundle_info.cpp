@@ -106,6 +106,7 @@ const std::string BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
 const std::string MODULE_COMPILE_MODE = "compileMode";
+const std::string BUNDLE_HQF_INFOS = "hqfInfos";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -366,6 +367,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
         APP_LOGE("baseBundleInfo_ is nullptr, create failed");
     }
     *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
+    this->hqfInfos_ = info.hqfInfos_;
     return *this;
 }
 
@@ -513,6 +515,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
     jsonObject[DISPOSED_STATUS] = disposedStatus_;
+    jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1361,6 +1364,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_HQF_INFOS,
+        hqfInfos_,
+        JsonType::ARRAY,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -1454,6 +1465,12 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     }
     hapInfo.dependencies = it->second.dependencies;
     hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
+    for (const auto &hqf : hqfInfos_) {
+        if (hqf.moduleName == it->second.moduleName) {
+            hapInfo.hqfInfo = hqf;
+            break;
+        }
+    }
     return hapInfo;
 }
 
@@ -2653,6 +2670,17 @@ AppQuickFix InnerBundleInfo::GetAppQuickFix() const
 void InnerBundleInfo::SetAppQuickFix(const AppQuickFix &appQuickFix)
 {
     baseApplicationInfo_->appQuickFix = appQuickFix;
+    SetQuickFixHqfInfos(appQuickFix.deployedAppqfInfo.hqfInfos);
+}
+
+std::vector<HqfInfo> InnerBundleInfo::GetQuickFixHqfInfos() const
+{
+    return hqfInfos_;
+}
+
+void InnerBundleInfo::SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos)
+{
+    hqfInfos_ = hqfInfos;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
