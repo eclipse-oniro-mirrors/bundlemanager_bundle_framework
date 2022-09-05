@@ -135,6 +135,10 @@ public:
 
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) override;
 
+    virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) override;
+
+    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) override;
+
 private:
     ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

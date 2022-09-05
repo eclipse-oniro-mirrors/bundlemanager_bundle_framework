@@ -337,6 +337,42 @@ ErrCode InstalldProxy::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(IInstalld::Message::OBTAIN_QUICK_FIX_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    if (!reply.ReadStringVector(&dirVec)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceDir));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(destinationDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(IInstalld::Message::COPY_FILES, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

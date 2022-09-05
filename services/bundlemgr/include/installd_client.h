@@ -144,6 +144,10 @@ public:
 
     ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty);
 
+    ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec);
+
+    ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir);
+
 private:
     /**
      * @brief Get the installd proxy object.

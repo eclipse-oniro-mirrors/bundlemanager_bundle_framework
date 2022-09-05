@@ -236,6 +236,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
 
 ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
 {
+    APP_LOGD("InstalldHostImpl::RemoveDir:%{public}s", dir.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -527,6 +528,27 @@ ErrCode InstalldHostImpl::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     isDirEmpty = InstalldOperator::IsDirEmpty(dir);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    InstalldOperator::ObtainQuickFixFileDir(dir, dirVec);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    InstalldOperator::CopyFiles(sourceDir, destinationDir);
     return ERR_OK;
 }
 }  // namespace AppExecFwk

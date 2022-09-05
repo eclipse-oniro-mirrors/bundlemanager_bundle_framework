@@ -40,7 +40,7 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
     installParam_ = installParam;
     receiver_ = statusReceiver;
     installParam_.streamInstallMode = true;
-    std::string tempDir = BundleUtil::CreateInstallTempDir(installerId_);
+    std::string tempDir = BundleUtil::CreateInstallTempDir(installerId_, DirType::STREAM_INSTALL_DIR);
     if (tempDir.empty()) {
         return false;
     }

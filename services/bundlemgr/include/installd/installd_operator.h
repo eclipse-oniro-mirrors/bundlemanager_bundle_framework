@@ -178,6 +178,10 @@ public:
     static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath);
 
+    static bool ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &fileVec);
+
+    static bool CopyFiles(const std::string &sourceDir, const std::string &destinationDir);
+
 private:
     static bool OpenHandle(void **handle);
 
