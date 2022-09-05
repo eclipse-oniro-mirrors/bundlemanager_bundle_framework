@@ -1491,6 +1491,20 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
     return std::nullopt;
 }
 
+std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, int32_t userId) const
+{
+    for (const auto &ability : baseAbilityInfos_) {
+        auto abilityInfo = ability.second;
+        if ((abilityInfo.bundleName == bundleName) && (abilityInfo.name == abilityName) &&
+            (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
+            return abilityInfo;
+        }
+    }
+    return std::nullopt;
+}
+
 std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(
     const std::string &bundleName, int32_t userId) const
 {

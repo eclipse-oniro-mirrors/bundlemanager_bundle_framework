@@ -150,6 +150,16 @@ public:
     bool QueryAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     /**
+     * @brief Query a AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfo of list.
+     * @return Returns ERR_OK if the AbilityInfo is successfully obtained; returns errCode otherwise.
+     */
+    ErrCode QueryAbilityInfosV9(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    /**
      * @brief Query all match launcher ability infos by given wants.
      * @param want Indicates the match infomation for abilities.
      * @param info Indicates the bundleInfo.
@@ -668,7 +678,8 @@ public:
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
-
+    ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, const int32_t flags,
+        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
     void DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
@@ -748,11 +759,16 @@ private:
      */
     bool ImplicitQueryAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+    ErrCode ImplicitQueryAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags,
+        const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    void GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
-
+    ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
+        int32_t appIndex = 0) const;
     bool GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
@@ -776,9 +792,15 @@ private:
     void ResetBundleStateData();
     bool QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
         const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const;
+    ErrCode QueryAbilityInfoWithFlagsV9(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
+        const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const;
     bool ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
+    ErrCode ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
     void ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
+    void ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
     bool ImplicitQueryCurExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
