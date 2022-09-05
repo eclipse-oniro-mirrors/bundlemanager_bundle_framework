@@ -307,7 +307,7 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
     std::time_t curTime = std::time(0);
     std::string tempDir = Constants::HAP_COPY_PATH;
     if (type == DirType::STREAM_INSTALL_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::STRAM_INSTALL_PATH;
+        tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
     } else if (type == DirType::QUICK_FIX_DIR) {
         tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
     } else {

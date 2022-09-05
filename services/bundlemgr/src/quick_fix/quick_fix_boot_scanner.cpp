@@ -280,7 +280,7 @@ void QuickFixBootScanner::RemoveInvalidDir() const
         });
     }
     // remove invalid temp install dir
-    std::string tempInstallDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::STRAM_INSTALL_PATH;
+    std::string tempInstallDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
     std::string tempQuickFixDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
     BundleUtil::DeleteDir(tempInstallDir);
     BundleUtil::DeleteDir(tempQuickFixDir);
