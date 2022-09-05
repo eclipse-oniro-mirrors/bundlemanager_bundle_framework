@@ -85,7 +85,7 @@ static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return SYSTEM_ABILITY_ERROR;
     }
-    return NO_ERROR; // 内部实现pr中修改
+    return AppControlProxy->GetDisposedStatus(appId, disposedWant);
 }
 
 static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& disposedWant)
@@ -95,7 +95,7 @@ static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return SYSTEM_ABILITY_ERROR;
     }
-    return NO_ERROR; // 内部实现pr中修改
+    return AppControlProxy->SetDisposedStatus(appId, disposedWant);
 }
 
 static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
@@ -105,7 +105,7 @@ static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
         APP_LOGE("AppControlProxy is null.");
         return SYSTEM_ABILITY_ERROR;
     }
-    return NO_ERROR; // 内部实现pr中修改
+    return AppControlProxy->DeleteDisposedStatus(appId);
 }
 
 void SetDisposedStatusExec(napi_env env, void *data)
@@ -162,9 +162,9 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            ParseString(env, args[i], asyncCallbackInfo->appId);
+            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId);
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_object)) {
-            ParseElementName(env, args[i], asyncCallbackInfo->want);
+            CommonFunc::ParseElementName(env, args[i], asyncCallbackInfo->want);
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
             NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
         } else {
@@ -172,7 +172,11 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
             asyncCallbackInfo->err = PARAM_TYPE_ERROR;
         }
     }
-    auto promise = AsyncCallNativeMethod<DisposedStatus>(
+    if (asyncCallbackInfo->err == PARAM_TYPE_ERROR) {
+        napi_throw_type_error(env, std::to_string(PARAM_TYPE_ERROR).c_str(), "param type error!");
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<DisposedStatus>(
         env, asyncCallbackInfo, "SetDisposedStatus", SetDisposedStatusExec, SetDisposedStatusComplete);
     callbackPtr.release();
     APP_LOGI("call SetDisposedStatus done.");
@@ -213,7 +217,6 @@ void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
     }
 }
 
-
 napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
 {
     APP_LOGI("begin to DeleteDisposedStatus.");
@@ -232,7 +235,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            ParseString(env, args[i], asyncCallbackInfo->appId);
+            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId);
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
             NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
         } else {
@@ -240,7 +243,11 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
             APP_LOGE("DeleteDisposedStatus arg err! pos:%{public}u, type:%{public}d", i, valueType);
         }
     }
-    auto promise = AsyncCallNativeMethod<DisposedStatus>(
+    if (asyncCallbackInfo->err == PARAM_TYPE_ERROR) {
+        napi_throw_type_error(env, std::to_string(PARAM_TYPE_ERROR).c_str(), "param type error!");
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<DisposedStatus>(
         env, asyncCallbackInfo, "DeleteDisposedStatus", DeleteDisposedStatusExec, DeleteDisposedStatusComplete);
     callbackPtr.release();
     APP_LOGI("call DeleteDisposedStatus done.");
@@ -269,7 +276,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
     } else {
         NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
-        ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
+        CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -304,7 +311,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            ParseString(env, args[i], asyncCallbackInfo->appId);
+            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId);
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
             NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
         } else {
@@ -312,7 +319,11 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
             APP_LOGE("GetDisposedStatus arg err! pos:%{public}u, type:%{public}d", i, valueType);
         }
     }
-    auto promise = AsyncCallNativeMethod<DisposedStatus>(
+    if (asyncCallbackInfo->err == PARAM_TYPE_ERROR) {
+        napi_throw_type_error(env, std::to_string(PARAM_TYPE_ERROR).c_str(), "param type error!");
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<DisposedStatus>(
         env, asyncCallbackInfo, "GetDisposedStatus", GetDisposedStatusExec, GetDisposedStatusComplete);
     callbackPtr.release();
     APP_LOGI("call GetDisposedStatus done.");

@@ -26,22 +26,23 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-using namespace OHOS::AAFwk;
+using Want = OHOS::AAFwk::Want;
+class CommonFunc {
+public:
+static napi_value ParseInt(napi_env env, int &param, napi_value args);
 
-napi_value ParseInt(napi_env env, int &param, napi_value args);
+static std::string GetStringFromNAPI(napi_env env, napi_value value);
 
-std::string GetStringFromNAPI(napi_env env, napi_value value);
+static bool ParseString(napi_env env, napi_value value, std::string& result);
 
-bool ParseString(napi_env env, napi_value value, std::string& result);
+static napi_value ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args);
 
-napi_value ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args);
+static void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want);
 
-void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want);
-
-bool ParseElementName(napi_env env, napi_value args, Want &want);
+static bool ParseElementName(napi_env env, napi_value args, Want &want);
 
 template<typename T>
-napi_value AsyncCallNativeMethod(napi_env env,
+static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,
                                  std::string methodName,
                                  void (*execFunc)(napi_env, void *),
@@ -65,6 +66,7 @@ napi_value AsyncCallNativeMethod(napi_env env,
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     return promise;
 }
+};
 }
 }
 #endif
