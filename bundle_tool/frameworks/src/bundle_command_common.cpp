@@ -342,6 +342,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: install parse syscap error.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED,
+        "error: install parse native so failed.",
+    },
+    {
         IStatusReceiver::ERR_INSTALLD_PARAM_ERROR,
         "error: installd param error.",
     },
