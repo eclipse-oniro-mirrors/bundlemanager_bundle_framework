@@ -359,7 +359,7 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0200, Function | SmallTest 
  * @tc.name: test the empty path can't be installed
  * @tc.desc: 1.the third party bundle file path is empty
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
+ * @tc.require: issueI56WGB
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0300, Function | SmallTest | Level0)
 {
