@@ -187,6 +187,7 @@ constexpr uint8_t MAX_HAP_NUMBER = 128;
 
 // distributed database
 constexpr const char* APP_ID = "bundle_manager_service";
+constexpr const char* DISTRIBUTED_APP_ID = "distributed_bundle_manager_service";
 constexpr const char* STORE_ID = "installed_bundle_datas";
 constexpr const char* ABILITY_USAGE_STORE_ID = "ability_usage_datas";
 constexpr const char* PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";
