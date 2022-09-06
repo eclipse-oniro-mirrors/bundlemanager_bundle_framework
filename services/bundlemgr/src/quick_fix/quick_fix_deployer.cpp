@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "inner_bundle_info.h"
@@ -47,7 +48,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     }
 
     std::vector<std::string> realFilePaths;
-    ErrCode ret = BundleUtil::CheckFilePath(patchPaths_, realFilePaths);
+    ErrCode ret = ProcessBundleFilePaths(patchPaths_, realFilePaths);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -567,6 +568,23 @@ ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInner
     if (!dataMgr->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("update quickfix innerbundleInfo failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> &bundleFilePaths,
+    std::vector<std::string> &realFilePaths)
+{
+    ErrCode ret = BundleUtil::CheckFilePath(bundleFilePaths, realFilePaths);
+    if (ret != ERR_OK) {
+        APP_LOGE("ProcessBundleFilePaths CheckFilePath failed.");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+    for (const auto &path : realFilePaths) {
+        if (!BundleUtil::CheckFileType(path, Constants::QUICK_FIX_FILE_SUFFIX)) {
+            APP_LOGE("ProcessBundleFilePaths CheckFileType failed.");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+        }
     }
     return ERR_OK;
 }

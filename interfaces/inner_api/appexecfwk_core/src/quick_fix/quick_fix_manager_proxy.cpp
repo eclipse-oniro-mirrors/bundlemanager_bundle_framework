@@ -52,26 +52,14 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
         APP_LOGE("DeployQuickFix failed due to params error.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
-    std::vector<std::string> hqfFilePaths;
-    if (!BundleFileUtil::CheckFilePath(bundleFilePaths, hqfFilePaths)) {
-        APP_LOGE("DeployQuickFix CheckFilePath failed");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
-    }
-
-    std::vector<std::string> copyFilePaths;
-    auto ret = CopyFiles(hqfFilePaths, copyFilePaths);
-    if (ret != ERR_OK) {
-        APP_LOGE("copy files failed with errCode %{public}d", ret);
-        return ret;
-    }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteStringVector(copyFilePaths)) {
-        APP_LOGE("write copyFilePaths failed.");
+    if (!data.WriteStringVector(bundleFilePaths)) {
+        APP_LOGE("write bundleFilePaths failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
@@ -209,22 +197,18 @@ ErrCode QuickFixManagerProxy::CopyFiles(
         APP_LOGE("sourceFiles empty.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
-    for (const std::string &path : sourceFiles) {
-        std::string sourcePath;
-        if (!PathToRealPath(path, sourcePath)) {
-            APP_LOGE("to real path failed.");
-            return ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED;
-        }
+    std::vector<std::string> hqfFilePaths;
+    if (!BundleFileUtil::CheckFilePath(sourceFiles, hqfFilePaths)) {
+        APP_LOGE("CopyFiles CheckFilePath failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+    for (const std::string &sourcePath : hqfFilePaths) {
         size_t pos = sourcePath.find_last_of(SEPARATOR);
         if (pos == std::string::npos) {
             APP_LOGE("invalid sourcePath.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
         }
         std::string fileName = sourcePath.substr(pos + 1);
-        if (fileName.empty()) {
-            APP_LOGE("file name empty.");
-            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
-        }
         APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
         int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
         if (sourceFd < 0) {
