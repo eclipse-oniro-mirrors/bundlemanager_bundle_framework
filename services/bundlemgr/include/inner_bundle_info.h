@@ -103,6 +103,9 @@ struct InnerModuleInfo {
     int32_t upgradeFlag = 0;
     std::vector<std::string> dependencies;
     std::string compileMode;
+    bool isLibIsolated = false;
+    std::string nativeLibraryPath;
+    std::string cpuAbi;
 };
 
 struct SkillUri {
@@ -1074,6 +1077,20 @@ public:
             innerModuleInfos_.at(currentPackage_).hashValue = hashValue;
         }
     }
+
+    void SetModuleCpuAbi(const std::string &cpuAbi)
+    {
+        if (innerModuleInfos_.count(currentPackage_) == 1) {
+            innerModuleInfos_.at(currentPackage_).cpuAbi = cpuAbi;
+        }
+    }
+
+    void SetModuleNativeLibraryPath(const std::string &nativeLibraryPath)
+    {
+        if (innerModuleInfos_.count(currentPackage_) == 1) {
+            innerModuleInfos_.at(currentPackage_).nativeLibraryPath = nativeLibraryPath;
+        }
+    }
     /**
      * @brief Set ability enabled.
      * @param bundleName Indicates the bundleName.
@@ -1594,6 +1611,8 @@ public:
 
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
+    bool FetchNativeSoAttrs(
+        const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath);
 
 private:
     void GetBundleWithAbilities(

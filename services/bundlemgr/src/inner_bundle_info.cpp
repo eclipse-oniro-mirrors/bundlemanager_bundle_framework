@@ -70,6 +70,9 @@ const std::string MODULE_COMMON_EVENT = "commonEvents";
 const std::string MODULE_MAIN_ABILITY = "mainAbility";
 const std::string MODULE_ENTRY_ABILITY_KEY = "entryAbilityKey";
 const std::string MODULE_DEPENDENCIES = "dependencies";
+const std::string MODULE_IS_LIB_ISOLATED = "isLibIsolated";
+const std::string MODULE_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
+const std::string MODULE_CPU_ABI = "cpuAbi";
 const std::string NEW_BUNDLE_NAME = "newBundleName";
 const std::string MODULE_SRC_PATH = "srcPath";
 const std::string MODULE_HASH_VALUE = "hashValue";
@@ -444,6 +447,9 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_IS_MODULE_JSON, info.isModuleJson},
         {MODULE_IS_STAGE_BASED_MODEL, info.isStageBasedModel},
         {MODULE_DEPENDENCIES, info.dependencies},
+        {MODULE_IS_LIB_ISOLATED, info.isLibIsolated},
+        {MODULE_NATIVE_LIBRARY_PATH, info.nativeLibraryPath},
+        {MODULE_CPU_ABI, info.cpuAbi},
         {MODULE_HAP_PATH, info.hapPath},
         {MODULE_COMPILE_MODE, info.compileMode}
     };
@@ -855,6 +861,30 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_COMPILE_MODE,
         info.compileMode,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_IS_LIB_ISOLATED,
+        info.isLibIsolated,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_NATIVE_LIBRARY_PATH,
+        info.nativeLibraryPath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_CPU_ABI,
+        info.cpuAbi,
         JsonType::STRING,
         false,
         parseResult,
@@ -1419,6 +1449,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.colorMode = it->second.colorMode;
     hapInfo.isRemovable = it->second.isRemovable;
     hapInfo.upgradeFlag = it->second.upgradeFlag;
+    hapInfo.isLibIsolated = it->second.isLibIsolated;
+    hapInfo.nativeLibraryPath = it->second.nativeLibraryPath;
+    hapInfo.cpuAbi = it->second.cpuAbi;
 
     hapInfo.bundleName = baseApplicationInfo_->bundleName;
     hapInfo.mainElementName = it->second.mainAbility;
@@ -2695,6 +2728,27 @@ std::vector<HqfInfo> InnerBundleInfo::GetQuickFixHqfInfos() const
 void InnerBundleInfo::SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos)
 {
     hqfInfos_ = hqfInfos;
+}
+
+bool InnerBundleInfo::FetchNativeSoAttrs(
+    const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath)
+{
+    auto moduleIter = innerModuleInfos_.find(requestPackage);
+    if (moduleIter == innerModuleInfos_.end()) {
+        APP_LOGE("requestPackage(%{public}s) is not exist", requestPackage.c_str());
+        return false;
+    }
+
+    auto &moduleInfo = moduleIter->second;
+    if (moduleInfo.isLibIsolated) {
+        cpuAbi = moduleInfo.cpuAbi;
+        nativeLibraryPath = moduleInfo.nativeLibraryPath;
+    } else {
+        cpuAbi = baseApplicationInfo_->cpuAbi;
+        nativeLibraryPath = baseApplicationInfo_->nativeLibraryPath;
+    }
+
+    return !nativeLibraryPath.empty();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
