@@ -51,7 +51,7 @@ private:
     static std::recursive_mutex mutex_;
     static std::shared_ptr<DistributedDataStorage> instance_;
 
-    const DistributedKv::AppId appId_ {Constants::APP_ID};
+    const DistributedKv::AppId appId_ {Constants::DISTRIBUTED_APP_ID};
     const DistributedKv::StoreId storeId_ {Constants::DISTRIBUTE_DATA_STORE_ID};
     DistributedKv::DistributedKvDataManager dataManager_;
     std::shared_ptr<DistributedKv::SingleKvStore> kvStorePtr_;
