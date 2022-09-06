@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DELETER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DELETER_H
 
+#include "bundle_data_mgr.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_interface.h"
 
@@ -33,8 +34,11 @@ private:
     ErrCode ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickFix);
     ErrCode InnerDeletePatchDir(const AppqfInfo &appqfInfo, const std::string &bundleName);
     ErrCode GetQuickFixDataMgr();
+    ErrCode GetDataMgr();
+    ErrCode RemoveDeployingInfo(const std::string &bundleName);
 
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::string bundleName_;
 };
 } // AppExecFwk
