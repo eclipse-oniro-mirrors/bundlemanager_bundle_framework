@@ -27,6 +27,8 @@ ohos_benchmarktest("BenchmarkTestInstallerProxy") {
   }
 
   deps = [
+    "${appexecfwk_path}/test/sceneProject/benchmark/benchmarktesthap:benchmarktesthap",
+    "${appexecfwk_path}/test/sceneProject/benchmark/ohos_test:copy_ohos_test",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/benchmark:benchmark",
   ]
@@ -39,8 +41,6 @@ ohos_benchmarktest("BenchmarkTestInstallerProxy") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-  resource_config_file =
-      "${appexecfwk_path}/test/benchmarktest/resource/ohos_test.xml"
 }
 
 group("benchmarktest") {
