@@ -39,6 +39,14 @@ enum ApplicationFlag {
     GET_ALL_APPLICATION_INFO = 0xFFFF0000,
 };
 
+enum ApplicationFlagV9 {
+    GET_APPLICATION_INFO_DEFAULT_V9 = 0x00000000,
+    GET_APPLICATION_INFO_WITH_PERMISSION_V9 = 0x00000001,
+    GET_APPLICATION_INFO_WITH_METADATA_V9 = 0x00000002,
+    GET_APPLICATION_INFO_WITH_DISABLE_V9 = 0x00000004,
+    GET_ALL_APPLICATION_INFO_V9 = 0xFFFF0000,
+};
+
 struct Metadata : public Parcelable {
     std::string name;
     std::string value;

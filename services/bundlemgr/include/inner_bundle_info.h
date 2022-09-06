@@ -221,6 +221,17 @@ public:
         const std::string &moduleName, const std::string &abilityName,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
+     * @brief Find abilityInfo by bundle name and ability name.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name
+     * @param abilityName Indicates the ability name.
+     * @param userId Indicates the user ID.
+     * @return Returns the AbilityInfo object if find it; returns null otherwise.
+     */
+    std::optional<AbilityInfo> FindAbilityInfoV9(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
      * @brief Find abilityInfo of list by bundle name.
      * @param bundleName Indicates the bundle name.
      * @param userId Indicates the user ID.
