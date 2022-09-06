@@ -78,6 +78,9 @@ private:
 
     ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
 
+    ErrCode ProcessBundleFilePaths(const std::vector<std::string> &bundleFilePaths,
+        std::vector<std::string> &realFilePaths);
+
     void ToDeployQuickFixResult(const AppQuickFix &appQuickFix);
 
     void ProcessNativeLibraryPath(const std::string &patchPath, InnerAppQuickFix &innerAppQuickFix);
