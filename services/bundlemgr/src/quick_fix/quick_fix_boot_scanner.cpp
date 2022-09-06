@@ -67,7 +67,9 @@ void QuickFixBootScanner::ProcessQuickFixBootUp()
         }
         auto ret = ProcessState();
         if (ret != ERR_OK) {
-            APP_LOGE("quick fix info %{public}s is processed failed", quickFixInfo.first.c_str());
+            APP_LOGE("quick fix info %{public}s is processed failed with error %{public}d",
+                quickFixInfo.first.c_str(), ret);
+            quickFixDataMgr_->DeleteInnerAppQuickFix(quickFixInfo.first);
         }
         state_.reset();
     }
