@@ -560,6 +560,16 @@ public:
     /**
      * @brief Query extension info.
      * @param Want Indicates the information of extension info.
+     * @param flag Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
      * @param extensionType Indicates the type of the extension.
      * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
      * @param userId Indicates the userId in the system.
@@ -568,6 +578,17 @@ public:
      */
     virtual bool QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
         const int32_t &flag, const int32_t &userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
+     * @param extensionType Indicates the type of the extension.
+     * @param flag Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, const ExtensionAbilityType &extensionType,
+        int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
     /**
      * @brief Process hidump.
      * @param fd Indicates the fd.

@@ -779,6 +779,19 @@ public:
     /**
      * @brief Query extension info.
      * @param Want Indicates the information of extension info.
+     * @param flags Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos)
+    {
+        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
      * @param extensionType Indicates the type of the extension.
      * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
      * @param userId Indicates the userId in the system.
@@ -790,7 +803,20 @@ public:
     {
         return true;
     }
-
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
+     * @param extensionType Indicates the type of the extension.
+     * @param flags Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, const ExtensionAbilityType &extensionType,
+        int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    {
+        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+    }
     virtual bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos)
     {
@@ -1086,6 +1112,8 @@ public:
         GET_APP_CONTROL_PROXY,
         SET_DEBUG_MODE,
         QUERY_ABILITY_INFOS_V9,
+        QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9,
+        QUERY_EXTENSION_INFO_V9,
     };
 };
 }  // namespace AppExecFwk

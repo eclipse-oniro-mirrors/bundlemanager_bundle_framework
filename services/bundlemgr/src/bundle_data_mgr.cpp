@@ -2726,6 +2726,11 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
     return true;
 }
 
+ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
+{
+    return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+}
 bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
     ExtensionAbilityInfo &extensionInfo, int32_t appIndex) const
 {
