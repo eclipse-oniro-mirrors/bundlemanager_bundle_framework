@@ -35,6 +35,10 @@ ohos_moduletest("BmsBundleParserModuleTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${appexecfwk_path}/test/sceneProject/moduletest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/moduletest/other_bundle/bmsThirdBundle1:mstbmsThirdBundle1",
+    "${appexecfwk_path}/test/sceneProject/moduletest/other_bundle/bmsThirdBundle14:mstbmsThirdBundle14",
+    "${appexecfwk_path}/test/sceneProject/moduletest/other_bundle/bmsThirdBundle2:mstbmsThirdBundle2",
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:bundle_parser",
   ]
@@ -48,8 +52,6 @@ ohos_moduletest("BmsBundleParserModuleTest") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/mstbundlemgrservice/ohos_test.xml"
 }
 
 group("moduletest") {

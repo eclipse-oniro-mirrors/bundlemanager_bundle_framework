@@ -100,20 +100,13 @@ HWTEST_F(BmsBundleParserModuleTest, NullAbility_0200, Function | MediumTest | Le
  */
 HWTEST_F(BmsBundleParserModuleTest, InvalidBundleProfileName_0300, Function | MediumTest | Level2)
 {
-    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle11" << Constants::INSTALL_FILE_SUFFIX;
+    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle14" << Constants::INSTALL_FILE_SUFFIX;
     BundleParser bundleParser;
     InnerBundleInfo innerBundleInfo;
     AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleParser.Parse(
         pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_NO_PROFILE) << "fail, parser bundle success!";
-
-    pathStream_.clear();
-
-    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle14" << Constants::INSTALL_FILE_SUFFIX;
-    result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED) << "fail, parser bundle success!";
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << "fail, parser bundle success!";
 }
 
 /**
