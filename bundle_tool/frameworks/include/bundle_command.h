@@ -35,7 +35,8 @@ const std::string HELP_MSG = "usage: bm <command> <options>\n"
                              "  clean        clean the bundle data\n"
                              "  enable       enable the bundle\n"
                              "  disable      disable the bundle\n"
-                             "  get          obtain device udid\n";
+                             "  get          obtain device udid\n"
+                             "  quickfix     quick fix, including query and install\n";
 
 const std::string HELP_MSG_INSTALL =
     "usage: bm install <options>\n"
@@ -109,6 +110,17 @@ const std::string HELP_MSG_DUMP_DEPENDENCIES =
     "  -n, --bundle-name  <bundle-name>       dump dependent moduleNames by bundleName and moduleName\n"
     "  -m, --module-name  <module-name>       dump dependent moduleNames by bundleName and moduleName\n";
 
+const std::string HELP_MSG_QUICK_FIX =
+    "usage: bm quickfix <options>\n"
+    "options list:\n"
+    "-h, --help                                   list available commands\n"
+    "-q, --query                                  indicates query quickfix, used with -b or --bundle-name\n"
+    "-b, --bundle-name <bundle-name>              query quickfix status and information by a specified bundle name\n"
+    "-a, --apply                                  indicates apply quickfix, used with -f or --file-path\n"
+    "-f, --file-path <file-path>                  apply a quickfix file by a specified path\n"
+    "-f, --file-path <file-path> <file-path> ...  apply some quickfix files of one bundle\n"
+    "-f, --file-path <bundle-direction>           apply quickfix files by direction, under which are quickfix files\n";
+
 const std::string STRING_INCORRECT_OPTION = "error: incorrect option";
 const std::string HELP_MSG_NO_BUNDLE_PATH_OPTION =
     "error: you must specify a bundle path with '-p' or '--bundle-path'.";
@@ -167,6 +179,7 @@ private:
     ErrCode RunAsEnableCommand();
     ErrCode RunAsDisableCommand();
     ErrCode RunAsGetCommand();
+    ErrCode RunAsQuickFixCommand();
 
     std::string DumpBundleList(int32_t userId) const;
     std::string DumpBundleInfo(const std::string &bundleName, int32_t userId) const;

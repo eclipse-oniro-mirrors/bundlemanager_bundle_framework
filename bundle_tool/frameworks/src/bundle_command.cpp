@@ -30,6 +30,7 @@
 #include "bundle_mgr_proxy.h"
 #include "clean_cache_callback_host.h"
 #include "parameter.h"
+#include "quick_fix_command.h"
 #include "status_receiver_impl.h"
 #include "string_ex.h"
 
@@ -139,6 +140,7 @@ ErrCode BundleManagerShellCommand::CreateCommandMap()
         {"enable", std::bind(&BundleManagerShellCommand::RunAsEnableCommand, this)},
         {"disable", std::bind(&BundleManagerShellCommand::RunAsDisableCommand, this)},
         {"get", std::bind(&BundleManagerShellCommand::RunAsGetCommand, this)},
+        {"quickfix", std::bind(&BundleManagerShellCommand::RunAsQuickFixCommand, this)},
     };
 
     return OHOS::ERR_OK;
@@ -264,7 +266,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
                 if (GetBundlePath(optarg, bundlePath) != OHOS::ERR_OK) {
                     APP_LOGD("'bm install' with no argument.");
                     resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    
+
                     return OHOS::ERR_INVALID_VALUE;
                 }
                 index = optind;
@@ -1248,6 +1250,65 @@ ErrCode BundleManagerShellCommand::RunAsGetCommand()
     resultReceiver_.append(STRING_GET_UDID_OK + "\n");
     resultReceiver_.append(GetUdid() + "\n");
     return result;
+}
+
+ErrCode BundleManagerShellCommand::RunAsQuickFixCommand()
+{
+    for (auto index = INDEX_OFFSET; index < argc_; ++index) {
+        APP_LOGD("argv_[%{public}d]: %{public}s", index, argv_[index]);
+        std::string opt = argv_[index];
+        if ((opt == "-h") || (opt == "--help")) {
+            resultReceiver_.append(HELP_MSG_QUICK_FIX);
+            return ERR_OK;
+        } else if ((opt == "-a") || (opt == "--apply")) {
+            if (index >= argc_ - INDEX_OFFSET) {
+                resultReceiver_.append("error: option [--apply] is incorrect.\n");
+                resultReceiver_.append(HELP_MSG_QUICK_FIX);
+                return ERR_INVALID_VALUE;
+            }
+
+            std::string argKey = argv_[++index];
+            std::string argValue = argv_[++index];
+            if (argKey == "-f" || argKey == "--file-path") {
+                std::vector<std::string> quickFixFiles;
+                // collect value of multi file-path.
+                for (; index < argc_ && index >= INDEX_OFFSET; ++index) {
+                    if (argList_[index - INDEX_OFFSET] == "-q" || argList_[index - INDEX_OFFSET] == "--query" ||
+                        argList_[index - INDEX_OFFSET] == "-b" || argList_[index - INDEX_OFFSET] == "--bundle-name" ||
+                        argList_[index - INDEX_OFFSET] == "-a" || argList_[index - INDEX_OFFSET] == "--apply" ||
+                        argList_[index - INDEX_OFFSET] == "-f" || argList_[index - INDEX_OFFSET] == "--file-path") {
+                        break;
+                    }
+                    quickFixFiles.emplace_back(argList_[index - INDEX_OFFSET]);
+                }
+
+                return QuickFixCommand::ApplyQuickFix(quickFixFiles, resultReceiver_);
+            }
+        } else if ((opt == "-q") || (opt == "--query")) {
+            if (index >= argc_ - INDEX_OFFSET) {
+                resultReceiver_.append("error: option [--query] is incorrect.\n");
+                resultReceiver_.append(HELP_MSG_QUICK_FIX);
+                return ERR_INVALID_VALUE;
+            }
+
+            std::string bundleName;
+            std::string argKey = argv_[++index];
+            std::string argValue = argv_[++index];
+            if (argKey == "-b" || argKey == "--bundle-name") {
+                bundleName = argValue;
+            }
+
+            return QuickFixCommand::GetApplyedQuickFixInfo(bundleName, resultReceiver_);
+        } else {
+            resultReceiver_.append("error: unknown option.\n");
+            resultReceiver_.append(HELP_MSG_QUICK_FIX);
+            return ERR_INVALID_VALUE;
+        }
+    }
+
+    resultReceiver_.append("error: parameter is not enough.\n");
+    resultReceiver_.append(HELP_MSG_QUICK_FIX);
+    return ERR_INVALID_VALUE;
 }
 
 std::string BundleManagerShellCommand::GetUdid() const
