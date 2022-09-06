@@ -433,7 +433,7 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1000, Func
     EXPECT_NE(callback2, nullptr) << "the callback2 is nullptr";
     ret = quickFixHost->SwitchQuickFix(BUNDLE_NAME, true, callback2);
     EXPECT_EQ(ret, ERR_OK);
-    CheckResult(callback2, BUNDLE_NAME, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS);
+    CheckResult(callback2, BUNDLE_NAME, ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE);
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
