@@ -362,7 +362,7 @@ public:
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
     {
-        return ERR_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
     }
     /**
      * @brief Query the AllAbilityInfos of list by the given userId.

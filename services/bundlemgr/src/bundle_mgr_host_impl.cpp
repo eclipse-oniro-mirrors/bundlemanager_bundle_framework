@@ -338,13 +338,13 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     APP_LOGD("start QueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
-        return ERR_QUERY_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to QueryAbilityInfosV9");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
     }
     return dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
 }
