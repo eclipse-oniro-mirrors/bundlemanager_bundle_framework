@@ -1769,5 +1769,118 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfos_0001, TestSize.Le
     std::cout << "END QueryExtensionAbilityInfos_0001" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
+
+/**
+ * @tc.number: GetProfileFromHap001
+ * @tc.name: GetProfileFromHap
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap001, TestSize.Level1)
+{
+    auto name = std::string("GetProfileFromHap001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    HapModuleInfo info;
+    std::string metadataName = "ohos.extension.forms";
+    std::vector<std::string> profileInfo;
+    auto ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo);
+    EXPECT_FALSE(ret);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: GetHapModuleInfo001
+ * @tc.name: GetHapModuleInfo
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetHapModuleInfo001, TestSize.Level1)
+{
+    auto name = std::string("GetHapModuleInfo001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    AbilityInfo abilityInfo;
+    HapModuleInfo info;
+    std::string hapName = "sandboxTest";
+    auto ret = bundleMgrClient.GetHapModuleInfo(BUNDLE_NAME, hapName, info);
+    EXPECT_FALSE(ret);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: GetBundlePackInfo001
+ * @tc.name: GetBundlePackInfo
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
+{
+    auto name = std::string("GetBundlePackInfo001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    AbilityInfo abilityInfo;
+    BundlePackInfo info;
+    std::string hapName = "sandboxTest";
+    auto ret = bundleMgrClient.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, info, DEFAULT_USERID);
+    EXPECT_TRUE(ret);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: GetAccessibleAppCodePaths001
+ * @tc.name: GetAccessibleAppCodePaths
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetAccessibleAppCodePaths001, TestSize.Level1)
+{
+    auto name = std::string("GetAccessibleAppCodePaths001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    std::vector<std::string> ret = bundleMgrClient.GetAccessibleAppCodePaths(DEFAULT_USERID);
+    EXPECT_EQ(ret.empty(), true);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
