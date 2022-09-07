@@ -785,10 +785,16 @@ private:
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     bool ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
+    ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
+        ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     bool ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+    ErrCode ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &einfos) const;
+    void GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId, const InnerBundleInfo &info,
+        std::vector<ExtensionAbilityInfo> &infos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(
         const std::string &bundleName, const std::string &moduleName, int32_t userId) const;
@@ -814,7 +820,11 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
     bool ImplicitQueryCurExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+    ErrCode ImplicitQueryCurExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     void ImplicitQueryAllExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+    void ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
 
 private:
