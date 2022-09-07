@@ -20,9 +20,9 @@
 #include <iostream>
 #include <memory>
 #include <time.h>
-#include "zip_utils.h"
 #include "file_path.h"
-
+#include "zip_utils.h"
+#include "zlib_callback_info.h"
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
@@ -147,8 +147,8 @@ private:
 // srcDir = /ziptest/zipdata/zip1/zip1-1.cpp
 // destFile = /ziptest/hapresult/singlefile.zip
 // options is default value.
-bool Zip(const FilePath &srcDir, const FilePath &destFile, const OPTIONS &options, CALLBACK callback,
-    bool includeHiddenFiles);
+bool Zip(const std::string srcPath, const std::string destPath, CALLBACK callback,
+    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
 
 // Unzip the contents of zipFile into destDir.
 // example No1
@@ -158,7 +158,8 @@ bool Zip(const FilePath &srcDir, const FilePath &destFile, const OPTIONS &option
 // srcDir = /ziptest/hapresult/singlefile.zip
 // destFile = /ziptest/hapunzipdir/single
 // options is default value.
-bool Unzip(const FilePath &zipFile, const FilePath &destDir, const OPTIONS &options, CALLBACK callback);
+bool Unzip(const std::string srcFile, const std::string destFile, const OPTIONS options, CALLBACK callback,
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
 
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
