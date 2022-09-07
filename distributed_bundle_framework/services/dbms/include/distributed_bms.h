@@ -24,7 +24,6 @@
 #include "distributed_monitor.h"
 #include "if_system_ability_manager.h"
 #include "iremote_object.h"
-#include "image_buffer.h"
 #include "resource_manager.h"
 #include "singleton.h"
 #include "system_ability.h"
@@ -132,10 +131,18 @@ private:
     void Init();
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(
         const AppExecFwk::BundleInfo &bundleInfo, const std::string &localeInfo);
-    bool GetMediaBase64(std::string &path, std::string &value);
-    bool GetMediaBae64FromImageBuffer(std::shared_ptr<ImageBuffer>& imageBuffer, std::string& value);
+    bool GetMediaBase64(std::unique_ptr<uint8_t[]> &data, int64_t fileLength,
+        std::string &imageType, std::string &value);
     std::unique_ptr<unsigned char[]> LoadResourceFile(std::string &path, int &len);
-    std::unique_ptr<char[]> EncodeBase64(std::unique_ptr<unsigned char[]> &data, int srcLen);
+    std::unique_ptr<char[]> EncodeBase64(std::unique_ptr<uint8_t[]> &data, int srcLen);
+    int32_t GetAbilityLabel(std::shared_ptr<Global::Resource::ResourceManager> &resourceManager,
+        const AbilityInfo &abilityInfo, RemoteAbilityInfo &remoteAbilityInfo);
+    int32_t GetAbilityIconByContent(const std::shared_ptr<Global::Resource::ResourceManager> &resourceManager,
+        const AbilityInfo &abilityInfo, const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo);
+    int32_t GetAbilityIconByFile(const std::shared_ptr<Global::Resource::ResourceManager> &resourceManager,
+        const AbilityInfo &abilityInfo, const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo);
+    int32_t Base64WithoutCompress(std::unique_ptr<uint8_t[]> &imageContent, size_t imageContentSize,
+        RemoteAbilityInfo &remoteAbilityInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

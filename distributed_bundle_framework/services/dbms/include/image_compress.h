@@ -21,31 +21,24 @@
 #include <string>
 #include <cmath>
 
-#include "png.h"
-#include "jpeglib.h"
-#include "image_buffer.h"
-
 namespace OHOS {
 namespace AppExecFwk {
+    enum class ImageType {
+        JPEG = 1,
+        PNG = 2,
+        WORNG_TYPE = 3,
+    };
 class ImageCompress {
 public:
     ImageCompress() = default;
-    ~ImageCompress();
-    double CalRatio(std::string fileName);
-    bool NeedCompress(std::string fileName);
-    bool InitPngFile(std::shared_ptr<ImageBuffer>& imageBuffer, png_structp& png, png_infop& info);
-    int32_t DecodePngFile(std::string fileName, std::shared_ptr<ImageBuffer>& imageBuffer);
-    int32_t EncodePngFile(std::shared_ptr<ImageBuffer>& imageBuffer);
-    int32_t ResizeRGBAImage(std::shared_ptr<ImageBuffer>& imageBufferIn, std::shared_ptr<ImageBuffer>& imageBufferOut);
-    int32_t DecodeJPGFile(std::string fileName, std::shared_ptr<ImageBuffer>& imageBuffer);
-    int32_t EncodeJPGFile(std::shared_ptr<ImageBuffer>& imageBuffer);
-    int32_t ResizeRGBImage(std::shared_ptr<ImageBuffer>& imageBufferIn, std::shared_ptr<ImageBuffer>& imageBufferOut);
-    std::shared_ptr<ImageBuffer> CompressImage(std::string inFileName);
-    void ReleasePngPointer(png_bytepp& rowPointers, uint32_t height);
-    bool MallocPngPointer(png_bytepp& rowPointers, uint32_t height, uint32_t strides);
-    bool DoubleEqual(double left, double right);
-    bool IsPathValid(std::string& fileName);
-    static void PngToBuffer(png_structp png_ptr, png_bytep data, png_size_t lenght);
+    bool IsPathValid(const std::string &srcPath);
+    bool IsImageNeedCompressBySize(size_t fileSize);
+    double CalculateRatio(size_t fileSize, const std::string &imageType);
+    ImageType GetImageType(const std::unique_ptr<uint8_t[]> &fileData, size_t fileLength);
+    bool GetImageTypeString(const std::unique_ptr<uint8_t[]> &fileData, size_t fileLength, std::string &imageType);
+    bool GetImageFileInfo(const std::string &srcFile, std::unique_ptr<uint8_t[]> &fileContent, int64_t &fileLength);
+    bool CompressImageByContent(const std::unique_ptr<uint8_t[]> &fileData, size_t fileSize,
+        std::unique_ptr<uint8_t[]> &compressedData, int64_t &compressedSize, std::string &imageType);
 };
 }
 }

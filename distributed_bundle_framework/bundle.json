@@ -29,7 +29,7 @@
                 "hiviewdfx_hilog_native",
                 "i18n",
                 "ipc",
-                "libpng",
+                "multimedia_image_standard",
                 "napi",
                 "os_account",
                 "resource_management",
@@ -37,8 +37,6 @@
                 "samgr"
             ],
             "third_party": [
-                "libjpeg-turbo",
-                "libpng"
             ]
         },
         "build": {
