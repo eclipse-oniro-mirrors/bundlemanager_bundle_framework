@@ -2352,6 +2352,44 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoByUri_0500, Function | SmallTe
 }
 
 /**
+ * @tc.number: QueryAbilityInfoByUri_0600
+ * @tc.name: test can get the ability info by uri
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed by zero userid
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoByUri_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    AbilityInfo result;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->QueryAbilityInfoByUri(
+        ABILITY_URI, 0, result);
+    EXPECT_EQ(false, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryAbilityInfoByUri_0700
+ * @tc.name: test can get the ability info by uri
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed by empty ability uri
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoByUri_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    AbilityInfo result;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->QueryAbilityInfoByUri(
+        "", result);
+    EXPECT_EQ(false, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: QueryKeepAliveBundleInfos_0100
  * @tc.name: test can get the keep alive bundle infos
  * @tc.desc: 1.system run normally
@@ -2400,6 +2438,20 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0200, Function | SmallTes
     EXPECT_FALSE(listRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryKeepAliveBundleInfos_0300
+ * @tc.name: test can not get the keep alive bundle info which bundle doesn't exist
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryKeepAliveBundleInfos_03000, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool ret = bundleMgrProxy->QueryKeepAliveBundleInfos(bundleInfos);
+    EXPECT_EQ(true, ret);
 }
 
 /**
@@ -3639,6 +3691,23 @@ HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByModule_0500, Function | SmallTest
 }
 
 /**
+ * @tc.number: GetFormInfoByModule_0600
+ * @tc.name: test can not get the formInfo
+ * @tc.desc:1.system run normally
+ *          2.get form info with empty moduleName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByModule_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<FormInfo> formInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    auto result = bundleMgrProxy->GetFormsInfoByModule(BUNDLE_NAME_TEST, "", formInfos);
+    EXPECT_EQ(result, false);
+    EXPECT_TRUE(formInfos.empty());
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetFormInfoByApp_0100
  * @tc.name: test can get the formInfo by bundlename
  * @tc.desc: 1.system run normally
@@ -3722,6 +3791,23 @@ HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByApp_0500, Function | SmallTest | 
     std::vector<FormInfo> formInfo1;
     GetBundleDataMgr()->GetFormsInfoByApp(BUNDLE_NAME_DEMO, formInfo1);
     EXPECT_TRUE(formInfo1.empty());
+}
+
+/**
+ * @tc.number: GetFormInfoByApp_0600
+ * @tc.name: test can get the formInfo by bundlename
+ * @tc.desc: 1.system run normally
+ *           2.get form info fail by empty bundleName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByApp_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<FormInfo> formInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    auto result = bundleMgrProxy->GetFormsInfoByApp("", formInfos);
+    EXPECT_EQ(result, false);
+    EXPECT_TRUE(formInfos.empty());
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
@@ -4653,7 +4739,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_003, Function | SmallTest | 
  * @tc.desc: wrong bundleName, expect 0
  * @tc.require: AR000H7N9D
  */
-HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_0041, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_004, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
