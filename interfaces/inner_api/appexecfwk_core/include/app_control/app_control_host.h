@@ -28,14 +28,21 @@ public:
     AppControlHost();
     virtual ~AppControlHost();
 
-    int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
+    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
+    template<typename T>
+    bool ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos);
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &reply);
     ErrCode HandleAddAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleCleanAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
+
+    ErrCode HandleAddAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleCleanAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
 
     DISALLOW_COPY_AND_MOVE(AppControlHost);
 };

@@ -39,6 +39,13 @@ public:
 
     ErrCode GetAppInstallControlRule(const std::string &callingName,
         const std::string &controlRuleType, int32_t userId, std::vector<std::string> &appIds);
+
+    ErrCode AddAppRunningControlRule(const std::string &callingName,
+        const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId);
+    ErrCode DeleteAppRunningControlRule(const std::string &callingName,
+        const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId);
+    ErrCode DeleteAppRunningControlRule(const std::string &callingName, int32_t userId);
+    ErrCode GetAppRunningControlRule(const std::string &callingName, int32_t userId, std::vector<std::string> &appIds);
 private:
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
 };
