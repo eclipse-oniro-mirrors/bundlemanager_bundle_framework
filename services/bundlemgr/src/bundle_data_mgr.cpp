@@ -560,7 +560,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     APP_LOGD("flags:%{public}d, userId:%{public}d", flags, userId);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return false;
+        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
@@ -1800,7 +1800,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("GetInnerBundleInfoWithFlagsV9: bundleName not find");
-        return false;
+        return ERR_BUNDLE_MANAGER_QUERY_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
@@ -2955,9 +2955,6 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
         // query all
         ImplicitQueryAllExtensionInfosV9(want, flags, requestUserId, extensionInfos, appIndex);
     }
-    if (extensionInfos.empty()) {
-        return ERR_BUNDLE_MANAGER_QUERY_EXTENSION_NOT_EXIST;
-    }
     // sort by priority, descending order.
     if (extensionInfos.size() > 1) {
         std::stable_sort(extensionInfos.begin(), extensionInfos.end(),
@@ -3075,7 +3072,8 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t f
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
             InnerBundleInfo innerBundleInfo;
-            if (!GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId)) {
+            ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
+            if (ret != ERR_OK) {
                 APP_LOGE("ImplicitQueryExtensionAbilityInfos failed");
                 continue;
             }
