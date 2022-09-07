@@ -120,7 +120,7 @@ ErrCode QuickFixSwitcher::DisableQuickFix(const std::string &bundleName)
 
     ErrCode res = InnerSwitchQuickFix(bundleName, innerAppQuickFix, false);
     if (res != ERR_OK) {
-        APP_LOGE("InnerSwitchQuickFix failed");
+        APP_LOGE("InnerSwitchQuickFix failed %{public}d", res);
         return res;
     }
     stateGuard.Dismiss();
