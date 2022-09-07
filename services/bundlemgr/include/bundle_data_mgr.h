@@ -594,6 +594,16 @@ public:
     bool QueryExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     /**
+     * @brief Query a ExtensionAbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param extensionInfos Indicates the obtained ExtensionAbilityInfo of list.
+     * @return Returns ERR_OK if the ExtensionAbilityInfo is successfully obtained; returns errCode otherwise.
+     */
+    ErrCode QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+    /**
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
      */

@@ -2140,6 +2140,35 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const int32_t 
     return true;
 }
 
+ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!GetParcelableInfosWithErrCode(
+        IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9, data, extensionInfos)) {
+        APP_LOGE("fail to obtain extensionInfos");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
     const int32_t &flag, const int32_t &userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
@@ -2170,6 +2199,38 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const Extensio
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, const ExtensionAbilityType &extensionType,
+    int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(extensionType))) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!GetParcelableInfosWithErrCode(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, data, extensionInfos)) {
+        APP_LOGE("fail to obtain extensionInfos");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
