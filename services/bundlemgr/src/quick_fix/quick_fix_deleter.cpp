@@ -53,7 +53,7 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
     // 1. query quick fix info form db
     if (!quickFixDataMgr_->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix)) {
         APP_LOGE("no patch in the db");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE;
+        return ERR_OK;
     }
     // 2. update quick fix status
     if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix)) {
