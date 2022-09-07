@@ -4648,6 +4648,151 @@ HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_003, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: Marshalling_001
+ * @tc.name: BundleInfo Marshalling
+ * @tc.desc: 1.Test the marshalling of BundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_001, Function | SmallTest | Level1)
+{
+    BundleInfo info;
+    info.name = "com.ohos.contactsdataability";
+    info.versionName = "1.0";
+    info.vendor = "ohos";
+    info.releaseType = "Release";
+    info.mainEntry = "com.ohos.contactsdataability";
+    info.entryModuleName = "entry";
+    info.appId = "com.ohos.contactsdataability_BNtg4JBClbl92Rgc3jm"\
+        "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+    info.cpuAbi = "armeabi";
+    info.description = "dataability_description";
+    info.applicationInfo.name = "com.ohos.contactsdataability";
+    info.applicationInfo.bundleName = "com.ohos.contactsdataability";
+    info.applicationInfo.versionName = "1.0";
+    info.applicationInfo.iconPath = "$media:icon";
+    info.applicationInfo.description = "dataability_description";
+    info.applicationInfo.codePath = "/data/app/el1/budle/public/com.ohos.contactsdataability";
+    info.applicationInfo.dataBaseDir = "/data/app/el2/database/com.ohos.contactsdataability";
+    info.applicationInfo.apiReleaseType = "Release";
+    info.applicationInfo.deviceId = "Id001";
+    info.applicationInfo.entityType = "unsppecified";
+    info.applicationInfo.vendor = "ohos";
+    info.applicationInfo.nativeLibraryPath = "libs/arm";
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Marshalling_002
+ * @tc.name: RequestPermission Marshalling
+ * @tc.desc: 1.Test the marshalling of RequestPermission
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_002, Function | SmallTest | Level1)
+{
+    RequestPermission requestPermission;
+    requestPermission.name = "ohos.global.systemres";
+    requestPermission.reason = "1";
+    Parcel parcel;
+    bool ret = requestPermission.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Marshalling_003
+ * @tc.name: RequestPermissionUsedScene Marshalling
+ * @tc.desc: 1.Test the marshalling of RequestPermissionUsedScene
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_003, Function | SmallTest | Level1)
+{
+    RequestPermissionUsedScene usedScene;
+    usedScene.abilities = {"ohos.global.systemres.MainAbility"};
+    usedScene.when = "1";
+    Parcel parcel;
+    bool ret = usedScene.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Marshalling_004
+ * @tc.name: Metadata Marshalling
+ * @tc.desc: 1.Test the marshalling of Metadata
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_004, Function | SmallTest | Level1)
+{
+    Metadata metadata;
+    metadata.name = "ohos.global.systemres";
+    metadata.value = "1";
+    metadata.resource = "/data/accounts/account_0/applications/ohos.global.systemres";
+    Parcel parcel;
+    bool ret = metadata.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Marshalling_005
+ * @tc.name: RequestPermissionUsedScene Marshalling
+ * @tc.desc: 1.Test the marshalling of RequestPermissionUsedScene
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_005, Function | SmallTest | Level1)
+{
+    CustomizeData customizeData;
+    customizeData.name = "ohos.global.systemres";
+    customizeData.value = "1";
+    customizeData.extra = "/data/accounts/account_0/applications/ohos.global.systemres";
+    Parcel parcel;
+    bool ret = customizeData.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Unmarshalling_001
+ * @tc.name: RequestPermissionUsedScene Unmarshalling
+ * @tc.desc: 1.Test the marshalling of RequestPermissionUsedScene
+ */
+HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_001, Function | SmallTest | Level1)
+{
+    CompatibleAbilityInfo compatibleAbilityInfo;
+    compatibleAbilityInfo.name = "com.ohos.contactsdataability.ability";;
+    compatibleAbilityInfo.moduleName = "entry";
+    compatibleAbilityInfo.bundleName = "com.ohos.contactsdataability";
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    AbilityInfo abilityInfo;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfo(want, 0, 0, abilityInfo);
+    EXPECT_TRUE(testRet);
+    abilityInfo.ConvertToCompatiableAbilityInfo(compatibleAbilityInfo);
+    CheckCompatibleAbilityInfo(BUNDLE_NAME_TEST, ABILITY_NAME_TEST, compatibleAbilityInfo);
+    Parcel parcel;
+    bool ret = compatibleAbilityInfo.Unmarshalling(parcel);
+    EXPECT_FALSE(ret);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: Unmarshalling_002
+ * @tc.name: RequestPermissionUsedScene Unmarshalling
+ * @tc.desc: 1.Test the marshalling of RequestPermissionUsedScene
+ */
+HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_002, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    ApplicationInfo testResult;
+    bool testRet = GetBundleDataMgr()->GetApplicationInfo(
+        BUNDLE_NAME_TEST, ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, testResult);
+    EXPECT_TRUE(testRet);
+    CompatibleApplicationInfo appInfo;
+    testResult.ConvertToCompatibleApplicationInfo(appInfo);
+    Parcel parcel;
+    bool ret = appInfo.Unmarshalling(parcel);
+    EXPECT_FALSE(ret);
+    CheckCompatibleApplicationInfo(BUNDLE_NAME_TEST, PERMISSION_SIZE_ZERO, appInfo);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetDisposedStatus_002
  * @tc.name: test GetDisposedStatus
  * @tc.desc: wrong bundleName, expect 0
