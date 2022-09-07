@@ -2955,9 +2955,6 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
         // query all
         ImplicitQueryAllExtensionInfosV9(want, flags, requestUserId, extensionInfos, appIndex);
     }
-    if (extensionInfos.empty()) {
-        return ERR_BUNDLE_MANAGER_QUERY_EXTENSION_NOT_EXIST;
-    }
     // sort by priority, descending order.
     if (extensionInfos.size() > 1) {
         std::stable_sort(extensionInfos.begin(), extensionInfos.end(),
@@ -3075,7 +3072,8 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t f
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
             InnerBundleInfo innerBundleInfo;
-            if (!GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId)) {
+            ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
+            if (ret != ERR_OK) {
                 APP_LOGE("ImplicitQueryExtensionAbilityInfos failed");
                 continue;
             }
