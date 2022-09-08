@@ -151,10 +151,10 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             } else {
-                APP_LOGD("arg %{public}d ignored", i);
+                APP_LOGD("SetDisposedStatus extra arg ignored");
             }
         } else {
-            APP_LOGE("SetDisposedStatus arg err! pos:%{public}u, type:%{public}d", i, valueType);
+            APP_LOGE("SetDisposedStatus arg err!");
             BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -235,10 +235,10 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             } else {
-                APP_LOGD("arg %{public}d ignored", i);
+                APP_LOGD("DeleteDisposedStatus extra arg ignored");
             }
         } else {
-            APP_LOGE("DeleteDisposedStatus arg err! pos:%{public}u, type:%{public}d", i, valueType);
+            APP_LOGE("DeleteDisposedStatus arg err!");
             BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -321,10 +321,10 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             } else {
-                APP_LOGD("arg %{public}d ignored", i);
+                APP_LOGD("GetDisposedStatus extra arg ignored");
             }
         } else {
-            APP_LOGE("GetDisposedStatus arg err! pos:%{public}u, type:%{public}d", i, valueType);
+            APP_LOGE("GetDisposedStatus arg err!");
             BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
             return nullptr;
         }
