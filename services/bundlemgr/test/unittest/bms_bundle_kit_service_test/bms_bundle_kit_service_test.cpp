@@ -27,6 +27,7 @@
 #include "bundle_mgr_proxy.h"
 #include "directory_ex.h"
 #include "install_param.h"
+#include "extension_ability_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
@@ -2390,6 +2391,26 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoByUri_0700, Function | SmallTe
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfoByUri_0100
+ * @tc.name: test can get the extensio ability info by uri
+ * @tc.desc: 1.system run normally
+ *           2.uri not include :///, invalid
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUri_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    AbilityInfo result;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->QueryExtensionAbilityInfoByUri(
+        URI, DEFAULT_USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: QueryKeepAliveBundleInfos_0100
  * @tc.name: test can get the keep alive bundle infos
  * @tc.desc: 1.system run normally
@@ -2446,7 +2467,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0200, Function | SmallTes
  * @tc.desc: 1.system run normally
  *           2.get bundle info failed
  */
-HWTEST_F(BmsBundleKitServiceTest, QueryKeepAliveBundleInfos_03000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, QueryKeepAliveBundleInfos_0300, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> bundleInfos;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
