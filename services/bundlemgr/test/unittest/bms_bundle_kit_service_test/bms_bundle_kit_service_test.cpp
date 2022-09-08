@@ -4894,4 +4894,30 @@ HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_004, Function | SmallTest | 
     int32_t status = bundleMgrProxy->GetDisposedStatus("wrong");
     EXPECT_EQ(status, 0);
 }
+
+/**
+ * @tc.number: SetDebugMode_0100
+ * @tc.name: test SetDebugMode
+ * @tc.desc: SetDebugMode
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetDebugMode_0100, Function | SmallTest | Level1)
+{
+    bool isDebug = false;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t result = hostImpl->SetDebugMode(isDebug);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDebugMode_0200
+ * @tc.name: test SetDebugMode
+ * @tc.desc: SetDebugMode
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetDebugMode_0200, Function | SmallTest | Level1)
+{
+    bool isDebug = true;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t result = hostImpl->SetDebugMode(isDebug);
+    EXPECT_EQ(result, ERR_OK);
+}
 }
