@@ -12,42 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NAPI_ARG_H
-#define NAPI_ARG_H
-
-#include <memory>
-
-#include "app_log_wrapper.h"
+#ifndef BUSINESS_ERROR_H
+#define BUSINESS_ERROR_H
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class NapiArg {
+class BusinessError {
 public:
-    NapiArg(napi_env env, napi_callback_info info): env_(env), info_(info) {}
-    ~NapiArg() {}
+static inline void ThrowError(napi_env env, int32_t err)
+{
+    napi_throw_error(env, std::to_string(err).c_str(), "");
+}
 
-    bool Init(size_t minArgc, size_t maxArgc);
-
-    size_t GetArgc() const;
-
-    size_t GetMaxArgc() const;
-
-    napi_value GetThisArg() const;
-
-    napi_value GetArgv(size_t pos) const;
-
-    napi_value operator[](size_t pos) const;
-
-private:
-    napi_env env_ = nullptr;
-    napi_callback_info info_ = nullptr;
-    size_t argc_ = 0;
-    size_t maxArgc_ = 0;
-    std::unique_ptr<napi_value[]> argv_ = { nullptr };
-    napi_value thisArg_ = nullptr;
+static napi_value CreateError(napi_env env, int32_t err, const std::string& msg);
 };
 }
 }

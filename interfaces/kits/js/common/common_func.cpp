@@ -17,9 +17,12 @@
 #include <vector>
 
 #include "app_log_wrapper.h"
+#include "bundle_mgr_interface.h"
+#include "iservice_registry.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "system_ability_definition.h"
 #include "want.h"
 
 namespace OHOS {
@@ -30,19 +33,32 @@ constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 using Want = OHOS::AAFwk::Want;
 
+napi_value CommonFunc::WrapVoidToJS(napi_env env)
+{
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_get_null(env, &result));
+    return result;
+}
+
 napi_value CommonFunc::ParseInt(napi_env env, int &param, napi_value args)
 {
     napi_valuetype valuetype = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
     APP_LOGD("valuetype=%{public}d.", valuetype);
-    NAPI_ASSERT(env, valuetype == napi_number, "Wrong argument type. int32 expected.");
+    if (valuetype != napi_number) {
+        APP_LOGE("Wrong argument type. int32 expected.");
+        return nullptr;
+    }
     int32_t value = 0;
     napi_get_value_int32(env, args, &value);
     APP_LOGD("param=%{public}d.", value);
     param = value;
     napi_value result = nullptr;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
-    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error!");
+    if (status != napi_ok) {
+        APP_LOGE("napi_create_int32 error!");
+        return nullptr;
+    }
     return result;
 }
 
@@ -66,6 +82,26 @@ bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result
         return false;
     }
     return true;
+}
+
+sptr<IBundleMgr> CommonFunc::GetBundleMgr()
+{
+    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        APP_LOGE("systemAbilityManager is null.");
+        return nullptr;
+    }
+    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (bundleMgrSa == nullptr) {
+        APP_LOGE("bundleMgrSa is null.");
+        return nullptr;
+    }
+    auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+    if (bundleMgr == nullptr) {
+        APP_LOGE("iface_cast failed.");
+        return nullptr;
+    }
+    return bundleMgr;
 }
 
 std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)
@@ -119,7 +155,10 @@ napi_value CommonFunc::ParseStringArray(napi_env env, std::vector<std::string> &
     // create result code
     napi_value result;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
-    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error!");
+    if (status != napi_ok) {
+        APP_LOGE("napi_create_int32 error!");
+        return nullptr;
+    }
     return result;
 }
 
