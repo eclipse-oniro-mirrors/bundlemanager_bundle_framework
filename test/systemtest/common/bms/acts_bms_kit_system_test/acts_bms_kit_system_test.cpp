@@ -26,6 +26,7 @@
 #include "clean_cache_callback_host.h"
 #include "common_tool.h"
 #include "extension_ability_info.h"
+#include "permission_define.h"
 #include "iservice_registry.h"
 #include "nlohmann/json.hpp"
 #include "status_receiver_host.h"
@@ -51,10 +52,12 @@ const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string PERMISSIONNAME = "ohos.permission.READ_CALENDAR";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
 const int32_t RESID = 16777218;
+constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
 
 namespace OHOS {
@@ -4227,6 +4230,45 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0200, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: QueryAbilityInfosV9_0100
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.query ability infos
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START QueryAbilityInfos_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string abilityName = "bmsThirdBundle_A1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName(appName);
+    want.SetElement(name);
+    std::vector<AbilityInfo> AbilityInfo;
+    auto ret = bundleMgrProxy->QueryAbilityInfosV9(want, GET_ABILITY_INFO_DEFAULT_V9, USERID, AbilityInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END QueryAbilityInfos_0100" << std::endl;
+}
+
+/**
  * @tc.number: QueryAllAbilityInfos_0100
  * @tc.name: test QueryAllAbilityInfos proxy
  * @tc.desc: 1.query all ability infos
@@ -4681,6 +4723,93 @@ HWTEST_F(ActsBmsKitSystemTest, GetIconById_0100, Function | SmallTest | Level1)
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetIconById_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetPermissionDef_0100
+ * @tc.name: test GetPermissionDef proxy
+ * @tc.desc: 1.system run normally
+ *           2.get permission info successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0100, Function | SmallTest | Level1)
+{
+    PermissionDef permissionDef;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool res = bundleMgrProxy->GetPermissionDef(PERMISSIONNAME, permissionDef);
+    EXPECT_TRUE(res);
+
+}
+
+/**
+ * @tc.number: DisposedStatus_0100
+ * @tc.name: test DisposedStatus proxy
+ * @tc.desc: 1.system run normally
+ *           2.get disposed status failed by unpermission
+ */
+HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0100, Function | SmallTest | Level1)
+{
+    std::cout << "START DisposedStatus_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool result = bundleMgrProxy->SetDisposedStatus(appName, DISPOSED_STATUS);
+    EXPECT_FALSE(result);
+    int32_t status = bundleMgrProxy->GetDisposedStatus(appName);
+    EXPECT_EQ(status, 0);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END DisposedStatus_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetUdidByNetworkId_0100
+ * @tc.name: test GetUdidByNetworkId proxy
+ * @tc.desc: 1.system run normally
+ *           2.get udid info failed by empty networkid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUdidByNetworkId_0100, Function | SmallTest | Level1)
+{
+    std::cout << "START GetUdidByNetworkId_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    std::string udid;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bundleMgrProxy->GetUdidByNetworkId("", udid);
+    EXPECT_EQ(udid, "");
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetUdidByNetworkId_0100" << std::endl;
+}
+
+/**
+ * @tc.number: SetDebugMode_0100
+ * @tc.name: test SetDebugMode proxy
+ * @tc.desc: 1.system run normally
+ *           2.set debug mode successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, SetDebugMode_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->SetDebugMode(true);
+    EXPECT_EQ(res, ERR_OK);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
