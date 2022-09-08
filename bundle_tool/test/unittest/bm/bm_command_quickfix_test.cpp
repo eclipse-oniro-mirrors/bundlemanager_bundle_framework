@@ -240,7 +240,7 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0500, TestSize.Level1)
 
     BundleManagerShellCommand cmd(argc, argv);
 
-    EXPECT_EQ(cmd.ExecCommand(), "check file path failed.\n");
+    EXPECT_EQ(cmd.ExecCommand(), "apply quickfix failed with errno: 4.\n");
 }
 
 /**
@@ -264,7 +264,7 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0600, TestSize.Level1)
 
     BundleManagerShellCommand cmd(argc, argv);
 
-    EXPECT_EQ(cmd.ExecCommand(), "check file path failed.\n");
+    EXPECT_EQ(cmd.ExecCommand(), "apply quickfix failed with errno: 4.\n");
 }
 
 /**
@@ -287,7 +287,7 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0700, TestSize.Level1)
 
     BundleManagerShellCommand cmd(argc, argv);
 
-    EXPECT_EQ(cmd.ExecCommand(), "check file path failed.\n");
+    EXPECT_EQ(cmd.ExecCommand(), "apply quickfix failed with errno: 4.\n");
 }
 
 /**
