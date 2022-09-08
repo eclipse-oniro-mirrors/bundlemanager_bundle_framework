@@ -91,7 +91,7 @@ ErrCode QuickFixChecker::CheckPatchWithInstalledBundle(const AppQuickFix &appQui
     bool isDebug = bundleInfo.applicationInfo.debug &&
         (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
     APP_LOGD("application isDebug: %{public}d", isDebug);
-    if (isDebug && (bundleInfo.appqfInfo.type == QuickFixType::HOT_RELOAD)) {
+    if (isDebug && (bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.type == QuickFixType::HOT_RELOAD)) {
         // patch and hot reload can not both exist
         APP_LOGE("error: hot reload type already existed, hot reload and patch type can not both exist");
         return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
@@ -135,7 +135,7 @@ ErrCode QuickFixChecker::CheckHotReloadWithInstalledBundle(const AppQuickFix &ap
         APP_LOGE("error: hot reload type does not support release bundle");
         return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE;
     }
-    if (bundleInfo.appqfInfo.type == QuickFixType::PATCH) {
+    if (bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.type == QuickFixType::PATCH) {
         // patch and hot reload can not both exist
         APP_LOGE("error: patch type already existed, hot reload and patch can not both exist");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_ALREADY_EXISTED;
@@ -151,16 +151,21 @@ ErrCode QuickFixChecker::CheckCommonWithInstalledBundle(const AppQuickFix &appQu
             appQuickFix.bundleName.c_str(), bundleInfo.name.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
-    // check versionCode and versionName
+    // check versionCode
     if (bundleInfo.versionCode != appQuickFix.versionCode) {
         APP_LOGE("error: versionCode not same, appQuickFix: %{public}u, bundleInfo: %{public}u",
             appQuickFix.versionCode, bundleInfo.versionCode);
         return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME;
     }
+    const auto &deployedAppqfInfo = bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo;
+    if (deployedAppqfInfo.hqfInfos.empty()) {
+        APP_LOGD("no patch used in bundleName: %{public}s", bundleInfo.name.c_str());
+        return ERR_OK;
+    }
     const auto &qfInfo = appQuickFix.deployingAppqfInfo;
-    if (qfInfo.versionCode <= bundleInfo.appqfInfo.versionCode) {
+    if (qfInfo.versionCode <= deployedAppqfInfo.versionCode) {
         APP_LOGE("qhf version code %{public}u should be greater than the original %{public}u",
-            qfInfo.versionCode, bundleInfo.appqfInfo.versionCode);
+            qfInfo.versionCode, deployedAppqfInfo.versionCode);
         return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR;
     }
     return ERR_OK;

@@ -2492,6 +2492,7 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
+    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
@@ -2518,14 +2519,15 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
     } else {
         NAPI_CALL(env, napi_get_undefined(env,  &promise));
     }
+    callbackPtr.release();
     return GetBundlePackInfoWrap(env, promise, asyncCallbackInfo);
 }
 
 napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo)
 {
+    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "GetBundlePackInfoPromise", NAPI_AUTO_LENGTH, &resource));
-    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
@@ -3456,6 +3458,7 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_MISSING_PROP):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE):

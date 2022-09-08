@@ -46,7 +46,7 @@ const std::map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
     {"unspecified", DisplayOrientation::UNSPECIFIED},
     {"landscape", DisplayOrientation::LANDSCAPE},
     {"portrait", DisplayOrientation::PORTRAIT},
-    {"followrecent", DisplayOrientation::FOLLOWRECENT}
+    {"followRecent", DisplayOrientation::FOLLOWRECENT}
 };
 const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
@@ -325,6 +325,7 @@ struct Module {
     std::vector<DefinePermission> definePermissions;
     std::string mainAbility;
     std::string srcPath;
+    bool isLibIsolated = false;
 };
 
 // config.json
@@ -1781,6 +1782,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_MODULE_PROFILE_KEY_IS_LIB_ISOLATED,
+        module.isLibIsolated,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ConfigJson &configJson)
@@ -1956,7 +1965,29 @@ bool ConvertFormInfo(FormInfo &formInfo, const ProfileReader::Forms &form)
     return true;
 }
 
-bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bundleExtractor)
+void UpdateNativeSoAttrs(
+    const std::string &cpuAbi,
+    const std::string &soRelativePath,
+    bool isLibIsolated,
+    InnerBundleInfo &innerBundleInfo)
+{
+    APP_LOGD("cpuAbi %{public}s, soRelativePath : %{public}s, isLibIsolated : %{public}d",
+        cpuAbi.c_str(), soRelativePath.c_str(), isLibIsolated);
+    innerBundleInfo.SetCpuAbi(cpuAbi);
+    if (!isLibIsolated) {
+        innerBundleInfo.SetNativeLibraryPath(soRelativePath);
+        return;
+    }
+
+    innerBundleInfo.SetModuleNativeLibraryPath(
+        innerBundleInfo.GetCurModuleName() + Constants::PATH_SEPARATOR + soRelativePath);
+    innerBundleInfo.SetModuleCpuAbi(cpuAbi);
+}
+
+bool ParserNativeSo(
+    ProfileReader::ConfigJson &configJson,
+    const BundleExtractor &bundleExtractor,
+    InnerBundleInfo &innerBundleInfo)
 {
     std::string abis = GetAbiList();
     std::vector<std::string> abiList;
@@ -1970,18 +2001,21 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
         std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
     bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
     APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
+    std::string cpuAbi;
+    std::string soRelativePath;
     bool soExist = bundleExtractor.IsDirExist(Constants::LIBS);
     if (!soExist) {
         APP_LOGD("so not exist");
         if (isDefault) {
-            applicationInfo.cpuAbi =
-                isSystemLib64Exist ? Constants::ARM64_V8A : Constants::ARM_EABI_V7A;
+            cpuAbi = isSystemLib64Exist ? Constants::ARM64_V8A : Constants::ARM_EABI_V7A;
+            UpdateNativeSoAttrs(cpuAbi, soRelativePath, false, innerBundleInfo);
             return true;
         }
 
         for (const auto &abi : abiList) {
             if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end()) {
-                applicationInfo.cpuAbi = abi;
+                cpuAbi = abi;
+                UpdateNativeSoAttrs(cpuAbi, soRelativePath, false, innerBundleInfo);
                 return true;
             }
         }
@@ -1990,12 +2024,13 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
     }
 
     APP_LOGD("so exist");
+    bool isLibIsolated = configJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
             if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM64_V8A)) {
-                applicationInfo.cpuAbi = Constants::ARM64_V8A;
-                applicationInfo.nativeLibraryPath =
-                    Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A);
+                cpuAbi = Constants::ARM64_V8A;
+                soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A);
+                UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
                 return true;
             }
 
@@ -2003,16 +2038,16 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
         }
 
         if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI_V7A)) {
-            applicationInfo.cpuAbi = Constants::ARM_EABI_V7A;
-            applicationInfo.nativeLibraryPath =
-                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI_V7A);
+            cpuAbi = Constants::ARM_EABI_V7A;
+            soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI_V7A);
+            UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
         if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI)) {
-            applicationInfo.cpuAbi = Constants::ARM_EABI;
-            applicationInfo.nativeLibraryPath =
-                Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI);
+            cpuAbi = Constants::ARM_EABI;
+            soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI);
+            UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
@@ -2023,8 +2058,9 @@ bool ParserNativeSo(ApplicationInfo &applicationInfo, const BundleExtractor &bun
         std::string libsPath;
         libsPath.append(Constants::LIBS).append(abi).append(Constants::PATH_SEPARATOR);
         if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && bundleExtractor.IsDirExist(libsPath)) {
-            applicationInfo.cpuAbi = abi;
-            applicationInfo.nativeLibraryPath = Constants::LIBS + Constants::ABI_MAP.at(abi);
+            cpuAbi = abi;
+            soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(abi);
+            UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
     }
@@ -2087,13 +2123,6 @@ bool ToApplicationInfo(
         applicationInfo.supportedModes = 0;
     }
     applicationInfo.vendor = configJson.app.vendor;
-    // handle native so
-    if (!ParserNativeSo(applicationInfo, bundleExtractor)) {
-        APP_LOGE("Parser native so failed.");
-        return false;
-    }
-    APP_LOGD("nativeLibraryPath : %{private}s, cpuAbi : %{public}s",
-        applicationInfo.nativeLibraryPath.c_str(), applicationInfo.cpuAbi.c_str());
 
     // for SystemResource
     applicationInfo.iconId = configJson.app.iconId;
@@ -2212,6 +2241,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.dependencies = configJson.module.dependencies;
 
     innerModuleInfo.isModuleJson = false;
+    innerModuleInfo.isLibIsolated = configJson.module.isLibIsolated;
     return true;
 }
 
@@ -2480,6 +2510,10 @@ ErrCode BundleProfile::TransformTo(
     if (!ToInnerBundleInfo(
         configJson, bundleExtractor, appPrivilegeCapability, innerBundleInfo)) {
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    if (!ParserNativeSo(configJson, bundleExtractor, innerBundleInfo)) {
+        APP_LOGE("Parser native so failed.");
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
     }
     return ERR_OK;
 }

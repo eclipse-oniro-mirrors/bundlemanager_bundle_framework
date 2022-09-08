@@ -154,9 +154,6 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
       "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
     ]
   }
-
-  resource_config_file =
-      "${appexecfwk_path}/test/resource/bundlemgrservice/ohos_test1.xml"
 }
 
 group("unittest") {

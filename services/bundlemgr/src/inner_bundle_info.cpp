@@ -70,6 +70,9 @@ const std::string MODULE_COMMON_EVENT = "commonEvents";
 const std::string MODULE_MAIN_ABILITY = "mainAbility";
 const std::string MODULE_ENTRY_ABILITY_KEY = "entryAbilityKey";
 const std::string MODULE_DEPENDENCIES = "dependencies";
+const std::string MODULE_IS_LIB_ISOLATED = "isLibIsolated";
+const std::string MODULE_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
+const std::string MODULE_CPU_ABI = "cpuAbi";
 const std::string NEW_BUNDLE_NAME = "newBundleName";
 const std::string MODULE_SRC_PATH = "srcPath";
 const std::string MODULE_HASH_VALUE = "hashValue";
@@ -106,6 +109,7 @@ const std::string BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
 const std::string MODULE_COMPILE_MODE = "compileMode";
+const std::string BUNDLE_HQF_INFOS = "hqfInfos";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -366,6 +370,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
         APP_LOGE("baseBundleInfo_ is nullptr, create failed");
     }
     *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
+    this->hqfInfos_ = info.hqfInfos_;
     return *this;
 }
 
@@ -442,6 +447,9 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_IS_MODULE_JSON, info.isModuleJson},
         {MODULE_IS_STAGE_BASED_MODEL, info.isStageBasedModel},
         {MODULE_DEPENDENCIES, info.dependencies},
+        {MODULE_IS_LIB_ISOLATED, info.isLibIsolated},
+        {MODULE_NATIVE_LIBRARY_PATH, info.nativeLibraryPath},
+        {MODULE_CPU_ABI, info.cpuAbi},
         {MODULE_HAP_PATH, info.hapPath},
         {MODULE_COMPILE_MODE, info.compileMode}
     };
@@ -513,6 +521,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
     jsonObject[DISPOSED_STATUS] = disposedStatus_;
+    jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -852,6 +861,30 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_COMPILE_MODE,
         info.compileMode,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_IS_LIB_ISOLATED,
+        info.isLibIsolated,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_NATIVE_LIBRARY_PATH,
+        info.nativeLibraryPath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_CPU_ABI,
+        info.cpuAbi,
         JsonType::STRING,
         false,
         parseResult,
@@ -1361,6 +1394,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_HQF_INFOS,
+        hqfInfos_,
+        JsonType::ARRAY,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -1408,6 +1449,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.colorMode = it->second.colorMode;
     hapInfo.isRemovable = it->second.isRemovable;
     hapInfo.upgradeFlag = it->second.upgradeFlag;
+    hapInfo.isLibIsolated = it->second.isLibIsolated;
+    hapInfo.nativeLibraryPath = it->second.nativeLibraryPath;
+    hapInfo.cpuAbi = it->second.cpuAbi;
 
     hapInfo.bundleName = baseApplicationInfo_->bundleName;
     hapInfo.mainElementName = it->second.mainAbility;
@@ -1454,6 +1498,12 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     }
     hapInfo.dependencies = it->second.dependencies;
     hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
+    for (const auto &hqf : hqfInfos_) {
+        if (hqf.moduleName == it->second.moduleName) {
+            hapInfo.hqfInfo = hqf;
+            break;
+        }
+    }
     return hapInfo;
 }
 
@@ -1468,6 +1518,20 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
                 abilityInfo.applicationInfo);
+            return abilityInfo;
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, int32_t userId) const
+{
+    for (const auto &ability : baseAbilityInfos_) {
+        auto abilityInfo = ability.second;
+        if ((abilityInfo.bundleName == bundleName) && (abilityInfo.name == abilityName) &&
+            (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
             return abilityInfo;
         }
     }
@@ -1637,7 +1701,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
     SetKeepAlive(applicationInfo.keepAlive);
-    baseApplicationInfo_->bootable = applicationInfo.bootable;
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
@@ -1859,10 +1922,6 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
             APP_LOGE("get request permission state failed");
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
-    }
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_APPQF_INFO)
-        != GET_BUNDLE_WITH_APPQF_INFO) {
-        bundleInfo.appqfInfo = AppqfInfo();
     }
     GetBundleWithAbilities(flags, bundleInfo, userId);
     GetBundeleWithExtension(flags, bundleInfo, userId);
@@ -2650,14 +2709,46 @@ std::string InnerBundleInfo::GetModuleTypeByPackage(const std::string &packageNa
     return it->second.distro.moduleType;
 }
 
-AppqfInfo InnerBundleInfo::GetAppqfInfo() const
+AppQuickFix InnerBundleInfo::GetAppQuickFix() const
 {
-    return baseBundleInfo_->appqfInfo;
+    return baseApplicationInfo_->appQuickFix;
 }
 
-void InnerBundleInfo::SetAppqfInfo(const AppqfInfo &appqfInfo)
+void InnerBundleInfo::SetAppQuickFix(const AppQuickFix &appQuickFix)
 {
-    baseBundleInfo_->appqfInfo = appqfInfo;
+    baseApplicationInfo_->appQuickFix = appQuickFix;
+    SetQuickFixHqfInfos(appQuickFix.deployedAppqfInfo.hqfInfos);
+}
+
+std::vector<HqfInfo> InnerBundleInfo::GetQuickFixHqfInfos() const
+{
+    return hqfInfos_;
+}
+
+void InnerBundleInfo::SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos)
+{
+    hqfInfos_ = hqfInfos;
+}
+
+bool InnerBundleInfo::FetchNativeSoAttrs(
+    const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath)
+{
+    auto moduleIter = innerModuleInfos_.find(requestPackage);
+    if (moduleIter == innerModuleInfos_.end()) {
+        APP_LOGE("requestPackage(%{public}s) is not exist", requestPackage.c_str());
+        return false;
+    }
+
+    auto &moduleInfo = moduleIter->second;
+    if (moduleInfo.isLibIsolated) {
+        cpuAbi = moduleInfo.cpuAbi;
+        nativeLibraryPath = moduleInfo.nativeLibraryPath;
+    } else {
+        cpuAbi = baseApplicationInfo_->cpuAbi;
+        nativeLibraryPath = baseApplicationInfo_->nativeLibraryPath;
+    }
+
+    return !nativeLibraryPath.empty();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

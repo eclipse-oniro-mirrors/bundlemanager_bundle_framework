@@ -207,6 +207,13 @@ private:
      */
     ErrCode HandleQueryAbilityInfosMutiparam(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the QueryAbilityInfosV9 function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the HandleQueryAllAbilityInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -459,12 +466,26 @@ private:
      */
     ErrCode HandleQueryExtAbilityInfosWithoutType(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the HandleQueryExtAbilityInfosWithoutTypeV9 function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleQueryExtAbilityInfosWithoutTypeV9(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the HandleQueryExtensionInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleQueryExtAbilityInfos(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the HandleQueryExtAbilityInfosV9 function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleQueryExtAbilityInfosV9(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryExtAbilityInfosByType(MessageParcel &data, MessageParcel &reply);
 

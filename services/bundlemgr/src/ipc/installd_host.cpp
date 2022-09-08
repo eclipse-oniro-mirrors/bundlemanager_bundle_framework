@@ -56,6 +56,8 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::APPLY_DIFF_PATCH, &InstalldHost::HandleApplyDiffPatch);
     funcMap_.emplace(IInstalld::Message::IS_EXIST_DIR, &InstalldHost::HandleIsExistDir);
     funcMap_.emplace(IInstalld::Message::IS_DIR_EMPTY, &InstalldHost::HandleIsDirEmpty);
+    funcMap_.emplace(IInstalld::Message::OBTAIN_QUICK_FIX_DIR, &InstalldHost::HandObtainQuickFixFileDir);
+    funcMap_.emplace(IInstalld::Message::COPY_FILES, &InstalldHost::HandCopyFiles);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -296,6 +298,29 @@ bool InstalldHost::HandleIsDirEmpty(MessageParcel &data, MessageParcel &reply)
         APP_LOGE("write isDirEmpty failed");
         return false;
     }
+    return true;
+}
+
+bool InstalldHost::HandObtainQuickFixFileDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string dir = Str16ToStr8(data.ReadString16());
+    std::vector<std::string> dirVec;
+    ErrCode result = ObtainQuickFixFileDir(dir, dirVec);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if ((result == ERR_OK) && !reply.WriteStringVector(dirVec)) {
+        APP_LOGE("fail to obtain quick fix file dir from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandCopyFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string sourceDir = Str16ToStr8(data.ReadString16());
+    std::string destinationDir = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = CopyFiles(sourceDir, destinationDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 }  // namespace AppExecFwk

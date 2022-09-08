@@ -34,10 +34,6 @@ namespace OHOS {
 namespace {
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/parse_bundle/";
 const std::string NEW_APP = "new";
-const std::string BREAK_ZIP = "break_zip";
-const std::string NO_PROFILE = "no_profile";
-const std::string EMPTY_CONFIG = "empty_config";
-const std::string NOTHING_CONFIG = "nothing_config";
 const std::string UNKOWN_PATH = "unknown_path";
 const size_t ONE = 1;
 const size_t TWO = 2;
@@ -652,23 +648,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_1200, Function | SmallTest | Level0)
         APP_LOGD("test must prop %{public}s not exist", propKey.c_str());
         CheckNoPropProfileParseModule(propKey, ERR_OK);
     }
-}
-
-/**
- * @tc.number: TestParse_1300
- * @tc.name: parse bundle package by config.json
- * @tc.desc: 1. system running normally
- *           2. test parse bundle failed when the config.json is empty json
- */
-HWTEST_F(BmsBundleParserTest, TestParse_1300, Function | SmallTest | Level0)
-{
-    BundleParser bundleParser;
-    InnerBundleInfo innerBundleInfo;
-    pathStream_ << RESOURCE_ROOT_PATH << EMPTY_CONFIG << INSTALL_FILE_SUFFIX;
-    AppPrivilegeCapability appPrivilegeCapability;
-    ErrCode result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
 /**

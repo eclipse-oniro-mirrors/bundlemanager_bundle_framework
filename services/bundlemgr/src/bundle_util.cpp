@@ -302,10 +302,17 @@ void BundleUtil::RemoveHmdfsConfig(const std::string &bundleName)
     }
 }
 
-std::string BundleUtil::CreateInstallTempDir(uint32_t installerId)
+std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType &type)
 {
     std::time_t curTime = std::time(0);
     std::string tempDir = Constants::HAP_COPY_PATH;
+    if (type == DirType::STREAM_INSTALL_DIR) {
+        tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
+    } else if (type == DirType::QUICK_FIX_DIR) {
+        tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    } else {
+        return "";
+    }
     tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
         std::to_string(installerId) + Constants::PATH_SEPARATOR;
     if (!OHOS::ForceCreateDirectory(tempDir)) {

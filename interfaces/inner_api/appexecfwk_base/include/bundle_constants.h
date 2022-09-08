@@ -62,8 +62,11 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bun
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
+constexpr const char* COMPRESS_PROPERTY = "compress";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
+constexpr const char* STREAM_INSTALL_PATH = "stream_install";
+constexpr const char* QUICK_FIX_PATH = "quick_fix";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
@@ -184,7 +187,6 @@ constexpr uint8_t MAX_HAP_NUMBER = 128;
 
 // distributed database
 constexpr const char* APP_ID = "bundle_manager_service";
-constexpr const char* DISTRIBUTED_APP_ID = "distributed_bundle_manager_service";
 constexpr const char* STORE_ID = "installed_bundle_datas";
 constexpr const char* ABILITY_USAGE_STORE_ID = "ability_usage_datas";
 constexpr const char* PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";

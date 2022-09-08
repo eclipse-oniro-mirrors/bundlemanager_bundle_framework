@@ -167,7 +167,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0300, Function |
     std::vector<std::string> sourceFiles {NOT_EXIST_FILE_PATH};
     std::vector<std::string> destFiles;
     auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     APP_LOGI("end of BmsBundleQuickFixManager_0300.");
 }
 

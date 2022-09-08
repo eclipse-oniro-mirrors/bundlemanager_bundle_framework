@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_mgr_service.h"
 #include "installd_client.h"
 #include "scope_guard.h"
 
@@ -51,8 +52,8 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
     InnerAppQuickFix innerAppQuickFix;
     // 1. query quick fix info form db
     if (!quickFixDataMgr_->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix)) {
-        APP_LOGE("no patch in the db");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE;
+        APP_LOGI("no patch in the db");
+        return ERR_OK;
     }
     // 2. update quick fix status
     if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix)) {
@@ -70,8 +71,13 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
         APP_LOGE("ToDeletePatchDir failed");
         return errCode;
     }
-
-    // 5. to remove old patch info from db
+    // 5. to remove deployingAppqfInfo from cache
+    errCode = RemoveDeployingInfo(bundleName_);
+    if (errCode != ERR_OK) {
+        APP_LOGE("RemoveDeployingInfo failed");
+        return errCode;
+    }
+    // 6. to remove old patch info from db
     if (!quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName_)) {
         APP_LOGE("InnerDeleteQuickFix failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
@@ -134,6 +140,42 @@ ErrCode QuickFixDeleter::GetQuickFixDataMgr()
         quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
         if (quickFixDataMgr_ == nullptr) {
             APP_LOGE("quickFix dataMgr is nullptr");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeleter::GetDataMgr()
+{
+    if (dataMgr_ == nullptr) {
+        dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr_ == nullptr) {
+            APP_LOGE("dataMgr_ is nullptr");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeleter::RemoveDeployingInfo(const std::string &bundleName)
+{
+    if (GetDataMgr() != ERR_OK) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    InnerBundleInfo innerBundleInfo;
+    auto isExisted = dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo);
+    if (isExisted) {
+        AppQuickFix appQuickFix = innerBundleInfo.GetAppQuickFix();
+        if (appQuickFix.deployingAppqfInfo.hqfInfos.empty()) {
+            dataMgr_->EnableBundle(bundleName_);
+            return ERR_OK;
+        }
+        appQuickFix.deployingAppqfInfo = AppqfInfo();
+        innerBundleInfo.SetAppQuickFix(appQuickFix);
+        innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("update quickfix innerbundleInfo failed");
             return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }

@@ -43,7 +43,6 @@ const std::string BUNDLE_FILE_DIR = "/data/test/resource/bms/update_bundle/";
 const std::string V1_BUNDLE = "version1.hap";
 const std::string V2_BUNDLE = "version2.hap";
 const std::string V3_BUNDLE = "version3.hap";
-const std::string ERROR_FORMART_BUNDLE = "format_error_profile.hap";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const std::string PROFILE_FILE = "config.json";
@@ -231,7 +230,7 @@ void BmsBundleUpdaterTest::StopBundleService() const
 void BmsBundleUpdaterTest::CheckFileExist() const
 {
     CommonTool tool;
-    bool isCodeExist = tool.CheckFilePathISExist(BUNDLE_CODE_DIR + SEPARATOR + PACKAGE_NAME);
+    bool isCodeExist = tool.CheckFilePathISExist(BUNDLE_CODE_DIR);
     EXPECT_TRUE(isCodeExist);
     bool isDataExist = tool.CheckFilePathISExist(BUNDLE_DATA_DIR);
     EXPECT_TRUE(isDataExist);
@@ -359,29 +358,11 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0400, Function | SmallTest | Level0)
 
 /**
  * @tc.number: Update_0500
- * @tc.name: test the wrong format bundle can't be updated
- * @tc.desc: 1. the bundle file is wrong format
- *           2. the bundle can't be updated and the result is fail
- */
-HWTEST_F(BmsBundleUpdaterTest, Update_0500, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V1_BUNDLE);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    ErrCode updateResult = UpdateBundle(BUNDLE_FILE_DIR + ERROR_FORMART_BUNDLE);
-    EXPECT_EQ(updateResult, ERR_APPEXECFWK_PARSE_NO_PROFILE);
-
-    installResult = UninstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(installResult, ERR_OK);
-}
-
-/**
- * @tc.number: Update_0600
  * @tc.name: test the lower version bundle can't be updated
  * @tc.desc: 1. the bundle file is the lower version
  *           2. the bundle can't be updated and the result is fail
  */
-HWTEST_F(BmsBundleUpdaterTest, Update_0600, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleUpdaterTest, Update_0500, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V2_BUNDLE);
     EXPECT_EQ(installResult, ERR_OK);
@@ -394,13 +375,13 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0600, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: Update_0700
+ * @tc.number: Update_0600
  * @tc.name: test the installd service error case
  * @tc.desc: 1. the installd service error
  *           2. the update operation will return fail and the next install operation will success after restart installd
  *              service
  */
-HWTEST_F(BmsBundleUpdaterTest, Update_0700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleUpdaterTest, Update_0600, Function | SmallTest | Level1)
 {
     ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V1_BUNDLE);
     EXPECT_EQ(installResult, ERR_OK);
@@ -427,12 +408,12 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0700, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: Update_0800
+ * @tc.number: Update_0700
  * @tc.name: test when status receiver is null will not update bundle
  * @tc.desc: 1. the status receiver is null
  *           2. the update bundle operation will not execute when status receiver is null
  */
-HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleUpdaterTest, Update_0700, Function | SmallTest | Level2)
 {
     ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V1_BUNDLE);
     EXPECT_EQ(installResult, ERR_OK);
@@ -463,12 +444,12 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.number: Update_0900
+ * @tc.number: Update_0800
  * @tc.name: test the larger version bundle can be installed continuously
  * @tc.desc: 1. the bundle is already installed
  *           2. the larger version bundle can be installed continuously
  */
-HWTEST_F(BmsBundleUpdaterTest, Update_0900, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
 {
     ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V1_BUNDLE);
     EXPECT_EQ(installResult, ERR_OK);

@@ -36,6 +36,9 @@
 #include "perf_profile.h"
 #include "status_receiver_host.h"
 #include "system_bundle_installer.h"
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+#include "quick_fix_boot_scanner.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -199,6 +202,9 @@ void BMSEventHandler::OnBmsStarting()
 
 void BMSEventHandler::AfterBmsStart()
 {
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
+#endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
@@ -1355,7 +1361,7 @@ bool BMSEventHandler::MatchSignature(
 {
     if (configInfo.appSignature.empty()) {
         APP_LOGW("appSignature is empty");
-        return true;
+        return false;
     }
 
     return std::find(configInfo.appSignature.begin(),
@@ -1374,7 +1380,6 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     ApplicationInfo appInfo;
     appInfo.keepAlive = preBundleConfigInfo.keepAlive;
     appInfo.singleton = preBundleConfigInfo.singleton;
-    appInfo.bootable = preBundleConfigInfo.bootable;
     appInfo.runningResourcesApply = preBundleConfigInfo.runningResourcesApply;
     appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
     for (const auto &event : preBundleConfigInfo.allowCommonEvent) {

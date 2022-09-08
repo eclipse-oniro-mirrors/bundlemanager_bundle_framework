@@ -64,10 +64,7 @@ ohos_shared_library("appexecfwk_core") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [
-    "${common_path}:libappexecfwk_common",
-    "//third_party/jsoncpp:jsoncpp",
-  ]
+  deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
     "ability_base:want",
@@ -83,7 +80,6 @@ ohos_shared_library("appexecfwk_core") {
 
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
-    external_deps += [ "multimedia_image_standard:image_native" ]
   }
 
   if (bundle_framework_default_app) {

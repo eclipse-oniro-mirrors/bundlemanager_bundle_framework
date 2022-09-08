@@ -17,8 +17,10 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
+#include "inner_bundle_info.h"
 #include "installd_client.h"
 #include "patch_extractor.h"
 #include "patch_parser.h"
@@ -46,7 +48,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     }
 
     std::vector<std::string> realFilePaths;
-    ErrCode ret = BundleUtil::CheckFilePath(patchPaths_, realFilePaths);
+    ErrCode ret = ProcessBundleFilePaths(patchPaths_, realFilePaths);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -253,6 +255,10 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
             newQuickFix.bundleName.c_str());
         return ret;
     }
+    if (!newQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
+        // if so files exist, library path add patch_versionCode; if so files not exist, modify library path to empty.
+        ProcessNativeLibraryPath(newPatchPath, newInnerAppQuickFix);
+    }
     // move hqf files to new patch path
     ret = MoveHqfFiles(newInnerAppQuickFix, newPatchPath);
     if (ret != ERR_OK) {
@@ -265,9 +271,37 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
         return ret;
     }
     ToDeployQuickFixResult(newQuickFix);
+    ret = SaveToInnerBundleInfo(newInnerAppQuickFix);
+    if (ret != ERR_OK) {
+        APP_LOGE("error: bundleName %{public}s update deploying quick fix info to innerBundleInfo failed",
+            newQuickFix.bundleName.c_str());
+        return ret;
+    }
     guardRemovePatchPath.Dismiss();
     APP_LOGI("ToDeployEndStatus end.");
     return ERR_OK;
+}
+
+void QuickFixDeployer::ProcessNativeLibraryPath(const std::string &patchPath, InnerAppQuickFix &innerAppQuickFix)
+{
+    AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
+    const std::string &libraryPath = appQuickFix.deployingAppqfInfo.nativeLibraryPath;
+    if (libraryPath.empty()) {
+        return;
+    }
+    bool isSoExist = false;
+    std::string soPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
+    if (InstalldClient::GetInstance()->IsExistDir(soPath, isSoExist) != ERR_OK) {
+        APP_LOGE("ProcessNativeLibraryPath InstalldClient IsExistDir failed");
+        return;
+    }
+    if (isSoExist) {
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = Constants::PATCH_PATH +
+            std::to_string(appQuickFix.deployingAppqfInfo.versionCode) + Constants::PATH_SEPARATOR + libraryPath;
+    } else {
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
+    }
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
 }
 
 ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath)
@@ -372,7 +406,7 @@ ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInf
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // check bundleName is exists
-    if (!dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO,
+    if (!dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
         bundleInfo, Constants::ANY_USERID)) {
         APP_LOGE("error: GetBundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
@@ -507,6 +541,49 @@ ErrCode QuickFixDeployer::GetQuickFixDataMgr()
         if (quickFixDataMgr_ == nullptr) {
             APP_LOGE("error: quickFixDataMgr_ is nullptr");
             return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInnerAppQuickFix)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("error dataMgr is nullptr");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    const std::string &bundleName = newInnerAppQuickFix.GetAppQuickFix().bundleName;
+    InnerBundleInfo innerBundleInfo;
+    // obtain innerBundleInfo and enableGuard used to enable bundle which is under disable status
+    if (!dataMgr->GetInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
+    }
+    ScopeGuard enableGuard([&bundleName, &dataMgr] { dataMgr->EnableBundle(bundleName); });
+    AppQuickFix appQuickFix = newInnerAppQuickFix.GetAppQuickFix();
+    appQuickFix.deployedAppqfInfo = innerBundleInfo.GetAppQuickFix().deployedAppqfInfo;
+    innerBundleInfo.SetAppQuickFix(appQuickFix);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (!dataMgr->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("update quickfix innerbundleInfo failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> &bundleFilePaths,
+    std::vector<std::string> &realFilePaths)
+{
+    ErrCode ret = BundleUtil::CheckFilePath(bundleFilePaths, realFilePaths);
+    if (ret != ERR_OK) {
+        APP_LOGE("ProcessBundleFilePaths CheckFilePath failed.");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+    for (const auto &path : realFilePaths) {
+        if (!BundleUtil::CheckFileType(path, Constants::QUICK_FIX_FILE_SUFFIX)) {
+            APP_LOGE("ProcessBundleFilePaths CheckFileType failed.");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
     }
     return ERR_OK;

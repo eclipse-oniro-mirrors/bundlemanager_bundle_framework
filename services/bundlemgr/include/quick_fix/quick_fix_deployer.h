@@ -33,16 +33,18 @@ public:
 
     DeployQuickFixResult GetDeployQuickFixResult() const;
 
+    ErrCode ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFix,
+        const InnerAppQuickFix &oldInnerAppQuickFix);
+
 private:
     ErrCode DeployQuickFix();
 
     ErrCode GetQuickFixDataMgr();
 
+    ErrCode SaveToInnerBundleInfo(const InnerAppQuickFix &newInnerAppQuickFix);
+
     ErrCode ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
         InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix);
-
-    ErrCode ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFix,
-        const InnerAppQuickFix &oldInnerAppQuickFix);
 
     ErrCode ParseAndCheckAppQuickFixInfos(
         const std::vector<std::string> &bundleFilePaths,
@@ -76,7 +78,12 @@ private:
 
     ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
 
+    ErrCode ProcessBundleFilePaths(const std::vector<std::string> &bundleFilePaths,
+        std::vector<std::string> &realFilePaths);
+
     void ToDeployQuickFixResult(const AppQuickFix &appQuickFix);
+
+    void ProcessNativeLibraryPath(const std::string &patchPath, InnerAppQuickFix &innerAppQuickFix);
 
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;

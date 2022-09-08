@@ -19,7 +19,6 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
-#include "bundle_permission_mgr.h"
 #include "app_control_manager_rdb.h"
 
 namespace OHOS {
@@ -66,33 +65,42 @@ ErrCode AppControlManager::GetAppInstallControlRule(const std::string &callingNa
     return appControlManagerDb_->GetAppInstallControlRule(callingName, controlRuleType, userId, appIds);
 }
 
+ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingName,
+    const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId)
+{
+    APP_LOGD("AddAppRunningControlRule");
+    return appControlManagerDb_->AddAppRunningControlRule(callingName, controlRule, userId);
+}
+
+ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName,
+    const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId)
+{
+    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRule, userId);
+}
+
+ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName, int32_t userId)
+{
+    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, userId);
+}
+
+ErrCode AppControlManager::GetAppRunningControlRule(
+    const std::string &callingName, int32_t userId, std::vector<std::string> &appIds)
+{
+    return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
+}
+
 ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want)
 {
-    APP_LOGD("SetDisposedStatus");
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
-        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
-    }
     return appControlManagerDb_->SetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
 }
 
 ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId)
 {
-    APP_LOGD("DeleteDisposedStatus");
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
-        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
-    }
     return appControlManagerDb_->DeleteDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId);
 }
 
 ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want)
 {
-    APP_LOGD("GetDisposedStatus");
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
-        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
-    }
     return appControlManagerDb_->GetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
 }
 }

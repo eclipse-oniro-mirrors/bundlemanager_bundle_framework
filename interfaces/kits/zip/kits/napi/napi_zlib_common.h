@@ -20,7 +20,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "zip_utils.h"
+#include "zlib_callback_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -38,18 +38,10 @@ struct CallZipUnzipParam {
     OPTIONS options;
 };
 
-struct ZlibCallbackInfo {
-    napi_env env;
-    napi_ref callback = 0;
-    napi_deferred deferred;
-    CallZipUnzipParam param;
-    bool isCallBack = false;
-    int callbackResult = 0;
-};
-
 struct AsyncZipCallbackInfo {
     napi_async_work asyncWork;
-    std::shared_ptr<ZlibCallbackInfo> aceCallback;
+    CallZipUnzipParam param;
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo;
     int executeResult = 0;
 };
 bool UnwrapIntValue(napi_env env, napi_value jsValue, int &result);

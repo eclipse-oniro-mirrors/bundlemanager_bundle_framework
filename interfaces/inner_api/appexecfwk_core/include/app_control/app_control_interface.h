@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "app_running_control_rule_param.h"
 #include "iremote_broker.h"
 #include "want.h"
 
@@ -48,6 +49,13 @@ public:
     virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType, int32_t userId) = 0;
     virtual ErrCode GetAppInstallControlRule(
         const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds) = 0;
+    
+    virtual ErrCode AddAppRunningControlRule(
+        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) = 0;
+    virtual ErrCode DeleteAppRunningControlRule(
+        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) = 0;
+    virtual ErrCode DeleteAppRunningControlRule(int32_t userId) = 0;
+    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) = 0;
 
     virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) = 0;
     virtual ErrCode DeleteDisposedStatus(const std::string &appId) = 0;
@@ -58,6 +66,11 @@ public:
         DELETE_APP_INSTALL_CONTROL_RULE,
         CLEAN_APP_INSTALL_CONTROL_RULE,
         GET_APP_INSTALL_CONTROL_RULE,
+
+        ADD_APP_RUNNING_CONTROL_RULE,
+        DELETE_APP_RUNNING_CONTROL_RULE,
+        CLEAN_APP_RUNNING_CONTROL_RULE,
+        GET_APP_RUNNING_CONTROL_RULE,
 
         SET_DISPOSED_STATUS,
         DELETE_DISPOSED_STATUS,

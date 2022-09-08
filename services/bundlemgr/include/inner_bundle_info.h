@@ -30,6 +30,8 @@
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_user_info.h"
 #include "json_util.h"
+#include "quick_fix/app_quick_fix.h"
+#include "quick_fix/hqf_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -101,6 +103,9 @@ struct InnerModuleInfo {
     int32_t upgradeFlag = 0;
     std::vector<std::string> dependencies;
     std::string compileMode;
+    bool isLibIsolated = false;
+    std::string nativeLibraryPath;
+    std::string cpuAbi;
 };
 
 struct SkillUri {
@@ -216,6 +221,17 @@ public:
      * @return Returns the AbilityInfo object if find it; returns null otherwise.
      */
     std::optional<AbilityInfo> FindAbilityInfo(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
+     * @brief Find abilityInfo by bundle name and ability name.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name
+     * @param abilityName Indicates the ability name.
+     * @param userId Indicates the user ID.
+     * @return Returns the AbilityInfo object if find it; returns null otherwise.
+     */
+    std::optional<AbilityInfo> FindAbilityInfoV9(const std::string &bundleName,
         const std::string &moduleName, const std::string &abilityName,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
@@ -1061,6 +1077,20 @@ public:
             innerModuleInfos_.at(currentPackage_).hashValue = hashValue;
         }
     }
+
+    void SetModuleCpuAbi(const std::string &cpuAbi)
+    {
+        if (innerModuleInfos_.count(currentPackage_) == 1) {
+            innerModuleInfos_.at(currentPackage_).cpuAbi = cpuAbi;
+        }
+    }
+
+    void SetModuleNativeLibraryPath(const std::string &nativeLibraryPath)
+    {
+        if (innerModuleInfos_.count(currentPackage_) == 1) {
+            innerModuleInfos_.at(currentPackage_).nativeLibraryPath = nativeLibraryPath;
+        }
+    }
     /**
      * @brief Set ability enabled.
      * @param bundleName Indicates the bundleName.
@@ -1513,11 +1543,7 @@ public:
     void SetSingleton(bool singleton)
     {
         baseApplicationInfo_->singleton = singleton;
-    }
-
-    void SetBootable(bool bootable)
-    {
-        baseApplicationInfo_->bootable = bootable;
+        baseBundleInfo_->singleton = singleton;
     }
 
     void SetRunningResourcesApply(bool runningResourcesApply)
@@ -1575,11 +1601,18 @@ public:
 
     std::string GetModuleTypeByPackage(const std::string &packageName) const;
 
-    AppqfInfo GetAppqfInfo() const;
+    AppQuickFix GetAppQuickFix() const;
 
-    void SetAppqfInfo(const AppqfInfo &appqfInfo);
+    void SetAppQuickFix(const AppQuickFix &appQuickFix);
+
+    std::vector<HqfInfo> GetQuickFixHqfInfos() const;
+
+    void SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos);
+
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
+    bool FetchNativeSoAttrs(
+        const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath);
 
 private:
     void GetBundleWithAbilities(
@@ -1630,6 +1663,8 @@ private:
 
     // SandBox App Persistent Info
     std::vector<SandboxAppPersistentInfo> sandboxPersistentInfo_;
+    // quick fix hqf info
+    std::vector<HqfInfo> hqfInfos_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

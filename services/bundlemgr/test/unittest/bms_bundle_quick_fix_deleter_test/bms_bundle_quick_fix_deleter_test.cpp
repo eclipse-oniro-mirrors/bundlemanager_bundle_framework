@@ -172,7 +172,7 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0300, Functi
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
-    CheckResult(callback, BUNDLE_NAME, ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE);
+    CheckResult(callback, BUNDLE_NAME, ERR_OK);
 }
 
 /**

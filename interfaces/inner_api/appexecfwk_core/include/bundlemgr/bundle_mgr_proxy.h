@@ -252,6 +252,16 @@ public:
     virtual bool QueryAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
+     * @brief Query the AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode QueryAbilityInfosV9(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
+    /**
      * @brief Query the AbilityInfo of list for all service on launcher.
      * @param userId Indicates the information of the user.
      * @param abilityInfos Indicates the obtained AbilityInfos object.
@@ -537,6 +547,16 @@ public:
     /**
      * @brief Query extension info.
      * @param Want Indicates the information of extension info.
+     * @param flags Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
      * @param extensionType Indicates the type of the extension.
      * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
      * @param userId Indicates the userId in the system.
@@ -545,7 +565,17 @@ public:
      */
     virtual bool QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
         const int32_t &flag, const int32_t &userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
-
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
+     * @param extensionType Indicates the type of the extension.
+     * @param flags Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, const ExtensionAbilityType &extensionType,
+        int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
     virtual bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) override;
 
@@ -707,16 +737,9 @@ private:
     template <typename T>
     ErrCode GetParcelableInfosWithErrCode(IBundleMgr::Message code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
-    /**
-     * @brief Send a command message and then get a vector of parcelable information objects from the reply Ashmem.
-     * @param code Indicates the message code to be sent.
-     * @param data Indicates the objects to be sent.
-     * @param parcelableInfos Indicates the vector objects to be got;
-     * @return Returns true if the vector get successfully; returns false otherwise.
-     */
+
     template <typename T>
-    bool GetParcelableInfosFromAshmem(
-        IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+    bool GetParcelableInfosFromAshmem(MessageParcel &reply, std::vector<T> &parcelableInfos);
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
 };

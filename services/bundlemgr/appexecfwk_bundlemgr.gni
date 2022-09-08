@@ -92,6 +92,7 @@ sandbox_app = [
 
 quick_fix = [
   "${services_path}/bundlemgr/src/quick_fix/inner_app_quick_fix.cpp",
+  "${services_path}/bundlemgr/src/quick_fix/quick_fix_boot_scanner.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_checker.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_data_mgr.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_host_impl.cpp",
@@ -100,12 +101,16 @@ quick_fix = [
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_deployer.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_switcher.cpp",
   "${services_path}/bundlemgr/src/quick_fix/quick_fix_deleter.cpp",
+  "${services_path}/bundlemgr/include/quick_fix/state/src/quick_fix_delete_state.cpp",
+  "${services_path}/bundlemgr/include/quick_fix/state/src/quick_fix_deploy_state.cpp",
+  "${services_path}/bundlemgr/include/quick_fix/state/src/quick_fix_switch_state.cpp",
 ]
 
 app_control = [
   "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
   "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
   "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+  "${services_path}/bundlemgr/src/app_control/inner_app_running_control_rule.cpp",
 ]
 
 if (bms_rdb_enable) {

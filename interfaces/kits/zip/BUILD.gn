@@ -17,6 +17,7 @@ import("../../../appexecfwk.gni")
 config("zip_config") {
   include_dirs = [
     "include",
+    "kits/napi",
     "//commonlibrary/c_utils/base/include",
     "//third_party/libuv/include",
     "//third_party/node/src",
@@ -36,6 +37,7 @@ ohos_shared_library("zlib") {
     "kits/napi/napi_zlib.cpp",
     "kits/napi/napi_zlib_common.cpp",
     "kits/napi/native_module.cpp",
+    "kits/napi/zlib_callback_info.cpp",
     "src/file_path.cpp",
     "src/zip.cpp",
     "src/zip_internal.cpp",
@@ -51,12 +53,10 @@ ohos_shared_library("zlib") {
 
   deps = [
     "${common_path}:libappexecfwk_common",
-    "//third_party/libuv:uv_static",
     "//third_party/zlib:libz",
   ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog_native:libhilog_base",

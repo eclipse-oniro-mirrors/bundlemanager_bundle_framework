@@ -86,6 +86,7 @@
                         "ability_info.h",
                         "appexecfwk_errors.h",
                         "application_info.h",
+                        "app_running_control_rule_param.h",
                         "bundle_info.h"
                       ]
                     },

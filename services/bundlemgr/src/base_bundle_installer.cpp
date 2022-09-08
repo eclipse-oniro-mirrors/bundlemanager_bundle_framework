@@ -573,7 +573,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (needDeleteQuickFixInfo_) {
         APP_LOGD("module update, quick fix old patch need to delete, bundleName:%{public}s", bundleName_.c_str());
-        if (!oldInfo.GetAppqfInfo().hqfInfos.empty()) {
+        if (!oldInfo.GetAppQuickFix().deployedAppqfInfo.hqfInfos.empty()) {
             APP_LOGD("InnerBundleInfo quickFixInfo need disable, bundleName:%{public}s", bundleName_.c_str());
             auto quickFixSwitcher = std::make_unique<QuickFixSwitcher>(bundleName_, false);
             quickFixSwitcher->Execute();
@@ -1326,7 +1326,7 @@ void BaseBundleInstaller::ProcessHqfInfo(const InnerBundleInfo &oldInfo,
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     APP_LOGI("ProcessHqfInfo start, bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
         modulePackage_.c_str());
-    AppqfInfo appQfInfo = oldInfo.GetAppqfInfo();
+    AppqfInfo appQfInfo = oldInfo.GetAppQuickFix().deployedAppqfInfo;
     const std::string &nativeLibraryPath = newInfo.GetBaseApplicationInfo().nativeLibraryPath;
     ErrCode ret = ERR_OK;
     if (!isFeatureNeedUninstall_ && !appQfInfo.hqfInfos.empty()) {
@@ -1361,7 +1361,14 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         return hqfInfo.moduleName == moduleName;
     });
     if (iter != appQfInfo.hqfInfos.end()) {
-        if (nativeLibraryPath != appQfInfo.nativeLibraryPath) {
+        // appQfInfo.nativeLibraryPath may be start with patch_versionCode
+        std::string hqfLibraryPath = appQfInfo.nativeLibraryPath;
+        size_t lenA = nativeLibraryPath.size();
+        size_t lenB = appQfInfo.nativeLibraryPath.size();
+        if (lenB > lenA) {
+            hqfLibraryPath = hqfLibraryPath.substr(lenB - lenA, lenA);
+        }
+        if (hqfLibraryPath != nativeLibraryPath) {
             APP_LOGE("error: nativeLibraryPath not same, newInfo: %{private}s, hqf: %{private}s",
                      nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
@@ -1376,10 +1383,10 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
         std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-            Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
+            Constants::PATH_SEPARATOR + nativeLibraryPath;
         std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
             Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-            std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + appQfInfo.nativeLibraryPath;
+            std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath);
         if (ret != ERR_OK) {
             APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);
@@ -1478,13 +1485,14 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
 {
     std::string targetSoPath;
-    std::string nativeLibraryPath = info.GetBaseApplicationInfo().nativeLibraryPath;
-    if (!nativeLibraryPath.empty()) {
+    std::string cpuAbi;
+    std::string nativeLibraryPath;
+    if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
             .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
             .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
     }
-    std::string cpuAbi = info.GetBaseApplicationInfo().cpuAbi;
+
     APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
     auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
@@ -2004,6 +2012,10 @@ bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t u
     }
     std::set<std::string> set;
     for (const std::string &currentUriPrefix : currentUriPrefixList) {
+        if (currentUriPrefix == Constants::DATA_ABILITY_URI_PREFIX) {
+            APP_LOGE("uri format invalid");
+            return false;
+        }
         if (!set.insert(currentUriPrefix).second) {
             APP_LOGE("current module contains duplicate uriPrefix, verify uriPrefix failed");
             APP_LOGE("bundleName : %{public}s, moduleName : %{public}s, uriPrefix : %{public}s",

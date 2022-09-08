@@ -18,10 +18,14 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_control_constants.h"
+#include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+}
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
     appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
@@ -31,7 +35,7 @@ AppControlManagerHostImpl::AppControlManagerHostImpl()
     ruleTypeMap_ = {
         {AppInstallControlRuleType::DISALLOWED_UNINSTALL, AppControlConstants::APP_DISALLOWED_UNINSTALL},
         {AppInstallControlRuleType::DISALLOWED_INSTALL, AppControlConstants::APP_DISALLOWED_INSTALL},
-        {AppInstallControlRuleType::ALLOWED_INSTALL, AppControlConstants::APP_ALLOWED_INSTALL},
+        {AppInstallControlRuleType::ALLOWED_INSTALL, AppControlConstants::APP_ALLOWED_INSTALL}
     };
 }
 
@@ -101,34 +105,60 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
 }
 
-ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
+ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
+    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
 {
-    APP_LOGD("host begin to SetDisposedStatus");
-    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want);
-    if (ret != ERR_OK) {
-        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    return ret;
+    std::vector<InnerAppRunningControlRule> innerControlRules;
+    for (auto &ruleParam : controlRuleParam) {
+        InnerAppRunningControlRule controlRule(ruleParam,
+            AppRunningControlRuleType::DISALLOWED_RUNNING_FROM_ENTERPRISE_MGR);
+        innerControlRules.emplace_back(controlRule);
+    }
+
+    return appControlManager_->AddAppRunningControlRule(callingName, innerControlRules, userId);
 }
 
-ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
+ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(
+    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
 {
-    APP_LOGD("host begin to DeleteDisposedStatus");
-    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId);
-    if (ret != ERR_OK) {
-        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    return ret;
+    std::vector<InnerAppRunningControlRule> innerControlRules;
+    for (auto &ruleParam : controlRuleParam) {
+        InnerAppRunningControlRule controlRule(ruleParam,
+            AppRunningControlRuleType::DISALLOWED_RUNNING_FROM_ENTERPRISE_MGR);
+        innerControlRules.emplace_back(controlRule);
+    }
+
+    return appControlManager_->DeleteAppRunningControlRule(callingName, innerControlRules, userId);
 }
 
-ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
+ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
 {
-    APP_LOGE("host begin to GetDisposedStatus");
-    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want);
-    if (ret != ERR_OK) {
-        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    return ret;
+    return appControlManager_->DeleteAppRunningControlRule(callingName, userId);
+}
+
+ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
+{
+    std::string callingName = GetCallingName();
+    if (callingName.empty()) {
+        APP_LOGE("callingName is invalid");
+        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+    }
+    return appControlManager_->GetAppRunningControlRule(callingName, userId, appIds);
 }
 
 std::string AppControlManagerHostImpl::GetCallingName()
@@ -150,6 +180,48 @@ std::string AppControlManagerHostImpl::GetControlRuleType(const AppInstallContro
         return "";
     }
     return item->second;
+}
+
+ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
+{
+    APP_LOGD("host begin to SetDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
+{
+    APP_LOGD("host begin to DeleteDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
+{
+    APP_LOGE("host begin to GetDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
 }
 }
 }

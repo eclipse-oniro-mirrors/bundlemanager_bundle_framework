@@ -90,6 +90,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS, &BundleMgrHost::HandleQueryAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM,
         &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
+    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, &BundleMgrHost::HandleQueryAbilityInfosV9);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, &BundleMgrHost::HandleQueryAllAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI, &BundleMgrHost::HandleQueryAbilityInfoByUri);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_BY_URI, &BundleMgrHost::HandleQueryAbilityInfosByUri);
@@ -139,7 +140,10 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_PRIVILEGE_LEVEL, &BundleMgrHost::HandleGetAppPrivilegeLevel);
     funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE,
         &BundleMgrHost::HandleQueryExtAbilityInfosWithoutType);
+    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9,
+        &BundleMgrHost::HandleQueryExtAbilityInfosWithoutTypeV9);
     funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO, &BundleMgrHost::HandleQueryExtAbilityInfos);
+    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, &BundleMgrHost::HandleQueryExtAbilityInfosV9);
     funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_BY_TYPE,
         &BundleMgrHost::HandleQueryExtAbilityInfosByType);
     funcMap_.emplace(IBundleMgr::Message::VERIFY_CALLING_PERMISSION, &BundleMgrHost::HandleVerifyCallingPermission);
@@ -641,6 +645,31 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosMutiparam(MessageParcel &data, Mes
     if (ret) {
         if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
             APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = QueryAbilityInfosV9(*want, flags, userId, abilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
+            APP_LOGE("writeParcelableVectorIntoAshmem failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -1389,6 +1418,29 @@ ErrCode BundleMgrHost::HandleQueryExtAbilityInfosWithoutType(MessageParcel &data
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleQueryExtAbilityInfosWithoutTypeV9(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (!want) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode ret = QueryExtensionAbilityInfosV9(*want, flags, userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleQueryExtAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
@@ -1407,6 +1459,30 @@ ErrCode BundleMgrHost::HandleQueryExtAbilityInfos(MessageParcel &data, MessagePa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryExtAbilityInfosV9(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ExtensionAbilityType type = static_cast<ExtensionAbilityType>(data.ReadInt32());
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode ret = QueryExtensionAbilityInfosV9(*want, type, flags, userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
         APP_LOGE("write extension infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

@@ -42,7 +42,6 @@ ohos_shared_library("defaultappmanager") {
       "ability_base:want",
       "bundle_framework:appexecfwk_base",
       "bundle_framework:appexecfwk_core",
-      "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
   } else {
@@ -51,11 +50,6 @@ ohos_shared_library("defaultappmanager") {
 
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
-
-    external_deps += [
-      "multimedia_image_standard:image",
-      "multimedia_image_standard:image_native",
-    ]
   }
 
   relative_install_dir = "module/bundle"

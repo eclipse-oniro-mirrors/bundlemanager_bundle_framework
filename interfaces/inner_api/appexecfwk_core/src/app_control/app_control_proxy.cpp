@@ -18,12 +18,9 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "ipc_types.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-using Want = OHOS::AAFwk::Want;
-
 AppControlProxy::AppControlProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IAppControlMgr>(object)
 {
     APP_LOGD("create AppControlProxy.");
@@ -38,7 +35,7 @@ ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string>
     const AppInstallControlRuleType controlRuleType, int32_t userId)
 {
     APP_LOGI("begin to call AddAppInstallControlRule.");
-    if (appIds.size() == 0) {
+    if (appIds.empty()) {
         APP_LOGE("AddAppInstallControlRule failed due to params error.");
         return ERR_INVALID_VALUE;
     }
@@ -47,7 +44,7 @@ ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string>
         APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector(appIds, data)) {
+    if (!WriteStringVector(appIds, data)) {
         APP_LOGE("write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -67,7 +64,7 @@ ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string>
 ErrCode AppControlProxy::DeleteAppInstallControlRule(const std::vector<std::string> &appIds, int32_t userId)
 {
     APP_LOGI("begin to call DeleteAppInstallControlRule.");
-    if (appIds.size() == 0) {
+    if (appIds.empty()) {
         APP_LOGE("DeleteAppInstallControlRule failed due to params error.");
         return ERR_INVALID_VALUE;
     }
@@ -76,7 +73,7 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(const std::vector<std::stri
         APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector(appIds, data)) {
+    if (!WriteStringVector(appIds, data)) {
         APP_LOGE("write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -131,9 +128,91 @@ ErrCode AppControlProxy::GetAppInstallControlRule(
     return GetParcelableInfos(IAppControlMgr::Message::GET_APP_INSTALL_CONTROL_RULE, data, appIds);
 }
 
+ErrCode AppControlProxy::AddAppRunningControlRule(
+    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+{
+    APP_LOGI("begin to call AddAppRunningControlRule.");
+    if (controlRuleParam.empty()) {
+        APP_LOGE("AddAppRunningControlRule failed due to params error.");
+        return ERR_INVALID_VALUE;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!WriteParcelableVector(controlRuleParam, data)) {
+        APP_LOGE("write running controlRuleParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::ADD_APP_RUNNING_CONTROL_RULE, data, reply);
+}
+ErrCode AppControlProxy::DeleteAppRunningControlRule(
+    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+{
+    APP_LOGI("begin to call delete AppRunningControlRules.");
+    if (controlRuleParam.empty()) {
+        APP_LOGE("DeleteAppRunningControlRule failed due to params error.");
+        return ERR_INVALID_VALUE;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!WriteParcelableVector(controlRuleParam, data)) {
+        APP_LOGE("write controlRuleParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::DELETE_APP_RUNNING_CONTROL_RULE, data, reply);
+}
+
+ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
+{
+    APP_LOGI("begin to call delete appRunningControlRuleType.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::CLEAN_APP_RUNNING_CONTROL_RULE, data, reply);
+}
+
+ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
+{
+    APP_LOGI("begin to call GetAppInstallControlRule.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfos(IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE, data, appIds);
+}
+
 ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)
 {
-    APP_LOGI("proxy begin to SetDisposedStatus.");
+    APP_LOGD("proxy begin to SetDisposedStatus.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -153,7 +232,7 @@ ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want 
 
 ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
 {
-    APP_LOGI("proxy begin to DeleteDisposedStatus.");
+    APP_LOGD("proxy begin to DeleteDisposedStatus.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -170,7 +249,7 @@ ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
 
 ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
 {
-    APP_LOGI("proxy begin to GetDisposedStatus.");
+    APP_LOGD("proxy begin to GetDisposedStatus.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -180,14 +259,14 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
         APP_LOGE("write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (GetParcelableInfo<Want>(IAppControlMgr::Message::GET_DISPOSED_STATUS, data, want) != ERR_OK) {
+    ErrCode ret = GetParcelableInfo<Want>(IAppControlMgr::Message::GET_DISPOSED_STATUS, data, want);
+    if (ret != ERR_OK) {
         APP_LOGE("fail to GetDisposedStatus want from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
 
-bool AppControlProxy::WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data)
+bool AppControlProxy::WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &data)
 {
     if (!data.WriteInt32(stringVector.size())) {
         APP_LOGE("write ParcelableVector failed");
@@ -201,6 +280,42 @@ bool AppControlProxy::WriteParcelableVector(const std::vector<std::string> &stri
         }
     }
     return true;
+}
+
+template<typename T>
+bool AppControlProxy::WriteParcelableVector(const std::vector<T> &parcelableVector, MessageParcel &data)
+{
+    if (!data.WriteInt32(parcelableVector.size())) {
+        APP_LOGE("write ParcelableVector failed");
+        return false;
+    }
+
+    for (auto &parcelable : parcelableVector) {
+        if (!data.WriteParcelable(&parcelable)) {
+            APP_LOGE("write ParcelableVector failed");
+            return false;
+        }
+    }
+    return true;
+}
+
+template<typename T>
+ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, MessageParcel& data, T& parcelableInfo)
+{
+    MessageParcel reply;
+    int32_t ret = SendRequest(code, data, reply);
+    if (ret != NO_ERROR) {
+        APP_LOGE("get return error=%{public}d from host", ret);
+        return ret;
+    }
+    std::unique_ptr<T> info(reply.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelableInfo = *info;
+    APP_LOGI("GetParcelableInfo success.");
+    return NO_ERROR;
 }
 
 int32_t AppControlProxy::GetParcelableInfos(
@@ -233,25 +348,6 @@ int32_t AppControlProxy::SendRequest(IAppControlMgr::Message code, MessageParcel
         APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
     }
     return result;
-}
-
-template<typename T>
-ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, MessageParcel& data, T& parcelableInfo)
-{
-    MessageParcel reply;
-    int32_t ret = SendRequest(code, data, reply);
-    if (ret != NO_ERROR) {
-        APP_LOGE("get return error=%{public}d from host", ret);
-        return ret;
-    }
-    std::unique_ptr<T> info(reply.ReadParcelable<T>());
-    if (info == nullptr) {
-        APP_LOGE("ReadParcelable failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    parcelableInfo = *info;
-    APP_LOGI("GetParcelableInfo success.");
-    return NO_ERROR;
 }
 } // AppExecFwk
 } // OHOS

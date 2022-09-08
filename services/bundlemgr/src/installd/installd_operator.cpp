@@ -30,6 +30,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "directory_ex.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -134,6 +135,9 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         // handle native so
         if (IsNativeSo(entryName, targetSoPath, cpuAbi)) {
             ExtractTargetFile(extractor, entryName, targetSoPath, cpuAbi);
+            continue;
+        }
+        if (system::GetBoolParameter(Constants::COMPRESS_PROPERTY, false)) {
             continue;
         }
         const std::string dir = GetPathDir(entryName);
@@ -671,7 +675,7 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     std::vector<std::string> oldSoFileNames, diffFileNames;
     if (InstalldOperator::IsDirEmpty(oldSoPath) || InstalldOperator::IsDirEmpty(diffFilePath)) {
         APP_LOGD("oldSoPath or diffFilePath is empty, not require ApplyPatch");
-        return ERR_OK;
+        return true;
     }
     if (!ProcessApplyDiffPatchPath(oldSoPath, diffFilePath, newSoPath, oldSoFileNames, diffFileNames)) {
         APP_LOGE("ApplyDiffPatch ProcessApplyDiffPatchPath failed");
@@ -714,6 +718,90 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     }
     CloseHandle(&handle);
     APP_LOGI("ApplyDiffPatch end");
+    return true;
+}
+
+bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &fileVec)
+{
+    if (dir.empty()) {
+        APP_LOGE("ObtainQuickFixFileDir dir path invaild");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(dir, realPath)) {
+        APP_LOGE("dir(%{public}s) is not real path", dir.c_str());
+        return false;
+    }
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        APP_LOGE("ObtainQuickFixFileDir open dir(%{public}s) fail", realPath.c_str());
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = dir + Constants::PATH_SEPARATOR + currentName;
+        struct stat s;
+        if (stat(curPath.c_str(), &s) == 0) {
+            // directory
+            if (s.st_mode & S_IFDIR) {
+                ObtainQuickFixFileDir(curPath, fileVec);
+            }
+
+            // file
+            if((s.st_mode & S_IFREG) && (currentName.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
+                fileVec.emplace_back(dir);
+            }
+        }
+    }
+    closedir(directory);
+    return true;
+}
+
+bool InstalldOperator::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+{
+    APP_LOGD("sourceDir is %{public}s, destinationDir is %{public}s", sourceDir.c_str(), destinationDir.c_str());
+    if (sourceDir.empty() || destinationDir.empty()) {
+        APP_LOGE("Copy file failed due to sourceDir or destinationDir is empty");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(sourceDir, realPath)) {
+        APP_LOGE("sourceDir(%{public}s) is not real path", sourceDir.c_str());
+        return false;
+    }
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        APP_LOGE("CopyFiles open dir(%{public}s) fail", realPath.c_str());
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = sourceDir + Constants::PATH_SEPARATOR + currentName;
+        struct stat s;
+        if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
+            std::string innerDesStr = destinationDir + Constants::PATH_SEPARATOR + currentName;
+            if (CopyFile(curPath, innerDesStr)) {
+                ChangeFileAttr(innerDesStr, Constants::FOUNDATION_UID, Constants::BMS_GID);
+            }
+        }
+    }
+    closedir(directory);
     return true;
 }
 }  // namespace AppExecFwk

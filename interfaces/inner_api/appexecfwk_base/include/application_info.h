@@ -23,6 +23,7 @@
 #include "bundle_constants.h"
 #include "module_info.h"
 #include "parcel.h"
+#include "quick_fix/app_quick_fix.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,6 +37,14 @@ enum ApplicationFlag {
     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000200,
     GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT = 0x00000400,
     GET_ALL_APPLICATION_INFO = 0xFFFF0000,
+};
+
+enum ApplicationFlagV9 {
+    GET_APPLICATION_INFO_DEFAULT_V9 = 0x00000000,
+    GET_APPLICATION_INFO_WITH_PERMISSION_V9 = 0x00000001,
+    GET_APPLICATION_INFO_WITH_METADATA_V9 = 0x00000002,
+    GET_APPLICATION_INFO_WITH_DISABLE_V9 = 0x00000004,
+    GET_ALL_APPLICATION_INFO_V9 = 0xFFFF0000,
 };
 
 struct Metadata : public Parcelable {
@@ -140,7 +149,6 @@ struct ApplicationInfo : public Parcelable {
     bool singleton = false;
     bool userDataClearable = true;
     bool accessible = false;
-    bool bootable = false;
     bool runningResourcesApply = false;
     bool associatedWakeUp = false;
     bool hideDesktopIcon = false;
@@ -191,6 +199,8 @@ struct ApplicationInfo : public Parcelable {
     std::vector<std::string> targetBundleList;
 
     std::string fingerprint;
+    // quick fix info
+    AppQuickFix appQuickFix;
 
     // unused
     std::string icon;

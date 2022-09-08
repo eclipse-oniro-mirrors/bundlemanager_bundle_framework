@@ -52,11 +52,14 @@ void QuickFixDataMgr::InitStatesMap()
         {QuickFixStatus::DEPLOY_END, QuickFixStatus::SWITCH_DISABLE_START},
         {QuickFixStatus::DEPLOY_END, QuickFixStatus::DELETE_START},
         {QuickFixStatus::SWITCH_ENABLE_START, QuickFixStatus::SWITCH_END},
+        {QuickFixStatus::SWITCH_ENABLE_START, QuickFixStatus::SWITCH_ENABLE_START},
         {QuickFixStatus::SWITCH_DISABLE_START, QuickFixStatus::SWITCH_END},
+        {QuickFixStatus::SWITCH_DISABLE_START, QuickFixStatus::SWITCH_DISABLE_START},
         {QuickFixStatus::SWITCH_ENABLE_START, QuickFixStatus::DEPLOY_END},
         {QuickFixStatus::SWITCH_DISABLE_START, QuickFixStatus::DEPLOY_END},
         {QuickFixStatus::SWITCH_END, QuickFixStatus::DELETE_START},
         {QuickFixStatus::DELETE_START, QuickFixStatus::SWITCH_END},
+        {QuickFixStatus::DELETE_START, QuickFixStatus::DELETE_START},
         {QuickFixStatus::DELETE_START, QuickFixStatus::DELETE_END}
     };
 }
@@ -116,6 +119,14 @@ bool QuickFixDataMgr::IsNextStatusExisted(const QuickFixStatus &curStatus, const
 bool QuickFixDataMgr::UpdateQuickFixStatus(const QuickFixStatus &nextStatus, InnerAppQuickFix &innerAppQuickFix)
 {
     QuickFixMark fixMark = innerAppQuickFix.GetQuickFixMark();
+    // invalid status can be transferred as DELETE_START status
+    if (nextStatus == QuickFixStatus::DELETE_START && (fixMark.status == QuickFixStatus::DEFAULT_STATUS ||
+        fixMark.status == QuickFixStatus::DELETE_END)) {
+        fixMark.status = nextStatus;
+        innerAppQuickFix.SetQuickFixMark(fixMark);
+        return SaveInnerAppQuickFix(innerAppQuickFix);
+    }
+
     if (fixMark.status == QuickFixStatus::DEFAULT_STATUS || nextStatus == QuickFixStatus::DEFAULT_STATUS) {
         APP_LOGE("status is invalid");
         return false;

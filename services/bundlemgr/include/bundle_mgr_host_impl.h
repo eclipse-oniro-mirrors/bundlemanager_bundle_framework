@@ -34,7 +34,7 @@ class BundleMgrHostImpl : public BundleMgrHost {
 public:
     BundleMgrHostImpl()
     {
-        auto myRunner = EventRunner::Create(true);
+        auto myRunner = EventRunner::Create(BUNDLE_MGR_THREAD);
         handler_ = std::make_shared<BMSEventHandler>(myRunner);
     }
     virtual ~BundleMgrHostImpl() {}
@@ -264,6 +264,16 @@ public:
      * @return Returns true if the AbilityInfos is successfully obtained; returns false otherwise.
      */
     virtual bool QueryAbilityInfos(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
+    /**
+     * @brief Query the AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
      * @brief Query the AbilityInfo of list of all service on launcher.
@@ -550,6 +560,16 @@ public:
     /**
      * @brief Query extension info.
      * @param Want Indicates the information of extension info.
+     * @param flag Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
      * @param extensionType Indicates the type of the extension.
      * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
      * @param userId Indicates the userId in the system.
@@ -558,6 +578,17 @@ public:
      */
     virtual bool QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
         const int32_t &flag, const int32_t &userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+    /**
+     * @brief Query extension info.
+     * @param Want Indicates the information of extension info.
+     * @param extensionType Indicates the type of the extension.
+     * @param flag Indicates the query flag which will filter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, const ExtensionAbilityType &extensionType,
+        int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
     /**
      * @brief Process hidump.
      * @param fd Indicates the fd.
@@ -694,7 +725,10 @@ private:
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     bool GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo);
+    
+private:
     std::shared_ptr<BMSEventHandler> handler_;
+    const std::string BUNDLE_MGR_THREAD = "bundle_mgr_thread";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

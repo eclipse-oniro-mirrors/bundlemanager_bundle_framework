@@ -24,6 +24,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class DirType {
+    STREAM_INSTALL_DIR = 0,
+    QUICK_FIX_DIR = 1,
+    UNKNOWN
+};
+
 class BundleUtil {
 public:
     /**
@@ -141,7 +147,7 @@ public:
     static std::string GetBoolStrVal(bool val);
     static void MakeHmdfsConfig(const std::string &bundleName, int32_t bundleId);
     static void RemoveHmdfsConfig(const std::string &bundleName);
-    static std::string CreateInstallTempDir(uint32_t installerId);
+    static std::string CreateInstallTempDir(uint32_t installerId, const DirType &type);
     static int32_t CreateFileDescriptor(const std::string &bundlePath, long long offset);
     static int32_t CreateFileDescriptorForReadOnly(const std::string &bundlePath, long long offset);
     static void CloseFileDescriptor(std::vector<int32_t> &fdVec);

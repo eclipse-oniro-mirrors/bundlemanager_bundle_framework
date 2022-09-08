@@ -663,13 +663,13 @@ bool BundlePermissionMgr::GetDefaultPermission(
 bool BundlePermissionMgr::MatchSignature(
     const DefaultPermission &permission, const std::string &signature)
 {
-        if (permission.appSignature.empty()) {
-            APP_LOGW("appSignature is empty");
-            return true;
-        }
+    if (permission.appSignature.empty()) {
+        APP_LOGW("appSignature is empty");
+        return false;
+    }
 
-        return std::find(permission.appSignature.begin(),
-            permission.appSignature.end(), signature) != permission.appSignature.end();
+    return std::find(permission.appSignature.begin(),
+        permission.appSignature.end(), signature) != permission.appSignature.end();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

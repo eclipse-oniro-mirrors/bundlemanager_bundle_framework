@@ -27,6 +27,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "json_serializer.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -51,7 +52,6 @@ const std::string APPLICATION_USER_DATA_CLEARABLE = "userDataClearable";
 const std::string APPLICATION_IS_SYSTEM_APP = "isSystemApp";
 const std::string APPLICATION_IS_LAUNCHER_APP = "isLauncherApp";
 const std::string APPLICATION_IS_FREEINSTALL_APP = "isFreeInstallApp";
-const std::string APPLICATION_BOOTABLE = "bootable";
 const std::string APPLICATION_RUNNING_RESOURCES_APPLY = "runningResourcesApply";
 const std::string APPLICATION_ASSOCIATED_WAKE_UP = "associatedWakeUp";
 const std::string APPLICATION_HIDE_DESKTOP_ICON = "hideDesktopIcon";
@@ -96,6 +96,7 @@ const std::string APPLICATION_LABEL_RESOURCE = "labelResource";
 const std::string APPLICATION_DESCRIPTION_RESOURCE = "descriptionResource";
 const std::string APPLICATION_MULTI_PROJECTS = "multiProjects";
 const std::string APPLICATION_CROWDTEST_DEADLINE = "crowdtestDeadline";
+const std::string APPLICATION_APP_QUICK_FIX = "appQuickFix";
 const std::string RESOURCE_ID = "id";
 }
 
@@ -256,7 +257,6 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     isSystemApp = parcel.ReadBool();
     isLauncherApp = parcel.ReadBool();
     isFreeInstallApp = parcel.ReadBool();
-    bootable = parcel.ReadBool();
     runningResourcesApply = parcel.ReadBool();
     associatedWakeUp = parcel.ReadBool();
     hideDesktopIcon = parcel.ReadBool();
@@ -356,6 +356,12 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     isCompressNativeLibs = parcel.ReadBool();
     signatureKey = Str16ToStr8(parcel.ReadString16());
     multiProjects = parcel.ReadBool();
+    std::unique_ptr<AppQuickFix> appQuickFixPtr(parcel.ReadParcelable<AppQuickFix>());
+    if (appQuickFixPtr == nullptr) {
+        APP_LOGE("ReadParcelable<AppQuickFixPtr> failed");
+        return false;
+    }
+    appQuickFix = *appQuickFixPtr;
     return true;
 }
 
@@ -403,7 +409,6 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSystemApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLauncherApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isFreeInstallApp);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, bootable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, runningResourcesApply);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, associatedWakeUp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hideDesktopIcon);
@@ -485,6 +490,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(signatureKey));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, multiProjects);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appQuickFix);
     return true;
 }
 
@@ -581,7 +587,6 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_IS_SYSTEM_APP, applicationInfo.isSystemApp},
         {APPLICATION_IS_LAUNCHER_APP, applicationInfo.isLauncherApp},
         {APPLICATION_IS_FREEINSTALL_APP, applicationInfo.isFreeInstallApp},
-        {APPLICATION_BOOTABLE, applicationInfo.bootable},
         {APPLICATION_RUNNING_RESOURCES_APPLY, applicationInfo.runningResourcesApply},
         {APPLICATION_ASSOCIATED_WAKE_UP, applicationInfo.associatedWakeUp},
         {APPLICATION_HIDE_DESKTOP_ICON, applicationInfo.hideDesktopIcon},
@@ -625,6 +630,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DESCRIPTION_RESOURCE, applicationInfo.descriptionResource},
         {APPLICATION_MULTI_PROJECTS, applicationInfo.multiProjects},
         {APPLICATION_CROWDTEST_DEADLINE, applicationInfo.crowdtestDeadline},
+        {APPLICATION_APP_QUICK_FIX, applicationInfo.appQuickFix},
     };
 }
 
@@ -796,14 +802,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_IS_FREEINSTALL_APP,
         applicationInfo.isFreeInstallApp,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_BOOTABLE,
-        applicationInfo.bootable,
         JsonType::BOOLEAN,
         false,
         parseResult,
@@ -1149,6 +1147,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         APPLICATION_CROWDTEST_DEADLINE,
         applicationInfo.crowdtestDeadline,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AppQuickFix>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_QUICK_FIX,
+        applicationInfo.appQuickFix,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

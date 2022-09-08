@@ -59,6 +59,7 @@ const std::string QUICK_FIX_VERSION_NAME = "1.0";
 const std::string BUNDLE_VERSION_NAME = "1.0";
 const std::string PROVISION_TYPE_DEBUG = "debug";
 const std::string PROVISION_TYPE_RELEASE = "release";
+const std::string RESULT_CODE = "resultCode";
 
 const nlohmann::json PATCH_JSON = R"(
     {
@@ -222,11 +223,12 @@ void BmsBundleQuickFixTest::AddInnerBundleInfo(const std::string bundleName,
 {
     BundleInfo bundleInfo;
     bundleInfo.name = bundleName;
-    bundleInfo.appqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
-    bundleInfo.appqfInfo.versionName =  QUICK_FIX_VERSION_NAME;
-    bundleInfo.appqfInfo.cpuAbi = QUICK_FIX_ABI;
-    bundleInfo.appqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-    bundleInfo.appqfInfo.type = type;
+    AppqfInfo deployedAppqfInfo;
+    deployedAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    deployedAppqfInfo.versionName =  QUICK_FIX_VERSION_NAME;
+    deployedAppqfInfo.cpuAbi = QUICK_FIX_ABI;
+    deployedAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    deployedAppqfInfo.type = type;
     bundleInfo.versionCode = BUNDLE_VERSION_CODE;
     bundleInfo.versionName = BUNDLE_VERSION_NAME;
 
@@ -236,6 +238,7 @@ void BmsBundleQuickFixTest::AddInnerBundleInfo(const std::string bundleName,
         applicationInfo.debug = true;
         applicationInfo.appProvisionType = PROVISION_TYPE_DEBUG;
     }
+    applicationInfo.appQuickFix.deployedAppqfInfo = deployedAppqfInfo;
     applicationInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
     InnerBundleUserInfo userInfo;
     userInfo.bundleName = bundleName;
@@ -747,7 +750,8 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0016, Function | SmallTest
         BundleInfo bundleInfo;
         ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
-        bundleInfo.appqfInfo.versionCode = 2;
+        bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.versionCode = 2;
+        bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.hqfInfos.emplace_back(HqfInfo());
         QuickFixChecker checker;
         ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR);
@@ -1101,7 +1105,14 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0028, Function | SmallTest
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     std::vector<std::string> path {HAP_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
+    auto callbackRes = callback->GetResCode();
+    EXPECT_TRUE(callbackRes != nullptr);
+    if (callbackRes != nullptr) {
+        auto jsonObject = nlohmann::json::parse(callbackRes->ToString());
+        const int32_t resultCode = jsonObject[RESULT_CODE];
+        EXPECT_EQ(resultCode, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
 }
 
 /**
@@ -1119,6 +1130,12 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0029, Function | SmallTest
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     std::vector<std::string> path {HQF_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REAL_PATH_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
+    auto callbackRes = callback->GetResCode();
+    if (callbackRes != nullptr) {
+        auto jsonObject = nlohmann::json::parse(callbackRes->ToString());
+        const int32_t resultCode = jsonObject[RESULT_CODE];
+        EXPECT_EQ(resultCode, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
 }
 } // OHOS

@@ -55,44 +55,22 @@ public:
     void TearDown();
     void MockInstallBundleInfo();
     void MockUninstallBundleInfo() const;
-    void GenerateInnerQuickFixInfo(InnerAppQuickFix &innerQuickFixInfo) const;
     void MockDeployQuickFix() const;
-    void MockSwitchQuickFix(bool enable);
+    void MockEnableQuickFix() const;
+    void MockDisableQuickFix() const;
     void MockDeleteQuickFix() const;
-    void CheckAppqfInfo(const BundleInfo &bundleInfo) const;
-    void CheckAppqfInfoEmpty(const BundleInfo &bundleInfo) const;
+    void CheckAppQuickFixInfo(const AppqfInfo &appqfInfo) const;
+    void CheckAppQuickFixInfoEmpty(const AppqfInfo &appqfInfo) const;
 
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+    const std::shared_ptr<QuickFixDataMgr> GetQuickFixDataMgr() const;
 private:
-    InnerBundleInfo innerBundleInfo;
-    AppqfInfo appqfInfo;
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
 };
 
 BmsBundleQuickFixQueryTest::BmsBundleQuickFixQueryTest()
-{
-    BundleInfo bundleInfo;
-    bundleInfo.name = BUNDLE_NAME;
-    bundleInfo.versionCode = BUNDLE_VERSION_CODE;
-    bundleInfo.versionName = BUNDLE_VERSION_NAME;
-
-    ApplicationInfo applicationInfo;
-    applicationInfo.name = BUNDLE_NAME;
-    applicationInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = BUNDLE_NAME;
-    userInfo.bundleUserInfo.userId = USERID;
-
-    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
-    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
-
-    appqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
-    appqfInfo.versionName =  QUICK_FIX_VERSION_NAME;
-    appqfInfo.cpuAbi = QUICK_FIX_ABI;
-    appqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-}
+{}
 
 BmsBundleQuickFixQueryTest::~BmsBundleQuickFixQueryTest()
 {}
@@ -123,24 +101,46 @@ const std::shared_ptr<BundleDataMgr> BmsBundleQuickFixQueryTest::GetBundleDataMg
     return bundleMgrService_->GetDataMgr();
 }
 
-void BmsBundleQuickFixQueryTest::CheckAppqfInfo(const BundleInfo &bundleInfo) const
+const std::shared_ptr<QuickFixDataMgr> BmsBundleQuickFixQueryTest::GetQuickFixDataMgr() const
 {
-    EXPECT_EQ(QUICK_FIX_VERSION_CODE, bundleInfo.appqfInfo.versionCode);
-    EXPECT_EQ(QUICK_FIX_VERSION_NAME, bundleInfo.appqfInfo.versionName);
-    EXPECT_EQ(QUICK_FIX_ABI, bundleInfo.appqfInfo.cpuAbi);
-    EXPECT_EQ(QUICK_FIX_SO_PATH, bundleInfo.appqfInfo.nativeLibraryPath);
+    return quickFixDataMgr_;
 }
 
-void BmsBundleQuickFixQueryTest::CheckAppqfInfoEmpty(const BundleInfo &bundleInfo) const
+void BmsBundleQuickFixQueryTest::CheckAppQuickFixInfo(const AppqfInfo &appqfInfo) const
 {
-    EXPECT_EQ(QUICK_FIX_VERSION_CODE_ZERO, bundleInfo.appqfInfo.versionCode);
-    EXPECT_EQ(EMPTY_STRING, bundleInfo.appqfInfo.versionName);
-    EXPECT_EQ(EMPTY_STRING, bundleInfo.appqfInfo.cpuAbi);
-    EXPECT_EQ(EMPTY_STRING, bundleInfo.appqfInfo.nativeLibraryPath);
+    EXPECT_EQ(QUICK_FIX_VERSION_CODE, appqfInfo.versionCode);
+    EXPECT_EQ(QUICK_FIX_VERSION_NAME, appqfInfo.versionName);
+    EXPECT_EQ(QUICK_FIX_ABI, appqfInfo.cpuAbi);
+    EXPECT_EQ(QUICK_FIX_SO_PATH, appqfInfo.nativeLibraryPath);
+}
+
+void BmsBundleQuickFixQueryTest::CheckAppQuickFixInfoEmpty(const AppqfInfo &appqfInfo) const
+{
+    EXPECT_EQ(QUICK_FIX_VERSION_CODE_ZERO, appqfInfo.versionCode);
+    EXPECT_EQ(EMPTY_STRING, appqfInfo.versionName);
+    EXPECT_EQ(EMPTY_STRING, appqfInfo.cpuAbi);
+    EXPECT_EQ(EMPTY_STRING, appqfInfo.nativeLibraryPath);
 }
 
 void BmsBundleQuickFixQueryTest::MockInstallBundleInfo()
 {
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.versionCode = BUNDLE_VERSION_CODE;
+    bundleInfo.versionName = BUNDLE_VERSION_NAME;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = USERID;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -162,244 +162,241 @@ void BmsBundleQuickFixQueryTest::MockUninstallBundleInfo() const
 
     EXPECT_TRUE(startRet);
     EXPECT_TRUE(finishRet);
+    MockDeleteQuickFix();
 }
 
-void BmsBundleQuickFixQueryTest::GenerateInnerQuickFixInfo(InnerAppQuickFix &innerQuickFixInfo) const
+void BmsBundleQuickFixQueryTest::MockEnableQuickFix() const
 {
-    AppQuickFix appQuickFix;
-    appQuickFix.bundleName = BUNDLE_NAME;
-    appQuickFix.versionCode = QUICK_FIX_VERSION_CODE;
-    appQuickFix.versionName = QUICK_FIX_VERSION_NAME;
-    appQuickFix.deployedAppqfInfo = appqfInfo;
-    appQuickFix.deployingAppqfInfo = appqfInfo;
+    auto quickFixMgr = GetQuickFixDataMgr();
+    EXPECT_FALSE(quickFixMgr == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    auto ret = quickFixMgr->QueryInnerAppQuickFix(BUNDLE_NAME, innerAppQuickFix);
+    EXPECT_TRUE(ret);
 
-    innerQuickFixInfo.SetAppQuickFix(appQuickFix);
+    InnerBundleInfo innerBundleInfo;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    auto result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    EXPECT_TRUE(result);
+
+    AppQuickFix appQuickFix = innerBundleInfo.GetAppQuickFix();
+    appQuickFix.deployedAppqfInfo = innerAppQuickFix.GetAppQuickFix().deployingAppqfInfo;
+    innerBundleInfo.SetAppQuickFix(appQuickFix);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    auto result1 = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    EXPECT_TRUE(result1);
+
+    AppQuickFix appQuickFix_1 = innerAppQuickFix.GetAppQuickFix();
+    appQuickFix_1.deployingAppqfInfo = AppqfInfo();
+    innerAppQuickFix.SetAppQuickFix(appQuickFix_1);
+    auto ret1 = quickFixMgr->SaveInnerAppQuickFix(innerAppQuickFix);
+    EXPECT_TRUE(ret1);
 }
 
-void BmsBundleQuickFixQueryTest::MockSwitchQuickFix(bool enable)
+void BmsBundleQuickFixQueryTest::MockDisableQuickFix() const
 {
-    if (!enable) {
-        appqfInfo = AppqfInfo();
-    }
-    innerBundleInfo.SetAppqfInfo(appqfInfo);
+    auto quickFixMgr = GetQuickFixDataMgr();
+    EXPECT_FALSE(quickFixMgr == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    auto ret = quickFixMgr->QueryInnerAppQuickFix(BUNDLE_NAME, innerAppQuickFix);
+    EXPECT_TRUE(ret);
+
+    InnerBundleInfo innerBundleInfo;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    auto result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    EXPECT_TRUE(result);
+
+    AppQuickFix appQuickFix_1 = innerAppQuickFix.GetAppQuickFix();
+    appQuickFix_1.deployedAppqfInfo = innerBundleInfo.GetAppQuickFix().deployedAppqfInfo;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix_1);
+    auto ret1 = quickFixMgr->SaveInnerAppQuickFix(innerAppQuickFix);
+    EXPECT_TRUE(ret1);
+
+    AppQuickFix appQuickFix = innerBundleInfo.GetAppQuickFix();
+    appQuickFix.deployedAppqfInfo = AppqfInfo();
+    innerBundleInfo.SetAppQuickFix(appQuickFix);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    auto result1 = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    EXPECT_TRUE(result1);
 }
 
 void BmsBundleQuickFixQueryTest::MockDeployQuickFix() const
 {
-    InnerAppQuickFix innerQuickFixInfo;
-    GenerateInnerQuickFixInfo(innerQuickFixInfo);
-    EXPECT_NE(quickFixDataMgr_, nullptr) << "the quickFixDataMgr_ is nullptr";
-    bool ret = quickFixDataMgr_->SaveInnerAppQuickFix(innerQuickFixInfo);
-    EXPECT_TRUE(ret);
+    AppqfInfo appqfInfo;
+    appqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    appqfInfo.versionName =  QUICK_FIX_VERSION_NAME;
+    appqfInfo.cpuAbi = QUICK_FIX_ABI;
+    appqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    appQuickFix.versionCode = QUICK_FIX_VERSION_CODE;
+    appQuickFix.versionName = QUICK_FIX_VERSION_NAME;
+    appQuickFix.deployingAppqfInfo = appqfInfo;
+
+    InnerBundleInfo innerBundleInfo;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    auto result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    EXPECT_TRUE(result);
+    innerBundleInfo.SetAppQuickFix(appQuickFix);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    
+    InnerAppQuickFix innerAppQuickFix;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    auto quickFixMgr = GetQuickFixDataMgr();
+    EXPECT_FALSE(quickFixMgr == nullptr);
+    quickFixMgr->SaveInnerAppQuickFix(innerAppQuickFix);
 }
 
 void BmsBundleQuickFixQueryTest::MockDeleteQuickFix() const
 {
-    EXPECT_NE(quickFixDataMgr_, nullptr) << "the quickFixDataMgr_ is nullptr";
-    bool ret = quickFixDataMgr_->DeleteInnerAppQuickFix(BUNDLE_NAME);
-    EXPECT_TRUE(ret);
+    auto quickFixMgr = GetQuickFixDataMgr();
+    EXPECT_FALSE(quickFixMgr == nullptr);
+    quickFixMgr->DeleteInnerAppQuickFix(BUNDLE_NAME);
 }
 
 /**
- * @tc.number: GetBundleInfo_0100
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
+ * @tc.number: GetApplicationInfo_0100
+ * Function: GetApplicationInfo
+ * @tc.name: test GetApplicationInfo
  * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
-             2.get bundle info failed with empty bundle name
+ *           2.GetApplicationInfo before deploy AppQuickFix, so get empty AppQuickFix
  */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0100, Function | SmallTest | Level0)
-{
-    BundleInfo result;
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    bool ret = dataMgr->GetBundleInfo(
-        EMPTY_STRING, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_FALSE(ret);
-    EXPECT_EQ(EMPTY_STRING, result.name);
-}
-
-/**
- * @tc.number: GetBundleInfo_0200
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normal
- *           2.get bundleInfo unsuccessfully because of wrong bundleName
- */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0100, Function | SmallTest | Level1)
 {
     MockInstallBundleInfo();
 
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME_DEMO, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_FALSE(ret);
-
-    MockUninstallBundleInfo();
-}
-
-/**
- * @tc.number: GetBundleInfo_0300
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
- *           2.get empty AppqfInfo because of bundleFlag
- */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0300, Function | SmallTest | Level1)
-{
-    MockInstallBundleInfo();
-
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, result, USERID);
+    ApplicationInfo result;
+    bool ret = GetBundleDataMgr()->GetApplicationInfo(
+        BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, result);
     EXPECT_TRUE(ret);
     EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfoEmpty(result);
+    CheckAppQuickFixInfoEmpty(result.appQuickFix.deployedAppqfInfo);
+    CheckAppQuickFixInfoEmpty(result.appQuickFix.deployingAppqfInfo);
 
     MockUninstallBundleInfo();
 }
 
 /**
- * @tc.number: GetBundleInfo_0400
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
+ * @tc.number: GetApplicationInfo_0200
+ * Function: GetApplicationInfo
+ * @tc.name: test GetApplicationInfo
  * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
- *           2.getBundleInfo before deploy AppQuickFix, so get empty AppqfInfo
+ *           2.deploy but not enable AppQuickFix, deploying is not empty
  */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0400, Function | SmallTest | Level1)
-{
-    MockInstallBundleInfo();
-
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfoEmpty(result);
-
-    MockUninstallBundleInfo();
-}
-
-/**
- * @tc.number: GetBundleInfo_0500
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
- * @tc.require: issueI5MZ5Y
- * @tc.desc: 1.system run normally
- *           2.deploy but not enable AppQuickFix, so get empty AppqfInfo
- */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0200, Function | SmallTest | Level1)
 {
     MockInstallBundleInfo();
     MockDeployQuickFix();
-
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
+    ApplicationInfo result;
+    bool ret = GetBundleDataMgr()->GetApplicationInfo(
+        BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, result);
     EXPECT_TRUE(ret);
     EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfoEmpty(result);
+    CheckAppQuickFixInfo(result.appQuickFix.deployingAppqfInfo);
 
     MockUninstallBundleInfo();
 }
 
 /**
- * @tc.number: GetBundleInfo_0600
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
+ * @tc.number: GetApplicationInfo_0300
+ * Function: GetApplicationInfo
+ * @tc.name: test GetApplicationInfo
  * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
- *           2.deploy and enable AppQuickFix, so get valid AppqfInfo
+ *           2.enable AppQuickFix, deployed is not empty
  */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0300, Function | SmallTest | Level1)
 {
     MockInstallBundleInfo();
     MockDeployQuickFix();
-    MockSwitchQuickFix(true);
+    MockEnableQuickFix();
 
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
+    ApplicationInfo result;
+    bool ret = GetBundleDataMgr()->GetApplicationInfo(
+        BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, result);
     EXPECT_TRUE(ret);
     EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfo(result);
+    CheckAppQuickFixInfo(result.appQuickFix.deployedAppqfInfo);
 
     MockUninstallBundleInfo();
 }
 
 /**
- * @tc.number: GetBundleInfo_0700
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
+ * @tc.number: GetApplicationInfo_0400
+ * Function: GetApplicationInfo
+ * @tc.name: test GetApplicationInfo
  * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
- *           2.enable and delete AppQuickFix, get valid AppqfInfo
+ *           2.enable and delete AppQuickFix, deployed is not empty
  */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0400, Function | SmallTest | Level1)
 {
     MockInstallBundleInfo();
     MockDeployQuickFix();
-    MockSwitchQuickFix(true);
+    MockEnableQuickFix();
     MockDeleteQuickFix();
 
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
+    ApplicationInfo result;
+    bool ret = GetBundleDataMgr()->GetApplicationInfo(
+        BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, result);
     EXPECT_TRUE(ret);
     EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfo(result);
+    CheckAppQuickFixInfo(result.appQuickFix.deployedAppqfInfo);
 
     MockUninstallBundleInfo();
 }
 
 /**
- * @tc.number: GetBundleInfo_0800
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
+ * @tc.number: GetApplicationInfo_0500
+ * Function: GetApplicationInfo
+ * @tc.name: test GetApplicationInfo
  * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
- *           2.disable AppQuickFix, get empty AppqfInfo
+ *           2.disable AppQuickFix, deployed is empty
  */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0500, Function | SmallTest | Level1)
 {
     MockInstallBundleInfo();
     MockDeployQuickFix();
-    MockSwitchQuickFix(false);
+    MockDisableQuickFix();
 
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
+    ApplicationInfo result;
+    bool ret = GetBundleDataMgr()->GetApplicationInfo(
+        BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, result);
     EXPECT_TRUE(ret);
     EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfoEmpty(result);
+    CheckAppQuickFixInfoEmpty(result.appQuickFix.deployedAppqfInfo);
 
     MockUninstallBundleInfo();
 }
 
 /**
- * @tc.number: GetBundleInfo_0900
- * Function: GetBundleInfo
- * @tc.name: test GetBundleInfo
+ * @tc.number: GetApplicationInfo_0600
+ * Function: GetApplicationInfo
+ * @tc.name: test GetApplicationInfo
  * @tc.require: issueI5MZ5Y
  * @tc.desc: 1.system run normally
- *           2.disable and delete AppQuickFix, get empty AppqfInfo
+ *           2.disable and delete AppQuickFix, deployed is empty
  */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetBundleInfo_0900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0600, Function | SmallTest | Level1)
 {
     MockInstallBundleInfo();
     MockDeployQuickFix();
-    MockSwitchQuickFix(false);
+    MockDisableQuickFix();
     MockDeleteQuickFix();
 
-    BundleInfo result;
-    bool ret = GetBundleDataMgr()->GetBundleInfo(
-        BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_APPQF_INFO, result, USERID);
+    ApplicationInfo result;
+    bool ret = GetBundleDataMgr()->GetApplicationInfo(
+        BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, result);
     EXPECT_TRUE(ret);
     EXPECT_EQ(BUNDLE_NAME, result.name);
-    CheckAppqfInfoEmpty(result);
+    CheckAppQuickFixInfoEmpty(result.appQuickFix.deployedAppqfInfo);
 
     MockUninstallBundleInfo();
 }

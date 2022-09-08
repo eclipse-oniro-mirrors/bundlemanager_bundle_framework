@@ -22,10 +22,17 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class QuickFixType {
+    UNKNOWN = 0,
+    PATCH = 1,
+    HOT_RELOAD = 2
+};
+
 struct HqfInfo : public Parcelable {
     std::string moduleName;
     std::string hapSha256;
     std::string hqfFilePath;
+    QuickFixType type = QuickFixType::UNKNOWN; // quick fix type
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

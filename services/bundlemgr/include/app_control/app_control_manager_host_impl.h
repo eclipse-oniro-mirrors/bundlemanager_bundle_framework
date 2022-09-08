@@ -18,6 +18,7 @@
 
 #include "app_control_host.h"
 #include "app_control_manager.h"
+#include "app_running_control_rule_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -37,12 +38,19 @@ public:
     virtual ErrCode GetAppInstallControlRule(const AppInstallControlRuleType controlRuleType, int32_t userId,
         std::vector<std::string> &appIds) override;
 
+    // for app running control rule
+    virtual ErrCode AddAppRunningControlRule(
+        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) override;
+    virtual ErrCode DeleteAppRunningControlRule(
+        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) override;
+    virtual ErrCode DeleteAppRunningControlRule(int32_t userId) override;
+    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) override;
+    
     virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) override;
 
     virtual ErrCode DeleteDisposedStatus(const std::string &appId) override;
 
     virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) override;
-
 private:
     std::string GetCallingName();
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);

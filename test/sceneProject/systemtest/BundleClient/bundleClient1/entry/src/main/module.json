@@ -1,0 +1,75 @@
+{
+  "module": {
+    "name": "entry_phone",
+    "type": "entry",
+    "mainElement": "MainAbility",
+    "srcEntrance": "./ets/Application/AbilityStage.ts",
+    "description": "$string:phone_entry_dsc",
+    "descriptionId": 16777220,
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "@profile:main_pages",
+    "uiSyntax": "ets",    
+    "abilities": [
+      {
+        "name": "MainAbility",
+        "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+        "description": "$string:phone_entry_main",
+        "descriptionId": 16777221,
+        "icon": "$media:icon",
+        "iconId": 16777225,
+        "label": "$string:entry_label",
+        "labelId": 16777218,
+        "visible": true,
+        "orientation": "portrait",
+        "metadata": [
+          {
+            "name": "ohos.ability.shortcuts",
+            "resource": "$profile:shortcuts_config"
+          }
+        ],
+        "skills": [
+          {
+            "actions": [
+              "action.system.home"
+            ],
+            "entities": [
+              "entity.system.home"
+            ]
+          }
+        ]
+      }
+    ],
+    
+    "extensionAbilities": [
+      {
+        "description": "$string:form_description",
+        "descriptionId": 16777219,
+        "icon": "$media:icon",
+        "iconId": 16777225,
+        "metadata": [
+          {
+            "name": "ohos.extension.form",
+            "resource": "@profile:form_config"
+          }
+        ],
+        "name": "Form",
+        "srcEntrance": "./ets/Form/MyForm.ts",
+        "type": "form",
+        "visible": true
+      },
+      {
+        "description": "$string:serviceability_description",
+        "descriptionId": 16777222,
+        "icon": "$media:icon",
+        "iconId": 16777225,
+        "name": "WeatherFormAbility",
+        "srcEntrance": "./ets/Weather/WeatherFormAbility.ts",
+        "type": "wallpaper"
+      }
+    ]
+  }
+}

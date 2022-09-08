@@ -44,9 +44,6 @@ ohos_benchmarktest("BenchmarkTestBundleMgrProxy") {
     defines = [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
     external_deps += [ "multimedia_image_standard:image_native" ]
   }
-
-  resource_config_file =
-      "${appexecfwk_path}/test/benchmarktest/resource/ohos_test.xml"
 }
 
 group("benchmarktest") {

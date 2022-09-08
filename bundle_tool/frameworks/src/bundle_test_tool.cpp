@@ -1440,7 +1440,13 @@ ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixP
         APP_LOGE("quickFixProxy is null");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-    auto res = quickFixProxy->DeployQuickFix(pathVec, callback);
+    std::vector<std::string> destFiles;
+    auto res = quickFixProxy->CopyFiles(pathVec, destFiles);
+    if (res != ERR_OK) {
+        APP_LOGE("Copy files failed with %{public}d.", res);
+        return res;
+    }
+    res = quickFixProxy->DeployQuickFix(destFiles, callback);
     if (res != ERR_OK) {
         APP_LOGE("DeployQuickFix failed");
         return res;
@@ -1537,7 +1543,7 @@ std::string BundleTestTool::GetResMsg(int32_t code, const std::shared_ptr<QuickF
     } else {
         resMsg += MSG_ERR_BUNDLEMANAGER_QUICK_FIX_UNKOWN;
     }
-    if (code == OHOS::ERR_OK && quickFixRes != nullptr) {
+    if (quickFixRes != nullptr) {
         resMsg += quickFixRes->ToString() + "\n";
     }
     return resMsg;

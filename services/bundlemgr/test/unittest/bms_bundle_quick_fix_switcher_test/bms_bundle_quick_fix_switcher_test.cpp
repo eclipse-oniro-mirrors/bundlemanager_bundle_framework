@@ -60,7 +60,7 @@ public:
     void QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix) const;
     InnerAppQuickFix GenerateAppQuickFixInfo(const std::string &bundleName, const QuickFixStatus &status) const;
     void CheckResult(const sptr<MockQuickFixCallback> &callback, const std::string &bundleName, int32_t errCode) const;
-    void SetAppqfInfo(InnerBundleInfo &innerBundleInfo) const;
+    void SetAppQuickFix(InnerBundleInfo &innerBundleInfo) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
@@ -191,12 +191,14 @@ void BmsBundleQuickFixSwitcherTest::CheckResult(const sptr<MockQuickFixCallback>
     EXPECT_EQ(errCode, resultCode);
 }
 
-void BmsBundleQuickFixSwitcherTest::SetAppqfInfo(InnerBundleInfo &innerBundleInfo) const
+void BmsBundleQuickFixSwitcherTest::SetAppQuickFix(InnerBundleInfo &innerBundleInfo) const
 {
     AppqfInfo qfInfo;
     HqfInfo hqfInfo;
     qfInfo.hqfInfos.emplace_back(hqfInfo);
-    innerBundleInfo.SetAppqfInfo(qfInfo);
+    AppQuickFix appQuickFix;
+    appQuickFix.deployedAppqfInfo = qfInfo;
+    innerBundleInfo.SetAppQuickFix(appQuickFix);
 }
 
 /**
@@ -431,7 +433,7 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1000, Func
     EXPECT_NE(callback2, nullptr) << "the callback2 is nullptr";
     ret = quickFixHost->SwitchQuickFix(BUNDLE_NAME, true, callback2);
     EXPECT_EQ(ret, ERR_OK);
-    CheckResult(callback2, BUNDLE_NAME, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS);
+    CheckResult(callback2, BUNDLE_NAME, ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE);
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
@@ -508,7 +510,7 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1300, Func
     InnerBundleInfo innerBundleInfo;
     bool result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
-    SetAppqfInfo(innerBundleInfo);
+    SetAppQuickFix(innerBundleInfo);
     result = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
 
@@ -565,7 +567,7 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1500, Func
     InnerBundleInfo innerBundleInfo;
     bool result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
-    SetAppqfInfo(innerBundleInfo);
+    SetAppQuickFix(innerBundleInfo);
     result = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
 

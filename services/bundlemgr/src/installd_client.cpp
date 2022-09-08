@@ -248,5 +248,15 @@ ErrCode InstalldClient::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return CallService(&IInstalld::IsDirEmpty, dir, isDirEmpty);
 }
+
+ErrCode InstalldClient::ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec)
+{
+    return CallService(&IInstalld::ObtainQuickFixFileDir, dir, dirVec);
+}
+
+ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+{
+    return CallService(&IInstalld::CopyFiles, sourceDir, destinationDir);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

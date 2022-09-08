@@ -29,14 +29,14 @@
 ```
 foundation/bundlemanager/bundle_framework
 ├── bundle_tool                        # bm工具存放目录
-├── distributed_bundle_framework       # 分布式包管理服务框架代码					   
+├── distributed_bundle_framework       # 分布式包管理服务框架代码
 ├── common
 │   └── log							   # 日志组件目录
 ├── interfaces
 │   ├── inner_api                      # 内部接口存放目录
 │   └── kits                           # 应用接口
 │       ├── js                         # JS接口
-│       └── native                     # C/C++接口   					   
+│       └── native                     # C/C++接口  
 ├── services                           # 包管理服务框架代码
 └── test						       # 测试目录
 ```
@@ -53,6 +53,7 @@ bm是用来方便开发者调试的一个工具。bm工具被hdc工具封装，�
 | enable | 使能命令，用来使能应用 |
 | disable | 禁用命令，用来禁用应用 |
 | get | 获取udid命令，用来获取设备的udid |
+| quickfix | 快速修复相关命令，用来执行补丁相关操作，如补丁安装、补丁查询 |
 #### 帮助命令
 | 命令    | 描述       |
 | ------- | ---------- |
@@ -170,6 +171,19 @@ bm disable -n com.ohos.app
 ```Bash
 # 获取设备的udid
 bm get -u
+```
+
+#### 快速修复命令
+| 命令       | 描述                       |
+| ---------- | -------------------------- |
+| bm quickfix -h | 显示quickfix支持的命令信息 |
+| bm quickfix -a -f <file-path> | 执行补丁安装命令 |
+| bm quickfix -q -b <bundle-name> | 根据包名查询补丁包信息 |
+
+* 示例
+```Bash
+# 根据包名查询补丁包信息
+bm quickfix -q -b <bundle-name>
 ```
 ## 相关仓
 
