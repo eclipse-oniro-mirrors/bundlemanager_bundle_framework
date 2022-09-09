@@ -18,6 +18,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
+#include "bundle_mgr_proxy.h"
 #include "iservice_registry.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -32,6 +33,9 @@ constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 using Want = OHOS::AAFwk::Want;
+
+sptr<IBundleMgr> CommonFunc::bundleMgr_ = nullptr;
+std::mutex CommonFunc::bundleMgrMutex_;
 
 napi_value CommonFunc::WrapVoidToJS(napi_env env)
 {
@@ -86,22 +90,25 @@ bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result
 
 sptr<IBundleMgr> CommonFunc::GetBundleMgr()
 {
-    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        APP_LOGE("systemAbilityManager is null.");
-        return nullptr;
+    if (bundleMgr_ == nullptr) {
+        std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            APP_LOGE("systemAbilityManager is null.");
+            return nullptr;
+        }
+        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (bundleMgrSa == nullptr) {
+            APP_LOGE("bundleMgrSa is null.");
+            return nullptr;
+        }
+        bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+        if (bundleMgr_ == nullptr) {
+            APP_LOGE("iface_cast failed.");
+            return nullptr;
+        }
     }
-    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (bundleMgrSa == nullptr) {
-        APP_LOGE("bundleMgrSa is null.");
-        return nullptr;
-    }
-    auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-    if (bundleMgr == nullptr) {
-        APP_LOGE("iface_cast failed.");
-        return nullptr;
-    }
-    return bundleMgr;
+    return bundleMgr_;
 }
 
 std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)

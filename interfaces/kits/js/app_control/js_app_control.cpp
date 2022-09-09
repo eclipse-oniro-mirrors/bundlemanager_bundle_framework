@@ -34,6 +34,10 @@ using namespace OHOS::AAFwk;
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        return nullptr;
+    }
     auto appControlProxy = bundleMgr->GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("GetAppControlProxy failed.");
@@ -96,7 +100,7 @@ void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     napi_value result[1] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
@@ -186,7 +190,7 @@ void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     napi_value result[1] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         APP_LOGE("DeleteDisposedStatus err = %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
@@ -271,7 +275,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     napi_value result[2] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     } else {
