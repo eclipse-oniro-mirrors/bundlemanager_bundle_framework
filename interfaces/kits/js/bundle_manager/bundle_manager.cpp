@@ -12,24 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NAPI_CONSTANTS_H
-#define NAPI_CONSTANTS_H
+#include "bundle_manager.h"
+
+#include <string>
+
+#include "app_log_wrapper.h"
+#include "bundle_errors.h"
+#include "bundle_mgr_interface.h"
+#include "bundle_mgr_proxy.h"
+#include "business_error.h"
+#include "common_func.h"
+#include "ipc_skeleton.h"
+#include "napi_arg.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr size_t ARGS_SIZE_ONE = 1;
-constexpr size_t ARGS_SIZE_TWO = 2;
-constexpr size_t ARGS_SIZE_THREE = 3;
-constexpr size_t ARGS_SIZE_FOUR = 4;
+using namespace OHOS::AAFwk;
 
-constexpr size_t ARGS_POS_ZERO = 0;
-constexpr size_t ARGS_POS_ONE = 1;
-constexpr size_t ARGS_POS_TWO = 2;
-constexpr size_t ARGS_POS_THREE = 3;
+void QueryAbilityInfosExec(napi_env env, void *data)
+{}
 
-constexpr size_t NAPI_RETURN_ONE = 1;
+void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
+{}
+
+napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
+{
+    return nullptr;
 }
 }
 }
-#endif

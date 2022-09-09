@@ -23,6 +23,10 @@ namespace AppExecFwk {
 constexpr ErrCode PERMISSION_DENIED_ERROR = 201;
 constexpr ErrCode PARAM_CHECK_ERROR = 401;
 constexpr ErrCode SYSTEM_ABILITY_NOT_FOUND = 801;
+constexpr ErrCode BUNDLE_NOT_EXIST = 17700001;
+constexpr ErrCode ABILITY_NOT_EXIST = 17700003;
+constexpr ErrCode INVALID_USER_ID = 17700004;
+constexpr ErrCode INTERNAL_ERROR = 17700101;
 constexpr ErrCode OUT_OF_MEMORY_ERROR = 17700102;
 }
 }
