@@ -17,6 +17,7 @@
 #define COMMON_FUNC_H
 
 #include <vector>
+#include <mutex>
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
@@ -83,6 +84,10 @@ static napi_value AsyncCallNativeMethod(napi_env env,
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     return promise;
 }
+
+private:
+    static sptr<IBundleMgr> bundleMgr_;
+    static std::mutex bundleMgrMutex_;
 };
 }
 }
