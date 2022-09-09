@@ -4811,5 +4811,58 @@ HWTEST_F(ActsBmsKitSystemTest, SetDebugMode_0100, Function | SmallTest | Level1)
     auto res = bundleMgrProxy->SetDebugMode(true);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: GetDefaultAppProxy_0100
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ *           2.test GetDefaultAppProxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    auto res = getDefaultAppProxy->IsDefaultApplication("");
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CheckAbilityEnabled_0100
+ * @tc.name: test SetAbilityEnabled and IsAbilityEnabled proxy
+ * @tc.desc: 1.system run normally
+ *           2.set ability enabled
+ *           3.get ability enabled
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0100, Function | SmallTest | Level1)
+{
+    std::cout << "START GetUdidByNetworkId_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    AbilityInfo abilityInfo;
+    abilityInfo.name = BASE_ABILITY_NAME;
+    abilityInfo.bundleName = appName;
+    abilityInfo.moduleName = BASE_MODULE_NAME;
+    bool testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
+    EXPECT_TRUE(testRet);
+    bool testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
+    EXPECT_FALSE(testRet1);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetUdidByNetworkId_0100" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

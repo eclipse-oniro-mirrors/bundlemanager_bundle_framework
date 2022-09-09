@@ -3598,34 +3598,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1200, Function | SmallTest
 }
 
 /**
- * @tc.number: CheckAbilityEnabled_1300
- * @tc.name: test can check ability status is disable by setting and can be enabled again
- * @tc.desc: 1.system run normally
- *           2.check the ability status successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1300, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, DEFAULT_USERID);
-    EXPECT_FALSE(testRet);
-    bool testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
-    EXPECT_FALSE(testRet1);
-    bool testRet2 = bundleMgrProxy->SetAbilityEnabled(abilityInfo, true, DEFAULT_USERID);
-    EXPECT_FALSE(testRet2);
-    bool testRet3 = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
-    EXPECT_FALSE(testRet3);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: GetFormInfoByModule_0100
  * @tc.name: test can  get the formInfo
  * @tc.desc: 1.system run normally
@@ -4897,23 +4869,6 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_002, Function | SmallTest | Leve
     CheckCompatibleApplicationInfo(BUNDLE_NAME_TEST, PERMISSION_SIZE_ZERO, appInfo);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: GetDisposedStatus_002
- * @tc.name: test GetDisposedStatus
- * @tc.desc: wrong bundleName, expect 0
- * @tc.require: AR000H7N9D
- */
-HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_004, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    int32_t status = bundleMgrProxy->GetDisposedStatus("wrong");
-    EXPECT_EQ(status, 0);
 }
 
 /**
