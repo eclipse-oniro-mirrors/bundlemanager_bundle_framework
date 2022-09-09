@@ -4900,6 +4900,64 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_002, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: CompatibleAbilityInfo_001
+ * @tc.name: ReadFromParcel
+ * @tc.desc: 1.Test ReadFromParcel of compatibleAbilityInfo success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleAbilityInfo_001, Function | SmallTest | Level1)
+{
+    CompatibleAbilityInfo compatibleAbilityInfo;
+    compatibleAbilityInfo.name = "com.ohos.contactsdata.ability";;
+    compatibleAbilityInfo.moduleName = "entry";
+    compatibleAbilityInfo.bundleName = "com.ohos.contactsdataability";
+    Parcel parcel;
+    auto ret = compatibleAbilityInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CompatibleAbilityInfo_002
+ * @tc.name: ConvertToAbilityInfo
+ * @tc.desc: 1.Test ConvertToAbilityInfo of compatibleAbilityInfo success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleAbilityInfo_002, Function | SmallTest | Level1)
+{
+    CompatibleAbilityInfo compatibleAbilityInfo;
+    compatibleAbilityInfo.name = "com.ohos.contactsdata.ability";
+    AbilityInfo info;
+    compatibleAbilityInfo.ConvertToAbilityInfo(info);
+    EXPECT_EQ(compatibleAbilityInfo.name, info.name);
+}
+
+/**
+ * @tc.number: CompatibleApplicationInfo_001
+ * @tc.name: ReadFromParcel
+ * @tc.desc: 1.Test ReadFromParcel of CompatibleApplicationInfo success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleApplicationInfo_001, Function | SmallTest | Level1)
+{
+    CompatibleApplicationInfo appInfo;
+    appInfo.name = "com.ohos.contactsdata.ability";
+    Parcel parcel;
+    auto ret = appInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CompatibleApplicationInfo_002
+ * @tc.name: ConvertToApplicationInfo
+ * @tc.desc: 1.Test ConvertToApplicationInfo of CompatibleApplicationInfo success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleApplicationInfo_002, Function | SmallTest | Level1)
+{
+    CompatibleApplicationInfo appInfo;
+    appInfo.name = "com.ohos.contactsdata.ability";
+    ApplicationInfo info;
+    appInfo.ConvertToApplicationInfo(info);
+    EXPECT_EQ(appInfo.name, info.name);
+}
+
+/**
  * @tc.number: GetDisposedStatus_002
  * @tc.name: test GetDisposedStatus
  * @tc.desc: wrong bundleName, expect 0

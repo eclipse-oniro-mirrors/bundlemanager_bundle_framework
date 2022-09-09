@@ -167,7 +167,6 @@ struct CompatibleAbilityInfo : public Parcelable {
     virtual bool Marshalling(Parcel& parcel) const override;
     static CompatibleAbilityInfo* Unmarshalling(Parcel& parcel);
 
-    void CopyToDest(CompatibleAbilityInfo& dest) const;
     void ConvertToAbilityInfo(AbilityInfo& abilityInfo) const;
 };
 
