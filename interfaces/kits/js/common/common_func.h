@@ -46,6 +46,18 @@ static void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &wa
 
 static bool ParseElementName(napi_env env, napi_value args, Want &want);
 
+static ErrCode ConvertErrCode(ErrCode nativeErrCode);
+
+static bool ParseWant(napi_env env, napi_value args, Want &want);
+
+static void ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo, napi_value value);
+
+static void ConvertMetadata(napi_env env, const Metadata &metadata, napi_value value);
+
+static void ConvertAbilityInfos(napi_env env, const std::vector<AbilityInfo> &abilityInfos, napi_value value);
+
+static void ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo, napi_value objAbilityInfo);
+
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,
