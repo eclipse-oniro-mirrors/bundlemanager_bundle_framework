@@ -146,6 +146,43 @@ bool BundleMgrProxy::GetApplicationInfo(
     return true;
 }
 
+ErrCode BundleMgrProxy::GetApplicationInfoV9(
+    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetApplicationInfoV9 of %{public}s", appName.c_str());
+    if (appName.empty()) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appName)) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write appName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelableInfoWithErrCode<ApplicationInfo>(
+        IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9, data, appInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetApplicationInfoV9 from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 bool BundleMgrProxy::GetApplicationInfos(
     const ApplicationFlag flag, int userId, std::vector<ApplicationInfo> &appInfos)
 {
@@ -205,6 +242,43 @@ bool BundleMgrProxy::GetApplicationInfos(
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::GetApplicationInfosV9(
+    int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get GetApplicationInfosV9 of specific userId id %{private}d", userId);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetApplicationInfosV9 due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetApplicationInfosV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetApplicationInfosV9 due to write userId error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host returns error, error code: %{public}d.", res);
+        return res;
+    }
+
+    if (!GetParcelableInfosFromAshmem<ApplicationInfo>(reply, appInfos)) {
+        APP_LOGE("failed to GetApplicationInfosV9 from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 bool BundleMgrProxy::GetBundleInfo(

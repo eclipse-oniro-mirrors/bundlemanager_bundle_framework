@@ -1865,6 +1865,53 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 }
 
+ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, ApplicationInfo &appInfo) const
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    appInfo = *baseApplicationInfo_;
+
+    appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
+    appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
+    appInfo.uid = innerBundleUserInfo.uid;
+
+    for (const auto &info : innerModuleInfos_) {
+        ModuleInfo moduleInfo;
+        moduleInfo.moduleName = info.second.moduleName;
+        moduleInfo.moduleSourceDir = info.second.modulePath;
+        appInfo.moduleInfos.emplace_back(moduleInfo);
+        appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
+        if (info.second.isEntry) {
+            appInfo.entryDir = info.second.modulePath;
+        }
+        if ((static_cast<uint32_t>(flags) & ApplicationFlagV9::GET_APPLICATION_INFO_WITH_PERMISSION_V9) ==
+            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_PERMISSION_V9) {
+            std::transform(info.second.requestPermissions.begin(),
+                info.second.requestPermissions.end(),
+                std::back_inserter(appInfo.permissions),
+                [](const auto &p) { return p.name; });
+        }
+        if ((static_cast<uint32_t>(flags) & ApplicationFlagV9::GET_APPLICATION_INFO_WITH_METADATA_V9) ==
+            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_METADATA_V9) {
+            bool isModuleJson = info.second.isModuleJson;
+            if (!isModuleJson && info.second.metaData.customizeData.size() > 0) {
+                appInfo.metaData[info.second.moduleName] = info.second.metaData.customizeData;
+            }
+            if (isModuleJson && info.second.metadata.size() > 0) {
+                appInfo.metadata[info.second.moduleName] = info.second.metadata;
+            }
+        }
+    }
+    if (!appInfo.permissions.empty()) {
+        RemoveDuplicateName(appInfo.permissions);
+    }
+    return ERR_OK;
+}
+
 bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
 {
     InnerBundleUserInfo innerBundleUserInfo;

@@ -65,6 +65,24 @@ bool BundleMgrHostImpl::GetApplicationInfo(
     return dataMgr->GetApplicationInfo(appName, flags, userId, appInfo);
 }
 
+ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
+    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
+{
+    APP_LOGD("start GetApplicationInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
+        appName.c_str(), flags, userId);
+    if (!VerifyQueryPermission(appName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, bgein to GetApplicationInfoV9");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetApplicationInfoV9(appName, flags, userId, appInfo);
+}
+
 bool BundleMgrHostImpl::GetApplicationInfos(
     const ApplicationFlag flag, const int userId, std::vector<ApplicationInfo> &appInfos)
 {
@@ -86,6 +104,23 @@ bool BundleMgrHostImpl::GetApplicationInfos(
         return false;
     }
     return dataMgr->GetApplicationInfos(flags, userId, appInfos);
+}
+
+ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
+    int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
+{
+    APP_LOGD("start GetApplicationInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to GetApplicationInfosV9");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetApplicationInfosV9(flags, userId, appInfos);
 }
 
 bool BundleMgrHostImpl::GetBundleInfo(
