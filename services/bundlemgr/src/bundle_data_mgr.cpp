@@ -471,7 +471,7 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     ElementName element = want.GetElement();
@@ -498,7 +498,7 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
     }
     if (abilityInfos.empty()) {
         APP_LOGE("no matching abilityInfo");
-        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
 }
@@ -560,7 +560,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     APP_LOGD("flags:%{public}d, userId:%{public}d", flags, userId);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
@@ -575,12 +575,12 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     if (appIndex > 0) {
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGE("sandboxAppHelper_ is nullptr");
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
     }
 
@@ -588,7 +588,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
         APP_LOGE("ability not found");
-        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
 
     return QueryAbilityInfoWithFlagsV9(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
@@ -655,13 +655,13 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosV9(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     if (want.GetAction().empty() && want.GetEntities().empty()
         && want.GetUriString().empty() && want.GetType().empty()) {
         APP_LOGE("param invalid");
-        return ERR_BUNDLE_MANAGER_QUERY_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     APP_LOGD("action:%{public}s, uri:%{private}s, type:%{public}s",
         want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
@@ -669,7 +669,7 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosV9(
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ is empty");
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string bundleName = want.GetElement().GetBundleName();
     if (!bundleName.empty()) {
@@ -728,12 +728,12 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9) == GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9 &&
         !innerBundleInfo.IsSystemApp()) {
         APP_LOGE("target not system app");
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)) {
         if (!innerBundleInfo.IsAbilityEnabled((*option), userId)) {
             APP_LOGE("ability:%{public}s is disabled", option->name.c_str());
-            return ERR_BUNDLE_MANAGER_QUERY_ABILITY_DISABLED;
+            return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
         }
     }
     info = (*option);
@@ -793,12 +793,12 @@ ErrCode BundleDataMgr::ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t 
     if (appIndex > 0) {
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGE("sandboxAppHelper_ is nullptr");
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
@@ -1799,30 +1799,30 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ data is empty");
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     APP_LOGD("GetInnerBundleInfoWithFlagsV9: %{public}s", bundleName.c_str());
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("GetInnerBundleInfoWithFlagsV9: bundleName not find");
-        return ERR_BUNDLE_MANAGER_QUERY_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE_V9)
         && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
         APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_QUERY_APPLICATION_DISABLED;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     info = innerBundleInfo;
     return ERR_OK;
@@ -2741,7 +2741,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     ElementName element = want.GetElement();
@@ -2768,7 +2768,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
     }
     if (extensionInfos.empty()) {
         APP_LOGE("no matching abilityInfo");
-        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     APP_LOGD("query extensionAbilityInfo successfully");
     return ERR_OK;
@@ -2839,7 +2839,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     APP_LOGD("flags:%{public}d, userId:%{public}d", flags, userId);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
@@ -2853,18 +2853,18 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     if (appIndex > 0) {
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGE("sandboxAppHelper_ is nullptr");
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
     }
     auto extension = innerBundleInfo.FindExtensionInfo(bundleName, moduleName, extensionName);
     if (!extension) {
         APP_LOGE("extensionAbility not found or disabled");
-        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) !=
         GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) {
@@ -2942,7 +2942,7 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
     if (want.GetAction().empty() && want.GetEntities().empty()
         && want.GetUriString().empty() && want.GetType().empty()) {
         APP_LOGE("param invalid");
-        return ERR_BUNDLE_MANAGER_QUERY_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     APP_LOGD("action:%{public}s, uri:%{private}s, type:%{public}s",
         want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
@@ -2950,7 +2950,7 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
 
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     std::string bundleName = want.GetElement().GetBundleName();
@@ -3017,12 +3017,12 @@ ErrCode BundleDataMgr::ImplicitQueryCurExtensionInfosV9(const Want &want, int32_
     if (appIndex > 0) {
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGE("sandboxAppHelper_ is nullptr");
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);

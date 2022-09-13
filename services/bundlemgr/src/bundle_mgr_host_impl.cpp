@@ -338,13 +338,13 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     APP_LOGD("start QueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to QueryAbilityInfosV9");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
 }
@@ -1260,13 +1260,13 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
     APP_LOGD("QueryExtensionAbilityInfosV9 without type begin");
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("want uri is %{private}s", want.GetUriString().c_str());
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
     if (ret != ERR_OK) {
@@ -1275,7 +1275,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
     }
     if (extensionInfos.empty()) {
         APP_LOGE("no valid extension info can be inquired");
-        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
 }
@@ -1319,12 +1319,12 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
     APP_LOGD("QueryExtensionAbilityInfosV9 begin");
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, infos);
@@ -1341,7 +1341,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
     });
     if (extensionInfos.empty()) {
         APP_LOGE("no valid extension info can be inquired");
-        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
 }

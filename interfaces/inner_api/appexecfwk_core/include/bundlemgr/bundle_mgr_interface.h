@@ -362,7 +362,7 @@ public:
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
     {
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
      * @brief Query the AllAbilityInfos of list by the given userId.
@@ -787,7 +787,7 @@ public:
     virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos)
     {
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
      * @brief Query extension info.
@@ -815,7 +815,7 @@ public:
     virtual ErrCode QueryExtensionAbilityInfosV9(const Want &want, const ExtensionAbilityType &extensionType,
         int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
     {
-        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     virtual bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos)

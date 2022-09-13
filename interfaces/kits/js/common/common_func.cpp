@@ -259,13 +259,13 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
     switch (nativeErrCode) {
         case ERR_OK:
             return NO_ERROR;
-        case ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID:
+        case ERR_BUNDLE_MANAGER_INVALID_USER_ID:
             return INVALID_USER_ID;
-        case ERR_BUNDLE_MANAGER_QUERY_BUNDLE_NOT_EXIST:
+        case ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST:
             return BUNDLE_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST:
+        case ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST:
             return ABILITY_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DENIED:
+        case ERR_BUNDLE_MANAGER_PERMISSION_DENIED:
             return PERMISSION_DENIED_ERROR;
         default:
             return INTERNAL_ERROR;
