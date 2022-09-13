@@ -1312,7 +1312,7 @@ ErrCode BundleDataMgr::GetBundlePackInfo(
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
         APP_LOGE("GetBundlePackInfo failed");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NAME_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     BundlePackInfo innerBundlePackInfo = innerBundleInfo.GetBundlePackInfo();
     if (static_cast<uint32_t>(flags) & GET_PACKAGES) {
@@ -2052,7 +2052,7 @@ ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const st
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NAME_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo newInfo = infoItem->second;
     return newInfo.IsModuleRemovable(moduleName, userId, isRemovable);
