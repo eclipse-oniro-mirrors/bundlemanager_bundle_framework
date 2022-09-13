@@ -721,8 +721,8 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     return true;
 }
 
-ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
-    const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const
+ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityInfo> &option,
+    int32_t flags, int32_t userId, const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const
 {
     APP_LOGD("begin to QueryAbilityInfoWithFlagsV9.");
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9) == GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9 &&

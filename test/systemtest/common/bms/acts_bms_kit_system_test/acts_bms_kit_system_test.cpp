@@ -51,7 +51,8 @@ const std::string ERROR_UNINSTALL_FAILED = "uninstall failed!";
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
-const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
+    "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string PERMISSIONNAME = "ohos.permission.READ_CALENDAR";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
@@ -4737,7 +4738,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0100, Function | SmallTest | Lev
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool res = bundleMgrProxy->GetPermissionDef(PERMISSIONNAME, permissionDef);
     EXPECT_TRUE(res);
-
 }
 
 /**

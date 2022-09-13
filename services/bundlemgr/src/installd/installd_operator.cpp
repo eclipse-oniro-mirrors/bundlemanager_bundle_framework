@@ -756,9 +756,10 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
             }
 
             // file
-            if((s.st_mode & S_IFREG) && (currentName.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
-                fileVec.emplace_back(dir);
-            }
+            if((s.st_mode & S_IFREG) && 
+                (currentName.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
+                    fileVec.emplace_back(dir);
+                }
         }
     }
     closedir(directory);
