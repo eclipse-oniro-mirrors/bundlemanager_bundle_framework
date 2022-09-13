@@ -309,7 +309,7 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
     auto libraryPath = nativeLibraryPath;
     std::string soPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
     if (InstalldClient::GetInstance()->IsExistDir(soPath, isSoExist) != ERR_OK) {
-        APP_LOGE("ProcessNativeLibraryPath InstalldClient IsExistDir failed");
+        APP_LOGE("ProcessNativeLibraryPath InstalldClient IsExistDir(%{public}s) failed", soPath.c_str());
         return;
     }
 
@@ -317,6 +317,10 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
     if (isSoExist) {
         nativeLibraryPath = Constants::PATCH_PATH +
             std::to_string(appQuickFix.deployingAppqfInfo.versionCode) + Constants::PATH_SEPARATOR + libraryPath;
+    } else {
+        APP_LOGI("So(%{public}s) is not exist and set nativeLibraryPath(%{public}s) empty",
+            soPath.c_str(), nativeLibraryPath.c_str());
+        nativeLibraryPath.clear();
     }
 }
 
@@ -341,7 +345,8 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         std::string libraryPath;
         std::string cpuAbi;
         bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
-        if (!FetchPatchNativeSoAttrs(appQuickFix.deployingAppqfInfo, isLibIsolated, libraryPath, cpuAbi)) {
+        if (!FetchPatchNativeSoAttrs(
+            appQuickFix.deployingAppqfInfo, hqf, isLibIsolated, libraryPath, cpuAbi)) {
             continue;
         }
 
@@ -466,13 +471,7 @@ bool QuickFixDeployer::IsLibIsolated(
         return false;
     }
 
-    auto moduleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(moduleName);
-    if (!moduleInfo) {
-        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
-        return false;
-    }
-
-    return moduleInfo->isLibIsolated;
+    return innerBundleInfo.IsLibIsolated(moduleName);
 }
 
 bool QuickFixDeployer::FetchInnerBundleInfo(
@@ -492,12 +491,12 @@ bool QuickFixDeployer::FetchInnerBundleInfo(
     return true;
 }
 
-bool QuickFixDeployer::FetchPatchNativeSoAttrs(
-    const AppqfInfo &appqfInfo, bool isLibIsolated, std::string &nativeLibraryPath, std::string &cpuAbi)
+bool QuickFixDeployer::FetchPatchNativeSoAttrs(const AppqfInfo &appqfInfo,
+    const HqfInfo hqfInfo, bool isLibIsolated, std::string &nativeLibraryPath, std::string &cpuAbi)
 {
     if (isLibIsolated) {
-        nativeLibraryPath = appqfInfo.hqfInfos[0].nativeLibraryPath;
-        cpuAbi = appqfInfo.hqfInfos[0].cpuAbi;
+        nativeLibraryPath = hqfInfo.nativeLibraryPath;
+        cpuAbi = hqfInfo.cpuAbi;
     } else {
         nativeLibraryPath = appqfInfo.nativeLibraryPath;
         cpuAbi = appqfInfo.cpuAbi;

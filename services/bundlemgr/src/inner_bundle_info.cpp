@@ -2730,7 +2730,7 @@ void InnerBundleInfo::SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos)
 }
 
 bool InnerBundleInfo::FetchNativeSoAttrs(
-    const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath)
+    const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const
 {
     auto moduleIter = innerModuleInfos_.find(requestPackage);
     if (moduleIter == innerModuleInfos_.end()) {
@@ -2748,6 +2748,17 @@ bool InnerBundleInfo::FetchNativeSoAttrs(
     }
 
     return !nativeLibraryPath.empty();
+}
+
+bool InnerBundleInfo::IsLibIsolated(const std::string &moduleName) const
+{
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        return false;
+    }
+
+    return moduleInfo->isLibIsolated;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

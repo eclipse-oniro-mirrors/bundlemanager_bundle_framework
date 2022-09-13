@@ -93,8 +93,8 @@ private:
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
-    bool FetchPatchNativeSoAttrs(
-        const AppqfInfo &appqfInfo, bool isLibIsolated, std::string &nativeLibraryPath, std::string &cpuAbi);
+    bool FetchPatchNativeSoAttrs(const AppqfInfo &appqfInfo,
+        const HqfInfo hqfInfo, bool isLibIsolated, std::string &nativeLibraryPath, std::string &cpuAbi);
 
     bool HasNativeSoInBundle(const AppQuickFix &appQuickFix);
 

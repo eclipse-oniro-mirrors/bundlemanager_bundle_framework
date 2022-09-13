@@ -154,6 +154,8 @@ public:
     static Resource GetResource(const std::string &bundleName, const std::string &moduleName, int32_t resId);
     static bool CreateDir(const std::string &dir);
     static bool RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath);
+    static bool StartWith(const std::string &source, const std::string &suffix);
+    static bool EndWith(const std::string &source, const std::string &suffix);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

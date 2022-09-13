@@ -1612,8 +1612,9 @@ public:
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
     bool FetchNativeSoAttrs(
-        const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath);
+        const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
+    bool IsLibIsolated(const std::string &moduleName) const;
 
 private:
     void GetBundleWithAbilities(

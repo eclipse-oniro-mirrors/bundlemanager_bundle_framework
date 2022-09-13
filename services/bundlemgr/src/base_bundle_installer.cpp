@@ -1320,41 +1320,190 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     return ERR_OK;
 }
 
-void BaseBundleInstaller::ProcessHqfInfo(const InnerBundleInfo &oldInfo,
-    const InnerBundleInfo &newInfo) const
+void BaseBundleInstaller::ProcessHqfInfo(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     APP_LOGI("ProcessHqfInfo start, bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
         modulePackage_.c_str());
-    AppqfInfo appQfInfo = oldInfo.GetAppQuickFix().deployedAppqfInfo;
-    const std::string &nativeLibraryPath = newInfo.GetBaseApplicationInfo().nativeLibraryPath;
-    ErrCode ret = ERR_OK;
-    if (!isFeatureNeedUninstall_ && !appQfInfo.hqfInfos.empty()) {
-        ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
-    }
-    if (ret != ERR_OK) {
-        APP_LOGE("ProcessHqfInfo failed, errcode: %{public}d", ret);
-    }
-    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
-    InnerAppQuickFix innerAppQuickFix;
-    if ((quickFixDataMgr != nullptr) && (!quickFixDataMgr->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix))) {
+    std::string cpuAbi;
+    std::string nativeLibraryPath;
+    if (!newInfo.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
+        APP_LOGI("No native so, bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
+            modulePackage_.c_str());
         return;
     }
-    appQfInfo = innerAppQuickFix.GetAppQuickFix().deployingAppqfInfo;
-    ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
+
+    ErrCode ret = ProcessDeployedHqfInfo(
+        nativeLibraryPath, cpuAbi, newInfo, oldInfo.GetAppQuickFix());
     if (ret != ERR_OK) {
-        APP_LOGE("ProcessHqfInfo failed, errcode: %{public}d", ret);
+        APP_LOGW("ProcessDeployedHqfInfo failed, errcode: %{public}d", ret);
+        return;
     }
+
+    ret = ProcessDeployingHqfInfo(nativeLibraryPath, cpuAbi, newInfo);
+    if (ret != ERR_OK) {
+        APP_LOGW("ProcessDeployingHqfInfo failed, errcode: %{public}d", ret);
+        return;
+    }
+
     APP_LOGI("ProcessHqfInfo end");
 #endif
+}
+
+ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLibraryPath,
+    const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &oldAppQuickFix) const
+{
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    APP_LOGI("ProcessDeployedHqfInfo");
+    auto appQuickFix = oldAppQuickFix;
+    AppqfInfo &appQfInfo = appQuickFix.deployedAppqfInfo;
+    if (isFeatureNeedUninstall_ || appQfInfo.hqfInfos.empty()) {
+        APP_LOGI("No need ProcessDeployedHqfInfo");
+        return ERR_OK;
+    }
+
+    ErrCode ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("ProcessDeployedHqfInfo failed, errcode: %{public}d", ret);
+        return ret;
+    }
+
+    std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
+        Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
+        std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
+    bool isExist = false;
+    if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
+        APP_LOGW("Patch no diff file");
+        return ERR_OK;
+    }
+
+    ret = UpdataLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("UpdataModuleLib failed, errcode: %{public}d", ret);
+        return ret;
+    }
+
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, innerBundleInfo)) {
+        APP_LOGE("Fetch bundleInfo(%{public}s) failed.", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    innerBundleInfo.SetAppQuickFix(appQuickFix);
+    if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName_, innerBundleInfo)) {
+        APP_LOGE("update quickfix innerbundleInfo failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+#endif
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
+    const std::string &nativeLibraryPath, const std::string &cpuAbi, const InnerBundleInfo &newInfo) const
+{
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    APP_LOGI("ProcessDeployingHqfInfo");
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    if (quickFixDataMgr == nullptr) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+
+    InnerAppQuickFix innerAppQuickFix;
+    if (!quickFixDataMgr->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix)) {
+        return ERR_OK;
+    }
+
+    auto appQuickFix = innerAppQuickFix.GetAppQuickFix();
+    AppqfInfo &appQfInfo = appQuickFix.deployingAppqfInfo;
+    ErrCode ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("ProcessDeployingHqfInfo failed, errcode: %{public}d", ret);
+        return ret;
+    }
+
+    std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
+        Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
+        std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
+    bool isExist = false;
+    if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
+        APP_LOGW("Patch no diff file");
+        return ERR_OK;
+    }
+
+    ret = UpdataLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("UpdataModuleLib failed, errcode: %{public}d", ret);
+        return ret;
+    }
+
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    if (!quickFixDataMgr->SaveInnerAppQuickFix(innerAppQuickFix)) {
+        APP_LOGE("bundleName: %{public}s, inner app quick fix save failed", bundleName_.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED;
+    }
+#endif
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::UpdataLibAttrs(const InnerBundleInfo &newInfo,
+    const std::string &cpuAbi, const std::string &nativeLibraryPath, AppqfInfo &appQfInfo) const
+{
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    auto newNativeLibraryPath = Constants::PATCH_PATH +
+        std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
+    auto moduleName = newInfo.GetCurModuleName();
+    bool isLibIsolated = newInfo.IsLibIsolated(moduleName);
+    if (!isLibIsolated) {
+        appQfInfo.nativeLibraryPath = newNativeLibraryPath;
+        appQfInfo.cpuAbi = cpuAbi;
+        return ERR_OK;
+    }
+
+    for (auto &hqfInfo : appQfInfo.hqfInfos) {
+        if (hqfInfo.moduleName != moduleName) {
+            continue;
+        }
+
+        hqfInfo.nativeLibraryPath = newNativeLibraryPath;
+        hqfInfo.cpuAbi = cpuAbi;
+        if (!BundleUtil::StartWith(appQfInfo.nativeLibraryPath, Constants::PATCH_PATH)) {
+            appQfInfo.nativeLibraryPath.clear();
+        }
+
+        return ERR_OK;
+    }
+
+    return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST;
+#else
+    return ERR_OK;
+#endif
+}
+
+bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
+    const std::string &nativeLibraryPath, const std::string &hqfLibraryPath) const
+{
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    if (!hqfLibraryPath.empty()) {
+        auto position = hqfLibraryPath.find(Constants::PATH_SEPARATOR);
+        if (position == std::string::npos) {
+            return false;
+        }
+
+        auto newHqfLibraryPath = hqfLibraryPath.substr(position);
+        if (!BundleUtil::EndWith(nativeLibraryPath, newHqfLibraryPath)) {
+            APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
+                        nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
+            return false;
+        }
+    }
+#endif
+    return true;
 }
 
 ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    if (appQfInfo.nativeLibraryPath.empty() || nativeLibraryPath.empty()) {
-        return ERR_OK;
-    }
     const std::string moduleName = modulePackage_;
     auto iter = find_if(appQfInfo.hqfInfos.begin(), appQfInfo.hqfInfos.end(),
         [&moduleName](const auto &hqfInfo) {
@@ -1362,14 +1511,8 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
     });
     if (iter != appQfInfo.hqfInfos.end()) {
         // appQfInfo.nativeLibraryPath may be start with patch_versionCode
-        std::string hqfLibraryPath = appQfInfo.nativeLibraryPath;
-        size_t lenA = nativeLibraryPath.size();
-        size_t lenB = appQfInfo.nativeLibraryPath.size();
-        if (lenB > lenA) {
-            hqfLibraryPath = hqfLibraryPath.substr(lenB - lenA, lenA);
-        }
-        if (hqfLibraryPath != nativeLibraryPath) {
-            APP_LOGE("error: nativeLibraryPath not same, newInfo: %{private}s, hqf: %{private}s",
+        if (!CheckHapLibsWithPatchLibs(nativeLibraryPath, appQfInfo.nativeLibraryPath)) {
+            APP_LOGE("CheckHapLibsWithPatchLibs failed newInfo: %{public}s, hqf: %{public}s",
                      nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
         }
