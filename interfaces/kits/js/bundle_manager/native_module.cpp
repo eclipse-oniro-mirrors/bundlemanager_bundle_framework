@@ -25,8 +25,13 @@ namespace OHOS {
 namespace AppExecFwk {
 static napi_value BundleManagerExport(napi_env env, napi_value exports)
 {
+    napi_value abilityFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &abilityFlag));
+    CreateAbilityFlagObject(env, abilityFlag);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryAbilityInfos", QueryAbilityInfos),
+        DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
