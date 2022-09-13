@@ -1043,7 +1043,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0100, Function | SmallTes
 
     bool isRemovable = false;
     auto testRet = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
-    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_MODULE_NAME_NOT_EXIST);
     EXPECT_FALSE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -1088,8 +1088,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0300, Function | SmallTes
 
     bool testRet2 = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true);
     EXPECT_TRUE(testRet2);
-    bool testRet3 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST);
-    EXPECT_TRUE(testRet3);
+    isRemovable = false;
+    auto testRet3 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
+    EXPECT_EQ(testRet3, ERR_OK);
+    EXPECT_TRUE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -1122,7 +1124,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0500, Function | SmallTes
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
-    EXPECT_EQ(testRet1, ERR_OK);
+    EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_MODULE_NAME_NOT_EXIST);
     EXPECT_FALSE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -1142,7 +1144,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0600, Function | SmallTes
     EXPECT_TRUE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable("", "", isRemovable);
-    EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_BUNDLE_NAME_NOT_EXIST);
+    EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     EXPECT_FALSE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -1167,7 +1169,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0700, Function | SmallTes
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
-    EXPECT_EQ(testRet1, ERR_OK);
+    EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_MODULE_NAME_NOT_EXIST);
     EXPECT_FALSE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);

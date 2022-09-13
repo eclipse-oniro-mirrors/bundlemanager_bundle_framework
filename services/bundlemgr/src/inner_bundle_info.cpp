@@ -2430,7 +2430,9 @@ bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
         return false;
     }
     for (const auto &innerModuleInfo : innerModuleInfos_) {
-        if (!IsModuleRemovable(innerModuleInfo.second.moduleName, userId)) {
+        bool isRemovable = true;
+        if ((IsModuleRemovable(innerModuleInfo.second.moduleName, userId, isRemovable) == ERR_OK) &&
+            !isRemovable) {
             APP_LOGE("not all haps should be cleaned");
             return false;
         }

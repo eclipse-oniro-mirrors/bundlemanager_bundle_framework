@@ -2202,11 +2202,12 @@ static bool InnerGetBundlePackInfo(const std::string &bundleName, int32_t flags,
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    bool ret = iBundleMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
-    if (!ret) {
-        APP_LOGE("bundlePackInfo is not find");
+    auto ret = iBundleMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
+    if (ret == ERR_OK) {
+        return true;
     }
-    return ret;
+    APP_LOGE("bundlePackInfo is not find");
+    return false;
 }
 
 static void ConvertSummaryApp(napi_env env, napi_value &app, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)

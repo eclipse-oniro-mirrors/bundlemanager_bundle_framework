@@ -1293,7 +1293,7 @@ bool BundleDataMgr::GetBundleInfo(
     return true;
 }
 
-bool BundleDataMgr::GetBundlePackInfo(
+ErrCode BundleDataMgr::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId) const
 {
     APP_LOGD("Service BundleDataMgr GetBundlePackInfo start");
@@ -1306,30 +1306,30 @@ bool BundleDataMgr::GetBundlePackInfo(
 
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("getBundlePackInfo userId is invalid");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
         APP_LOGE("GetBundlePackInfo failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NAME_NOT_EXIST;
     }
     BundlePackInfo innerBundlePackInfo = innerBundleInfo.GetBundlePackInfo();
     if (static_cast<uint32_t>(flags) & GET_PACKAGES) {
         bundlePackInfo.packages = innerBundlePackInfo.packages;
-        return true;
+        return ERR_OK;
     }
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_SUMMARY) {
         bundlePackInfo.summary.app = innerBundlePackInfo.summary.app;
         bundlePackInfo.summary.modules = innerBundlePackInfo.summary.modules;
-        return true;
+        return ERR_OK;
     }
     if (static_cast<uint32_t>(flags) & GET_MODULE_SUMMARY) {
         bundlePackInfo.summary.modules = innerBundlePackInfo.summary.modules;
-        return true;
+        return ERR_OK;
     }
     bundlePackInfo = innerBundlePackInfo;
-    return true;
+    return ERR_OK;
 }
 
 bool BundleDataMgr::GetBundleInfosByMetaData(

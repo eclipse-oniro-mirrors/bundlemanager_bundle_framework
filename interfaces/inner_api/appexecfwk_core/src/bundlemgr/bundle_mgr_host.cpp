@@ -402,12 +402,12 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfo(MessageParcel &data, MessageParce
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flag, info, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetBundlePackInfo(name, flag, info, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -424,12 +424,12 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfoWithIntFlags(MessageParcel &data, 
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flags, info, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetBundlePackInfo(name, flags, info, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

@@ -147,19 +147,19 @@ bool BundleMgrHostImpl::GetBundleInfo(
     return dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
 }
 
-bool BundleMgrHostImpl::GetBundlePackInfo(
+ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     return GetBundlePackInfo(bundleName, static_cast<int32_t>(flag), bundlePackInfo, userId);
 }
 
-bool BundleMgrHostImpl::GetBundlePackInfo(
+ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return dataMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo, userId);
 }
