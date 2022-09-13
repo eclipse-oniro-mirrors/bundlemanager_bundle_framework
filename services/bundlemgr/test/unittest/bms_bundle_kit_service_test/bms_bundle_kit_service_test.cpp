@@ -25,6 +25,8 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_proxy.h"
+#include "bundle_status_callback_proxy.h"
+#include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
 #include "install_param.h"
 #include "extension_ability_info.h"
@@ -4852,6 +4854,21 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_005, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: Marshalling_006
+ * @tc.name: AppRunningControlRuleParam Marshalling
+ * @tc.desc: 1.Test the marshalling of AppRunningControlRuleParam
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_006, Function | SmallTest | Level1)
+{
+    AppRunningControlRuleParam param;
+    param.appId = "Id001";
+    param.controlMessage = "Success";
+    Parcel parcel;
+    bool ret = param.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: Unmarshalling_001
  * @tc.name: RequestPermissionUsedScene Unmarshalling
  * @tc.desc: 1.Test the marshalling of RequestPermissionUsedScene
@@ -4897,6 +4914,43 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_002, Function | SmallTest | Leve
     CheckCompatibleApplicationInfo(BUNDLE_NAME_TEST, PERMISSION_SIZE_ZERO, appInfo);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: Unmarshalling_003
+ * @tc.name: AppRunningControlRuleParam Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of AppRunningControlRuleParam
+ */
+HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_003, Function | SmallTest | Level1)
+{
+    AppRunningControlRuleParam param1;
+    param1.appId = "Id001";
+    param1.controlMessage = "Success";
+    Parcel parcel;
+    AppRunningControlRuleParam param2;
+    auto ret1 = param1.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = param2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(param1.appId, ret2->appId);
+    EXPECT_EQ(param1.controlMessage, ret2->controlMessage);
+}
+
+/**
+ * @tc.number: AppRunningControlRuleParam_001
+ * @tc.name: ReadFromParcel
+ * @tc.desc: 1.Test ReadFromParcel of AppRunningControlRuleParam
+ */
+HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleParam_001, Function | SmallTest | Level1)
+{
+    AppRunningControlRuleParam param;
+    param.appId = "Id001";
+    param.controlMessage = "Success";
+    Parcel parcel;
+    auto ret1 = param.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = param.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
 }
 
 /**
@@ -4972,6 +5026,100 @@ HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_004, Function | SmallTest | 
     }
     int32_t status = bundleMgrProxy->GetDisposedStatus("wrong");
     EXPECT_EQ(status, 0);
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_001
+ * @tc.name: OnBundleStateChanged
+ * @tc.desc: 1.Test StatusCallbackProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_001, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    int32_t resultCode = 0;
+    uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
+    std::string resultMsg = Constants::EMPTY_STRING;
+    proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
+    EXPECT_EQ(resultCode, 0);
+    EXPECT_EQ(resultMsg, "");
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_002
+ * @tc.name: OnBundleAdded
+ * @tc.desc: 1.Test StatusCallbackProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_002, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    std::string bundleName = "com.example.bundlekit.test";
+    int32_t userId = 100;
+    proxy->OnBundleAdded(bundleName, userId);
+    EXPECT_EQ(bundleName, "com.example.bundlekit.test");
+    EXPECT_EQ(userId, 100);
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_003
+ * @tc.name: OnBundleUpdated
+ * @tc.desc: 1.Test StatusCallbackProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_003, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    std::string bundleName = "com.example.bundlekit.test";
+    int32_t userId = 100;
+    proxy->OnBundleUpdated(bundleName, userId);
+    EXPECT_EQ(bundleName, "com.example.bundlekit.test");
+    EXPECT_EQ(userId, 100);
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_004
+ * @tc.name: OnBundleRemoved
+ * @tc.desc: 1.Test StatusCallbackProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_004, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    std::string bundleName = "com.example.bundlekit.test";
+    int32_t userId = 100;
+    proxy->OnBundleRemoved(bundleName, userId);
+    EXPECT_EQ(bundleName, "com.example.bundlekit.test");
+    EXPECT_EQ(userId, 100);
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_005
+ * @tc.name: OnCleanCacheFinished
+ * @tc.desc: 1.Test CleanCacheCallbackProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_005, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<CleanCacheCallbackProxy>(remoteObject);
+    bool testRet = true;
+    proxy->OnCleanCacheFinished(testRet);
+    EXPECT_TRUE(testRet);
 }
 
 /**
