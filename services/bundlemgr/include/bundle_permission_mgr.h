@@ -49,7 +49,7 @@ public:
      * @param permissionDef Indicates the object containing detailed information about the given permission.
      * @return Returns true if the PermissionDef object is successfully obtained; returns false otherwise.
      */
-    static bool GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef);
+    static ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef);
     /**
      * @brief Requests a certain permission from user.
      * @param bundleName Indicates the name of the bundle.

@@ -27,6 +27,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryAbilityInfos", QueryAbilityInfos),
+        DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

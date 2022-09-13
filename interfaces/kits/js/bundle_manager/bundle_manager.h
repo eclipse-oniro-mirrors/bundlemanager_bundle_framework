@@ -19,6 +19,7 @@
 #include "ability_info.h"
 #include "base_cb_info.h"
 #include "bundle_constants.h"
+#include "bundle_mgr_interface.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -35,7 +36,15 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
     std::vector<AbilityInfo> abilityInfos;
 };
 
+struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
+    explicit AsyncPermissionDefineCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string permissionName;
+    OHOS::AppExecFwk::PermissionDef permissionDef;
+};
+
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
+
+napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // NAPI_BUNDLE_MANAGER_H

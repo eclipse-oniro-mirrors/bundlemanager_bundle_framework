@@ -958,12 +958,12 @@ ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel
     APP_LOGI("name %{public}s", permissionName.c_str());
 
     PermissionDef permissionDef;
-    bool ret = GetPermissionDef(permissionName, permissionDef);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetPermissionDef(permissionName, permissionDef);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&permissionDef)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

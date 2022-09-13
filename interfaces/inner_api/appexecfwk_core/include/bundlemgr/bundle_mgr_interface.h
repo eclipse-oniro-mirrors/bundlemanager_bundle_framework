@@ -509,9 +509,9 @@ public:
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
      * @return Returns true if the PermissionDef object is successfully obtained; returns false otherwise.
      */
-    virtual bool GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+    virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
     {
-        return false;
+        return ERR_OK;
     }
     /**
      * @brief Checks whether the system has a specified capability.
