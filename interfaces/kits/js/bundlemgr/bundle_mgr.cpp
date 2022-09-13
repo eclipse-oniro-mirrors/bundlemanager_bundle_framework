@@ -5618,10 +5618,11 @@ static bool InnerSetModuleUpgradeFlagExecute(napi_env env,
         return false;
     }
     auto result = iBundleMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
-    if (result) {
-        APP_LOGI("InnerSetModuleUpgradeFlagExecute::SetModuleUpgradeFlag");
+    if (result != ERR_OK) {
+        APP_LOGE("InnerSetModuleUpgradeFlagExecute::SetModuleUpgradeFlag failed");
+        return false;
     }
-    return result;
+    return true;
 }
 
 void SetModuleUpgradeFlagExecute(napi_env env, void *data)

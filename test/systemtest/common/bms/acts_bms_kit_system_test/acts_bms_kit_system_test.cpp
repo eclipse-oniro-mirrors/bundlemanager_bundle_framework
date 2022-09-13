@@ -4600,7 +4600,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0100, Function | SmallTest |
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     auto result = bundleMgrProxy->SetModuleUpgradeFlag(appName, BASE_MODULE_NAME, 1);
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(result == ERR_OK);
     auto res = bundleMgrProxy->GetModuleUpgradeFlag(appName, BASE_MODULE_NAME);
     EXPECT_TRUE(res);
 

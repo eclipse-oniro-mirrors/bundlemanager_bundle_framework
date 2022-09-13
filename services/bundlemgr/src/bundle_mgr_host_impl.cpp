@@ -1037,13 +1037,13 @@ bool BundleMgrHostImpl::GetModuleUpgradeFlag(const std::string &bundleName, cons
     return dataMgr->GetModuleUpgradeFlag(bundleName, moduleName);
 }
 
-bool BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
+ErrCode BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, int32_t upgradeFlag)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return dataMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
 }

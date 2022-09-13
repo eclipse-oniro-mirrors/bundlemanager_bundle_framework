@@ -680,9 +680,9 @@ public:
      * @param moduleName Indicates the module name to be queried.
      * @param isEnable Specifies whether to enable the upgradeFlag of InnerModuleInfo.
      *                 The value true means to enable it, and the value false means to disable it
-     * @return Returns true if the upgradeFlag is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the upgradeFlag is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool SetModuleUpgradeFlag(
+    virtual ErrCode SetModuleUpgradeFlag(
         const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag) override;
 
     virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;

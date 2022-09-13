@@ -2537,16 +2537,16 @@ void InnerBundleInfo::DeleteModuleRemovable(const std::string &moduleName, int32
     }
 }
 
-bool InnerBundleInfo::SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag)
+ErrCode InnerBundleInfo::SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag)
 {
     APP_LOGD("moduleName= %{public}s, upgradeFlag = %{public}d", moduleName.c_str(), upgradeFlag);
     for (auto &innerModuleInfo : innerModuleInfos_) {
         if (innerModuleInfo.second.moduleName == moduleName) {
             innerModuleInfo.second.upgradeFlag = upgradeFlag;
-            return true;
+            return ERR_OK;
         }
     }
-    return false;
+    return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
 }
 
 int32_t InnerBundleInfo::GetModuleUpgradeFlag(std::string moduleName) const

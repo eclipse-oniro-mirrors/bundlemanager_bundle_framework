@@ -2214,23 +2214,25 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
     return true;
 }
 
-bool BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
+ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, const int32_t upgradeFlag)
 {
     APP_LOGD("SetModuleUpgradeFlag %{public}d", upgradeFlag);
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    InnerBundleInfo newInfo = infoItem->second;
-    bool setFlag = newInfo.SetModuleUpgradeFlag(moduleName, upgradeFlag);
-    if (dataStorage_->SaveStorageBundleInfo(newInfo)) {
-        setFlag = infoItem->second.SetModuleUpgradeFlag(moduleName, upgradeFlag);
-        return setFlag;
+    InnerBundleInfo &newInfo = infoItem->second;
+    ErrCode setFlag = newInfo.SetModuleUpgradeFlag(moduleName, upgradeFlag);
+    if (setFlag == ERR_OK) {
+        if (dataStorage_->SaveStorageBundleInfo(newInfo)) {
+            return ERR_OK;
+        }
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    APP_LOGD("dataStorage SetModuleUpgradeFlag %{public}s failed", bundleName.c_str());
-    return false;
+    APP_LOGE("dataStorage SetModuleUpgradeFlag %{public}s failed", bundleName.c_str());
+    return setFlag;
 }
 
 int32_t BundleDataMgr::GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName) const

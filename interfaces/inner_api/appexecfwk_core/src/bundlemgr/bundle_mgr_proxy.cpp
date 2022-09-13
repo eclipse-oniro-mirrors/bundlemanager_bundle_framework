@@ -1719,40 +1719,40 @@ bool BundleMgrProxy::GetModuleUpgradeFlag(const std::string &bundleName, const s
     return reply.ReadBool();
 }
 
-bool BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
+ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, int32_t upgradeFlag)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetModuleUpgradeFlag of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write moduleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(upgradeFlag)) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write isEnable fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::SET_MODULE_NEED_UPDATE, data, reply)) {
         APP_LOGE("fail to SetModuleUpgradeFlag from server");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
 ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)

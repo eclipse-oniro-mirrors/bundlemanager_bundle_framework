@@ -1115,9 +1115,9 @@ public:
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.
      * @param upgradeFlag Indicates the module is need update or not.
-     * @return Return true if set data successfully.
+     * @return Return ERR_OK if set data successfully.
      */
-    bool SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
+    ErrCode SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
 
     /**
      * @brief Get the Application Need Recover object
