@@ -20,7 +20,6 @@
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
-#include "inner_bundle_info.h"
 #include "installd_client.h"
 #include "patch_extractor.h"
 #include "patch_parser.h"
@@ -164,7 +163,7 @@ void QuickFixDeployer::ToDeployQuickFixResult(const AppQuickFix &appQuickFix)
     deployQuickFixResult_.bundleVersionCode = appQuickFix.versionCode;
     deployQuickFixResult_.patchVersionCode = appQuickFix.deployingAppqfInfo.versionCode;
     deployQuickFixResult_.type = appQuickFix.deployingAppqfInfo.type;
-    deployQuickFixResult_.isSoContained = !appQuickFix.deployingAppqfInfo.nativeLibraryPath.empty();
+    deployQuickFixResult_.isSoContained = HasNativeSoInBundle(appQuickFix);
     deployQuickFixResult_.moduleNames.clear();
     for (const auto &hqf : appQuickFix.deployingAppqfInfo.hqfInfos) {
         deployQuickFixResult_.moduleNames.emplace_back(hqf.moduleName);
@@ -255,10 +254,11 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
             newQuickFix.bundleName.c_str());
         return ret;
     }
-    if (!newQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
-        // if so files exist, library path add patch_versionCode; if so files not exist, modify library path to empty.
-        ProcessNativeLibraryPath(newPatchPath, newInnerAppQuickFix);
-    }
+
+    // if so files exist, library path add patch_versionCode;
+    // if so files not exist, modify library path to empty.
+    ProcessNativeLibraryPath(newPatchPath, newInnerAppQuickFix);
+
     // move hqf files to new patch path
     ret = MoveHqfFiles(newInnerAppQuickFix, newPatchPath);
     if (ret != ERR_OK) {
@@ -285,23 +285,39 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
 void QuickFixDeployer::ProcessNativeLibraryPath(const std::string &patchPath, InnerAppQuickFix &innerAppQuickFix)
 {
     AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
-    const std::string &libraryPath = appQuickFix.deployingAppqfInfo.nativeLibraryPath;
-    if (libraryPath.empty()) {
-        return;
+    if (!appQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
+        std::string nativeLibraryPath = appQuickFix.deployingAppqfInfo.nativeLibraryPath;
+        ProcessNativeLibraryPath(patchPath, innerAppQuickFix, nativeLibraryPath);
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = nativeLibraryPath;
     }
+
+    for (auto &hqfInfo : appQuickFix.deployingAppqfInfo.hqfInfos) {
+        if (!hqfInfo.nativeLibraryPath.empty()) {
+            std::string nativeLibraryPath = hqfInfo.nativeLibraryPath;
+            ProcessNativeLibraryPath(patchPath, innerAppQuickFix, nativeLibraryPath);
+            hqfInfo.nativeLibraryPath = nativeLibraryPath;
+        }
+    }
+
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+}
+
+void QuickFixDeployer::ProcessNativeLibraryPath(
+    const std::string &patchPath, const InnerAppQuickFix &innerAppQuickFix, std::string &nativeLibraryPath)
+{
     bool isSoExist = false;
+    auto libraryPath = nativeLibraryPath;
     std::string soPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
     if (InstalldClient::GetInstance()->IsExistDir(soPath, isSoExist) != ERR_OK) {
         APP_LOGE("ProcessNativeLibraryPath InstalldClient IsExistDir failed");
         return;
     }
+
+    AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
     if (isSoExist) {
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = Constants::PATCH_PATH +
+        nativeLibraryPath = Constants::PATCH_PATH +
             std::to_string(appQuickFix.deployingAppqfInfo.versionCode) + Constants::PATH_SEPARATOR + libraryPath;
-    } else {
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
     }
-    innerAppQuickFix.SetAppQuickFix(appQuickFix);
 }
 
 ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath)
@@ -314,8 +330,21 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         APP_LOGE("error: creat patch path failed, errcode %{public}d", ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
-    if (!appQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
-        const std::string &libraryPath = appQuickFix.deployingAppqfInfo.nativeLibraryPath;
+
+    auto &appQfInfo = appQuickFix.deployingAppqfInfo;
+    for (const auto &hqf : appQfInfo.hqfInfos) {
+        if (hqf.hqfFilePath.empty()) {
+            APP_LOGE("error: hapFilePath is empty");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+        }
+
+        std::string libraryPath;
+        std::string cpuAbi;
+        bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
+        if (!FetchPatchNativeSoAttrs(appQuickFix.deployingAppqfInfo, isLibIsolated, libraryPath, cpuAbi)) {
+            continue;
+        }
+
         std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + appQuickFix.bundleName +
             Constants::PATH_SEPARATOR + libraryPath;
         APP_LOGD("ProcessPatchDeployEnd oldPath %{public}s", oldSoPath.c_str());
@@ -326,14 +355,19 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
             APP_LOGD("bundleName: %{public}s no so path", appQuickFix.bundleName.c_str());
             return ERR_OK;
         }
+
         // extract diff so, diff so path
         std::string diffFilePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
             appQuickFix.bundleName + Constants::TMP_SUFFIX;
         ScopeGuard guardRemoveDiffPath([diffFilePath] { InstalldClient::GetInstance()->RemoveDir(diffFilePath); });
-        ret = ExtractDiffFiles(diffFilePath, appQuickFix.deployingAppqfInfo);
+
+        // extract so to targetPath
+        ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, diffFilePath, cpuAbi);
         if (ret != ERR_OK) {
-            return ret;
+            APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
+            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
+
         // apply diff patch
         std::string newSoPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
@@ -343,6 +377,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
             return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
         }
     }
+
     return ERR_OK;
 }
 
@@ -370,6 +405,8 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
         APP_LOGE("parse AppQuickFixFiles failed, errcode %{public}d", ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
+
+    ResetNativeSoAttrs(infos);
     QuickFixChecker checker;
     // check multiple AppQuickFix
     ret = checker.CheckAppQuickFixInfos(infos);
@@ -391,6 +428,97 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
         }
     }
     return ERR_OK;
+}
+
+void QuickFixDeployer::ResetNativeSoAttrs(std::unordered_map<std::string, AppQuickFix> &infos)
+{
+    for (auto &info : infos) {
+        ResetNativeSoAttrs(info.second);
+    }
+}
+
+void QuickFixDeployer::ResetNativeSoAttrs(AppQuickFix &appQuickFix)
+{
+    auto &appqfInfo = appQuickFix.deployingAppqfInfo;
+    if (appqfInfo.hqfInfos.size() != 1) {
+        APP_LOGW("The number of hqfInfos is not one.");
+        return;
+    }
+
+    bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, appqfInfo.hqfInfos[0].moduleName);
+    if (!isLibIsolated) {
+        APP_LOGW("Lib is not isolated.");
+        return;
+    }
+
+    appqfInfo.hqfInfos[0].cpuAbi = appqfInfo.cpuAbi;
+    appqfInfo.hqfInfos[0].nativeLibraryPath =
+        appqfInfo.hqfInfos[0].moduleName + Constants::PATH_SEPARATOR + appqfInfo.nativeLibraryPath;
+    appqfInfo.nativeLibraryPath.clear();
+}
+
+bool QuickFixDeployer::IsLibIsolated(
+    const std::string &bundleName, const std::string &moduleName)
+{
+    InnerBundleInfo innerBundleInfo;
+    if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("Fetch bundleInfo(%{public}s) failed.", bundleName.c_str());
+        return false;
+    }
+
+    auto moduleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        return false;
+    }
+
+    return moduleInfo->isLibIsolated;
+}
+
+bool QuickFixDeployer::FetchInnerBundleInfo(
+    const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("error dataMgr is nullptr");
+        return false;
+    }
+
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("Fetch bundleInfo(%{public}s) failed.", bundleName.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+bool QuickFixDeployer::FetchPatchNativeSoAttrs(
+    const AppqfInfo &appqfInfo, bool isLibIsolated, std::string &nativeLibraryPath, std::string &cpuAbi)
+{
+    if (isLibIsolated) {
+        nativeLibraryPath = appqfInfo.hqfInfos[0].nativeLibraryPath;
+        cpuAbi = appqfInfo.hqfInfos[0].cpuAbi;
+    } else {
+        nativeLibraryPath = appqfInfo.nativeLibraryPath;
+        cpuAbi = appqfInfo.cpuAbi;
+    }
+
+    return !nativeLibraryPath.empty();
+}
+
+bool QuickFixDeployer::HasNativeSoInBundle(const AppQuickFix &appQuickFix)
+{
+    if (!appQuickFix.deployingAppqfInfo.nativeLibraryPath.empty()) {
+        return true;
+    }
+
+    for (const auto &hqfInfo : appQuickFix.deployingAppqfInfo.hqfInfos) {
+        if (!hqfInfo.nativeLibraryPath.empty()) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo)
@@ -470,29 +598,6 @@ ErrCode QuickFixDeployer::SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickF
             innerAppQuickFix.GetAppQuickFix().bundleName.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED;
     }
-    return ERR_OK;
-}
-
-ErrCode QuickFixDeployer::ExtractDiffFiles(const std::string &targetPath,
-    const AppqfInfo &appQfInfo)
-{
-    APP_LOGD("ExtractDiffFiles start.");
-    if (appQfInfo.nativeLibraryPath.empty()) {
-        return ERR_OK;
-    }
-    for (const auto &hqf : appQfInfo.hqfInfos) {
-        if (hqf.hqfFilePath.empty()) {
-            APP_LOGE("error: hapFilePath is empty");
-            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
-        }
-        // extract so to targetPath
-        ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, targetPath, appQfInfo.cpuAbi);
-        if (ret != ERR_OK) {
-            APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
-            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
-        }
-    }
-    APP_LOGD("ExtractDiffFiles end.");
     return ERR_OK;
 }
 

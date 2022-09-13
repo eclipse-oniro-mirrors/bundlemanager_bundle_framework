@@ -1613,6 +1613,7 @@ public:
     void UpdateRemovable(bool isPreInstall, bool removable);
     bool FetchNativeSoAttrs(
         const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath);
+    void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
 
 private:
     void GetBundleWithAbilities(
