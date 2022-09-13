@@ -1275,7 +1275,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
     }
     if (extensionInfos.empty()) {
         APP_LOGE("no valid extension info can be inquired");
-        return ERR_BUNDLE_MANAGER_QUERY_EXTENSION_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
 }
@@ -1341,7 +1341,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
     });
     if (extensionInfos.empty()) {
         APP_LOGE("no valid extension info can be inquired");
-        return ERR_BUNDLE_MANAGER_QUERY_EXTENSION_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
 }

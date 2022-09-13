@@ -1286,10 +1286,6 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!GetParcelableInfo<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef)) {
-        APP_LOGE("fail to GetPermissionDef from server");
-        return false;
-    }
     return GetParcelableInfoWithErrCode<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef);
 }
 
