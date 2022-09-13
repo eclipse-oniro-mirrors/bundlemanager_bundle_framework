@@ -137,11 +137,15 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
+#ifndef X86_EMULATOR_MODE
         auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
         if (verifyRes != ERR_OK) {
             APP_LOGE("hap file verify failed");
             return verifyRes;
         }
+#else
+        BundleVerifyMgr::ParseHapProfile(bundlePath, hapVerifyResult);
+#endif
         hapVerifyRes.emplace_back(hapVerifyResult);
     }
 
@@ -150,6 +154,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
+#ifndef X86_EMULATOR_MODE
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
     auto appDistributionType = hapVerifyRes[0].GetProvisionInfo().distributionType;
@@ -177,6 +182,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     if (isInvalid) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
+#endif
     APP_LOGD("finish check multiple haps signInfo");
     return ERR_OK;
 }
