@@ -585,7 +585,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName, responseUserId);
+    auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
         APP_LOGE("ability not found");
         return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
@@ -725,6 +725,11 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
     const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const
 {
     APP_LOGD("begin to QueryAbilityInfoWithFlagsV9.");
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9) == GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9 &&
+        !innerBundleInfo.IsSystemApp()) {
+        APP_LOGE("target not system app");
+        return ERR_BUNDLE_MANAGER_QUERY_INTERNAL_ERROR;
+    }
     if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)) {
         if (!innerBundleInfo.IsAbilityEnabled((*option), userId)) {
             APP_LOGE("ability:%{public}s is disabled", option->name.c_str());
@@ -936,6 +941,11 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
 void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
     const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9) == GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9 &&
+        !info.IsSystemApp()) {
+        APP_LOGE("target not system app");
+        return;
+    }
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
@@ -2758,7 +2768,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
     }
     if (extensionInfos.empty()) {
         APP_LOGE("no matching abilityInfo");
-        return ERR_BUNDLE_MANAGER_QUERY_EXTENSION_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
     }
     APP_LOGD("query extensionAbilityInfo successfully");
     return ERR_OK;
@@ -2836,7 +2846,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     if (appIndex == 0) {
         ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
         if (ret != ERR_OK) {
-            APP_LOGE("ExplicitQueryExtensionInfo failed");
+            APP_LOGE("ExplicitQueryExtensionInfoV9 failed");
             return ret;
         }
     }
@@ -2854,7 +2864,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     auto extension = innerBundleInfo.FindExtensionInfo(bundleName, moduleName, extensionName);
     if (!extension) {
         APP_LOGE("extensionAbility not found or disabled");
-        return ERR_BUNDLE_MANAGER_QUERY_EXTENSION_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST;
     }
     if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) !=
         GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) {

@@ -1526,7 +1526,7 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
 
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
     const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, int32_t userId) const
+    const std::string &abilityName) const
 {
     for (const auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;

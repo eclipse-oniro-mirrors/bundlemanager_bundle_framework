@@ -137,5 +137,44 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     APP_LOGD("call QueryAbilityInfos done");
     return promise;
 }
+
+void CreateAbilityFlagObject(napi_env env, napi_value value)
+{
+    napi_value nGetAbilityInfoDefault;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT_V9),
+        &nGetAbilityInfoDefault));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_DEFAULT",
+        nGetAbilityInfoDefault));
+
+    napi_value nGetAbilityInfoWithPermission;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_PERMISSION_V9),
+        &nGetAbilityInfoWithPermission));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_PERMISSION",
+        nGetAbilityInfoWithPermission));
+
+    napi_value nGetAbilityInfoWithApplication;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_APPLICATION_V9),
+        &nGetAbilityInfoWithApplication));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_APPLICATION",
+        nGetAbilityInfoWithApplication));
+
+    napi_value nGetAbilityInfoWithMetadata;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_METADATA_V9),
+        &nGetAbilityInfoWithMetadata));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_METADATA",
+        nGetAbilityInfoWithMetadata));
+
+    napi_value nGetAbilityInfoWithDisabled;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_DISABLE_V9),
+        &nGetAbilityInfoWithDisabled));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_DISABLE",
+        nGetAbilityInfoWithDisabled));
+
+    napi_value nGetAbilityInfOnlySystemApp;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9),
+        &nGetAbilityInfOnlySystemApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_ONLY_SYSTEM_APP",
+        nGetAbilityInfOnlySystemApp));
+}
 }
 }

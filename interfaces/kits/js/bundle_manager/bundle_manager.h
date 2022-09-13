@@ -36,6 +36,7 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
 };
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
+void CreateAbilityFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // NAPI_BUNDLE_MANAGER_H
