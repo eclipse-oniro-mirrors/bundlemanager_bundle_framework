@@ -23,6 +23,7 @@ group("napi_packages") {
   if (support_jsapi) {
     deps += [
       "app_control:appcontrol",
+      "bundle_manager:bundlemanager",
       "bundlemgr:bundle",
       "default_app:defaultappmanager",
       "launchermgr:innerbundlemanager",
