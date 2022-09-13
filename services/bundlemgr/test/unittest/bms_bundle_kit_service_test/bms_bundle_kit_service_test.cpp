@@ -15,6 +15,7 @@
 
 #include <chrono>
 #include <fstream>
+#include <thread>
 #include <gtest/gtest.h>
 
 #include "ability_manager_client.h"
@@ -36,6 +37,7 @@
 #include "launcher_service.h"
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
+#include "service_control.h"
 #include "want.h"
 
 using namespace testing::ext;
@@ -125,9 +127,11 @@ const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.bundleki
 const std::string FILES_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/files";
 const std::string TEST_FILE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/files";
 const std::string DATA_BASE_DIR = "/data/app/el2/100/database/com.example.bundlekit.test";
+const std::string DBMS_PROCESS_DIR = "/data/service/el1/public/database/bundle_manager_service/kvdb";
 const std::string TEST_DATA_BASE_DIR = "/data/app/el2/100/database/com.example.bundlekit.test";
 const std::string CACHE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/cache";
 const std::string TEST_CACHE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/cache/cache";
+const std::string SERVICES_NAME = "d-bms";
 const std::string FORM_NAME = "form_js";
 const std::string FORM_PATH = "data/app";
 const std::string FORM_JS_COMPONENT_NAME = "JS";
@@ -5118,5 +5122,28 @@ HWTEST_F(BmsBundleKitServiceTest, SetDebugMode_0200, Function | SmallTest | Leve
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t result = hostImpl->SetDebugMode(isDebug);
     EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.name: DynamicSystemProcess_0100
+ * @tc.desc: Test start and stop d-bms process
+ * @tc.type: FUNC
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, DynamicSystemProcess_0100, Function | SmallTest | Level1)
+{
+    int32_t systemAbilityId = 402;
+    std::string strExtra = std::to_string(systemAbilityId);
+    auto extraArgv = strExtra.c_str();
+    int ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), START, &extraArgv, 1);
+    EXPECT_EQ(ret, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    int dataExist = access(DBMS_PROCESS_DIR.c_str(), F_OK);
+    EXPECT_EQ(dataExist, 0);
+
+    ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), STOP, &extraArgv, 1);
+    EXPECT_EQ(ret, 0);
+    dataExist = access(DBMS_PROCESS_DIR.c_str(), F_OK);
+    EXPECT_EQ(dataExist, 0);
 }
 }
