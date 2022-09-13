@@ -50,7 +50,6 @@ const std::map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
 };
 const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
-    {"singletop", LaunchMode::SINGLETOP},
     {"standard", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
