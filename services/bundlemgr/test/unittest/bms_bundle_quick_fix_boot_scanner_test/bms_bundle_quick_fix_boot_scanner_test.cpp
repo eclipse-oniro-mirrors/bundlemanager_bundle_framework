@@ -179,7 +179,8 @@ void BmsBundleQuickFixBootScannerTest::CheckQuickFixInfo(const std::string &bund
     EXPECT_TRUE(result);
 }
 
-void BmsBundleQuickFixBootScannerTest::QueryAllInnerQuickFixInfo(std::map<std::string, InnerAppQuickFix> &innerQuickFixInfos) const
+void BmsBundleQuickFixBootScannerTest::QueryAllInnerQuickFixInfo(std::map<std::string,
+    InnerAppQuickFix> &innerQuickFixInfos) const
 {
     EXPECT_NE(quickFixDataMgr_, nullptr) << "the quickFixDataMgr_ is nullptr";
     bool ret = quickFixDataMgr_->QueryAllInnerAppQuickFix(innerQuickFixInfos);
