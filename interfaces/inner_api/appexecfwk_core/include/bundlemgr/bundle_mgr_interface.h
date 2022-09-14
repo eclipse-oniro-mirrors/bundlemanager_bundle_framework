@@ -80,6 +80,20 @@ public:
         return false;
     }
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flag Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApplicationInfoV9(
+        const std::string &appName, int32_t flag, int32_t userId, ApplicationInfo &appInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains information about all installed applications of a specified user.
      * @param flag Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
@@ -104,6 +118,19 @@ public:
         int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
     {
         return false;
+    }
+    /**
+     * @brief Obtains information about all installed applications of a specified user.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo objects that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfos Indicates all of the obtained ApplicationInfo objects.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApplicationInfosV9(
+        int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
      * @brief Obtains the BundleInfo based on a given bundle name.
@@ -1114,6 +1141,8 @@ public:
         QUERY_ABILITY_INFOS_V9,
         QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9,
         QUERY_EXTENSION_INFO_V9,
+        GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
+        GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
     };
 };
 }  // namespace AppExecFwk

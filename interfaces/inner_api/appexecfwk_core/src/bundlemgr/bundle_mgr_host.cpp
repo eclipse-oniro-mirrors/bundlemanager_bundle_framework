@@ -66,8 +66,12 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetApplicationInfoWithIntFlags);
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS, &BundleMgrHost::HandleGetApplicationInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetApplicationInfosWithIntFlags);
+    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO, &BundleMgrHost::HandleGetBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundleInfoWithIntFlags);
@@ -261,6 +265,29 @@ ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlags(MessageParcel &data,
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string name = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("name %{public}s, flags %{public}d, userId %{public}d", name.c_str(), flags, userId);
+
+    ApplicationInfo info;
+    auto ret = GetApplicationInfoV9(name, flags, userId, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&info)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -293,6 +320,26 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ApplicationInfo> infos;
+    auto ret = GetApplicationInfosV9(flags, userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
         if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

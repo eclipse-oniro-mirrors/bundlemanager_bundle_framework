@@ -1126,6 +1126,15 @@ public:
      */
     void GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
     /**
+     * @brief Obtains configuration information about an application.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return return ERR_OK if getApplicationInfo successfully, return error code otherwise.
+     */
+    ErrCode GetApplicationInfoV9(int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
+    /**
      * @brief Obtains configuration information about an bundle.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
      * @param bundleInfos Indicates all of the obtained BundleInfo objects.

@@ -55,6 +55,17 @@ public:
     virtual bool GetApplicationInfo(
         const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) override;
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name through the proxy object.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApplicationInfoV9(
+        const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) override;
+    /**
      * @brief Obtains information about all installed applications of a specified user through the proxy object.
      * @param flag Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
@@ -73,6 +84,16 @@ public:
      * @return Returns true if the application is successfully obtained; returns false otherwise.
      */
     virtual bool GetApplicationInfos(
+        int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) override;
+    /**
+     * @brief Obtains information about all installed applications of a specified user through the proxy object.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo objects that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfos Indicates all of the obtained ApplicationInfo objects.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApplicationInfosV9(
         int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) override;
     /**
      * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.

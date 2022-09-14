@@ -207,6 +207,17 @@ public:
     bool GetApplicationInfo(
         const std::string &appName, int32_t flags, const int userId, ApplicationInfo &appInfo) const;
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApplicationInfoV9(
+        const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
+    /**
      * @brief Obtains information about all installed applications of a specified user.
      * @param flags Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
@@ -216,6 +227,16 @@ public:
      */
     bool GetApplicationInfos(
         int32_t flags, const int userId, std::vector<ApplicationInfo> &appInfos) const;
+    /**
+     * @brief Obtains information about all installed applications of a specified user.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo objects that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfos Indicates all of the obtained ApplicationInfo objects.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApplicationInfosV9(
+        int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) const;
     /**
      * @brief Obtains BundleInfo of all bundles available in the system.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
@@ -688,7 +709,7 @@ public:
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
-    ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, const int32_t flags,
+    ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);

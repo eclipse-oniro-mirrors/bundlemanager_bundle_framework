@@ -1171,6 +1171,26 @@ bool BundleDataMgr::GetApplicationInfo(
     return true;
 }
 
+ErrCode BundleDataMgr::GetApplicationInfoV9(
+    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    auto ret = GetInnerBundleInfoWithFlagsV9(appName, flags, innerBundleInfo, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationInfoV9 failed");
+        return ret;
+    }
+
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    return innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
+}
+
 bool BundleDataMgr::GetApplicationInfos(
     int32_t flags, const int userId, std::vector<ApplicationInfo> &appInfos) const
 {
@@ -1205,6 +1225,43 @@ bool BundleDataMgr::GetApplicationInfos(
     }
     APP_LOGD("get installed bundles success");
     return find;
+}
+
+ErrCode BundleDataMgr::GetApplicationInfosV9(
+    int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        if (info.IsDisabled()) {
+            APP_LOGE("app %{public}s is disabled", info.GetBundleName().c_str());
+            continue;
+        }
+        int32_t responseUserId = info.GetResponseUserId(requestUserId);
+        if (!(static_cast<uint32_t>(flags) &
+            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_DISABLE_V9)
+            && !info.GetApplicationEnabled(responseUserId)) {
+            APP_LOGD("bundleName: %{public}s is disabled", info.GetBundleName().c_str());
+            continue;
+        }
+        ApplicationInfo appInfo;
+        auto res = info.GetApplicationInfoV9(flags, responseUserId, appInfo);
+        if (res != ERR_OK) {
+            return res;
+        }
+        appInfos.emplace_back(appInfo);
+    }
+    APP_LOGD("get installed bundles success");
+    return ERR_OK;
 }
 
 bool BundleDataMgr::GetBundleInfo(
