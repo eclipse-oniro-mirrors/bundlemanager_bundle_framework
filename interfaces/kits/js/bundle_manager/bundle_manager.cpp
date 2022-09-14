@@ -176,5 +176,116 @@ void CreateAbilityFlagObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_ONLY_SYSTEM_APP",
         nGetAbilityInfOnlySystemApp));
 }
+
+static ErrCode InnerCleanBundleCacheCallback(
+    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback>& cleanCacheCallback)
+{
+    if (cleanCacheCallback == nullptr) {
+        APP_LOGE("callback nullptr");
+        return INTERNAL_ERROR;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return INTERNAL_ERROR;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
+    if (result != ERR_OK) {
+        APP_LOGE("CleanBundleDataFiles call error");
+        return result;
+    }
+    return ERR_OK;
+}
+
+void CleanBundleCacheFilesExec(napi_env env, void *data)
+{
+    CleanBundleCacheCallbackInfo* asyncCallbackInfo = reinterpret_cast<CleanBundleCacheCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("error CleanBundleCacheCallbackInfo is nullptr");
+        return;
+    }
+    if (asyncCallbackInfo->cleanCacheCallback == nullptr) {
+        asyncCallbackInfo->cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
+    }
+    asyncCallbackInfo->err =
+        InnerCleanBundleCacheCallback(asyncCallbackInfo->bundleName, asyncCallbackInfo->cleanCacheCallback);
+}
+
+void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
+{
+    CleanBundleCacheCallbackInfo* asyncCallbackInfo = reinterpret_cast<CleanBundleCacheCallbackInfo*>(data);
+    std::unique_ptr<CleanBundleCacheCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[1] = { 0 };
+    if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cleanCacheCallback != nullptr)) {
+        // wait for OnCleanCacheFinished
+        uv_sem_wait(&(asyncCallbackInfo->cleanCacheCallback->uvSem_));
+        asyncCallbackInfo->err = asyncCallbackInfo->cleanCacheCallback->GetErr() ? NO_ERROR : INTERNAL_ERROR;
+    }
+    // implement callback or promise
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("napi begin to CleanBundleCacheFiles");
+    NapiArg args(env, info);
+    CleanBundleCacheCallbackInfo *asyncCallbackInfo = new (std::nothrow) CleanBundleCacheCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("CleanBundleCacheFiles asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<CleanBundleCacheCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("CleanBundleCacheFiles napi func init failed");
+        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    size_t maxArgc = args.GetMaxArgc();
+    for (size_t i = 0; i < maxArgc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("CleanBundleCacheFiles bundleName is not a string!");
+                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            } else {
+                APP_LOGD("CleanBundleCacheFiles extra arg ignored");
+            }
+        } else {
+            APP_LOGE("CleanBundleCacheFiles arg err!");
+            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<CleanBundleCacheCallbackInfo>(
+        env, asyncCallbackInfo, "CleanBundleCacheFiles", CleanBundleCacheFilesExec, CleanBundleCacheFilesComplete);
+    callbackPtr.release();
+    APP_LOGI("napi call CleanBundleCacheFiles done");
+    return promise;
+}
 }
 }

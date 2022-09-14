@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef NAPI_BUNDLE_MANAGER_H
-#define NAPI_BUNDLE_MANAGER_H
+#ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
+#define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
 
 #include "ability_info.h"
 #include "base_cb_info.h"
 #include "bundle_constants.h"
+#include "clean_cache_callback.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -35,8 +36,15 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
     std::vector<AbilityInfo> abilityInfos;
 };
 
+struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
+    explicit CleanBundleCacheCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
+};
+
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
+napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif // NAPI_BUNDLE_MANAGER_H
+#endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H

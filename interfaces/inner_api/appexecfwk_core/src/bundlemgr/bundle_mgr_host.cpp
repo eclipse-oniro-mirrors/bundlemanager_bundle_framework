@@ -1026,8 +1026,8 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageP
     sptr<ICleanCacheCallback> cleanCacheCallback = iface_cast<ICleanCacheCallback>(object);
     int32_t userId = data.ReadInt32();
 
-    bool ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

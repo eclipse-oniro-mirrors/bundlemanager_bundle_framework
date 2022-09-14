@@ -4625,13 +4625,13 @@ static bool InnerCleanBundleCacheCallback(
         return false;
     }
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    auto result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
-    if (!result) {
+    ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
+    if (result != ERR_OK) {
         APP_LOGE("CleanBundleDataFiles call error");
-        return result;
+        return false;
     }
 
-    return result;
+    return true;
 }
 
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)

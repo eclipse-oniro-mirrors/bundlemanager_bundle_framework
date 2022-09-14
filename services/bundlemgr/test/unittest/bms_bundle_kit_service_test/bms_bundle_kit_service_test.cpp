@@ -2961,8 +2961,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0200, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool result = hostImpl->CleanBundleCacheFiles("", cleanCache);
-    EXPECT_FALSE(result);
+    auto result = hostImpl->CleanBundleCacheFiles("", cleanCache);
+    EXPECT_FALSE(result == ERR_OK);
     CheckCacheExist();
 
     CleanFileDir();
@@ -2983,8 +2983,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool result = hostImpl->CleanBundleCacheFiles("", cleanCache);
-    EXPECT_FALSE(result);
+    auto result = hostImpl->CleanBundleCacheFiles("", cleanCache);
+    EXPECT_FALSE(result == ERR_OK);
     CheckCacheExist();
 
     CleanFileDir();
@@ -3006,8 +3006,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_TRUE(result);
+    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_TRUE(result == ERR_OK);
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3028,8 +3028,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0500, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_TRUE(result);
+    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_TRUE(result == ERR_OK);
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3050,8 +3050,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0600, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_TRUE(result);
+    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_TRUE(result == ERR_OK);
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3072,8 +3072,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_FALSE(result);
+    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_FALSE(result == ERR_OK);
     CheckCacheExist();
 
     CleanFileDir();
@@ -3099,8 +3099,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool result = bundleMgrProxy->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_FALSE(result);
+    auto result = bundleMgrProxy->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_FALSE(result == ERR_OK);
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);

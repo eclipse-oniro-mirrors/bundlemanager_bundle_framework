@@ -123,7 +123,7 @@ CleanCacheCallBackImpl::~CleanCacheCallBackImpl()
 void CleanCacheCallBackImpl::OnCleanCacheFinished(bool succeeded)
 {
     APP_LOGI("BMS_Kit_St OnCleanCacheFinished results are %{public}d", succeeded);
-    resultSucceededSignal_.set_value(!succeeded);
+    resultSucceededSignal_.set_value(succeeded);
 }
 
 bool CleanCacheCallBackImpl::GetSucceededResult() const
@@ -4863,35 +4863,6 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0100, Function | SmallTest | 
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetUdidByNetworkId_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetAccessibleAppCodePaths_0100
- * @tc.name: test GetAccessibleAppCodePaths proxy
- * @tc.desc: 1.system run normally
- *           2.get accessible app code paths successfully
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAccessibleAppCodePaths_0100, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    auto res = bundleMgrProxy->GetAccessibleAppCodePaths(USERID);
-    EXPECT_EQ(res.size(), 0);
-}
-
-/**
- * @tc.number: GetBundleUserMgr_0100
- * @tc.name: test GetBundleUserMgr proxy
- * @tc.desc: 1.system run normally
- *           2.GetBundleUserMgr is not nullptr
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleUserMgr_0100, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    sptr<IBundleUserMgr> getBundleUserMgr = bundleMgrProxy->GetBundleUserMgr();
-    if (!getBundleUserMgr) {
-        APP_LOGE("getBundleUserMgr is nullptr.");
-        EXPECT_EQ(getBundleUserMgr, nullptr);
-    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

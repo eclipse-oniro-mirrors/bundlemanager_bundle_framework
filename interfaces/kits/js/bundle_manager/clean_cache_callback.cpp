@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,16 +14,13 @@
  */
 #include <uv.h>
 
-#include "cleancache_callback.h"
+#include "clean_cache_callback.h"
 
 #include "napi/native_common.h"
 
-namespace {
-constexpr int32_t OPERATION_SUCCESS = 0;
-constexpr int32_t OPERATION_FAILED = 1;
-}
-
-CleanCacheCallback::CleanCacheCallback(int32_t err) : err_(err)
+namespace OHOS {
+namespace AppExecFwk {
+CleanCacheCallback::CleanCacheCallback()
 {
     uv_sem_init(&uvSem_, 0);
 }
@@ -32,6 +29,8 @@ CleanCacheCallback::~CleanCacheCallback() {}
 
 void CleanCacheCallback::OnCleanCacheFinished(bool err)
 {
-    err_ = err ? OPERATION_SUCCESS : OPERATION_FAILED;
+    err_ = err;
     uv_sem_post(&uvSem_);
 }
+} // AppExecFwk
+} // OHOS

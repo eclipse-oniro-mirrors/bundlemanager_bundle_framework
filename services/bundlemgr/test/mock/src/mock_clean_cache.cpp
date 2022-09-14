@@ -19,7 +19,7 @@ namespace OHOS {
 namespace AppExecFwk {
 void MockCleanCache::OnCleanCacheFinished(bool error)
 {
-    signal_.set_value(!error);
+    signal_.set_value(error);
 }
 
 sptr<IRemoteObject> MockCleanCache::AsObject()

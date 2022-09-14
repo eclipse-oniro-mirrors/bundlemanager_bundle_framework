@@ -31,6 +31,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryAbilityInfos", QueryAbilityInfos),
+        DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", CleanBundleCacheFiles),
         DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
     };
 
@@ -49,7 +50,7 @@ static napi_module bundle_manager_module = {
     .reserved = {0}
 };
 
-extern "C" __attribute__((constructor)) void BUndleManagerRegister(void)
+extern "C" __attribute__((constructor)) void BundleManagerRegister(void)
 {
     napi_module_register(&bundle_manager_module);
 }
