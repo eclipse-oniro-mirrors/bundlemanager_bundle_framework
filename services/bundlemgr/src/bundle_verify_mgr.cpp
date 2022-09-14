@@ -80,5 +80,15 @@ void BundleVerifyMgr::DisableDebug()
     Security::Verify::DisableDebugMode();
     isDebug_ = false;
 }
+
+ErrCode BundleVerifyMgr::ParseHapProfile(const std::string &filePath, HapVerifyResult &hapVerifyResult)
+{
+    auto ret = Security::Verify::ParseHapProfile(filePath, hapVerifyResult);
+    APP_LOGI("ParseHapProfile result %{public}d", ret);
+    if (HAP_VERIFY_ERR_MAP.find(ret) == HAP_VERIFY_ERR_MAP.end()) {
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    return HAP_VERIFY_ERR_MAP.at(ret);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
