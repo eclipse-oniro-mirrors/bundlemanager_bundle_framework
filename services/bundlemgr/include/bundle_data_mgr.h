@@ -680,9 +680,10 @@ public:
      * @brief Get Module isRemovable by bundleName and moduleName.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param moduleName Indicates the moduleName.
-     * @return Returns true if the module isRemovable is successfully obtained; returns false otherwise.
+     * @param isRemovable Indicates the module whether is removable.
+     * @return Returns ERR_OK if the module isRemovable is successfully obtained; returns other ErrCode otherwise.
      */
-    bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) const;
+    ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable) const;
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     /**

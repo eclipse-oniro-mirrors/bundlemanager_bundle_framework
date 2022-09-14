@@ -1007,14 +1007,26 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
     return true;
 }
 
-bool BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
+bool BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName)
 {
+    APP_LOGD("start IsApplicationEnabled, bundleName : %{public}s", bundleName.c_str());
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->IsModuleRemovable(bundleName, moduleName);
+    return dataMgr->IsApplicationEnabled(bundleName);
+}
+
+ErrCode BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+    bool &isRemovable)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return dataMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
 }
 
 bool BundleMgrHostImpl::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)

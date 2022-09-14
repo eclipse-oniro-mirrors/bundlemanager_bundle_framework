@@ -620,11 +620,12 @@ public:
      * @brief Obtains the value of isRemovable based on a given bundle name and module name.
      * @param bundleName Indicates the bundle name to be queried.
      * @param moduleName Indicates the module name to be queried.
-     * @return Returns true if the isRemovable is successfully obtained; returns false otherwise.
+     * @param isRemovable Indicates the module whether is removable.
+     * @return Returns ERR_OK if the isRemovable is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
+    virtual ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable)
     {
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
      * @brief Sets whether to enable isRemovable based on a given bundle name and module name.

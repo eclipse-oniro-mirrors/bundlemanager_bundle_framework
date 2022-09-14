@@ -2458,7 +2458,8 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
     return true;
 }
 
-bool InnerBundleInfo::IsModuleRemovable(const std::string &moduleName, int32_t userId) const
+ErrCode InnerBundleInfo::IsModuleRemovable(const std::string &moduleName, int32_t userId,
+    bool &isRemovable) const
 {
     std::string stringUserId = "";
     stringUserId.append(std::to_string(userId));
@@ -2466,16 +2467,16 @@ bool InnerBundleInfo::IsModuleRemovable(const std::string &moduleName, int32_t u
     auto modInfoItem = GetInnerModuleInfoByModuleName(moduleName);
     if (!modInfoItem) {
         APP_LOGE("get InnerModuleInfo by moduleName(%{public}s) failed", moduleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_MODULE_NAME_NOT_EXIST;
     }
     auto item = modInfoItem->isRemovable.find(stringUserId);
     if (item == modInfoItem->isRemovable.end()) {
         APP_LOGE("userId:%{public}d has not moduleName:%{public}s", userId, moduleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_MODULE_NAME_NOT_EXIST;
     }
-    bool ret = item->second;
-    APP_LOGD("userId:%{public}d, moduleName:%{public}s, ret:%{public}d,", userId, moduleName.c_str(), ret);
-    return ret;
+    isRemovable = item->second;
+    APP_LOGD("userId:%{public}d, moduleName:%{public}s, isRemovable:%{public}d,", userId, moduleName.c_str(), isRemovable);
+    return ERR_OK;
 }
 
 bool InnerBundleInfo::AddModuleRemovableInfo(

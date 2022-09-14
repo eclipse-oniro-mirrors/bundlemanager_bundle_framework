@@ -2034,16 +2034,17 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
     }
 }
 
-bool BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) const
+ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+    bool &isRemovable) const
 {
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("bundleName or moduleName is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGE("get a invalid userid");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     APP_LOGD("bundleName:%{public}s, moduleName:%{public}s, userId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), userId);
@@ -2051,10 +2052,10 @@ bool BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const std::
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NAME_NOT_EXIST;
     }
     InnerBundleInfo newInfo = infoItem->second;
-    return newInfo.IsModuleRemovable(moduleName, userId);
+    return newInfo.IsModuleRemovable(moduleName, userId, isRemovable);
 }
 
 

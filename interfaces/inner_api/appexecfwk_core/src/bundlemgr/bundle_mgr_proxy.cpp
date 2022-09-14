@@ -1622,35 +1622,67 @@ bool BundleMgrProxy::DumpInfos(
     return true;
 }
 
-bool BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
+bool BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to IsModuleRemovable of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || moduleName.empty()) {
-        APP_LOGE("fail to IsModuleRemovable due to params empty");
+    APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsApplicationEnabled due to params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to IsModuleRemovable due to write InterfaceToken fail");
+        APP_LOGE("fail to IsApplicationEnabled due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to IsModuleRemovable due to write bundleName fail");
+        APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
         return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply)) {
+        APP_LOGE("fail to IsApplicationEnabled from server");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+    bool &isRemovable)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to IsModuleRemovable of %{public}s", bundleName.c_str());
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("fail to IsModuleRemovable due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsModuleRemovable due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to IsModuleRemovable due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to IsModuleRemovable due to write moduleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::IS_MODULE_REMOVABLE, data, reply)) {
         APP_LOGE("fail to IsModuleRemovable from server");
         return false;
     }
-    return reply.ReadBool();
+    ErrCode ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        isRemovable = reply.ReadBool();
+    }
+    return ret;
 }
 
 bool BundleMgrProxy::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)

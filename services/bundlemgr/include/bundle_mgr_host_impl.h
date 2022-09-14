@@ -646,9 +646,11 @@ public:
      * @brief Obtains the value of isRemovable based on a given bundle name and module name.
      * @param bundleName Indicates the bundle name to be queried.
      * @param moduleName Indicates the module name to be queried.
+     * @param isRemovable Indicates the module whether is removable.
      * @return Returns true if the isRemovable is successfully obtained; returns false otherwise.
      */
-    virtual bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) override;
+    virtual bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+        bool &isRemovable) override;
     /**
      * @brief Sets whether to enable isRemovable based on a given bundle name and module name.
      * @param bundleName Indicates the bundle name to be queried.

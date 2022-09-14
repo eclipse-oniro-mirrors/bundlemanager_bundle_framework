@@ -5394,11 +5394,12 @@ static bool InnerIsModuleRemovableExecute(napi_env env, const std::string &bundl
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName);
-    if (result) {
-        APP_LOGI("InnerIsModuleRemovableExecute::IsModuleRemovable");
+    bool isRemovable = false;
+    auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
+    if (result != ERR_OK) {
+        APP_LOGE("InnerIsModuleRemovableExecute::IsModuleRemovable failed.");
     }
-    return result;
+    return isRemovable;
 }
 
 void IsModuleRemovableExecute(napi_env env, void *data)

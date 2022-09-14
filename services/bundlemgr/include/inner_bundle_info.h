@@ -1403,9 +1403,10 @@ public:
      * @brief whether userId's module should be removed.
      * @param moduleName Indicates the moduleName.
      * @param userId Indicates the userId.
+     * @param isRemovable Indicates the module whether is removable.
      * @return Return get module isRemoved result.
      */
-    bool IsModuleRemovable(const std::string &moduleName, int32_t userId) const;
+    ErrCode IsModuleRemovable(const std::string &moduleName, int32_t userId, bool &isRemovable) const;
     /**
      * @brief Add module removable info
      * @param info Indicates the innerModuleInfo of module.
