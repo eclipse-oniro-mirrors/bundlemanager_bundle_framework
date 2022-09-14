@@ -193,9 +193,8 @@ static ErrCode InnerCleanBundleCacheCallback(
     ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
     if (result != ERR_OK) {
         APP_LOGE("CleanBundleDataFiles call error");
-        return result;
     }
-    return ERR_OK;
+    return CommonFunc::ConvertErrCode(result);
 }
 
 void CleanBundleCacheFilesExec(napi_env env, void *data)
@@ -245,7 +244,7 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
 
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("napi begin to CleanBundleCacheFiles");
+    APP_LOGD("napi begin to CleanBundleCacheFiles");
     NapiArg args(env, info);
     CleanBundleCacheCallbackInfo *asyncCallbackInfo = new (std::nothrow) CleanBundleCacheCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -284,7 +283,7 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<CleanBundleCacheCallbackInfo>(
         env, asyncCallbackInfo, "CleanBundleCacheFiles", CleanBundleCacheFilesExec, CleanBundleCacheFilesComplete);
     callbackPtr.release();
-    APP_LOGI("napi call CleanBundleCacheFiles done");
+    APP_LOGD("napi call CleanBundleCacheFiles done");
     return promise;
 }
 }
