@@ -4591,11 +4591,12 @@ static bool InnerSetApplicationEnabled(napi_env env, const std::string &bundleNa
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
-    if (result) {
+    ErrCode result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
+    if (result != ERR_OK) {
         APP_LOGE("InnerSetApplicationEnabled::SetApplicationEnabled");
+        return false;
     }
-    return result;
+    return true;
 }
 
 static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::AbilityInfo &abilityInfo, bool isEnable)
@@ -4605,11 +4606,12 @@ static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::Ability
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
-    if (result) {
+    ErrCode result = iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
+    if (result != ERR_OK) {
         APP_LOGE("InnerSetAbilityEnabled::SetAbilityEnabled");
+        return false;
     }
-    return result;
+    return true;
 }
 
 static bool InnerCleanBundleCacheCallback(
@@ -5012,11 +5014,13 @@ static bool InnerIsAbilityEnabled(napi_env env, const OHOS::AppExecFwk::AbilityI
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->IsAbilityEnabled(abilityInfo);
-    if (result) {
+    bool isEnable = false;
+    ErrCode result = iBundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
+    if (result != ERR_OK) {
         APP_LOGI("InnerIsAbilityEnabled::IsAbilityEnabled");
+        return false;
     }
-    return result;
+    return isEnable;
 }
 
 EnabledInfo *CreateAsyncIsAbilityEnabledCallbackInfo(napi_env env)
@@ -5200,11 +5204,13 @@ static bool InnerIsApplicationEnabled(napi_env env, const std::string &bundleNam
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->IsApplicationEnabled(bundleName);
-    if (result) {
+    bool isEnable = false;
+    ErrCode result = iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    if (result != ERR_OK) {
         APP_LOGI("InnerIsApplicationEnabled::IsApplicationEnabled");
+        return false;
     }
-    return result;
+    return isEnable;
 }
 
 EnabledInfo *CreateAsyncIsApplicationEnabledCallbackInfo(napi_env env)

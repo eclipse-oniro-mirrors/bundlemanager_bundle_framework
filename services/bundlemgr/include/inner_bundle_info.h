@@ -473,6 +473,16 @@ public:
 
         return innerBundleUserInfo.bundleUserInfo.enabled;
     }
+    ErrCode GetApplicationEnabledV9(int32_t userId, bool &isEnabled) const
+    {
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+            APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
+            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        }
+        isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
+        return ERR_OK;
+    }
     /**
      * @brief Set application enabled.
      * @param userId Indicates the user ID.
@@ -1360,6 +1370,8 @@ public:
      * @return Return set ability enabled result.
      */
     bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId) const;
+
+    ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const;
 
     bool IsAccessible() const
     {

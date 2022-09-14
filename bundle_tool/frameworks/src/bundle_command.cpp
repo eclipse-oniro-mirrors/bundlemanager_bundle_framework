@@ -1514,20 +1514,21 @@ bool BundleManagerShellCommand::SetApplicationEnabledOperation(const AbilityInfo
 {
     APP_LOGD("bundleName: %{public}s", abilityInfo.bundleName.c_str());
     userId = BundleCommandCommon::GetCurrentUserId(userId);
-    bool ret = false;
+    int32_t ret;
     if (abilityInfo.name.size() == 0) {
         ret = bundleMgrProxy_->SetApplicationEnabled(abilityInfo.bundleName, isEnable, userId);
     } else {
         ret = bundleMgrProxy_->SetAbilityEnabled(abilityInfo, isEnable, userId);
     }
-    if (!ret) {
+    if (ret != 0) {
         if (isEnable) {
             APP_LOGE("enable bundle failed");
         } else {
             APP_LOGE("disable bundle failed");
         }
+        return false;
     }
-    return ret;
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

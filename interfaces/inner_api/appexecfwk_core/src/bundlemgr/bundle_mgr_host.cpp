@@ -1177,9 +1177,16 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    bool ret = IsApplicationEnabled(bundleName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    bool isEnable = false;
+    ErrCode ret = IsApplicationEnabled(bundleName, isEnable);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1189,27 +1196,33 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
     bool isEnable = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    bool ret = SetApplicationEnabled(bundleName, isEnable, userId);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return SetApplicationEnabled(bundleName, isEnable, userId);
 }
 
 ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
-    if (!abilityInfo) {
+    if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    bool ret = IsAbilityEnabled(*abilityInfo);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    if (abilityInfo->bundleName.empty() || abilityInfo->name.empty()) {
+        APP_LOGE("fail to IsAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    bool isEnable = false;
+    ErrCode ret = IsAbilityEnabled(*abilityInfo, isEnable);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1225,12 +1238,7 @@ ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParce
     }
     bool isEnabled = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    bool ret = SetAbilityEnabled(*abilityInfo, isEnabled, userId);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return SetAbilityEnabled(*abilityInfo, isEnabled, userId);
 }
 
 ErrCode BundleMgrHost::HandleGetAbilityInfo(MessageParcel &data, MessageParcel &reply)

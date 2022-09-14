@@ -472,34 +472,36 @@ public:
     /**
      * @brief Checks whether a specified application is enabled.
      * @param bundleName Indicates the bundle name of the application.
-     * @return Returns true if the application is enabled; returns false otherwise.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
      */
-    virtual bool IsApplicationEnabled(const std::string &bundleName) override;
+    virtual ErrCode IsApplicationEnabled(const std::string &bundleName, bool &isEnable) override;
     /**
      * @brief Sets whether to enable a specified application.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Specifies whether to enable the application.
      *                 The value true means to enable it, and the value false means to disable it.
      * @param userId description the user id.
-     * @return Returns true if the application is enabled; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    virtual bool SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+    virtual ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
      */
-    virtual bool IsAbilityEnabled(const AbilityInfo &abilityInfo) override;
+    virtual ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) override;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.
      * @param isEnabled Specifies whether to enable the ability.
      *                 The value true means to enable it, and the value false means to disable it.
      * @param userId description the user id.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    virtual bool SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
+    virtual ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the interface used to install and uninstall bundles.

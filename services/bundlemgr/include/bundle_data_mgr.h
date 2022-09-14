@@ -369,33 +369,35 @@ public:
     /**
      * @brief Get whether the application status is enabled.
      * @param bundleName Indicates the bundle name.
-     * @return Returns true if the bundle status is enabled; returns false otherwise.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
      */
-    bool IsApplicationEnabled(const std::string &bundleName) const;
+    ErrCode IsApplicationEnabled(const std::string &bundleName, bool &isEnable) const;
     /**
      * @brief Set the application status.
      * @param bundleName Indicates the bundle name.
      * @param isEnable Indicates the status to set.
      * @param userId Indicates the user id.
-     * @return Returns true if the bundle status successfully set; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    bool SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+    ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
      */
-    bool IsAbilityEnabled(const AbilityInfo &abilityInfo) const;
+    ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) const;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.
      * @param isEnabled Specifies whether to enable the ability.
      *                 The value true means to enable it, and the value false means to disable it.
      * @param userId Indicates the user id.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    bool SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
+    ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Register the bundle status callback function.

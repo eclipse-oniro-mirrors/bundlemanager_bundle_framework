@@ -4853,10 +4853,11 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0100, Function | SmallTest | 
     abilityInfo.name = BASE_ABILITY_NAME;
     abilityInfo.bundleName = appName;
     abilityInfo.moduleName = BASE_MODULE_NAME;
-    bool testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
-    EXPECT_TRUE(testRet);
-    bool testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
-    EXPECT_FALSE(testRet1);
+    int32_t testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
+    EXPECT_EQ(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo, isEnable);
+    EXPECT_NE(0, testRet1);
 
     resvec.clear();
     Uninstall(appName, resvec);
