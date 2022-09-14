@@ -1007,17 +1007,6 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
     return true;
 }
 
-bool BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName)
-{
-    APP_LOGD("start IsApplicationEnabled, bundleName : %{public}s", bundleName.c_str());
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
-    return dataMgr->IsApplicationEnabled(bundleName);
-}
-
 ErrCode BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
     bool &isRemovable)
 {

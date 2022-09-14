@@ -1615,33 +1615,6 @@ bool BundleMgrProxy::DumpInfos(
     return true;
 }
 
-bool BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("fail to IsApplicationEnabled due to params empty");
-        return false;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to IsApplicationEnabled due to write InterfaceToken fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply)) {
-        APP_LOGE("fail to IsApplicationEnabled from server");
-        return false;
-    }
-    return reply.ReadBool();
-}
-
 ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
     bool &isRemovable)
 {
