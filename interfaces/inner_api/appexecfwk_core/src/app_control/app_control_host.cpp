@@ -60,6 +60,8 @@ int AppControlHost::OnRemoteRequest(
             return HandleCleanAppRunningControlRule(data, reply);
         case IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE:
             return HandleGetAppRunningControlRule(data, reply);
+        case IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT:
+            return HandleGetAppRunningControlRuleResult(data, reply);
         case IAppControlMgr::Message::SET_DISPOSED_STATUS:
             return HandleSetDisposedStatus(data, reply);
         case IAppControlMgr::Message::GET_DISPOSED_STATUS:
@@ -141,24 +143,24 @@ ErrCode AppControlHost::HandleGetAppInstallControlRule(MessageParcel& data, Mess
 
 ErrCode AppControlHost::HandleAddAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
 {
-    std::vector<AppRunningControlRuleParam> controlRuleParam;
-    if (!ReadParcelableVector(data, controlRuleParam)) {
+    std::vector<AppRunningControlRule> controlRules;
+    if (!ReadParcelableVector(data, controlRules)) {
         APP_LOGE("read controlRuleParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t userId = data.ReadInt32();
-    return AddAppRunningControlRule(controlRuleParam, userId);
+    return AddAppRunningControlRule(controlRules, userId);
 }
 
 ErrCode AppControlHost::HandleDeleteAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
 {
-    std::vector<AppRunningControlRuleParam> controlRuleParam;
-    if (!ReadParcelableVector(data, controlRuleParam)) {
+    std::vector<AppRunningControlRule> controlRules;
+    if (!ReadParcelableVector(data, controlRules)) {
         APP_LOGE("read controlRuleParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t userId = data.ReadInt32();
-    return DeleteAppRunningControlRule(controlRuleParam, userId);
+    return DeleteAppRunningControlRule(controlRules, userId);
 }
 
 ErrCode AppControlHost::HandleCleanAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
@@ -182,6 +184,23 @@ ErrCode AppControlHost::HandleGetAppRunningControlRule(MessageParcel& data, Mess
     }
     if (!WriteParcelableVector(appIds, reply)) {
         APP_LOGE("write appIds failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleGetAppRunningControlRuleResult(MessageParcel& data, MessageParcel& reply)
+{
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    AppRunningControlRuleResult ruleResult;
+    int32_t ret = GetAppRunningControlRule(bundleName, userId, ruleResult);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleGetAppRunningControlRuleResult failed");
+        return ret;
+    }
+    if (!reply.WriteParcelable(&ruleResult)) {
+        APP_LOGE("write info failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

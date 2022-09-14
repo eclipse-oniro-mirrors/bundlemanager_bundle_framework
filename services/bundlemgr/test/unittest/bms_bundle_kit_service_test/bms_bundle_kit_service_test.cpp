@@ -4881,7 +4881,7 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_005, Function | SmallTest | Level1
 HWTEST_F(BmsBundleKitServiceTest, Marshalling_006, Function | SmallTest | Level1)
 {
     AppRunningControlRuleParam param;
-    param.appId = "Id001";
+    param.controlWant = nullptr;
     param.controlMessage = "Success";
     Parcel parcel;
     bool ret = param.Marshalling(parcel);
@@ -4944,7 +4944,7 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_002, Function | SmallTest | Leve
 HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_003, Function | SmallTest | Level1)
 {
     AppRunningControlRuleParam param1;
-    param1.appId = "Id001";
+    param1.controlWant = nullptr;
     param1.controlMessage = "Success";
     Parcel parcel;
     AppRunningControlRuleParam param2;
@@ -4952,7 +4952,7 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_003, Function | SmallTest | Leve
     EXPECT_EQ(ret1, true);
     auto ret2 = param2.Unmarshalling(parcel);
     EXPECT_NE(ret2, nullptr);
-    EXPECT_EQ(param1.appId, ret2->appId);
+    EXPECT_EQ(param1.controlWant, ret2->controlWant);
     EXPECT_EQ(param1.controlMessage, ret2->controlMessage);
 }
 
@@ -4964,7 +4964,7 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_003, Function | SmallTest | Leve
 HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleParam_001, Function | SmallTest | Level1)
 {
     AppRunningControlRuleParam param;
-    param.appId = "Id001";
+    param.controlWant = std::make_shared<Want>();
     param.controlMessage = "Success";
     Parcel parcel;
     auto ret1 = param.Marshalling(parcel);

@@ -16,10 +16,13 @@
 #include "app_control_manager.h"
 
 #include "app_control_constants.h"
+#include "app_control_manager_rdb.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "application_info.h"
 #include "bundle_constants.h"
-#include "app_control_manager_rdb.h"
+#include "bundle_info.h"
+#include "bundle_mgr_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -66,16 +69,16 @@ ErrCode AppControlManager::GetAppInstallControlRule(const std::string &callingNa
 }
 
 ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingName,
-    const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId)
+    const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     APP_LOGD("AddAppRunningControlRule");
-    return appControlManagerDb_->AddAppRunningControlRule(callingName, controlRule, userId);
+    return appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
 }
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName,
-    const std::vector<InnerAppRunningControlRule> &controlRule, int32_t userId)
+    const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRule, userId);
+    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRules, userId);
 }
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName, int32_t userId)
@@ -102,6 +105,34 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId)
 ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want)
 {
     return appControlManagerDb_->GetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
+}
+
+ErrCode AppControlManager::GetAppRunningControlRule(
+    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    BundleInfo bundleInfo;
+    bool ret = dataMgr->GetBundleInfo(bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, bundleInfo, userId);
+    if (!ret) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::vector<AppRunningControlRule> controlRules;
+    ErrCode errCode = appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRules);
+    if (errCode != ERR_OK) {
+        return errCode;
+    }
+    if (!controlRules.empty()) {
+        controlRule.ruleParam = controlRules[0].ruleParam;
+        controlRule.ruleType = controlRules[0].ruleType;
+    } else {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
+    }
+    return errCode;
 }
 }
 }
