@@ -123,7 +123,7 @@ CleanCacheCallBackImpl::~CleanCacheCallBackImpl()
 void CleanCacheCallBackImpl::OnCleanCacheFinished(bool succeeded)
 {
     APP_LOGI("BMS_Kit_St OnCleanCacheFinished results are %{public}d", succeeded);
-    resultSucceededSignal_.set_value(!succeeded);
+    resultSucceededSignal_.set_value(succeeded);
 }
 
 bool CleanCacheCallBackImpl::GetSucceededResult() const

@@ -1436,40 +1436,40 @@ bool BundleMgrProxy::IsSafeMode()
     return reply.ReadBool();
 }
 
-bool BundleMgrProxy::CleanBundleCacheFiles(
+ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
     if (bundleName.empty() || !cleanCacheCallback) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to CleanBundleCacheFiles due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to CleanBundleCacheFiles due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteObject<IRemoteObject>(cleanCacheCallback->AsObject())) {
         APP_LOGE("fail to CleanBundleCacheFiles, for write parcel failed");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to CleanBundleCacheFiles due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::CLEAN_BUNDLE_CACHE_FILES, data, reply)) {
         APP_LOGE("fail to CleanBundleCacheFiles from server");
-        return false;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
 bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const int userId)
@@ -2850,7 +2850,7 @@ int32_t BundleMgrProxy::GetUdidByNetworkId(const std::string &networkId, std::st
     }
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, data, reply)) {
-        return TRANSACTION_ERR;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     udid = reply.ReadString();
     return NO_ERROR;
