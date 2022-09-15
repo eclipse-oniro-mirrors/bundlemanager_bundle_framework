@@ -804,7 +804,7 @@ private:
         int32_t appIndex = 0) const;
     bool GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
     int32_t GetUserIdByUid(int32_t uid) const;
-    bool GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
+    ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     bool ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;

@@ -525,12 +525,12 @@ ErrCode BundleMgrHost::HandleGetNameForUid(MessageParcel &data, MessageParcel &r
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int uid = data.ReadInt32();
     std::string name;
-    bool ret = GetNameForUid(uid, name);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetNameForUid(uid, name);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteString(name)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

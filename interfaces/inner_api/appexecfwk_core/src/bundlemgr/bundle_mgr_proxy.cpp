@@ -615,31 +615,32 @@ bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &b
     return true;
 }
 
-bool BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
+ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetNameForUid of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetNameForUid due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(uid)) {
         APP_LOGE("fail to GetNameForUid due to write uid fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::GET_NAME_FOR_UID, data, reply)) {
         APP_LOGE("fail to GetNameForUid from server");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return false;
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply errCode : %{public}d", ret);
+        return ret;
     }
     name = reply.ReadString();
-    return true;
+    return ERR_OK;
 }
 
 bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
