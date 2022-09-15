@@ -13,24 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef BUSINESS_ERROR_H
-#define BUSINESS_ERROR_H
+#ifndef JS_APP_CONTROL_H
+#define JS_APP_CONTROL_H
 
+#include "base_cb_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class BusinessError {
-public:
-static inline void ThrowError(napi_env env, int32_t err)
-{
-    napi_throw_error(env, std::to_string(err).c_str(), "");
-}
+struct DisposedStatus : public BaseCallbackInfo {
+    explicit DisposedStatus(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-static napi_value CreateError(napi_env env, int32_t err, const std::string& msg);
+    std::string appId;
+    OHOS::AAFwk::Want want;
 };
-}
-}
-#endif
+
+napi_value GetDisposedStatus(napi_env env, napi_callback_info info);
+napi_value SetDisposedStatus(napi_env env, napi_callback_info info);
+napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info);
+}  // namespace AppExecFwk
+}  // namespace OHOS
+#endif /* JS_APP_CONTROL_H */

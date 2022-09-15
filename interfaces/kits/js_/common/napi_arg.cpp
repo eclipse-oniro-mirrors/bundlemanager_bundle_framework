@@ -30,17 +30,18 @@ bool NapiArg::Init(size_t minArgc, size_t maxArgc)
         return false;
     }
     // argc larger than maxArgc is permitted, but we only use the first $maxArgc$ args
-    if (argc < minArgc) {
+    if (argc >= minArgc) {
+        if (argc != 0) {
+            argv_ = std::make_unique<napi_value[]>(argc);
+            status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisArg, nullptr);
+            if (status != napi_ok) {
+                APP_LOGE("Cannot get func args for %{public}d", status);
+                return false;
+            }
+        }
+    } else {
         APP_LOGE("Incorrect number of arguments");
         return false;
-    }
-    if (argc != 0) {
-        argv_ = std::make_unique<napi_value[]>(argc);
-        status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisArg, nullptr);
-        if (status != napi_ok) {
-            APP_LOGE("Cannot get func args for %{public}d", status);
-            return false;
-        }
     }
     argc_ = argc;
     thisArg_ = thisArg;

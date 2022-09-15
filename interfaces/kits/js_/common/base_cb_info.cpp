@@ -12,25 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NAPI_CONSTANTS_H
-#define NAPI_CONSTANTS_H
+#include "app_log_wrapper.h"
+#include "base_cb_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr size_t ARGS_SIZE_ONE = 1;
-constexpr size_t ARGS_SIZE_TWO = 2;
-constexpr size_t ARGS_SIZE_THREE = 3;
-constexpr size_t ARGS_SIZE_FOUR = 4;
+    AsyncWorkData::AsyncWorkData(napi_env napiEnv)
+    {
+        env = napiEnv;
+    }
 
-constexpr size_t ARGS_POS_ZERO = 0;
-constexpr size_t ARGS_POS_ONE = 1;
-constexpr size_t ARGS_POS_TWO = 2;
-constexpr size_t ARGS_POS_THREE = 3;
-constexpr size_t ARGS_POS_FOUR = 4;
-
-constexpr size_t NAPI_RETURN_ONE = 1;
+    AsyncWorkData::~AsyncWorkData()
+    {
+        if (callback) {
+            APP_LOGD("AsyncWorkData::~AsyncWorkData delete callback");
+            napi_delete_reference(env, callback);
+            callback = nullptr;
+        }
+        if (asyncWork) {
+            APP_LOGD("AsyncWorkData::~AsyncWorkData delete asyncWork");
+            napi_delete_async_work(env, asyncWork);
+            asyncWork = nullptr;
+        }
+    }
 }
 }
-}
-#endif

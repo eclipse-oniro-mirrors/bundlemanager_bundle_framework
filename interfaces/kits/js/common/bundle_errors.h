@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-#include "business_error.h"
+#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_ERRORS_H
+#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_ERRORS_H
+
+#include "errors.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::string& msg)
-{
-    napi_value businessError = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &businessError));
-    napi_value errorCode = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, err, &errorCode));
-    napi_value errorMessage = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH, &errorMessage));
-    NAPI_CALL(env, napi_set_named_property(env, businessError, "code", errorCode));
-    NAPI_CALL(env, napi_set_named_property(env, businessError, "message", errorMessage));
-    return businessError;
+constexpr ErrCode PERMISSION_DENIED_ERROR = 201;
+constexpr ErrCode PARAM_CHECK_ERROR = 401;
+constexpr ErrCode SYSTEM_ABILITY_NOT_FOUND = 801;
+constexpr ErrCode BUNDLE_NOT_EXIST = 17700001;
+constexpr ErrCode ABILITY_NOT_EXIST = 17700003;
+constexpr ErrCode INVALID_USER_ID = 17700004;
+constexpr ErrCode INTERNAL_ERROR = 17700101;
+constexpr ErrCode OUT_OF_MEMORY_ERROR = 17700102;
 }
 }
-}
+#endif

@@ -25,7 +25,6 @@ ohos_shared_library("bundlemanager") {
   ]
   sources = [
     "bundle_manager.cpp",
-    "clean_cache_callback.cpp",
     "native_module.cpp",
   ]
 

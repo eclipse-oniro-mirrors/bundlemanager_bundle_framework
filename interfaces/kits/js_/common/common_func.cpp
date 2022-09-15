@@ -42,13 +42,6 @@ constexpr const char* ACTION = "action";
 constexpr const char* ENTITIES = "entities";
 constexpr const char* FLAGS = "flags";
 constexpr const char* DEVICE_ID = "deviceId";
-constexpr const char* NAME = "name";
-constexpr const char* IS_VISIBLE = "isVisible";
-constexpr const char* PERMISSIONS = "permissions";
-constexpr const char* META_DATA = "metadata";
-constexpr const char* ENABLED = "enabled";
-constexpr const char* READ_PERMISSION = "readPermission";
-constexpr const char* WRITE_PERMISSION = "writePermission";
 constexpr const char* LABEL = "label";
 constexpr const char* LABEL_ID = "labelId";
 constexpr const char* DESCRIPTION = "description";
@@ -109,42 +102,6 @@ bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result
         APP_LOGE("napi_get_value_string_utf8 error");
         return false;
     }
-    return true;
-}
-
-bool CommonFunc::ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& abilityInfo)
-{
-    napi_valuetype valueType;
-    NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
-    if (valueType != napi_object) {
-        APP_LOGE("ParseAbilityInfo type mismatch!");
-        return false;
-    }
-
-    napi_value prop = nullptr;
-    // parse bundleName
-    napi_get_named_property(env, param, "bundleName", &prop);
-    std::string bundleName;
-    if (!ParseString(env, prop, bundleName)) {
-        return false;
-    }
-    abilityInfo.bundleName = bundleName;
-
-    // parse moduleName
-    napi_get_named_property(env, param, "moduleName", &prop);
-    std::string moduleName;
-    if (!ParseString(env, prop, moduleName)) {
-        return false;
-    }
-    abilityInfo.moduleName = moduleName;
-
-    // parse abilityName
-    napi_get_named_property(env, param, "name", &prop);
-    std::string abilityName;
-    if (!ParseString(env, prop, abilityName)) {
-        return false;
-    }
-    abilityInfo.name = abilityName;
     return true;
 }
 
@@ -302,13 +259,13 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
     switch (nativeErrCode) {
         case ERR_OK:
             return NO_ERROR;
-        case ERR_BUNDLE_MANAGER_INVALID_USER_ID:
+        case ERR_BUNDLE_MANAGER_QUERY_INVALID_USER_ID:
             return INVALID_USER_ID;
-        case ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST:
+        case ERR_BUNDLE_MANAGER_QUERY_BUNDLE_NOT_EXIST:
             return BUNDLE_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST:
+        case ERR_BUNDLE_MANAGER_QUERY_ABILITY_NOT_EXIST:
             return ABILITY_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_PERMISSION_DENIED:
+        case ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DENIED:
             return PERMISSION_DENIED_ERROR;
         default:
             return INTERNAL_ERROR;
@@ -418,7 +375,7 @@ void CommonFunc::ConvertMetadata(napi_env env, const Metadata &metadata, napi_va
 {
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, metadata.name.c_str(), NAPI_AUTO_LENGTH, &nName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "name", nName));
 
     napi_value nValue;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, metadata.value.c_str(), NAPI_AUTO_LENGTH, &nValue));
@@ -453,7 +410,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
 
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, NAME, nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "name", nName));
 
     napi_value nLabel;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.label.c_str(), NAPI_AUTO_LENGTH, &nLabel));
@@ -487,7 +444,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
 
     napi_value nVisible;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.visible, &nVisible));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, IS_VISIBLE, nVisible));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "isVisible", nVisible));
 
     napi_value nType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(abilityInfo.type), &nType));
@@ -502,25 +459,24 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "launchType", nLaunchType));
 
     napi_value nPermissions;
-    size_t size = abilityInfo.permissions.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPermissions));
-    for (size_t idx = 0; idx < size; ++idx) {
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nPermissions));
+    for (size_t idx = 0; idx < abilityInfo.permissions.size(); ++idx) {
         napi_value nPermission;
         NAPI_CALL_RETURN_VOID(
             env, napi_create_string_utf8(env, abilityInfo.permissions[idx].c_str(), NAPI_AUTO_LENGTH, &nPermission));
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, idx, nPermission));
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, PERMISSIONS, nPermissions));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "permissions", nPermissions));
 
     napi_value nReadPermission;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, abilityInfo.readPermission.c_str(), NAPI_AUTO_LENGTH, &nReadPermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, READ_PERMISSION, nReadPermission));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "readPermission", nReadPermission));
 
     napi_value nWritePermission;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, abilityInfo.writePermission.c_str(), NAPI_AUTO_LENGTH, &nWritePermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, WRITE_PERMISSION, nWritePermission));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "writePermission", nWritePermission));
 
     napi_value nUri;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, abilityInfo.uri.c_str(), NAPI_AUTO_LENGTH, &nUri));
@@ -537,7 +493,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "deviceTypes", nDeviceTypes));
     // ConvertApplicationInfo
     napi_value nMetadata;
-    size = abilityInfo.metadata.size();
+    size_t size = abilityInfo.metadata.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
     for (size_t index = 0; index < size; ++index) {
         napi_value nMetaData;
@@ -545,11 +501,11 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
         ConvertMetadata(env, abilityInfo.metadata[index], nMetaData);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadata, index, nMetaData));
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, META_DATA, nMetadata));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "metadata", nMetadata));
 
     napi_value nEnabled;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.enabled, &nEnabled));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, ENABLED, nEnabled));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "enabled", nEnabled));
 
     napi_value nSupportWindowModes;
     size = abilityInfo.windowModes.size();
@@ -566,93 +522,6 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWindowSize));
     ConvertWindowSize(env, abilityInfo, nWindowSize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "windowSize", nWindowSize));
-}
-
-void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
-    napi_value value)
-{
-    for (size_t index = 0; index < extensionInfos.size(); ++index) {
-        napi_value objExtensionInfo = nullptr;
-        napi_create_object(env, &objExtensionInfo);
-        ConvertExtensionInfo(env, extensionInfos[index], objExtensionInfo);
-        napi_set_element(env, value, index, objExtensionInfo);
-    }
-}
-
-void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
-    napi_value objExtensionInfo)
-{
-    napi_value nBundleName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, extensionInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, BUNDLE_NAME, nBundleName));
-
-    napi_value nModuleName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, extensionInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, MODULE_NAME, nModuleName));
-
-    napi_value nName;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, NAME, nName));
-
-    napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.labelId, &nLabelId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, LABEL_ID, nLabelId));
-
-    napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.descriptionId, &nDescriptionId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, DESCRIPTION_ID, nDescriptionId));
-
-    napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.iconId, &nIconId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, ICON_ID, nIconId));
-
-    napi_value nVisible;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfo.visible, &nVisible));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, IS_VISIBLE, nVisible));
-
-    napi_value nExtensionAbilityType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(extensionInfo.type), &nExtensionAbilityType));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objExtensionInfo, "extensionAbilityType", nExtensionAbilityType));
-
-    napi_value nPermissions;
-    size_t size = extensionInfo.permissions.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPermissions));
-    for (size_t i = 0; i < size; ++i) {
-        napi_value permission;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, extensionInfo.permissions[i].c_str(), NAPI_AUTO_LENGTH, &permission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, i, permission));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, PERMISSIONS, nPermissions));
-    // ConvertApplicationInfo
-    napi_value nMetadata;
-    size = extensionInfo.metadata.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
-    for (size_t i = 0; i < size; ++i) {
-        napi_value nMetaData;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nMetaData));
-        ConvertMetadata(env, extensionInfo.metadata[i], nMetaData);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadata, i, nMetaData));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, META_DATA, nMetadata));
-
-    napi_value nEnabled;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfo.enabled, &nEnabled));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, ENABLED, nEnabled));
-
-    napi_value nReadPermission;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, extensionInfo.readPermission.c_str(), NAPI_AUTO_LENGTH, &nReadPermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, READ_PERMISSION, nReadPermission));
-
-    napi_value nWritePermission;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, extensionInfo.writePermission.c_str(), NAPI_AUTO_LENGTH, &nWritePermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, WRITE_PERMISSION, nWritePermission));
 }
 }
 }

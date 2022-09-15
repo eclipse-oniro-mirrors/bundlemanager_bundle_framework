@@ -12,25 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NAPI_CONSTANTS_H
-#define NAPI_CONSTANTS_H
+#ifndef BASE_CB_INFO_H
+#define BASE_CB_INFO_H
+#include "napi/native_api.h"
+#include "napi/native_common.h"
+#include "napi/native_node_api.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr size_t ARGS_SIZE_ONE = 1;
-constexpr size_t ARGS_SIZE_TWO = 2;
-constexpr size_t ARGS_SIZE_THREE = 3;
-constexpr size_t ARGS_SIZE_FOUR = 4;
+struct AsyncWorkData {
+    explicit AsyncWorkData(napi_env napiEnv);
+    virtual ~AsyncWorkData();
+    napi_env env;
+    napi_async_work asyncWork = nullptr;
+    napi_deferred deferred = nullptr;
+    napi_ref callback = nullptr;
+};
 
-constexpr size_t ARGS_POS_ZERO = 0;
-constexpr size_t ARGS_POS_ONE = 1;
-constexpr size_t ARGS_POS_TWO = 2;
-constexpr size_t ARGS_POS_THREE = 3;
-constexpr size_t ARGS_POS_FOUR = 4;
-
-constexpr size_t NAPI_RETURN_ONE = 1;
-}
+struct BaseCallbackInfo: public AsyncWorkData {
+    explicit BaseCallbackInfo(napi_env napiEnv) : AsyncWorkData(napiEnv) {}
+    int32_t err = 0;
+    std::string message;
+};
 }
 }
 #endif

@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef NAPI_BUNDLE_MANAGER_H
-#define NAPI_BUNDLE_MANAGER_H
+#ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
+#define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
 
 #include "ability_info.h"
 #include "base_cb_info.h"
 #include "bundle_constants.h"
-#include "bundle_mgr_interface.h"
+#include "clean_cache_callback.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -36,16 +36,51 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
     std::vector<AbilityInfo> abilityInfos;
 };
 
+struct ExtensionCallbackInfo : public BaseCallbackInfo {
+    explicit ExtensionCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    OHOS::AAFwk::Want want;
+    int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+};
+
+struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
+    explicit CleanBundleCacheCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
+};
+
+struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
+    explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    bool isEnable = false;
+};
+
+struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    AbilityInfo abilityInfo;
+    bool isEnable = false;
+};
+
 struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
     explicit AsyncPermissionDefineCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     std::string permissionName;
     OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
+napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
+napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
-
+napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
+napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
+void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
+void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif // NAPI_BUNDLE_MANAGER_H
+#endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H

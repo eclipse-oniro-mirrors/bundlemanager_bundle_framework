@@ -29,26 +29,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &abilityFlag));
     CreateAbilityFlagObject(env, abilityFlag);
 
-    napi_value extensionFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &extensionFlag));
-    CreateExtensionAbilityFlagObject(env, extensionFlag);
-
-    napi_value extensionType = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &extensionType));
-    CreateExtensionAbilityTypeObject(env, extensionType);
-
     napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("queryAbilityInfo", QueryAbilityInfos),
-        DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfo", QueryExtensionInfos),
-        DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
-        DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
-        DECLARE_NAPI_FUNCTION("isApplicationEnabled", IsApplicationEnabled),
-        DECLARE_NAPI_FUNCTION("isAbilityEnabled", IsAbilityEnabled),
-        DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", CleanBundleCacheFiles),
-        DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
-        DECLARE_NAPI_PROPERTY("ExtensionAbilityFlag", extensionFlag),
-        DECLARE_NAPI_PROPERTY("ExtensionAbilityType", extensionType),
+        DECLARE_NAPI_FUNCTION("queryAbilityInfos", QueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
+        DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
@@ -66,7 +50,7 @@ static napi_module bundle_manager_module = {
     .reserved = {0}
 };
 
-extern "C" __attribute__((constructor)) void BundleManagerRegister(void)
+extern "C" __attribute__((constructor)) void BUndleManagerRegister(void)
 {
     napi_module_register(&bundle_manager_module);
 }

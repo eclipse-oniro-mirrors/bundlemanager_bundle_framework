@@ -12,22 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <uv.h>
 
-#include "business_error.h"
+#include "clean_cache_callback.h"
+
+#include "napi/native_common.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::string& msg)
+CleanCacheCallback::CleanCacheCallback()
 {
-    napi_value businessError = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &businessError));
-    napi_value errorCode = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, err, &errorCode));
-    napi_value errorMessage = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH, &errorMessage));
-    NAPI_CALL(env, napi_set_named_property(env, businessError, "code", errorCode));
-    NAPI_CALL(env, napi_set_named_property(env, businessError, "message", errorMessage));
-    return businessError;
+    uv_sem_init(&uvSem_, 0);
 }
+
+CleanCacheCallback::~CleanCacheCallback() {}
+
+void CleanCacheCallback::OnCleanCacheFinished(bool err)
+{
+    err_ = err;
+    uv_sem_post(&uvSem_);
 }
-}
+} // AppExecFwk
+} // OHOS

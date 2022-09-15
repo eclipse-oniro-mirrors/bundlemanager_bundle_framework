@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,26 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <uv.h>
+#ifndef NAPI_CONSTANTS_H
+#define NAPI_CONSTANTS_H
 
-#include "cleancache_callback.h"
-
-#include "napi/native_common.h"
-
+namespace OHOS {
+namespace AppExecFwk {
 namespace {
-constexpr int32_t OPERATION_SUCCESS = 0;
-constexpr int32_t OPERATION_FAILED = 1;
-}
+constexpr size_t ARGS_SIZE_ONE = 1;
+constexpr size_t ARGS_SIZE_TWO = 2;
+constexpr size_t ARGS_SIZE_THREE = 3;
+constexpr size_t ARGS_SIZE_FOUR = 4;
 
-CleanCacheCallback::CleanCacheCallback(int32_t err) : err_(err)
-{
-    uv_sem_init(&uvSem_, 0);
-}
+constexpr size_t ARGS_POS_ZERO = 0;
+constexpr size_t ARGS_POS_ONE = 1;
+constexpr size_t ARGS_POS_TWO = 2;
+constexpr size_t ARGS_POS_THREE = 3;
 
-CleanCacheCallback::~CleanCacheCallback() {}
-
-void CleanCacheCallback::OnCleanCacheFinished(bool err)
-{
-    err_ = err ? OPERATION_SUCCESS : OPERATION_FAILED;
-    uv_sem_post(&uvSem_);
+constexpr size_t NAPI_RETURN_ONE = 1;
 }
+}
+}
+#endif

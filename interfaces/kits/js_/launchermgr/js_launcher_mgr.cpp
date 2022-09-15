@@ -12,26 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <uv.h>
 
-#include "cleancache_callback.h"
+#include "js_launcher_mgr.h"
 
-#include "napi/native_common.h"
-
-namespace {
-constexpr int32_t OPERATION_SUCCESS = 0;
-constexpr int32_t OPERATION_FAILED = 1;
-}
-
-CleanCacheCallback::CleanCacheCallback(int32_t err) : err_(err)
+namespace OHOS {
+namespace AppExecFwk {
+JSLauncherMgr::JSLauncherMgr()
 {
-    uv_sem_init(&uvSem_, 0);
+    launcherService_ = new LauncherService();
 }
 
-CleanCacheCallback::~CleanCacheCallback() {}
+JSLauncherMgr::~JSLauncherMgr() {}
 
-void CleanCacheCallback::OnCleanCacheFinished(bool err)
+OHOS::sptr<LauncherService> JSLauncherMgr::GetLauncherService()
 {
-    err_ = err ? OPERATION_SUCCESS : OPERATION_FAILED;
-    uv_sem_post(&uvSem_);
+    return DelayedSingleton<JSLauncherMgr>::GetInstance()->launcherService_;
 }
+}  // namespace AppExecFwk
+}  // namespace OHOS

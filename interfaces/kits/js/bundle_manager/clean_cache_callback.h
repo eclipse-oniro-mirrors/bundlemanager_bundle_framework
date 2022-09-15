@@ -13,24 +13,38 @@
  * limitations under the License.
  */
 
-#ifndef BUSINESS_ERROR_H
-#define BUSINESS_ERROR_H
+#ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_CLEAN_CACHE_CALLBACK_H
+#define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_CLEAN_CACHE_CALLBACK_H
+
+#include <future>
+#include <uv.h>
 
 #include "napi/native_api.h"
-#include "napi/native_common.h"
 #include "napi/native_node_api.h"
+
+#include "clean_cache_callback_host.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class BusinessError {
+class CleanCacheCallback : public CleanCacheCallbackHost {
 public:
-static inline void ThrowError(napi_env env, int32_t err)
-{
-    napi_throw_error(env, std::to_string(err).c_str(), "");
-}
+    CleanCacheCallback();
+    virtual ~CleanCacheCallback();
+    void OnCleanCacheFinished(bool err) override;
 
-static napi_value CreateError(napi_env env, int32_t err, const std::string& msg);
+    bool GetErr() const
+    {
+        return err_;
+    }
+
+    uv_sem_t uvSem_;
+
+private:
+    bool err_ = false;
+    DISALLOW_COPY_AND_MOVE(CleanCacheCallback);
 };
-}
-}
-#endif
+} // AppExecFwk
+} // OHOS
+
+#endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_CLEAN_CACHE_CALLBACK_H

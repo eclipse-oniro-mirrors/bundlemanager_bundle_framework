@@ -12,26 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <uv.h>
 
-#include "cleancache_callback.h"
+#ifndef APPEXECFWK_JS_LAUNCHER_MGR_H
+#define APPEXECFWK_JS_LAUNCHER_MGR_H
 
-#include "napi/native_common.h"
+#include <mutex>
+#include <string>
+#include <vector>
 
-namespace {
-constexpr int32_t OPERATION_SUCCESS = 0;
-constexpr int32_t OPERATION_FAILED = 1;
-}
+#include "launcher_service.h"
+#include "nocopyable.h"
+#include "singleton.h"
 
-CleanCacheCallback::CleanCacheCallback(int32_t err) : err_(err)
-{
-    uv_sem_init(&uvSem_, 0);
-}
+namespace OHOS {
+namespace AppExecFwk {
+class JSLauncherMgr {
+    DECLARE_DELAYED_SINGLETON(JSLauncherMgr);
 
-CleanCacheCallback::~CleanCacheCallback() {}
+public:
+    static OHOS::sptr<LauncherService> GetLauncherService();
 
-void CleanCacheCallback::OnCleanCacheFinished(bool err)
-{
-    err_ = err ? OPERATION_SUCCESS : OPERATION_FAILED;
-    uv_sem_post(&uvSem_);
-}
+private:
+    OHOS::sptr<LauncherService> launcherService_ = nullptr;
+};
+}  // namespace AppExecFwk
+}  // namespace OHOS
+
+#endif // APPEXECFWK_JS_LAUNCHER_MGR_H

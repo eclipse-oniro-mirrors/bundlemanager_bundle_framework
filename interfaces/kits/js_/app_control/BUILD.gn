@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
-ohos_shared_library("bundlemanager") {
+ohos_shared_library("appcontrol") {
   include_dirs = [
     "//third_party/node/src",
     "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
@@ -24,14 +24,13 @@ ohos_shared_library("bundlemanager") {
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [
-    "bundle_manager.cpp",
-    "clean_cache_callback.cpp",
+    "js_app_control.cpp",
     "native_module.cpp",
   ]
 
   deps = [
     "${common_path}:libappexecfwk_common",
-    "../common:bundle_napi_common",
+    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common:bundle_napi_common",
   ]
 
   external_deps = [

@@ -14,7 +14,6 @@
  */
 
 #include "business_error.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::string& msg)
