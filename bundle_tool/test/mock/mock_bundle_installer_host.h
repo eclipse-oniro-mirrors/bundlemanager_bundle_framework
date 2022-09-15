@@ -36,6 +36,8 @@ const std::string STRING_BUNDLE_NAME = "name";
 const std::string STRING_MODULE_NAME = "module";
 const std::string STRING_ABILITY_NAME = "ability";
 const std::string DEFAULT_USER_ID = "100";
+const std::string DEFAULT_WAIT_TIME = "100";
+const std::string DEFAULT_DEVICE_TIME = "0";
 }  // namespace
 
 class MockBundleInstallerHost : public IRemoteStub<IBundleInstaller> {
