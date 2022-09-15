@@ -59,6 +59,11 @@ static void ConvertAbilityInfos(napi_env env, const std::vector<AbilityInfo> &ab
 
 static void ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo, napi_value objAbilityInfo);
 
+static void ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
+    napi_value value);
+
+static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo, napi_value objExtensionInfo);
+
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,

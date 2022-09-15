@@ -2823,14 +2823,14 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
 
     ErrCode ret = ImplicitQueryExtensionInfosV9(want, flags, requestUserId, extensionInfos, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGE("implicit queryExtensionAbilityInfos error");
+        APP_LOGE("ImplicitQueryExtensionInfosV9 error");
         return ret;
     }
     if (extensionInfos.empty()) {
         APP_LOGE("no matching abilityInfo");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    APP_LOGD("query extensionAbilityInfo successfully");
+    APP_LOGD("QueryExtensionAbilityInfosV9 success");
     return ERR_OK;
 }
 
