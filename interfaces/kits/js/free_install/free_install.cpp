@@ -36,7 +36,6 @@ enum class UpgradeFlag {
 };
 const std::string RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
 const std::string RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG = "setHapModuleUpgradeFlag";
-
 }
 
 static ErrCode InnerIsHapModuleRemovable(const std::string &bundleName,
@@ -45,13 +44,13 @@ static ErrCode InnerIsHapModuleRemovable(const std::string &bundleName,
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        return INTERNAL_ERROR;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
     if (result != ERR_OK) {
         APP_LOGE("InnerIsHapModuleRemovable::IsModuleRemovable failed");
     }
-    return result;
+    return CommonFunc::ConvertErrCode(result);
 }
 
 void IsHapModuleRemovableExec(napi_env env, void *data)
@@ -101,13 +100,13 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid.");
-        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     HapModuleRemovableCallbackInfo *asyncCallbackInfo = new (std::nothrow) HapModuleRemovableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<HapModuleRemovableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -117,12 +116,12 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -132,7 +131,7 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
     }
@@ -150,13 +149,13 @@ static ErrCode InnerSetHapModuleUpgradeFlag(const std::string &bundleName,
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        return INTERNAL_ERROR;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     auto result = iBundleMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
     if (result != ERR_OK) {
         APP_LOGE("InnerSetHapModuleUpgradeFlag::SetModuleUpgradeFlag failed");
     }
-    return result;
+    return CommonFunc::ConvertErrCode(result);
 }
 
 void SetHapModuleUpgradeFlagExec(napi_env env, void *data)
@@ -206,13 +205,13 @@ napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
     APP_LOGD("NAPI_SetHapModuleUpgradeFlag start");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
-        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     SetHapModuleUpgradeFlagCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) SetHapModuleUpgradeFlagCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<SetHapModuleUpgradeFlagCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -222,17 +221,17 @@ napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_number)) {
             if (!CommonFunc::ParseInt(env, asyncCallbackInfo->upgradeFlag, args[i])) {
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_THREE) {
@@ -241,8 +240,7 @@ napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
             }
             break;
         } else {
-            APP_LOGE("param check error");
-            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
     }
