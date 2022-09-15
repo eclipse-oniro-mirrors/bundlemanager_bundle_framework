@@ -51,7 +51,8 @@ const std::string ERROR_UNINSTALL_FAILED = "uninstall failed!";
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
-const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
+    "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string PERMISSIONNAME = "ohos.permission.READ_CALENDAR";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
@@ -122,7 +123,7 @@ CleanCacheCallBackImpl::~CleanCacheCallBackImpl()
 void CleanCacheCallBackImpl::OnCleanCacheFinished(bool succeeded)
 {
     APP_LOGI("BMS_Kit_St OnCleanCacheFinished results are %{public}d", succeeded);
-    resultSucceededSignal_.set_value(!succeeded);
+    resultSucceededSignal_.set_value(succeeded);
 }
 
 bool CleanCacheCallBackImpl::GetSucceededResult() const
@@ -4434,9 +4435,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0100, Function | SmallTest | Le
 
     BundlePackInfo bundlePackInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool testRet = bundleMgrProxy->GetBundlePackInfo(
+    auto testRet = bundleMgrProxy->GetBundlePackInfo(
         appName, GET_PACK_INFO_ALL, bundlePackInfo, USERID);
-    EXPECT_EQ(true, testRet);
+    EXPECT_EQ(testRet, ERR_OK);
     
     resvec.clear();
     Uninstall(appName, resvec);
@@ -4464,9 +4465,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0200, Function | SmallTest | Le
 
     BundlePackInfo bundlePackInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool testRet = bundleMgrProxy->GetBundlePackInfo(
+    auto testRet = bundleMgrProxy->GetBundlePackInfo(
         appName, BundleFlag::GET_BUNDLE_DEFAULT, bundlePackInfo, USERID);
-    EXPECT_EQ(true, testRet);
+    EXPECT_EQ(ERR_OK, testRet);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -4599,7 +4600,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0100, Function | SmallTest |
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     auto result = bundleMgrProxy->SetModuleUpgradeFlag(appName, BASE_MODULE_NAME, 1);
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(result == ERR_OK);
     auto res = bundleMgrProxy->GetModuleUpgradeFlag(appName, BASE_MODULE_NAME);
     EXPECT_TRUE(res);
 
@@ -4737,7 +4738,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0100, Function | SmallTest | Lev
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool res = bundleMgrProxy->GetPermissionDef(PERMISSIONNAME, permissionDef);
     EXPECT_TRUE(res);
-
 }
 
 /**
@@ -4853,10 +4853,11 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0100, Function | SmallTest | 
     abilityInfo.name = BASE_ABILITY_NAME;
     abilityInfo.bundleName = appName;
     abilityInfo.moduleName = BASE_MODULE_NAME;
-    bool testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
-    EXPECT_TRUE(testRet);
-    bool testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo);
-    EXPECT_FALSE(testRet1);
+    int32_t testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
+    EXPECT_EQ(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo, isEnable);
+    EXPECT_NE(0, testRet1);
 
     resvec.clear();
     Uninstall(appName, resvec);

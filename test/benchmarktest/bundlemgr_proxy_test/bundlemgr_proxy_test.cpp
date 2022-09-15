@@ -920,7 +920,8 @@ static void BenchmarkTestIsApplicationEnabled(benchmark::State &state)
             break;
         }
         /* @tc.steps: step1.call IsApplicationEnabled in loop */
-        bundleMgrProxy->IsApplicationEnabled(BUNDLE_NAME);
+        bool isEnable = false;
+        bundleMgrProxy->IsApplicationEnabled(BUNDLE_NAME, isEnable);
     }
 }
 
@@ -960,7 +961,8 @@ static void BenchmarkTestIsAbilityEnabled(benchmark::State &state)
             break;
         }
         /* @tc.steps: step1.call IsAbilityEnabled in loop */
-        bundleMgrProxy->IsAbilityEnabled(info);
+        bool isEnable = false;
+        bundleMgrProxy->IsAbilityEnabled(info, isEnable);
     }
 }
 

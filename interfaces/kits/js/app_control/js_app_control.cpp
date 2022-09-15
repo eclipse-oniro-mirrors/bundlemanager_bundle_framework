@@ -51,7 +51,7 @@ static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& 
     auto appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null.");
-        return SYSTEM_ABILITY_NOT_FOUND;
+        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
     // to be modified after inner implementation
     return ERR_OK;
@@ -62,7 +62,7 @@ static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& 
     auto appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null.");
-        return SYSTEM_ABILITY_NOT_FOUND;
+        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
     // to be modified after inner implementation
     return ERR_OK;
@@ -73,7 +73,7 @@ static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
     auto appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null.");
-        return SYSTEM_ABILITY_NOT_FOUND;
+        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
     // to be modified after inner implementation
     return ERR_OK;
@@ -127,13 +127,13 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("Napi func init failed");
-        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
@@ -142,13 +142,13 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
                 APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->appId.c_str());
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_object)) {
             if (!CommonFunc::ParseElementName(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("disposed want invalid!");
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -159,7 +159,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
             }
         } else {
             APP_LOGE("SetDisposedStatus arg err!");
-            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
     }
@@ -217,13 +217,13 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid.");
-        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
@@ -232,7 +232,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
                 APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->appId.c_str());
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -243,7 +243,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
             }
         } else {
             APP_LOGE("DeleteDisposedStatus arg err!");
-            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
     }
@@ -303,13 +303,13 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid.");
-        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); i++) {
@@ -318,7 +318,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
                 APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->appId.c_str());
-                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -329,7 +329,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
             }
         } else {
             APP_LOGE("GetDisposedStatus arg err!");
-            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
     }

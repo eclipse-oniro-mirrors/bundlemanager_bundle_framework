@@ -551,10 +551,15 @@ bool BundleTestTool::GetIsRemovableOperation(
     const std::string &bundleName, const std::string &moduleName, std::string &result) const
 {
     APP_LOGD("bundleName: %{public}s, moduleName:%{public}s", bundleName.c_str(), moduleName.c_str());
-    auto ret = bundleMgrProxy_->IsModuleRemovable(bundleName, moduleName);
-    APP_LOGD("IsModuleRemovable end bundleName: %{public}s, ret:%{public}d", bundleName.c_str(), ret);
-    result.append("isRemovable: " + std::to_string(ret) + "\n");
-    return ret;
+    bool isRemovable = false;
+    auto ret = bundleMgrProxy_->IsModuleRemovable(bundleName, moduleName, isRemovable);
+    APP_LOGD("IsModuleRemovable end bundleName: %{public}s, isRemovable:%{public}d", bundleName.c_str(), isRemovable);
+    result.append("isRemovable: " + std::to_string(isRemovable) + "\n");
+    if (ret != ERR_OK) {
+        APP_LOGE("IsModuleRemovable failed, ret: %{public}d", ret);
+        return false;
+    }
+    return true;
 }
 
 bool BundleTestTool::CheckRemovableErrorOption(int option, int counter, const std::string &commandName)

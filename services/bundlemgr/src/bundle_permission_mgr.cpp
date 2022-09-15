@@ -627,7 +627,7 @@ ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName,
         ConvertPermissionDef(accessTokenPermDef, permissionDef);
         return ERR_OK;
     }
-    return ERR_BUNDLE_MANAGER_QUERY_GET_PERMISSION_DEFINE_FAILED;
+    return ret;
 }
 
 bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,

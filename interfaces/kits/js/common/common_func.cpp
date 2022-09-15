@@ -303,15 +303,15 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
         case ERR_OK:
             return NO_ERROR;
         case ERR_BUNDLE_MANAGER_INVALID_USER_ID:
-            return INVALID_USER_ID;
+            return ERROR_INVALID_USER_ID;
         case ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST:
-            return BUNDLE_NOT_EXIST;
+            return ERROR_BUNDLE_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST:
-            return ABILITY_NOT_EXIST;
+            return ERROR_ABILITY_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_PERMISSION_DENIED:
-            return PERMISSION_DENIED_ERROR;
+            return ERROR_PERMISSION_DENIED_ERROR;
         default:
-            return INTERNAL_ERROR;
+            return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 }
 
@@ -653,6 +653,26 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, extensionInfo.writePermission.c_str(), NAPI_AUTO_LENGTH, &nWritePermission));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, WRITE_PERMISSION, nWritePermission));
+}
+
+void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
+{
+    napi_value nPermissionName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, permissionDef.permissionName.c_str(), NAPI_AUTO_LENGTH, &nPermissionName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "permissionName", nPermissionName));
+
+    napi_value nGrantMode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.grantMode, &nGrantMode));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "grantMode", nGrantMode));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "labelId", nLabelId));
+
+    napi_value nDescriptionId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "descriptionId", nDescriptionId));
 }
 }
 }

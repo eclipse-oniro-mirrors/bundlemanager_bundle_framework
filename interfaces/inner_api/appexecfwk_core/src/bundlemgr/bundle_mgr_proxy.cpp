@@ -146,6 +146,43 @@ bool BundleMgrProxy::GetApplicationInfo(
     return true;
 }
 
+ErrCode BundleMgrProxy::GetApplicationInfoV9(
+    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetApplicationInfoV9 of %{public}s", appName.c_str());
+    if (appName.empty()) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appName)) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write appName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetApplicationInfoV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelableInfoWithErrCode<ApplicationInfo>(
+        IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9, data, appInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetApplicationInfoV9 from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 bool BundleMgrProxy::GetApplicationInfos(
     const ApplicationFlag flag, int userId, std::vector<ApplicationInfo> &appInfos)
 {
@@ -205,6 +242,43 @@ bool BundleMgrProxy::GetApplicationInfos(
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::GetApplicationInfosV9(
+    int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get GetApplicationInfosV9 of specific userId id %{private}d", userId);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetApplicationInfosV9 due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetApplicationInfosV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetApplicationInfosV9 due to write userId error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host returns error, error code: %{public}d.", res);
+        return res;
+    }
+
+    if (!GetParcelableInfosFromAshmem<ApplicationInfo>(reply, appInfos)) {
+        APP_LOGE("failed to GetApplicationInfosV9 from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 bool BundleMgrProxy::GetBundleInfo(
@@ -277,75 +351,68 @@ bool BundleMgrProxy::GetBundleInfo(
     return true;
 }
 
-bool BundleMgrProxy::GetBundlePackInfo(
+ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetBundlePackInfo due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetBundlePackInfo due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int>(flag))) {
         APP_LOGE("fail to GetBundlePackInfo due to write flag fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetBundlePackInfo due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!GetParcelableInfo<BundlePackInfo>(IBundleMgr::Message::GET_BUNDLE_PACK_INFO, data, bundlePackInfo)) {
-        APP_LOGE("fail to GetBundlePackInfo from server");
-        return false;
-    }
-    return true;
+    return GetParcelableInfoWithErrCode<BundlePackInfo>(IBundleMgr::Message::GET_BUNDLE_PACK_INFO, data,
+        bundlePackInfo);
 }
 
-bool BundleMgrProxy::GetBundlePackInfo(
+ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetBundlePackInfo due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetBundlePackInfo due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
         APP_LOGE("fail to GetBundlePackInfo due to write flag fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetBundlePackInfo due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!GetParcelableInfo<BundlePackInfo>(
-            IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS, data, bundlePackInfo)) {
-        APP_LOGE("fail to GetBundlePackInfo from server");
-        return false;
-    }
-    return true;
+    return GetParcelableInfoWithErrCode<BundlePackInfo>(
+        IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS, data, bundlePackInfo);
 }
 
 bool BundleMgrProxy::GetBundleInfos(
@@ -1273,7 +1340,7 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
     APP_LOGD("begin to GetPermissionDef of %{public}s", permissionName.c_str());
     if (permissionName.empty()) {
         APP_LOGE("fail to GetPermissionDef due to params empty");
-        return ERR_BUNDLE_MANAGER_QUERY_EMPTY_BUNDLE_NAME;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
@@ -1358,40 +1425,40 @@ bool BundleMgrProxy::IsSafeMode()
     return reply.ReadBool();
 }
 
-bool BundleMgrProxy::CleanBundleCacheFiles(
+ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
     if (bundleName.empty() || !cleanCacheCallback) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to CleanBundleCacheFiles due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to CleanBundleCacheFiles due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteObject<IRemoteObject>(cleanCacheCallback->AsObject())) {
         APP_LOGE("fail to CleanBundleCacheFiles, for write parcel failed");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to CleanBundleCacheFiles due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::CLEAN_BUNDLE_CACHE_FILES, data, reply)) {
         APP_LOGE("fail to CleanBundleCacheFiles from server");
-        return false;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
 bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const int userId)
@@ -1544,62 +1611,40 @@ bool BundleMgrProxy::DumpInfos(
     return true;
 }
 
-bool BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("fail to IsApplicationEnabled due to params empty");
-        return false;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to IsApplicationEnabled due to write InterfaceToken fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply)) {
-        APP_LOGE("fail to IsApplicationEnabled from server");
-        return false;
-    }
-    return reply.ReadBool();
-}
-
-bool BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
+ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+    bool &isRemovable)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to IsModuleRemovable of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to IsModuleRemovable due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to IsModuleRemovable due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to IsModuleRemovable due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to IsModuleRemovable due to write moduleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::IS_MODULE_REMOVABLE, data, reply)) {
         APP_LOGE("fail to IsModuleRemovable from server");
         return false;
     }
-    return reply.ReadBool();
+    ErrCode ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        isRemovable = reply.ReadBool();
+    }
+    return ret;
 }
 
 bool BundleMgrProxy::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)
@@ -1668,137 +1713,167 @@ bool BundleMgrProxy::GetModuleUpgradeFlag(const std::string &bundleName, const s
     return reply.ReadBool();
 }
 
-bool BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
+ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, int32_t upgradeFlag)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetModuleUpgradeFlag of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write moduleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(upgradeFlag)) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to write isEnable fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::SET_MODULE_NEED_UPDATE, data, reply)) {
         APP_LOGE("fail to SetModuleUpgradeFlag from server");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
-bool BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
+ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsApplicationEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+    isEnable = reply.ReadBool();
+    return NO_ERROR;
+}
+
+ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to SetApplicationEnabled due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetApplicationEnabled due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to SetApplicationEnabled due to write bundleName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(isEnable)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write isEnable fail");
-        return false;
+        APP_LOGE("fail to SetApplicationEnabled due to write isEnable fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write userId fail");
-        return false;
+        APP_LOGE("fail to SetApplicationEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::SET_APPLICATION_ENABLED, data, reply)) {
-        APP_LOGE("fail to SetApplicationEnabled from server");
-        return false;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
-bool BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo)
+ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to IsAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.name.empty()) {
         APP_LOGE("fail to IsAbilityEnabled due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to IsAbilityEnabled due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&abilityInfo)) {
         APP_LOGE("fail to IsAbilityEnabled due to write abilityInfo fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::IS_ABILITY_ENABLED, data, reply)) {
-        APP_LOGE("fail to IsAbilityEnabled from server");
-        return false;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return reply.ReadBool();
+    int32_t ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+    isEnable = reply.ReadBool();
+    return NO_ERROR;
 }
 
-bool BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
+ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.name.empty()) {
         APP_LOGE("fail to SetAbilityEnabled due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetAbilityEnabled due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&abilityInfo)) {
         APP_LOGE("fail to SetAbilityEnabled due to write abilityInfo fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(isEnabled)) {
         APP_LOGE("fail to SetAbilityEnabled due to write isEnabled fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to SetAbilityEnabled due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::SET_ABILITY_ENABLED, data, reply)) {
-        APP_LOGE("fail to SetAbilityEnabled from server");
-        return false;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return reply.ReadBool();
+    return reply.ReadInt32();
 }
 
 bool BundleMgrProxy::GetAbilityInfo(
@@ -2156,13 +2231,8 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, int32_t f
         APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    if (!GetParcelableInfosWithErrCode(
-        IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9, data, extensionInfos)) {
-        APP_LOGE("fail to obtain extensionInfos");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return GetParcelableInfosWithErrCode(
+        IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9, data, extensionInfos);
 }
 
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
@@ -2221,12 +2291,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, const Ext
         APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    if (!GetParcelableInfosWithErrCode(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, data, extensionInfos)) {
-        APP_LOGE("fail to obtain extensionInfos");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return GetParcelableInfosWithErrCode(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, data, extensionInfos);
 }
 
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
@@ -2768,7 +2833,7 @@ int32_t BundleMgrProxy::GetUdidByNetworkId(const std::string &networkId, std::st
     }
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, data, reply)) {
-        return TRANSACTION_ERR;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     udid = reply.ReadString();
     return NO_ERROR;
@@ -3076,6 +3141,7 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(IBundleMgr::Message code, M
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -3141,7 +3207,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
         }
         APP_LOGD("get parcelable infos success");
     }
-
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
     return res;
 }
 

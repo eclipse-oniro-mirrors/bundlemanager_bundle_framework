@@ -1849,7 +1849,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
     BundlePackInfo info;
     std::string hapName = "sandboxTest";
     auto ret = bundleMgrClient.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, info, DEFAULT_USERID);
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(ret == ERR_OK);
 
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);

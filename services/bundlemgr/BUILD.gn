@@ -188,6 +188,10 @@ ohos_shared_library("libbms") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
+  if (is_emulator) {
+    defines += [ "X86_EMULATOR_MODE" ]
+  }
+
   configs = [ ":bundlemgr_common_config" ]
   cflags = [
     "-fvisibility=hidden",

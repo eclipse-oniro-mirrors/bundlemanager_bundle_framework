@@ -207,6 +207,17 @@ public:
     bool GetApplicationInfo(
         const std::string &appName, int32_t flags, const int userId, ApplicationInfo &appInfo) const;
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApplicationInfoV9(
+        const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
+    /**
      * @brief Obtains information about all installed applications of a specified user.
      * @param flags Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
@@ -216,6 +227,16 @@ public:
      */
     bool GetApplicationInfos(
         int32_t flags, const int userId, std::vector<ApplicationInfo> &appInfos) const;
+    /**
+     * @brief Obtains information about all installed applications of a specified user.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo objects that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfos Indicates all of the obtained ApplicationInfo objects.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApplicationInfosV9(
+        int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) const;
     /**
      * @brief Obtains BundleInfo of all bundles available in the system.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
@@ -241,9 +262,9 @@ public:
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    bool GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundleInfo,
+    ErrCode GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundleInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Obtains the BundleInfo of application bundles based on the specified metaData.
@@ -348,33 +369,35 @@ public:
     /**
      * @brief Get whether the application status is enabled.
      * @param bundleName Indicates the bundle name.
-     * @return Returns true if the bundle status is enabled; returns false otherwise.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
      */
-    bool IsApplicationEnabled(const std::string &bundleName) const;
+    ErrCode IsApplicationEnabled(const std::string &bundleName, bool &isEnable) const;
     /**
      * @brief Set the application status.
      * @param bundleName Indicates the bundle name.
      * @param isEnable Indicates the status to set.
      * @param userId Indicates the user id.
-     * @return Returns true if the bundle status successfully set; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    bool SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+    ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
      */
-    bool IsAbilityEnabled(const AbilityInfo &abilityInfo) const;
+    ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) const;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.
      * @param isEnabled Specifies whether to enable the ability.
      *                 The value true means to enable it, and the value false means to disable it.
      * @param userId Indicates the user id.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    bool SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
+    ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Register the bundle status callback function.
@@ -657,9 +680,10 @@ public:
      * @brief Get Module isRemovable by bundleName and moduleName.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param moduleName Indicates the moduleName.
-     * @return Returns true if the module isRemovable is successfully obtained; returns false otherwise.
+     * @param isRemovable Indicates the module whether is removable.
+     * @return Returns ERR_OK if the module isRemovable is successfully obtained; returns other ErrCode otherwise.
      */
-    bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) const;
+    ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable) const;
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     /**
@@ -676,7 +700,7 @@ public:
 #endif
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
-    bool SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
+    ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
     int32_t GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName) const;
     /**
      * @brief Get the Inner Bundle Info With Flags object
@@ -688,7 +712,7 @@ public:
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
-    ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, const int32_t flags,
+    ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);

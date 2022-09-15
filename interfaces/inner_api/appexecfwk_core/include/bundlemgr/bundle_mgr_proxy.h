@@ -55,6 +55,17 @@ public:
     virtual bool GetApplicationInfo(
         const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) override;
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name through the proxy object.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApplicationInfoV9(
+        const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) override;
+    /**
      * @brief Obtains information about all installed applications of a specified user through the proxy object.
      * @param flag Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
@@ -73,6 +84,16 @@ public:
      * @return Returns true if the application is successfully obtained; returns false otherwise.
      */
     virtual bool GetApplicationInfos(
+        int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) override;
+    /**
+     * @brief Obtains information about all installed applications of a specified user through the proxy object.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo objects that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfos Indicates all of the obtained ApplicationInfo objects.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApplicationInfosV9(
         int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) override;
     /**
      * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.
@@ -100,9 +121,9 @@ public:
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
      * @param userId Indicates the user ID.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flags,
+    virtual ErrCode GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flags,
         BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
@@ -110,9 +131,9 @@ public:
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
      * @param userId Indicates the user ID.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetBundlePackInfo(const std::string &bundleName, int32_t flags,
+    virtual ErrCode GetBundlePackInfo(const std::string &bundleName, int32_t flags,
         BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains BundleInfo of all bundles available in the system through the proxy object.
@@ -371,7 +392,7 @@ public:
      * @brief Obtains detailed information about a specified permission through the proxy object.
      * @param permissionName Indicates the name of the ohos permission.
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
-     * @return Returns true if the PermissionDef object is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the PermissionDef object is successfully obtained; returns other ErrCode otherwise.
      */
     virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
     /**
@@ -396,9 +417,9 @@ public:
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
      * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.
      * @param userId description the user id.
-     * @return Returns true if this function is successfully called; returns false otherwise.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
-    virtual bool CleanBundleCacheFiles(
+    virtual ErrCode CleanBundleCacheFiles(
         const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
@@ -438,34 +459,36 @@ public:
     /**
      * @brief Checks whether a specified application is enabled through the proxy object.
      * @param bundleName Indicates the bundle name of the application.
-     * @return Returns true if the application is enabled; returns false otherwise.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
      */
-    virtual bool IsApplicationEnabled(const std::string &bundleName) override;
+    virtual ErrCode IsApplicationEnabled(const std::string &bundleName, bool &isEnable) override;
     /**
      * @brief Sets whether to enable a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Specifies whether to enable the application.
      *                 The value true means to enable it, and the value false means to disable it.
      * @param userId description the user id.
-     * @return Returns true if the application is enabled; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    virtual bool SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+    virtual ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
      */
-    virtual bool IsAbilityEnabled(const AbilityInfo &abilityInfo) override;
+    virtual ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) override;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.
      * @param isEnabled Specifies whether to enable the ability.
      *                 The value true means to enable it, and the value false means to disable it.
      * @param userId description the user id.
-     * @return Returns true if the ability is enabled; returns false otherwise.
+     * @return Returns result of the operation.
      */
-    virtual bool SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
+    virtual ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the interface used to install and uninstall bundles through the proxy object.
@@ -620,9 +643,11 @@ public:
      * @brief Obtains the value of isRemovable based on a given bundle name through the proxy object.
      * @param bundleName Indicates the bundle name to be queried.
      * @param moduleName Indicates the module name to be queried.
+     * @param isRemovable Indicates the module whether is removable.
      * @return Returns true if the isRemovable is successfully obtained; returns false otherwise.
      */
-    virtual bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) override;
+    virtual ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+        bool &isRemovable) override;
     /**
      * @brief Sets whether to enable isRemovable based on a given bundle name through the proxy object.
      * @param bundleName Indicates the bundle name to be queried.
@@ -657,9 +682,9 @@ public:
      * @param moduleName Indicates the module name to be queried.
      * @param isEnable Specifies whether to enable the upgradeFlag of InnerModuleInfo.
      *                 The value true means to enable it, and the value false means to disable it
-     * @return Returns true if the upgradeFlag is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the upgradeFlag is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool SetModuleUpgradeFlag(
+    virtual ErrCode SetModuleUpgradeFlag(
         const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag) override;
 
     virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;

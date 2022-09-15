@@ -19,6 +19,7 @@
 #include "ability_info.h"
 #include "base_cb_info.h"
 #include "bundle_constants.h"
+#include "bundle_mgr_interface.h"
 #include "clean_cache_callback.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"

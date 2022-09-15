@@ -27,6 +27,8 @@ namespace {
 const std::string HQF_INFO_HAP_SHA256 = "hapSha256";
 const std::string HQF_INFO_HQF_FILE_PATH = "hqfFilePath";
 const std::string HQF_INFO_TYPE = "type";
+const std::string HQF_INFO_CPU_ABI = "cpuAbi";
+const std::string HQF_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 }
 
 void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
@@ -35,7 +37,9 @@ void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)
         {Constants::MODULE_NAME, hqfInfo.moduleName},
         {HQF_INFO_HAP_SHA256, hqfInfo.hapSha256},
         {HQF_INFO_HQF_FILE_PATH, hqfInfo.hqfFilePath},
-        {HQF_INFO_TYPE, hqfInfo.type}
+        {HQF_INFO_TYPE, hqfInfo.type},
+        {HQF_INFO_CPU_ABI, hqfInfo.cpuAbi},
+        {HQF_INFO_NATIVE_LIBRARY_PATH, hqfInfo.nativeLibraryPath}
     };
 }
 
@@ -75,6 +79,22 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HQF_INFO_CPU_ABI,
+        hqfInfo.cpuAbi,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HQF_INFO_NATIVE_LIBRARY_PATH,
+        hqfInfo.nativeLibraryPath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 bool HqfInfo::ReadFromParcel(Parcel &parcel)
@@ -83,6 +103,8 @@ bool HqfInfo::ReadFromParcel(Parcel &parcel)
     hapSha256 = Str16ToStr8(parcel.ReadString16());
     hqfFilePath = Str16ToStr8(parcel.ReadString16());
     type = static_cast<QuickFixType>(parcel.ReadInt32());
+    cpuAbi = Str16ToStr8(parcel.ReadString16());
+    nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -92,6 +114,8 @@ bool HqfInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapSha256));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hqfFilePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
     return true;
 }
 
