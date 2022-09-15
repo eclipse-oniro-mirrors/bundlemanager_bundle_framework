@@ -255,11 +255,11 @@ public:
      * @brief Obtains the formal name associated with the given UID.
      * @param uid Indicates the uid.
      * @param name Indicates the obtained formal name.
-     * @return Returns true if the formal name is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
      */
-    virtual bool GetNameForUid(const int uid, std::string &name)
+    virtual ErrCode GetNameForUid(const int uid, std::string &name)
     {
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.

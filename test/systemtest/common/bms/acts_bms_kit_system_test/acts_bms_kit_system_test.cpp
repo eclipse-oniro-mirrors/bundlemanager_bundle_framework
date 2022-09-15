@@ -3934,8 +3934,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
         }
         BundleInfo bundleInfo1;
         bundleMgrProxy->GetBundleInfo(BASE_BUNDLE_NAME + '1', BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo1, USERID);
-        bool ret = bundleMgrProxy->GetNameForUid(bundleInfo1.uid, name1);
-        EXPECT_TRUE(ret);
+        ErrCode ret = bundleMgrProxy->GetNameForUid(bundleInfo1.uid, name1);
+        EXPECT_EQ(ret, ERR_OK);
         Uninstall(BASE_BUNDLE_NAME + '1', resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "uninstall fail!";
         resvec.clear();
@@ -3947,7 +3947,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
         BundleInfo bundleInfo2;
         bundleMgrProxy->GetBundleInfo(BASE_BUNDLE_NAME + '1', BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo2, USERID);
         ret = bundleMgrProxy->GetNameForUid(bundleInfo2.uid, name2);
-        EXPECT_TRUE(ret);
+        EXPECT_EQ(ret, ERR_OK);
         EXPECT_NE(bundleInfo1.uid, bundleInfo2.uid);
         EXPECT_EQ(name1, name2);
         for (int i = 1; i <= 2; i++) {
@@ -3956,7 +3956,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
             Uninstall(appName, resvec2);
             EXPECT_EQ(commonTool.VectorToStr(resvec2), "Success") << "uninstall fail!";
         }
-        if (!ret) {
+        if (ret != ERR_OK) {
             APP_LOGI("GetNameForUid_0100 failed - cycle count: %{public}d", i);
             break;
         }
@@ -3997,12 +3997,12 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0200, Function | MediumTest | Level
         BundleInfo bundleInfo;
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
         std::string name;
-        bool ret = bundleMgrProxy->GetNameForUid(Constants::INVALID_UID, name);
-        EXPECT_FALSE(ret);
+        ErrCode ret = bundleMgrProxy->GetNameForUid(Constants::INVALID_UID, name);
+        EXPECT_NE(ret, ERR_OK);
         resvec.clear();
         Uninstall(appName, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "uninstall fail!";
-        if (ret) {
+        if (ret != ERR_OK) {
             APP_LOGI("GetNameForUid_0200 failed - cycle count: %{public}d", i);
             break;
         }
@@ -4035,11 +4035,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0300, Function | MediumTest | Level
         BundleInfo bundleInfo;
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
         std::string name;
-        bool ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
-        EXPECT_TRUE(ret);
+        ErrCode ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
+        EXPECT_EQ(ret, ERR_OK);
         EXPECT_EQ(name, SYSTEM_SETTINGS_BUNDLE_NAME);
 
-        if (!ret) {
+        if (ret != ERR_OK) {
             APP_LOGI("GetNameForUid_0300 failed - cycle count: %{public}d", i);
             break;
         }

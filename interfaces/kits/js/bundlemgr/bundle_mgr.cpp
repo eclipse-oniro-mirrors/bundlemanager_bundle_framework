@@ -6232,7 +6232,11 @@ static bool InnerGetNameForUid(int32_t uid, std::string &bundleName)
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    return iBundleMgr->GetNameForUid(uid, bundleName);
+    if (iBundleMgr->GetNameForUid(uid, bundleName) != ERR_OK) {
+        APP_LOGE("GetNameForUid failed");
+        return false;
+    }
+    return true;
 }
 
 napi_value GetNameForUid(napi_env env, napi_callback_info info)

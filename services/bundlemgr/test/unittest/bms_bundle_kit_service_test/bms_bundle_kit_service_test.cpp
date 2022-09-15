@@ -3343,8 +3343,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0100, Function | SmallTest | Lev
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     std::string testResult;
-    bool testRet = GetBundleDataMgr()->GetNameForUid(TEST_UID, testResult);
-    EXPECT_TRUE(testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetNameForUid(TEST_UID, testResult);
+    EXPECT_EQ(testRet, ERR_OK);
     EXPECT_EQ(BUNDLE_NAME_TEST, testResult);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3359,8 +3359,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0100, Function | SmallTest | Lev
 HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0200, Function | SmallTest | Level1)
 {
     std::string testResult;
-    bool testRet = GetBundleDataMgr()->GetNameForUid(TEST_UID, testResult);
-    EXPECT_FALSE(testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetNameForUid(TEST_UID, testResult);
+    EXPECT_NE(testRet, ERR_OK);
     EXPECT_NE(BUNDLE_NAME_TEST, testResult);
 }
 
@@ -3375,8 +3375,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0300, Function | SmallTest | Lev
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     std::string testResult;
-    bool testRet = GetBundleDataMgr()->GetNameForUid(DEMO_UID, testResult);
-    EXPECT_FALSE(testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetNameForUid(DEMO_UID, testResult);
+    EXPECT_NE(testRet, ERR_OK);
     EXPECT_NE(BUNDLE_NAME_TEST, testResult);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3394,8 +3394,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0400, Function | SmallTest | Lev
     MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
 
     std::string testResult;
-    bool testRet = GetBundleDataMgr()->GetNameForUid(INVALID_UID, testResult);
-    EXPECT_FALSE(testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetNameForUid(INVALID_UID, testResult);
+    EXPECT_NE(testRet, ERR_OK);
     EXPECT_NE(BUNDLE_NAME_TEST, testResult);
     EXPECT_NE(BUNDLE_NAME_DEMO, testResult);
 
