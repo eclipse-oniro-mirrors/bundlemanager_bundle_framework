@@ -3998,7 +3998,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0200, Function | MediumTest | Level
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
         std::string name;
         ErrCode ret = bundleMgrProxy->GetNameForUid(Constants::INVALID_UID, name);
-        EXPECT_NE(testRet, ERR_OK);
+        EXPECT_NE(ret, ERR_OK);
         resvec.clear();
         Uninstall(appName, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "uninstall fail!";

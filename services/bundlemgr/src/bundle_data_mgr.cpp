@@ -1893,7 +1893,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE_V9)
+    if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)
         && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
         APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
