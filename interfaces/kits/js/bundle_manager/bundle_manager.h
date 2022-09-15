@@ -52,6 +52,22 @@ struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
 };
 
+struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
+    explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    bool isEnable = false;
+};
+
+struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    AbilityInfo abilityInfo;
+    bool isEnable = false;
+};
+
+napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
+napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);

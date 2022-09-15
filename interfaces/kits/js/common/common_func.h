@@ -47,9 +47,11 @@ static void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &wa
 
 static bool ParseElementName(napi_env env, napi_value args, Want &want);
 
-static ErrCode ConvertErrCode(ErrCode nativeErrCode);
-
 static bool ParseWant(napi_env env, napi_value args, Want &want);
+
+static bool ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& abilityInfo);
+
+static ErrCode ConvertErrCode(ErrCode nativeErrCode);
 
 static void ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo, napi_value value);
 

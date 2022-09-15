@@ -112,6 +112,42 @@ bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result
     return true;
 }
 
+bool CommonFunc::ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& abilityInfo)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGE("ParseAbilityInfo type mismatch!");
+        return false;
+    }
+
+    napi_value prop = nullptr;
+    // parse bundleName
+    napi_get_named_property(env, param, "bundleName", &prop);
+    std::string bundleName;
+    if (!ParseString(env, prop, bundleName)) {
+        return false;
+    }
+    abilityInfo.bundleName = bundleName;
+
+    // parse moduleName
+    napi_get_named_property(env, param, "moduleName", &prop);
+    std::string moduleName;
+    if (!ParseString(env, prop, moduleName)) {
+        return false;
+    }
+    abilityInfo.moduleName = moduleName;
+
+    // parse abilityName
+    napi_get_named_property(env, param, "name", &prop);
+    std::string abilityName;
+    if (!ParseString(env, prop, abilityName)) {
+        return false;
+    }
+    abilityInfo.name = abilityName;
+    return true;
+}
+
 sptr<IBundleMgr> CommonFunc::GetBundleMgr()
 {
     if (bundleMgr_ == nullptr) {

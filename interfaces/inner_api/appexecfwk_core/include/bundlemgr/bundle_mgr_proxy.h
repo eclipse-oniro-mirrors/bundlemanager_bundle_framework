@@ -735,8 +735,6 @@ private:
      * @return Returns true if message send successfully; returns false otherwise.
      */
     bool SendTransactCmd(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply);
-
-    ErrCode SendTransactCommand(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Send a command message and then get a parcelable information object from the reply.
      * @param code Indicates the message code to be sent.

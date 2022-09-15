@@ -42,6 +42,50 @@ static ErrCode InnerQueryAbilityInfos(napi_env env, const Want &want,
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static ErrCode InnerSetApplicationEnabled(napi_env, const std::string &bundleName, bool &isEnable)
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        return SYSTEM_ABILITY_NOT_FOUND;
+    }
+    ErrCode ret = bundleMgr->SetApplicationEnabled(bundleName, isEnable);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+static ErrCode InnerIsApplicationEnabled(napi_env, const std::string &bundleName, bool &isEnable)
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        return SYSTEM_ABILITY_NOT_FOUND;
+    }
+    ErrCode ret = bundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+static ErrCode InnerSetAbilityEnabled(napi_env, const AbilityInfo &abilityInfo, bool &isEnable)
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        return SYSTEM_ABILITY_NOT_FOUND;
+    }
+    ErrCode ret = bundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+static ErrCode InnerIsAbilityEnabled(napi_env, const AbilityInfo &abilityInfo, bool &isEnable)
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        return SYSTEM_ABILITY_NOT_FOUND;
+    }
+    ErrCode ret = bundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 void QueryAbilityInfosExec(napi_env env, void *data)
 {
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
@@ -296,6 +340,336 @@ void CreateAbilityFlagObject(napi_env env, napi_value value)
         &nGetAbilityInfOnlySystemApp));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_ONLY_SYSTEM_APP",
         nGetAbilityInfOnlySystemApp));
+}
+
+void SetApplicationEnabledExec(napi_env env, void *data)
+{
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        return;
+    }
+    asyncCallbackInfo->err = InnerSetApplicationEnabled(env, asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->isEnable);
+}
+
+void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[1] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to SetApplicationEnabled");
+    NapiArg args(env, info);
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid!", asyncCallbackInfo->bundleName.c_str());
+                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_boolean)) {
+            NAPI_CALL(env, napi_get_value_bool(env, args[i], &asyncCallbackInfo->isEnable));
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            APP_LOGE("SetApplicationEnabled arg err!");
+            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(
+        env, asyncCallbackInfo, "SetApplicationEnabled", SetApplicationEnabledExec, SetApplicationEnabledComplete);
+    callbackPtr.release();
+    APP_LOGD("call SetApplicationEnabled done.");
+    return promise;
+}
+
+void SetAbilityEnabledExec(napi_env env, void *data)
+{
+    AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        return;
+    }
+    asyncCallbackInfo->err = InnerSetAbilityEnabled(env, asyncCallbackInfo->abilityInfo,
+        asyncCallbackInfo->isEnable);
+}
+
+void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[1] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to SetAbilityEnabled");
+    NapiArg args(env, info);
+    AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
+            if (!CommonFunc::ParseAbilityInfo(env, args[i], asyncCallbackInfo->abilityInfo)) {
+                APP_LOGE("SetAbilityEnabled arg err!");
+                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_boolean)) {
+            NAPI_CALL(env, napi_get_value_bool(env, args[i], &asyncCallbackInfo->isEnable));
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            APP_LOGE("SetAbilityEnabled arg err!");
+            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(
+        env, asyncCallbackInfo, "SetAbilityEnabled", SetAbilityEnabledExec, SetAbilityEnabledComplete);
+    callbackPtr.release();
+    APP_LOGD("call SetAbilityEnabled done.");
+    return promise;
+}
+
+void IsApplicationEnabledExec(napi_env env, void *data)
+{
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        return;
+    }
+    asyncCallbackInfo->err = InnerIsApplicationEnabled(env, asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->isEnable);
+}
+
+void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[ARGS_POS_ONE]));
+    } else {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to IsSetApplicationEnabled");
+    NapiArg args(env, info);
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid!", asyncCallbackInfo->bundleName.c_str());
+                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            APP_LOGE("IsSetApplicationEnabled arg err!");
+            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(
+        env, asyncCallbackInfo, "IsSetApplicationEnabled", IsApplicationEnabledExec, IsApplicationEnabledComplete);
+    callbackPtr.release();
+    APP_LOGD("call IsSetApplicationEnabled done.");
+    return promise;
+}
+
+void IsAbilityEnabledExec(napi_env env, void *data)
+{
+    AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        return;
+    }
+    asyncCallbackInfo->err = InnerIsAbilityEnabled(env, asyncCallbackInfo->abilityInfo,
+        asyncCallbackInfo->isEnable);
+}
+
+void IsAbilityEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[ARGS_POS_ONE]));
+    } else {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to IsAbilityEnabled");
+    NapiArg args(env, info);
+    AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
+            if (!CommonFunc::ParseAbilityInfo(env, args[i], asyncCallbackInfo->abilityInfo)) {
+                APP_LOGE("IsAbilityEnabled arg err!");
+                BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            APP_LOGE("IsAbilityEnabled arg err!");
+            BusinessError::ThrowError(env, PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(
+        env, asyncCallbackInfo, "IsAbilityEnabled", IsAbilityEnabledExec, IsAbilityEnabledComplete);
+    callbackPtr.release();
+    APP_LOGD("call SetAbilityEnabled done.");
+    return promise;
 }
 
 static ErrCode InnerCleanBundleCacheCallback(
