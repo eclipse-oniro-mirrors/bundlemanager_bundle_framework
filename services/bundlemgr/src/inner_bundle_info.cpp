@@ -2786,6 +2786,11 @@ AppQuickFix InnerBundleInfo::GetAppQuickFix() const
 void InnerBundleInfo::SetAppQuickFix(const AppQuickFix &appQuickFix)
 {
     baseApplicationInfo_->appQuickFix = appQuickFix;
+    if (appQuickFix.deployedAppqfInfo.hqfInfos.empty() && appQuickFix.deployingAppqfInfo.hqfInfos.empty()) {
+        baseApplicationInfo_->appQuickFix.bundleName = Constants::EMPTY_STRING;
+        baseApplicationInfo_->appQuickFix.versionCode = 0;
+        baseApplicationInfo_->appQuickFix.versionName = Constants::EMPTY_STRING;
+    }
     SetQuickFixHqfInfos(appQuickFix.deployedAppqfInfo.hqfInfos);
 }
 
