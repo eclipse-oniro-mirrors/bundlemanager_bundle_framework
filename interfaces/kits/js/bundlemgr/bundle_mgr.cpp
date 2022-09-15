@@ -95,8 +95,8 @@ enum class InstallErrorCode {
     STATUS_UNINSTALL_PERMISSION_DENIED = 0X45,
     STATUS_USER_NOT_EXIST = 0X50,
     STATUS_USER_FAILURE_INVALID = 0X51,
-    STATUS_USER_CREATE_FALIED = 0X52,
-    STATUS_USER_REMOVE_FALIED = 0X53,
+    STATUS_USER_CREATE_FAILED = 0X52,
+    STATUS_USER_REMOVE_FAILED = 0X53,
 };
 
 enum class UpgradeFlag {
@@ -3581,13 +3581,13 @@ static void ConvertInstallResult(InstallResult &installResult)
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_NOT_EXIST);
             installResult.resultMsg = "STATUS_USER_NOT_EXIST";
             break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_CREATE_FALIED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FALIED);
-            installResult.resultMsg = "STATUS_USER_CREATE_FALIED";
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_CREATE_FAILED):
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FAILED);
+            installResult.resultMsg = "STATUS_USER_CREATE_FAILED";
             break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_REMOVE_FALIED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FALIED);
-            installResult.resultMsg = "STATUS_USER_REMOVE_FALIED";
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_REMOVE_FAILED):
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FAILED);
+            installResult.resultMsg = "STATUS_USER_REMOVE_FAILED";
             break;
         default:
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
@@ -3630,7 +3630,6 @@ napi_value Install(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
         if (valuetype != napi_function) {
             APP_LOGE("Wrong argument type. Function expected.");
-            delete asyncCallbackInfo;
             return nullptr;
         }
         NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));

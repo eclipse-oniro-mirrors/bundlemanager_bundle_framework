@@ -26,6 +26,7 @@ group("napi_packages") {
       "bundle_manager:bundlemanager",
       "bundlemgr:bundle",
       "default_app:defaultappmanager",
+      "installer:installer",
       "launchermgr:innerbundlemanager",
       "package:package",
     ]
