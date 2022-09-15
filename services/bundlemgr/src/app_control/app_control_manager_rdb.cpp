@@ -75,8 +75,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
         APP_LOGE("BatchInsert failed.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    uint64_t num = insertNum;
-    if (valuesBuckets.size() != num) {
+    if (valuesBuckets.size() != static_cast<uint32>(insertNum)) {
         APP_LOGE("BatchInsert size not expected.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -184,8 +183,7 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
         APP_LOGE("BatchInsert AddAppRunningControlRule failed.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    uint64_t num = insertNum;
-    if (valuesBuckets.size() != num) {
+    if (valuesBuckets.size() != static_cast<uint32>(insertNum)) {
         APP_LOGE("BatchInsert size not expected.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
