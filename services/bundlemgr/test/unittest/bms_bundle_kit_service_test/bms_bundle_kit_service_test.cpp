@@ -127,7 +127,6 @@ const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.bundleki
 const std::string FILES_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/files";
 const std::string TEST_FILE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/files";
 const std::string DATA_BASE_DIR = "/data/app/el2/100/database/com.example.bundlekit.test";
-const std::string DBMS_PROCESS_DIR = "/data/service/el1/public/database/bundle_manager_service/kvdb";
 const std::string TEST_DATA_BASE_DIR = "/data/app/el2/100/database/com.example.bundlekit.test";
 const std::string CACHE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/cache";
 const std::string TEST_CACHE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/cache/cache";
@@ -5167,12 +5166,8 @@ HWTEST_F(BmsBundleKitServiceTest, DynamicSystemProcess_0100, Function | SmallTes
     int ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), START, &extraArgv, 1);
     EXPECT_EQ(ret, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    int dataExist = access(DBMS_PROCESS_DIR.c_str(), F_OK);
-    EXPECT_EQ(dataExist, 0);
 
     ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), STOP, &extraArgv, 1);
     EXPECT_EQ(ret, 0);
-    dataExist = access(DBMS_PROCESS_DIR.c_str(), F_OK);
-    EXPECT_EQ(dataExist, 0);
 }
 }
