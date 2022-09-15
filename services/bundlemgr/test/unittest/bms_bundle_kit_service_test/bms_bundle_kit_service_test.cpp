@@ -5095,6 +5095,94 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_005, Function | SmallTe
 }
 
 /**
+ * @tc.number: SeriviceStatusCallback_006
+ * @tc.name: OnBundleStateChanged
+ * @tc.desc: 1.Test StatusCallbackProxy
+ *           2.bundle state changed fail by wrong installType
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_006, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    int32_t resultCode = 0;
+    int32_t installType = 0;
+    std::string resultMsg = Constants::EMPTY_STRING;
+    proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
+    EXPECT_EQ(resultCode, 0);
+    EXPECT_EQ(installType, 0);
+    EXPECT_EQ(resultMsg, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_007
+ * @tc.name: OnBundleStateChanged
+ * @tc.desc: 1.Test StatusCallbackProxy
+ *           2.bundle state changed fail by wrong resultCode
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_007, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    uint8_t resultCode = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
+    uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
+    std::string resultMsg = Constants::EMPTY_STRING;
+    proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
+    EXPECT_EQ(resultCode, 0);
+    EXPECT_EQ(installType, 0);
+    EXPECT_EQ(resultMsg, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_008
+ * @tc.name: OnBundleStateChanged
+ * @tc.desc: 1.Test StatusCallbackProxy
+ *           2.bundle state changed fail by wrong resultMsg
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_008, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    int32_t resultCode = 0;
+    uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
+    std::string resultMsg = "";
+    proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
+    EXPECT_EQ(resultCode, 0);
+    EXPECT_EQ(installType, 0);
+    EXPECT_EQ(resultMsg, "");
+}
+
+/**
+ * @tc.number: SeriviceStatusCallback_009
+ * @tc.name: OnBundleStateChanged
+ * @tc.desc: 1.Test StatusCallbackProxy
+ *           2.bundle state changed fail by wrong bundle name
+ */
+HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_009, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get proxy success.");
+    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
+    int32_t resultCode = 0;
+    uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
+    std::string resultMsg = Constants::EMPTY_STRING;
+    proxy->OnBundleStateChanged(installType, resultCode, resultMsg, "");
+    EXPECT_EQ(resultCode, 0);
+    EXPECT_EQ(installType, 0);
+    EXPECT_EQ(resultMsg, Constants::EMPTY_STRING);
+}
+
+/**
  * @tc.number: SetDebugMode_0100
  * @tc.name: test SetDebugMode
  * @tc.desc: SetDebugMode
