@@ -1183,8 +1183,8 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
     }
     bool isEnable = false;
     ErrCode ret = IsApplicationEnabled(bundleName, isEnable);
-    if (ret != ERR_OK) {
-        return ret;
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1202,7 +1202,11 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
     }
     bool isEnable = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    return SetApplicationEnabled(bundleName, isEnable, userId);
+    ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply)
@@ -1219,8 +1223,8 @@ ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel
     }
     bool isEnable = false;
     ErrCode ret = IsAbilityEnabled(*abilityInfo, isEnable);
-    if (ret != ERR_OK) {
-        return ret;
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1238,7 +1242,11 @@ ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParce
     }
     bool isEnabled = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    return SetAbilityEnabled(*abilityInfo, isEnabled, userId);
+    ErrCode ret = SetAbilityEnabled(*abilityInfo, isEnabled, userId);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleGetAbilityInfo(MessageParcel &data, MessageParcel &reply)

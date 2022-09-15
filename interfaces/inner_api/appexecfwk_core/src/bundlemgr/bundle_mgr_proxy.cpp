@@ -1773,15 +1773,16 @@ ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool
         APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     MessageParcel reply;
-    ErrCode ret = SendTransactCommand(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply);
+    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
     if (ret != NO_ERROR) {
-        APP_LOGE("fail to IsApplicationEnabled from server errcode:%{public}d", ret);
         return ret;
     }
     isEnable = reply.ReadBool();
-    return ERR_OK;
+    return NO_ERROR;
 }
 
 ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
@@ -1810,13 +1811,11 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
         APP_LOGE("fail to SetApplicationEnabled due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     MessageParcel reply;
-    ErrCode ret = SendTransactCommand(IBundleMgr::Message::SET_APPLICATION_ENABLED, data, reply);
-    if (ret != NO_ERROR) {
-        APP_LOGE("fail to SetApplicationEnabled from server errcode:%{public}d", ret);
+    if (!SendTransactCmd(IBundleMgr::Message::SET_APPLICATION_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return ret;
+    return reply.ReadInt32();
 }
 
 ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
@@ -1837,15 +1836,16 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
         APP_LOGE("fail to IsAbilityEnabled due to write abilityInfo fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     MessageParcel reply;
-    ErrCode ret = SendTransactCommand(IBundleMgr::Message::IS_ABILITY_ENABLED, data, reply);
+    if (!SendTransactCmd(IBundleMgr::Message::IS_ABILITY_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
     if (ret != NO_ERROR) {
-        APP_LOGE("fail to IsAbilityEnabled from server errcode:%{public}d", ret);
         return ret;
     }
     isEnable = reply.ReadBool();
-    return ERR_OK;
+    return NO_ERROR;
 }
 
 ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
@@ -1876,11 +1876,10 @@ ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
     }
 
     MessageParcel reply;
-    ErrCode ret = SendTransactCommand(IBundleMgr::Message::SET_ABILITY_ENABLED, data, reply);
-    if (ret != NO_ERROR) {
-        APP_LOGE("fail to SetAbilityEnabled from server errcode:%{public}d", ret);
+    if (!SendTransactCmd(IBundleMgr::Message::SET_ABILITY_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return ret;
+    return reply.ReadInt32();
 }
 
 bool BundleMgrProxy::GetAbilityInfo(
@@ -3294,22 +3293,6 @@ bool BundleMgrProxy::SendTransactCmd(IBundleMgr::Message code, MessageParcel &da
         return false;
     }
     return true;
-}
-
-ErrCode BundleMgrProxy::SendTransactCommand(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply)
-{
-    MessageOption option(MessageOption::TF_SYNC);
-
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
-        return -1;
-    }
-    ErrCode result = remote->SendRequest(code, data, reply, option);
-    if (result != NO_ERROR) {
-        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
-    }
-    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
