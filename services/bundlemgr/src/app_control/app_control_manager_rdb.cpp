@@ -69,7 +69,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
         valuesBucket.PutString(APP_ID, appId);
         valuesBuckets.emplace_back(valuesBucket);
     }
-    int64_t insertNum = 0;
+    uint64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
         APP_LOGE("BatchInsert failed.");
