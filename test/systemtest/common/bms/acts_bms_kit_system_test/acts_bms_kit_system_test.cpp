@@ -4737,7 +4737,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0100, Function | SmallTest | Lev
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool res = bundleMgrProxy->GetPermissionDef(PERMISSIONNAME, permissionDef);
     EXPECT_TRUE(res);
-
 }
 
 /**
