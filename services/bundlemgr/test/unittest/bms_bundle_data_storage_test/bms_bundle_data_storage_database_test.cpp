@@ -20,6 +20,7 @@
 #include "ability_info.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
+#include "inner_bundle_user_info.h"
 #include "inner_bundle_info.h"
 #include "json_constants.h"
 #include "json_serializer.h"
@@ -1186,4 +1187,41 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0100, Function | SmallTest |
 {
     InnerBundleInfo innerBundleInfo;
     EXPECT_EQ(innerBundleInfo.FromJson(innerBundleInfoJson_), OHOS::ERR_OK);
+}
+
+/**
+ * @tc.number: SaveData_0200
+ * @tc.name: save bundle installation information to persist storage
+ * @tc.desc: 1.system running normally and no saved any bundle data
+ *           2.save a new bundle installation information fail by wrong parameter
+ * @tc.require: AR000GJUIR
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0200, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.ToJson(innerBundleInfoJson_);
+    EXPECT_EQ(innerBundleInfo.FromJson(false), OHOS::ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+}
+
+/**
+ * @tc.number: SaveData_0300
+ * @tc.name: save bundle installation information to persist storage
+ * @tc.desc: 1.system running normally and no saved any bundle data
+ *           2.successfully save a new bundle installation information for the first time
+ * @tc.require: AR000GJUIR
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0300, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = "bundleName";
+    userInfo.uid = Constants::INVALID_UID;
+    userInfo.accessTokenId = 0;
+    userInfo.gids.push_back(0);
+    userInfo.installTime = 0;
+    userInfo.updateTime = 0;
+    userInfo.bundleUserInfo.userId = 100;
+    to_json(jsonObject, userInfo);
+    EXPECT_EQ(jsonObject["bundleName"], "bundleName");
+    EXPECT_EQ(jsonObject["uid"], Constants::INVALID_UID);
 }
