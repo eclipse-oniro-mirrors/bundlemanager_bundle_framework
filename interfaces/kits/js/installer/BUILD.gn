@@ -41,8 +41,8 @@ ohos_shared_library("installer") {
   ]
 
   sources = [
-    "installer.cpp",
     "${kits_path}/js/bundlemgr/installer_callback.cpp",
+    "installer.cpp",
     "native_module.cpp",
   ]
   external_deps += [
