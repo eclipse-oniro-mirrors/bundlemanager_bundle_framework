@@ -69,13 +69,14 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
         valuesBucket.PutString(APP_ID, appId);
         valuesBuckets.emplace_back(valuesBucket);
     }
-    uint64_t insertNum = 0;
+    int64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
         APP_LOGE("BatchInsert failed.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    if (valuesBuckets.size() != insertNum) {
+    uint64_t num = insertNum;
+    if (valuesBuckets.size() != num) {
         APP_LOGE("BatchInsert size not expected.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -177,13 +178,14 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
         valuesBucket.PutInt(APP_RUNNING_CONTROL_RULE_TYPE, static_cast<int>(rule.GetControlRuleType()));
         valuesBuckets.emplace_back(valuesBucket);
     }
-    uint64_t insertNum = 0;
+    int64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
         APP_LOGE("BatchInsert AddAppRunningControlRule failed.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    if (valuesBuckets.size() != insertNum) {
+    uint64_t num = insertNum;
+    if (valuesBuckets.size() != num) {
         APP_LOGE("BatchInsert size not expected.");
         return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
