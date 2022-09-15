@@ -177,7 +177,7 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
         valuesBucket.PutInt(APP_RUNNING_CONTROL_RULE_TYPE, static_cast<int>(rule.GetControlRuleType()));
         valuesBuckets.emplace_back(valuesBucket);
     }
-    int64_t insertNum = 0;
+    uint64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
         APP_LOGE("BatchInsert AddAppRunningControlRule failed.");
