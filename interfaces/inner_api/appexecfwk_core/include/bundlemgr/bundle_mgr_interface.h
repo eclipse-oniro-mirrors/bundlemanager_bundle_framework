@@ -165,12 +165,12 @@ public:
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
      * @param userId Indicates the user ID.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag,
+    virtual ErrCode GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag,
         BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     /**
@@ -179,12 +179,12 @@ public:
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
      * @param userId Indicates the user ID.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetBundlePackInfo(const std::string &bundleName, int32_t flags,
+    virtual ErrCode GetBundlePackInfo(const std::string &bundleName, int32_t flags,
         BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     /**
@@ -620,11 +620,12 @@ public:
      * @brief Obtains the value of isRemovable based on a given bundle name and module name.
      * @param bundleName Indicates the bundle name to be queried.
      * @param moduleName Indicates the module name to be queried.
-     * @return Returns true if the isRemovable is successfully obtained; returns false otherwise.
+     * @param isRemovable Indicates the module whether is removable.
+     * @return Returns ERR_OK if the isRemovable is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
+    virtual ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable)
     {
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
      * @brief Sets whether to enable isRemovable based on a given bundle name and module name.
@@ -960,12 +961,12 @@ public:
      * @param moduleName Indicates the module name to be queried.
      * @param isEnable Specifies whether to enable the isRemovable of InnerModuleInfo.
      *                 The value true means to enable it, and the value false means to disable it
-     * @return Returns true if the isRemovable is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the isRemovable is successfully obtained; returns ErrCode otherwise.
      */
-    virtual bool SetModuleUpgradeFlag(
+    virtual ErrCode SetModuleUpgradeFlag(
         const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag)
     {
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual bool CheckAbilityEnableInstall(

@@ -4435,9 +4435,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0100, Function | SmallTest | Le
 
     BundlePackInfo bundlePackInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool testRet = bundleMgrProxy->GetBundlePackInfo(
+    auto testRet = bundleMgrProxy->GetBundlePackInfo(
         appName, GET_PACK_INFO_ALL, bundlePackInfo, USERID);
-    EXPECT_EQ(true, testRet);
+    EXPECT_EQ(testRet, ERR_OK);
     
     resvec.clear();
     Uninstall(appName, resvec);
@@ -4465,9 +4465,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0200, Function | SmallTest | Le
 
     BundlePackInfo bundlePackInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool testRet = bundleMgrProxy->GetBundlePackInfo(
+    auto testRet = bundleMgrProxy->GetBundlePackInfo(
         appName, BundleFlag::GET_BUNDLE_DEFAULT, bundlePackInfo, USERID);
-    EXPECT_EQ(true, testRet);
+    EXPECT_EQ(ERR_OK, testRet);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -4600,7 +4600,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0100, Function | SmallTest |
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     auto result = bundleMgrProxy->SetModuleUpgradeFlag(appName, BASE_MODULE_NAME, 1);
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(result == ERR_OK);
     auto res = bundleMgrProxy->GetModuleUpgradeFlag(appName, BASE_MODULE_NAME);
     EXPECT_TRUE(res);
 

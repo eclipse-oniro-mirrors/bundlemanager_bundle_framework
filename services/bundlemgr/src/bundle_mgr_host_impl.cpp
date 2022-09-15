@@ -147,19 +147,19 @@ bool BundleMgrHostImpl::GetBundleInfo(
     return dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
 }
 
-bool BundleMgrHostImpl::GetBundlePackInfo(
+ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     return GetBundlePackInfo(bundleName, static_cast<int32_t>(flag), bundlePackInfo, userId);
 }
 
-bool BundleMgrHostImpl::GetBundlePackInfo(
+ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return dataMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo, userId);
 }
@@ -1008,14 +1008,15 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
     return true;
 }
 
-bool BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName)
+ErrCode BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+    bool &isRemovable)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    return dataMgr->IsModuleRemovable(bundleName, moduleName);
+    return dataMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
 }
 
 bool BundleMgrHostImpl::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)
@@ -1038,13 +1039,13 @@ bool BundleMgrHostImpl::GetModuleUpgradeFlag(const std::string &bundleName, cons
     return dataMgr->GetModuleUpgradeFlag(bundleName, moduleName);
 }
 
-bool BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
+ErrCode BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, int32_t upgradeFlag)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return dataMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
 }

@@ -2429,7 +2429,9 @@ bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
         return false;
     }
     for (const auto &innerModuleInfo : innerModuleInfos_) {
-        if (!IsModuleRemovable(innerModuleInfo.second.moduleName, userId)) {
+        bool isRemovable = true;
+        if ((IsModuleRemovable(innerModuleInfo.second.moduleName, userId, isRemovable) == ERR_OK) &&
+            !isRemovable) {
             APP_LOGE("not all haps should be cleaned");
             return false;
         }
@@ -2457,7 +2459,8 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
     return true;
 }
 
-bool InnerBundleInfo::IsModuleRemovable(const std::string &moduleName, int32_t userId) const
+ErrCode InnerBundleInfo::IsModuleRemovable(const std::string &moduleName, int32_t userId,
+    bool &isRemovable) const
 {
     std::string stringUserId = "";
     stringUserId.append(std::to_string(userId));
@@ -2465,16 +2468,17 @@ bool InnerBundleInfo::IsModuleRemovable(const std::string &moduleName, int32_t u
     auto modInfoItem = GetInnerModuleInfoByModuleName(moduleName);
     if (!modInfoItem) {
         APP_LOGE("get InnerModuleInfo by moduleName(%{public}s) failed", moduleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     auto item = modInfoItem->isRemovable.find(stringUserId);
     if (item == modInfoItem->isRemovable.end()) {
         APP_LOGE("userId:%{public}d has not moduleName:%{public}s", userId, moduleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
-    bool ret = item->second;
-    APP_LOGD("userId:%{public}d, moduleName:%{public}s, ret:%{public}d,", userId, moduleName.c_str(), ret);
-    return ret;
+    isRemovable = item->second;
+    APP_LOGD("userId:%{public}d, moduleName:%{public}s, isRemovable:%{public}d,", userId, moduleName.c_str(),
+        isRemovable);
+    return ERR_OK;
 }
 
 bool InnerBundleInfo::AddModuleRemovableInfo(
@@ -2536,16 +2540,16 @@ void InnerBundleInfo::DeleteModuleRemovable(const std::string &moduleName, int32
     }
 }
 
-bool InnerBundleInfo::SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag)
+ErrCode InnerBundleInfo::SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag)
 {
     APP_LOGD("moduleName= %{public}s, upgradeFlag = %{public}d", moduleName.c_str(), upgradeFlag);
     for (auto &innerModuleInfo : innerModuleInfos_) {
         if (innerModuleInfo.second.moduleName == moduleName) {
             innerModuleInfo.second.upgradeFlag = upgradeFlag;
-            return true;
+            return ERR_OK;
         }
     }
-    return false;
+    return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
 }
 
 int32_t InnerBundleInfo::GetModuleUpgradeFlag(std::string moduleName) const

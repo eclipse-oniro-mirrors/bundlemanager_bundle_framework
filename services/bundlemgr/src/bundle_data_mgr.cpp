@@ -1295,7 +1295,7 @@ bool BundleDataMgr::GetBundleInfo(
     return true;
 }
 
-bool BundleDataMgr::GetBundlePackInfo(
+ErrCode BundleDataMgr::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId) const
 {
     APP_LOGD("Service BundleDataMgr GetBundlePackInfo start");
@@ -1308,30 +1308,30 @@ bool BundleDataMgr::GetBundlePackInfo(
 
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("getBundlePackInfo userId is invalid");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
         APP_LOGE("GetBundlePackInfo failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     BundlePackInfo innerBundlePackInfo = innerBundleInfo.GetBundlePackInfo();
     if (static_cast<uint32_t>(flags) & GET_PACKAGES) {
         bundlePackInfo.packages = innerBundlePackInfo.packages;
-        return true;
+        return ERR_OK;
     }
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_SUMMARY) {
         bundlePackInfo.summary.app = innerBundlePackInfo.summary.app;
         bundlePackInfo.summary.modules = innerBundlePackInfo.summary.modules;
-        return true;
+        return ERR_OK;
     }
     if (static_cast<uint32_t>(flags) & GET_MODULE_SUMMARY) {
         bundlePackInfo.summary.modules = innerBundlePackInfo.summary.modules;
-        return true;
+        return ERR_OK;
     }
     bundlePackInfo = innerBundlePackInfo;
-    return true;
+    return ERR_OK;
 }
 
 bool BundleDataMgr::GetBundleInfosByMetaData(
@@ -2036,16 +2036,17 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
     }
 }
 
-bool BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) const
+ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+    bool &isRemovable) const
 {
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("bundleName or moduleName is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGE("get a invalid userid");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     APP_LOGD("bundleName:%{public}s, moduleName:%{public}s, userId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), userId);
@@ -2053,10 +2054,10 @@ bool BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const std::
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo newInfo = infoItem->second;
-    return newInfo.IsModuleRemovable(moduleName, userId);
+    return newInfo.IsModuleRemovable(moduleName, userId, isRemovable);
 }
 
 
@@ -2216,23 +2217,25 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
     return true;
 }
 
-bool BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
+ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, const int32_t upgradeFlag)
 {
     APP_LOGD("SetModuleUpgradeFlag %{public}d", upgradeFlag);
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    InnerBundleInfo newInfo = infoItem->second;
-    bool setFlag = newInfo.SetModuleUpgradeFlag(moduleName, upgradeFlag);
-    if (dataStorage_->SaveStorageBundleInfo(newInfo)) {
-        setFlag = infoItem->second.SetModuleUpgradeFlag(moduleName, upgradeFlag);
-        return setFlag;
+    InnerBundleInfo &newInfo = infoItem->second;
+    ErrCode setFlag = newInfo.SetModuleUpgradeFlag(moduleName, upgradeFlag);
+    if (setFlag == ERR_OK) {
+        if (dataStorage_->SaveStorageBundleInfo(newInfo)) {
+            return ERR_OK;
+        }
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    APP_LOGD("dataStorage SetModuleUpgradeFlag %{public}s failed", bundleName.c_str());
-    return false;
+    APP_LOGE("dataStorage SetModuleUpgradeFlag %{public}s failed", bundleName.c_str());
+    return setFlag;
 }
 
 int32_t BundleDataMgr::GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName) const

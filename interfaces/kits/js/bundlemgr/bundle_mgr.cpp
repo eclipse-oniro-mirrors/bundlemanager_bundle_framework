@@ -2202,11 +2202,12 @@ static bool InnerGetBundlePackInfo(const std::string &bundleName, int32_t flags,
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    bool ret = iBundleMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
-    if (!ret) {
-        APP_LOGE("bundlePackInfo is not find");
+    auto ret = iBundleMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
+    if (ret == ERR_OK) {
+        return true;
     }
-    return ret;
+    APP_LOGE("bundlePackInfo is not find");
+    return false;
 }
 
 static void ConvertSummaryApp(napi_env env, napi_value &app, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
@@ -5393,11 +5394,12 @@ static bool InnerIsModuleRemovableExecute(napi_env env, const std::string &bundl
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName);
-    if (result) {
-        APP_LOGI("InnerIsModuleRemovableExecute::IsModuleRemovable");
+    bool isRemovable = false;
+    auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
+    if (result != ERR_OK) {
+        APP_LOGE("InnerIsModuleRemovableExecute::IsModuleRemovable failed.");
     }
-    return result;
+    return isRemovable;
 }
 
 void IsModuleRemovableExecute(napi_env env, void *data)
@@ -5617,10 +5619,11 @@ static bool InnerSetModuleUpgradeFlagExecute(napi_env env,
         return false;
     }
     auto result = iBundleMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
-    if (result) {
-        APP_LOGI("InnerSetModuleUpgradeFlagExecute::SetModuleUpgradeFlag");
+    if (result != ERR_OK) {
+        APP_LOGE("InnerSetModuleUpgradeFlagExecute::SetModuleUpgradeFlag failed");
+        return false;
     }
-    return result;
+    return true;
 }
 
 void SetModuleUpgradeFlagExecute(napi_env env, void *data)

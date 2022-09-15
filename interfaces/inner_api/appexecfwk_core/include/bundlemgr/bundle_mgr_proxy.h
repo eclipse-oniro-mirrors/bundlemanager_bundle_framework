@@ -121,9 +121,9 @@ public:
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
      * @param userId Indicates the user ID.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flags,
+    virtual ErrCode GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flags,
         BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
@@ -131,9 +131,9 @@ public:
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
      * @param userId Indicates the user ID.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetBundlePackInfo(const std::string &bundleName, int32_t flags,
+    virtual ErrCode GetBundlePackInfo(const std::string &bundleName, int32_t flags,
         BundlePackInfo &bundlePackInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains BundleInfo of all bundles available in the system through the proxy object.
@@ -643,9 +643,11 @@ public:
      * @brief Obtains the value of isRemovable based on a given bundle name through the proxy object.
      * @param bundleName Indicates the bundle name to be queried.
      * @param moduleName Indicates the module name to be queried.
+     * @param isRemovable Indicates the module whether is removable.
      * @return Returns true if the isRemovable is successfully obtained; returns false otherwise.
      */
-    virtual bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) override;
+    virtual ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
+        bool &isRemovable) override;
     /**
      * @brief Sets whether to enable isRemovable based on a given bundle name through the proxy object.
      * @param bundleName Indicates the bundle name to be queried.
@@ -680,9 +682,9 @@ public:
      * @param moduleName Indicates the module name to be queried.
      * @param isEnable Specifies whether to enable the upgradeFlag of InnerModuleInfo.
      *                 The value true means to enable it, and the value false means to disable it
-     * @return Returns true if the upgradeFlag is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the upgradeFlag is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool SetModuleUpgradeFlag(
+    virtual ErrCode SetModuleUpgradeFlag(
         const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag) override;
 
     virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;

@@ -78,14 +78,14 @@ bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const Bun
     return bundleMgr_->GetBundleInfo(bundleName, flag, bundleInfo, userId);
 }
 
-bool BundleMgrClientImpl::GetBundlePackInfo(
+ErrCode BundleMgrClientImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     APP_LOGI("enter");
     ErrCode result = Connect();
     if (result != ERR_OK) {
         APP_LOGE("failed to connect");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return bundleMgr_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }

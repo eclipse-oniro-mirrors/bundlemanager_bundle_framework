@@ -262,9 +262,9 @@ public:
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param BundlePackInfo Indicates the obtained BundlePackInfo object.
-     * @return Returns true if the BundlePackInfo is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the BundlePackInfo is successfully obtained; returns other ErrCode otherwise.
      */
-    bool GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundleInfo,
+    ErrCode GetBundlePackInfo(const std::string &bundleName, int32_t flags, BundlePackInfo &bundleInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Obtains the BundleInfo of application bundles based on the specified metaData.
@@ -680,9 +680,10 @@ public:
      * @brief Get Module isRemovable by bundleName and moduleName.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param moduleName Indicates the moduleName.
-     * @return Returns true if the module isRemovable is successfully obtained; returns false otherwise.
+     * @param isRemovable Indicates the module whether is removable.
+     * @return Returns ERR_OK if the module isRemovable is successfully obtained; returns other ErrCode otherwise.
      */
-    bool IsModuleRemovable(const std::string &bundleName, const std::string &moduleName) const;
+    ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable) const;
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     /**
@@ -699,7 +700,7 @@ public:
 #endif
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
-    bool SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
+    ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
     int32_t GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName) const;
     /**
      * @brief Get the Inner Bundle Info With Flags object

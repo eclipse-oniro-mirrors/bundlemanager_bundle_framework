@@ -402,12 +402,12 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfo(MessageParcel &data, MessageParce
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flag, info, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetBundlePackInfo(name, flag, info, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -424,12 +424,12 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfoWithIntFlags(MessageParcel &data, 
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flags, info, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetBundlePackInfo(name, flags, info, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1666,9 +1666,14 @@ ErrCode BundleMgrHost::HandleIsModuleRemovable(MessageParcel &data, MessageParce
     std::string moduleName = data.ReadString();
 
     APP_LOGD("bundleName %{public}s, moduleName %{public}s", bundleName.c_str(), moduleName.c_str());
-    bool ret = IsModuleRemovable(bundleName, moduleName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    bool isRemovable = false;
+    ErrCode ret = IsModuleRemovable(bundleName, moduleName, isRemovable);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isRemovable)) {
+        APP_LOGE("write isRemovable failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

@@ -1115,9 +1115,9 @@ public:
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.
      * @param upgradeFlag Indicates the module is need update or not.
-     * @return Return true if set data successfully.
+     * @return Return ERR_OK if set data successfully.
      */
-    bool SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
+    ErrCode SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
 
     /**
      * @brief Get the Application Need Recover object
@@ -1403,9 +1403,10 @@ public:
      * @brief whether userId's module should be removed.
      * @param moduleName Indicates the moduleName.
      * @param userId Indicates the userId.
+     * @param isRemovable Indicates the module whether is removable.
      * @return Return get module isRemoved result.
      */
-    bool IsModuleRemovable(const std::string &moduleName, int32_t userId) const;
+    ErrCode IsModuleRemovable(const std::string &moduleName, int32_t userId, bool &isRemovable) const;
     /**
      * @brief Add module removable info
      * @param info Indicates the innerModuleInfo of module.
