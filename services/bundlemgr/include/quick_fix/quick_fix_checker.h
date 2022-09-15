@@ -56,6 +56,9 @@ private:
 
     std::string GetAppProvisionType(const Security::Verify::ProvisionType &type);
 
+    ErrCode CheckPatchNativeSoWithInstalledBundle(
+        const BundleInfo &bundleInfo, const AppqfInfo &qfInfo);
+
     static size_t QUICK_FIX_MAP_SIZE;
 };
 } // AppExecFwk

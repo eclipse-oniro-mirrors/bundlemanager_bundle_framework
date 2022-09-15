@@ -522,5 +522,29 @@ bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::str
         std::string(Constants::SANDBOX_DATA_PATH).size(), relaDataPath);
     return true;
 }
+
+bool BundleUtil::StartWith(const std::string &source, const std::string &prefix)
+{
+    if (source.empty() || prefix.empty()) {
+        return false;
+    }
+
+    return source.find(prefix) == 0;
+}
+
+bool BundleUtil::EndWith(const std::string &source, const std::string &suffix)
+{
+    if (source.empty() || suffix.empty()) {
+        return false;
+    }
+
+    auto position = source.rfind(suffix);
+    if (position == std::string::npos) {
+        return false;
+    }
+
+    std::string suffixStr = source.substr(position);
+    return suffixStr == suffix;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

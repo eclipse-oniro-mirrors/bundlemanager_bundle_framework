@@ -1684,18 +1684,17 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->process = applicationInfo.process;
     baseApplicationInfo_->supportedModes = applicationInfo.supportedModes;
     baseApplicationInfo_->vendor = applicationInfo.vendor;
-
-    if (baseApplicationInfo_->nativeLibraryPath.empty()) {
-        baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
-        baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
-    }
     baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
-    baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
-    baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
     baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     UpdatePrivilegeCapability(applicationInfo);
+}
+
+void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
+{
+    baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
+    baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
 
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
@@ -2800,7 +2799,7 @@ void InnerBundleInfo::SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos)
 }
 
 bool InnerBundleInfo::FetchNativeSoAttrs(
-    const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath)
+    const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const
 {
     auto moduleIter = innerModuleInfos_.find(requestPackage);
     if (moduleIter == innerModuleInfos_.end()) {
@@ -2818,6 +2817,17 @@ bool InnerBundleInfo::FetchNativeSoAttrs(
     }
 
     return !nativeLibraryPath.empty();
+}
+
+bool InnerBundleInfo::IsLibIsolated(const std::string &moduleName) const
+{
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        return false;
+    }
+
+    return moduleInfo->isLibIsolated;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

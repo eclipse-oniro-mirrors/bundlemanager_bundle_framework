@@ -502,6 +502,14 @@ private:
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
     void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath) const;
+    ErrCode ProcessDeployedHqfInfo(const std::string &nativeLibraryPath,
+        const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &appQuickFix) const;
+    ErrCode ProcessDeployingHqfInfo(
+        const std::string &nativeLibraryPath, const std::string &cpuAbi, const InnerBundleInfo &newInfo) const;
+    ErrCode UpdataLibAttrs(const InnerBundleInfo &newInfo,
+        const std::string &cpuAbi, const std::string &nativeLibraryPath, AppqfInfo &appQfInfo) const;
+    bool CheckHapLibsWithPatchLibs(
+        const std::string &nativeLibraryPath, const std::string &hqfLibraryPath) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
