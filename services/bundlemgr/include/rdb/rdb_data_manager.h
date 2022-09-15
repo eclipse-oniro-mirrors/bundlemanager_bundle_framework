@@ -28,6 +28,7 @@ public:
 
     static void ClearCache();
     bool InsertData(const std::string &key, const std::string &value);
+    bool InsertData(const NativeRdb::ValuesBucket &valuesBucket);
     bool UpdateData(const std::string &key, const std::string &value);
     bool DeleteData(const std::string &key);
     bool QueryData(const std::string &key, std::string &value);

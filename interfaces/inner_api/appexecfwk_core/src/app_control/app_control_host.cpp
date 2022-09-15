@@ -60,6 +60,12 @@ int AppControlHost::OnRemoteRequest(
             return HandleCleanAppRunningControlRule(data, reply);
         case IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE:
             return HandleGetAppRunningControlRule(data, reply);
+        case IAppControlMgr::Message::SET_DISPOSED_STATUS:
+            return HandleSetDisposedStatus(data, reply);
+        case IAppControlMgr::Message::GET_DISPOSED_STATUS:
+            return HandleGetDisposedStatus(data, reply);
+        case IAppControlMgr::Message::DELETE_DISPOSED_STATUS:
+            return HandleDeleteDisposedStatus(data, reply);
         default:
             APP_LOGW("AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -179,6 +185,55 @@ ErrCode AppControlHost::HandleGetAppRunningControlRule(MessageParcel& data, Mess
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleSetDisposedStatus(MessageParcel& data, MessageParcel& reply)
+{
+    std::string appId = data.ReadString();
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<Want> failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SetDisposedStatus(appId, *want);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleSetDisposedStatus failed");
+    }
+    return ret;
+}
+
+ErrCode AppControlHost::HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel &reply)
+{
+    std::string appId = data.ReadString();
+    ErrCode ret = DeleteDisposedStatus(appId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleDeleteDisposedStatus failed");
+    }
+    return ret;
+}
+
+ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParcel &reply)
+{
+    std::string appId = data.ReadString();
+    Want want;
+    ErrCode ret = GetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleGetDisposedStatus failed");
+    } else {
+        if (!reply.WriteParcelable(&want)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
 }
 
 bool AppControlHost::WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &reply)

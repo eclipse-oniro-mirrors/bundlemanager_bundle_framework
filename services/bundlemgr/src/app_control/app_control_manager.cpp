@@ -15,6 +15,7 @@
 
 #include "app_control_manager.h"
 
+#include "app_control_constants.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
@@ -22,6 +23,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+    constexpr const char* APP_DISALLOWED_RUN = "AppDisallowedRun";
+}
+
 AppControlManager::AppControlManager()
 {
     appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
@@ -81,6 +87,21 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     const std::string &callingName, int32_t userId, std::vector<std::string> &appIds)
 {
     return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
+}
+
+ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want)
+{
+    return appControlManagerDb_->SetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
+}
+
+ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId)
+{
+    return appControlManagerDb_->DeleteDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId);
+}
+
+ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want)
+{
+    return appControlManagerDb_->GetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
 }
 }
 }

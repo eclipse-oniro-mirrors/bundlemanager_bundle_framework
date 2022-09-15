@@ -45,6 +45,12 @@ public:
         const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) override;
     virtual ErrCode DeleteAppRunningControlRule(int32_t userId) override;
     virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) override;
+    
+    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) override;
+
+    virtual ErrCode DeleteDisposedStatus(const std::string &appId) override;
+
+    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) override;
 private:
     std::string GetCallingName();
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);

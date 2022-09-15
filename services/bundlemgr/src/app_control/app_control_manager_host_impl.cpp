@@ -18,10 +18,14 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_control_constants.h"
+#include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+}
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
     appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
@@ -176,6 +180,48 @@ std::string AppControlManagerHostImpl::GetControlRuleType(const AppInstallContro
         return "";
     }
     return item->second;
+}
+
+ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
+{
+    APP_LOGD("host begin to SetDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
+{
+    APP_LOGD("host begin to DeleteDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
+{
+    APP_LOGE("host begin to GetDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
 }
 }
 }
