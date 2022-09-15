@@ -1716,8 +1716,8 @@ ErrCode BundleMgrHost::HandleSetModuleUpgradeFlag(MessageParcel &data, MessagePa
     std::string moduleName = data.ReadString();
     int32_t upgradeFlag = data.ReadInt32();
     APP_LOGD("bundleName %{public}s, moduleName %{public}s", bundleName.c_str(), moduleName.c_str());
-    bool ret = SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
