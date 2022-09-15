@@ -320,10 +320,11 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @param abilityName Indicates the ability name.
-     * @return Returns the label of the ability if exist; returns empty string otherwise.
+     * @param label Indicates the obtained label.
+     * @return Returns ERR_OK if the ability label is successfully obtained; returns errCode otherwise.
      */
-    std::string GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) const;
+    ErrCode GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::string &label) const;
     /**
      * @brief Obtains the Want for starting the main ability of an application based on the given bundle name.
      * @param bundleName Indicates the bundle name.

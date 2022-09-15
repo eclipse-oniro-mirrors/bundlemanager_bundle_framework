@@ -52,6 +52,14 @@ struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
 };
 
+struct AbilityLabelCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityLabelCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+    std::string abilityLabel;
+};
+
 struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
@@ -70,6 +78,7 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
+napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

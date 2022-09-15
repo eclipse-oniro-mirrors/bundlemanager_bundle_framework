@@ -462,24 +462,27 @@ std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, co
         APP_LOGE("DataMgr is nullptr");
         return Constants::EMPTY_STRING;
     }
-    return dataMgr->GetAbilityLabel(bundleName, Constants::EMPTY_STRING, abilityName);
+    std::string label;
+    ErrCode ret = dataMgr->GetAbilityLabel(bundleName, Constants::EMPTY_STRING, abilityName, label);
+    if (ret != ERR_OK) {
+        return Constants::EMPTY_STRING;
+    }
+    return label;
 }
 
-std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName)
+ErrCode BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::string &label)
 {
-    APP_LOGD("start GetAbilityLabel, bundleName : %{public}s, moduleName : %{public}s, abilityName : %{public}s",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
-        return Constants::EMPTY_STRING;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    return dataMgr->GetAbilityLabel(bundleName, moduleName, abilityName);
+    return dataMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
 }
 
 bool BundleMgrHostImpl::GetBundleArchiveInfo(

@@ -1629,49 +1629,42 @@ bool BundleDataMgr::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundleInf
     return !(bundleInfos.empty());
 }
 
-std::string BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName) const
+ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::string &label) const
 {
 #ifdef GLOBAL_RESMGR_ENABLE
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGW("bundleInfos_ data is empty");
-        return Constants::EMPTY_STRING;
+    InnerBundleInfo innerBundleInfo;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId());
+    if (ret != ERR_OK) {
+        return ret;
     }
-    APP_LOGI("GetAbilityLabel %{public}s", bundleName.c_str());
-    auto item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        return Constants::EMPTY_STRING;
-    }
-    const InnerBundleInfo &innerBundleInfo = item->second;
-    if (innerBundleInfo.IsDisabled()) {
-        APP_LOGW("app %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
-        return Constants::EMPTY_STRING;
-    }
-    auto ability = innerBundleInfo.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId());
+    
+    auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
-        return Constants::EMPTY_STRING;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     if ((*ability).labelId == 0) {
-        return (*ability).label;
+        label = (*ability).label;
+        return ERR_OK;
     }
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, (*ability).moduleName, GetUserId());
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
-        return Constants::EMPTY_STRING;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    std::string abilityLabel;
     OHOS::Global::Resource::RState errval =
-        resourceManager->GetStringById(static_cast<uint32_t>((*ability).labelId), abilityLabel);
+        resourceManager->GetStringById(static_cast<uint32_t>((*ability).labelId), label);
     if (errval != OHOS::Global::Resource::RState::SUCCESS) {
-        return Constants::EMPTY_STRING;
-    } else {
-        return abilityLabel;
+        APP_LOGE("ResourceManager GetStringById failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    return ERR_OK;
 #else
-    APP_LOGW("GLOBAL_RESMGR_ENABLE is false");
-    return Constants::EMPTY_STRING;
+    APP_LOGW("GLOBAL_RES_MGR_ENABLE is false");
+    return ERR_BUNDLE_MANAGER_GLOBAL_RES_MGR_ENABLE_DISABLED;
 #endif
 }
 

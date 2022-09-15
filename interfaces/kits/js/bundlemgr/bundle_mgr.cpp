@@ -1290,12 +1290,17 @@ static std::string InnerGetAbilityLabel(napi_env env, std::string &bundleName, s
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        return "";
+        return Constants::EMPTY_STRING;
     }
-    if (hasModuleName) {
-        return iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName);
+    if (!hasModuleName) {
+        return iBundleMgr->GetAbilityLabel(bundleName, abilityName);
     }
-    return iBundleMgr->GetAbilityLabel(bundleName, abilityName);
+    std::string label;
+    ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
+    if (ret != ERR_OK) {
+        return Constants::EMPTY_STRING;
+    }
+    return label;
 }
 
 static void ProcessApplicationInfos(
