@@ -29,10 +29,21 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &abilityFlag));
     CreateAbilityFlagObject(env, abilityFlag);
 
+    napi_value extensionFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &extensionFlag));
+    CreateExtensionAbilityFlagObject(env, extensionFlag);
+
+    napi_value extensionType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &extensionType));
+    CreateExtensionAbilityTypeObject(env, extensionType);
+
     napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("queryAbilityInfos", QueryAbilityInfos),
+        DECLARE_NAPI_FUNCTION("queryAbilityInfo", QueryAbilityInfos),
+        DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfo", QueryExtensionInfos),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", CleanBundleCacheFiles),
         DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
+        DECLARE_NAPI_PROPERTY("ExtensionAbilityFlag", extensionFlag),
+        DECLARE_NAPI_PROPERTY("ExtensionAbilityType", extensionType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

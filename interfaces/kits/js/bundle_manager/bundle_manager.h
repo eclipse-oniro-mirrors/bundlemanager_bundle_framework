@@ -36,6 +36,16 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
     std::vector<AbilityInfo> abilityInfos;
 };
 
+struct ExtensionCallbackInfo : public BaseCallbackInfo {
+    explicit ExtensionCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    OHOS::AAFwk::Want want;
+    int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+};
+
 struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     explicit CleanBundleCacheCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
@@ -43,8 +53,11 @@ struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
 };
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
+napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
+void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
+void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H

@@ -2238,13 +2238,8 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, int32_t f
         APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    if (!GetParcelableInfosWithErrCode(
-        IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9, data, extensionInfos)) {
-        APP_LOGE("fail to obtain extensionInfos");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return GetParcelableInfosWithErrCode(
+        IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9, data, extensionInfos);
 }
 
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
@@ -2303,12 +2298,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, const Ext
         APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    if (!GetParcelableInfosWithErrCode(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, data, extensionInfos)) {
-        APP_LOGE("fail to obtain extensionInfos");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return GetParcelableInfosWithErrCode(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, data, extensionInfos);
 }
 
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
@@ -3158,6 +3148,7 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(IBundleMgr::Message code, M
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -3223,7 +3214,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
         }
         APP_LOGD("get parcelable infos success");
     }
-
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
     return res;
 }
 
