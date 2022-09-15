@@ -2477,7 +2477,8 @@ ErrCode InnerBundleInfo::IsModuleRemovable(const std::string &moduleName, int32_
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     isRemovable = item->second;
-    APP_LOGD("userId:%{public}d, moduleName:%{public}s, isRemovable:%{public}d,", userId, moduleName.c_str(), isRemovable);
+    APP_LOGD("userId:%{public}d, moduleName:%{public}s, isRemovable:%{public}d,", userId, moduleName.c_str(),
+        isRemovable);
     return ERR_OK;
 }
 
