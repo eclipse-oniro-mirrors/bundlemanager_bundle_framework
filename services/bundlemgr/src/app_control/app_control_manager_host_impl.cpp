@@ -187,7 +187,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
     APP_LOGD("host begin to SetDisposedStatus");
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     ErrCode ret = appControlManager_->SetDisposedStatus(appId, want);
     if (ret != ERR_OK) {
@@ -201,7 +201,7 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
     APP_LOGD("host begin to DeleteDisposedStatus");
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     ErrCode ret = appControlManager_->DeleteDisposedStatus(appId);
     if (ret != ERR_OK) {
@@ -215,7 +215,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
     APP_LOGE("host begin to GetDisposedStatus");
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     ErrCode ret = appControlManager_->GetDisposedStatus(appId, want);
     if (ret != ERR_OK) {
