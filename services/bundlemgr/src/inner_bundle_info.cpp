@@ -363,13 +363,15 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
     if (this->baseApplicationInfo_ == nullptr) {
         APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
+    } else {
+        *(this->baseApplicationInfo_) = *(info.baseApplicationInfo_);
     }
-    *(this->baseApplicationInfo_) = *(info.baseApplicationInfo_);
     this->baseBundleInfo_ = std::make_shared<BundleInfo>();
     if (this->baseBundleInfo_ == nullptr) {
         APP_LOGE("baseBundleInfo_ is nullptr, create failed");
+    } else {
+        *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
     }
-    *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
     this->hqfInfos_ = info.hqfInfos_;
     return *this;
 }
