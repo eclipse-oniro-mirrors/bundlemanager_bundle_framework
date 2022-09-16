@@ -476,7 +476,6 @@ ErrCode BundleTestTool::CheckOperation(int userId, std::string deviceId, std::st
 
 ErrCode BundleTestTool::RunAsCheckCommand()
 {
-    int option = -1;
     int counter = 0;
     int userId = 100;
     std::string deviceId = "";
@@ -485,7 +484,7 @@ ErrCode BundleTestTool::RunAsCheckCommand()
     std::string abilityName = "";
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -664,7 +663,6 @@ bool BundleTestTool::CheckRemovableCorrectOption(
 ErrCode BundleTestTool::RunAsSetRemovableCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     int isRemovable = 0;
     std::string commandName = SET_RM;
@@ -674,7 +672,7 @@ ErrCode BundleTestTool::RunAsSetRemovableCommand()
     APP_LOGD("RunAsSetCommand is start");
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
         }
@@ -710,7 +708,6 @@ ErrCode BundleTestTool::RunAsSetRemovableCommand()
 ErrCode BundleTestTool::RunAsGetRemovableCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string commandName = GET_RM;
     std::string name = "";
@@ -719,7 +716,7 @@ ErrCode BundleTestTool::RunAsGetRemovableCommand()
     APP_LOGD("RunAsGetRemovableCommand is start");
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -860,7 +857,6 @@ ErrCode BundleTestTool::InstallSandboxOperation(
 ErrCode BundleTestTool::RunAsInstallSandboxCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string commandName = INSTALL_SANDBOX;
     std::string bundleName = "";
@@ -868,7 +864,7 @@ ErrCode BundleTestTool::RunAsInstallSandboxCommand()
     int32_t dlpType = 0;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_SANDBOX.c_str(), LONG_OPTIONS_SANDBOX, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_SANDBOX.c_str(), LONG_OPTIONS_SANDBOX, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -917,7 +913,6 @@ ErrCode BundleTestTool::UninstallSandboxOperation(const std::string &bundleName,
 ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string bundleName = "";
     std::string commandName = UNINSTALL_SANDBOX;
@@ -925,7 +920,7 @@ ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
     int32_t appIndex = -1;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_SANDBOX.c_str(), LONG_OPTIONS_SANDBOX, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_SANDBOX.c_str(), LONG_OPTIONS_SANDBOX, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -981,7 +976,6 @@ ErrCode BundleTestTool::DumpSandboxBundleInfo(const std::string &bundleName, con
 ErrCode BundleTestTool::RunAsDumpSandboxCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string bundleName = "";
     std::string commandName = DUMP_SANDBOX;
@@ -989,7 +983,7 @@ ErrCode BundleTestTool::RunAsDumpSandboxCommand()
     int32_t appIndex = -1;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_SANDBOX.c_str(), LONG_OPTIONS_SANDBOX, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_SANDBOX.c_str(), LONG_OPTIONS_SANDBOX, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1086,7 +1080,6 @@ bool BundleTestTool::CheckGetStringCorrectOption(
 ErrCode BundleTestTool::RunAsGetStringCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string commandName = "getStr";
     std::string name = "";
@@ -1097,7 +1090,7 @@ ErrCode BundleTestTool::RunAsGetStringCommand()
     APP_LOGD("RunAsGetStringCommand is start");
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1184,7 +1177,6 @@ bool BundleTestTool::CheckGetIconCorrectOption(
 ErrCode BundleTestTool::RunAsGetIconCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string commandName = "getIcon";
     std::string name = "";
@@ -1196,7 +1188,7 @@ ErrCode BundleTestTool::RunAsGetIconCommand()
     APP_LOGD("RunAsGetIconCommand is start");
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1239,13 +1231,12 @@ ErrCode BundleTestTool::RunAsGetIconCommand()
 ErrCode BundleTestTool::RunAsDeployQuickFix()
 {
     int32_t result = OHOS::ERR_OK;
-    int32_t option = -1;
     int32_t counter = 0;
     int32_t index = 0;
     std::vector<std::string> quickFixPaths;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1311,13 +1302,12 @@ ErrCode BundleTestTool::GetQuickFixPath(int32_t index, std::vector<std::string>&
 ErrCode BundleTestTool::RunAsSwitchQuickFix()
 {
     int32_t result = OHOS::ERR_OK;
-    int32_t option = -1;
     int32_t counter = 0;
     int32_t enable = -1;
     std::string bundleName;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1366,12 +1356,11 @@ ErrCode BundleTestTool::RunAsSwitchQuickFix()
 ErrCode BundleTestTool::RunAsDeleteQuickFix()
 {
     int32_t result = OHOS::ERR_OK;
-    int32_t option = -1;
     int32_t counter = 0;
     std::string bundleName;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_QUICK_FIX.c_str(), LONG_OPTIONS_QUICK_FIX, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1416,6 +1405,7 @@ ErrCode BundleTestTool::RunAsDeleteQuickFix()
 ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixPaths,
     std::shared_ptr<QuickFixResult> &quickFixRes)
 {
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     std::set<std::string> realPathSet;
     for (const auto &quickFixPath : quickFixPaths) {
         std::string realPath;
@@ -1428,7 +1418,6 @@ ErrCode BundleTestTool::DeployQuickFix(const std::vector<std::string> &quickFixP
     }
     std::vector<std::string> pathVec(realPathSet.begin(), realPathSet.end());
 
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixStatusCallbackHostlmpl> callback(new (std::nothrow) QuickFixStatusCallbackHostlmpl());
     if (callback == nullptr || bundleMgrProxy_ == nullptr) {
         APP_LOGE("callback or bundleMgrProxy is null");
@@ -1557,12 +1546,11 @@ std::string BundleTestTool::GetResMsg(int32_t code, const std::shared_ptr<QuickF
 ErrCode BundleTestTool::RunAsSetDebugMode()
 {
     int32_t result = OHOS::ERR_OK;
-    int32_t option = -1;
     int32_t counter = 0;
     int32_t enable = -1;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_DEBUG_MODE.c_str(), LONG_OPTIONS_DEBUG_MODE, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DEBUG_MODE.c_str(), LONG_OPTIONS_DEBUG_MODE, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;

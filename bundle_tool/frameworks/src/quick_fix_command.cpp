@@ -38,7 +38,6 @@ public:
     {
         APP_LOGD("function called.");
         AAFwk::Want want = eventData.GetWant();
-        std::string action = want.GetAction();
         int32_t applyResult = want.GetIntParam("applyResult", -1);
         std::string resultInfo = want.GetStringParam("applyResultInfo");
         std::string bundleName = want.GetStringParam("bundleName");
