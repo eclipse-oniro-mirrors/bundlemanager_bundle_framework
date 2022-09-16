@@ -228,7 +228,7 @@ ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want 
     }
     MessageParcel reply;
     ErrCode ret = SendRequest(IAppControlMgr::Message::SET_DISPOSED_STATUS, data, reply);
-    if (ret != ERROR_OK) {
+    if (ret != ERR_OK) {
         APP_LOGE("SendRequest failed.");
         return ret;
     }
@@ -255,7 +255,7 @@ ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
 
     MessageParcel reply;
     ErrCode ret = SendRequest(IAppControlMgr::Message::DELETE_DISPOSED_STATUS, data, reply);
-    if (ret != ERROR_OK) {
+    if (ret != ERR_OK) {
         APP_LOGE("SendRequest failed.");
         return ret;
     }
@@ -329,7 +329,7 @@ ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, Message
         APP_LOGE("get return error=%{public}d from host", ret);
         return ret;
     }
-    ret = reply.readInt32();
+    ret = reply.ReadInt32();
     if (ret != NO_ERROR) {
         return ret;
     }

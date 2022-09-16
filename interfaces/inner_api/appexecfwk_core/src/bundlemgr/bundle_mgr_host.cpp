@@ -66,8 +66,12 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetApplicationInfoWithIntFlags);
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS, &BundleMgrHost::HandleGetApplicationInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetApplicationInfosWithIntFlags);
+    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO, &BundleMgrHost::HandleGetBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundleInfoWithIntFlags);
@@ -261,6 +265,29 @@ ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlags(MessageParcel &data,
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string name = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("name %{public}s, flags %{public}d, userId %{public}d", name.c_str(), flags, userId);
+
+    ApplicationInfo info;
+    auto ret = GetApplicationInfoV9(name, flags, userId, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&info)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -293,6 +320,26 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ApplicationInfo> infos;
+    auto ret = GetApplicationInfosV9(flags, userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
         if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -355,12 +402,12 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfo(MessageParcel &data, MessageParce
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flag, info, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetBundlePackInfo(name, flag, info, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -377,12 +424,12 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfoWithIntFlags(MessageParcel &data, 
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundlePackInfo info;
-    bool ret = GetBundlePackInfo(name, flags, info, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetBundlePackInfo(name, flags, info, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -478,12 +525,12 @@ ErrCode BundleMgrHost::HandleGetNameForUid(MessageParcel &data, MessageParcel &r
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int uid = data.ReadInt32();
     std::string name;
-    bool ret = GetNameForUid(uid, name);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetNameForUid(uid, name);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteString(name)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1026,8 +1073,8 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageP
     sptr<ICleanCacheCallback> cleanCacheCallback = iface_cast<ICleanCacheCallback>(object);
     int32_t userId = data.ReadInt32();
 
-    bool ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -1130,9 +1177,16 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    bool ret = IsApplicationEnabled(bundleName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    bool isEnable = false;
+    ErrCode ret = IsApplicationEnabled(bundleName, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1142,11 +1196,14 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
     bool isEnable = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    bool ret = SetApplicationEnabled(bundleName, isEnable, userId);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId);
+    if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1156,13 +1213,20 @@ ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
-    if (!abilityInfo) {
+    if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    bool ret = IsAbilityEnabled(*abilityInfo);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    if (abilityInfo->bundleName.empty() || abilityInfo->name.empty()) {
+        APP_LOGE("fail to IsAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    bool isEnable = false;
+    ErrCode ret = IsAbilityEnabled(*abilityInfo, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1178,9 +1242,8 @@ ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParce
     }
     bool isEnabled = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    bool ret = SetAbilityEnabled(*abilityInfo, isEnabled, userId);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    ErrCode ret = SetAbilityEnabled(*abilityInfo, isEnabled, userId);
+    if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1603,9 +1666,14 @@ ErrCode BundleMgrHost::HandleIsModuleRemovable(MessageParcel &data, MessageParce
     std::string moduleName = data.ReadString();
 
     APP_LOGD("bundleName %{public}s, moduleName %{public}s", bundleName.c_str(), moduleName.c_str());
-    bool ret = IsModuleRemovable(bundleName, moduleName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
+    bool isRemovable = false;
+    ErrCode ret = IsModuleRemovable(bundleName, moduleName, isRemovable);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isRemovable)) {
+        APP_LOGE("write isRemovable failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1648,8 +1716,8 @@ ErrCode BundleMgrHost::HandleSetModuleUpgradeFlag(MessageParcel &data, MessagePa
     std::string moduleName = data.ReadString();
     int32_t upgradeFlag = data.ReadInt32();
     APP_LOGD("bundleName %{public}s, moduleName %{public}s", bundleName.c_str(), moduleName.c_str());
-    bool ret = SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

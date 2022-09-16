@@ -404,4 +404,94 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1400, Function | MediumTest | Level1
     SetMockObjects(cmd);
     EXPECT_EQ(cmd.ExecCommand(), STRING_BUNDLE_NAME + "\n");
 }
+
+/**
+ * @tc.number: Bm_Command_Dump_1500
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm dump -n <bundle-name> -u" command.
+ */
+HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1500, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        (char *)TOOL_NAME.c_str(),
+        (char *)cmd_.c_str(),
+        (char *)"-n",
+        (char *)STRING_BUNDLE_NAME.c_str(),
+        (char *)"-u",
+        (char *)"",
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP);
+}
+
+/**
+ * @tc.number: Bm_Command_Dump_1600
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm dump -n <bundle-name> -u <user-id>" command.
+ */
+HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1600, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        (char *)TOOL_NAME.c_str(),
+        (char *)cmd_.c_str(),
+        (char *)"-n",
+        (char *)STRING_BUNDLE_NAME.c_str(),
+        (char *)"-u",
+        (char *)DEFAULT_USER_ID.c_str(),
+        (char *)"",
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_BUNDLE_NAME + "\n");
+}
+
+/**
+ * @tc.number: Bm_Command_Dump_1700
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm dump -n <bundle-name> -d" command.
+ */
+HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1700, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        (char *)TOOL_NAME.c_str(),
+        (char *)cmd_.c_str(),
+        (char *)"-n",
+        (char *)STRING_BUNDLE_NAME.c_str(),
+        (char *)"-d",
+        (char *)"",
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP);
+}
+
+/**
+ * @tc.number: Bm_Command_Dump_1800
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm dump -n <bundle-name> -d <device-id>" command.
+ */
+HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1800, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        (char *)TOOL_NAME.c_str(),
+        (char *)cmd_.c_str(),
+        (char *)"-n",
+        (char *)STRING_BUNDLE_NAME.c_str(),
+        (char *)"-d",
+        (char *)DEFAULT_DEVICE_TIME.c_str(),
+        (char *)"",
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_DUMP_FAILED + "\n");
+}
 } // namespace OHOS

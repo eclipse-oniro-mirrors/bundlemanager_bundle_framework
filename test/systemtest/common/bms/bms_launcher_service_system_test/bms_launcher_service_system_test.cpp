@@ -834,6 +834,28 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetApplicationInfo_0500, Function | M
     EXPECT_FALSE(result);
     GTEST_LOG_(INFO) << "END BMS_GetApplicationInfo_0500";
 }
+
+/**
+ * @tc.number: InstallByBundleName_0100
+ * @tc.name: test InstallByBundleName by LauncherService
+ * @tc.desc: install fail by invalid bundleName
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, InstallByBundleName_0100, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START InstallByBundleName_0100";
+    std::string message;
+
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.userId = USERID;
+    sptr<StatusReceiverImpl> statusReceiver = new (std::nothrow) StatusReceiverImpl();
+    EXPECT_NE(statusReceiver, nullptr);
+    bool result = installerProxy->InstallByBundleName("", installParam, statusReceiver);
+    EXPECT_FALSE(result);
+
+    GTEST_LOG_(INFO) << "END InstallByBundleName_0100";
+}
  // namespace AppExecFwk
 }  // namespace OHOS
 }

@@ -33,6 +33,8 @@ struct HqfInfo : public Parcelable {
     std::string hapSha256;
     std::string hqfFilePath;
     QuickFixType type = QuickFixType::UNKNOWN; // quick fix type
+    std::string cpuAbi;
+    std::string nativeLibraryPath;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

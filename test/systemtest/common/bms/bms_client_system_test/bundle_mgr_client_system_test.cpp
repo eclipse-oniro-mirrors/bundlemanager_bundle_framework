@@ -24,6 +24,7 @@
 #include "bundle_installer_interface.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
+#include "bundle_user_mgr_proxy.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "common_tool.h"
@@ -1848,7 +1849,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
     BundlePackInfo info;
     std::string hapName = "sandboxTest";
     auto ret = bundleMgrClient.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, info, DEFAULT_USERID);
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(ret == ERR_OK);
 
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
@@ -1881,6 +1882,30 @@ HWTEST_F(BundleMgrClientSystemTest, GetAccessibleAppCodePaths001, TestSize.Level
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
 
     GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: CreateNewUser_001
+ * @tc.name: CreateNewUser
+ * @tc.desc: 1.Test CreateNewUser and then remove it
+ */
+HWTEST_F(BundleMgrClientSystemTest, CreateNewUser_001, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    APP_LOGI("get bundle usermgr proxy success.");
+    int userId = 10001;
+    auto bundleUserMgrProxy = iface_cast<BundleUserMgrProxy>(remoteObject);
+    ApplicationInfo appInfo;
+    bundleUserMgrProxy->CreateNewUser(userId);
+    bool ret = GetBundleMgrProxy()->GetApplicationInfo(BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+    EXPECT_FALSE(ret);
+    bundleUserMgrProxy->RemoveUser(userId);
+    ret = GetBundleMgrProxy()->GetApplicationInfo(BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+    EXPECT_FALSE(ret);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

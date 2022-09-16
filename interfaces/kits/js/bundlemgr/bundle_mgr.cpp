@@ -95,8 +95,8 @@ enum class InstallErrorCode {
     STATUS_UNINSTALL_PERMISSION_DENIED = 0X45,
     STATUS_USER_NOT_EXIST = 0X50,
     STATUS_USER_FAILURE_INVALID = 0X51,
-    STATUS_USER_CREATE_FALIED = 0X52,
-    STATUS_USER_REMOVE_FALIED = 0X53,
+    STATUS_USER_CREATE_FAILED = 0X52,
+    STATUS_USER_REMOVE_FAILED = 0X53,
 };
 
 enum class UpgradeFlag {
@@ -2202,11 +2202,12 @@ static bool InnerGetBundlePackInfo(const std::string &bundleName, int32_t flags,
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    bool ret = iBundleMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
-    if (!ret) {
-        APP_LOGE("bundlePackInfo is not find");
+    auto ret = iBundleMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
+    if (ret == ERR_OK) {
+        return true;
     }
-    return ret;
+    APP_LOGE("bundlePackInfo is not find");
+    return false;
 }
 
 static void ConvertSummaryApp(napi_env env, napi_value &app, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
@@ -3583,13 +3584,13 @@ static void ConvertInstallResult(InstallResult &installResult)
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_NOT_EXIST);
             installResult.resultMsg = "STATUS_USER_NOT_EXIST";
             break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_CREATE_FALIED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FALIED);
-            installResult.resultMsg = "STATUS_USER_CREATE_FALIED";
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_CREATE_FAILED):
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FAILED);
+            installResult.resultMsg = "STATUS_USER_CREATE_FAILED";
             break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_REMOVE_FALIED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FALIED);
-            installResult.resultMsg = "STATUS_USER_REMOVE_FALIED";
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_REMOVE_FAILED):
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FAILED);
+            installResult.resultMsg = "STATUS_USER_REMOVE_FAILED";
             break;
         default:
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
@@ -3632,7 +3633,6 @@ napi_value Install(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
         if (valuetype != napi_function) {
             APP_LOGE("Wrong argument type. Function expected.");
-            delete asyncCallbackInfo;
             return nullptr;
         }
         NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -4593,11 +4593,12 @@ static bool InnerSetApplicationEnabled(napi_env env, const std::string &bundleNa
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
-    if (result) {
+    ErrCode result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
+    if (result != ERR_OK) {
         APP_LOGE("InnerSetApplicationEnabled::SetApplicationEnabled");
+        return false;
     }
-    return result;
+    return true;
 }
 
 static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::AbilityInfo &abilityInfo, bool isEnable)
@@ -4607,11 +4608,12 @@ static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::Ability
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
-    if (result) {
+    ErrCode result = iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
+    if (result != ERR_OK) {
         APP_LOGE("InnerSetAbilityEnabled::SetAbilityEnabled");
+        return false;
     }
-    return result;
+    return true;
 }
 
 static bool InnerCleanBundleCacheCallback(
@@ -4627,13 +4629,13 @@ static bool InnerCleanBundleCacheCallback(
         return false;
     }
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    auto result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
-    if (!result) {
+    ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
+    if (result != ERR_OK) {
         APP_LOGE("CleanBundleDataFiles call error");
-        return result;
+        return false;
     }
 
-    return result;
+    return true;
 }
 
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
@@ -5014,11 +5016,13 @@ static bool InnerIsAbilityEnabled(napi_env env, const OHOS::AppExecFwk::AbilityI
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->IsAbilityEnabled(abilityInfo);
-    if (result) {
+    bool isEnable = false;
+    ErrCode result = iBundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
+    if (result != ERR_OK) {
         APP_LOGI("InnerIsAbilityEnabled::IsAbilityEnabled");
+        return false;
     }
-    return result;
+    return isEnable;
 }
 
 EnabledInfo *CreateAsyncIsAbilityEnabledCallbackInfo(napi_env env)
@@ -5202,11 +5206,13 @@ static bool InnerIsApplicationEnabled(napi_env env, const std::string &bundleNam
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->IsApplicationEnabled(bundleName);
-    if (result) {
+    bool isEnable = false;
+    ErrCode result = iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    if (result != ERR_OK) {
         APP_LOGI("InnerIsApplicationEnabled::IsApplicationEnabled");
+        return false;
     }
-    return result;
+    return isEnable;
 }
 
 EnabledInfo *CreateAsyncIsApplicationEnabledCallbackInfo(napi_env env)
@@ -5390,11 +5396,12 @@ static bool InnerIsModuleRemovableExecute(napi_env env, const std::string &bundl
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName);
-    if (result) {
-        APP_LOGI("InnerIsModuleRemovableExecute::IsModuleRemovable");
+    bool isRemovable = false;
+    auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
+    if (result != ERR_OK) {
+        APP_LOGE("InnerIsModuleRemovableExecute::IsModuleRemovable failed.");
     }
-    return result;
+    return isRemovable;
 }
 
 void IsModuleRemovableExecute(napi_env env, void *data)
@@ -5614,10 +5621,11 @@ static bool InnerSetModuleUpgradeFlagExecute(napi_env env,
         return false;
     }
     auto result = iBundleMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
-    if (result) {
-        APP_LOGI("InnerSetModuleUpgradeFlagExecute::SetModuleUpgradeFlag");
+    if (result != ERR_OK) {
+        APP_LOGE("InnerSetModuleUpgradeFlagExecute::SetModuleUpgradeFlag failed");
+        return false;
     }
-    return result;
+    return true;
 }
 
 void SetModuleUpgradeFlagExecute(napi_env env, void *data)
@@ -6224,7 +6232,11 @@ static bool InnerGetNameForUid(int32_t uid, std::string &bundleName)
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    return iBundleMgr->GetNameForUid(uid, bundleName);
+    if (iBundleMgr->GetNameForUid(uid, bundleName) != ERR_OK) {
+        APP_LOGE("GetNameForUid failed");
+        return false;
+    }
+    return true;
 }
 
 napi_value GetNameForUid(napi_env env, napi_callback_info info)
@@ -6495,9 +6507,6 @@ void CreateLaunchModeObject(napi_env env, napi_value value)
     napi_value nSingleton;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::SINGLETON), &nSingleton));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SINGLETON", nSingleton));
-    napi_value nSingletop;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::SINGLETOP), &nSingletop));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SINGLETOP", nSingletop));
     napi_value nStandard;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::STANDARD), &nStandard));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STANDARD", nStandard));

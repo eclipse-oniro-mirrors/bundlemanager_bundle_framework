@@ -50,6 +50,13 @@ private:
      */
     ErrCode HandleGetApplicationInfoWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetApplicationInfoV9 function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetApplicationInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetApplicationInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -63,6 +70,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetApplicationInfosWithIntFlags(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the GetApplicationsInfoV9 function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundleInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

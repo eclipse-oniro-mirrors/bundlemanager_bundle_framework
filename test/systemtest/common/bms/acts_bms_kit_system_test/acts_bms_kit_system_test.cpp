@@ -26,6 +26,7 @@
 #include "clean_cache_callback_host.h"
 #include "common_tool.h"
 #include "extension_ability_info.h"
+#include "permission_define.h"
 #include "iservice_registry.h"
 #include "nlohmann/json.hpp"
 #include "status_receiver_host.h"
@@ -50,11 +51,14 @@ const std::string ERROR_UNINSTALL_FAILED = "uninstall failed!";
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
-const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
+    "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string PERMISSIONNAME = "ohos.permission.READ_CALENDAR";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
 const int32_t RESID = 16777218;
+constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
 
 namespace OHOS {
@@ -119,7 +123,7 @@ CleanCacheCallBackImpl::~CleanCacheCallBackImpl()
 void CleanCacheCallBackImpl::OnCleanCacheFinished(bool succeeded)
 {
     APP_LOGI("BMS_Kit_St OnCleanCacheFinished results are %{public}d", succeeded);
-    resultSucceededSignal_.set_value(!succeeded);
+    resultSucceededSignal_.set_value(succeeded);
 }
 
 bool CleanCacheCallBackImpl::GetSucceededResult() const
@@ -3930,8 +3934,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
         }
         BundleInfo bundleInfo1;
         bundleMgrProxy->GetBundleInfo(BASE_BUNDLE_NAME + '1', BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo1, USERID);
-        bool ret = bundleMgrProxy->GetNameForUid(bundleInfo1.uid, name1);
-        EXPECT_TRUE(ret);
+        ErrCode ret = bundleMgrProxy->GetNameForUid(bundleInfo1.uid, name1);
+        EXPECT_EQ(ret, ERR_OK);
         Uninstall(BASE_BUNDLE_NAME + '1', resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "uninstall fail!";
         resvec.clear();
@@ -3943,7 +3947,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
         BundleInfo bundleInfo2;
         bundleMgrProxy->GetBundleInfo(BASE_BUNDLE_NAME + '1', BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo2, USERID);
         ret = bundleMgrProxy->GetNameForUid(bundleInfo2.uid, name2);
-        EXPECT_TRUE(ret);
+        EXPECT_EQ(ret, ERR_OK);
         EXPECT_NE(bundleInfo1.uid, bundleInfo2.uid);
         EXPECT_EQ(name1, name2);
         for (int i = 1; i <= 2; i++) {
@@ -3952,7 +3956,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
             Uninstall(appName, resvec2);
             EXPECT_EQ(commonTool.VectorToStr(resvec2), "Success") << "uninstall fail!";
         }
-        if (!ret) {
+        if (ret != ERR_OK) {
             APP_LOGI("GetNameForUid_0100 failed - cycle count: %{public}d", i);
             break;
         }
@@ -3993,12 +3997,12 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0200, Function | MediumTest | Level
         BundleInfo bundleInfo;
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
         std::string name;
-        bool ret = bundleMgrProxy->GetNameForUid(Constants::INVALID_UID, name);
-        EXPECT_FALSE(ret);
+        ErrCode ret = bundleMgrProxy->GetNameForUid(Constants::INVALID_UID, name);
+        EXPECT_NE(ret, ERR_OK);
         resvec.clear();
         Uninstall(appName, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "uninstall fail!";
-        if (ret) {
+        if (ret != ERR_OK) {
             APP_LOGI("GetNameForUid_0200 failed - cycle count: %{public}d", i);
             break;
         }
@@ -4031,11 +4035,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0300, Function | MediumTest | Level
         BundleInfo bundleInfo;
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
         std::string name;
-        bool ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
-        EXPECT_TRUE(ret);
+        ErrCode ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
+        EXPECT_EQ(ret, ERR_OK);
         EXPECT_EQ(name, SYSTEM_SETTINGS_BUNDLE_NAME);
 
-        if (!ret) {
+        if (ret != ERR_OK) {
             APP_LOGI("GetNameForUid_0300 failed - cycle count: %{public}d", i);
             break;
         }
@@ -4227,6 +4231,45 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0200, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: QueryAbilityInfosV9_0100
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.query ability infos
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START QueryAbilityInfos_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string abilityName = "bmsThirdBundle_A1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName(appName);
+    want.SetElement(name);
+    std::vector<AbilityInfo> AbilityInfo;
+    auto ret = bundleMgrProxy->QueryAbilityInfosV9(want, GET_ABILITY_INFO_DEFAULT_V9, USERID, AbilityInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END QueryAbilityInfos_0100" << std::endl;
+}
+
+/**
  * @tc.number: QueryAllAbilityInfos_0100
  * @tc.name: test QueryAllAbilityInfos proxy
  * @tc.desc: 1.query all ability infos
@@ -4392,9 +4435,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0100, Function | SmallTest | Le
 
     BundlePackInfo bundlePackInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool testRet = bundleMgrProxy->GetBundlePackInfo(
+    auto testRet = bundleMgrProxy->GetBundlePackInfo(
         appName, GET_PACK_INFO_ALL, bundlePackInfo, USERID);
-    EXPECT_EQ(true, testRet);
+    EXPECT_EQ(testRet, ERR_OK);
     
     resvec.clear();
     Uninstall(appName, resvec);
@@ -4422,9 +4465,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0200, Function | SmallTest | Le
 
     BundlePackInfo bundlePackInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool testRet = bundleMgrProxy->GetBundlePackInfo(
+    auto testRet = bundleMgrProxy->GetBundlePackInfo(
         appName, BundleFlag::GET_BUNDLE_DEFAULT, bundlePackInfo, USERID);
-    EXPECT_EQ(true, testRet);
+    EXPECT_EQ(ERR_OK, testRet);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -4557,7 +4600,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0100, Function | SmallTest |
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     auto result = bundleMgrProxy->SetModuleUpgradeFlag(appName, BASE_MODULE_NAME, 1);
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(result == ERR_OK);
     auto res = bundleMgrProxy->GetModuleUpgradeFlag(appName, BASE_MODULE_NAME);
     EXPECT_TRUE(res);
 
@@ -4681,6 +4724,175 @@ HWTEST_F(ActsBmsKitSystemTest, GetIconById_0100, Function | SmallTest | Level1)
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetIconById_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetPermissionDef_0100
+ * @tc.name: test GetPermissionDef proxy
+ * @tc.desc: 1.system run normally
+ *           2.get permission info successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0100, Function | SmallTest | Level1)
+{
+    PermissionDef permissionDef;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool res = bundleMgrProxy->GetPermissionDef(PERMISSIONNAME, permissionDef);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: DisposedStatus_0100
+ * @tc.name: test DisposedStatus proxy
+ * @tc.desc: 1.system run normally
+ *           2.get disposed status failed by unpermission
+ */
+HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0100, Function | SmallTest | Level1)
+{
+    std::cout << "START DisposedStatus_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool result = bundleMgrProxy->SetDisposedStatus(appName, DISPOSED_STATUS);
+    EXPECT_FALSE(result);
+    int32_t status = bundleMgrProxy->GetDisposedStatus(appName);
+    EXPECT_EQ(status, 0);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END DisposedStatus_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetUdidByNetworkId_0100
+ * @tc.name: test GetUdidByNetworkId proxy
+ * @tc.desc: 1.system run normally
+ *           2.get udid info failed by empty networkid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUdidByNetworkId_0100, Function | SmallTest | Level1)
+{
+    std::cout << "START GetUdidByNetworkId_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    std::string udid;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bundleMgrProxy->GetUdidByNetworkId("", udid);
+    EXPECT_EQ(udid, "");
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetUdidByNetworkId_0100" << std::endl;
+}
+
+/**
+ * @tc.number: SetDebugMode_0100
+ * @tc.name: test SetDebugMode proxy
+ * @tc.desc: 1.system run normally
+ *           2.set debug mode successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, SetDebugMode_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->SetDebugMode(true);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDefaultAppProxy_0100
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ *           2.test GetDefaultAppProxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    auto res = getDefaultAppProxy->IsDefaultApplication("");
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CheckAbilityEnabled_0100
+ * @tc.name: test SetAbilityEnabled and IsAbilityEnabled proxy
+ * @tc.desc: 1.system run normally
+ *           2.set ability enabled
+ *           3.get ability enabled
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0100, Function | SmallTest | Level1)
+{
+    std::cout << "START GetUdidByNetworkId_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    AbilityInfo abilityInfo;
+    abilityInfo.name = BASE_ABILITY_NAME;
+    abilityInfo.bundleName = appName;
+    abilityInfo.moduleName = BASE_MODULE_NAME;
+    int32_t testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
+    EXPECT_EQ(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = bundleMgrProxy->IsAbilityEnabled(abilityInfo, isEnable);
+    EXPECT_NE(0, testRet1);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetUdidByNetworkId_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetAccessibleAppCodePaths_0100
+ * @tc.name: test GetAccessibleAppCodePaths proxy
+ * @tc.desc: 1.system run normally
+ *           2.get accessible app code paths successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAccessibleAppCodePaths_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->GetAccessibleAppCodePaths(USERID);
+    EXPECT_EQ(res.size(), 0);
+}
+
+/**
+ * @tc.number: GetBundleUserMgr_0100
+ * @tc.name: test GetBundleUserMgr proxy
+ * @tc.desc: 1.system run normally
+ *           2.GetBundleUserMgr is not nullptr
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleUserMgr_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IBundleUserMgr> getBundleUserMgr = bundleMgrProxy->GetBundleUserMgr();
+    if (!getBundleUserMgr) {
+        APP_LOGE("getBundleUserMgr is nullptr.");
+        EXPECT_EQ(getBundleUserMgr, nullptr);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

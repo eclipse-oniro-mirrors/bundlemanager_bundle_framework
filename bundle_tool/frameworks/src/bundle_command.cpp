@@ -108,7 +108,7 @@ private:
 void CleanCacheCallbackImpl::OnCleanCacheFinished(bool error)
 {
     if (signal_ != nullptr) {
-        signal_->set_value(!error);
+        signal_->set_value(error);
     }
 }
 
@@ -1490,12 +1490,12 @@ bool BundleManagerShellCommand::CleanBundleCacheFilesOperation(const std::string
         APP_LOGE("cleanCacheCallBack is null");
         return false;
     }
-    bool cleanRet = bundleMgrProxy_->CleanBundleCacheFiles(bundleName, cleanCacheCallBack, userId);
-    if (cleanRet) {
+    ErrCode cleanRet = bundleMgrProxy_->CleanBundleCacheFiles(bundleName, cleanCacheCallBack, userId);
+    if (cleanRet == ERR_OK) {
         return cleanCacheCallBack->GetResultCode();
     }
     APP_LOGE("clean bundle cache files operation failed");
-    return cleanRet;
+    return false;
 }
 
 bool BundleManagerShellCommand::CleanBundleDataFilesOperation(const std::string &bundleName, int32_t userId) const
@@ -1514,20 +1514,21 @@ bool BundleManagerShellCommand::SetApplicationEnabledOperation(const AbilityInfo
 {
     APP_LOGD("bundleName: %{public}s", abilityInfo.bundleName.c_str());
     userId = BundleCommandCommon::GetCurrentUserId(userId);
-    bool ret = false;
+    int32_t ret;
     if (abilityInfo.name.size() == 0) {
         ret = bundleMgrProxy_->SetApplicationEnabled(abilityInfo.bundleName, isEnable, userId);
     } else {
         ret = bundleMgrProxy_->SetAbilityEnabled(abilityInfo, isEnable, userId);
     }
-    if (!ret) {
+    if (ret != 0) {
         if (isEnable) {
             APP_LOGE("enable bundle failed");
         } else {
             APP_LOGE("disable bundle failed");
         }
+        return false;
     }
-    return ret;
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

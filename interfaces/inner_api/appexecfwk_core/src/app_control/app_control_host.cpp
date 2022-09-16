@@ -219,7 +219,7 @@ ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParc
     std::string appId = data.ReadString();
     Want want;
     ErrCode ret = GetDisposedStatus(appId, want);
-    if (!reply.WriteIn32(ret)) {
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

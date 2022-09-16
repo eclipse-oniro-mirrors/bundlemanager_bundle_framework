@@ -32,6 +32,6 @@ CleanCacheCallback::~CleanCacheCallback() {}
 
 void CleanCacheCallback::OnCleanCacheFinished(bool err)
 {
-    err_ = err ? OPERATION_FAILED : OPERATION_SUCCESS;
+    err_ = err ? OPERATION_SUCCESS : OPERATION_FAILED;
     uv_sem_post(&uvSem_);
 }

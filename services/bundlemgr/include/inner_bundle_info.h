@@ -228,12 +228,10 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name
      * @param abilityName Indicates the ability name.
-     * @param userId Indicates the user ID.
      * @return Returns the AbilityInfo object if find it; returns null otherwise.
      */
     std::optional<AbilityInfo> FindAbilityInfoV9(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName,
-        int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        const std::string &moduleName, const std::string &abilityName) const;
     /**
      * @brief Find abilityInfo of list by bundle name.
      * @param bundleName Indicates the bundle name.
@@ -474,6 +472,16 @@ public:
         }
 
         return innerBundleUserInfo.bundleUserInfo.enabled;
+    }
+    ErrCode GetApplicationEnabledV9(int32_t userId, bool &isEnabled) const
+    {
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+            APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
+            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        }
+        isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
+        return ERR_OK;
     }
     /**
      * @brief Set application enabled.
@@ -1107,9 +1115,9 @@ public:
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.
      * @param upgradeFlag Indicates the module is need update or not.
-     * @return Return true if set data successfully.
+     * @return Return ERR_OK if set data successfully.
      */
-    bool SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
+    ErrCode SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
 
     /**
      * @brief Get the Application Need Recover object
@@ -1127,6 +1135,15 @@ public:
      * @param appInfo Indicates the obtained ApplicationInfo object.
      */
     void GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
+    /**
+     * @brief Obtains configuration information about an application.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return return ERR_OK if getApplicationInfo successfully, return error code otherwise.
+     */
+    ErrCode GetApplicationInfoV9(int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
     /**
      * @brief Obtains configuration information about an bundle.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
@@ -1354,6 +1371,8 @@ public:
      */
     bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId) const;
 
+    ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const;
+
     bool IsAccessible() const
     {
         return baseApplicationInfo_->accessible;
@@ -1384,9 +1403,10 @@ public:
      * @brief whether userId's module should be removed.
      * @param moduleName Indicates the moduleName.
      * @param userId Indicates the userId.
+     * @param isRemovable Indicates the module whether is removable.
      * @return Return get module isRemoved result.
      */
-    bool IsModuleRemovable(const std::string &moduleName, int32_t userId) const;
+    ErrCode IsModuleRemovable(const std::string &moduleName, int32_t userId, bool &isRemovable) const;
     /**
      * @brief Add module removable info
      * @param info Indicates the innerModuleInfo of module.
@@ -1612,7 +1632,9 @@ public:
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
     bool FetchNativeSoAttrs(
-        const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath);
+        const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
+    void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
+    bool IsLibIsolated(const std::string &moduleName) const;
 
 private:
     void GetBundleWithAbilities(

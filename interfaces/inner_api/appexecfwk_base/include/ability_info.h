@@ -39,6 +39,7 @@ enum AbilityInfoFlagV9 {
     GET_ABILITY_INFO_WITH_APPLICATION_V9 = 0x00000002,
     GET_ABILITY_INFO_WITH_METADATA_V9 = 0x00000004,
     GET_ABILITY_INFO_WITH_DISABLE_V9 = 0x00000008,
+    GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9 = 0x00000010,
 };
 
 enum class AbilityType {
@@ -87,7 +88,6 @@ enum class DisplayOrientation {
 enum class LaunchMode {
     SINGLETON = 0,
     STANDARD,  // support more than one instance
-    SINGLETOP,
     SPECIFIED,
 };
 
@@ -167,7 +167,6 @@ struct CompatibleAbilityInfo : public Parcelable {
     virtual bool Marshalling(Parcel& parcel) const override;
     static CompatibleAbilityInfo* Unmarshalling(Parcel& parcel);
 
-    void CopyToDest(CompatibleAbilityInfo& dest) const;
     void ConvertToAbilityInfo(AbilityInfo& abilityInfo) const;
 };
 

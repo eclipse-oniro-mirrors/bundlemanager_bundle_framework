@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DEPLOYER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DEPLOYER_H
 
+#include "inner_bundle_info.h"
 #include "quick_fix_checker.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_interface.h"
@@ -72,10 +73,6 @@ private:
 
     ErrCode SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickFix);
 
-    ErrCode ExtractDiffFiles(
-        const std::string &targetPath,
-        const AppqfInfo &appQfInfo);
-
     ErrCode MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath);
 
     ErrCode ProcessBundleFilePaths(const std::vector<std::string> &bundleFilePaths,
@@ -84,6 +81,22 @@ private:
     void ToDeployQuickFixResult(const AppQuickFix &appQuickFix);
 
     void ProcessNativeLibraryPath(const std::string &patchPath, InnerAppQuickFix &innerAppQuickFix);
+
+    void ProcessNativeLibraryPath(
+        const std::string &patchPath, const InnerAppQuickFix &innerAppQuickFix, std::string &nativeLibraryPath);
+
+    void ResetNativeSoAttrs(std::unordered_map<std::string, AppQuickFix> &infos);
+
+    void ResetNativeSoAttrs(AppQuickFix &appQuickFix);
+
+    bool IsLibIsolated(const std::string &bundleName, const std::string &moduleName);
+
+    bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+
+    bool FetchPatchNativeSoAttrs(const AppqfInfo &appqfInfo,
+        const HqfInfo hqfInfo, bool isLibIsolated, std::string &nativeLibraryPath, std::string &cpuAbi);
+
+    bool HasNativeSoInBundle(const AppQuickFix &appQuickFix);
 
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;

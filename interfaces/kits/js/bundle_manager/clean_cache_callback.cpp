@@ -12,18 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <uv.h>
 
-#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_ERRORS_H
-#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_ERRORS_H
+#include "clean_cache_callback.h"
 
-#include "errors.h"
+#include "napi/native_common.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-constexpr ErrCode PERMISSION_DENIED_ERROR = 201;
-constexpr ErrCode PARAM_CHECK_ERROR = 401;
-constexpr ErrCode SYSTEM_ABILITY_NOT_FOUND = 801;
-constexpr ErrCode OUT_OF_MEMORY_ERROR = 17700102;
+CleanCacheCallback::CleanCacheCallback()
+{
+    uv_sem_init(&uvSem_, 0);
 }
+
+CleanCacheCallback::~CleanCacheCallback() {}
+
+void CleanCacheCallback::OnCleanCacheFinished(bool err)
+{
+    err_ = err;
+    uv_sem_post(&uvSem_);
 }
-#endif
+} // AppExecFwk
+} // OHOS

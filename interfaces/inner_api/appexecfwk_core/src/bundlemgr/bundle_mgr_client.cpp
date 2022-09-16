@@ -52,12 +52,12 @@ bool BundleMgrClient::GetBundleInfo(const std::string &bundleName, const BundleF
     return impl_->GetBundleInfo(bundleName, flag, bundleInfo, userId);
 }
 
-bool BundleMgrClient::GetBundlePackInfo(
+ErrCode BundleMgrClient::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return impl_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }

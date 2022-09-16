@@ -101,24 +101,60 @@ ErrCode QuickFixChecker::CheckPatchWithInstalledBundle(const AppQuickFix &appQui
             appQuickFix.versionName.c_str(), bundleInfo.versionName.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME;
     }
+
     const auto &qfInfo = appQuickFix.deployingAppqfInfo;
-    if ((!qfInfo.cpuAbi.empty() && !bundleInfo.applicationInfo.cpuAbi.empty()) &&
-        (qfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi)) {
-        APP_LOGE("qfInfo.cpuAbi: %{public}s, applicationInfo.cpuAbi: %{public}s", qfInfo.cpuAbi.c_str(),
-            bundleInfo.applicationInfo.cpuAbi.c_str());
-        return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+    ret = CheckPatchNativeSoWithInstalledBundle(bundleInfo, qfInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("error: CheckPatchNativeSoWithInstalledBundle failed");
+        return ret;
     }
-    if ((!qfInfo.nativeLibraryPath.empty() && !bundleInfo.applicationInfo.nativeLibraryPath.empty()) &&
-        (qfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath)) {
-        APP_LOGE("qfInfo.nativeLibraryPath: %{public}s, applicationInfo.nativeLibraryPath: %{public}s",
-            qfInfo.nativeLibraryPath.c_str(), bundleInfo.applicationInfo.nativeLibraryPath.c_str());
-        return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
-    }
+
     ret = CheckSignatureInfo(bundleInfo, provisionInfo);
     if (ret != ERR_OK) {
         APP_LOGE("error: CheckSignatureInfo failed, appId or apl not same");
         return ret;
     }
+    return ERR_OK;
+}
+
+ErrCode QuickFixChecker::CheckPatchNativeSoWithInstalledBundle(
+    const BundleInfo &bundleInfo, const AppqfInfo &qfInfo)
+{
+    bool hasAppLib =
+        (!qfInfo.nativeLibraryPath.empty() && !bundleInfo.applicationInfo.nativeLibraryPath.empty());
+    if (hasAppLib) {
+        if (qfInfo.cpuAbi != bundleInfo.applicationInfo.cpuAbi) {
+            APP_LOGE("qfInfo.cpuAbi: %{public}s, applicationInfo.cpuAbi: %{public}s",
+                qfInfo.cpuAbi.c_str(), bundleInfo.applicationInfo.cpuAbi.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+        }
+
+        if (qfInfo.nativeLibraryPath != bundleInfo.applicationInfo.nativeLibraryPath) {
+            APP_LOGE("qfInfo.nativeLibraryPath: %{public}s, applicationInfo.nativeLibraryPath: %{public}s",
+                qfInfo.nativeLibraryPath.c_str(), bundleInfo.applicationInfo.nativeLibraryPath.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+        }
+    }
+
+    for (const auto &hqfInfo : qfInfo.hqfInfos) {
+        auto iter = std::find_if(bundleInfo.hapModuleInfos.begin(), bundleInfo.hapModuleInfos.end(),
+            [moduleName = hqfInfo.moduleName](const auto &hapModuleInfo) {
+                return hapModuleInfo.moduleName == moduleName;
+            });
+        if (iter == bundleInfo.hapModuleInfos.end()) {
+            continue;
+        }
+
+        auto &hapModuleInfoNativeLibraryPath = iter->nativeLibraryPath;
+        auto &hqfInfoNativeLibraryPath = iter->nativeLibraryPath;
+        if ((!hapModuleInfoNativeLibraryPath.empty() && !hqfInfoNativeLibraryPath.empty()) &&
+            (hapModuleInfoNativeLibraryPath != hqfInfoNativeLibraryPath)) {
+            APP_LOGE("hqfInfoNativeLibraryPath: %{public}s, hapModuleInfoNativeLibraryPath: %{public}s",
+                hqfInfoNativeLibraryPath.c_str(), hapModuleInfoNativeLibraryPath.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+        }
+    }
+
     return ERR_OK;
 }
 

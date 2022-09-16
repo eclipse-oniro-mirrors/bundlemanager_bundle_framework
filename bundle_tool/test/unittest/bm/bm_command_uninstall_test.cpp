@@ -388,3 +388,79 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1300, Function | MediumTes
 
     EXPECT_EQ(cmd.ExecCommand(), STRING_UNINSTALL_BUNDLE_OK + "\n");
 }
+
+/**
+ * @tc.number: Bm_Command_Uninstall_1400
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -n <bundle-name> -u" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1400, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        (char *)TOOL_NAME.c_str(),
+        (char *)cmd_.c_str(),
+        (char *)"-n",
+        (char *)STRING_BUNDLE_NAME.c_str(),
+        (char *)"-u",
+        (char *)"",
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_UNINSTALL);
+}
+
+/**
+ * @tc.number: Bm_Command_Uninstall_1500
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -n <bundle-name> -u <user-id>" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1500, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        (char *)TOOL_NAME.c_str(),
+        (char *)cmd_.c_str(),
+        (char *)"-n",
+        (char *)STRING_BUNDLE_NAME.c_str(),
+        (char *)"-u",
+        (char *)DEFAULT_USER_ID.c_str(),
+        (char *)"",
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), STRING_UNINSTALL_BUNDLE_OK + "\n");
+}
+
+/**
+ * @tc.number: Bm_Command_Uninstall_1600
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -n <bundle-name> -k" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1600, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        (char *)TOOL_NAME.c_str(),
+        (char *)cmd_.c_str(),
+        (char *)"-n",
+        (char *)STRING_BUNDLE_NAME.c_str(),
+        (char *)"-k",
+        (char *)"",
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), STRING_UNINSTALL_BUNDLE_OK + "\n");
+}
