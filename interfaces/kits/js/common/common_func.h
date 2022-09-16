@@ -33,7 +33,7 @@ class CommonFunc {
 public:
 static napi_value WrapVoidToJS(napi_env env);
 
-static napi_value ParseInt(napi_env env, int &param, napi_value args);
+static napi_value ParseInt(napi_env env, napi_value args, int32_t &param);
 
 static std::string GetStringFromNAPI(napi_env env, napi_value value);
 

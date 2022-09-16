@@ -17,6 +17,7 @@
 #define BUNDLE_FRAMEWORK_KITS_JS_FREE_INSTALL_FREE_INSTALL_H
 
 #include "base_cb_info.h"
+#include "bundle_pack_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -37,10 +38,19 @@ struct SetHapModuleUpgradeFlagCallbackInfo : public BaseCallbackInfo {
     int32_t upgradeFlag = 0;
 };
 
+struct GetBundlePackInfoCallbackInfo : public BaseCallbackInfo {
+    explicit GetBundlePackInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    int32_t bundlePackFlag = 0;
+    BundlePackInfo bundlePackInfo;
+};
+
 napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info);
 napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info);
+napi_value GetBundlePackInfo(napi_env env, napi_callback_info info);
 
 void CreateUpgradeFlagObject(napi_env env, napi_value value);
+void CreateBundlePackFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_KITS_JS_FREE_INSTALL_FREE_INSTALL_H
