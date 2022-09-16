@@ -200,10 +200,7 @@ ErrCode AppControlHost::HandleSetDisposedStatus(MessageParcel& data, MessageParc
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret != ERR_OK) {
-        APP_LOGE("HandleSetDisposedStatus failed");
-    }
-    return ret;
+    return ERR_OK;
 }
 
 ErrCode AppControlHost::HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel &reply)
@@ -214,10 +211,7 @@ ErrCode AppControlHost::HandleDeleteDisposedStatus(MessageParcel& data, MessageP
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret != ERR_OK) {
-        APP_LOGE("HandleDeleteDisposedStatus failed");
-    }
-    return ret;
+    return ERR_OK;
 }
 
 ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParcel &reply)
@@ -225,15 +219,17 @@ ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParc
     std::string appId = data.ReadString();
     Want want;
     ErrCode ret = GetDisposedStatus(appId, want);
-    if (ret != ERR_OK) {
-        APP_LOGE("HandleGetDisposedStatus failed");
-    } else {
+    if (!reply.WriteIn32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&want)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    return ret;
+    return ERR_OK;
 }
 
 bool AppControlHost::WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &reply)

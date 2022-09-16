@@ -227,7 +227,17 @@ ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::SET_DISPOSED_STATUS, data, reply);
+    ErrCode ret = SendRequest(IAppControlMgr::Message::SET_DISPOSED_STATUS, data, reply);
+    if (ret != ERROR_OK) {
+        APP_LOGE("SendRequest failed.");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
@@ -244,7 +254,17 @@ ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::DELETE_DISPOSED_STATUS, data, reply);
+    ErrCode ret = SendRequest(IAppControlMgr::Message::DELETE_DISPOSED_STATUS, data, reply);
+    if (ret != ERROR_OK) {
+        APP_LOGE("SendRequest failed.");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
@@ -261,7 +281,8 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
     }
     ErrCode ret = GetParcelableInfo<Want>(IAppControlMgr::Message::GET_DISPOSED_STATUS, data, want);
     if (ret != ERR_OK) {
-        APP_LOGE("fail to GetDisposedStatus want from server");
+        APP_LOGE("host return error : %{public}d", ret);
+        return ret;
     }
     return ERR_OK;
 }
@@ -306,6 +327,10 @@ ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, Message
     int32_t ret = SendRequest(code, data, reply);
     if (ret != NO_ERROR) {
         APP_LOGE("get return error=%{public}d from host", ret);
+        return ret;
+    }
+    ret = reply.readInt32();
+    if (ret != NO_ERROR) {
         return ret;
     }
     std::unique_ptr<T> info(reply.ReadParcelable<T>());
