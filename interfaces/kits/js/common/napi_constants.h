@@ -30,6 +30,7 @@ constexpr size_t ARGS_POS_THREE = 3;
 constexpr size_t ARGS_POS_FOUR = 4;
 
 constexpr size_t NAPI_RETURN_ONE = 1;
+constexpr size_t CALLBACK_PARAM_SIZE = 2;
 }
 }
 }
