@@ -2143,16 +2143,14 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncBundleInfosCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
+            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetBundleInfos(
                     env, asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncBundleInfosCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
+            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
             std::unique_ptr<AsyncBundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -2701,16 +2699,14 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncBundleInfoCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
+            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetBundleInfo(asyncCallbackInfo->env, asyncCallbackInfo->param,
                     asyncCallbackInfo->flags, asyncCallbackInfo->bundleOptions, asyncCallbackInfo->bundleInfo);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncBundleInfoCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
+            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
             std::unique_ptr<AsyncBundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {

@@ -17,10 +17,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-    AsyncWorkData::AsyncWorkData(napi_env napiEnv)
-    {
-        env = napiEnv;
-    }
+    AsyncWorkData::AsyncWorkData(napi_env napiEnv) : env(napiEnv)
+    {}
 
     AsyncWorkData::~AsyncWorkData()
     {

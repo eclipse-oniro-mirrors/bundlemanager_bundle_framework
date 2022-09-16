@@ -41,10 +41,8 @@ constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 
-DefaultAppInfo::DefaultAppInfo(napi_env napiEnv)
-{
-    env = napiEnv;
-}
+DefaultAppInfo::DefaultAppInfo(napi_env napiEnv) : env(napiEnv)
+{}
 
 DefaultAppInfo::~DefaultAppInfo()
 {
@@ -332,13 +330,13 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             if (asyncCallbackInfo->errCode == NO_ERROR) {
                 asyncCallbackInfo->result = InnerIsDefaultApplication(env, asyncCallbackInfo->type);
             }
         },
         [](napi_env env, napi_status status, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->errCode != NO_ERROR) {
@@ -426,14 +424,14 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             if (asyncCallbackInfo->errCode == NO_ERROR) {
                 asyncCallbackInfo->result = InnerGetDefaultApplication(env, asyncCallbackInfo->userId,
                     asyncCallbackInfo->type, asyncCallbackInfo->bundleInfo);
             }
         },
         [](napi_env env, napi_status status, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->errCode != NO_ERROR) {
@@ -529,14 +527,14 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             if (asyncCallbackInfo->errCode == NO_ERROR) {
                 asyncCallbackInfo->result = InnerSetDefaultApplication(env, asyncCallbackInfo->userId,
                     asyncCallbackInfo->type, asyncCallbackInfo->want);
             }
         },
         [](napi_env env, napi_status status, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
             if (asyncCallbackInfo->errCode == NO_ERROR && !asyncCallbackInfo->result) {
                 asyncCallbackInfo->errCode = EXECUTE_ERROR;
@@ -623,14 +621,14 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             if (asyncCallbackInfo->errCode == NO_ERROR) {
                 asyncCallbackInfo->result = InnerResetDefaultApplication(env, asyncCallbackInfo->userId,
                     asyncCallbackInfo->type);
             }
         },
         [](napi_env env, napi_status status, void *data) {
-            DefaultAppInfo *asyncCallbackInfo = (DefaultAppInfo *)data;
+            DefaultAppInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppInfo *>(data);
             std::unique_ptr<DefaultAppInfo> callbackPtr {asyncCallbackInfo};
             if (asyncCallbackInfo->errCode == NO_ERROR && !asyncCallbackInfo->result) {
                 asyncCallbackInfo->errCode = EXECUTE_ERROR;
