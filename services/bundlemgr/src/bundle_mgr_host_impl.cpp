@@ -311,6 +311,7 @@ void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
         APP_LOGE("connectAbilityMgr is nullptr");
+        return;
     }
     connectAbilityMgr->UpgradeAtomicService(want, userId);
 }

@@ -43,8 +43,6 @@ void FillFdOpenFileFunc(zlib_filefunc_def *pzlibFilefuncDef, PlatformFile fd);
 
 unzFile OpenFdForUnzipping(PlatformFile zipFD);
 
-struct tm GetTmDataFromTickts(int64_t ticks);
-
 unzFile OpenForUnzipping(std::string &fileNameUtf8);
 
 // Opens the file referred to by |zipFD| for unzipping.
