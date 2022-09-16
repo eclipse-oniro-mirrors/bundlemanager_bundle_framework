@@ -16,13 +16,10 @@
 #ifndef BUNDLE_FRAMEWORK_KITS_JS_FREE_INSTALL_FREE_INSTALL_H
 #define BUNDLE_FRAMEWORK_KITS_JS_FREE_INSTALL_FREE_INSTALL_H
 
-#include "ability_info.h"
 #include "base_cb_info.h"
-#include "bundle_constants.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -44,7 +41,6 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info);
 napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info);
 
 void CreateUpgradeFlagObject(napi_env env, napi_value value);
-
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_KITS_JS_FREE_INSTALL_FREE_INSTALL_H
