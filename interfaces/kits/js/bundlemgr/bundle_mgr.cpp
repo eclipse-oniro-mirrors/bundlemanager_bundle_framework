@@ -2013,7 +2013,8 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncApplicationInfoCallbackInfo* asyncCallbackInfo = (AsyncApplicationInfoCallbackInfo*)data;
+            AsyncApplicationInfoCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncApplicationInfoCallbackInfo*>(data);
             std::unique_ptr<AsyncApplicationInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -2135,14 +2136,14 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = (AsyncBundleInfosCallbackInfo*)data;
+            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetBundleInfos(
                     env, asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = (AsyncBundleInfosCallbackInfo*)data;
+            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
             std::unique_ptr<AsyncBundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -2532,14 +2533,16 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo = (AsyncBundlePackInfoCallbackInfo*)data;
+            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetBundlePackInfo(asyncCallbackInfo->bundleName,
                     asyncCallbackInfo->flags, asyncCallbackInfo->bundlePackInfo);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo = (AsyncBundlePackInfoCallbackInfo*)data;
+            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
             std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -2690,14 +2693,14 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = (AsyncBundleInfoCallbackInfo*)data;
+            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetBundleInfo(asyncCallbackInfo->env, asyncCallbackInfo->param,
                     asyncCallbackInfo->flags, asyncCallbackInfo->bundleOptions, asyncCallbackInfo->bundleInfo);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = (AsyncBundleInfoCallbackInfo*)data;
+            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
             std::unique_ptr<AsyncBundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {

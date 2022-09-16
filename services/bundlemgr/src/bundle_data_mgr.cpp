@@ -90,7 +90,7 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     }
 
     for (const auto &item : bundleInfos_) {
-        std::lock_guard<std::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> stateLock(stateMutex_);
         installStates_.emplace(item.first, InstallState::INSTALL_SUCCESS);
     }
 
