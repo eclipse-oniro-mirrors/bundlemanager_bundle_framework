@@ -27,6 +27,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct GetBundleNameByUidCallbackInfo : public BaseCallbackInfo {
+    explicit GetBundleNameByUidCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    int32_t uid = 0;
+    std::string bundleName;
+};
 struct AbilityCallbackInfo : public BaseCallbackInfo {
     explicit AbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -64,6 +70,7 @@ struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
     bool isEnable = false;
 };
 
+napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
