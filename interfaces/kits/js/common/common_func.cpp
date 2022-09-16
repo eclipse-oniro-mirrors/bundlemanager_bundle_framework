@@ -306,6 +306,8 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
             return ERROR_INVALID_USER_ID;
         case ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST:
             return ERROR_BUNDLE_NOT_EXIST;
+        case ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST:
+            return ERROR_MODULE_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST:
             return ERROR_ABILITY_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_PERMISSION_DENIED:
