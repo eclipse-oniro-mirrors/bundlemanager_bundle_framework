@@ -2539,7 +2539,8 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
     std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "GetBundlePackInfoPromise", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+    NAPI_CALL(env, napi_create_async_work(
+        env, nullptr, resource,
         [](napi_env env, void* data) {
             AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
                 reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
@@ -7218,7 +7219,9 @@ napi_value GetDispatcherVersionWrap(
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "GetDispatcherVersionWrap", NAPI_AUTO_LENGTH, &resource));
     std::unique_ptr<AsyncDispatcherVersionCallbackInfo> callbackPtr { asyncCallbackInfo };
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+    NAPI_CALL(env,
+        napi_create_async_work(
+            env, nullptr, resource,
             [](napi_env env, void *data) {
                 AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo =
                     reinterpret_cast<AsyncDispatcherVersionCallbackInfo *>(data);
