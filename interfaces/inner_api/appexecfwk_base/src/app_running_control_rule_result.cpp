@@ -26,6 +26,9 @@ namespace {
 }
 void AppRunningControlRuleResult::ExecuteControlRule()
 {
+    if (ruleParam.controlWant != nullptr) {
+        APP_LOGI("ExecuteControlRule want:%{public}s", ruleParam.controlWant->ToString().c_str());
+    }
     if (ruleParam.controlMessage.empty()) {
         APP_LOGI("ExecuteControlRule control message:%{public}s", APP_CONTROL_EDM_DEFAULT_MESSAGE.c_str());
         return;

@@ -197,10 +197,13 @@ ErrCode AppControlHost::HandleGetAppRunningControlRuleResult(MessageParcel& data
     int32_t ret = GetAppRunningControlRule(bundleName, userId, ruleResult);
     if (ret != ERR_OK) {
         APP_LOGE("HandleGetAppRunningControlRuleResult failed");
-        return ret;
     }
-    if (!reply.WriteParcelable(&ruleResult)) {
-        APP_LOGE("write info failed");
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteParcelable(&ruleResult)) {
+        APP_LOGE("write AppRunningControlRuleResult failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

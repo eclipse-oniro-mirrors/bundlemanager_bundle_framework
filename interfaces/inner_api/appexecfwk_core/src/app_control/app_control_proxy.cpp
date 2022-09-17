@@ -211,7 +211,7 @@ ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<st
 }
 
 ErrCode AppControlProxy::GetAppRunningControlRule(
-    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule)
+    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
     APP_LOGI("begin to call GetAppRunningControlRuleResult.");
     MessageParcel data;
@@ -227,9 +227,8 @@ ErrCode AppControlProxy::GetAppRunningControlRule(
         APP_LOGE("write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    MessageParcel reply;
     return GetParcelableInfo<AppRunningControlRuleResult>(
-        IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT, data, controlRule);
+        IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT, data, controlRuleResult);
 }
 
 ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)

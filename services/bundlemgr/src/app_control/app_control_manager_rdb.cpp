@@ -36,6 +36,12 @@ namespace {
     const std::string CONTROL_MESSAGE = "CONTROL_MESSAGE";
     const std::string CONTROL_RULE_TYPE = "CONTROL_RULE_TYPE";
     const std::string DISPOSED_STATUS = "DISPOSED_STATUS";
+    const std::string PRIORITY = "PRIORITY";
+
+    enum class PRIORITY {
+        EDM = 100,
+        APP_MARKET = 200,
+    };
 }
 AppControlManagerRdb::AppControlManagerRdb()
 {
@@ -48,7 +54,7 @@ AppControlManagerRdb::AppControlManagerRdb()
         + APP_CONTROL_RDB_TABLE_NAME
         + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, CALLING_NAME TEXT NOT NULL, "
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
-        + "CONTROL_RULE_TYPE INTEGER, DISPOSED_STATUS TEXT);");
+        + "CONTROL_RULE_TYPE INTEGER, DISPOSED_STATUS TEXT, PRIORITY INTEGER);");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
 }
 
@@ -181,7 +187,10 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
         valuesBucket.PutInt(CONTROL_RULE_TYPE, static_cast<int>(controlRule.ruleType));
         if (controlRule.ruleParam.controlWant != nullptr) {
             valuesBucket.PutString(DISPOSED_STATUS, controlRule.ruleParam.controlWant->ToString());
+        } else {
+            valuesBucket.PutString(DISPOSED_STATUS, "default");
         }
+        valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::EDM));
         valuesBuckets.emplace_back(valuesBucket);
     }
     int64_t insertNum = 0;
@@ -270,12 +279,13 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
 }
 
 ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
-    int32_t userId, std::vector<AppRunningControlRule> &controlRules)
+    int32_t userId, AppRunningControlRule &controlRule)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.OrderByAsc(PRIORITY); // ascending
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("QueryData failed");
@@ -288,40 +298,36 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        APP_LOGI("GetAppRunningControlRule size 0");
-        return ERR_OK;
+        APP_LOGI("GetAppRunningControlRule failed");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
     }
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    do {
-        AppRunningControlRuleParam ruleParam;
-        ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, ruleParam.controlMessage);
-        if (ret != NativeRdb::E_OK) {
-            APP_LOGE("GetString appId failed, ret: %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-        }
-        int32_t ruleType = static_cast<int>(AppRunningControlRuleType::UNSPECIFIED);
-        ret = absSharedResultSet->GetInt(CONTROL_RULE_TYPE_INDEX, ruleType);
-        if (ret != NativeRdb::E_OK) {
-            APP_LOGE("GetString ruleType failed, ret: %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-        }
-        std::string wantString;
-        ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, wantString);
-        if (ret != NativeRdb::E_OK) {
-            APP_LOGE("GetString controlWant failed, ret: %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-        }
-        ruleParam.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
-        AppRunningControlRule controlRule;
-        controlRule.ruleType = static_cast<AppRunningControlRuleType>(ruleType);
-        controlRule.appId = appId;
-        controlRule.ruleParam = ruleParam;
-        controlRules.push_back(controlRule);
-    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    AppRunningControlRuleParam ruleParam;
+    ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, ruleParam.controlMessage);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetString appId failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    int32_t ruleType = static_cast<int>(AppRunningControlRuleType::UNSPECIFIED);
+    ret = absSharedResultSet->GetInt(CONTROL_RULE_TYPE_INDEX, ruleType);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetString ruleType failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    std::string wantString;
+    ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, wantString);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetString controlWant failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    ruleParam.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
+    controlRule.ruleParam = ruleParam;
+    controlRule.ruleType = static_cast<AppRunningControlRuleType>(ruleType);
+    controlRule.appId = appId;
     return ERR_OK;
 }
 
@@ -339,6 +345,7 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     valuesBucket.PutString(APP_CONTROL_LIST, controlRuleType);
     valuesBucket.PutString(APP_ID, appId);
     valuesBucket.PutString(DISPOSED_STATUS, want.ToString());
+    valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::APP_MARKET));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
         APP_LOGE("SetDisposedStatus callingName:%{public}s controlRuleType:%{public}s appId:%{public}s failed.",
