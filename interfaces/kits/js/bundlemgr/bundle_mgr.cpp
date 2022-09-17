@@ -2852,11 +2852,14 @@ static bool InnerGetLaunchWantForBundle(
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    bool ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want);
-    if (!ret) {
+
+    ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want);
+    if (ret != ERR_OK) {
         APP_LOGE("-----launchWantForBundle is not find-----");
+        return false;
     }
-    return ret;
+
+    return true;
 }
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
 {

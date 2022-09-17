@@ -1277,30 +1277,33 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t us
     return true;
 }
 
-bool BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Want &want)
+ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetLaunchWantForBundle of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetHapModuleInfo due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetLaunchWantForBundle due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetLaunchWantForBundle due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetLaunchWantForBundle due to write userId fail");
         return false;
     }
 
-    if (!GetParcelableInfo<Want>(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, data, want)) {
-        APP_LOGE("fail to GetLaunchWantForBundle from server");
-        return false;
-    }
-    return true;
+    return GetParcelableInfoWithErrCode<Want>(
+        IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, data, want);
 }
 
 int BundleMgrProxy::CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName)
