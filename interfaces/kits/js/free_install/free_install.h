@@ -45,9 +45,16 @@ struct GetBundlePackInfoCallbackInfo : public BaseCallbackInfo {
     BundlePackInfo bundlePackInfo;
 };
 
+struct GetDispatchInfoCallbackInfo : public BaseCallbackInfo {
+    explicit GetDispatchInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string version;
+    std::string dispatchAPI;
+};
+
 napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info);
 napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info);
 napi_value GetBundlePackInfo(napi_env env, napi_callback_info info);
+napi_value GetDispatchInfo(napi_env env, napi_callback_info info);
 
 void CreateUpgradeFlagObject(napi_env env, napi_value value);
 void CreateBundlePackFlagObject(napi_env env, napi_value value);

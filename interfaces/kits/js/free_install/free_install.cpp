@@ -42,6 +42,9 @@ const std::vector<int32_t> BUNDLE_PACK_FLAGS = {
 const std::string RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
 const std::string RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG = "setHapModuleUpgradeFlag";
 const std::string RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO = "getBundlePackInfo";
+const std::string RESOURCE_NAME_OF_GET_DISPATCH_INFO = "getDispatchInfo";
+const std::string DISPATCH_INFO_VERSION = "1";
+const std::string DISPATCH_INFO_DISPATCH_API = "1.0";
 }
 
 static ErrCode InnerIsHapModuleRemovable(const std::string &bundleName,
@@ -78,16 +81,17 @@ void IsHapModuleRemovableComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<HapModuleRemovableCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->result, &result[1]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->result, &result[ARGS_SIZE_ONE]));
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
     if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        if (asyncCallbackInfo->err == SUCCESS) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
         }
@@ -185,14 +189,14 @@ void SetHapModuleUpgradeFlagComplete(napi_env env, napi_status status, void *dat
         return;
     }
     std::unique_ptr<SetHapModuleUpgradeFlagCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[1] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
+    napi_value result[ARGS_SIZE_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
     }
     if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
+        if (asyncCallbackInfo->err == SUCCESS) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
@@ -597,16 +601,18 @@ void GetBundlePackInfoComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<GetBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        ConvertBundlePackInfo(env, result[1], asyncCallbackInfo->bundlePackFlag, asyncCallbackInfo->bundlePackInfo);
+        ConvertBundlePackInfo(env, result[ARGS_SIZE_ONE],
+            asyncCallbackInfo->bundlePackFlag, asyncCallbackInfo->bundlePackInfo);
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
     if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        if (asyncCallbackInfo->err == SUCCESS) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
         }
@@ -667,6 +673,95 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
         GetBundlePackInfoExec, GetBundlePackInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetBundlePackInfo end");
+    return promise;
+}
+
+static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::string version, std::string dispatchAPI)
+{
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &value));
+    napi_value napiVersion;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, version.c_str(), NAPI_AUTO_LENGTH, &napiVersion));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "version", napiVersion));
+    napi_value napiDispatchAPI;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, dispatchAPI.c_str(), NAPI_AUTO_LENGTH, &napiDispatchAPI));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "dispatchAPI", napiDispatchAPI));
+}
+
+void GetDispatchInfoExec(napi_env env, void *data)
+{
+    GetDispatchInfoCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<GetDispatchInfoCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        return;
+    }
+    asyncCallbackInfo->version = DISPATCH_INFO_VERSION;
+    asyncCallbackInfo->dispatchAPI = DISPATCH_INFO_DISPATCH_API;
+    asyncCallbackInfo->err = SUCCESS;
+}
+
+void GetDispatchInfoComplete(napi_env env, napi_status status, void *data)
+{
+    GetDispatchInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetDispatchInfoCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<GetDispatchInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        ConvertDispatcherVersion(env, result[ARGS_SIZE_ONE],
+            asyncCallbackInfo->version, asyncCallbackInfo->dispatchAPI);
+    } else {
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == SUCCESS) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value GetDispatchInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetDispatchInfo start");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    GetDispatchInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetDispatchInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<GetDispatchInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    size_t size = args.GetMaxArgc();
+    for (size_t i = 0; i < size; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+            break;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<GetDispatchInfoCallbackInfo>(
+        env, asyncCallbackInfo, RESOURCE_NAME_OF_GET_DISPATCH_INFO,
+        GetDispatchInfoExec, GetDispatchInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetDispatchInfo end");
     return promise;
 }
 } // AppExecFwk
