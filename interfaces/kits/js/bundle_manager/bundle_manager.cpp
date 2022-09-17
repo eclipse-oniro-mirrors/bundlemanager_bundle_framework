@@ -102,7 +102,7 @@ napi_value GetBundleNameByUid(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
-            CommonFunc::ParseInt(env, asyncCallbackInfo->uid, args[i]);
+            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->uid);
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
             NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             break;
@@ -244,10 +244,10 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
-            CommonFunc::ParseInt(env, asyncCallbackInfo->flags, args[i]);
+            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, asyncCallbackInfo->userId, args[i]);
+                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
@@ -363,12 +363,12 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
-            CommonFunc::ParseInt(env, asyncCallbackInfo->extensionAbilityType, args[i]);
+            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->extensionAbilityType);
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_number)) {
-            CommonFunc::ParseInt(env, asyncCallbackInfo->flags, args[i]);
+            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
         } else if (i == ARGS_POS_THREE) {
             if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, asyncCallbackInfo->userId, args[i]);
+                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;

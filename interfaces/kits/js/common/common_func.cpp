@@ -68,7 +68,7 @@ napi_value CommonFunc::WrapVoidToJS(napi_env env)
     return result;
 }
 
-napi_value CommonFunc::ParseInt(napi_env env, int &param, napi_value args)
+napi_value CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
 {
     napi_valuetype valuetype = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));

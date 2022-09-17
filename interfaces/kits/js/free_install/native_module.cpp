@@ -29,10 +29,16 @@ static napi_value FreeInstallExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &upgradeFlag));
     CreateUpgradeFlagObject(env, upgradeFlag);
 
+    napi_value bundlePackFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &bundlePackFlag));
+    CreateBundlePackFlagObject(env, bundlePackFlag);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_PROPERTY("UpgradeFlag", upgradeFlag),
+        DECLARE_NAPI_PROPERTY("BundlePackFlag", bundlePackFlag),
         DECLARE_NAPI_FUNCTION("isHapModuleRemovable", IsHapModuleRemovable),
-        DECLARE_NAPI_FUNCTION("setHapModuleUpgradeFlag", SetHapModuleUpgradeFlag)
+        DECLARE_NAPI_FUNCTION("setHapModuleUpgradeFlag", SetHapModuleUpgradeFlag),
+        DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
