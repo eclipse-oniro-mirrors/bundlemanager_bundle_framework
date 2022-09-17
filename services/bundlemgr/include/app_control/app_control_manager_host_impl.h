@@ -40,12 +40,14 @@ public:
 
     // for app running control rule
     virtual ErrCode AddAppRunningControlRule(
-        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) override;
+        const std::vector<AppRunningControlRule> &controlRules, int32_t userId) override;
     virtual ErrCode DeleteAppRunningControlRule(
-        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) override;
+        const std::vector<AppRunningControlRule> &controlRules, int32_t userId) override;
     virtual ErrCode DeleteAppRunningControlRule(int32_t userId) override;
     virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) override;
-    
+    virtual ErrCode GetAppRunningControlRule(
+        const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule) override;
+
     virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) override;
 
     virtual ErrCode DeleteDisposedStatus(const std::string &appId) override;

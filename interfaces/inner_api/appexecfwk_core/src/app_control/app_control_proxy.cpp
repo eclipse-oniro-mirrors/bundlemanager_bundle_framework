@@ -129,10 +129,10 @@ ErrCode AppControlProxy::GetAppInstallControlRule(
 }
 
 ErrCode AppControlProxy::AddAppRunningControlRule(
-    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+    const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     APP_LOGI("begin to call AddAppRunningControlRule.");
-    if (controlRuleParam.empty()) {
+    if (controlRules.empty()) {
         APP_LOGE("AddAppRunningControlRule failed due to params error.");
         return ERR_INVALID_VALUE;
     }
@@ -141,8 +141,8 @@ ErrCode AppControlProxy::AddAppRunningControlRule(
         APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector(controlRuleParam, data)) {
-        APP_LOGE("write running controlRuleParam failed.");
+    if (!WriteParcelableVector(controlRules, data)) {
+        APP_LOGE("write AppRunningControlRule failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
@@ -153,10 +153,10 @@ ErrCode AppControlProxy::AddAppRunningControlRule(
     return SendRequest(IAppControlMgr::Message::ADD_APP_RUNNING_CONTROL_RULE, data, reply);
 }
 ErrCode AppControlProxy::DeleteAppRunningControlRule(
-    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+    const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     APP_LOGI("begin to call delete AppRunningControlRules.");
-    if (controlRuleParam.empty()) {
+    if (controlRules.empty()) {
         APP_LOGE("DeleteAppRunningControlRule failed due to params error.");
         return ERR_INVALID_VALUE;
     }
@@ -165,8 +165,8 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(
         APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector(controlRuleParam, data)) {
-        APP_LOGE("write controlRuleParam failed");
+    if (!WriteParcelableVector(controlRules, data)) {
+        APP_LOGE("write AppRunningControlRule failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
@@ -208,6 +208,28 @@ ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<st
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfos(IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE, data, appIds);
+}
+
+ErrCode AppControlProxy::GetAppRunningControlRule(
+    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule)
+{
+    APP_LOGI("begin to call GetAppRunningControlRuleResult.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetMediaData due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    return GetParcelableInfo<AppRunningControlRuleResult>(
+        IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT, data, controlRule);
 }
 
 ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)

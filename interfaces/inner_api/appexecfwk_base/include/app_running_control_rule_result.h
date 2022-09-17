@@ -13,29 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_RUNNING_CONTROL_RULE_PARAM_H
-#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_RUNNING_CONTROL_RULE_PARAM_H
+#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_RUNNING_CONTROL_RULE_RESULT_H
+#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_RUNNING_CONTROL_RULE_RESULT_H
 
 #include <string>
 
+#include "app_running_control_rule_param.h"
 #include "parcel.h"
 #include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class AppRunningControlRuleType {
-    DISALLOWED_RUNNING_NOW = 0, // L1 edm
-    DISALLOWED_RUNNING_NEXT, // L2
-    UNSPECIFIED,
-};
-struct AppRunningControlRuleParam : public Parcelable {
-    std::string controlMessage;
-    std::shared_ptr<AAFwk::Want> controlWant = nullptr;
+struct AppRunningControlRuleResult : public Parcelable {
+    AppRunningControlRuleParam ruleParam;
+    AppRunningControlRuleType ruleType;
 
+    void ExecuteControlRule();
+    AppRunningControlRuleType GetAppRunningControlRuleType();
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static AppRunningControlRuleParam *Unmarshalling(Parcel &parcel);
+    static AppRunningControlRuleResult *Unmarshalling(Parcel &parcel);
 };
 } // AppExecFwk
 } // OHOS
-#endif // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_RUNNING_CONTROL_RULE_PARAM_H
+#endif // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APP_RUNNING_CONTROL_RULE_RESULT_H
