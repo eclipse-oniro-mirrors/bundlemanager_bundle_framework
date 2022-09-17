@@ -1943,8 +1943,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0100, Function | SmallT
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     Want want;
-    bool testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_TEST, want);
-    EXPECT_EQ(true, testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_TEST, want);
+    EXPECT_EQ(ERR_OK, testRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -1959,8 +1959,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0200, Function | SmallT
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     Want want;
-    bool testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_DEMO, want);
-    EXPECT_EQ(false, testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_DEMO, want);
+    EXPECT_NE(ERR_OK, testRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -1989,8 +1989,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0300, Function | SmallT
     SaveToDatabase(bundleName, innerBundleInfo, true, false);
 
     Want want;
-    bool testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_DEMO, want);
-    EXPECT_EQ(false, testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_DEMO, want);
+    EXPECT_NE(ERR_OK, testRet);
 
     MockUninstallBundle(BUNDLE_NAME_DEMO);
 }
@@ -2005,8 +2005,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0400, Function | SmallT
 {
     MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
     Want want;
-    bool testRet = GetBundleDataMgr()->GetLaunchWantForBundle(EMPTY_STRING, want);
-    EXPECT_EQ(false, testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundle(EMPTY_STRING, want);
+    EXPECT_NE(ERR_OK, testRet);
 
     MockUninstallBundle(BUNDLE_NAME_DEMO);
 }
@@ -2020,8 +2020,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0400, Function | SmallT
 HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0500, Function | SmallTest | Level1)
 {
     Want want;
-    bool testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_TEST, want);
-    EXPECT_EQ(false, testRet);
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundle(BUNDLE_NAME_TEST, want);
+    EXPECT_NE(ERR_OK, testRet);
 }
 
 /**
@@ -2039,8 +2039,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0600, Function | SmallT
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool testRet = bundleMgrProxy->GetLaunchWantForBundle(BUNDLE_NAME_DEMO, want);
-    EXPECT_EQ(false, testRet);
+    ErrCode testRet = bundleMgrProxy->GetLaunchWantForBundle(BUNDLE_NAME_DEMO, want);
+    EXPECT_NE(ERR_OK, testRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }

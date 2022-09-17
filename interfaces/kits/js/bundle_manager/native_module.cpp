@@ -46,6 +46,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isApplicationEnabled", IsApplicationEnabled),
         DECLARE_NAPI_FUNCTION("isAbilityEnabled", IsAbilityEnabled),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", CleanBundleCacheFiles),
+        DECLARE_NAPI_FUNCTION("getLaunchWantForBundle", GetLaunchWantForBundle),
         DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityFlag", extensionFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityType", extensionType),

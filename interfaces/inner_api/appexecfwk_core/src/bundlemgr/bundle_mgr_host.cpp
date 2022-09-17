@@ -965,15 +965,16 @@ ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, Message
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
     APP_LOGI("name %{public}s", bundleName.c_str());
 
     Want want;
-    bool ret = GetLaunchWantForBundle(bundleName, want);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetLaunchWantForBundle(bundleName, want, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&want)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

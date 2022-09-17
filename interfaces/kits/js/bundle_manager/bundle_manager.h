@@ -64,6 +64,13 @@ struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     bool isEnable = false;
 };
 
+struct LaunchWantCallbackInfo : public BaseCallbackInfo {
+    explicit LaunchWantCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    OHOS::AAFwk::Want want;
+};
+
 struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
     explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     AbilityInfo abilityInfo;
@@ -78,6 +85,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
+napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);

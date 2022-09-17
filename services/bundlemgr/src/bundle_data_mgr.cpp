@@ -1711,25 +1711,28 @@ bool BundleDataMgr::GetHapModuleInfo(
     return true;
 }
 
-bool BundleDataMgr::GetLaunchWantForBundle(const std::string &bundleName, Want &want) const
+ErrCode BundleDataMgr::GetLaunchWantForBundle(
+    const std::string &bundleName, Want &want, int32_t userId) const
 {
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-
-    if (!GetInnerBundleInfoWithFlags(bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
-        innerBundleInfo, GetUserIdByCallingUid())) {
-        APP_LOGE("GetLaunchWantForBundle failed");
-        return false;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetInnerBundleInfoWithFlagsV9 failed");
+        return ret;
     }
+
     std::string mainAbility = innerBundleInfo.GetMainAbility();
     if (mainAbility.empty()) {
         APP_LOGE("no main ability in the bundle %{public}s", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+
     want.SetElementName("", bundleName, mainAbility);
     want.SetAction(Constants::INTENT_ACTION_HOME);
     want.AddEntity(Constants::INTENT_ENTITY_HOME);
-    return true;
+    return ERR_OK;
 }
 
 bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const
@@ -2514,7 +2517,7 @@ bool BundleDataMgr::GetShortcutInfos(
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(
         bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId)) {
-        APP_LOGE("GetLaunchWantForBundle failed");
+        APP_LOGE("GetShortcutInfos failed");
         return false;
     }
     innerBundleInfo.GetShortcutInfos(shortcutInfos);

@@ -388,9 +388,11 @@ public:
      * @brief Obtains the Want for starting the main ability of an application based on the given bundle name.
      * @param bundleName Indicates the bundle name.
      * @param want Indicates the obtained launch Want object.
-     * @return Returns true if the launch Want object is successfully obtained; returns false otherwise.
+     * @param userId Indicates the userId.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
-    virtual bool GetLaunchWantForBundle(const std::string &bundleName, Want &want) override;
+    virtual ErrCode GetLaunchWantForBundle(
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Checks whether the publickeys of two bundles are the same.
      * @param firstBundleName Indicates the first bundle name.
