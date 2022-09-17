@@ -81,16 +81,17 @@ void IsHapModuleRemovableComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<HapModuleRemovableCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
+    napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->result, &result[1]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->result, &result[ARGS_SIZE_ONE]));
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
         }
@@ -188,7 +189,7 @@ void SetHapModuleUpgradeFlagComplete(napi_env env, napi_status status, void *dat
         return;
     }
     std::unique_ptr<SetHapModuleUpgradeFlagCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[1] = {0};
+    napi_value result[ARGS_SIZE_ONE] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
@@ -600,16 +601,18 @@ void GetBundlePackInfoComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<GetBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
+    napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        ConvertBundlePackInfo(env, result[1], asyncCallbackInfo->bundlePackFlag, asyncCallbackInfo->bundlePackInfo);
+        ConvertBundlePackInfo(env, result[ARGS_SIZE_ONE],
+            asyncCallbackInfo->bundlePackFlag, asyncCallbackInfo->bundlePackInfo);
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
         }
@@ -705,16 +708,18 @@ void GetDispatchInfoComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<GetDispatchInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
+    napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        ConvertDispatcherVersion(env, result[1], asyncCallbackInfo->version, asyncCallbackInfo->dispatchAPI);
+        ConvertDispatcherVersion(env, result[ARGS_SIZE_ONE],
+            asyncCallbackInfo->version, asyncCallbackInfo->dispatchAPI);
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
         }

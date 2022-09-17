@@ -43,6 +43,6 @@ ohos_shared_library("freeinstall") {
   ]
 
   relative_install_dir = "module/bundle"
-  subsystem_name = "freeinstall"
+  subsystem_name = "bundleframework"
   part_name = "bundle_framework"
 }
