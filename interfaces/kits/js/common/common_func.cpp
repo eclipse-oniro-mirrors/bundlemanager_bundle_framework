@@ -301,7 +301,7 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
 {
     switch (nativeErrCode) {
         case ERR_OK:
-            return NO_ERROR;
+            return SUCCESS;
         case ERR_BUNDLE_MANAGER_INVALID_USER_ID:
             return ERROR_INVALID_USER_ID;
         case ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST:
