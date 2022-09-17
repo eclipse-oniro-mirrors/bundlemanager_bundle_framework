@@ -37,8 +37,10 @@ namespace {
 // resource name
 const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
+const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
 // install message
 const std::string MSG_INSTALL_SUCCESSFULLY = "Install successfully";
+const std::string MSG_RECOVER_SUCCESSFULLY = "Recover successfully";
 const std::string MSG_ERROR_BUNDLE_SERVICE_EXCEPTION = "error bundle service exception";
 const std::string MSG_ERROR_INSTALL_PARSE_FAILED = "error install parse failed";
 const std::string MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED = "error install verify signature failed";
@@ -530,12 +532,15 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     return true;
 }
 
-void InstallExecute(napi_env env, void *data)
+void InstallExecuter(napi_env env, void *data)
 {
     AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
     const std::vector<std::string> bundleFilePath = asyncCallbackInfo->hapFiles;
-    InstallParam installParam = asyncCallbackInfo->installParam;
-    InstallResult installResult = asyncCallbackInfo->installResult;
+    InstallResult &installResult = asyncCallbackInfo->installResult;
     if (bundleFilePath.empty()) {
         installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID);
         return;
@@ -550,16 +555,16 @@ void InstallExecute(napi_env env, void *data)
     sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
     sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
     if (callback == nullptr || recipient == nullptr) {
-        APP_LOGE("callback nullptr");
+        APP_LOGE("callback or death recipient is nullptr");
         installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
         return;
     }
     iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
 
-    if (installParam.installFlag == InstallFlag::NORMAL) {
-        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    if (asyncCallbackInfo->installParam.installFlag == InstallFlag::NORMAL) {
+        asyncCallbackInfo->installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     }
-    ErrCode res = iBundleInstaller->StreamInstall(bundleFilePath, installParam, callback);
+    ErrCode res = iBundleInstaller->StreamInstall(bundleFilePath, asyncCallbackInfo->installParam, callback);
     if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
         APP_LOGE("install param error");
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
@@ -593,7 +598,7 @@ void InstallCompleted(napi_env env, napi_status status, void *data)
     }
 
     if (callbackPtr->deferred) {
-        if (callbackPtr->installResult.resultCode == 0) {
+        if (callbackPtr->installResult.resultCode == SUCCESS) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[SECOND_PARAM]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
@@ -664,15 +669,137 @@ napi_value Install(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_create_reference(env, thirdArg, NAPI_RETURN_ONE, &callbackPtr->callback));
     }
 
-    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecute,
+    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
         InstallCompleted);
     callbackPtr.release();
     return promise;
 }
 
+void RecoverExecuter(napi_env env, void *data)
+{
+    AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    const std::string bundleName = asyncCallbackInfo->bundleName;
+    InstallResult &installResult = asyncCallbackInfo->installResult;
+    if (bundleName.empty()) {
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
+        return;
+    }
+    auto iBundleInstaller = CommonFunc::GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+
+    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+    if (callback == nullptr || recipient == nullptr) {
+        APP_LOGE("callback or death recipient is nullptr");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+    iBundleInstaller->Recover(bundleName, asyncCallbackInfo->installParam, callback);
+    installResult.resultMsg = callback->GetResultMsg();
+    APP_LOGD("InnerRecover resultMsg %{public}s.", installResult.resultMsg.c_str());
+    installResult.resultCode = callback->GetResultCode();
+    APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
+}
+
+void RecoverCompleted(napi_env env, napi_status status, void *data)
+{
+    AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[SECOND_PARAM]));
+    ConvertInstallResult(callbackPtr->installResult);
+    napi_value nResultMsg;
+    if (callbackPtr->installResult.resultCode == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, MSG_RECOVER_SUCCESSFULLY.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_set_named_property(env, result[SECOND_PARAM], "resultMessage", nResultMsg));
+    } else {
+        result[FIRST_PARAM] = BusinessError::CreateError(env, callbackPtr->installResult.resultCode,
+            callbackPtr->installResult.resultMsg);
+    }
+
+    if (callbackPtr->deferred) {
+        if (callbackPtr->installResult.resultCode == SUCCESS) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[SECOND_PARAM]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
+        }
+    } else {
+        napi_value callback = CommonFunc::WrapVoidToJS(env);
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, callbackPtr->callback, &callback));
+
+        napi_value undefined = CommonFunc::WrapVoidToJS(env);
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
+
+        napi_value callResult = CommonFunc::WrapVoidToJS(env);
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, CALLBACK_PARAM_SIZE,
+            &result[FIRST_PARAM], &callResult));
+    }
+}
+
 napi_value Recover(napi_env env, napi_callback_info info)
 {
-    return nullptr;
+    APP_LOGD("Recover by bundleName called");
+    // obtain arguments of install interface
+    NapiArg args(env, info);
+    if (!args.Init(INSTALLER_PARAMS_NUMBER, INSTALLER_PARAMS_NUMBER)) {
+        APP_LOGE("init param failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto argc = args.GetMaxArgc();
+    APP_LOGD("the number of argc is  %{public}zu", argc);
+    if (argc < INSTALLER_PARAMS_NUMBER) {
+        APP_LOGE("the params number is incorrect");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
+
+    napi_value firstArg = args.GetArgv(FIRST_PARAM);
+    napi_value secondArg = args.GetArgv(SECOND_PARAM);
+    napi_value thirdArg = args.GetArgv(THIRD_PARAM);
+    if (firstArg == nullptr || secondArg == nullptr || thirdArg == nullptr) {
+        APP_LOGE("the params is nullptr");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    std::string bundleName;
+    InstallParam installParam;
+    if ((!CommonFunc::ParseString(env, firstArg, bundleName)) || (!ParseInstallParam(env, secondArg, installParam))) {
+        APP_LOGE("the param parse failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    callbackPtr->bundleName = bundleName;
+    callbackPtr->installParam = installParam;
+
+    if (argc == INSTALLER_PARAMS_NUMBER) {
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, thirdArg, &valuetype));
+        if (valuetype != napi_function) {
+            APP_LOGE("Wrong argument type. Function expected.");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+        NAPI_CALL(env, napi_create_reference(env, thirdArg, NAPI_RETURN_ONE, &callbackPtr->callback));
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_RECOVER, RecoverExecuter,
+        RecoverCompleted);
+    callbackPtr.release();
+    return promise;
 }
 
 napi_value Uninstall(napi_env env, napi_callback_info info)
