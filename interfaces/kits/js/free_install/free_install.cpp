@@ -314,8 +314,8 @@ static void ConvertSummaryApp(napi_env env, napi_value &app, const BundlePackInf
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundlePackInfo.summary.app.version.code, &versionCode));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, version, "code", versionCode));
     napi_value minCompatibleVersionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundlePackInfo.summary.app.version.minCompatibleVersionCode,
-                                   &minCompatibleVersionCode));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, bundlePackInfo.summary.app.version.minCompatibleVersionCode, &minCompatibleVersionCode));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, version, "minCompatibleVersionCode", minCompatibleVersionCode));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, app, "version", version));
