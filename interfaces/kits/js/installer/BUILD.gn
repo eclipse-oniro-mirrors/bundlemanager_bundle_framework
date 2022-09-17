@@ -41,6 +41,7 @@ ohos_shared_library("installer") {
   ]
 
   sources = [
+    "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
     "${kits_path}/js/bundlemgr/installer_callback.cpp",
     "installer.cpp",
     "native_module.cpp",
@@ -49,6 +50,9 @@ ohos_shared_library("installer") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_single",
   ]
 
   relative_install_dir = "module/bundle"

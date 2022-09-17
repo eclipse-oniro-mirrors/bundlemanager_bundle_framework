@@ -136,7 +136,7 @@ static ErrCode InnerSetApplicationEnabled(napi_env, const std::string &bundleNam
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
-        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = bundleMgr->SetApplicationEnabled(bundleName, isEnable);
     return CommonFunc::ConvertErrCode(ret);
@@ -147,7 +147,7 @@ static ErrCode InnerIsApplicationEnabled(napi_env, const std::string &bundleName
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
-        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = bundleMgr->IsApplicationEnabled(bundleName, isEnable);
     return CommonFunc::ConvertErrCode(ret);
@@ -158,7 +158,7 @@ static ErrCode InnerSetAbilityEnabled(napi_env, const AbilityInfo &abilityInfo, 
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
-        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = bundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
     return CommonFunc::ConvertErrCode(ret);
@@ -169,7 +169,7 @@ static ErrCode InnerIsAbilityEnabled(napi_env, const AbilityInfo &abilityInfo, b
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
-        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = bundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
     return CommonFunc::ConvertErrCode(ret);
@@ -474,7 +474,7 @@ void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
 
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("begin to SetApplicationEnabled");
+    APP_LOGD("begin to SetApplicationEnabled");
     NapiArg args(env, info);
     ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -557,7 +557,7 @@ void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
 
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("begin to SetAbilityEnabled");
+    APP_LOGD("begin to SetAbilityEnabled");
     NapiArg args(env, info);
     AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {

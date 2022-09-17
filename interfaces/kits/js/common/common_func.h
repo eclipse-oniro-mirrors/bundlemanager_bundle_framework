@@ -29,6 +29,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
+
+struct PropertyInfo {
+    const std::string propertyName;
+    bool isNecessary = false;
+    napi_valuetype propertyType = napi_undefined;
+};
+
 class CommonFunc {
 public:
 static napi_value WrapVoidToJS(napi_env env);
@@ -38,6 +45,17 @@ static napi_value ParseInt(napi_env env, napi_value args, int32_t &param);
 static std::string GetStringFromNAPI(napi_env env, napi_value value);
 
 static sptr<IBundleMgr> GetBundleMgr();
+
+static sptr<IBundleInstaller> GetBundleInstaller();
+
+static bool ParsePropertyArray(napi_env env, napi_value args, const std::string &propertyName,
+    std::vector<napi_value> &valueVec);
+
+static bool ParseStringPropertyFromObject(napi_env env, napi_value args, const std::string &propertyName,
+    bool isNecessary, std::string &value);
+
+static bool ParsePropertyFromObject(napi_env env, napi_value args, const PropertyInfo &propertyInfo,
+    napi_value &property);
 
 static bool ParseString(napi_env env, napi_value value, std::string& result);
 
@@ -96,6 +114,11 @@ private:
     static sptr<IBundleMgr> bundleMgr_;
     static std::mutex bundleMgrMutex_;
 };
-}
-}
+
+#define PARSE_PROPERTY(env, property, funcType, value)                                        \
+    do {                                                                                      \
+        NAPI_CALL_BASE(env, napi_get_value_##funcType(env, property, &value), false);         \
+    } while (0)
+} // AppExecFwk
+} // OHOS
 #endif
