@@ -35,11 +35,12 @@ bool BundlePermissionMgr::Init()
         APP_LOGE("rootDirList is empty");
         return false;
     }
-
-    for (const auto &rootDir : rootDirList) {
-        permissionFileList.emplace_back(
-            rootDir + Constants::PRODUCT_SUFFIX + Constants::INSTALL_LIST_PERMISSIONS_CONFIG);
-    }
+    std::transform(rootDirList.begin(),
+        rootDirList.end(),
+        std::back_inserter(permissionFileList),
+        [](const auto &rootDir) {
+            return rootDir + Constants::PRODUCT_SUFFIX + Constants::INSTALL_LIST_PERMISSIONS_CONFIG;
+        });
 #else
     permissionFileList.emplace_back(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);
 #endif
@@ -369,7 +370,6 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
     const InnerBundleInfo &innerBundleInfo)
 {
     auto reqPermissions = innerBundleInfo.GetAllRequestPermissions();
-    std::vector<std::string> grantPermList;
     std::vector<AccessToken::PermissionStateFull> permStateFullList;
     if (!reqPermissions.empty()) {
         for (const auto &reqPermission : reqPermissions) {
@@ -506,9 +506,7 @@ bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessToken::AccessTokenI
         return false;
     }
     newPermissionState = userGrantReqPermList;
-    for (const auto &perm : systemGrantReqPermList) {
-        newPermissionState.emplace_back(perm);
-    }
+    std::copy(systemGrantReqPermList.begin(), systemGrantReqPermList.end(), std::back_inserter(newPermissionState));
     return true;
 }
 
@@ -578,10 +576,11 @@ bool BundlePermissionMgr::CheckGrantPermission(
     }
     if (permDef.provisionEnable) {
         APP_LOGD("CheckGrantPermission acls size: %{public}zu", acls.size());
-        for (auto &perm : acls) {
-            if (permDef.permissionName == perm) {
-                return true;
-            }
+        auto res = std::any_of(acls.begin(), acls.end(), [permDef](const auto &perm) {
+            return permDef.permissionName == perm;
+        });
+        if (res) {
+            return res;
         }
     }
     APP_LOGE("BundlePermissionMgr::CheckGrantPermission failed permission name : %{public}s",

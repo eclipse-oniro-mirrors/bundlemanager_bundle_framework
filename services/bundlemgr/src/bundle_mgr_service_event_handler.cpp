@@ -585,9 +585,7 @@ void BMSEventHandler::GetPreInstallDirFromScan(std::vector<std::string> &bundleD
 {
     std::list<std::string> scanbundleDirs;
     GetBundleDirFromScan(scanbundleDirs);
-    for (const auto &scanbundleDir : scanbundleDirs) {
-        bundleDirs.emplace_back(scanbundleDir);
-    }
+    std::copy(scanbundleDirs.begin(), scanbundleDirs.end(), std::back_inserter(bundleDirs));
 }
 
 void BMSEventHandler::AnalyzeHaps(
@@ -1283,13 +1281,13 @@ bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
         APP_LOGE("path or installList is empty.");
         return false;
     }
-
-    for (const auto &installInfo : installList_) {
-        if (installInfo.bundleDir == path) {
-            return installInfo.removable;
-        }
+    auto installInfo = std::find_if(installList_.begin(), installList_.end(),
+        [path](const auto &installInfo) {
+        return installInfo.bundleDir == path;
+    });
+    if (installInfo != installList_.end()) {
+        return (*installInfo).removable;
     }
-
     return true;
 #else
     return false;

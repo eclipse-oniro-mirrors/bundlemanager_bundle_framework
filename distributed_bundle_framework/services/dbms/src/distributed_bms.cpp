@@ -194,7 +194,7 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
     auto iDistBundleMgr = GetDistributedBundleMgr(elementName.GetDeviceID());
-    int32_t resultCode = OHOS::NO_ERROR;
+    int32_t resultCode;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
@@ -218,7 +218,7 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
     auto iDistBundleMgr = GetDistributedBundleMgr(elementNames[0].GetDeviceID());
-    int32_t resultCode = OHOS::NO_ERROR;
+    int32_t resultCode;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;

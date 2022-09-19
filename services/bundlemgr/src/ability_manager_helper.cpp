@@ -63,11 +63,12 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bund
     }
     for (RunningProcessInfo info : runningList) {
         if (info.uid_ == bundleUid) {
-            for (std::string bundleNameInRunningProcessInfo : info.bundleNames) {
-                if (bundleNameInRunningProcessInfo == bundleName) {
-                    APP_LOGI("bundleName: %{public}s is running.", bundleName.c_str());
-                    return RUNNING;
-                }
+            auto res = std::any_of(info.bundleNames.begin(), info.bundleNames.end(),
+                [bundleName](const auto &bundleNameInRunningProcessInfo) {
+                    return bundleNameInRunningProcessInfo == bundleName;
+                });
+            if (res) {
+                return RUNNING;
             }
         }
     }
