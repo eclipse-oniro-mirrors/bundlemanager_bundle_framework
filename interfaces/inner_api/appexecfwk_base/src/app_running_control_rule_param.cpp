@@ -23,15 +23,16 @@ namespace OHOS {
 namespace AppExecFwk {
 bool AppRunningControlRuleParam::ReadFromParcel(Parcel &parcel)
 {
-    appId = Str16ToStr8(parcel.ReadString16());
     controlMessage = Str16ToStr8(parcel.ReadString16());
+    std::shared_ptr<AAFwk::Want> want(parcel.ReadParcelable<AAFwk::Want>());
+    controlWant = want;
     return true;
 }
 
 bool AppRunningControlRuleParam::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(controlMessage));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, controlWant.get());
     return true;
 }
 

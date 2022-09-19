@@ -68,7 +68,7 @@ napi_value CommonFunc::WrapVoidToJS(napi_env env)
     return result;
 }
 
-napi_value CommonFunc::ParseInt(napi_env env, int &param, napi_value args)
+napi_value CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
 {
     napi_valuetype valuetype = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
@@ -88,6 +88,122 @@ napi_value CommonFunc::ParseInt(napi_env env, int &param, napi_value args)
         return nullptr;
     }
     return result;
+}
+
+bool CommonFunc::ParsePropertyArray(napi_env env, napi_value args, const std::string &propertyName,
+    std::vector<napi_value> &valueVec)
+{
+    napi_valuetype type = napi_undefined;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &type), false);
+    if (type != napi_object) {
+        APP_LOGE("args is not an object!");
+        return false;
+    }
+
+    bool hasKey = false;
+    napi_has_named_property(env, args, propertyName.c_str(), &hasKey);
+    if (!hasKey) {
+        APP_LOGW("%{public}s is not existed", propertyName.c_str());
+        return true;
+    }
+    napi_value property = nullptr;
+    napi_status status = napi_get_named_property(env, args, propertyName.c_str(), &property);
+    if (status != napi_ok) {
+        APP_LOGE("napi get named hashParams property error!");
+        return false;
+    }
+    bool isArray = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, property, &isArray), false);
+    if (!isArray) {
+        APP_LOGE("hashParams is not array!");
+        return false;
+    }
+    uint32_t arrayLength = 0;
+    NAPI_CALL_BASE(env, napi_get_array_length(env, property, &arrayLength), false);
+    APP_LOGD("ParseHashParams property is array, length=%{public}ud", arrayLength);
+
+    napi_value valueAry = 0;
+    for (uint32_t j = 0; j < arrayLength; j++) {
+        NAPI_CALL_BASE(env, napi_get_element(env, property, j, &valueAry), false);
+        valueVec.emplace_back(valueAry);
+    }
+    return true;
+}
+
+bool CommonFunc::ParseStringPropertyFromObject(napi_env env, napi_value args, const std::string &propertyName,
+    bool isNecessary, std::string &value)
+{
+    napi_valuetype type = napi_undefined;
+        NAPI_CALL_BASE(env, napi_typeof(env, args, &type), false);
+        if (type != napi_object) {
+            APP_LOGE("args is not an object!");
+            return false;
+        }
+        bool hasKey = false;
+        napi_has_named_property(env, args, propertyName.c_str(), &hasKey);
+        if (!hasKey) {
+            if (isNecessary) {
+                APP_LOGE("%{public}s is not existed", propertyName.c_str());
+                return false;
+            }
+            return true;
+        }
+        napi_value property = nullptr;
+        napi_status status = napi_get_named_property(env, args, propertyName.c_str(), &property);
+        if (status != napi_ok) {
+            APP_LOGE("napi get named %{public}s property error!", propertyName.c_str());
+            return false;
+        }
+        napi_typeof(env, property, &type);
+        if (type != napi_string) {
+            APP_LOGE("property type incorrect!");
+            return false;
+        }
+        if (property == nullptr) {
+            APP_LOGE("property is nullptr!");
+            return false;
+        }
+        if (!CommonFunc::ParseString(env, property, value)) {
+            APP_LOGE("parse string failed");
+            return false;
+        }
+        return true;
+}
+
+bool CommonFunc::ParsePropertyFromObject(napi_env env, napi_value args, const PropertyInfo &propertyInfo,
+    napi_value &property)
+{
+    napi_valuetype type = napi_undefined;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &type), false);
+    if (type != napi_object) {
+        APP_LOGE("args is not an object!");
+        return false;
+    }
+    bool hasKey = false;
+    napi_has_named_property(env, args, propertyInfo.propertyName.c_str(), &hasKey);
+    if (!hasKey) {
+        if (propertyInfo.isNecessary) {
+            APP_LOGE("%{public}s is not existed", propertyInfo.propertyName.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    napi_status status = napi_get_named_property(env, args, propertyInfo.propertyName.c_str(), &property);
+    if (status != napi_ok) {
+        APP_LOGE("napi get named %{public}s property error!", propertyInfo.propertyName.c_str());
+        return false;
+    }
+    napi_typeof(env, property, &type);
+    if (type != propertyInfo.propertyType) {
+        APP_LOGE("property type incorrect!");
+        return false;
+    }
+    if (property == nullptr) {
+        APP_LOGE("property is nullptr");
+        return false;
+    }
+    return true;
 }
 
 bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result)
@@ -169,6 +285,16 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
         }
     }
     return bundleMgr_;
+}
+
+sptr<IBundleInstaller> CommonFunc::GetBundleInstaller()
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    return iBundleMgr->GetBundleInstaller();
 }
 
 std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)
@@ -301,11 +427,13 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
 {
     switch (nativeErrCode) {
         case ERR_OK:
-            return NO_ERROR;
+            return SUCCESS;
         case ERR_BUNDLE_MANAGER_INVALID_USER_ID:
             return ERROR_INVALID_USER_ID;
         case ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST:
             return ERROR_BUNDLE_NOT_EXIST;
+        case ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST:
+            return ERROR_MODULE_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST:
             return ERROR_ABILITY_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_PERMISSION_DENIED:

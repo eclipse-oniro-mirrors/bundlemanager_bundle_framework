@@ -23,8 +23,10 @@ namespace AppControlConstants {
 constexpr const char* APP_DISALLOWED_UNINSTALL = "AppDisallowedUninstall";
 constexpr const char* APP_DISALLOWED_INSTALL = "AppDisallowedInstall";
 constexpr const char* APP_ALLOWED_INSTALL = "AppAllowedInstall";
+constexpr const char* APP_DISALLOWED_RUN = "AppDisallowedRun";
 
 constexpr const char* EDM_CALLING = "edm";
+constexpr int32_t FOUNDATION_UID = 5523;
 constexpr int32_t EDM_UID = 537;
 constexpr int32_t LIST_MAX_SIZE = 1024;
 }

@@ -19,8 +19,10 @@
 #include <string>
 #include <vector>
 
-#include "app_running_control_rule_param.h"
+#include "app_running_control_rule_result.h"
+#include "app_running_control_rule.h"
 #include "iremote_broker.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -31,8 +33,13 @@ enum class AppInstallControlRuleType {
     UNSPECIFIED,
 };
 
+enum class AppRunControlRuleType {
+    DISALLOWED_RUN = 10,
+};
+
 class IAppControlMgr : public IRemoteBroker {
 public:
+    using Want = OHOS::AAFwk::Want;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.appControl");
 
@@ -45,21 +52,32 @@ public:
         const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds) = 0;
     
     virtual ErrCode AddAppRunningControlRule(
-        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) = 0;
+        const std::vector<AppRunningControlRule> &controlRules, int32_t userId) = 0;
     virtual ErrCode DeleteAppRunningControlRule(
-        const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId) = 0;
+        const std::vector<AppRunningControlRule> &controlRules, int32_t userId) = 0;
     virtual ErrCode DeleteAppRunningControlRule(int32_t userId) = 0;
     virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) = 0;
+    virtual ErrCode GetAppRunningControlRule(
+        const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule) = 0;
+
+    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) = 0;
+    virtual ErrCode DeleteDisposedStatus(const std::string &appId) = 0;
+    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) = 0;
 
     enum Message : uint32_t {
         ADD_APP_INSTALL_CONTROL_RULE = 0,
         DELETE_APP_INSTALL_CONTROL_RULE,
         CLEAN_APP_INSTALL_CONTROL_RULE,
         GET_APP_INSTALL_CONTROL_RULE,
+
         ADD_APP_RUNNING_CONTROL_RULE,
         DELETE_APP_RUNNING_CONTROL_RULE,
         CLEAN_APP_RUNNING_CONTROL_RULE,
         GET_APP_RUNNING_CONTROL_RULE,
+        GET_APP_RUNNING_CONTROL_RULE_RESULT,
+        SET_DISPOSED_STATUS,
+        DELETE_DISPOSED_STATUS,
+        GET_DISPOSED_STATUS,
     };
 };
 } // namespace AppExecFwk

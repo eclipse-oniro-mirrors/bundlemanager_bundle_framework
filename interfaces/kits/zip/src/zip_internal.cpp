@@ -28,29 +28,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 
-struct tm GetTmDataFromTickts(int64_t sec)
-{
-    time_t second = (time_t)sec;
-    struct tm now {
-        .tm_year = 0,
-        .tm_mon = 0,
-        .tm_mday = 0,
-        .tm_hour = 0,
-        .tm_min = 0,
-        .tm_sec = 0,
-    };
-    struct tm *tmNow = nullptr;
-    localtime_r(&second, tmNow);
-    if (tmNow == nullptr) {
-        return now;
-    }
-    int baseYeaar = 1900;
-    now = *tmNow;
-    now.tm_year += baseYeaar;
-    now.tm_mon += 1;
-    return now;
-}
-
 // Callback function for zlib that opens a file stream from a file descriptor.
 // Since we do not own the file descriptor, dup it so that we can fdopen/fclose
 // a file stream.

@@ -53,8 +53,7 @@ static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    // to be modified after inner implementation
-    return ERR_OK;
+    return appControlProxy->GetDisposedStatus(appId, disposedWant);
 }
 
 static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& disposedWant)
@@ -64,8 +63,7 @@ static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    // to be modified after inner implementation
-    return ERR_OK;
+    return appControlProxy->SetDisposedStatus(appId, disposedWant);
 }
 
 static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
@@ -75,8 +73,7 @@ static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
         APP_LOGE("AppControlProxy is null.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    // to be modified after inner implementation
-    return ERR_OK;
+    return appControlProxy->DeleteDisposedStatus(appId);
 }
 
 void SetDisposedStatusExec(napi_env env, void *data)
@@ -102,7 +99,7 @@ void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("SetDisposedStatus err = %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
     }
     if (asyncCallbackInfo->deferred) {
@@ -279,6 +276,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     } else {
+        APP_LOGE("GetDisposedStatus err = %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
     }
     if (asyncCallbackInfo->deferred) {

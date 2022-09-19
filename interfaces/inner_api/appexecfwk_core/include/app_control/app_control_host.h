@@ -43,7 +43,11 @@ private:
     ErrCode HandleDeleteAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleCleanAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetAppRunningControlRuleResult(MessageParcel& data, MessageParcel& reply);
 
+    ErrCode HandleGetDisposedStatus(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleSetDisposedStatus(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel& reply);
     DISALLOW_COPY_AND_MOVE(AppControlHost);
 };
 } // namespace AppExecFwk

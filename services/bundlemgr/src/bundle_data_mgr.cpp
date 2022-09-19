@@ -90,7 +90,7 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     }
 
     for (const auto &item : bundleInfos_) {
-        std::lock_guard<std::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> stateLock(stateMutex_);
         installStates_.emplace(item.first, InstallState::INSTALL_SUCCESS);
     }
 
@@ -1463,7 +1463,7 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
 bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) const
 {
     InnerBundleInfo innerBundleInfo;
-    if (!GetInnerBundleInfoByUid(uid, innerBundleInfo)) {
+    if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
         APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGE("sandboxAppHelper_ is nullptr");
@@ -1479,18 +1479,18 @@ bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) 
     return true;
 }
 
-bool BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const
+ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const
 {
     int32_t userId = GetUserIdByUid(uid);
     if (userId == Constants::UNSPECIFIED_USERID || userId == Constants::INVALID_USERID) {
         APP_LOGE("the uid %{public}d is illegal when get bundleName by uid.", uid);
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ data is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     for (const auto &item : bundleInfos_) {
@@ -1501,12 +1501,12 @@ bool BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &inne
         }
         if (info.GetUid(userId) == uid) {
             innerBundleInfo = info;
-            return true;
+            return ERR_OK;
         }
     }
 
     APP_LOGD("the uid(%{public}d) is not exists.", uid);
-    return false;
+    return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -1553,7 +1553,7 @@ int64_t BundleDataMgr::GetAllFreeInstallBundleSpaceSize() const
 bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bundleNames) const
 {
     InnerBundleInfo innerBundleInfo;
-    if (!GetInnerBundleInfoByUid(uid, innerBundleInfo)) {
+    if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
         APP_LOGE("get innerBundleInfo by uid failed.");
         return false;
     }
@@ -1564,7 +1564,22 @@ bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bu
 
 bool BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
 {
-    return GetBundleNameForUid(uid, name);
+    InnerBundleInfo innerBundleInfo;
+    ErrCode ret = GetInnerBundleInfoByUid(uid, innerBundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
+            APP_LOGE("get innerBundleInfo by uid failed.");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+    }
+
+    name = innerBundleInfo.GetBundleName();
+    return ERR_OK;
 }
 
 bool BundleDataMgr::GetBundleGids(const std::string &bundleName, std::vector<int> &gids) const
@@ -1696,25 +1711,28 @@ bool BundleDataMgr::GetHapModuleInfo(
     return true;
 }
 
-bool BundleDataMgr::GetLaunchWantForBundle(const std::string &bundleName, Want &want) const
+ErrCode BundleDataMgr::GetLaunchWantForBundle(
+    const std::string &bundleName, Want &want, int32_t userId) const
 {
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-
-    if (!GetInnerBundleInfoWithFlags(bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
-        innerBundleInfo, GetUserIdByCallingUid())) {
-        APP_LOGE("GetLaunchWantForBundle failed");
-        return false;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetInnerBundleInfoWithFlagsV9 failed");
+        return ret;
     }
+
     std::string mainAbility = innerBundleInfo.GetMainAbility();
     if (mainAbility.empty()) {
         APP_LOGE("no main ability in the bundle %{public}s", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+
     want.SetElementName("", bundleName, mainAbility);
     want.SetAction(Constants::INTENT_ACTION_HOME);
     want.AddEntity(Constants::INTENT_ENTITY_HOME);
-    return true;
+    return ERR_OK;
 }
 
 bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const
@@ -1726,7 +1744,7 @@ bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const
     }
 
     InnerBundleInfo innerBundleInfo;
-    if (!GetInnerBundleInfoByUid(uid, innerBundleInfo)) {
+    if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
         return false;
     }
 
@@ -1878,7 +1896,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE_V9)
+    if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)
         && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
         APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
@@ -2499,7 +2517,7 @@ bool BundleDataMgr::GetShortcutInfos(
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(
         bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId)) {
-        APP_LOGE("GetLaunchWantForBundle failed");
+        APP_LOGE("GetShortcutInfos failed");
         return false;
     }
     innerBundleInfo.GetShortcutInfos(shortcutInfos);

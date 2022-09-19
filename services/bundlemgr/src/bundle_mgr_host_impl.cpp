@@ -229,13 +229,18 @@ bool BundleMgrHostImpl::GetBundlesForUid(const int uid, std::vector<std::string>
     return dataMgr->GetBundlesForUid(uid, bundleNames);
 }
 
-bool BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
+ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 {
     APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify query permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetNameForUid(uid, name);
 }
@@ -306,6 +311,7 @@ void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
         APP_LOGE("connectAbilityMgr is nullptr");
+        return;
     }
     connectAbilityMgr->UpgradeAtomicService(want, userId);
 }
@@ -582,20 +588,22 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t
     return dataMgr->GetHapModuleInfo(abilityInfo, hapModuleInfo, userId);
 }
 
-bool BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName, Want &want)
+ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId)
 {
     APP_LOGD("start GetLaunchWantForBundle, bundleName : %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+
     APP_LOGD("verify permission success, begin to GetLaunchWantForBundle");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetLaunchWantForBundle(bundleName, want);
+
+    return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
 }
 
 int BundleMgrHostImpl::CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName)

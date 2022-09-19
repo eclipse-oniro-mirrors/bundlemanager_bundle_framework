@@ -185,9 +185,9 @@ public:
      * @brief Obtains the formal name associated with the given UID.
      * @param uid Indicates the uid.
      * @param name Indicates the obtained formal name.
-     * @return Returns true if the formal name is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
      */
-    virtual bool GetNameForUid(const int uid, std::string &name) override;
+    virtual ErrCode GetNameForUid(const int uid, std::string &name) override;
     /**
      * @brief Obtains an array of all group IDs associated with a specified bundle through the proxy object.
      * @param bundleName Indicates the bundle name.
@@ -376,9 +376,11 @@ public:
      *          based on the given bundle name through the proxy object.
      * @param bundleName Indicates the bundle name.
      * @param want Indicates the obtained launch Want object.
-     * @return Returns true if the launch Want object is successfully obtained; returns false otherwise.
+     * @param userId Indicates the userId.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
-    virtual bool GetLaunchWantForBundle(const std::string &bundleName, Want &want) override;
+    virtual ErrCode GetLaunchWantForBundle(
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Checks whether the publickeys of two bundles are the same through the proxy object.
      * @param firstBundleName Indicates the first bundle name.

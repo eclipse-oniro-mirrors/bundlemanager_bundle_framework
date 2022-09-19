@@ -38,7 +38,6 @@ public:
     {
         APP_LOGD("function called.");
         AAFwk::Want want = eventData.GetWant();
-        std::string action = want.GetAction();
         int32_t applyResult = want.GetIntParam("applyResult", -1);
         std::string resultInfo = want.GetStringParam("applyResultInfo");
         std::string bundleName = want.GetStringParam("bundleName");
@@ -114,7 +113,7 @@ int32_t QuickFixCommand::GetApplyedQuickFixInfo(const std::string &bundleName, s
     AAFwk::ApplicationQuickFixInfo quickFixInfo;
     auto result = AAFwk::QuickFixManagerClient::GetInstance()->GetApplyedQuickFixInfo(bundleName, quickFixInfo);
     if (result == ERR_OK) {
-        resultInfo.append("the quickfix files has been installed.\nInformation as follows:\n");
+        resultInfo.append("Information as follows:\n");
         resultInfo.append(GetQuickFixInfoString(quickFixInfo));
     } else {
         resultInfo.append("Get quick fix info failed with errno " + std::to_string(result) + ".\n");
@@ -135,7 +134,12 @@ std::string QuickFixCommand::GetQuickFixInfoString(const AAFwk::ApplicationQuick
     info.append("  patch version name: " + appqfInfo.versionName + "\n");
     info.append("  cpu abi: " + appqfInfo.cpuAbi + "\n");
     info.append("  native library path: " + appqfInfo.nativeLibraryPath + "\n");
-    std::string type = appqfInfo.type == AppExecFwk::QuickFixType::PATCH ? "patch" : "hotreload";
+    std::string type;
+    if (appqfInfo.type == AppExecFwk::QuickFixType::PATCH) {
+        type = "patch";
+    } else if (appqfInfo.type == AppExecFwk::QuickFixType::HOT_RELOAD) {
+        type = "hotreload";
+    }
     info.append("  type: " + type + "\n");
     for (auto hqfInfo : appqfInfo.hqfInfos) {
         info.append("  ModuelQuickFixInfo:\n");

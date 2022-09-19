@@ -35,12 +35,13 @@ public:
     virtual ErrCode DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
 
-private:
-    virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
     virtual ErrCode CopyFiles(const std::vector<std::string> &sourceFiles,
         std::vector<std::string> &destFiles) override;
 
+private:
+    virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
     bool SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply);
+
     static inline BrokerDelegator<QuickFixManagerProxy> delegator_;
 };
 } // AppExecFwk

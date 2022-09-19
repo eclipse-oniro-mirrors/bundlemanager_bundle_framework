@@ -18,10 +18,14 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_control_constants.h"
+#include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+}
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
     appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
@@ -47,11 +51,11 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
 }
@@ -62,7 +66,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const std::vector
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppInstallControlRule(callingName, appIds, userId);
 }
@@ -75,11 +79,11 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, userId);
 }
@@ -92,49 +96,35 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
 }
 
 ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
-    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+    const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    std::vector<InnerAppRunningControlRule> innerControlRules;
-    for (auto &ruleParam : controlRuleParam) {
-        InnerAppRunningControlRule controlRule(ruleParam,
-            AppRunningControlRuleType::DISALLOWED_RUNNING_FROM_ENTERPRISE_MGR);
-        innerControlRules.emplace_back(controlRule);
-    }
-
-    return appControlManager_->AddAppRunningControlRule(callingName, innerControlRules, userId);
+    return appControlManager_->AddAppRunningControlRule(callingName, controlRules, userId);
 }
 
 ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(
-    const std::vector<AppRunningControlRuleParam> &controlRuleParam, int32_t userId)
+    const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    std::vector<InnerAppRunningControlRule> innerControlRules;
-    for (auto &ruleParam : controlRuleParam) {
-        InnerAppRunningControlRule controlRule(ruleParam,
-            AppRunningControlRuleType::DISALLOWED_RUNNING_FROM_ENTERPRISE_MGR);
-        innerControlRules.emplace_back(controlRule);
-    }
-
-    return appControlManager_->DeleteAppRunningControlRule(callingName, innerControlRules, userId);
+    return appControlManager_->DeleteAppRunningControlRule(callingName, controlRules, userId);
 }
 
 ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
@@ -142,7 +132,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppRunningControlRule(callingName, userId);
 }
@@ -152,9 +142,20 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(int32_t userId, std:
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLEMANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppRunningControlRule(callingName, userId, appIds);
+}
+
+ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
+    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule)
+{
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    if (uid != AppControlConstants::FOUNDATION_UID) {
+        APP_LOGW("calling permission denied");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+    }
+    return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRule);
 }
 
 std::string AppControlManagerHostImpl::GetCallingName()
@@ -176,6 +177,48 @@ std::string AppControlManagerHostImpl::GetControlRuleType(const AppInstallContro
         return "";
     }
     return item->second;
+}
+
+ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
+{
+    APP_LOGD("host begin to SetDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
+{
+    APP_LOGD("host begin to DeleteDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
+{
+    APP_LOGE("host begin to GetDisposedStatus");
+    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want);
+    if (ret != ERR_OK) {
+        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
 }
 }
 }

@@ -525,12 +525,12 @@ ErrCode BundleMgrHost::HandleGetNameForUid(MessageParcel &data, MessageParcel &r
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int uid = data.ReadInt32();
     std::string name;
-    bool ret = GetNameForUid(uid, name);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetNameForUid(uid, name);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteString(name)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -965,15 +965,16 @@ ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, Message
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
     APP_LOGI("name %{public}s", bundleName.c_str());
 
     Want want;
-    bool ret = GetLaunchWantForBundle(bundleName, want);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetLaunchWantForBundle(bundleName, want, userId);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&want)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1716,8 +1717,8 @@ ErrCode BundleMgrHost::HandleSetModuleUpgradeFlag(MessageParcel &data, MessagePa
     std::string moduleName = data.ReadString();
     int32_t upgradeFlag = data.ReadInt32();
     APP_LOGD("bundleName %{public}s, moduleName %{public}s", bundleName.c_str(), moduleName.c_str());
-    bool ret = SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

@@ -22,10 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class AppRunningControlRuleType {
-    DISALLOWED_RUNNING_FROM_ENTERPRISE_MGR = 0, // L1 edm
-    DISALLOWED_RUNNING_FROM_DISPOSE, // L2
-};
 
 class InnerAppRunningControlRule {
 public:

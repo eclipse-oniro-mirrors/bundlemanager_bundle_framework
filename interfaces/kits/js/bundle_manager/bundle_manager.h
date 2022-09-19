@@ -28,6 +28,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct GetBundleNameByUidCallbackInfo : public BaseCallbackInfo {
+    explicit GetBundleNameByUidCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    int32_t uid = 0;
+    std::string bundleName;
+};
 struct AbilityCallbackInfo : public BaseCallbackInfo {
     explicit AbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -59,6 +65,13 @@ struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     bool isEnable = false;
 };
 
+struct LaunchWantCallbackInfo : public BaseCallbackInfo {
+    explicit LaunchWantCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    OHOS::AAFwk::Want want;
+};
+
 struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
     explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     AbilityInfo abilityInfo;
@@ -71,6 +84,7 @@ struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
+napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
@@ -79,6 +93,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
+napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
