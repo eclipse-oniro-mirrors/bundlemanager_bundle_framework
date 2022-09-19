@@ -618,16 +618,16 @@ int32_t BundlePermissionMgr::VerifyPermission(
     return AccessToken::AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
 }
 
-bool BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     APP_LOGD("BundlePermissionMgr::GetPermissionDef permission %{public}s", permissionName.c_str());
     AccessToken::PermissionDef accessTokenPermDef;
     int32_t ret = AccessToken::AccessTokenKit::GetDefPermission(permissionName, accessTokenPermDef);
     if (ret == AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         ConvertPermissionDef(accessTokenPermDef, permissionDef);
-        return true;
+        return ERR_OK;
     }
-    return false;
+    return ret;
 }
 
 bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,

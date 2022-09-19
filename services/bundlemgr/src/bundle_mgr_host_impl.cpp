@@ -654,15 +654,15 @@ int BundleMgrHostImpl::CheckPublicKeys(const std::string &firstBundleName, const
     return dataMgr->CheckPublicKeys(firstBundleName, secondBundleName);
 }
 
-bool BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (permissionName.empty()) {
         APP_LOGE("fail to GetPermissionDef due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
 }

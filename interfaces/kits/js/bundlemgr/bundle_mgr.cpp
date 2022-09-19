@@ -24,6 +24,7 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "cleancache_callback.h"
+#include "common_func.h"
 #include "if_system_ability_manager.h"
 #include "installer_callback.h"
 #include "ipc_skeleton.h"
@@ -2945,27 +2946,6 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static void ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
-{
-    napi_value nPermissionName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, permissionDef.permissionName.c_str(), NAPI_AUTO_LENGTH, &nPermissionName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "permissionName", nPermissionName));
-    APP_LOGI("InnerGetPermissionDef name=%{public}s.", permissionDef.permissionName.c_str());
-
-    napi_value nGrantMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.grantMode, &nGrantMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "grantMode", nGrantMode));
-
-    napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.labelId, &nLabelId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "labelId", nLabelId));
-
-    napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.descriptionId, &nDescriptionId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "descriptionId", nDescriptionId));
-}
-
 static bool InnerGetPermissionDef(napi_env env, const std::string &permissionName, PermissionDef &permissionDef)
 {
     auto iBundleMgr = GetBundleMgr();
@@ -3040,7 +3020,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
                 if (asyncCallbackInfo->ret) {
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, CODE_SUCCESS, &result[PARAM0]));
                     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
-                    ConvertPermissionDef(env, result[PARAM1], asyncCallbackInfo->permissionDef);
+                    CommonFunc::ConvertPermissionDef(env, result[PARAM1], asyncCallbackInfo->permissionDef);
                 } else {
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, OPERATION_FAILED, &result[PARAM0]));
                     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[PARAM1]));

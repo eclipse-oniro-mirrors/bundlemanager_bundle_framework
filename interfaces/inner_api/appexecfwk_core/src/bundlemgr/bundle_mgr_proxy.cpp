@@ -1364,30 +1364,26 @@ int BundleMgrProxy::CheckPublicKeys(const std::string &firstBundleName, const st
     return reply.ReadInt32();
 }
 
-bool BundleMgrProxy::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetPermissionDef of %{public}s", permissionName.c_str());
     if (permissionName.empty()) {
         APP_LOGE("fail to GetPermissionDef due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetPermissionDef due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(permissionName)) {
         APP_LOGE("fail to GetPermissionDef due to write permissionName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!GetParcelableInfo<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef)) {
-        APP_LOGE("fail to GetPermissionDef from server");
-        return false;
-    }
-    return true;
+    return GetParcelableInfoWithErrCode<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef);
 }
 
 bool BundleMgrProxy::HasSystemCapability(const std::string &capName)
