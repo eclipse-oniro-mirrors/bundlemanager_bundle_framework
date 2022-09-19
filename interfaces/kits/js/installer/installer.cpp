@@ -516,7 +516,6 @@ static bool ParseCrowdtestDeadline(napi_env env, napi_value args, int64_t &crowd
     if (property != nullptr) {
         PARSE_PROPERTY(env, property, int64, crowdtestDeadline);
     }
-    APP_LOGD("param crowdtestDeadline is %{public}lld", crowdtestDeadline);
     return true;
 }
 
