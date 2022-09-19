@@ -31,7 +31,7 @@ bool NapiArg::Init(size_t minArgc, size_t maxArgc)
     }
     // argc larger than maxArgc is permitted, but we only use the first $maxArgc$ args
     if (argc < minArgc) {
-        APP_LOGE("Incorrect number of arguments, argc:%{public}d, minArgc:%{public}d", argc, minArgc);
+        APP_LOGE("Incorrect number of arguments, argc:%{public}zu, minArgc:%{public}zu", argc, minArgc);
         return false;
     }
     if (argc != 0) {
