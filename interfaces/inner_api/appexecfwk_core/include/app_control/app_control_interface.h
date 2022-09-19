@@ -58,7 +58,7 @@ public:
     virtual ErrCode DeleteAppRunningControlRule(int32_t userId) = 0;
     virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) = 0;
     virtual ErrCode GetAppRunningControlRule(
-        const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule) = 0;
+        const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult) = 0;
 
     virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) = 0;
     virtual ErrCode DeleteDisposedStatus(const std::string &appId) = 0;
