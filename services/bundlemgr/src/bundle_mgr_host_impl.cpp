@@ -515,7 +515,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
         return true;
     } else {
-        return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo);
+        return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo) == ERR_OK;
     }
 }
 

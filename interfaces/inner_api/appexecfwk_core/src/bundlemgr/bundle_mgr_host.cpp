@@ -919,7 +919,7 @@ ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9(MessageParcel &d
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string hapFilePath = data.ReadString();
     int32_t flags = data.ReadInt32();
-    APP_LOGD("hapFilePath %{private}s, flagS %{public}d", hapFilePath.c_str(), flags);
+    APP_LOGD("hapFilePath %{private}s, flags %{public}d", hapFilePath.c_str(), flags);
 
     BundleInfo info;
     ErrCode ret = GetBundleArchiveInfoV9(hapFilePath, flags, info);
