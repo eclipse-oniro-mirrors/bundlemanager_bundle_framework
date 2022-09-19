@@ -36,7 +36,7 @@ namespace {
 const std::string BUNDLE_NAME = "com.example.freeInstall";
 const std::string BUNDLE_NAME_DEMO = "com.example.demo.freeInstall";
 const std::string MODULE_NAME_TEST = "entry";
-const std::string MODULE_NAME_NOT_EXIST= "notExist";
+const std::string MODULE_NAME_NOT_EXIST = "notExist";
 const std::string ABILITY_NAME_TEST = "MainAbility";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
@@ -182,7 +182,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0001, Function | Sma
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable("", "", isRemovable);
-        EXPECT_EQ(ret , ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
         EXPECT_FALSE(isRemovable);
     }
 }
@@ -202,7 +202,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0002, Function | Sma
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME_DEMO, MODULE_NAME_TEST, isRemovable);
-        EXPECT_EQ(ret , ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         EXPECT_FALSE(isRemovable);
     }
 
@@ -224,7 +224,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0003, Function | Sma
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_NOT_EXIST, isRemovable);
-        EXPECT_EQ(ret , ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
         EXPECT_FALSE(isRemovable);
     }
 
@@ -246,7 +246,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0004, Function | Sma
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable);
-        EXPECT_EQ(ret , ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
         EXPECT_FALSE(isRemovable);
     }
 
@@ -270,7 +270,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0005, Function | Sma
         EXPECT_TRUE(result);
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable);
-        EXPECT_EQ(ret , ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
         EXPECT_TRUE(isRemovable);
     }
 
@@ -288,8 +288,8 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0006, Function | Sma
 {
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
-        ErrCode ret = bundleMgr->SetModuleUpgradeFlag(BUNDLE_NAME, MODULE_NAME_TEST, 0);
-        EXPECT_EQ(ret , ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        ErrCode ret = bundleMgr->SetModuleUpgradeFlag("", "", 0);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 
@@ -307,7 +307,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0007, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         ErrCode ret = bundleMgr->SetModuleUpgradeFlag(BUNDLE_NAME_DEMO, MODULE_NAME_TEST, 0);
-        EXPECT_EQ(ret , ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
@@ -327,7 +327,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0008, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         ErrCode ret = bundleMgr->SetModuleUpgradeFlag(BUNDLE_NAME, MODULE_NAME_NOT_EXIST, 0);
-        EXPECT_EQ(ret , ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
@@ -347,7 +347,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0009, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         ErrCode ret = bundleMgr->SetModuleUpgradeFlag(BUNDLE_NAME, MODULE_NAME_TEST, UPGRADE_FLAG);
-        EXPECT_EQ(ret , ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
         bool flag = bundleMgr->GetModuleUpgradeFlag(BUNDLE_NAME, MODULE_NAME_TEST);
         EXPECT_TRUE(flag);
     }
@@ -425,7 +425,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0013, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         BundlePackInfo packInfo;
-        ErrCode ret  = bundleMgr->GetBundlePackInfo(BUNDLE_NAME_DEMO,
+        ErrCode ret = bundleMgr->GetBundlePackInfo(BUNDLE_NAME_DEMO,
             BundlePackFlag::GET_PACK_INFO_ALL, packInfo, USERID);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
@@ -447,7 +447,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0014, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         BundlePackInfo packInfo;
-        ErrCode ret  = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
+        ErrCode ret = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
             BundlePackFlag::GET_PACK_INFO_ALL, packInfo, INVALID_USER_ID);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     }
@@ -469,7 +469,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0015, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         BundlePackInfo packInfo;
-        ErrCode ret  = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
+        ErrCode ret = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
             BundlePackFlag::GET_PACK_INFO_ALL, packInfo, USERID);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_FALSE(packInfo.packages.empty());
@@ -531,12 +531,11 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0017, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         BundlePackInfo packInfo;
-        ErrCode ret  = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
+        ErrCode ret = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
             BundlePackFlag::GET_BUNDLE_SUMMARY, packInfo, USERID);
         EXPECT_EQ(ret, ERR_OK);
         // GET_PACKAGES: include summary, not include package
         EXPECT_TRUE(packInfo.packages.empty());
-        EXPECT_EQ(packInfo.summary.app.bundleName, EMPTY_STRING);
 
         EXPECT_FALSE(packInfo.summary.modules.empty());
         EXPECT_EQ(packInfo.summary.app.bundleName, BUNDLE_NAME);
@@ -563,7 +562,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0018, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         BundlePackInfo packInfo;
-        ErrCode ret  = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
+        ErrCode ret = bundleMgr->GetBundlePackInfo(BUNDLE_NAME,
             BundlePackFlag::GET_MODULE_SUMMARY, packInfo, USERID);
         EXPECT_EQ(ret, ERR_OK);
         // GET_PACKAGES: include summary.modules, not include packages and summary.app
