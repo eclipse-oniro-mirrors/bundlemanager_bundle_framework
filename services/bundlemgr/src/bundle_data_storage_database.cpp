@@ -114,10 +114,6 @@ bool BundleDataStorageDatabase::LoadAllData(std::map<std::string, InnerBundleInf
     bool ret = true;
     if (status != Status::SUCCESS) {
         APP_LOGE("get entries error: %{public}d", status);
-        // KEY_NOT_FOUND means no data in database, no need to report.
-        if (status != Status::KEY_NOT_FOUND) {
-            const std::string interfaceName = "KvStoreSnapshot::GetEntries()";
-        }
         ret = false;
     } else {
         SaveEntries(allEntries, infos);
@@ -148,7 +144,6 @@ bool BundleDataStorageDatabase::SaveStorageBundleInfo(const InnerBundleInfo &inn
         }
     }
     if (status != Status::SUCCESS) {
-        const std::string interfaceName = "kvStorePtr::Put()";
         APP_LOGE("put valLocalAbilityManager::InitializeSaProfilesue to kvStore error: %{public}d", status);
         return false;
     }
@@ -180,7 +175,6 @@ bool BundleDataStorageDatabase::DeleteStorageBundleInfo(const InnerBundleInfo &i
     }
 
     if (status != Status::SUCCESS) {
-        const std::string interfaceName = "kvStorePtr::Delete()";
         APP_LOGE("delete key error: %{public}d", status);
         return false;
     } else {

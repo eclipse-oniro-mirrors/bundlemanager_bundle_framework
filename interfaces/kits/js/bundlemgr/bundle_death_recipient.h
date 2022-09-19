@@ -26,7 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    BundleDeathRecipient(const sptr<StatusReceiverHost> &statusReceiver,
+    explicit BundleDeathRecipient(const sptr<StatusReceiverHost> &statusReceiver,
         const sptr<QuickFixStatusCallbackHost> &callback = nullptr);
     virtual ~BundleDeathRecipient();
     virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject> &remote) override;
