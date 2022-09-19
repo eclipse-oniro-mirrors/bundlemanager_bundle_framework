@@ -77,6 +77,23 @@ struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
     bool isEnable = false;
 };
 
+struct ApplicationInfoCallbackInfo : public BaseCallbackInfo {
+    explicit ApplicationInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    ApplicationInfo appInfo;
+};
+
+struct ApplicationInfosCallbackInfo : public BaseCallbackInfo {
+    explicit ApplicationInfosCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<ApplicationInfo> appInfos;
+};
+
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
@@ -86,6 +103,9 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
+napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
+napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
+void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
