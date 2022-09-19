@@ -30,6 +30,12 @@ struct InstallResult {
     std::string resultMsg;
 };
 
+enum class InstallOption {
+    RECOVER = 1,
+    UNINSTALL = 2,
+    UNKNOWN = 3
+};
+
 struct AsyncInstallCallbackInfo {
     explicit AsyncInstallCallbackInfo(napi_env napiEnv) : env(napiEnv) {}
     ~AsyncInstallCallbackInfo();
@@ -40,6 +46,7 @@ struct AsyncInstallCallbackInfo {
     OHOS::AppExecFwk::InstallParam installParam;
     InstallResult installResult;
     int32_t errCode = 0;
+    InstallOption option = InstallOption::UNKNOWN;
 
     napi_env env;
     napi_async_work asyncWork = nullptr;

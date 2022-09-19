@@ -37,10 +37,9 @@ namespace {
 // resource name
 const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
-const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
+const std::string RESOURCE_NAME = "Recover or uninstall";
 // install message
-const std::string MSG_INSTALL_SUCCESSFULLY = "Install successfully";
-const std::string MSG_RECOVER_SUCCESSFULLY = "Recover successfully";
+const std::string MSG_OPERATE_SUCCESSFULLY = "Operate Successfully";
 const std::string MSG_ERROR_BUNDLE_SERVICE_EXCEPTION = "error bundle service exception";
 const std::string MSG_ERROR_INSTALL_PARSE_FAILED = "error install parse failed";
 const std::string MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED = "error install verify signature failed";
@@ -169,7 +168,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, struct InstallResult> &
 {
     errCodeMap = {
         { IStatusReceiver::SUCCESS,
-            { SUCCESS, MSG_INSTALL_SUCCESSFULLY }},
+            { SUCCESS, MSG_OPERATE_SUCCESSFULLY }},
         { IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR,
             { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION }},
         { IStatusReceiver::ERR_INSTALL_HOST_INSTALLER_FAILED,
@@ -367,7 +366,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, struct InstallResult> &
 
 static void ConvertInstallResult(InstallResult &installResult)
 {
-    APP_LOGD("ConvertInstallResult = %{public}s.", installResult.resultMsg.c_str());
+    APP_LOGD("ConvertInstallResult msg %{public}s, errCode is %{public}d.", installResult.resultMsg.c_str(),
+        installResult.resultCode);
     std::unordered_map<int32_t, struct InstallResult> errCodeMap;
     CreateErrCodeMap(errCodeMap);
     auto iter = errCodeMap.find(installResult.resultCode);
@@ -579,7 +579,7 @@ void InstallExecuter(napi_env env, void *data)
     }
 }
 
-void InstallCompleted(napi_env env, napi_status status, void *data)
+void OperationCompleted(napi_env env, napi_status status, void *data)
 {
     AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -589,7 +589,7 @@ void InstallCompleted(napi_env env, napi_status status, void *data)
     napi_value nResultMsg;
     if (callbackPtr->installResult.resultCode == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, MSG_INSTALL_SUCCESSFULLY.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+            napi_create_string_utf8(env, MSG_OPERATE_SUCCESSFULLY.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
         NAPI_CALL_RETURN_VOID(env,
             napi_set_named_property(env, result[SECOND_PARAM], "resultMessage", nResultMsg));
     } else {
@@ -670,12 +670,12 @@ napi_value Install(napi_env env, napi_callback_info info)
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
-        InstallCompleted);
+        OperationCompleted);
     callbackPtr.release();
     return promise;
 }
 
-void RecoverExecuter(napi_env env, void *data)
+void UninstallOrRecoverExecuter(napi_env env, void *data)
 {
     AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
     if (asyncCallbackInfo == nullptr) {
@@ -703,53 +703,24 @@ void RecoverExecuter(napi_env env, void *data)
         return;
     }
     iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
-    iBundleInstaller->Recover(bundleName, asyncCallbackInfo->installParam, callback);
+    if (asyncCallbackInfo->option == InstallOption::RECOVER) {
+        iBundleInstaller->Recover(bundleName, asyncCallbackInfo->installParam, callback);
+    } else if (asyncCallbackInfo->option == InstallOption::UNINSTALL) {
+        iBundleInstaller->Uninstall(bundleName, asyncCallbackInfo->installParam, callback);
+    } else {
+        APP_LOGE("error install option");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
     installResult.resultMsg = callback->GetResultMsg();
     APP_LOGD("InnerRecover resultMsg %{public}s.", installResult.resultMsg.c_str());
     installResult.resultCode = callback->GetResultCode();
     APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
 }
 
-void RecoverCompleted(napi_env env, napi_status status, void *data)
+napi_value UninstallOrRecover(napi_env env, napi_callback_info info, std::unique_ptr<AsyncInstallCallbackInfo> &callbackPtr)
 {
-    AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
-    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[CALLBACK_PARAM_SIZE] = {0};
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[SECOND_PARAM]));
-    ConvertInstallResult(callbackPtr->installResult);
-    napi_value nResultMsg;
-    if (callbackPtr->installResult.resultCode == SUCCESS) {
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, MSG_RECOVER_SUCCESSFULLY.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-        NAPI_CALL_RETURN_VOID(env,
-            napi_set_named_property(env, result[SECOND_PARAM], "resultMessage", nResultMsg));
-    } else {
-        result[FIRST_PARAM] = BusinessError::CreateError(env, callbackPtr->installResult.resultCode,
-            callbackPtr->installResult.resultMsg);
-    }
-
-    if (callbackPtr->deferred) {
-        if (callbackPtr->installResult.resultCode == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[SECOND_PARAM]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
-        }
-    } else {
-        napi_value callback = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, callbackPtr->callback, &callback));
-
-        napi_value undefined = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-
-        napi_value callResult = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, CALLBACK_PARAM_SIZE,
-            &result[FIRST_PARAM], &callResult));
-    }
-}
-
-napi_value Recover(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("Recover by bundleName called");
+    APP_LOGD("UninstallOrRecover by bundleName called");
     // obtain arguments of install interface
     NapiArg args(env, info);
     if (!args.Init(INSTALLER_PARAMS_NUMBER, INSTALLER_PARAMS_NUMBER)) {
@@ -764,7 +735,6 @@ napi_value Recover(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
 
     napi_value firstArg = args.GetArgv(FIRST_PARAM);
     napi_value secondArg = args.GetArgv(SECOND_PARAM);
@@ -796,15 +766,26 @@ napi_value Recover(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_create_reference(env, thirdArg, NAPI_RETURN_ONE, &callbackPtr->callback));
     }
 
-    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_RECOVER, RecoverExecuter,
-        RecoverCompleted);
+    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME,
+        UninstallOrRecoverExecuter, OperationCompleted);
     callbackPtr.release();
     return promise;
 }
 
+napi_value Recover(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Recover called");
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
+    callbackPtr->option = InstallOption::RECOVER;
+    return UninstallOrRecover(env, info, callbackPtr);
+}
+
 napi_value Uninstall(napi_env env, napi_callback_info info)
 {
-    return nullptr;
+    APP_LOGD("Uninstall called");
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
+    callbackPtr->option = InstallOption::UNINSTALL;
+    return UninstallOrRecover(env, info, callbackPtr);
 }
 
 napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
