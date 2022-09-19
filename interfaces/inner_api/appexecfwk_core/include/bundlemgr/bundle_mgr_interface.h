@@ -488,6 +488,18 @@ public:
         return false;
     }
     /**
+     * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
+     * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleArchiveInfoV9(
+        const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtain the HAP module info of a specific ability.
      * @param abilityInfo Indicates the ability.
      * @param hapModuleInfo Indicates the obtained HapModuleInfo object.
@@ -1148,6 +1160,7 @@ public:
         QUERY_EXTENSION_INFO_V9,
         GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
         GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
+        GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
     };
 };
 }  // namespace AppExecFwk

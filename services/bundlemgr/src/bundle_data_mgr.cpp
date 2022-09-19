@@ -747,7 +747,7 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
         info.metadata.clear();
     }
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION_V9) == GET_ABILITY_INFO_WITH_APPLICATION_V9) {
-        innerBundleInfo.GetApplicationInfo(GET_APPLICATION_INFO_DEFAULT_V9, userId, info.applicationInfo);
+        innerBundleInfo.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, userId, info.applicationInfo);
     }
     return ERR_OK;
 }
@@ -965,7 +965,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
                 }
                 if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION_V9) ==
                     GET_ABILITY_INFO_WITH_APPLICATION_V9) {
-                    info.GetApplicationInfo(GET_APPLICATION_INFO_DEFAULT_V9, userId, abilityinfo.applicationInfo);
+                    info.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, userId, abilityinfo.applicationInfo);
                 }
                 if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION_V9) !=
                     GET_ABILITY_INFO_WITH_PERMISSION_V9) {
@@ -2961,7 +2961,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) ==
         GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) {
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-        innerBundleInfo.GetApplicationInfo(GET_APPLICATION_INFO_DEFAULT_V9, responseUserId,
+        innerBundleInfo.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, responseUserId,
             extensionInfo.applicationInfo);
     }
     return ERR_OK;
@@ -3252,7 +3252,7 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
             if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) ==
                 GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) {
-                info.GetApplicationInfo(GET_APPLICATION_INFO_DEFAULT_V9, userId, extensionInfo.applicationInfo);
+                info.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, userId, extensionInfo.applicationInfo);
             }
             if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) !=
                 GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) {

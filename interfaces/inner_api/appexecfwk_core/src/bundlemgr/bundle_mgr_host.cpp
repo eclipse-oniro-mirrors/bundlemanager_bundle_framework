@@ -109,6 +109,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO, &BundleMgrHost::HandleGetBundleArchiveInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlags);
+    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_HAP_MODULE_INFO, &BundleMgrHost::HandleGetHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, &BundleMgrHost::HandleGetLaunchWantForBundle);
     funcMap_.emplace(IBundleMgr::Message::CHECK_PUBLICKEYS, &BundleMgrHost::HandleCheckPublicKeys);
@@ -904,6 +906,28 @@ ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlags(MessageParcel &dat
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        if (!reply.WriteParcelable(&info)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string hapFilePath = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    APP_LOGD("hapFilePath %{private}s, flagS %{public}d", hapFilePath.c_str(), flags);
+
+    BundleInfo info;
+    ErrCode ret = GetBundleArchiveInfoV9(hapFilePath, flags, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
