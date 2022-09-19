@@ -1221,6 +1221,32 @@ bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, int32_
     return true;
 }
 
+ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
+    if (hapFilePath.empty()) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hapFilePath)) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write hapFilePath fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+}
+
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3163,7 +3189,7 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(IBundleMgr::Message code, M
         parcelableInfo = *info;
     }
 
-    APP_LOGD("get parcelable info success");
+    APP_LOGD("GetParcelableInfoWithErrCode ErrCode : %{public}d", res);
     return res;
 }
 
@@ -3199,6 +3225,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
