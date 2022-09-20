@@ -72,15 +72,9 @@ static void ProcessApplicationInfos(
         APP_LOGD("-----appInfos is null-----");
         return;
     }
-    APP_LOGD("-----appInfos is not null-----");
     size_t index = 0;
     for (const auto &item : appInfos) {
-        APP_LOGI("name{%s} ", item.name.c_str());
-        APP_LOGI("bundleName{%s} ", item.bundleName.c_str());
-        for (const auto &moduleInfo : item.moduleInfos) {
-            APP_LOGI("moduleName{%s} ", moduleInfo.moduleName.c_str());
-            APP_LOGI("bundleName{%s} ", moduleInfo.moduleSourceDir.c_str());
-        }
+        APP_LOGI("name{%s}, bundleName{%s} ", item.name.c_str(), item.bundleName.c_str());
         napi_value objAppInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
         CommonFunc::ConvertApplicationInfo(env, objAppInfo, item);
