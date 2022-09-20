@@ -37,6 +37,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &extensionType));
     CreateExtensionAbilityTypeObject(env, extensionType);
 
+    napi_value applicationFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &applicationFlag));
+    CreateApplicationFlagObject(env, abilityFlag);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
@@ -52,6 +56,9 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityFlag", extensionFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityType", extensionType),
+        DECLARE_NAPI_FUNCTION("getApplicationInfo", GetApplicationInfo),
+        DECLARE_NAPI_FUNCTION("getAllApplicationInfo", GetApplicationInfos),
+        DECLARE_NAPI_PROPERTY("ApplicationFlag", applicationFlag),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
