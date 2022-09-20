@@ -933,7 +933,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0022, Function | SmallTest
         object[BUNDLE_PATCH_PROFILE_KEY_APP][BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_CODE] = 2;
         object[BUNDLE_PATCH_PROFILE_KEY_MODULE][BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE] = "patch";
         AppQuickFix appQuickFix = CreateAppQuickFix(object);
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
         BundleInfo bundleInfo;
         ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
