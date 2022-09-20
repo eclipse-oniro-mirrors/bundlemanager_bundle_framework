@@ -147,6 +147,24 @@ bool BundleMgrHostImpl::GetBundleInfo(
     return dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
 }
 
+ErrCode BundleMgrHostImpl::GetBundleInfoV9(
+    const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
+{
+    APP_LOGD("start GetBundleInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
+        bundleName.c_str(), flags, userId);
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to GetBundleInfoV9");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+}
+
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {

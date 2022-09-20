@@ -1295,6 +1295,37 @@ bool BundleDataMgr::GetBundleInfo(
     return true;
 }
 
+ErrCode BundleDataMgr::GetBundleInfoV9(
+    const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
+{
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    if (userId == Constants::ANY_USERID) {
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for this bundle(%{public}s)", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+
+    auto ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleInfoV9 failed, error code: %{public}d", ret);
+        return ret;
+    }
+
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
+    APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
+    return true;
+}
+
 ErrCode BundleDataMgr::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId) const
 {

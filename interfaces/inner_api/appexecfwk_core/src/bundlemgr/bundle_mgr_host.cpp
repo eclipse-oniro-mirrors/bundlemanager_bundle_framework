@@ -75,6 +75,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO, &BundleMgrHost::HandleGetBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundleInfoWithIntFlags);
+    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_PACK_INFO, &BundleMgrHost::HandleGetBundlePackInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundlePackInfoWithIntFlags);
@@ -388,6 +390,29 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        if (!reply.WriteParcelable(&info)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string name = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
+    BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    auto ret = GetBundleInfoV9(name, flags, info, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&info)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

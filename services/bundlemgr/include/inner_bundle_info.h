@@ -1152,6 +1152,14 @@ public:
      */
     bool GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
+     * @brief Obtains configuration information about an bundle.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
      * @brief Check if special metadata is in the application.
      * @param metaData Indicates the special metaData.
      * @param bundleInfos Returns true if the metadata in application; returns false otherwise.
@@ -1639,10 +1647,12 @@ public:
 private:
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
-    void GetBundeleWithExtension(
+    void GetBundleWithExtension(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void BuildDefaultUserInfo();
     void RemoveDuplicateName(std::vector<std::string> &name) const;
+    void GetBundleWithReqPermissionsV9(int32_t flags, BundleInfo &bundleInfo) const;
+    void ProcessBundleFlags(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;

@@ -116,6 +116,16 @@ public:
     virtual bool GetBundleInfo(const std::string &bundleName, int32_t flags,
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
+     * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
+        BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
