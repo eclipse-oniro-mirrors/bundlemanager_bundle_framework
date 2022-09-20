@@ -528,7 +528,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == 0) {
-        APP_LOGE("sandbox path");
+        APP_LOGD("sandbox path");
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
     }
     std::string realPath;
