@@ -130,7 +130,7 @@ public:
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName,
-        int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t flags, BundleInfo &bundleInfo, int32_t userId) override;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.

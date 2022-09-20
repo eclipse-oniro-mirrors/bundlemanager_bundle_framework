@@ -167,7 +167,7 @@ public:
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
-        BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
+        BundleInfo &bundleInfo, int32_t userId)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

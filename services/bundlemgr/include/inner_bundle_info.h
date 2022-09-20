@@ -1158,7 +1158,8 @@ public:
      * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
-    ErrCode GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    ErrCode GetBundleInfoV9(int32_t flags,
+        BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Check if special metadata is in the application.
      * @param metaData Indicates the special metaData.
