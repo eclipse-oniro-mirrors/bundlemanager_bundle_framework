@@ -42,6 +42,18 @@ enum BundleFlag {
     GET_BUNDLE_WITH_HASH_VALUE = 0x00000030,
 };
 
+enum BundleFlagV9 {
+    GET_BUNDLE_INFO_DEFAULT_V9 = 0x00000000,
+    GET_BUNDLE_INFO_WITH_APPLICATION_V9 = 0x00000001,
+    GET_BUNDLE_INFO_WITH_HAP_MODULE_V9 = 0x00000002,
+    GET_BUNDLE_INFO_WITH_ABILITY_V9 = 0x00000004,
+    GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY_V9 = 0x00000008,
+    GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION_V9 = 0x00000010,
+    GET_BUNDLE_INFO_WITH_METADATA_V9 = 0x00000020,
+    GET_BUNDLE_INFO_WITH_DISABLE_V9 = 0x000000040,
+    GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9 = 0x00000080,
+};
+
 struct RequestPermissionUsedScene : public Parcelable {
     std::vector<std::string> abilities;
     std::string when;
@@ -60,6 +72,15 @@ struct RequestPermission : public Parcelable {
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static RequestPermission *Unmarshalling(Parcel &parcel);
+};
+
+struct SignatureInfo : public Parcelable {
+    std::string appId;
+    std::string fingerprint;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static SignatureInfo *Unmarshalling(Parcel &parcel);
 };
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
@@ -117,6 +138,8 @@ struct BundleInfo : public Parcelable {
     int32_t minSdkVersion = -1;
     int32_t maxSdkVersion = -1;
     bool isDifferentName = false;
+
+    SignatureInfo signatureInfo;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
