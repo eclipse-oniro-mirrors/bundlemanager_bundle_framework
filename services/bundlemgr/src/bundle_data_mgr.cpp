@@ -1562,7 +1562,7 @@ bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bu
     return true;
 }
 
-bool BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
+ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
 {
     InnerBundleInfo innerBundleInfo;
     ErrCode ret = GetInnerBundleInfoByUid(uid, innerBundleInfo);
