@@ -2239,6 +2239,10 @@ ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, const int32_t upgradeFlag)
 {
     APP_LOGD("SetModuleUpgradeFlag %{public}d", upgradeFlag);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
