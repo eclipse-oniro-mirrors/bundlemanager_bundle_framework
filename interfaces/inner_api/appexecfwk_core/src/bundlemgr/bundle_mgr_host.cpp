@@ -846,12 +846,18 @@ ErrCode BundleMgrHost::HandleGetAbilityLabelWithModuleName(MessageParcel &data, 
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::string abilityName = data.ReadString();
-
-    APP_LOGI("bundleName %{public}s, moduleName %{public}s, abilityName %{public}s",
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        APP_LOGE("fail to GetAbilityLabel due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    APP_LOGD("GetAbilityLabe bundleName %{public}s, moduleName %{public}s, abilityName %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
-    BundleInfo info;
-    std::string label = GetAbilityLabel(bundleName, moduleName, abilityName);
-    if (!reply.WriteString(label)) {
+    std::string label;
+    ErrCode ret = GetAbilityLabel(bundleName, moduleName, abilityName, label);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteString(label)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

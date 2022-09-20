@@ -456,12 +456,13 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @param abilityName Indicates the ability name.
-     * @return Returns the label of the ability if exist; returns empty string otherwise.
+     * @param label Indicates the obtained label.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    virtual std::string GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName)
+    virtual ErrCode GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::string &label)
     {
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
      * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
