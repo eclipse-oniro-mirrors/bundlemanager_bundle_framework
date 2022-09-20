@@ -73,28 +73,32 @@ std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::LoadImageFile(const u
     return std::shared_ptr<Media::PixelMap>(std::move(pixelMapPtr));
 }
 
-std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::GetAbilityPixelMapIcon(const std::string &bundleName,
-    const std::string &moduleName, const std::string &abilityName)
+ErrCode BundleGraphicsClientImpl::GetAbilityPixelMapIcon(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName, std::shared_ptr<Media::PixelMap> &pixelMap)
 {
     APP_LOGI("begin GetAbilityPixelMapIcon");
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        return nullptr;
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
     std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
     size_t len = 0;
     ErrCode ret = iBundleMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
-    if (ret != ERR_OK || mediaDataPtr == nullptr || len == 0) {
+    if (ret != ERR_OK) {
         APP_LOGE("get media data failed");
-        return nullptr;
+        return ret;
+    }
+    if (mediaDataPtr == nullptr || len == 0) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto pixelMapPtr = LoadImageFile(mediaDataPtr.get(), len);
     if (pixelMapPtr == nullptr) {
         APP_LOGE("loadImageFile failed");
-        return nullptr;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return pixelMapPtr;
+    pixelMap = std::move(pixelMapPtr);
+    return ERR_OK;
 }
 }  // AppExecFwk
 }  // OHOS

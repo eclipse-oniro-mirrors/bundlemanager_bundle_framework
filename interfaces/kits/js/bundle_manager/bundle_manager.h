@@ -25,6 +25,9 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+#include "pixel_map.h"
+#endif
 #include "want.h"
 
 namespace OHOS {
@@ -65,6 +68,16 @@ struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     explicit CleanBundleCacheCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
+};
+
+struct AbilityIconCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityIconCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
+#endif
 };
 
 struct AbilityLabelCallbackInfo : public BaseCallbackInfo {
@@ -126,6 +139,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
+napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);

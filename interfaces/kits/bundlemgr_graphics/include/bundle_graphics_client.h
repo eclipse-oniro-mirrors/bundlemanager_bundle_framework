@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "appexecfwk_errors.h"
 #include "pixel_map.h"
 
 namespace OHOS {
@@ -29,8 +30,8 @@ public:
     BundleGraphicsClient();
     ~BundleGraphicsClient() = default;
 
-    std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName);
+    ErrCode GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName, std::shared_ptr<Media::PixelMap> &pixelMapPtr);
 
 private:
     std::shared_ptr<BundleGraphicsClientImpl> impl_;

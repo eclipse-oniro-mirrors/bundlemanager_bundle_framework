@@ -6112,15 +6112,17 @@ static std::shared_ptr<Media::PixelMap> InnerGetAbilityIcon(
         APP_LOGE("bundleName or abilityName is invalid param");
         return nullptr;
     }
-    BundleGraphicsClient client;
-    if (hasModuleName) {
-        if (moduleName.empty()) {
-            APP_LOGE("moduleName is invalid param");
-            return nullptr;
-        }
-        return client.GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
+    if (hasModuleName && moduleName.empty()) {
+        APP_LOGE("moduleName is invalid param");
+        return nullptr;
     }
-    return client.GetAbilityPixelMapIcon(bundleName, "", abilityName);
+    BundleGraphicsClient client;
+    std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
+    ErrCode ret = client.GetAbilityPixelMapIcon(bundleName, moduleName, abilityName, pixelMap);
+    if (ret != ERR_OK) {
+        return nullptr;
+    }
+    return pixelMap;
 }
 
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
