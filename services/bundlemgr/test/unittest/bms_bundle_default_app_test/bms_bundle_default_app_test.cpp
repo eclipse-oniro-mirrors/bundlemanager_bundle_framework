@@ -97,7 +97,7 @@ public:
     sptr<IDefaultApp> GetDefaultAppProxy();
     void StartInstalldService() const;
     void StartBundleService();
-    bool SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
+    ErrCode SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
         const std::string& abilityName) const;
     static std::set<std::string> invalidTypeSet;
 private:
@@ -151,7 +151,7 @@ ErrCode BmsBundleDefaultAppTest::InstallBundle(const std::string &bundlePath) co
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USER_ID;
     bool result = installer->Install(bundlePath, installParam, receiver);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     return receiver->GetResultCode();
 }
 
@@ -174,7 +174,7 @@ ErrCode BmsBundleDefaultAppTest::UnInstallBundle(const std::string &bundleName) 
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USER_ID;
     bool result = installer->Uninstall(bundleName, installParam, receiver);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     return receiver->GetResultCode();
 }
 
@@ -201,7 +201,7 @@ sptr<IDefaultApp> BmsBundleDefaultAppTest::GetDefaultAppProxy()
     return bundleMgrService_->GetDefaultAppProxy();
 }
 
-bool BmsBundleDefaultAppTest::SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
+ErrCode BmsBundleDefaultAppTest::SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
     const std::string& abilityName) const
 {
     AAFwk::Want want;
@@ -220,8 +220,9 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0100, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = defaultAppProxy->IsDefaultApplication(DEFAULT_APP_VIDEO);
-    EXPECT_FALSE(result);
+    bool isDefaultApp = false;
+    ErrCode result = defaultAppProxy->IsDefaultApplication(DEFAULT_APP_VIDEO, isDefaultApp);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -235,12 +236,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0200, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
@@ -266,18 +267,18 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0300, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
+    EXPECT_EQ(result, ERR_OK);
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
 
     AAFwk::Want want;
     result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
-    EXPECT_FALSE(result);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -292,14 +293,14 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0400, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
+    EXPECT_EQ(result, ERR_OK);
     result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_FILE_TYPE_VIDEO_MP4, ABILITY_VIDEO_MP4);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.bundleName, BUNDLE_NAME);
@@ -319,14 +320,14 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0500, Function | SmallTest
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     AAFwk::Want want;
-    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
-    EXPECT_TRUE(result);
+    ErrCode result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_EQ(result, ERR_OK);
     result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_FILE_TYPE_VIDEO_MP4, ABILITY_VIDEO_MP4);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
@@ -346,17 +347,17 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0600, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
+    EXPECT_EQ(result, ERR_OK);
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
 
     result = defaultAppProxy->ResetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
-    EXPECT_FALSE(result);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -371,19 +372,19 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0700, Function | SmallTest
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     AAFwk::Want want;
-    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
-    EXPECT_TRUE(result);
+    ErrCode result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_EQ(result, ERR_OK);
     result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_FILE_TYPE_VIDEO_MP4, ABILITY_VIDEO_MP4);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
 
     result = defaultAppProxy->ResetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, bundleInfo);
-    EXPECT_FALSE(result);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -397,12 +398,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0800, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_IMAGE, ABILITY_IMAGE);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_IMAGE, ABILITY_IMAGE);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_IMAGE, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_IMAGE);
@@ -419,12 +420,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0900, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_BROWSER, ABILITY_BROWSER);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_BROWSER, ABILITY_BROWSER);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_BROWSER, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_BROWSER);
@@ -441,12 +442,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1000, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_AUDIO, ABILITY_AUDIO);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_AUDIO, ABILITY_AUDIO);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_AUDIO, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_AUDIO);
@@ -463,12 +464,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1100, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PDF, ABILITY_PDF);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PDF, ABILITY_PDF);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_PDF, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_PDF);
@@ -485,12 +486,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1200, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_WORD, ABILITY_WORD);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_WORD, ABILITY_WORD);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_WORD, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_WORD);
@@ -507,12 +508,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1300, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EXCEL, ABILITY_EXCEL);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EXCEL, ABILITY_EXCEL);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_EXCEL, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_EXCEL);
@@ -529,12 +530,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1400, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PPT, ABILITY_PPT);
-    EXPECT_TRUE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PPT, ABILITY_PPT);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_PPT, bundleInfo);
-    EXPECT_TRUE(result);
+    EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
     auto abilityInfo = bundleInfo.abilityInfos[0];
     EXPECT_EQ(abilityInfo.name, ABILITY_PPT);
@@ -551,8 +552,9 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1500, Function | SmallTest
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     for (const std::string& invalidType : invalidTypeSet) {
-        bool result = defaultAppProxy->IsDefaultApplication(invalidType);
-        EXPECT_FALSE(result);
+        bool isDefaultApp = false;
+        ErrCode result = defaultAppProxy->IsDefaultApplication(invalidType, isDefaultApp);
+        EXPECT_NE(result, ERR_OK);
     }
 }
 
@@ -567,8 +569,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1600, Function | SmallTest
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     for (const std::string& invalidType : invalidTypeSet) {
-        bool result = SetDefaultApplicationWrap(defaultAppProxy, invalidType, ABILITY_VIDEO);
-        EXPECT_FALSE(result);
+        ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, invalidType, ABILITY_VIDEO);
+        EXPECT_NE(result, ERR_OK);
     }
 }
 
@@ -584,8 +586,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1700, Function | SmallTest
     EXPECT_NE(defaultAppProxy, nullptr);
     BundleInfo bundleInfo;
     for (const std::string& invalidType : invalidTypeSet) {
-        bool result = defaultAppProxy->GetDefaultApplication(USER_ID, invalidType, bundleInfo);
-        EXPECT_FALSE(result);
+        ErrCode result = defaultAppProxy->GetDefaultApplication(USER_ID, invalidType, bundleInfo);
+        EXPECT_NE(result, ERR_OK);
     }
 }
 
@@ -600,8 +602,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1800, Function | SmallTest
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     for (const std::string& invalidType : invalidTypeSet) {
-        bool result = defaultAppProxy->ResetDefaultApplication(USER_ID, invalidType);
-        EXPECT_FALSE(result);
+        ErrCode result = defaultAppProxy->ResetDefaultApplication(USER_ID, invalidType);
+        EXPECT_NE(result, ERR_OK);
     }
 }
 
@@ -618,8 +620,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1900, Function | SmallTest
     AAFwk::Want want;
     ElementName elementName("", BUNDLE_NAME, ABILITY_VIDEO, MODULE_NAME);
     want.SetElement(elementName);
-    bool result = defaultAppProxy->SetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, want);
-    EXPECT_FALSE(result);
+    ErrCode result = defaultAppProxy->SetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -633,8 +635,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2000, Function | SmallTest
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     BundleInfo bundleInfo;
-    bool result = defaultAppProxy->GetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
-    EXPECT_FALSE(result);
+    ErrCode result = defaultAppProxy->GetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -647,8 +649,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2100, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = defaultAppProxy->ResetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO);
-    EXPECT_FALSE(result);
+    ErrCode result = defaultAppProxy->ResetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -664,8 +666,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2200, Function | SmallTest
     AAFwk::Want want;
     ElementName elementName("", "", ABILITY_VIDEO, MODULE_NAME);
     want.SetElement(elementName);
-    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
-    EXPECT_FALSE(result);
+    ErrCode result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -681,8 +683,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2300, Function | SmallTest
     AAFwk::Want want;
     ElementName elementName("", BUNDLE_NAME, ABILITY_VIDEO, "");
     want.SetElement(elementName);
-    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
-    EXPECT_FALSE(result);
+    ErrCode result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -698,8 +700,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2400, Function | SmallTest
     AAFwk::Want want;
     ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
     want.SetElement(elementName);
-    bool result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
-    EXPECT_FALSE(result);
+    ErrCode result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -712,8 +714,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2500, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_BROWSER, ABILITY_BROWSER_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_BROWSER, ABILITY_BROWSER_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -726,8 +728,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2600, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -740,8 +742,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2700, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_IMAGE, ABILITY_IMAGE_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_IMAGE, ABILITY_IMAGE_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -754,8 +756,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2800, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_AUDIO, ABILITY_AUDIO_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_AUDIO, ABILITY_AUDIO_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -768,8 +770,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2900, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PDF, ABILITY_PDF_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PDF, ABILITY_PDF_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -782,8 +784,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3000, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_WORD, ABILITY_WORD_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_WORD, ABILITY_WORD_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -796,8 +798,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3100, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EXCEL, ABILITY_EXCEL_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EXCEL, ABILITY_EXCEL_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -810,7 +812,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3200, Function | SmallTest
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
-    bool result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PPT, ABILITY_PPT_ERROR);
-    EXPECT_FALSE(result);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PPT, ABILITY_PPT_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 } // OHOS

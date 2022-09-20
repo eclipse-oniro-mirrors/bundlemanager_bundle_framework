@@ -27,10 +27,10 @@ class DefaultAppMgr {
 public:
     static DefaultAppMgr& GetInstance();
     static bool VerifyElementFormat(const Element& element);
-    bool IsDefaultApplication(int32_t userId, const std::string& type) const;
-    bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
-    bool SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
-    bool ResetDefaultApplication(int32_t userId, const std::string& type) const;
+    ErrCode IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const;
+    ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
+    ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) const;
     void HandleUninstallBundle(int32_t userId, const std::string& bundleName) const;
     void HandleCreateUser(int32_t userId) const;
     void HandleRemoveUser(int32_t userId) const;
@@ -39,8 +39,8 @@ private:
     ~DefaultAppMgr();
     DISALLOW_COPY_AND_MOVE(DefaultAppMgr);
     void Init();
-    bool GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
-    bool GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    ErrCode GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    ErrCode GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
     bool GetBundleInfo(int32_t userId, const std::string& type, const Element& element, BundleInfo& bundleInfo) const;
     bool IsTypeValid(const std::string& type) const;
     bool IsAppType(const std::string& type) const;

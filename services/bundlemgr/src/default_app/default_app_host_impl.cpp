@@ -27,20 +27,20 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-bool DefaultAppHostImpl::IsDefaultApplication(const std::string& type)
+ErrCode DefaultAppHostImpl::IsDefaultApplication(const std::string& type, bool& isDefaultApp)
 {
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     APP_LOGD("begin to call IsDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
-    return DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type);
+    return DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
 }
 
-bool DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+ErrCode DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
     APP_LOGD("begin to GetDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
     return DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
 }
 
-bool DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
+ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
     APP_LOGD("begin to SetDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
     const ElementName& elementName = want.GetElement();
@@ -60,18 +60,18 @@ bool DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     Element element;
     bool ret = dataMgr->GetElement(userId, elementName, element);
     if (!ret) {
         APP_LOGE("GetElement failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
 }
 
-bool DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
+ErrCode DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
     APP_LOGD("begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s", userId, type.c_str());
     return DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);

@@ -91,50 +91,51 @@ void DefaultAppMgr::Init()
     defaultAppDb_->RegisterDeathListener();
 }
 
-bool DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type) const
+ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
     bool ret = VerifyUserIdAndType(userId, type);
     if (!ret) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     Element element;
     ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfo failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ret = IsElementValid(userId, type, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     // get bundle name via calling uid
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGW("get BundleDataMgr failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string callingBundleName;
     ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
     if (!ret) {
         APP_LOGW("GetBundleNameForUid failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-    return element.bundleName == callingBundleName;
+    isDefaultApp = element.bundleName == callingBundleName;
+    return ERR_OK;
 }
 
-bool DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     bool ret = VerifyUserIdAndType(userId, type);
     if (!ret) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_GET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.GET_DEFAULT_APPLICATION failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
     if (IsAppType(type)) {
@@ -143,20 +144,20 @@ bool DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& typ
         return GetBundleInfoByFileType(userId, type, bundleInfo);
     } else {
         APP_LOGW("invalid type, not app type or file type.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 }
 
-bool DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
+ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
 {
     bool ret = VerifyUserIdAndType(userId, type);
     if (!ret) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     // clear default app
     ret = IsElementEmpty(element);
@@ -165,54 +166,57 @@ bool DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& typ
         ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
         if (!ret) {
             APP_LOGW("DeleteDefaultApplicationInfo failed.");
-            return false;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         APP_LOGD("SetDefaultApplication success.");
-        return true;
+        return ERR_OK;
     }
     ret = IsElementValid(userId, type, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("SetDefaultApplicationInfo failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     APP_LOGD("SetDefaultApplication success.");
-    return true;
+    return ERR_OK;
 }
 
-bool DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
+ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
     bool ret = VerifyUserIdAndType(userId, type);
     if (!ret) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     Element element;
     ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, type, element);
     if (!ret) {
         APP_LOGD("directly delete default info.");
-        return defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
+        if (defaultAppDb_->DeleteDefaultApplicationInfo(userId, type)) {
+            return ERR_OK;
+        }
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ret = IsElementValid(userId, type, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("SetDefaultApplicationInfo failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     APP_LOGD("ResetDefaultApplication success.");
-    return true;
+    return ERR_OK;
 }
 
 void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName) const
@@ -252,30 +256,30 @@ void DefaultAppMgr::HandleRemoveUser(int32_t userId) const
     defaultAppDb_->DeleteDefaultApplicationInfos(userId);
 }
 
-bool DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+ErrCode DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     Element element;
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfo failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ret = GetBundleInfo(userId, type, element, bundleInfo);
     if (!ret) {
         APP_LOGW("GetBundleInfo failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     APP_LOGD("GetBundleInfoByAppType success.");
-    return true;
+    return ERR_OK;
 }
 
-bool DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+ErrCode DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     std::map<std::string, Element> infos;
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfos failed.");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::map<std::string, Element> defaultAppTypeInfos;
     std::map<std::string, Element> defaultFileTypeInfos;
@@ -291,18 +295,18 @@ bool DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string& t
     for (const auto& item : defaultAppTypeInfos) {
         if (GetBundleInfo(userId, type, item.second, bundleInfo)) {
             APP_LOGD("match default app type success.");
-            return true;
+            return ERR_OK;
         }
     }
     // match default file type
     for (const auto& item : defaultFileTypeInfos) {
         if (item.first == type && GetBundleInfo(userId, type, item.second, bundleInfo)) {
             APP_LOGD("match default file type success.");
-            return true;
+            return ERR_OK;
         }
     }
     APP_LOGW("GetBundleInfoByFileType failed.");
-    return false;
+    return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
 }
 
 bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const Element& element,
