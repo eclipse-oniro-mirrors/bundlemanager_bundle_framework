@@ -69,12 +69,12 @@ static void ProcessApplicationInfos(
     napi_env env, napi_value result, const std::vector<ApplicationInfo> &appInfos)
 {
     if (appInfos.size() == 0) {
-        APP_LOGD("-----appInfos is null-----");
+        APP_LOGD("appInfos is null");
         return;
     }
     size_t index = 0;
     for (const auto &item : appInfos) {
-        APP_LOGI("name{%s}, bundleName{%s} ", item.name.c_str(), item.bundleName.c_str());
+        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.bundleName.c_str());
         napi_value objAppInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
         CommonFunc::ConvertApplicationInfo(env, objAppInfo, item);
@@ -249,7 +249,7 @@ napi_value GetBundleNameByUid(napi_env env, napi_callback_info info)
 
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI_GetApplicationInfoV9 called");
+    APP_LOGD("NAPI_GetApplicationInfo called");
     NapiArg args(env, info);
     ApplicationInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -275,7 +275,10 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_SIZE_ONE) {
             if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
+                if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+                    APP_LOGE("Falgs %{public}d invalid!", asyncCallbackInfo->flags);
+                    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                }
                 if (args.GetArgc() == ARGS_SIZE_TWO) {
                     asyncCallbackInfo->userId = defaultUserid;
                 }
@@ -286,7 +289,10 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_SIZE_TWO) {
             if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
+                if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                    APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
+                    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                }
             } else if (valueType == napi_function) {
                 asyncCallbackInfo->userId = defaultUserid;
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -307,13 +313,13 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetApplicationInfo", GetApplicationInfoExec, GetApplicationInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetApplicationInfoV9 done.");
+    APP_LOGD("call NAPI_GetApplicationInfo done.");
     return promise;
 }
 
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI_GetApplicationInfosV9 called");
+    APP_LOGD("NAPI_GetApplicationInfos called");
     NapiArg args(env, info);
     ApplicationInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationInfosCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -332,13 +338,18 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
-            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Falgs %{public}d invalid!", asyncCallbackInfo->flags);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            }
             if (args.GetArgc() == ARGS_SIZE_ONE) {
                 asyncCallbackInfo->userId = defaultUserid;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
+            if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+
             } else if (valueType == napi_function) {
                 asyncCallbackInfo->userId = defaultUserid;
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -359,7 +370,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfosCallbackInfo>(
         env, asyncCallbackInfo, "GetApplicationInfos", GetApplicationInfosExec, GetApplicationInfosComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetApplicationInfosV9 done.");
+    APP_LOGD("call NAPI_GetApplicationInfos done.");
     return promise;
 }
 
