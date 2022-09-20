@@ -515,40 +515,72 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
         return true;
     } else {
-        return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo);
+        return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo) == ERR_OK;
     }
 }
 
-bool BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath,
-    int32_t flags, BundleInfo &bundleInfo)
+ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
+    const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
+{
+    APP_LOGD("start GetBundleArchiveInfoV9, hapFilePath : %{public}s, flags : %{public}d", hapFilePath.c_str(), flags);
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == 0) {
+        APP_LOGD("sandbox path");
+        return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
+    }
+    std::string realPath;
+    ErrCode ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleArchiveInfoV9 file path %{private}s invalid", hapFilePath.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    InnerBundleInfo info;
+    BundleParser bundleParser;
+    AppPrivilegeCapability appPrivilegeCapability;
+    appPrivilegeCapability.allowMultiProcess = true;
+    appPrivilegeCapability.allowUsePrivilegeExtension = true;
+    ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
+    if (ret != ERR_OK) {
+        APP_LOGE("parse bundle info failed, error: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID); // to do : should change to GetBundleInfoV9
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath,
+    int32_t flags, BundleInfo &bundleInfo, bool fromV9)
 {
     std::string bundleName;
     if (!ObtainCallingBundleName(bundleName)) {
         APP_LOGE("get calling bundleName failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string hapRealPath;
     if (!BundleUtil::RevertToRealPath(hapFilePath, bundleName, hapRealPath)) {
         APP_LOGE("GetBundleArchiveInfo RevertToRealPath failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string tempHapPath = Constants::BUNDLE_MANAGER_SERVICE_PATH +
         Constants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTime());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string hapName = hapFilePath.substr(hapFilePath.find_last_of("//") + 1);
     std::string tempHapFile = tempHapPath + Constants::PATH_SEPARATOR + hapName;
     if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile) != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfo copy hap file failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string realPath;
     auto ret = BundleUtil::CheckFilePath(tempHapFile, realPath);
     if (ret != ERR_OK) {
         APP_LOGE("CheckFilePath failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     InnerBundleInfo info;
     BundleParser bundleParser;
@@ -559,12 +591,16 @@ bool BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &hap
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         BundleUtil::DeleteDir(tempHapPath);
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleUtil::DeleteDir(tempHapPath);
     APP_LOGD("verify permission success, begin to GetBundleArchiveInfo");
-    info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
-    return true;
+    if (fromV9) {
+        // to do : GetBundleInfoV9
+    } else {
+        info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
+    }
+    return ERR_OK;
 }
 
 bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
@@ -618,15 +654,15 @@ int BundleMgrHostImpl::CheckPublicKeys(const std::string &firstBundleName, const
     return dataMgr->CheckPublicKeys(firstBundleName, secondBundleName);
 }
 
-bool BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (permissionName.empty()) {
         APP_LOGE("fail to GetPermissionDef due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
 }

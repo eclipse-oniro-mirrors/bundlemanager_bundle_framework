@@ -108,7 +108,7 @@ ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& wan
 }
 
 ErrCode AppControlManager::GetAppRunningControlRule(
-    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule)
+    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -121,17 +121,13 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    std::vector<AppRunningControlRule> controlRules;
-    ErrCode errCode = appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRules);
+    AppRunningControlRule controlRule;
+    ErrCode errCode = appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRule);
     if (errCode != ERR_OK) {
         return errCode;
     }
-    if (!controlRules.empty()) {
-        controlRule.ruleParam = controlRules[0].ruleParam;
-        controlRule.ruleType = controlRules[0].ruleType;
-    } else {
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
-    }
+    controlRuleResult.ruleParam = controlRule.ruleParam;
+    controlRuleResult.ruleType = controlRule.ruleType;
     return errCode;
 }
 }

@@ -356,6 +356,16 @@ public:
     virtual bool GetBundleArchiveInfo(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo) override;
     /**
+     * @brief Obtains information about an application bundle contained
+     *          in an ohos Ability Package (HAP) through the proxy object.
+     * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleArchiveInfoV9(
+        const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo) override;
+    /**
      * @brief Obtain the HAP module info of a specific ability through the proxy object.
      * @param abilityInfo Indicates the ability.
      * @param hapModuleInfo Indicates the obtained HapModuleInfo object.
@@ -394,9 +404,9 @@ public:
      * @brief Obtains detailed information about a specified permission through the proxy object.
      * @param permissionName Indicates the name of the ohos permission.
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
-     * @return Returns true if the PermissionDef object is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the PermissionDef object is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
+    virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
     /**
      * @brief Checks whether the system has a specified capability through the proxy object.
      * @param capName Indicates the name of the system feature to check.

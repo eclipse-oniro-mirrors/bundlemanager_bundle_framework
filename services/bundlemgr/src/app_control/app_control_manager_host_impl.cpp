@@ -148,14 +148,14 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(int32_t userId, std:
 }
 
 ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
-    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule)
+    const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
         APP_LOGW("calling permission denied");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
     }
-    return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRule);
+    return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRuleResult);
 }
 
 std::string AppControlManagerHostImpl::GetCallingName()

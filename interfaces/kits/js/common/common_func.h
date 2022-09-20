@@ -90,6 +90,8 @@ static void ConvertModuleInfo(napi_env env, const ModuleInfo &moduleInfo, napi_v
 
 static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo);
 
+static void ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef);
+
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,

@@ -16,6 +16,7 @@ import("../../../../appexecfwk.gni")
 
 ohos_shared_library("bundle") {
   include_dirs = [
+    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
     "//third_party/node/src",
     "//third_party/libuv/include",
     "//utils/system/safwk/native/include",
@@ -33,7 +34,10 @@ ohos_shared_library("bundle") {
     "native_module.cpp",
   ]
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "../common:bundle_napi_common",
+  ]
 
   external_deps = [
     "ability_base:want",

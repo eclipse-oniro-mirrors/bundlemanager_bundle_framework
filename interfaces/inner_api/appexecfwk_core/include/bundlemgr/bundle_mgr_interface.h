@@ -488,6 +488,18 @@ public:
         return false;
     }
     /**
+     * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
+     * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleArchiveInfoV9(
+        const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtain the HAP module info of a specific ability.
      * @param abilityInfo Indicates the ability.
      * @param hapModuleInfo Indicates the obtained HapModuleInfo object.
@@ -536,11 +548,11 @@ public:
      * @brief Obtains detailed information about a specified permission.
      * @param permissionName Indicates the name of the ohos permission.
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
-     * @return Returns true if the PermissionDef object is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the PermissionDef object is successfully obtained; returns other ErrCode otherwise.
      */
-    virtual bool GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+    virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
     {
-        return false;
+        return ERR_OK;
     }
     /**
      * @brief Checks whether the system has a specified capability.
@@ -1148,6 +1160,7 @@ public:
         QUERY_EXTENSION_INFO_V9,
         GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
         GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
+        GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
     };
 };
 }  // namespace AppExecFwk

@@ -369,6 +369,15 @@ public:
     virtual bool GetBundleArchiveInfo(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo) override;
     /**
+     * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
+     * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleArchiveInfoV9(
+        const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo) override;
+    /**
      * @brief Obtain the HAP module info of a specific ability.
      * @param abilityInfo Indicates the ability.
      * @param hapModuleInfo Indicates the obtained HapModuleInfo object.
@@ -408,7 +417,7 @@ public:
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
      * @return Returns true if the PermissionDef object is successfully obtained; returns false otherwise.
      */
-    virtual bool GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
+    virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
     /**
      * @brief Checks whether the system has a specified capability.
      * @param capName Indicates the name of the system feature to check.
@@ -751,7 +760,8 @@ private:
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
-    bool GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo);
+    ErrCode GetBundleArchiveInfoBySandBoxPath(
+        const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
     
 private:
     std::shared_ptr<BMSEventHandler> handler_;

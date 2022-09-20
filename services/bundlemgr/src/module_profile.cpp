@@ -37,6 +37,7 @@ const std::set<std::string> MODULE_TYPE_SET = {
 };
 
 const std::set<std::string> DEVICE_TYPE_SET = {
+    "default",
     "phone",
     "tablet",
     "tv",

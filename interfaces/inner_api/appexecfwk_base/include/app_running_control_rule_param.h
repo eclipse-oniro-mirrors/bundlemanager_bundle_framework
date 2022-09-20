@@ -24,9 +24,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 enum class AppRunningControlRuleType {
-    DISALLOWED_RUNNING_NOW = 0, // L1 edm
-    DISALLOWED_RUNNING_NEXT, // L2
     UNSPECIFIED,
+    DISALLOWED_RUNNING_NOW, // L1 edm
+    DISALLOWED_RUNNING_NEXT, // L2 app market
 };
 struct AppRunningControlRuleParam : public Parcelable {
     std::string controlMessage;

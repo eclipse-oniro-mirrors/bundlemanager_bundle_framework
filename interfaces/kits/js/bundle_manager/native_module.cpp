@@ -42,6 +42,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     CreateApplicationFlagObject(env, abilityFlag);
 
     napi_property_descriptor desc[] = {
+        DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
         DECLARE_NAPI_FUNCTION("queryAbilityInfo", QueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfo", QueryExtensionInfos),
@@ -51,6 +52,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isAbilityEnabled", IsAbilityEnabled),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", CleanBundleCacheFiles),
         DECLARE_NAPI_FUNCTION("getLaunchWantForBundle", GetLaunchWantForBundle),
+        DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityFlag", extensionFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityType", extensionType),

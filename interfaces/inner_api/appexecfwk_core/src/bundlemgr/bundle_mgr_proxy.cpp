@@ -1221,6 +1221,32 @@ bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, int32_
     return true;
 }
 
+ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
+    if (hapFilePath.empty()) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hapFilePath)) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write hapFilePath fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+}
+
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1338,30 +1364,26 @@ int BundleMgrProxy::CheckPublicKeys(const std::string &firstBundleName, const st
     return reply.ReadInt32();
 }
 
-bool BundleMgrProxy::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetPermissionDef of %{public}s", permissionName.c_str());
     if (permissionName.empty()) {
         APP_LOGE("fail to GetPermissionDef due to params empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetPermissionDef due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(permissionName)) {
         APP_LOGE("fail to GetPermissionDef due to write permissionName fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!GetParcelableInfo<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef)) {
-        APP_LOGE("fail to GetPermissionDef from server");
-        return false;
-    }
-    return true;
+    return GetParcelableInfoWithErrCode<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef);
 }
 
 bool BundleMgrProxy::HasSystemCapability(const std::string &capName)
@@ -3163,7 +3185,7 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(IBundleMgr::Message code, M
         parcelableInfo = *info;
     }
 
-    APP_LOGD("get parcelable info success");
+    APP_LOGD("GetParcelableInfoWithErrCode ErrCode : %{public}d", res);
     return res;
 }
 
@@ -3199,6 +3221,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
