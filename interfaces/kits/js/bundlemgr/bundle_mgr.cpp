@@ -1379,7 +1379,8 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncApplicationInfosCallbackInfo* asyncCallbackInfo = (AsyncApplicationInfosCallbackInfo*)data;
+            AsyncApplicationInfosCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncApplicationInfosCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetApplicationInfos(asyncCallbackInfo->env,
                                                                   asyncCallbackInfo->flags,
@@ -1388,7 +1389,8 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncApplicationInfosCallbackInfo* asyncCallbackInfo = (AsyncApplicationInfosCallbackInfo*)data;
+            AsyncApplicationInfosCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncApplicationInfosCallbackInfo*>(data);
             std::unique_ptr<AsyncApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -1678,14 +1680,16 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            AsyncAbilityInfoCallbackInfo *asyncCallbackInfo = (AsyncAbilityInfoCallbackInfo *)data;
+            AsyncAbilityInfoCallbackInfo *asyncCallbackInfo =
+                reinterpret_cast<AsyncAbilityInfoCallbackInfo *>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerQueryAbilityInfos(env, asyncCallbackInfo->want, asyncCallbackInfo->flags,
                     asyncCallbackInfo->userId, asyncCallbackInfo->abilityInfos);
             }
         },
         [](napi_env env, napi_status status, void *data) {
-            AsyncAbilityInfoCallbackInfo *asyncCallbackInfo = (AsyncAbilityInfoCallbackInfo *)data;
+            AsyncAbilityInfoCallbackInfo *asyncCallbackInfo =
+                reinterpret_cast<AsyncAbilityInfoCallbackInfo *>(data);
             std::unique_ptr<AsyncAbilityInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -1767,7 +1771,8 @@ static bool InnerGetAbilityInfo(const std::string &bundleName, const std::string
 void StartGetAbilityInfoExecuteCB(napi_env env, void *data)
 {
     APP_LOGI("%{public}s called.", __func__);
-    AsyncAbilityInfosCallbackInfo *asyncCallbackInfo = (AsyncAbilityInfosCallbackInfo *)data;
+    AsyncAbilityInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AsyncAbilityInfosCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("%{public}s asyncCallbackInfo == nullptr", __func__);
         return;
@@ -1784,7 +1789,8 @@ void StartGetAbilityInfoExecuteCB(napi_env env, void *data)
 void StartGetAbilityInfoCompletedCB(napi_env env, napi_status status, void *data)
 {
     APP_LOGI("%{public}s called.", __func__);
-    AsyncAbilityInfosCallbackInfo *asyncCallbackInfo = (AsyncAbilityInfosCallbackInfo *)data;
+    AsyncAbilityInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AsyncAbilityInfosCallbackInfo *>(data);
     std::unique_ptr<AsyncAbilityInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[2] = {0};
     if (asyncCallbackInfo->err) {
@@ -2004,7 +2010,8 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncApplicationInfoCallbackInfo* asyncCallbackInfo = (AsyncApplicationInfoCallbackInfo*)data;
+            AsyncApplicationInfoCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncApplicationInfoCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetApplicationInfo(asyncCallbackInfo->env,
                                                                  asyncCallbackInfo->bundleName,
@@ -2531,8 +2538,7 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
     std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "GetBundlePackInfoPromise", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource,
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
                 reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
@@ -2800,14 +2806,16 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = (AsyncBundleInfoCallbackInfo*)data;
+            AsyncBundleInfoCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetArchiveInfo(env, asyncCallbackInfo->param,
                     asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncBundleInfoCallbackInfo* asyncCallbackInfo = (AsyncBundleInfoCallbackInfo*)data;
+            AsyncBundleInfoCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
             std::unique_ptr<AsyncBundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -2900,14 +2908,16 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            AsyncLaunchWantForBundleCallbackInfo *asyncCallbackInfo = (AsyncLaunchWantForBundleCallbackInfo *)data;
+            AsyncLaunchWantForBundleCallbackInfo *asyncCallbackInfo =
+                reinterpret_cast<AsyncLaunchWantForBundleCallbackInfo *>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret =
                     InnerGetLaunchWantForBundle(env, asyncCallbackInfo->bundleName, asyncCallbackInfo->want);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncLaunchWantForBundleCallbackInfo* asyncCallbackInfo = (AsyncLaunchWantForBundleCallbackInfo*)data;
+            AsyncLaunchWantForBundleCallbackInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncLaunchWantForBundleCallbackInfo*>(data);
             std::unique_ptr<AsyncLaunchWantForBundleCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->err) {
@@ -3000,7 +3010,8 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
-            AsyncPermissionDefCallbackInfo *asyncCallbackInfo = (AsyncPermissionDefCallbackInfo *)data;
+            AsyncPermissionDefCallbackInfo *asyncCallbackInfo =
+                reinterpret_cast<AsyncPermissionDefCallbackInfo *>(data);
             APP_LOGD("asyncCallbackInfo->permissionName=%{public}s.", asyncCallbackInfo->permissionName.c_str());
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetPermissionDef(env, asyncCallbackInfo->permissionName,
@@ -3008,7 +3019,8 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void *data) {
-            AsyncPermissionDefCallbackInfo *asyncCallbackInfo = (AsyncPermissionDefCallbackInfo *)data;
+            AsyncPermissionDefCallbackInfo *asyncCallbackInfo =
+                reinterpret_cast<AsyncPermissionDefCallbackInfo *>(data);
             std::unique_ptr<AsyncPermissionDefCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[ARGS_SIZE_TWO] = {0};
             if (asyncCallbackInfo->err) {
@@ -3155,7 +3167,8 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
             resourceName,
             [](napi_env env, void *data) {},
             [](napi_env env, napi_status status, void *data) {
-                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo = (AsyncGetBundleInstallerCallbackInfo *)data;
+                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
                 std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result[ARGS_SIZE_TWO] = {0};
                 napi_value callback = 0;
@@ -3193,7 +3206,8 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
             [](napi_env env, void *data) {},
             [](napi_env env, napi_status status, void *data) {
                 APP_LOGI("=================load=================");
-                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo = (AsyncGetBundleInstallerCallbackInfo *)data;
+                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
                 std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result;
                 napi_value m_classBundleInstaller = nullptr;
@@ -3630,7 +3644,8 @@ napi_value Install(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 if (!asyncCallbackInfo->errCode) {
                     InnerInstall(env,
                         asyncCallbackInfo->hapFiles,
@@ -3639,7 +3654,8 @@ napi_value Install(napi_env env, napi_callback_info info)
                 }
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result[ARGS_SIZE_TWO] = {0};
                 napi_value callback = 0;
@@ -3692,7 +3708,8 @@ napi_value Install(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 InnerInstall(env,
                     asyncCallbackInfo->hapFiles,
                     asyncCallbackInfo->installParam,
@@ -3700,7 +3717,8 @@ napi_value Install(napi_env env, napi_callback_info info)
             },
             [](napi_env env, napi_status status, void *data) {
                 APP_LOGI("=================load=================");
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
                 ConvertInstallResult(asyncCallbackInfo->installResult);
                 napi_value result;
@@ -3760,7 +3778,8 @@ napi_value Recover(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 if (!asyncCallbackInfo->errCode) {
                     InnerRecover(env,
                         asyncCallbackInfo->bundleName,
@@ -3769,7 +3788,8 @@ napi_value Recover(napi_env env, napi_callback_info info)
                 }
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result[ARGS_SIZE_TWO] = {0};
                 napi_value callback = 0;
@@ -3822,14 +3842,16 @@ napi_value Recover(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 InnerRecover(env,
                     asyncCallbackInfo->bundleName,
                     asyncCallbackInfo->installParam,
                     asyncCallbackInfo->installResult);
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
                 ConvertInstallResult(asyncCallbackInfo->installResult);
                 napi_value result;
@@ -3920,7 +3942,8 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 if (!asyncCallbackInfo->errCode) {
                     InnerUninstall(env,
                         asyncCallbackInfo->bundleName,
@@ -3929,7 +3952,8 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                 }
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result[ARGS_SIZE_TWO] = {0};
                 napi_value callback = 0;
@@ -3982,13 +4006,15 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 InnerUninstall(
                     env, asyncCallbackInfo->param, asyncCallbackInfo->installParam, asyncCallbackInfo->installResult);
             },
             [](napi_env env, napi_status status, void *data) {
                 APP_LOGI("=================load=================");
-                AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+                AsyncInstallCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
                 std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
                 ConvertInstallResult(asyncCallbackInfo->installResult);
                 napi_value result;
@@ -4078,11 +4104,13 @@ napi_value GetAllFormsInfo(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncFormInfosCallbackInfo *asyncCallbackInfo = (AsyncFormInfosCallbackInfo *)data;
+                AsyncFormInfosCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosCallbackInfo *>(data);
                 asyncCallbackInfo->ret = InnerGetAllFormsInfo(env, asyncCallbackInfo->formInfos);
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncFormInfosCallbackInfo *asyncCallbackInfo = (AsyncFormInfosCallbackInfo *)data;
+                AsyncFormInfosCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosCallbackInfo *>(data);
                 std::unique_ptr<AsyncFormInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result[ARGS_SIZE_TWO] = {0};
                 napi_value callback = 0;
@@ -4117,12 +4145,14 @@ napi_value GetAllFormsInfo(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncFormInfosCallbackInfo *asyncCallbackInfo = (AsyncFormInfosCallbackInfo *)data;
+                AsyncFormInfosCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosCallbackInfo *>(data);
                 InnerGetAllFormsInfo(env, asyncCallbackInfo->formInfos);
             },
             [](napi_env env, napi_status status, void *data) {
                 APP_LOGI("=================load=================");
-                AsyncFormInfosCallbackInfo *asyncCallbackInfo = (AsyncFormInfosCallbackInfo *)data;
+                AsyncFormInfosCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosCallbackInfo *>(data);
                 std::unique_ptr<AsyncFormInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result;
                 NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result));
@@ -4186,12 +4216,14 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByModuleCallbackInfo *)data;
+                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByModuleCallbackInfo *>(data);
                 asyncCallbackInfo->ret = InnerGetFormInfosByModule(
                     env, asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName, asyncCallbackInfo->formInfos);
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByModuleCallbackInfo *)data;
+                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByModuleCallbackInfo *>(data);
                 std::unique_ptr<AsyncFormInfosByModuleCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result[ARGS_SIZE_TWO] = {0};
                 napi_value callback = 0;
@@ -4226,13 +4258,15 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByModuleCallbackInfo *)data;
+                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByModuleCallbackInfo *>(data);
                 InnerGetFormInfosByModule(
                     env, asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName, asyncCallbackInfo->formInfos);
             },
             [](napi_env env, napi_status status, void *data) {
                 APP_LOGI("=================load=================");
-                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByModuleCallbackInfo *)data;
+                AsyncFormInfosByModuleCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByModuleCallbackInfo *>(data);
                 std::unique_ptr<AsyncFormInfosByModuleCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result;
                 NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result));
@@ -4292,12 +4326,14 @@ napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByAppCallbackInfo *)data;
+                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByAppCallbackInfo *>(data);
                 asyncCallbackInfo->ret =
                     InnerGetFormInfosByApp(env, asyncCallbackInfo->bundleName, asyncCallbackInfo->formInfos);
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByAppCallbackInfo *)data;
+                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByAppCallbackInfo *>(data);
                 std::unique_ptr<AsyncFormInfosByAppCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result[ARGS_SIZE_TWO] = {0};
                 napi_value callback = 0;
@@ -4332,12 +4368,14 @@ napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info)
             nullptr,
             resourceName,
             [](napi_env env, void *data) {
-                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByAppCallbackInfo *)data;
+                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByAppCallbackInfo *>(data);
                 InnerGetFormInfosByApp(env, asyncCallbackInfo->bundleName, asyncCallbackInfo->formInfos);
             },
             [](napi_env env, napi_status status, void *data) {
                 APP_LOGI("=================load=================");
-                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo = (AsyncFormInfosByAppCallbackInfo *)data;
+                AsyncFormInfosByAppCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncFormInfosByAppCallbackInfo *>(data);
                 std::unique_ptr<AsyncFormInfosByAppCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result;
                 NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result));
@@ -4669,7 +4707,8 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            EnabledInfo* asyncCallbackInfo = (EnabledInfo*)data;
+            EnabledInfo* asyncCallbackInfo =
+                reinterpret_cast<EnabledInfo*>(data);
             if (!asyncCallbackInfo->errCode) {
                 asyncCallbackInfo->result = InnerSetApplicationEnabled(asyncCallbackInfo->env,
                                                                        asyncCallbackInfo->bundleName,
@@ -4680,7 +4719,8 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            EnabledInfo* asyncCallbackInfo = (EnabledInfo*)data;
+            EnabledInfo* asyncCallbackInfo =
+                reinterpret_cast<EnabledInfo*>(data);
             std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[1] = { 0 };
             if (asyncCallbackInfo->errCode) {
@@ -4960,7 +5000,8 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            EnabledInfo* asyncCallbackInfo = (EnabledInfo*)data;
+            EnabledInfo* asyncCallbackInfo =
+                reinterpret_cast<EnabledInfo*>(data);
             if (!asyncCallbackInfo->errCode) {
                 asyncCallbackInfo->result = InnerSetAbilityEnabled(asyncCallbackInfo->env,
                                                                    asyncCallbackInfo->abilityInfo,
@@ -4971,7 +5012,8 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            EnabledInfo* asyncCallbackInfo = (EnabledInfo*)data;
+            EnabledInfo* asyncCallbackInfo =
+                reinterpret_cast<EnabledInfo*>(data);
             std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[1] = { 0 };
             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
@@ -6125,7 +6167,8 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncAbilityInfo* asyncCallbackInfo = (AsyncAbilityInfo*)data;
+            AsyncAbilityInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncAbilityInfo*>(data);
             if (!asyncCallbackInfo->errCode) {
                 asyncCallbackInfo->pixelMap = InnerGetAbilityIcon(asyncCallbackInfo->env,
                                                                   asyncCallbackInfo->bundleName,
@@ -6138,7 +6181,8 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncAbilityInfo* asyncCallbackInfo = (AsyncAbilityInfo*)data;
+            AsyncAbilityInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncAbilityInfo*>(data);
             std::unique_ptr<AsyncAbilityInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->errCode) {
@@ -6263,13 +6307,15 @@ napi_value GetNameForUid(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncGetNameByUidInfo* asyncCallbackInfo = (AsyncGetNameByUidInfo*)data;
+            AsyncGetNameByUidInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncGetNameByUidInfo*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerGetNameForUid(asyncCallbackInfo->uid, asyncCallbackInfo->bundleName);
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncGetNameByUidInfo* asyncCallbackInfo = (AsyncGetNameByUidInfo*)data;
+            AsyncGetNameByUidInfo* asyncCallbackInfo =
+                reinterpret_cast<AsyncGetNameByUidInfo*>(data);
             std::unique_ptr<AsyncGetNameByUidInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[ARGS_SIZE_TWO] = { 0 };
             // set error code
@@ -6345,7 +6391,8 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext* asyncCallbackInfo =
+                reinterpret_cast<AsyncHandleBundleContext*>(data);
             if (asyncCallbackInfo->cleanCacheCallback == nullptr) {
                 asyncCallbackInfo->cleanCacheCallback = new (std::nothrow) CleanCacheCallback(UNDEFINED_ERROR);
             }
@@ -6355,7 +6402,8 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext* asyncCallbackInfo =
+                reinterpret_cast<AsyncHandleBundleContext*>(data);
             std::unique_ptr<AsyncHandleBundleContext> callbackPtr {asyncCallbackInfo};
             napi_value result[1] = { 0 };
             // set error code
@@ -6973,13 +7021,15 @@ napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void *data) {
-            AsyncExtensionInfoCallbackInfo *info = (AsyncExtensionInfoCallbackInfo *)data;
+            AsyncExtensionInfoCallbackInfo *info =
+                reinterpret_cast<AsyncExtensionInfoCallbackInfo *>(data);
             if (!info->err) {
                 info->ret = InnerQueryExtensionInfo(env, *info);
             }
         },
         [](napi_env env, napi_status status, void *data) {
-            AsyncExtensionInfoCallbackInfo *info = (AsyncExtensionInfoCallbackInfo *)data;
+            AsyncExtensionInfoCallbackInfo *info =
+                reinterpret_cast<AsyncExtensionInfoCallbackInfo *>(data);
             std::unique_ptr<AsyncExtensionInfoCallbackInfo> callbackPtr {info};
             napi_value result[2] = { 0 };
             if (info->err) {
@@ -7147,17 +7197,17 @@ napi_value GetDispatcherVersionWrap(
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "GetDispatcherVersionWrap", NAPI_AUTO_LENGTH, &resource));
     std::unique_ptr<AsyncDispatcherVersionCallbackInfo> callbackPtr { asyncCallbackInfo };
-    NAPI_CALL(env,
-        napi_create_async_work(
-            env, nullptr, resource,
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void *data) {
-                AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo = (AsyncDispatcherVersionCallbackInfo *)data;
+                AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncDispatcherVersionCallbackInfo *>(data);
                 asyncCallbackInfo->version = "1";
                 asyncCallbackInfo->dispatchAPI = "1.0";
                 asyncCallbackInfo->ret = 1;
             },
             [](napi_env env, napi_status status, void *data) {
-                AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo = (AsyncDispatcherVersionCallbackInfo *)data;
+                AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncDispatcherVersionCallbackInfo *>(data);
                 std::unique_ptr<AsyncDispatcherVersionCallbackInfo> callbackPtr { asyncCallbackInfo };
                 napi_value result[2] = { 0 };
                 if (asyncCallbackInfo->err) {
@@ -7311,7 +7361,8 @@ napi_value GetProfileAsync(napi_env env, napi_value value, std::unique_ptr<Async
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "GetProfileAsync", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
-        AsyncGetProfileInfo *info = (AsyncGetProfileInfo *)data;
+        AsyncGetProfileInfo *info =
+            reinterpret_cast<AsyncGetProfileInfo *>(data);
         if (info == nullptr) {
             APP_LOGE("GetProfileAsync failed with nullptr");
             return;
@@ -7320,7 +7371,8 @@ napi_value GetProfileAsync(napi_env env, napi_value value, std::unique_ptr<Async
             info->ret = InnerGetProfile(env, *info);
         }
     }, [](napi_env env, napi_status status, void *data) {
-        AsyncGetProfileInfo *info = (AsyncGetProfileInfo *)data;
+        AsyncGetProfileInfo *info =
+            reinterpret_cast<AsyncGetProfileInfo *>(data);
         std::unique_ptr<AsyncGetProfileInfo> callbackPtr {info};
         napi_value result[2] = { 0 };
         if (info->errCode) {
