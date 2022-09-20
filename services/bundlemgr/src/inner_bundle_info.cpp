@@ -1752,19 +1752,19 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
     innerModuleInfos_.erase(it);
     std::string key;
     key.append(".").append(modulePackage).append(".");
-    for (auto it = shortcutInfos_.begin(); it != shortcutInfos_.end();) {
-        if (it->first.find(key) != std::string::npos) {
-            shortcutInfos_.erase(it++);
+    for (auto iter = shortcutInfos_.begin(); iter != shortcutInfos_.end();) {
+        if (iter->first.find(key) != std::string::npos) {
+            shortcutInfos_.erase(iter++);
         } else {
-            ++it;
+            ++iter;
         }
     }
 
-    for (auto it = commonEvents_.begin(); it != commonEvents_.end();) {
-        if (it->first.find(key) != std::string::npos) {
-            commonEvents_.erase(it++);
+    for (auto iter = commonEvents_.begin(); iter != commonEvents_.end();) {
+        if (iter->first.find(key) != std::string::npos) {
+            commonEvents_.erase(iter++);
         } else {
-            ++it;
+            ++iter;
         }
     }
 
