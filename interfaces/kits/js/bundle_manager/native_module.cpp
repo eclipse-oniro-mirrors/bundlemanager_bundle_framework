@@ -38,6 +38,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     CreateExtensionAbilityTypeObject(env, extensionType);
 
     napi_property_descriptor desc[] = {
+        DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
         DECLARE_NAPI_FUNCTION("queryAbilityInfo", QueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfo", QueryExtensionInfos),

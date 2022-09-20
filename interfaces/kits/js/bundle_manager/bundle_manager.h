@@ -19,6 +19,7 @@
 #include "ability_info.h"
 #include "base_cb_info.h"
 #include "bundle_constants.h"
+#include "bundle_info.h"
 #include "bundle_mgr_interface.h"
 #include "clean_cache_callback.h"
 #include "napi/native_api.h"
@@ -28,6 +29,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
+    explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    std::string hapFilePath;
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+};
 struct GetBundleNameByUidCallbackInfo : public BaseCallbackInfo {
     explicit GetBundleNameByUidCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -84,6 +92,7 @@ struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
+napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
