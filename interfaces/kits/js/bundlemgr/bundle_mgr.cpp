@@ -2531,8 +2531,7 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
     std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "GetBundlePackInfoPromise", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource,
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
                 reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
@@ -2591,7 +2590,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     APP_LOGD("argc = [%{public}zu]", argc);
     std::string bundleName;
-    int32_t flags;
+    int32_t flags = 0;
     BundleOptions bundleOptions;
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
@@ -7121,6 +7120,7 @@ napi_value GetDispatcherVersion(napi_env env, napi_callback_info info)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
+    std::unique_ptr<AsyncDispatcherVersionCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (argc != PARAM0 && argc != PARAM1) {
         asyncCallbackInfo->err = PARAM_TYPE_ERROR;
         asyncCallbackInfo->message = "type mismatch";
@@ -7138,6 +7138,7 @@ napi_value GetDispatcherVersion(napi_env env, napi_callback_info info)
     } else {
         NAPI_CALL(env, napi_get_undefined(env, &promise));
     }
+    callbackPtr.release();
     return GetDispatcherVersionWrap(env, promise, asyncCallbackInfo);
 }
 
