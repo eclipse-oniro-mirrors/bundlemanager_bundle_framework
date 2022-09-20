@@ -3643,8 +3643,10 @@ void BundleDataMgr::UpdateRemovable(
         return;
     }
 
-    infoItem->second.UpdateRemovable(true, removable);
-    SaveInnerBundleInfo(infoItem->second);
+    if (infoItem->second.IsRemovable() != removable) {
+        infoItem->second.UpdateRemovable(true, removable);
+        SaveInnerBundleInfo(infoItem->second);
+    }
 }
 
 void BundleDataMgr::UpdatePrivilegeCapability(
