@@ -79,9 +79,9 @@ ohos_unittest("BmsBundleInstallerTest") {
 
   if (bundle_framework_graphics) {
     include_dirs += [
-      "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     ]
-    deps += [ "//foundation/multimedia/image_standard/interfaces/innerkits:image_native" ]
+    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
 
   deps += bundle_install_deps
@@ -243,9 +243,9 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 
   if (bundle_framework_graphics) {
     include_dirs += [
-      "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     ]
-    deps += [ "//foundation/multimedia/image_standard/interfaces/innerkits:image_native" ]
+    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
 
   deps += bundle_install_deps
