@@ -113,7 +113,6 @@ bool ZipFile::ParseAllEntries()
     bool ret = true;
     ZipPos currentPos = centralDirPos_;
     CentralDirEntry directoryEntry = {0};
-    size_t fileLength = 0;
 
     for (uint16_t i = 0; i < endDir_.totalEntries; i++) {
         std::string fileName;
@@ -141,7 +140,7 @@ bool ZipFile::ParseAllEntries()
             break;
         }
 
-        fileLength = (directoryEntry.nameSize >= MAX_FILE_NAME) ? (MAX_FILE_NAME - 1) : directoryEntry.nameSize;
+        size_t fileLength = (directoryEntry.nameSize >= MAX_FILE_NAME) ? (MAX_FILE_NAME - 1) : directoryEntry.nameSize;
         if (fread(&(fileName[0]), fileLength, FILE_READ_COUNT, file_) != FILE_READ_COUNT) {
             APP_LOGE("parse entry(%{public}d) read file name failed, error: %{public}d", i, errno);
             ret = false;
@@ -509,7 +508,6 @@ bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSi
     bool ret = true;
     int32_t zlibErr = Z_OK;
     uint32_t remainCompressedSize = zipEntry.compressedSize;
-    size_t inflateLen = 0;
     uint8_t errorTimes = 0;
     while ((remainCompressedSize > 0) || (zstream.avail_in > 0)) {
         if (!ReadZStream(bufIn, zstream, remainCompressedSize)) {
@@ -524,7 +522,7 @@ bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSi
             break;
         }
 
-        inflateLen = UNZIP_BUF_OUT_LEN - zstream.avail_out;
+        size_t inflateLen = UNZIP_BUF_OUT_LEN - zstream.avail_out;
         if (inflateLen > 0) {
             dest.write((const char *)bufOut, inflateLen);
             zstream.next_out = bufOut;
