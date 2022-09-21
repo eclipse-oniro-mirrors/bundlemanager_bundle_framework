@@ -151,7 +151,7 @@ ErrCode BmsBundleDefaultAppTest::InstallBundle(const std::string &bundlePath) co
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USER_ID;
     bool result = installer->Install(bundlePath, installParam, receiver);
-    EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(result);
     return receiver->GetResultCode();
 }
 
@@ -174,7 +174,7 @@ ErrCode BmsBundleDefaultAppTest::UnInstallBundle(const std::string &bundleName) 
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USER_ID;
     bool result = installer->Uninstall(bundleName, installParam, receiver);
-    EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(result);
     return receiver->GetResultCode();
 }
 
