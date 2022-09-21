@@ -966,6 +966,11 @@ public:
         return 0;
     }
 
+    virtual ErrCode SetDebugMode(bool isDebug)
+    {
+        return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1059,6 +1064,7 @@ public:
         GET_STRING_BY_ID,
         GET_ICON_BY_ID,
         GET_UDID_BY_NETWORK_ID,
+        SET_DEBUG_MODE,
     };
 };
 }  // namespace AppExecFwk
