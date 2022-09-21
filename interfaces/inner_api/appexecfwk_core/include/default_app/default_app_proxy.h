@@ -26,14 +26,14 @@ public:
     explicit DefaultAppProxy(const sptr<IRemoteObject>& object);
     virtual ~DefaultAppProxy();
 
-    virtual bool IsDefaultApplication(const std::string& type) override;
-    virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) override;
-    virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
-    virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) override;
+    virtual ErrCode IsDefaultApplication(const std::string& type, bool& isDefaultApp) override;
+    virtual ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) override;
+    virtual ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
+    virtual ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) override;
 
 private:
     template <typename T>
-    bool GetParcelableInfo(IDefaultApp::Message code, MessageParcel& data, T& parcelableInfo);
+    ErrCode GetParcelableInfo(IDefaultApp::Message code, MessageParcel& data, T& parcelableInfo);
     bool SendRequest(IDefaultApp::Message code, MessageParcel& data, MessageParcel& reply);
     static inline BrokerDelegator<DefaultAppProxy> delegator_;
 };
