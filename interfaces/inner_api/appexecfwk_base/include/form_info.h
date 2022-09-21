@@ -24,11 +24,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class FormType {
-    JAVA = 0,
-    JS = 1,
-};
-
 struct FormInfo : public Parcelable {
     std::string package;
     std::string bundleName;
