@@ -707,6 +707,16 @@ void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<Extension
     }
 }
 
+void CommonFunc::ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value)
+{
+    for (size_t index = 0; index < strs.size(); ++index) {
+        napi_value nStr;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, strs[index].c_str(), NAPI_AUTO_LENGTH, &nStr));
+        napi_set_element(env, value, index, nStr);
+    }
+}
+
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
     napi_value objExtensionInfo)
 {
