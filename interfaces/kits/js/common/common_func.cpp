@@ -966,5 +966,239 @@ void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const Per
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "descriptionId", nDescriptionId));
 }
+
+void CommonFunc::ConvertRequestPermissionUsedScene(napi_env env,
+    const RequestPermissionUsedScene &requestPermissionUsedScene, napi_value result)
+{
+    napi_value nAbilities;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nAbilities));
+    for (size_t index = 0; index < requestPermissionUsedScene.abilities.size(); index++) {
+        napi_value objAbility;
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, requestPermissionUsedScene.abilities[index].c_str(),
+                                    NAPI_AUTO_LENGTH, &objAbility));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nAbilities, index, objAbility));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "abilities", nAbilities));
+
+    napi_value nWhen;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_string_utf8(env, requestPermissionUsedScene.when.c_str(), NAPI_AUTO_LENGTH, &nWhen));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "when", nWhen));
+}
+
+void CommonFunc::ConvertRequestPermission(napi_env env, const RequestPermission &requestPermission, napi_value result)
+{
+    napi_value nPermissionName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, requestPermission.name.c_str(), NAPI_AUTO_LENGTH, &nPermissionName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, NAME, nPermissionName));
+
+    napi_value nReason;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, requestPermission.reason.c_str(), NAPI_AUTO_LENGTH, &nReason));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "reason", nReason));
+
+    napi_value nReasonId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, requestPermission.reasonId, &nReasonId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "reasonId", nReasonId));
+
+    napi_value nUsedScene;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nUsedScene));
+    ConvertRequestPermissionUsedScene(env, requestPermission.usedScene, nUsedScene);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "usedScene", nUsedScene));
+}
+
+void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value)
+{
+    napi_value nAppId;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, signatureInfo.appId.c_str(), NAPI_AUTO_LENGTH, &nAppId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appId", nAppId));
+
+    napi_value nFingerprint;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, signatureInfo.fingerprint.c_str(), NAPI_AUTO_LENGTH, &nFingerprint));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "fingerprint", nFingerprint));
+}
+
+void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)
+{
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, NAME, nName));
+    APP_LOGI("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
+
+    napi_value nIcon;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIcon));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ICON, nIcon));
+
+    napi_value nIconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ICON_ID, nIconId));
+
+    napi_value nLabel;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.label.c_str(), NAPI_AUTO_LENGTH, &nLabel));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, LABEL, nLabel));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, LABEL_ID, nLabelId));
+
+    napi_value nDescription;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, hapModuleInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, DESCRIPTION, nDescription));
+
+    napi_value ndescriptionId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.descriptionId, &ndescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, DESCRIPTION_ID, ndescriptionId));
+
+    napi_value nMainElementName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.mainElementName.c_str(), NAPI_AUTO_LENGTH,
+        &nMainElementName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "mainElementName", nMainElementName));
+
+    napi_value nAbilityInfos;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nAbilityInfos));
+    for (size_t idx = 0; idx < hapModuleInfo.abilityInfos.size(); idx++) {
+        napi_value objAbilityInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAbilityInfo));
+        ConvertAbilityInfo(env, hapModuleInfo.abilityInfos[idx], objAbilityInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nAbilityInfos, idx, objAbilityInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "abilitiesInfo", nAbilityInfos));
+
+    napi_value nExtensionAbilityInfos;
+    napi_create_array_with_length(env, hapModuleInfo.extensionInfos.size(), &nExtensionAbilityInfos);
+    ConvertExtensionInfos(env, hapModuleInfo.extensionInfos, nExtensionAbilityInfos);
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objHapModuleInfo, "extensionAbilitiesInfo", nExtensionAbilityInfos));
+
+    napi_value nMetadata;
+    size_t size = hapModuleInfo.metadata.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value innerMeta;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &innerMeta));
+        ConvertMetadata(env, hapModuleInfo.metadata[index], innerMeta);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadata, index, innerMeta));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "metadata", nMetadata));
+
+    napi_value nDeviceTypes;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nDeviceTypes));
+    for (size_t idx = 0; idx < hapModuleInfo.deviceTypes.size(); idx++) {
+        napi_value nDeviceType;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, hapModuleInfo.deviceTypes[idx].c_str(), NAPI_AUTO_LENGTH, &nDeviceType));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDeviceTypes, idx, nDeviceType));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "deviceTypes", nDeviceTypes));
+
+    napi_value nInstallationFree;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, hapModuleInfo.installationFree, &nInstallationFree));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "installationFree", nInstallationFree));
+
+    napi_value nHashValue;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, hapModuleInfo.hashValue.c_str(), NAPI_AUTO_LENGTH, &nHashValue));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "hashValue", nHashValue));
+
+    napi_value nModuleSourceDir;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.moduleSourceDir.c_str(), NAPI_AUTO_LENGTH,
+        &nModuleSourceDir));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "moduleSourceDir", nModuleSourceDir));
+}
+
+void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags)
+{
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, NAME, nName));
+
+    napi_value nVendor;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleInfo.vendor.c_str(), NAPI_AUTO_LENGTH, &nVendor));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "vendor", nVendor));
+
+    napi_value nVersionCode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, bundleInfo.versionCode, &nVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "versionCode", nVersionCode));
+
+    napi_value nVersionName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, bundleInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &nVersionName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "versionName", nVersionName));
+
+    napi_value nMinCompatibleVersionCode;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, bundleInfo.minCompatibleVersionCode, &nMinCompatibleVersionCode));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, objBundleInfo, "minCompatibleVersionCode", nMinCompatibleVersionCode));
+
+    napi_value nTargetVersion;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInfo.targetVersion, &nTargetVersion));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "targetVersion", nTargetVersion));
+
+    napi_value nAppInfo;
+    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_APPLICATION_V9)
+        == GET_BUNDLE_INFO_WITH_APPLICATION_V9) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nAppInfo));
+        ConvertApplicationInfo(env, nAppInfo, bundleInfo.applicationInfo);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nAppInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "appInfo", nAppInfo));
+
+    napi_value nHapModuleInfos;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nHapModuleInfos));
+    for (size_t idx = 0; idx < bundleInfo.hapModuleInfos.size(); idx++) {
+        napi_value objHapModuleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objHapModuleInfo));
+        ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[idx], objHapModuleInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nHapModuleInfos, idx, objHapModuleInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "hapModulesInfo", nHapModuleInfos));
+
+    napi_value nReqPermissionDetails;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nReqPermissionDetails));
+    for (size_t idx = 0; idx < bundleInfo.reqPermissionDetails.size(); idx++) {
+        napi_value objReqPermission;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objReqPermission));
+        ConvertRequestPermission(env, bundleInfo.reqPermissionDetails[idx], objReqPermission);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nReqPermissionDetails, idx, objReqPermission));
+    }
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, objBundleInfo, "reqPermissionDetails", nReqPermissionDetails));
+
+    napi_value nReqPermissionStates;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nReqPermissionStates));
+    for (size_t idx = 0; idx < bundleInfo.reqPermissionStates.size(); idx++) {
+        napi_value nReqPermissionState;
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_int32(env, static_cast<int32_t>(bundleInfo.reqPermissionStates[idx]), &nReqPermissionState));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nReqPermissionStates, idx, nReqPermissionState));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "permissionGrantStates",
+        nReqPermissionStates));
+
+    napi_value nSignatureInfo;
+    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9)
+        == GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSignatureInfo));
+        ConvertSignatureInfo(env, bundleInfo.signatureInfo, nSignatureInfo);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nSignatureInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "signatureInfo", nSignatureInfo));
+
+    napi_value nInstallTime;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, bundleInfo.installTime, &nInstallTime));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "installTime", nInstallTime));
+
+    napi_value nUpdateTime;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, bundleInfo.updateTime, &nUpdateTime));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "updateTime", nUpdateTime));
+}
 }
 }

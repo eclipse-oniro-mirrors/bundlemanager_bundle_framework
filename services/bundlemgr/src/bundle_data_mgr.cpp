@@ -1323,7 +1323,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
-    return true;
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetBundlePackInfo(
@@ -1671,7 +1671,7 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
     if (ret != ERR_OK) {
         return ret;
     }
-    
+
     auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
