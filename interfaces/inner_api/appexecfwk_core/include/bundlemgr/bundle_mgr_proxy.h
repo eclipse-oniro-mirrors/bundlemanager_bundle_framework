@@ -668,6 +668,8 @@ public:
 
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
 
+    virtual ErrCode SetDebugMode(bool isDebug) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
