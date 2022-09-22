@@ -82,6 +82,8 @@ static void ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo, nap
 static void ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
     napi_value value);
 
+static void ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value);
+
 static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo, napi_value objExtensionInfo);
 
 static void ConvertResource(napi_env env, const Resource &resource, napi_value objResource);
