@@ -779,9 +779,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
                 APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
             }
-            for (const auto &item : cache) {
-                caches.emplace_back(item);
-            }
+            std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
         }
 
         bool succeed = true;

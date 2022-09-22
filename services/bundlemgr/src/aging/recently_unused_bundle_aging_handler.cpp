@@ -77,7 +77,6 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
         return false;
     }
     auto bundleInstaller = bms->GetBundleInstaller();
-    auto bundleDataMgr = bms->GetDataMgr();
     if (bundleInstaller == nullptr) {
         APP_LOGE("bundleInstaller is null.");
         return false;

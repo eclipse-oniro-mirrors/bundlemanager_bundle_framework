@@ -45,12 +45,8 @@ BundleMgrService::BundleMgrService() : SystemAbility(BUNDLE_MGR_SERVICE_SYS_ABIL
 
 BundleMgrService::~BundleMgrService()
 {
-    if (host_ != nullptr) {
-        host_ = nullptr;
-    }
-    if (installer_ != nullptr) {
-        installer_ = nullptr;
-    }
+    host_ = nullptr;
+    installer_ = nullptr;
     if (handler_) {
         handler_.reset();
     }
