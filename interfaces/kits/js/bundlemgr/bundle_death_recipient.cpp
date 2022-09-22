@@ -24,10 +24,6 @@ namespace AppExecFwk {
 namespace {
     const std::string STRING_FAIL = "[BUNDLER_MANAGER_SERVICE_UNAVAILABLE]";
 }
-BundleDeathRecipient::BundleDeathRecipient(
-    const sptr<StatusReceiverHost> &statusReceiver) : statusReceiver_(statusReceiver), quickFixCallback_(nullptr)
-{
-}
 BundleDeathRecipient::BundleDeathRecipient(const sptr<StatusReceiverHost> &statusReceiver,
     const sptr<QuickFixStatusCallbackHost> &callback) : statusReceiver_(statusReceiver), quickFixCallback_(callback)
 {
