@@ -4845,6 +4845,84 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_006, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: Marshalling_007
+ * @tc.name: HapModuleInfo Marshalling
+ * @tc.desc: 1.Test the marshalling of HapModuleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_007, Function | SmallTest | Level1)
+{
+    HapModuleInfo info;
+    std::vector<std::string> reqCapabilities;
+    std::vector<std::string> deviceTypes;
+    std::vector<std::string> dependencies;
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo abilityInfo;
+    std::map<std::string, bool> isRemovable;
+    isRemovable["hap1"] = true;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    std::vector<Metadata> metadata;
+    Metadata data;
+    reqCapabilities.emplace_back("video_support");
+    deviceTypes.emplace_back("default");
+    dependencies.emplace_back("dependency");
+    abilityInfos.emplace_back(abilityInfo);
+    extensionInfos.emplace_back(extensionAbilityInfo);
+    metadata.emplace_back(data);
+    info.reqCapabilities = reqCapabilities;
+    info.deviceTypes = reqCapabilities;
+    info.abilityInfos = abilityInfos;
+    info.isRemovable = isRemovable;
+    info.extensionInfos = extensionInfos;
+    info.metadata = metadata;
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Marshalling_008
+ * @tc.name: ApplicationInfo Marshalling
+ * @tc.desc: 1.Test the marshalling of ApplicationInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_008, Function | SmallTest | Level1)
+{
+    ApplicationInfo info;
+    std::vector<std::string> allowCommonEvent;
+    std::vector<std::string> permissions;
+    std::vector<std::string> moduleSourceDirs;
+    std::vector<std::string> targetBundleList;
+    std::vector<ModuleInfo> moduleInfos;
+    ModuleInfo moduleInfo;
+    Metadata data1("paramName", "paramValue", "paramResource");
+    std::map<std::string, std::vector<Metadata>> metadata;
+    std::vector<Metadata> vecMetaData;
+    vecMetaData.emplace_back(data1);
+    metadata["name"] = vecMetaData;
+    std::map<std::string, std::vector<CustomizeData>> metaData;
+    std::vector<CustomizeData> vecCustomizeData;
+    CustomizeData customizeData;
+    vecCustomizeData.emplace_back(customizeData);
+    metaData["moduleName"] = vecCustomizeData;
+    allowCommonEvent.emplace_back("allow1");
+    permissions.emplace_back("permission1");
+    moduleSourceDirs.emplace_back("dir1");
+    targetBundleList.emplace_back("target");
+    moduleInfos.emplace_back(moduleInfo);
+    info.allowCommonEvent = allowCommonEvent;
+    info.permissions = permissions;
+    info.targetBundleList = targetBundleList;
+    info.moduleSourceDirs = moduleSourceDirs;
+    info.moduleInfos = moduleInfos;
+    info.metadata = metadata;
+    info.metaData = metaData;
+
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: Unmarshalling_001
  * @tc.name: RequestPermissionUsedScene Unmarshalling
  * @tc.desc: 1.Test the marshalling of RequestPermissionUsedScene
@@ -4926,6 +5004,82 @@ HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleParam_001, Function | Sma
     auto ret1 = param.Marshalling(parcel);
     EXPECT_EQ(ret1, true);
     auto ret2 = param.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+}
+
+/**
+ * @tc.number: ReadFromParcelOfHapModuleInfo_001
+ * @tc.name: ReadFromParcel
+ * @tc.desc: 1.Test ReadFromParcel of HapModuleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, ReadFromParcelOfHapModuleInfo_001, Function | SmallTest | Level1)
+{
+    HapModuleInfo info;
+    std::vector<std::string> reqCapabilities;
+    std::vector<std::string> dependencies;
+    std::map<std::string, bool> isRemovable;
+    isRemovable["hap1"] = true;
+    reqCapabilities.emplace_back("video_support");
+    dependencies.emplace_back("dependency");
+    info.reqCapabilities = reqCapabilities;
+    info.dependencies = dependencies;
+    info.isRemovable = isRemovable;
+
+    Parcel parcel;
+    auto ret1 = info.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = info.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+}
+
+/**
+ * @tc.number: ReadFromParcelOfApplicationInfo_001
+ * @tc.name: ReadFromParcel
+ * @tc.desc: 1.Test ReadFromParcel of ApplicationInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, ReadFromParcelOfApplicationInfo_001, Function | SmallTest | Level1)
+{
+    ApplicationInfo info;
+    Metadata data1("paramName", "paramValue", "paramResource");
+    std::map<std::string, std::vector<Metadata>> metadata;
+    std::vector<Metadata> vecMetaData;
+    vecMetaData.emplace_back(data1);
+    metadata["name"] = vecMetaData;
+    std::map<std::string, std::vector<CustomizeData>> metaData;
+    std::vector<CustomizeData> vecCustomizeData;
+    CustomizeData customizeData;
+    vecCustomizeData.emplace_back(customizeData);
+    metaData["moduleName"] = vecCustomizeData;
+    std::vector<std::string> targetBundleList;
+    targetBundleList.emplace_back("target");
+    info.metadata = metadata;
+    info.metaData = metaData;
+    info.targetBundleList = targetBundleList;
+    Parcel parcel;
+    auto ret1 = info.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = info.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+}
+
+/**
+ * @tc.number: ReadMetaDataFromParcel_001
+ * @tc.name: ReadMetaDataFromParcel
+ * @tc.desc: 1.Test ReadFromParcel of ApplicationInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, ReadMetaDataFromParcel_001, Function | SmallTest | Level1)
+{
+    ApplicationInfo info;
+    std::map<std::string, std::vector<CustomizeData>> metaData;
+    std::vector<CustomizeData> vecCustomizeData;
+    CustomizeData customizeData;
+    vecCustomizeData.emplace_back(customizeData);
+    metaData["moduleName"] = vecCustomizeData;
+    info.metaData = metaData;
+    Parcel parcel;
+    auto ret1 = info.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = info.ReadMetaDataFromParcel(parcel);
     EXPECT_TRUE(ret2);
 }
 
