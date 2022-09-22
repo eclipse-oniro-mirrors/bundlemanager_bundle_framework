@@ -1984,7 +1984,7 @@ void UpdateNativeSoAttrs(
 }
 
 bool ParserNativeSo(
-    ProfileReader::ConfigJson &configJson,
+    const ProfileReader::ConfigJson &configJson,
     const BundleExtractor &bundleExtractor,
     InnerBundleInfo &innerBundleInfo)
 {

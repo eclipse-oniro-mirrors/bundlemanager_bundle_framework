@@ -64,7 +64,6 @@ struct UnzipParam {
 bool IsHiddenFile(const FilePath &filePath)
 {
     FilePath localFilePath = filePath;
-    std::string path = localFilePath.BaseName().Value();
     if (!localFilePath.Value().empty()) {
         return localFilePath.Value().c_str()[0] == HIDDEN_SEPARATOR;
     } else {

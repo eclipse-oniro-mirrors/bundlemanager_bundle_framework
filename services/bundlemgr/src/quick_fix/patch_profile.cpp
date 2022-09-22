@@ -177,7 +177,7 @@ QuickFixType GetQuickFixType(const std::string &type)
     return QuickFixType::UNKNOWN;
 }
 
-void ToPatchInfo(PatchJson &patchJson, AppQuickFix &appQuickFix)
+void ToPatchInfo(const PatchJson &patchJson, AppQuickFix &appQuickFix)
 {
     appQuickFix.bundleName = patchJson.app.bundleName;
     appQuickFix.versionCode = patchJson.app.versionCode;

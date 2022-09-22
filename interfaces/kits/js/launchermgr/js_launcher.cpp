@@ -519,7 +519,7 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
         [](napi_env env, void* data) {
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext *>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerJSLauncherServiceOn(env, asyncCallbackInfo->bundleStatusCallback);
             }
@@ -579,7 +579,7 @@ static bool InnerJSLauncherServiceOff()
 
 static void LauncherServiceOffComplete(napi_env env, napi_status status, void* data)
 {
-    AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+    AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
     if (!asyncCallbackInfo->err) {
         asyncCallbackInfo->ret = InnerJSLauncherServiceOff();
     }
@@ -714,7 +714,7 @@ static napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info 
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerJSGetAllLauncherAbilityInfos(asyncCallbackInfo->env,
                                                                            asyncCallbackInfo->userId,
@@ -722,7 +722,7 @@ static napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info 
             }
         },
         [](napi_env env, napi_status status, void* data) {
-          AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+          AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
           napi_value result[INDEX_TWO] = { 0 };
           // wrap result
           if (asyncCallbackInfo->err) {
@@ -926,7 +926,7 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret = InnerJSGetShortcutInfos(asyncCallbackInfo->env,
                                                                  asyncCallbackInfo->bundleName,
@@ -934,7 +934,7 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
             napi_value result[INDEX_TWO] = { 0 };
             // wrap result
             if (asyncCallbackInfo->err) {

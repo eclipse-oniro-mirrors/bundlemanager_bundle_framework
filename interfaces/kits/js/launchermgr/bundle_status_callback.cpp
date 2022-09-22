@@ -44,6 +44,9 @@ BundleStatusCallback::~BundleStatusCallback()
         [](uv_work_t* work, int status) {
             // JS Thread
             DelRefCallbackInfo* delRefCallbackInfo =  reinterpret_cast<DelRefCallbackInfo*>(work->data);
+            if (delRefCallbackInfo == nullptr) {
+                return;
+            }
             napi_delete_reference(delRefCallbackInfo->env_, delRefCallbackInfo->addedCallback_);
             napi_delete_reference(delRefCallbackInfo->env_, delRefCallbackInfo->updatedCallback_);
             napi_delete_reference(delRefCallbackInfo->env_, delRefCallbackInfo->removeCallback_);
@@ -86,6 +89,9 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
         [](uv_work_t* work, int status) {
             // JS Thread
             AsyncCallbackInfo* asyncCallbackInfo =  reinterpret_cast<AsyncCallbackInfo*>(work->data);
+            if (asyncCallbackInfo == nullptr) {
+                return;
+            }
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
@@ -134,6 +140,9 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
         [](uv_work_t* work, int status) {
             // JS Thread
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
+            if (asyncCallbackInfo == nullptr) {
+                return;
+            }
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
@@ -182,6 +191,9 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
         [](uv_work_t* work, int status) {
             // JS Thread
             AsyncCallbackInfo* asyncCallbackInfo =  reinterpret_cast<AsyncCallbackInfo*>(work->data);
+            if (asyncCallbackInfo == nullptr) {
+                return;
+            }
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
