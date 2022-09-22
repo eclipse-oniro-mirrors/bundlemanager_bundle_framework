@@ -3840,39 +3840,39 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
 }
 #endif
 
-bool BundleDataMgr::GetMediaData(const std::string &bundleName, const std::string &moduleName,
+ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const
 {
     APP_LOGI("begin to GetMediaData.");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
-        return false;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     APP_LOGD("GetMediaData %{public}s", bundleName.c_str());
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId());
     if (!ability) {
         APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, moduleName, GetUserId());
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     OHOS::Global::Resource::RState ret =
         resourceManager->GetMediaDataById(static_cast<uint32_t>((*ability).iconId), len, mediaDataPtr);
     if (ret != OHOS::Global::Resource::RState::SUCCESS || mediaDataPtr == nullptr || len == 0) {
         APP_LOGE("GetMediaDataById failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return true;
+    return ERR_OK;
 }
 
 std::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()
