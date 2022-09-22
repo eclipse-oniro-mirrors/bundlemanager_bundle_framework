@@ -2029,19 +2029,21 @@ bool InnerBundleInfo::CheckSpecialMetaData(const std::string &metaData) const
 {
     if (isNewVersion_) {
         for (const auto &moduleInfo : innerModuleInfos_) {
-            auto metadata = moduleInfo.second.metadata;
-            auto res = std::any_of(metadata.begin(), metadata.end(),
-                [](const auto &data){return metaData == data.name;});
-            if (res) return true;
+            for (const auto &data : moduleInfo.second.metadata) {
+                if (metaData == data.name) {
+                    return true;
+                }
+            }
         }
         return false;
     }
     // old version
     for (const auto &moduleInfo : innerModuleInfos_) {
-        auto cusData = moduleInfo.second.metaData.customizeData;
-        auto result = std::any_of(cusData.begin(), cusData.end(),
-            [](const auto &data){return metaData == data.name;});
-        if (result) return true;
+        for (const auto &data : moduleInfo.second.metaData.customizeData) {
+            if (metaData == data.name) {
+                return true;
+            }
+        }
     }
     return false;
 }
