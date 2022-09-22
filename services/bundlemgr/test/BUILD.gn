@@ -46,6 +46,7 @@ group("unittest") {
   if (bundle_framework_graphics) {
     deps = [
       "unittest/bms_bundle_accesstokenid_test:unittest",
+      "unittest/bms_bundle_app_control_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
       "unittest/bms_bundle_data_storage_test:unittest",
       "unittest/bms_bundle_default_app_test:unittest",
