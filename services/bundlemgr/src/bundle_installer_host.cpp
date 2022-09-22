@@ -29,7 +29,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string INSTALL_THREAD = "install_thread";
+const std::string INSTALL_THREAD = "InstallThread";
 const std::string GET_MANAGER_FAIL = "fail to get bundle installer manager";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;

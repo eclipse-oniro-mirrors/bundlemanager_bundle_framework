@@ -40,7 +40,7 @@ const int32_t TIME_20_DAYS = 20;
 const int32_t TIME_10_DAYS = 10;
 const int32_t COUNT_MODULE_RECODES_GET = 1000;
 
-const std::string AGING_THREAD = "aging_thread";
+const std::string AGING_THREAD = "AgingThread";
 
 const std::string UNUSED_FOR_30_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor30DaysBundleAgingHandler";
 const std::string UNUSED_FOR_20_DAYS_BUNDLE_AGING_HANDLER = "UnusedFor20DaysBundleAgingHandler";

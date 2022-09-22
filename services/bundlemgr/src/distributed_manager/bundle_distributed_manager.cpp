@@ -30,7 +30,7 @@ namespace {
 const int32_t CHECK_ABILITY_ENABLE_INSTALL = 1;
 const int32_t QUERY_RPC_ID_BY_ABILITY = 1;
 const uint32_t OUT_TIME = 3000;
-const std::string DISTRIBUTED_MANAGER_THREAD = "distributed_manager_thread";
+const std::string DISTRIBUTED_MANAGER_THREAD = "DistributedManagerThread";
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "com.ohos.hag.famanager.HapInstallServiceAbility";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
