@@ -58,11 +58,6 @@ size_t NapiArg::GetMaxArgc() const
     return maxArgc_;
 }
 
-napi_value NapiArg::GetThisArg() const
-{
-    return thisArg_;
-}
-
 napi_value NapiArg::GetArgv(size_t pos) const
 {
     return (pos < argc_) ? argv_[pos] : nullptr;

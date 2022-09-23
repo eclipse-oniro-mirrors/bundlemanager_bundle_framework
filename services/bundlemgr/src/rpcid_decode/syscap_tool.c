@@ -37,60 +37,6 @@ typedef struct RequiredProductCompatibilityIDHead {
     uint16_t apiVersionType : 1;
 } RPCIDHead;
 
-static void FreeContextBuffer(char *contextBuffer)
-{
-    (void)free(contextBuffer);
-}
-
-static int32_t GetFileContext(char *inputFile, char **contextBufPtr, uint32_t *bufferLen)
-{
-    if (inputFile == NULL) {
-        return ERROR;
-    }
-    int32_t ret;
-    FILE *fp = NULL;
-    struct stat statBuf;
-    char *contextBuffer = NULL;
-    ret = stat(inputFile, &statBuf);
-    if (ret != OK) {
-        HILOG_ERROR(LOG_CORE, "get file(%s) st_mode failed, errno = %d\n", inputFile, errno);
-        return ret;
-    }
-
-    if (!(statBuf.st_mode & S_IRUSR)) {
-        HILOG_ERROR(LOG_CORE, "don't have permission to read the file(%s)\n", inputFile);
-        return ERROR;
-    }
-
-    contextBuffer = (char *)malloc(statBuf.st_size + 1);
-    if (contextBuffer == NULL) {
-        HILOG_ERROR(LOG_CORE, "malloc contextBuffer failed, size = %d, errno = %d\n",
-                    (int32_t)statBuf.st_size + 1, errno);
-        return ERROR;
-    }
-
-    fp = fopen(inputFile, "r");
-    if (fp == NULL) {
-        HILOG_ERROR(LOG_CORE, "open file(%s) failed, errno = %d\n", inputFile, errno);
-        FreeContextBuffer(contextBuffer);
-        return ERROR;
-    }
-
-    size_t res = fread(contextBuffer, statBuf.st_size, 1, fp);
-    if (res != 1) {
-        HILOG_ERROR(LOG_CORE, "read file(%s) failed, errno = %d\n", inputFile, errno);
-        FreeContextBuffer(contextBuffer);
-        (void)fclose(fp);
-        return ERROR;
-    }
-
-    contextBuffer[statBuf.st_size] = '\0';
-    (void)fclose(fp);
-    *contextBufPtr = contextBuffer;
-    *bufferLen = statBuf.st_size + 1;
-    return OK;
-}
-
 int32_t RPCIDStreamDecodeToBuffer(
     char *contextBuffer, uint32_t bufferLen, char **syscapSetBuf, uint32_t *syscapSetLength)
 {
@@ -174,25 +120,4 @@ int32_t RPCIDStreamDecodeToBuffer(
     *syscapSetBuf = syscapBuf;
     *syscapSetLength = syscapBufLen;
     return OK;
-}
-
-int32_t RPCIDFileDecodeToBuffer(char *inputFile, char **syscapSetBuf, uint32_t *syscapSetLength)
-{
-    int32_t ret;
-    char *contextBuffer = NULL;
-    uint32_t bufferLen;
-    ret = GetFileContext(inputFile, &contextBuffer, &bufferLen);
-    if (ret != 0) {
-        HILOG_ERROR(LOG_CORE, "GetFileContext failed, input file : %s\n", inputFile);
-        return ret;
-    }
-
-    ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, syscapSetBuf, syscapSetLength);
-    FreeContextBuffer(contextBuffer);
-    return ret;
-}
-
-void FreeDecodeBuffer(char *syscapSetBuf)
-{
-    (void)free(syscapSetBuf);
 }

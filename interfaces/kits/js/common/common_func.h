@@ -82,6 +82,8 @@ static void ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo, nap
 static void ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
     napi_value value);
 
+static void ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value);
+
 static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo, napi_value objExtensionInfo);
 
 static void ConvertResource(napi_env env, const Resource &resource, napi_value objResource);
@@ -102,6 +104,9 @@ static void ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInf
 static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo);
 
 static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags);
+
+static void ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
+    int32_t userId, napi_value bundleChangeInfo);
 
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,

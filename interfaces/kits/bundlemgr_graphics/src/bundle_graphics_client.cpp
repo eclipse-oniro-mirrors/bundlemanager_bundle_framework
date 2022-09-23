@@ -25,14 +25,14 @@ BundleGraphicsClient::BundleGraphicsClient()
     impl_ = BundleGraphicsClientImpl::GetInstance();
 }
 
-std::shared_ptr<Media::PixelMap> BundleGraphicsClient::GetAbilityPixelMapIcon(const std::string &bundleName,
-    const std::string &moduleName, const std::string &abilityName)
+ErrCode BundleGraphicsClient::GetAbilityPixelMapIcon(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName, std::shared_ptr<Media::PixelMap> &pixelMapPtr)
 {
     if (impl_ == nullptr) {
         APP_LOGE("bundlemgr graphics client impl is nullptr");
-        return nullptr;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return impl_->GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
+    return impl_->GetAbilityPixelMapIcon(bundleName, moduleName, abilityName, pixelMapPtr);
 }
 }  // AppExecFwk
 }  // OHOS

@@ -46,6 +46,7 @@ group("unittest") {
   if (bundle_framework_graphics) {
     deps = [
       "unittest/bms_bundle_accesstokenid_test:unittest",
+      "unittest/bms_bundle_app_control_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
       "unittest/bms_bundle_data_storage_test:unittest",
       "unittest/bms_bundle_default_app_test:unittest",
@@ -54,6 +55,7 @@ group("unittest") {
       "unittest/bms_bundle_hap_verify_test:unittest",
       "unittest/bms_bundle_installer_test:unittest",
       "unittest/bms_bundle_kit_service_test:unittest",
+      "unittest/bms_bundle_manager_test:unittest",
       "unittest/bms_bundle_parser_test:unittest",
       "unittest/bms_bundle_permission_grant_test:unittest",
       "unittest/bms_bundle_quick_fix_boot_scanner_test:unittest",

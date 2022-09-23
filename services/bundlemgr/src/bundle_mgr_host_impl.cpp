@@ -779,9 +779,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
                 APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
             }
-            for (const auto &item : cache) {
-                caches.emplace_back(item);
-            }
+            std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
         }
 
         bool succeed = true;
@@ -1945,12 +1943,9 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (!dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len)) {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-    return ERR_OK;
+    return dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
 }
 
 void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)

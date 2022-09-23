@@ -290,7 +290,6 @@ void BaseBundleInstaller::SaveOldRemovableInfo(
 void BaseBundleInstaller::CheckEnableRemovable(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InnerBundleInfo &oldInfo, int32_t &userId, bool isFreeInstallFlag, bool isAppExist)
 {
-    bool existModule = false;
     for (auto &item : newInfos) {
         std::map<std::string, InnerModuleInfo> &moduleInfo = item.second.FetchInnerModuleInfos();
         bool hasInstalledInUser = oldInfo.HasInnerBundleUserInfo(userId);
@@ -302,7 +301,7 @@ void BaseBundleInstaller::CheckEnableRemovable(std::unordered_map<std::string, I
         for (auto &iter : moduleInfo) {
             APP_LOGD("modulePackage:(%{public}s), userId:%{public}d, flag:%{public}d, isAppExist:%{public}d",
                 iter.second.modulePackage.c_str(), userId, isFreeInstallFlag, isAppExist);
-            existModule = oldInfo.FindModule(iter.second.modulePackage);
+            bool existModule = oldInfo.FindModule(iter.second.modulePackage);
             bool hasModuleInUser = item.second.IsUserExistModule(iter.second.moduleName, userId);
             APP_LOGD("hasInstalledInUser:%{public}d, existModule:(%{public}d), hasModuleInUser:(%{public}d)",
                 hasInstalledInUser, existModule, hasModuleInUser);
@@ -1378,9 +1377,9 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
         return ERR_OK;
     }
 
-    ret = UpdataLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    ret = UpdateLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("UpdataModuleLib failed, errcode: %{public}d", ret);
+        APP_LOGE("UpdateModuleLib failed, errcode: %{public}d", ret);
         return ret;
     }
 
@@ -1431,9 +1430,9 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
         return ERR_OK;
     }
 
-    ret = UpdataLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    ret = UpdateLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("UpdataModuleLib failed, errcode: %{public}d", ret);
+        APP_LOGE("UpdateModuleLib failed, errcode: %{public}d", ret);
         return ret;
     }
 
@@ -1446,7 +1445,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::UpdataLibAttrs(const InnerBundleInfo &newInfo,
+ErrCode BaseBundleInstaller::UpdateLibAttrs(const InnerBundleInfo &newInfo,
     const std::string &cpuAbi, const std::string &nativeLibraryPath, AppqfInfo &appQfInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -1734,7 +1733,7 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
             return ERR_OK;
         }
 
-        // updata hap remove all lower version data dir
+        // update hap remove all lower version data dir
         for (auto infoItem : info.GetInnerBundleUserInfos()) {
             int32_t installedUserId = infoItem.second.bundleUserInfo.userId;
             RemoveModuleDataDir(info, modulePackage, installedUserId);

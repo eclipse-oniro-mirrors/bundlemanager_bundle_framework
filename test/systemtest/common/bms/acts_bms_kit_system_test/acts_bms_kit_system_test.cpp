@@ -4012,7 +4012,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0200, Function | MediumTest | Level
     if (result && stLevel_.BMSLevel > 1) {
         APP_LOGI("GetNameForUid_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
     }
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     std::cout << "END GetNameForUid_0200" << std::endl;
 }
 
@@ -4737,7 +4737,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0100, Function | SmallTest | Lev
     PermissionDef permissionDef;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool res = bundleMgrProxy->GetPermissionDef(PERMISSIONNAME, permissionDef);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**

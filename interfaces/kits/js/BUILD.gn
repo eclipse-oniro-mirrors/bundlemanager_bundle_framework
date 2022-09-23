@@ -24,6 +24,7 @@ group("napi_packages") {
     deps += [
       "app_control:appcontrol",
       "bundle_manager:bundlemanager",
+      "bundle_monitor:bundlemonitor",
       "bundlemgr:bundle",
       "default_app:defaultappmanager",
       "free_install:freeinstall",

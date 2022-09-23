@@ -18,10 +18,15 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "business_error.h"
 #include "common_func.h"
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+#include "image_source.h"
+#include "pixel_map_napi.h"
+#endif
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
@@ -544,6 +549,56 @@ static ErrCode InnerGetAbilityLabel(const std::string &bundleName, const std::st
     return CommonFunc::ConvertErrCode(ret);
 }
 
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+static std::shared_ptr<Media::PixelMap> LoadImageFile(const uint8_t *data, size_t len)
+{
+    APP_LOGD("begin LoadImageFile");
+    uint32_t errorCode = 0;
+    Media::SourceOptions opts;
+    std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(data, len, opts, errorCode);
+    if (errorCode != 0) {
+        APP_LOGE("failed to create image source err is %{public}d", errorCode);
+        return nullptr;
+    }
+
+    Media::DecodeOptions decodeOpts;
+    auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
+    if (errorCode != 0) {
+        APP_LOGE("failed to create pixelmap err %{public}d", errorCode);
+        return nullptr;
+    }
+    APP_LOGD("LoadImageFile finish");
+    return std::shared_ptr<Media::PixelMap>(std::move(pixelMapPtr));
+}
+
+static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::shared_ptr<Media::PixelMap> &pixelMap)
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
+    }
+    std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
+    size_t len = 0;
+    ErrCode ret = bundleMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
+    if (ret != ERR_OK) {
+        APP_LOGE("get media data failed");
+        return CommonFunc::ConvertErrCode(ret);
+    }
+    if (mediaDataPtr == nullptr || len == 0) {
+        return ERROR_SYSTEM_IO_OPERATION;
+    }
+    auto pixelMapPtr = LoadImageFile(mediaDataPtr.get(), len);
+    if (pixelMapPtr == nullptr) {
+        APP_LOGE("loadImageFile failed");
+        return ERROR_SYSTEM_IO_OPERATION;
+    }
+    pixelMap = std::move(pixelMapPtr);
+    return SUCCESS;
+}
+#endif
+
 void QueryAbilityInfosExec(napi_env env, void *data)
 {
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
@@ -888,7 +943,7 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
             }
             break;
         } else {
-            APP_LOGE("SetApplicationEnabled arg err!");
+            APP_LOGE("GetAbilityLabel arg err!");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -897,6 +952,111 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete);
     callbackPtr.release();
     APP_LOGD("call GetAbilityLabel done.");
+    return promise;
+}
+
+void GetAbilityIconExec(napi_env env, void *data)
+{
+    AbilityIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityIconCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        return;
+    }
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    asyncCallbackInfo->err = InnerGetAbilityIcon(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->moduleName, asyncCallbackInfo->abilityName, asyncCallbackInfo->pixelMap);
+#else
+    asyncCallbackInfo->err = ERROR_SYSTEM_ABILITY_NOT_FOUND;
+#endif
+}
+
+void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
+{
+    AbilityIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityIconCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<AbilityIconCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[2] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+        napi_value exports = nullptr;
+        Media::PixelMapNapi::Init(env, exports);
+        result[1] = Media::PixelMapNapi::CreatePixelMap(env, asyncCallbackInfo->pixelMap);
+#endif
+    } else {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetAbilityIcon");
+    NapiArg args(env, info);
+    AbilityIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityIconCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AbilityIconCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid!", asyncCallbackInfo->bundleName.c_str());
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
+                APP_LOGE("moduleName %{public}s invalid!", asyncCallbackInfo->moduleName.c_str());
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName)) {
+                APP_LOGE("abilityName %{public}s invalid!", asyncCallbackInfo->abilityName.c_str());
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_THREE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+            break;
+        } else {
+            APP_LOGE("GetAbilityIcon arg err!");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AbilityIconCallbackInfo>(
+        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetAbilityIcon done.");
     return promise;
 }
 
@@ -1365,7 +1525,7 @@ void GetLaunchWantForBundleExec(napi_env env, void *data)
         return;
     }
 
-    asyncCallbackInfo->err =InnerGetLaunchWantForBundleExec(
+    asyncCallbackInfo->err = InnerGetLaunchWantForBundleExec(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->want, asyncCallbackInfo->userId);
 }
 
@@ -1456,6 +1616,190 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("napi call GetLaunchWantForBundle done");
     return promise;
+}
+
+static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    std::string bundleName;
+    if (!iBundleMgr->ObtainCallingBundleName(bundleName)) {
+        APP_LOGE("InnerGetProfile failed when obtain calling bundelName");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    ErrCode result = ERR_OK;
+    Want want;
+    ElementName elementName("", bundleName, info.abilityName, info.moduleName);
+    want.SetElement(elementName);
+    BundleMgrClient client;
+    if (info.type == ProfileType::ABILITY_PROFILE) {
+        std::vector<AbilityInfo> abilityInfos;
+        result = iBundleMgr->QueryAbilityInfosV9(
+            want, AbilityInfoFlagV9::GET_ABILITY_INFO_WITH_METADATA_V9,
+            Constants::UNSPECIFIED_USERID, abilityInfos);
+        if (result != ERR_OK) {
+            APP_LOGE("QueryExtensionAbilityInfosV9 failed");
+            return result;
+        }
+
+        if (abilityInfos.empty()) {
+            APP_LOGE("extensionInfos empty");
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+
+        if (!client.GetProfileFromAbility(abilityInfos[0], info.metadataName, info.profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        }
+
+        return ERR_OK;
+    }
+
+    if (info.type == ProfileType::EXTENSION_PROFILE) {
+        std::vector<ExtensionAbilityInfo> extensionInfos;
+        result = iBundleMgr->QueryExtensionAbilityInfosV9(want,
+            ExtensionAbilityInfoFlagV9::GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9,
+            Constants::UNSPECIFIED_USERID, extensionInfos);
+        if (result != ERR_OK) {
+            APP_LOGE("QueryExtensionAbilityInfosV9 failed");
+            return result;
+        }
+
+        if (extensionInfos.empty()) {
+            APP_LOGE("extensionInfos empty");
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+
+        if (!client.GetProfileFromExtension(extensionInfos[0], info.metadataName, info.profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        }
+
+        return ERR_OK;
+    }
+
+    APP_LOGE("InnerGetProfile failed due to type is invalid");
+    return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+}
+
+void GetProfileExec(napi_env env, void *data)
+{
+    GetProfileCallbackInfo* asyncCallbackInfo = reinterpret_cast<GetProfileCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("error GetProfileCallbackInfo is nullptr");
+        return;
+    }
+
+    ErrCode result = InnerGetProfile(*asyncCallbackInfo);
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(result);
+}
+
+void GetProfileComplete(napi_env env, napi_status status, void *data)
+{
+    GetProfileCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetProfileCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+
+    std::unique_ptr<GetProfileCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+        CommonFunc::ConvertStringArrays(env, asyncCallbackInfo->profileVec, result[1]);
+    } else {
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType)
+{
+    APP_LOGD("napi begin to GetProfile");
+    NapiArg args(env, info);
+    GetProfileCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetProfileCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("GetProfile asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+
+    asyncCallbackInfo->type = profileType;
+    std::unique_ptr<GetProfileCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_POS_TWO, ARGS_SIZE_FOUR)) {
+        APP_LOGE("GetProfile napi func init failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    size_t maxArgc = args.GetMaxArgc();
+    for (size_t i = 0; i < maxArgc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
+                APP_LOGE("GetProfile moduleName is not a string!");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName)) {
+                APP_LOGE("GetProfile abilityName is not a string!");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_string)) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->metadataName)) {
+                APP_LOGE("GetProfile metadataName is not a string!");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else  if (i == ARGS_POS_THREE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+            break;
+        } else {
+            APP_LOGE("GetProfile arg err!");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<GetProfileCallbackInfo>(
+        env, asyncCallbackInfo, "GetProfile", GetProfileExec, GetProfileComplete);
+    callbackPtr.release();
+    APP_LOGD("napi call GetProfile done");
+    return promise;
+}
+
+napi_value GetProfileByAbility(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi begin to GetProfileByAbility");
+    return GetProfile(env, info, ProfileType::ABILITY_PROFILE);
+}
+
+napi_value GetProfileByExAbility(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi begin to GetProfileByExAbility");
+    return GetProfile(env, info, ProfileType::EXTENSION_PROFILE);
 }
 
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value)

@@ -707,6 +707,16 @@ void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<Extension
     }
 }
 
+void CommonFunc::ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value)
+{
+    for (size_t index = 0; index < strs.size(); ++index) {
+        napi_value nStr;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, strs[index].c_str(), NAPI_AUTO_LENGTH, &nStr));
+        napi_set_element(env, value, index, nStr);
+    }
+}
+
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
     napi_value objExtensionInfo)
 {
@@ -1199,6 +1209,18 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     napi_value nUpdateTime;
     NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, bundleInfo.updateTime, &nUpdateTime));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "updateTime", nUpdateTime));
+}
+
+void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
+    int32_t userId, napi_value bundleChangeInfo)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "bundleName", nBundleName));
+
+    napi_value nUserId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, userId, &nUserId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "userId", nUserId));
 }
 }
 }

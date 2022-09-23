@@ -25,6 +25,9 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+#include "pixel_map.h"
+#endif
 #include "want.h"
 
 namespace OHOS {
@@ -67,6 +70,16 @@ struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
 };
 
+struct AbilityIconCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityIconCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
+#endif
+};
+
 struct AbilityLabelCallbackInfo : public BaseCallbackInfo {
     explicit AbilityLabelCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
@@ -86,6 +99,21 @@ struct LaunchWantCallbackInfo : public BaseCallbackInfo {
     std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     OHOS::AAFwk::Want want;
+};
+
+enum ProfileType : uint32_t {
+    ABILITY_PROFILE = 0,
+    EXTENSION_PROFILE,
+    UNKNOWN_PROFILE
+};
+
+struct GetProfileCallbackInfo : public BaseCallbackInfo {
+    explicit GetProfileCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    ProfileType type = ProfileType::UNKNOWN_PROFILE;
+    std::string moduleName;
+    std::string abilityName;
+    std::string metadataName;
+    std::vector<std::string> profileVec;
 };
 
 struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
@@ -134,9 +162,13 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
+napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
+napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType);
+napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
+napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfo(napi_env env, napi_callback_info info);
