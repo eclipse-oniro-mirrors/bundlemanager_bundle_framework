@@ -63,10 +63,17 @@ ErrCode DefaultAppHost::HandleIsDefaultApplication(Parcel& data, Parcel& reply)
     APP_LOGI("begin to HandleIsDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string type = data.ReadString();
-    bool ret = IsDefaultApplication(type);
-    if (!reply.WriteBool(ret)) {
+    bool isDefaultApp = false;
+    ErrCode ret = IsDefaultApplication(type, isDefaultApp);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteBool(isDefaultApp)) {
+            APP_LOGE("write isDefaultApp failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }
@@ -78,12 +85,12 @@ ErrCode DefaultAppHost::HandleGetDefaultApplication(Parcel& data, Parcel& reply)
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     BundleInfo bundleInfo;
-    bool ret = GetDefaultApplication(userId, type, bundleInfo);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = GetDefaultApplication(userId, type, bundleInfo);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
+    if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&bundleInfo)) {
             APP_LOGE("write bundleInfo failed.");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -103,8 +110,8 @@ ErrCode DefaultAppHost::HandleSetDefaultApplication(Parcel& data, Parcel& reply)
         APP_LOGE("ReadParcelable<Want> failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    bool ret = SetDefaultApplication(userId, type, *want);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = SetDefaultApplication(userId, type, *want);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -117,8 +124,8 @@ ErrCode DefaultAppHost::HandleResetDefaultApplication(Parcel& data, Parcel& repl
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
-    bool ret = ResetDefaultApplication(userId, type);
-    if (!reply.WriteBool(ret)) {
+    ErrCode ret = ResetDefaultApplication(userId, type);
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

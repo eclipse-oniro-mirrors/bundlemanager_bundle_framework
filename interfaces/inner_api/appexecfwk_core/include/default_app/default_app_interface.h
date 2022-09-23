@@ -28,10 +28,10 @@ public:
 
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.DefaultApp");
     
-    virtual bool IsDefaultApplication(const std::string& type) = 0;
-    virtual bool GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) = 0;
-    virtual bool SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) = 0;
-    virtual bool ResetDefaultApplication(int32_t userId, const std::string& type) = 0;
+    virtual ErrCode IsDefaultApplication(const std::string& type, bool& isDefaultApp) = 0;
+    virtual ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) = 0;
+    virtual ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) = 0;
+    virtual ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) = 0;
 
     enum Message : uint32_t {
         IS_DEFAULT_APPLICATION = 0,

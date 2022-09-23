@@ -121,13 +121,12 @@ bool BundleAgingMgr::ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &da
         APP_LOGE("ReInitAgingRequest: can not get bundle active module record");
         return false;
     }
-    int64_t lastBundleUsedTime = 0;
     int64_t lastLaunchTimesMs = AgingUtil::GetNowSysTimeMs();
     APP_LOGD("now: %{public}" PRId64, lastLaunchTimesMs);
     for (auto iter : bundleNamesAndUid) {
         int64_t dataBytes = dataMgr->GetBundleSpaceSize(iter.first);
         // the value of lastLaunchTimesMs get from lastLaunchTimesMs interface
-        lastBundleUsedTime = 0;
+        int64_t lastBundleUsedTime = 0;
         for (const auto &moduleRecord : activeModuleRecord) {
             APP_LOGD("%{public}s: %{public}" PRId64, moduleRecord.bundleName_.c_str(),
                 moduleRecord.lastModuleUsedTime_);

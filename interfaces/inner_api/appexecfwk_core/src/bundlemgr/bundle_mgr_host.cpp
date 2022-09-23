@@ -75,6 +75,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO, &BundleMgrHost::HandleGetBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundleInfoWithIntFlags);
+    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_PACK_INFO, &BundleMgrHost::HandleGetBundlePackInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundlePackInfoWithIntFlags);
@@ -392,6 +394,31 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string name = data.ReadString();
+    if (name.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
+    BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    auto ret = GetBundleInfoV9(name, flags, info, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
@@ -846,12 +873,18 @@ ErrCode BundleMgrHost::HandleGetAbilityLabelWithModuleName(MessageParcel &data, 
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::string abilityName = data.ReadString();
-
-    APP_LOGI("bundleName %{public}s, moduleName %{public}s, abilityName %{public}s",
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        APP_LOGE("fail to GetAbilityLabel due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    APP_LOGD("GetAbilityLabe bundleName %{public}s, moduleName %{public}s, abilityName %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
-    BundleInfo info;
-    std::string label = GetAbilityLabel(bundleName, moduleName, abilityName);
-    if (!reply.WriteString(label)) {
+    std::string label;
+    ErrCode ret = GetAbilityLabel(bundleName, moduleName, abilityName, label);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteString(label)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

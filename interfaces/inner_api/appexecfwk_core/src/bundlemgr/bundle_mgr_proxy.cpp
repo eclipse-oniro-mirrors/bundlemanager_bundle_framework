@@ -351,6 +351,43 @@ bool BundleMgrProxy::GetBundleInfo(
     return true;
 }
 
+ErrCode BundleMgrProxy::GetBundleInfoV9(
+    const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetBundleInfoV9 due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleInfoV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetBundleInfoV9 due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleInfoV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInfoV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetBundleInfoV9 from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
@@ -1125,40 +1162,42 @@ std::string BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const
     return reply.ReadString();
 }
 
-std::string BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName)
+ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::string &label)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetAbilityLabel of %{public}s", bundleName.c_str());
+    APP_LOGI("begin to GetAbilityLabel of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetAbilityLabel due to params empty");
-        return Constants::EMPTY_STRING;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetAbilityLabel due to write InterfaceToken fail");
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetAbilityLabel due to write bundleName fail");
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetAbilityLabel due to write moduleName fail");
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(abilityName)) {
         APP_LOGE("fail to GetAbilityLabel due to write abilityName fail");
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::GET_ABILITY_LABEL_WITH_MODULE_NAME, data, reply)) {
-        APP_LOGE("fail to GetAbilityLabel from server");
-        return Constants::EMPTY_STRING;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return reply.ReadString();
+    int32_t errCode = reply.ReadInt32();
+    if (errCode != ERR_OK) {
+        return errCode;
+    }
+    label = reply.ReadString();
+    return ERR_OK;
 }
 
 bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)

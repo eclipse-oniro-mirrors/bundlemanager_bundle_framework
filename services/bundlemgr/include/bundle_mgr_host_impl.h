@@ -121,7 +121,16 @@ public:
      */
     virtual bool GetBundleInfo(const std::string &bundleName,
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
-
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoV9(const std::string &bundleName,
+        int32_t flags, BundleInfo &bundleInfo, int32_t userId) override;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -346,10 +355,11 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @param abilityName Indicates the ability name.
-     * @return Returns the label of the ability if exist; returns empty string otherwise.
+     * @param label Indicates the obtained label.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    virtual std::string GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) override;
+    virtual ErrCode GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::string &label) override;
     /**
      * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
      * @param hapFilePath Indicates the absolute file path of the HAP.
@@ -762,7 +772,7 @@ private:
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
-    
+
 private:
     std::shared_ptr<BMSEventHandler> handler_;
     const std::string BUNDLE_MGR_THREAD = "bundle_mgr_thread";

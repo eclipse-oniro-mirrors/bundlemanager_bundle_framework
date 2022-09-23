@@ -44,6 +44,14 @@ ohos_shared_library("bundlemanager") {
     "napi:ace_napi",
   ]
 
+  if (bundle_framework_graphics) {
+    defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+    external_deps += [
+      "multimedia_image_standard:image",
+      "multimedia_image_standard:image_native",
+    ]
+  }
+
   relative_install_dir = "module/bundle"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

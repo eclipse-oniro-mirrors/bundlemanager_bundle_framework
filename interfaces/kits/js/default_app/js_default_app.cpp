@@ -251,7 +251,13 @@ static bool InnerIsDefaultApplication(napi_env env, const std::string& type)
         APP_LOGE("defaultAppProxy is null.");
         return false;
     }
-    return defaultAppProxy->IsDefaultApplication(type);
+    bool isDefaultApp = false;
+    ErrCode ret = defaultAppProxy->IsDefaultApplication(type, isDefaultApp);
+    APP_LOGD("IsDefaultApplication ErrCode : %{public}d", ret);
+    if (ret == ERR_OK) {
+        return isDefaultApp;
+    }
+    return false;
 }
 
 static bool InnerGetDefaultApplication(napi_env env, int32_t userId, const std::string& type, BundleInfo& bundleInfo)
@@ -261,7 +267,9 @@ static bool InnerGetDefaultApplication(napi_env env, int32_t userId, const std::
         APP_LOGE("defaultAppProxy is null.");
         return false;
     }
-    return defaultAppProxy->GetDefaultApplication(userId, type, bundleInfo);
+    ErrCode ret = defaultAppProxy->GetDefaultApplication(userId, type, bundleInfo);
+    APP_LOGD("GetDefaultApplication ErrCode : %{public}d", ret);
+    return ret == ERR_OK;
 }
 
 static bool InnerSetDefaultApplication(napi_env env, int32_t userId, const std::string& type, const Want& want)
@@ -271,7 +279,9 @@ static bool InnerSetDefaultApplication(napi_env env, int32_t userId, const std::
         APP_LOGE("defaultAppProxy is null.");
         return false;
     }
-    return defaultAppProxy->SetDefaultApplication(userId, type, want);
+    ErrCode ret = defaultAppProxy->SetDefaultApplication(userId, type, want);
+    APP_LOGD("SetDefaultApplication ErrCode : %{public}d", ret);
+    return ret == ERR_OK;
 }
 
 static bool InnerResetDefaultApplication(napi_env env, int32_t userId, const std::string& type)
@@ -281,7 +291,9 @@ static bool InnerResetDefaultApplication(napi_env env, int32_t userId, const std
         APP_LOGE("defaultAppProxy is null.");
         return false;
     }
-    return defaultAppProxy->ResetDefaultApplication(userId, type);
+    ErrCode ret = defaultAppProxy->ResetDefaultApplication(userId, type);
+    APP_LOGD("ResetDefaultApplication ErrCode : %{public}d", ret);
+    return ret == ERR_OK;
 }
 
 napi_value IsDefaultApplication(napi_env env, napi_callback_info info)

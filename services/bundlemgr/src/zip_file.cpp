@@ -140,8 +140,7 @@ bool ZipFile::ParseAllEntries()
             break;
         }
 
-        size_t fileLength =
-            (directoryEntry.nameSize >= MAX_FILE_NAME) ? (MAX_FILE_NAME - 1) : directoryEntry.nameSize;
+        size_t fileLength = (directoryEntry.nameSize >= MAX_FILE_NAME) ? (MAX_FILE_NAME - 1) : directoryEntry.nameSize;
         if (fread(&(fileName[0]), fileLength, FILE_READ_COUNT, file_) != FILE_READ_COUNT) {
             APP_LOGE("parse entry(%{public}d) read file name failed, error: %{public}d", i, errno);
             ret = false;

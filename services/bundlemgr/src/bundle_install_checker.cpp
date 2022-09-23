@@ -341,7 +341,7 @@ void BundleInstallChecker::SetEntryInstallationFree(
     }
 
     auto packageModule = bundlePackInfo.summary.modules;
-    auto installationFree = std::any_of(packageModule.begin(), packageModule.end(), [&](auto &module) {
+    auto installationFree = std::any_of(packageModule.begin(), packageModule.end(), [&](const auto &module) {
         return module.distro.moduleType == "entry" && module.distro.installationFree;
     });
     if (installationFree) {

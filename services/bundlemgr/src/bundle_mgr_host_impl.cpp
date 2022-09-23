@@ -147,6 +147,24 @@ bool BundleMgrHostImpl::GetBundleInfo(
     return dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
 }
 
+ErrCode BundleMgrHostImpl::GetBundleInfoV9(
+    const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
+{
+    APP_LOGD("start GetBundleInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
+        bundleName.c_str(), flags, userId);
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to GetBundleInfoV9");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+}
+
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
@@ -156,6 +174,11 @@ ErrCode BundleMgrHostImpl::GetBundlePackInfo(
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
+    // check permission
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("SetModuleUpgradeFlag failed due to lack of permission");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -463,24 +486,27 @@ std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, co
         APP_LOGE("DataMgr is nullptr");
         return Constants::EMPTY_STRING;
     }
-    return dataMgr->GetAbilityLabel(bundleName, Constants::EMPTY_STRING, abilityName);
+    std::string label;
+    ErrCode ret = dataMgr->GetAbilityLabel(bundleName, Constants::EMPTY_STRING, abilityName, label);
+    if (ret != ERR_OK) {
+        return Constants::EMPTY_STRING;
+    }
+    return label;
 }
 
-std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName)
+ErrCode BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::string &label)
 {
-    APP_LOGD("start GetAbilityLabel, bundleName : %{public}s, moduleName : %{public}s, abilityName : %{public}s",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
-        return Constants::EMPTY_STRING;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    return dataMgr->GetAbilityLabel(bundleName, moduleName, abilityName);
+    return dataMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
 }
 
 bool BundleMgrHostImpl::GetBundleArchiveInfo(
@@ -753,9 +779,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
                 APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
             }
-            for (const auto &item : cache) {
-                caches.emplace_back(item);
-            }
+            std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
         }
 
         bool succeed = true;
@@ -1055,6 +1079,11 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
 ErrCode BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
     bool &isRemovable)
 {
+    // check permission
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("SetModuleUpgradeFlag failed due to lack of permission");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1086,6 +1115,11 @@ bool BundleMgrHostImpl::GetModuleUpgradeFlag(const std::string &bundleName, cons
 ErrCode BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, int32_t upgradeFlag)
 {
+    // check permission
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("SetModuleUpgradeFlag failed due to lack of permission");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1909,12 +1943,9 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (!dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len)) {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-    return ERR_OK;
+    return dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
 }
 
 void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)

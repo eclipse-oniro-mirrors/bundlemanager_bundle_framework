@@ -82,7 +82,15 @@ static void ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo, nap
 static void ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
     napi_value value);
 
+static void ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value);
+
 static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo, napi_value objExtensionInfo);
+
+static void ConvertResource(napi_env env, const Resource &resource, napi_value objResource);
+
+static void ConvertModuleInfo(napi_env env, const ModuleInfo &moduleInfo, napi_value objMoudleInfo);
+
+static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo);
 
 static void ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef);
 

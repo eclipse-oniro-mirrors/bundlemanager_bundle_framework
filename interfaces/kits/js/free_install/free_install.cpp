@@ -687,6 +687,22 @@ static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::strin
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "dispatchAPI", napiDispatchAPI));
 }
 
+static ErrCode InnerGetDispatchInfo(std::string &version, std::string &dispatchAPI)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    if (!iBundleMgr->VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("GetDispatchInfo failed due to permission denied");
+        return ERROR_PERMISSION_DENIED_ERROR;
+    }
+    version = DISPATCH_INFO_VERSION;
+    dispatchAPI = DISPATCH_INFO_DISPATCH_API;
+    return SUCCESS;
+}
+
 void GetDispatchInfoExec(napi_env env, void *data)
 {
     GetDispatchInfoCallbackInfo *asyncCallbackInfo =
@@ -695,9 +711,7 @@ void GetDispatchInfoExec(napi_env env, void *data)
         APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
         return;
     }
-    asyncCallbackInfo->version = DISPATCH_INFO_VERSION;
-    asyncCallbackInfo->dispatchAPI = DISPATCH_INFO_DISPATCH_API;
-    asyncCallbackInfo->err = SUCCESS;
+    asyncCallbackInfo->err = InnerGetDispatchInfo(asyncCallbackInfo->version, asyncCallbackInfo->dispatchAPI);
 }
 
 void GetDispatchInfoComplete(napi_env env, napi_status status, void *data)

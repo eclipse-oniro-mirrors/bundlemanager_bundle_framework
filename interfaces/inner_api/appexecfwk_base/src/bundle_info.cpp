@@ -70,7 +70,10 @@ const std::string REQUESTPERMISSION_USEDSCENE = "usedScene";
 const std::string REQUESTPERMISSION_ABILITIES = "abilities";
 const std::string REQUESTPERMISSION_ABILITY = "ability";
 const std::string REQUESTPERMISSION_WHEN = "when";
+const std::string SIGNATUREINFO_APPID = "appId";
+const std::string SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
+const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 }
 
 bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)
@@ -131,6 +134,31 @@ bool RequestPermission::Marshalling(Parcel &parcel) const
 RequestPermission *RequestPermission::Unmarshalling(Parcel &parcel)
 {
     RequestPermission *info = new (std::nothrow) RequestPermission();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool SignatureInfo::ReadFromParcel(Parcel &parcel)
+{
+    appId = Str16ToStr8(parcel.ReadString16());
+    fingerprint = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool SignatureInfo::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fingerprint));
+    return true;
+}
+
+SignatureInfo *SignatureInfo::Unmarshalling(Parcel &parcel)
+{
+    SignatureInfo *info = new (std::nothrow) SignatureInfo();
     if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
@@ -272,6 +300,13 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     maxSdkVersion = parcel.ReadInt32();
     isDifferentName = parcel.ReadBool();
     appIndex = parcel.ReadInt32();
+
+    std::unique_ptr<SignatureInfo> sigInfo(parcel.ReadParcelable<SignatureInfo>());
+    if (!sigInfo) {
+        APP_LOGE("ReadParcelable<SignatureInfo> failed");
+        return false;
+    }
+    signatureInfo = *sigInfo;
     return true;
 }
 
@@ -375,6 +410,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxSdkVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDifferentName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &signatureInfo);
     return true;
 }
 
@@ -404,6 +440,14 @@ void to_json(nlohmann::json &jsonObject, const RequestPermission &requestPermiss
         {REQUESTPERMISSION_REASON, requestPermission.reason},
         {REQUESTPERMISSION_REASON_ID, requestPermission.reasonId},
         {REQUESTPERMISSION_USEDSCENE, requestPermission.usedScene}
+    };
+}
+
+void to_json(nlohmann::json &jsonObject, const SignatureInfo &signatureInfo)
+{
+    jsonObject = nlohmann::json {
+        {SIGNATUREINFO_APPID, signatureInfo.appId},
+        {SIGNATUREINFO_FINGERPRINT, signatureInfo.fingerprint}
     };
 }
 
@@ -481,6 +525,31 @@ void from_json(const nlohmann::json &jsonObject, RequestPermission &requestPermi
     }
 }
 
+void from_json(const nlohmann::json &jsonObject, SignatureInfo &signatureInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        SIGNATUREINFO_APPID,
+        signatureInfo.appId,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        SIGNATUREINFO_FINGERPRINT,
+        signatureInfo.fingerprint,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read SignatureInfo from database error, error code : %{public}d", parseResult);
+    }
+}
+
 void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
 {
     jsonObject = nlohmann::json {
@@ -526,6 +595,7 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_MODULE_RES_PATHS, bundleInfo.moduleResPaths},
         {BUNDLE_INFO_SINGLETON, bundleInfo.singleton},
         {BUNDLE_INFO_APP_INDEX, bundleInfo.appIndex},
+        {BUNDLE_INFO_SIGNATURE_INFO, bundleInfo.signatureInfo},
     };
 }
 
@@ -869,6 +939,17 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<SignatureInfo>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_SIGNATURE_INFO,
+        bundleInfo.signatureInfo,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("BundleInfo from_json error, error code : %{public}d", parseResult);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

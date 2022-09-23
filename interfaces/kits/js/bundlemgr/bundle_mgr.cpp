@@ -197,7 +197,7 @@ static napi_value GetUndefinedValue(napi_env env)
     return jsObject;
 }
 
-static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, Query &query, napi_value jsObject)
+static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Query &query, napi_value jsObject)
 {
     if (uid != callingUid) {
         return;
@@ -1291,12 +1291,17 @@ static std::string InnerGetAbilityLabel(napi_env env, std::string &bundleName, s
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        return "";
+        return Constants::EMPTY_STRING;
     }
-    if (hasModuleName) {
-        return iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName);
+    if (!hasModuleName) {
+        return iBundleMgr->GetAbilityLabel(bundleName, abilityName);
     }
-    return iBundleMgr->GetAbilityLabel(bundleName, abilityName);
+    std::string label;
+    ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
+    if (ret != ERR_OK) {
+        return Constants::EMPTY_STRING;
+    }
+    return label;
 }
 
 static void ProcessApplicationInfos(
@@ -2298,7 +2303,7 @@ static void ConvertDistro(napi_env env, napi_value &modulesObject, const OHOS::A
 }
 
 static void ConvertFormsInfo(napi_env env, napi_value &abilityObject,
-    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> forms)
+    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms)
 {
     napi_value formsArray;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &formsArray));
@@ -2597,7 +2602,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     APP_LOGD("argc = [%{public}zu]", argc);
     std::string bundleName;
-    int32_t flags;
+    int32_t flags = 0;
     BundleOptions bundleOptions;
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
@@ -6107,15 +6112,17 @@ static std::shared_ptr<Media::PixelMap> InnerGetAbilityIcon(
         APP_LOGE("bundleName or abilityName is invalid param");
         return nullptr;
     }
-    BundleGraphicsClient client;
-    if (hasModuleName) {
-        if (moduleName.empty()) {
-            APP_LOGE("moduleName is invalid param");
-            return nullptr;
-        }
-        return client.GetAbilityPixelMapIcon(bundleName, moduleName, abilityName);
+    if (hasModuleName && moduleName.empty()) {
+        APP_LOGE("moduleName is invalid param");
+        return nullptr;
     }
-    return client.GetAbilityPixelMapIcon(bundleName, "", abilityName);
+    BundleGraphicsClient client;
+    std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
+    ErrCode ret = client.GetAbilityPixelMapIcon(bundleName, moduleName, abilityName, pixelMap);
+    if (ret != ERR_OK) {
+        return nullptr;
+    }
+    return pixelMap;
 }
 
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
@@ -7171,6 +7178,7 @@ napi_value GetDispatcherVersion(napi_env env, napi_callback_info info)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
+    std::unique_ptr<AsyncDispatcherVersionCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (argc != PARAM0 && argc != PARAM1) {
         asyncCallbackInfo->err = PARAM_TYPE_ERROR;
         asyncCallbackInfo->message = "type mismatch";
@@ -7188,6 +7196,7 @@ napi_value GetDispatcherVersion(napi_env env, napi_callback_info info)
     } else {
         NAPI_CALL(env, napi_get_undefined(env, &promise));
     }
+    callbackPtr.release();
     return GetDispatcherVersionWrap(env, promise, asyncCallbackInfo);
 }
 

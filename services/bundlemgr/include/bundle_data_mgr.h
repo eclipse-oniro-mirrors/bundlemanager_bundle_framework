@@ -256,7 +256,16 @@ public:
      */
     bool GetBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
-
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -291,9 +300,9 @@ public:
      * @brief Obtains the formal name associated with the given UID.
      * @param uid Indicates the uid.
      * @param name Indicates the obtained formal name.
-     * @return Returns true if the formal name is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    bool GetNameForUid(const int uid, std::string &name) const;
+    ErrCode GetNameForUid(const int uid, std::string &name) const;
     /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
@@ -320,10 +329,11 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @param abilityName Indicates the ability name.
-     * @return Returns the label of the ability if exist; returns empty string otherwise.
+     * @param label Indicates the obtained label.
+     * @return Returns ERR_OK if the ability label is successfully obtained; returns errCode otherwise.
      */
-    std::string GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName) const;
+    ErrCode GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::string &label) const;
     /**
      * @brief Obtains the Want for starting the main ability of an application based on the given bundle name.
      * @param bundleName Indicates the bundle name.
@@ -733,7 +743,7 @@ public:
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
-    bool GetMediaData(const std::string &bundleName, const std::string &moduleName,
+    ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const;
 
     std::shared_mutex &GetStatusCallbackMutex();

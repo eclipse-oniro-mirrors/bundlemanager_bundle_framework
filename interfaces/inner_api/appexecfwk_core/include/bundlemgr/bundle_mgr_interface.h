@@ -158,7 +158,19 @@ public:
     {
         return false;
     }
-
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
+        BundleInfo &bundleInfo, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -456,12 +468,13 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @param abilityName Indicates the ability name.
-     * @return Returns the label of the ability if exist; returns empty string otherwise.
+     * @param label Indicates the obtained label.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    virtual std::string GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName)
+    virtual ErrCode GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::string &label)
     {
-        return Constants::EMPTY_STRING;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
      * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
@@ -1161,6 +1174,7 @@ public:
         GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
         GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
+        GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
     };
 };
 }  // namespace AppExecFwk

@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ability_info.h"
+#include "appexecfwk_errors.h"
 #include "bundle_mgr_interface.h"
 #include "pixel_map.h"
 #include "singleton.h"
@@ -30,8 +31,8 @@ public:
     BundleGraphicsClientImpl() = default;
     ~BundleGraphicsClientImpl() = default;
 
-    std::shared_ptr<Media::PixelMap> GetAbilityPixelMapIcon(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName);
+    ErrCode GetAbilityPixelMapIcon(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName, std::shared_ptr<Media::PixelMap> &pixelMapPtr);
 
 private:
     sptr<IBundleMgr> GetBundleMgr();

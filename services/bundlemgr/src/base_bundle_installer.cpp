@@ -290,7 +290,6 @@ void BaseBundleInstaller::SaveOldRemovableInfo(
 void BaseBundleInstaller::CheckEnableRemovable(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InnerBundleInfo &oldInfo, int32_t &userId, bool isFreeInstallFlag, bool isAppExist)
 {
-    bool existModule = false;
     for (auto &item : newInfos) {
         std::map<std::string, InnerModuleInfo> &moduleInfo = item.second.FetchInnerModuleInfos();
         bool hasInstalledInUser = oldInfo.HasInnerBundleUserInfo(userId);
@@ -302,7 +301,7 @@ void BaseBundleInstaller::CheckEnableRemovable(std::unordered_map<std::string, I
         for (auto &iter : moduleInfo) {
             APP_LOGD("modulePackage:(%{public}s), userId:%{public}d, flag:%{public}d, isAppExist:%{public}d",
                 iter.second.modulePackage.c_str(), userId, isFreeInstallFlag, isAppExist);
-            existModule = oldInfo.FindModule(iter.second.modulePackage);
+            bool existModule = oldInfo.FindModule(iter.second.modulePackage);
             bool hasModuleInUser = item.second.IsUserExistModule(iter.second.moduleName, userId);
             APP_LOGD("hasInstalledInUser:%{public}d, existModule:(%{public}d), hasModuleInUser:(%{public}d)",
                 hasInstalledInUser, existModule, hasModuleInUser);
