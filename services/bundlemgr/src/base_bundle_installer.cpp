@@ -1377,9 +1377,9 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
         return ERR_OK;
     }
 
-    ret = UpdataLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    ret = UpdateLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("UpdataModuleLib failed, errcode: %{public}d", ret);
+        APP_LOGE("UpdateModuleLib failed, errcode: %{public}d", ret);
         return ret;
     }
 
@@ -1430,9 +1430,9 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
         return ERR_OK;
     }
 
-    ret = UpdataLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    ret = UpdateLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("UpdataModuleLib failed, errcode: %{public}d", ret);
+        APP_LOGE("UpdateModuleLib failed, errcode: %{public}d", ret);
         return ret;
     }
 
@@ -1445,7 +1445,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::UpdataLibAttrs(const InnerBundleInfo &newInfo,
+ErrCode BaseBundleInstaller::UpdateLibAttrs(const InnerBundleInfo &newInfo,
     const std::string &cpuAbi, const std::string &nativeLibraryPath, AppqfInfo &appQfInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -1733,7 +1733,7 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
             return ERR_OK;
         }
 
-        // updata hap remove all lower version data dir
+        // update hap remove all lower version data dir
         for (auto infoItem : info.GetInnerBundleUserInfos()) {
             int32_t installedUserId = infoItem.second.bundleUserInfo.userId;
             RemoveModuleDataDir(info, modulePackage, installedUserId);
