@@ -16,6 +16,7 @@
 #include "bundle_monitor.h"
 
 #include <string>
+#include <mutex>
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
@@ -33,6 +34,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+std::mutex g_monitorLock;
 std::shared_ptr<BundleMonitorCallback> g_bundleMonitor = nullptr;
 
 napi_value Register(napi_env env, napi_callback_info info)
@@ -63,6 +65,12 @@ napi_value Register(napi_env env, napi_callback_info info)
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
         BusinessError::ThrowError(env, ERROR_PERMISSION_DENIED_ERROR);
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(g_monitorLock);
+    if (g_bundleMonitor == nullptr) {
+        APP_LOGE("envorinment init failed!");
+        BusinessError::ThrowError(env, ERROR_ENVORINMENT_INIT_FAILED);
         return nullptr;
     }
     g_bundleMonitor->BundleMonitorOn(env, args[ARGS_POS_ONE], type);
@@ -101,15 +109,16 @@ napi_value Unregister(napi_env env, napi_callback_info info)
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
-
+        std::lock_guard<std::mutex> lock(g_monitorLock);
         if (g_bundleMonitor == nullptr) {
-            APP_LOGE("register callback first!");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            APP_LOGE("envorinment init failed!");
+            BusinessError::ThrowError(env, ERROR_ENVORINMENT_INIT_FAILED);
             return nullptr;
         }
         g_bundleMonitor->BundleMonitorOff(env, args[ARGS_POS_ONE], type);
         return nullptr;
     }
+    std::lock_guard<std::mutex> lock(g_monitorLock);
     g_bundleMonitor->BundleMonitorOff(env, type);
     return nullptr;
 }
