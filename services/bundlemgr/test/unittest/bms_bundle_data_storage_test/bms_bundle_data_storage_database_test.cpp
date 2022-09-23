@@ -646,6 +646,10 @@ protected:
                 ],
                 "reqPermissions": [
                 ],
+                "signatureInfo": {
+                    "appId": "",
+                    "fingerprint": ""
+                },
                 "seInfo": "",
                 "singleton": false,
                 "targetVersion": 8,
