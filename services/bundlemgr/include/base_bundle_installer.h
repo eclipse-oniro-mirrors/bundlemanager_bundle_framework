@@ -506,7 +506,7 @@ private:
         const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &appQuickFix) const;
     ErrCode ProcessDeployingHqfInfo(
         const std::string &nativeLibraryPath, const std::string &cpuAbi, const InnerBundleInfo &newInfo) const;
-    ErrCode UpdataLibAttrs(const InnerBundleInfo &newInfo,
+    ErrCode UpdateLibAttrs(const InnerBundleInfo &newInfo,
         const std::string &cpuAbi, const std::string &nativeLibraryPath, AppqfInfo &appQfInfo) const;
     bool CheckHapLibsWithPatchLibs(
         const std::string &nativeLibraryPath, const std::string &hqfLibraryPath) const;
