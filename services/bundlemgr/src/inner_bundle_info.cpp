@@ -2674,7 +2674,7 @@ bool InnerBundleInfo::GetAllDependentModuleNames(const std::string &moduleName,
             dependentModuleNames.push_back(name);
             std::vector<std::string> tempModuleNames;
             if (GetDependentModuleNames(name, tempModuleNames)) {
-                std::copy(tempModuleNames.begin(), tempModuleNames.end(),std::back_inserter(moduleDeque));
+                std::copy(tempModuleNames.begin(), tempModuleNames.end(), std::back_inserter(moduleDeque));
             }
         }
     }
@@ -2703,8 +2703,9 @@ void InnerBundleInfo::GetMainAbilityInfo(AbilityInfo &abilityInfo) const
 
 bool InnerBundleInfo::HasEntry() const
 {
-    return std::any_of(innerModuleInfos_.begin(), innerModuleInfos_.end(),
-        [](const auto &item){return item.second.isEntry;});
+    return std::any_of(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](const auto &item) {
+            return item.second.isEntry;
+        });
 }
 
 void InnerBundleInfo::SetDisposedStatus(int32_t status)
@@ -2750,8 +2751,10 @@ int64_t InnerBundleInfo::GetAppCrowdtestDeadline() const
 std::vector<std::string> InnerBundleInfo::GetDistroModuleName() const
 {
     std::vector<std::string> moduleVec;
-    std::transform(innerModuleInfos_.begin(), innerModuleInfos_.end(), std::back_inserter(moduleVec),
-        [](const auto &info){return info.second.moduleName;});
+    std::transform(innerModuleInfos_.begin(), innerModuleInfos_.end(),
+        std::back_inserter(moduleVec), [](const auto &info) {
+            return info.second.moduleName;
+        });
     return moduleVec;
 }
 
