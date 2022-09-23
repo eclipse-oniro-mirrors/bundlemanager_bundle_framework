@@ -127,7 +127,6 @@ const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.bundleki
 const std::string FILES_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/files";
 const std::string TEST_FILE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/files";
 const std::string DATA_BASE_DIR = "/data/app/el2/100/database/com.example.bundlekit.test";
-const std::string DBMS_PROCESS_DIR = "/data/service/el1/public/database/bundle_manager_service/kvdb";
 const std::string TEST_DATA_BASE_DIR = "/data/app/el2/100/database/com.example.bundlekit.test";
 const std::string CACHE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/cache";
 const std::string TEST_CACHE_DIR = "/data/app/el2/100/base/com.example.bundlekit.test/cache/cache";
@@ -1246,6 +1245,61 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfo_0400, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetBundleInfo_0500
+ * @tc.name: test can get the bundleName's bundle info
+ * @tc.desc: 1.system run normal
+ *           2.get bundle info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfo_0500, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo testResult;
+    bool testRet = hostImpl->GetBundleInfo(BUNDLE_NAME_TEST, BundleFlag::GET_BUNDLE_DEFAULT, testResult,
+        DEFAULT_USERID);
+    EXPECT_TRUE(testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleInfo_0600
+ * @tc.name: test can get the bundleName's bundle info
+ * @tc.desc: 1.system run normal
+ *           2.get bundle info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfo_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo testResult;
+    bool testRet = hostImpl->GetBundleInfo(BUNDLE_NAME_TEST, GET_BUNDLE_WITH_ABILITIES |
+        GET_BUNDLE_WITH_REQUESTED_PERMISSION, testResult, DEFAULT_USERID);
+
+    EXPECT_TRUE(testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleInfo_0700
+ * @tc.name: test can get the bundleName's bundle info
+ * @tc.desc: 1.system run normal
+ *           2.get bundle info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfo_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo testResult;
+    bool testRet = hostImpl->GetBundleInfo("", GET_BUNDLE_WITH_ABILITIES |
+        GET_BUNDLE_WITH_REQUESTED_PERMISSION, testResult, DEFAULT_USERID);
+    EXPECT_FALSE(testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetBundleInfos_0100
  * @tc.name: test can get the installed bundles's bundle info with nomal flag
  * @tc.desc: 1.system run normally
@@ -1389,6 +1443,25 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfo_0600, Function | SmallTest 
 }
 
 /**
+ * @tc.number: GetApplicationInfo_0700
+ * @tc.name: test can not get application info with empty appName
+ * @tc.desc: 1.system run normally
+ *           2.get application info failed with empty appName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfo_0700, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ApplicationInfo result;
+    bool ret = hostImpl->GetApplicationInfo(
+        EMPTY_STRING, ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, result);
+    EXPECT_FALSE(ret);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetApplicationInfos_0100
  * @tc.name: test can get the installed bundles's application info with basic info flag
  * @tc.desc: 1.system run normally
@@ -1425,6 +1498,49 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0200, Function | SmallTest
         ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, DEFAULT_USER_ID_TEST, appInfos);
     EXPECT_TRUE(ret);
     CheckInstalledApplicationInfos(PERMISSION_SIZE_TWO, appInfos);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0300
+ * @tc.name: test can get the installed bundles's application info with permissions
+ * @tc.desc: 1.system run normally
+ *           2.get all installed application info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    std::vector<ApplicationInfo> appInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool ret = hostImpl->GetApplicationInfos(
+        ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_TRUE(ret);
+    CheckInstalledApplicationInfos(PERMISSION_SIZE_TWO, appInfos);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0400
+ * @tc.name: test can get the installed bundles's application info with permissions
+ * @tc.desc: 1.system run normally
+ *           2.get all installed application info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    std::vector<ApplicationInfo> appInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool ret = hostImpl->GetApplicationInfos(
+        GET_ABILITY_INFO_DEFAULT, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_TRUE(ret);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
@@ -5138,12 +5254,8 @@ HWTEST_F(BmsBundleKitServiceTest, DynamicSystemProcess_0100, Function | SmallTes
     int ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), START, &extraArgv, 1);
     EXPECT_EQ(ret, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    int dataExist = access(DBMS_PROCESS_DIR.c_str(), F_OK);
-    EXPECT_EQ(dataExist, 0);
 
     ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), STOP, &extraArgv, 1);
     EXPECT_EQ(ret, 0);
-    dataExist = access(DBMS_PROCESS_DIR.c_str(), F_OK);
-    EXPECT_EQ(dataExist, 0);
 }
 }

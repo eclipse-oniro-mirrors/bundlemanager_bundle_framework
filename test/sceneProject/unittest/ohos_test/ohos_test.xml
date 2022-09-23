@@ -14,6 +14,12 @@
  * limitations under the License.
  -->
 <configuration ver="2.0">
+  <target name="BmsBundleAppControlTest">
+  <preparer>
+      <option name="push" value="test_bundle/bmsThirdBundle1.hap -> /data/test/resource/bms/app_control/"
+        src="res" />
+    </preparer>
+  </target>
   <target name="BmsBundleResourceManagerTest">
   <preparer>
       <option name="push" value="test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/resource_manager/"
@@ -79,6 +85,13 @@
       <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
+  <!-- <target name="BmsBundleManagerTest">
+    <preparer>
+      <option name="push" value="test_bundle/backup.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/preview.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+    </preparer>
+  </target> -->
   <target name="BmsBundleUninstallerTest">
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
