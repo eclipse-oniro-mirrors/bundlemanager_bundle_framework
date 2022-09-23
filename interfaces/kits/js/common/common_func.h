@@ -94,6 +94,9 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
 
 static void ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef);
 
+static void ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
+    int32_t userId, napi_value bundleChangeInfo);
+
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,

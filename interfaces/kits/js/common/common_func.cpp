@@ -976,5 +976,17 @@ void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const Per
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "descriptionId", nDescriptionId));
 }
+
+void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
+    int32_t userId, napi_value bundleChangeInfo)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "bundleName", nBundleName));
+
+    napi_value nUserId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, userId, &nUserId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "userId", nUserId));
+}
 }
 }
