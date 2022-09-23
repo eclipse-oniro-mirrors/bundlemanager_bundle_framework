@@ -209,7 +209,6 @@ bool PreInstallDataStorage::SavePreInstallStorageBundleInfo(const PreInstallBund
     }
 
     if (status != Status::SUCCESS) {
-        const std::string interfaceName = "kvStorePtr::Put()";
         APP_LOGD("put valLocalAbilityManager::InitializeSaProfilesue to kvStore error: %{public}d", status);
         return false;
     }
@@ -242,7 +241,6 @@ bool PreInstallDataStorage::DeletePreInstallStorageBundleInfo(const PreInstallBu
     }
 
     if (status != Status::SUCCESS) {
-        const std::string interfaceName = "kvStorePtr::Delete()";
         APP_LOGE("delete key error: %{public}d", status);
         return false;
     } else {

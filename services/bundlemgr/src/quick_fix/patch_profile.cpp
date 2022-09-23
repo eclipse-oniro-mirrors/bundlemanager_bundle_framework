@@ -177,7 +177,7 @@ QuickFixType GetQuickFixType(const std::string &type)
     return QuickFixType::UNKNOWN;
 }
 
-void ToPatchInfo(PatchJson &patchJson, AppQuickFix &appQuickFix)
+void ToPatchInfo(const PatchJson &patchJson, AppQuickFix &appQuickFix)
 {
     appQuickFix.bundleName = patchJson.app.bundleName;
     appQuickFix.versionCode = patchJson.app.versionCode;
@@ -270,7 +270,6 @@ bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo
     if (isDefault) {
         return DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
     }
-    
     for (const auto &abi : abiList) {
         std::string libsPath;
         libsPath.append(Constants::LIBS).append(abi).append(Constants::PATH_SEPARATOR);

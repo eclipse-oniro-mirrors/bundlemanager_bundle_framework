@@ -1752,19 +1752,19 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
     innerModuleInfos_.erase(it);
     std::string key;
     key.append(".").append(modulePackage).append(".");
-    for (auto it = shortcutInfos_.begin(); it != shortcutInfos_.end();) {
-        if (it->first.find(key) != std::string::npos) {
-            shortcutInfos_.erase(it++);
+    for (auto iter = shortcutInfos_.begin(); iter != shortcutInfos_.end();) {
+        if (iter->first.find(key) != std::string::npos) {
+            shortcutInfos_.erase(iter++);
         } else {
-            ++it;
+            ++iter;
         }
     }
 
-    for (auto it = commonEvents_.begin(); it != commonEvents_.end();) {
-        if (it->first.find(key) != std::string::npos) {
-            commonEvents_.erase(it++);
+    for (auto iter = commonEvents_.begin(); iter != commonEvents_.end();) {
+        if (iter->first.find(key) != std::string::npos) {
+            commonEvents_.erase(iter++);
         } else {
-            ++it;
+            ++iter;
         }
     }
 
@@ -2189,9 +2189,7 @@ void InnerBundleInfo::GetFormsInfoByModule(const std::string &moduleName, std::v
 void InnerBundleInfo::GetFormsInfoByApp(std::vector<FormInfo> &formInfos) const
 {
     for (const auto &data : formInfos_) {
-        for (auto &form : data.second) {
-            formInfos.emplace_back(form);
-        }
+        std::copy(data.second.begin(), data.second.end(), std::back_inserter(formInfos));
     }
 }
 
@@ -2794,9 +2792,7 @@ bool InnerBundleInfo::GetAllDependentModuleNames(const std::string &moduleName,
         return false;
     }
     std::deque<std::string> moduleDeque;
-    for (const auto &moduleName : dependentModuleNames) {
-        moduleDeque.push_back(moduleName);
-    }
+    std::copy(dependentModuleNames.begin(), dependentModuleNames.end(), std::back_inserter(moduleDeque));
     dependentModuleNames.clear();
     while (!moduleDeque.empty()) {
         std::string name = moduleDeque.front();
@@ -2805,9 +2801,7 @@ bool InnerBundleInfo::GetAllDependentModuleNames(const std::string &moduleName,
             dependentModuleNames.push_back(name);
             std::vector<std::string> tempModuleNames;
             if (GetDependentModuleNames(name, tempModuleNames)) {
-                for (const auto &moduleName : tempModuleNames) {
-                    moduleDeque.push_back(moduleName);
-                }
+                std::copy(tempModuleNames.begin(), tempModuleNames.end(), std::back_inserter(moduleDeque));
             }
         }
     }
@@ -2836,12 +2830,9 @@ void InnerBundleInfo::GetMainAbilityInfo(AbilityInfo &abilityInfo) const
 
 bool InnerBundleInfo::HasEntry() const
 {
-    for (const auto& item : innerModuleInfos_) {
-        if (item.second.isEntry) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](const auto &item) {
+            return item.second.isEntry;
+        });
 }
 
 void InnerBundleInfo::SetDisposedStatus(int32_t status)
@@ -2887,9 +2878,10 @@ int64_t InnerBundleInfo::GetAppCrowdtestDeadline() const
 std::vector<std::string> InnerBundleInfo::GetDistroModuleName() const
 {
     std::vector<std::string> moduleVec;
-    for (const auto &info : innerModuleInfos_) {
-        moduleVec.emplace_back(info.second.moduleName);
-    }
+    std::transform(innerModuleInfos_.begin(), innerModuleInfos_.end(),
+        std::back_inserter(moduleVec), [](const auto &info) {
+            return info.second.moduleName;
+        });
     return moduleVec;
 }
 

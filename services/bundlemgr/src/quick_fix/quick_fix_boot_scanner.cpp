@@ -65,10 +65,10 @@ void QuickFixBootScanner::ProcessQuickFixBootUp()
         if (quickFixStatus == QuickFixStatus::SWITCH_DISABLE_START) {
             state_ = std::make_shared<QuickFixSwitchState>(quickFixInfo.first, false);
         }
-        auto ret = ProcessState();
-        if (ret != ERR_OK) {
+        auto res = ProcessState();
+        if (res != ERR_OK) {
             APP_LOGE("quick fix info %{public}s is processed failed with error %{public}d",
-                quickFixInfo.first.c_str(), ret);
+                quickFixInfo.first.c_str(), res);
             quickFixDataMgr_->DeleteInnerAppQuickFix(quickFixInfo.first);
         }
         state_.reset();
