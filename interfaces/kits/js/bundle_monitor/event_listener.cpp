@@ -80,7 +80,8 @@ bool EventListener::Find(napi_value handler)
 // operator on js thread
 void EventListener::Emit(std::string &bundleName, int32_t userId)
 {
-    APP_LOGD("EventListener Emit Init callback size is %{publuic}d", callbackRefs_.size());
+    APP_LOGD("EventListener Emit Init callback size is %{publuic}d",
+        static_cast<int32_t>(callbackRefs_.size()));
     for (auto &callbackRef : callbackRefs_) {
         EmitOnUV(bundleName, userId, callbackRef);
     }
