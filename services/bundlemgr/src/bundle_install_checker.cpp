@@ -31,6 +31,13 @@ const std::string PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriori
 const std::string PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
 const std::string PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
 const std::string PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
+const std::string ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
+const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
+const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
+const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
+const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
+const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -207,7 +214,11 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         }
 
         AppPrivilegeCapability appPrivilegeCapability;
+        // from provision file
         ParseAppPrivilegeCapability(provisionInfo, appPrivilegeCapability);
+        // form install_list_capability.json, higher priority than provision file
+        FetchPrivilegeCapabilityFromPreConfig(
+            newInfo.GetBundleName(), provisionInfo.fingerprint, appPrivilegeCapability);
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
         result = ParseBundleInfo(bundlePaths[i], appPrivilegeCapability, newInfo, packInfo);
         if (result != ERR_OK) {
@@ -596,6 +607,76 @@ ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     return ERR_OK;
+}
+
+bool BundleInstallChecker::GetPrivilegeCapabilityValue(
+    const std::vector<std::string> &existInJson,
+    const std::string &key,
+    bool existInPreJson,
+    bool existInProvision)
+{
+    if (find(existInJson.cbegin(), existInJson.cend(), key) != existInJson.cend()) {
+        return existInPreJson;
+    }
+    return existInProvision;
+}
+
+void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
+    const std::string &bundleName,
+    const std::string &appSignature,
+    AppPrivilegeCapability &appPrivilegeCapability)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    PreBundleConfigInfo configInfo;
+    configInfo.bundleName = bundleName;
+    if (!BMSEventHandler::GetPreInstallCapability(configInfo)) {
+        APP_LOGW("App(%{public}s) is not exist in pre install capability list", bundleName.c_str());
+        return;
+    }
+    if (!MatchSignature(configInfo.appSignature, appSignature)) {
+        APP_LOGE("App(%{public}s) signature verify failed", bundleName.c_str());
+        return;
+    }
+    appPrivilegeCapability.allowUsePrivilegeExtension = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_APP_USE_PRIVILEGE_EXTENSION,
+        configInfo.allowUsePrivilegeExtension, appPrivilegeCapability.allowUsePrivilegeExtension);
+
+    appPrivilegeCapability.allowMultiProcess = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_APP_MULTI_PROCESS,
+        configInfo.allowMultiProcess, appPrivilegeCapability.allowMultiProcess);
+
+    appPrivilegeCapability.hideDesktopIcon = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_APP_DESKTOP_ICON_HIDE,
+        configInfo.hideDesktopIcon, appPrivilegeCapability.hideDesktopIcon);
+
+    appPrivilegeCapability.allowQueryPriority = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_ABILITY_PRIORITY_QUERIED,
+        configInfo.allowQueryPriority, appPrivilegeCapability.allowQueryPriority);
+
+    appPrivilegeCapability.allowExcludeFromMissions = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
+        configInfo.allowExcludeFromMissions, appPrivilegeCapability.allowExcludeFromMissions);
+
+    appPrivilegeCapability.formVisibleNotify = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_FORM_VISIBLE_NOTIFY,
+        configInfo.formVisibleNotify, appPrivilegeCapability.formVisibleNotify);
+
+    appPrivilegeCapability.formVisibleNotify = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_APP_DATA_NOT_CLEARED,
+        configInfo.userDataClearable, appPrivilegeCapability.userDataClearable);
+#endif
+}
+
+bool BundleInstallChecker::MatchSignature(
+    const std::vector<std::string> &appSignatures, const std::string &signature)
+{
+    if (appSignatures.empty()) {
+        APP_LOGW("appSignature is empty");
+        return false;
+    }
+
+    return std::find(
+        appSignatures.begin(), appSignatures.end(), signature) != appSignatures.end();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

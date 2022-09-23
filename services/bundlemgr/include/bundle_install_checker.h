@@ -133,6 +133,16 @@ private:
     
     ErrCode CheckMainElement(const InnerBundleInfo &info);
 
+    void FetchPrivilegeCapabilityFromPreConfig(
+        const std::string &bundleName,
+        const std::string &appSignature,
+        AppPrivilegeCapability &appPrivilegeCapability);
+
+    bool MatchSignature(const std::vector<std::string> &appSignatures, const std::string &signature);
+
+    bool GetPrivilegeCapabilityValue(const std::vector<std::string> &existInJson,
+        const std::string &key, bool existInPreJson, bool existInProvision);
+
     bool isContainEntry_ = false;
 };
 }  // namespace AppExecFwk
