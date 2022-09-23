@@ -80,6 +80,10 @@ void ZlibCallbackInfo::OnZipUnZipFinish(int32_t result)
         return;
     }
     uv_work_t* work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        APP_LOGE("create work failed!");
+        return;
+    }
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo {
         .env = env_,
         .callback = callback_,
@@ -87,7 +91,8 @@ void ZlibCallbackInfo::OnZipUnZipFinish(int32_t result)
         .isCallBack = isCallBack_,
         .callbackResult = result,
     };
-    if (work == nullptr || asyncCallbackInfo == nullptr) {
+    if (asyncCallbackInfo == nullptr) {
+        delete work;
         return;
     }
     work->data = (void*)asyncCallbackInfo;

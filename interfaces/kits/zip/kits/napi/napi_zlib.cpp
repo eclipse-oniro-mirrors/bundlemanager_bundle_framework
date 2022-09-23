@@ -474,8 +474,8 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
         return nullptr;
     }
     napi_value promise = nullptr;
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
     asyncZipCallbackInfo->param = param;
-
     if (argcAsync > PARAM3) {
         napi_valuetype valuetype = napi_undefined;
         NAPI_CALL_BASE(env, napi_typeof(env, args[PARAM3], &valuetype), nullptr);
@@ -486,7 +486,6 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
             asyncZipCallbackInfo->zlibCallbackInfo =
                 std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
         } else {
-            APP_LOGE("%{public}s, args[3] error. It should be a function type.", __func__);
             return nullptr;
         }
     } else {
@@ -496,17 +495,16 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
     }
     napi_value resourceName = 0;
     NAPI_CALL_BASE(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName), nullptr);
-    napi_create_async_work(env, nullptr, resourceName,
-        ZipFileExecute,
+    napi_create_async_work(env, nullptr, resourceName, ZipFileExecute,
         [](napi_env env, napi_status status, void *data) {
             AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
+            std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
         },
         (void *)asyncZipCallbackInfo,
         &asyncZipCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
+    callbackPtr.release();
     return promise;
 }
 
@@ -536,6 +534,7 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
     if (asyncZipCallbackInfo == nullptr) {
         return nullptr;
     }
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
     asyncZipCallbackInfo->param = param;
     napi_value promise = nullptr;
     if (argcAsync > PARAM3) {
@@ -548,7 +547,6 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
             asyncZipCallbackInfo->zlibCallbackInfo =
                 std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
         } else {
-            APP_LOGE("%{public}s, args[3] error. It should be a function type.", __func__);
             return nullptr;
         }
     } else {
@@ -561,12 +559,11 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
     napi_create_async_work(env, nullptr, resourceName, UnzipFileExecute,
         [](napi_env env, napi_status status, void *data) {
             AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
+            std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        },
-        (void *)asyncZipCallbackInfo, &asyncZipCallbackInfo->asyncWork);
+        }, (void *)asyncZipCallbackInfo, &asyncZipCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
+    callbackPtr.release();
     return promise;
 }
 
@@ -603,10 +600,6 @@ void UnzipFileExecute(napi_env env, void *data)
 {
     APP_LOGD("NAPI_UnzipFile_Promise_Execute, worker pool thread execute.");
     AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("NAPI_UnzipFile_Promise_Execute, input info parameters error.");
-        return;
-    }
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("NAPI_UnzipFile_Promise_Execute, input info parameters error.");
         return;
