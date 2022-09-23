@@ -775,7 +775,7 @@ private:
 
 private:
     std::shared_ptr<BMSEventHandler> handler_;
-    const std::string BUNDLE_MGR_THREAD = "bundle_mgr_thread";
+    const std::string BUNDLE_MGR_THREAD = "BundleMgrThread";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

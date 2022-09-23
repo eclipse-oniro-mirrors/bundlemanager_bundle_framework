@@ -24,7 +24,7 @@ namespace LIBZIP {
 namespace {
 const std::string SEPARATOR = "/";
 const std::regex FILE_PATH_REGEX("([0-9A-Za-z/+_=\\-\\(\\),.])+");
-const std::string ZIP_THREAD = "zip_thread";
+const std::string ZIP_THREAD = "ZipThread";
 }  // namespace
 using namespace OHOS::AppExecFwk;
 
