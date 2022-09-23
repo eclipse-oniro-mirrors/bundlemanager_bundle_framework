@@ -73,22 +73,6 @@ bool EndsWith(const std::string &str, const std::string &searchFor)
     return source == searchFor;
 }
 
-bool IsPathAbsolute(const std::string &path)
-{
-    // Look for a separator in the first position.
-    return path.length() > 0 && StartsWith(path, SEPARATOR);
-}
-
-bool IsASCIIChar(const char *pszStr)
-{
-    if (pszStr == nullptr) {
-        return false;
-    }
-
-    // Judge whether the first character in the string is ASCII character (0 – 127), and ASCII character occupies one
-    // byte
-    return (static_cast<unsigned char>(pszStr[0]) & 0x80) == 0x80 ? false : true;
-}
 bool FilePathCheckValid(const std::string &str)
 {
     return std::regex_match(str, FILE_PATH_REGEX);

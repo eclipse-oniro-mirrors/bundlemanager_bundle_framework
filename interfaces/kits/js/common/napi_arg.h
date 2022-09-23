@@ -35,8 +35,6 @@ public:
 
     size_t GetMaxArgc() const;
 
-    napi_value GetThisArg() const;
-
     napi_value GetArgv(size_t pos) const;
 
     napi_value operator[](size_t pos) const;
