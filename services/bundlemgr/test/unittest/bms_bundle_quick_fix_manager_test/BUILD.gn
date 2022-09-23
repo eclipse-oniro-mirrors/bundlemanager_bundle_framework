@@ -45,7 +45,6 @@ ohos_unittest("BmsBundleQuickFixManagerTest") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "distributed_bundle_framework:dbms_fwk",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",

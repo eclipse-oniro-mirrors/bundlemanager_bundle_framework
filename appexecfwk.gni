@@ -55,6 +55,11 @@ declare_args() {
   }
 
   if (defined(global_parts_info) &&
+      !defined(global_parts_info.bundlemanager_distributed_bundle_framework)) {
+    distributed_bundle_framework = false
+  }
+
+  if (defined(global_parts_info) &&
       !defined(global_parts_info.customization_config_policy)) {
     configpolicy_enable = false
   }
