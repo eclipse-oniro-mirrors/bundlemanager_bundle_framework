@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "nlohmann/json.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include "nocopyable.h"
 
 #include "app_quick_fix.h"

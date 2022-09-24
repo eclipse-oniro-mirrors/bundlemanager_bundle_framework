@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 
-#include "nlohmann/json.hpp"
 #include "parcel.h"
 
 namespace OHOS {
