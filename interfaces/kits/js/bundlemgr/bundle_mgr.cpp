@@ -2968,11 +2968,12 @@ static bool InnerGetPermissionDef(napi_env env, const std::string &permissionNam
         APP_LOGE("can not get iBundleMgr");
         return false;
     };
-    bool ret = iBundleMgr->GetPermissionDef(permissionName, permissionDef);
-    if (!ret) {
+    ErrCode ret = iBundleMgr->GetPermissionDef(permissionName, permissionDef);
+    if (ret != NO_ERROR) {
         APP_LOGE("permissionName is not find");
+        return false;
     }
-    return ret;
+    return true;
 }
 
 /**
