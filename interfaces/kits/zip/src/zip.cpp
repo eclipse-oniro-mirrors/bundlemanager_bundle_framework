@@ -291,7 +291,7 @@ bool UnzipWithFilterCallback(
 
     return ret;
 }
-bool Unzip(const std::string srcFile, const std::string destFile, OPTIONS options,
+bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS options,
     CALLBACK callback, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
@@ -388,7 +388,7 @@ bool ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile, con
     return result;
 }
 
-bool Zip(const std::string srcPath, const std::string destPath, CALLBACK callback,
+bool Zip(const std::string &srcPath, const std::string &destPath, CALLBACK callback,
     bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
