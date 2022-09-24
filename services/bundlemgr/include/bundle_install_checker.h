@@ -107,7 +107,6 @@ private:
 
     ErrCode ParseBundleInfo(
         const std::string &bundleFilePath,
-        const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &info,
         BundlePackInfo &packInfo) const;
 
@@ -142,6 +141,9 @@ private:
 
     bool GetPrivilegeCapabilityValue(const std::vector<std::string> &existInJson,
         const std::string &key, bool existInPreJson, bool existInProvision);
+
+    ErrCode ProcessBundleInfoByPrivilegeCapability(const AppPrivilegeCapability &appPrivilegeCapability,
+        InnerBundleInfo &innerBundleInfo);
 
     bool isContainEntry_ = false;
 };

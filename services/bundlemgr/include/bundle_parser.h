@@ -39,7 +39,6 @@ public:
      */
     ErrCode Parse(
         const std::string &pathName,
-        const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &innerBundleInfo) const;
 
     ErrCode ParsePackInfo(const std::string &pathName, BundlePackInfo &bundlePackInfo) const;

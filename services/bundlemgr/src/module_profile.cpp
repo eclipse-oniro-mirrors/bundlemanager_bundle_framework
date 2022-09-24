@@ -1266,7 +1266,6 @@ namespace {
 struct TransformParam {
     bool isSystemApp = false;
     bool isPreInstallApp = false;
-    AppPrivilegeCapability appPrivilegeCapability;
 };
 
 void GetMetadata(std::vector<Metadata> &metadata, const std::vector<Profile::Metadata> &profileMetadata)
@@ -1582,20 +1581,8 @@ bool ToAbilityInfo(
     abilityInfo.iconId = ability.iconId;
     abilityInfo.label = ability.label;
     abilityInfo.labelId = ability.labelId;
-#ifdef USE_PRE_BUNDLE_PROFILE
-    if (transformParam.appPrivilegeCapability.allowQueryPriority) {
-        abilityInfo.priority = ability.priority;
-    }
-
-    if (transformParam.appPrivilegeCapability.allowExcludeFromMissions) {
-        abilityInfo.excludeFromMissions = ability.excludeFromMissions;
-    }
-#else
-    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
-        abilityInfo.priority = ability.priority;
-        abilityInfo.excludeFromMissions = ability.excludeFromMissions;
-    }
-#endif
+    abilityInfo.priority = ability.priority;
+    abilityInfo.excludeFromMissions = ability.excludeFromMissions;
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
     abilityInfo.continuable = ability.continuable;
@@ -1663,13 +1650,6 @@ bool ToExtensionInfo(
 {
     APP_LOGD("transform ModuleJson to ExtensionAbilityInfo");
     extensionInfo.type = ConvertToExtensionAbilityType(extension.type);
-    bool privilegeType = (extensionInfo.type == ExtensionAbilityType::SERVICE)
-        || (extensionInfo.type == ExtensionAbilityType::DATASHARE);
-    if (privilegeType && !transformParam.appPrivilegeCapability.allowUsePrivilegeExtension) {
-        APP_LOGE("not allow use privilege extension");
-        return false;
-    }
-
     extensionInfo.name = extension.name;
     extensionInfo.srcEntrance = extension.srcEntrance;
     extensionInfo.icon = extension.icon;
@@ -1682,15 +1662,7 @@ bool ToExtensionInfo(
         extensionInfo.readPermission = extension.readPermission;
         extensionInfo.writePermission = extension.writePermission;
     }
-
-#ifdef USE_PRE_BUNDLE_PROFILE
-    if (transformParam.appPrivilegeCapability.allowQueryPriority) {
-#else
-    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
-#endif
-        extensionInfo.priority = extension.priority;
-    }
-
+    extensionInfo.priority = extension.priority;
     extensionInfo.uri = extension.uri;
     extensionInfo.permissions = extension.permissions;
     extensionInfo.visible = extension.visible;
@@ -1763,11 +1735,7 @@ bool ToInnerModuleInfo(
 
     innerModuleInfo.mainAbility = moduleJson.module.mainElement;
     innerModuleInfo.srcEntrance = moduleJson.module.srcEntrance;
-    if (transformParam.appPrivilegeCapability.allowMultiProcess && !moduleJson.module.process.empty()) {
-        innerModuleInfo.process = moduleJson.module.process;
-    } else {
-        innerModuleInfo.process = moduleJson.app.bundleName;
-    }
+    innerModuleInfo.process = moduleJson.module.process;
 
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
         if (Profile::DEVICE_TYPE_SET.find(deviceType) != Profile::DEVICE_TYPE_SET.end()) {
@@ -1797,7 +1765,6 @@ bool ToInnerModuleInfo(
 bool ToInnerBundleInfo(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
-    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &innerBundleInfo)
 {
     APP_LOGD("transform ModuleJson to InnerBundleInfo");
@@ -1807,7 +1774,6 @@ bool ToInnerBundleInfo(
     }
 
     TransformParam transformParam;
-    transformParam.appPrivilegeCapability = appPrivilegeCapability;
     transformParam.isPreInstallApp = innerBundleInfo.IsPreInstallApp();
 
     ApplicationInfo applicationInfo;
@@ -1918,7 +1884,6 @@ bool ToInnerBundleInfo(
 ErrCode ModuleProfile::TransformTo(
     const std::ostringstream &source,
     const BundleExtractor &bundleExtractor,
-    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGD("transform module.json stream to InnerBundleInfo");
@@ -1937,7 +1902,7 @@ ErrCode ModuleProfile::TransformTo(
         return ret;
     }
     if (!ToInnerBundleInfo(
-        moduleJson, bundleExtractor, appPrivilegeCapability, innerBundleInfo)) {
+        moduleJson, bundleExtractor, innerBundleInfo)) {
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {

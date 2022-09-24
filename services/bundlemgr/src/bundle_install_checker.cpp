@@ -213,14 +213,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
         }
 
-        AppPrivilegeCapability appPrivilegeCapability;
-        // from provision file
-        ParseAppPrivilegeCapability(provisionInfo, appPrivilegeCapability);
-        // form install_list_capability.json, higher priority than provision file
-        FetchPrivilegeCapabilityFromPreConfig(
-            newInfo.GetBundleName(), provisionInfo.fingerprint, appPrivilegeCapability);
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
-        result = ParseBundleInfo(bundlePaths[i], appPrivilegeCapability, newInfo, packInfo);
+        result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
         if (result != ERR_OK) {
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
@@ -236,6 +230,17 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 
         SetEntryInstallationFree(packInfo, newInfo);
         result = CheckMainElement(newInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
+        AppPrivilegeCapability appPrivilegeCapability;
+        // from provision file
+        ParseAppPrivilegeCapability(provisionInfo, appPrivilegeCapability);
+        // form install_list_capability.json, higher priority than provision file
+        FetchPrivilegeCapabilityFromPreConfig(
+            newInfo.GetBundleName(), provisionInfo.fingerprint, appPrivilegeCapability);
+        // process bundleInfo by appPrivilegeCapability
+        result = ProcessBundleInfoByPrivilegeCapability(appPrivilegeCapability, newInfo);
         if (result != ERR_OK) {
             return result;
         }
@@ -316,12 +321,11 @@ void BundleInstallChecker::GetPrivilegeCapability(
 
 ErrCode BundleInstallChecker::ParseBundleInfo(
     const std::string &bundleFilePath,
-    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &info,
     BundlePackInfo &packInfo) const
 {
     BundleParser bundleParser;
-    ErrCode result = bundleParser.Parse(bundleFilePath, appPrivilegeCapability, info);
+    ErrCode result = bundleParser.Parse(bundleFilePath, info);
     if (result != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", result);
         return result;
@@ -627,14 +631,15 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     AppPrivilegeCapability &appPrivilegeCapability)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
+    APP_LOGD("bundleName: %{public}s, FetchPrivilegeCapabilityFromPreConfig start", bundleName.c_str());
     PreBundleConfigInfo configInfo;
     configInfo.bundleName = bundleName;
     if (!BMSEventHandler::GetPreInstallCapability(configInfo)) {
-        APP_LOGW("App(%{public}s) is not exist in pre install capability list", bundleName.c_str());
+        APP_LOGW("bundleName: %{public}s is not exist in pre install capability list", bundleName.c_str());
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {
-        APP_LOGE("App(%{public}s) signature verify failed", bundleName.c_str());
+        APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
         return;
     }
     appPrivilegeCapability.allowUsePrivilegeExtension = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
@@ -661,9 +666,10 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         ALLOW_FORM_VISIBLE_NOTIFY,
         configInfo.formVisibleNotify, appPrivilegeCapability.formVisibleNotify);
 
-    appPrivilegeCapability.formVisibleNotify = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+    appPrivilegeCapability.userDataClearable = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_APP_DATA_NOT_CLEARED,
         configInfo.userDataClearable, appPrivilegeCapability.userDataClearable);
+    APP_LOGD("AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
 }
 
@@ -677,6 +683,63 @@ bool BundleInstallChecker::MatchSignature(
 
     return std::find(
         appSignatures.begin(), appSignatures.end(), signature) != appSignatures.end();
+}
+
+ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
+    const AppPrivilegeCapability &appPrivilegeCapability,
+    InnerBundleInfo &innerBundleInfo)
+{
+    // process application
+    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    if (!appPrivilegeCapability.allowMultiProcess || applicationInfo.process.empty()) {
+        applicationInfo.process = applicationInfo.bundleName;
+    }
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
+    // process ability
+    auto &abilityInfos = innerBundleInfo.FetchAbilityInfos();
+    for (auto iter = abilityInfos.begin(); iter != abilityInfos.end(); ++iter) {
+#ifdef USE_PRE_BUNDLE_PROFILE
+        if (!appPrivilegeCapability.allowQueryPriority) {
+            iter->second.priority = 0;
+        }
+        if (!appPrivilegeCapability.allowExcludeFromMissions) {
+            iter->second.excludeFromMissions = false;
+        }
+#else
+        if (!applicationInfo.isSystemApp || !bundleInfo.isPreInstallApp) {
+            iter->second.priority = 0;
+            iter->second.excludeFromMissions = false;
+        }
+#endif
+    }
+    // process ExtensionAbility
+    auto &extensionAbilityInfos = innerBundleInfo.FetchInnerExtensionInfos();
+    for (auto iter = extensionAbilityInfos.begin(); iter != extensionAbilityInfos.end(); ++iter) {
+        bool privilegeType = (iter->second.type == ExtensionAbilityType::SERVICE)
+            || (iter->second.type == ExtensionAbilityType::DATASHARE);
+        if (privilegeType && !appPrivilegeCapability.allowUsePrivilegeExtension) {
+            APP_LOGE("not allow use privilege extension");
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+        }
+#ifdef USE_PRE_BUNDLE_PROFILE
+        if (!appPrivilegeCapability.allowQueryPriority) {
+            iter->second.priority = 0;
+        }
+#else
+        if (!applicationInfo.isSystemApp || !bundleInfo.isPreInstallApp) {
+            iter->second.priority = 0;
+        }
+#endif
+    }
+    // process InnerModuleInfo
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    for (auto iter = innerModuleInfos.begin(); iter != innerModuleInfos.end(); ++iter) {
+        if (iter->second.isModuleJson && (!appPrivilegeCapability.allowMultiProcess || iter->second.process.empty())) {
+            iter->second.process = applicationInfo.bundleName;
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
