@@ -520,8 +520,7 @@ bool BundlePermissionMgr::GetRequestPermissionStates(BundleInfo &bundleInfo)
     uint32_t tokenId = bundleInfo.applicationInfo.accessTokenId;
     std::vector<Security::AccessToken::PermissionStateFull> allPermissionState;
     if (!GetAllReqPermissionStateFull(tokenId, allPermissionState)) {
-        APP_LOGE("BundlePermissionMgr::GetRequestPermissionStates failed");
-        return false;
+        APP_LOGW("BundlePermissionMgr::GetRequestPermissionStates failed");
     }
     std::string deviceId = bundleInfo.applicationInfo.deviceId;
     for (auto &req : requestPermission) {
@@ -538,7 +537,7 @@ bool BundlePermissionMgr::GetRequestPermissionStates(BundleInfo &bundleInfo)
                 }
             }
         } else {
-            APP_LOGE("request permission name : %{public}s is not exit", req.c_str());
+            APP_LOGE("request permission name : %{public}s is not exit in AccessTokenMgr", req.c_str());
             bundleInfo.reqPermissionStates.emplace_back(Constants::PERMISSION_NOT_GRANTED);
         }
     }
