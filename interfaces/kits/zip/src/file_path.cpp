@@ -389,7 +389,7 @@ bool FilePath::GetZipAllDirFiles(const std::string &path, std::vector<std::strin
         } else if (ptr->d_type == DT_DIR) {
             pathStringWithDelimiter = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
             std::vector<std::string> itemFiles;
-            result = GetZipAllDirFiles(pathStringWithDelimiter, itemFiles);
+            GetZipAllDirFiles(pathStringWithDelimiter, itemFiles);
 
             if (itemFiles.empty()) {
                 files.push_back(pathStringWithDelimiter);

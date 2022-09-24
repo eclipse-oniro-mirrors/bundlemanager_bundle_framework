@@ -50,10 +50,6 @@ static napi_value Init(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nModuleUpdateFlag));
     CreateModuleUpdateFlagObject(env, nModuleUpdateFlag);
 
-    napi_value nFormType = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nFormType));
-    CreateFormTypeObject(env, nFormType);
-
     napi_value nColorMode = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nColorMode));
     CreateColorModeObject(env, nColorMode);
@@ -114,16 +110,12 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getBundleInfo", GetBundleInfo),
         DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
         DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
-        DECLARE_NAPI_FUNCTION("getBundleGids", GetBundleGids),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getLaunchWantForBundle", GetLaunchWantForBundle),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_FUNCTION("getDispatcherVersion", GetDispatcherVersion),
         DECLARE_NAPI_FUNCTION("queryAbilityByWant", QueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
-        DECLARE_NAPI_FUNCTION("getFormsInfoByModule", GetFormsInfoByModule),
-        DECLARE_NAPI_FUNCTION("getFormsInfo", GetFormsInfoByApp),
-        DECLARE_NAPI_FUNCTION("getAllFormsInfo", GetAllFormsInfo),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
         DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
         DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
@@ -145,7 +137,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("DisplayOrientation", nDisplayOrientation),
         DECLARE_NAPI_PROPERTY("LaunchMode", nLaunchMode),
         DECLARE_NAPI_PROPERTY("ModuleUpdateFlag", nModuleUpdateFlag),
-        DECLARE_NAPI_PROPERTY("FormType", nFormType),
         DECLARE_NAPI_PROPERTY("ColorMode", nColorMode),
         DECLARE_NAPI_PROPERTY("GrantStatus", nGrantStatus),
         DECLARE_NAPI_PROPERTY("ModuleRemoveFlag", nModuleRemoveFlag),
