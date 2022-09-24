@@ -90,7 +90,6 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
-    "distributed_bundle_framework:dbms_fwk",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
