@@ -1772,6 +1772,74 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfos_0001, TestSize.Le
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfosV9_0001
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: Test the interface of QueryExtensionAbilityInfosV9
+ * @tc.require: AR000GNT9D
+ */
+HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0001, TestSize.Level1)
+{
+    auto name = std::string("QueryExtensionAbilityInfos_0001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    std::vector<ExtensionAbilityInfo> infos;
+    OHOS::AAFwk::Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetModuleName("entry_phone");
+    element.SetAbilityName("Form");
+    want.SetElement(element);
+    bool ret = GetBundleMgrProxy()->QueryExtensionAbilityInfosV9(want,
+        ExtensionAbilityInfoFlagV9::GET_EXTENSION_ABILITY_INFO_DEFAULT_V9, DEFAULT_USERID, infos);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(1, infos.size());
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    std::cout << "END QueryExtensionAbilityInfosV9_0001" << std::endl;
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0002
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: Test the interface of QueryExtensionAbilityInfosV9
+ * @tc.require: AR000GNT9D
+ */
+HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0002, TestSize.Level1)
+{
+    auto name = std::string("QueryExtensionAbilityInfos_0001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    std::vector<ExtensionAbilityInfo> infos;
+    OHOS::AAFwk::Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetModuleName("entry_phone");
+    element.SetAbilityName("Form");
+    want.SetElement(element);
+    bool ret = GetBundleMgrProxy()->QueryExtensionAbilityInfosV9(want, ExtensionAbilityType::FORM,
+        ExtensionAbilityInfoFlagV9::GET_EXTENSION_ABILITY_INFO_DEFAULT_V9, DEFAULT_USERID, infos);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(1, infos.size());
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    std::cout << "END QueryExtensionAbilityInfosV9_0002" << std::endl;
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
  * @tc.number: GetProfileFromHap001
  * @tc.name: GetProfileFromHap
  * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
