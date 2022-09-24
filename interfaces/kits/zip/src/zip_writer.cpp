@@ -40,7 +40,6 @@ const std::string SEPARATOR = "/";
 bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 {
     APP_LOGI("%{public}s called", __func__);
-    uint32_t num_bytes;
     char buf[kZipBufSize];
     if (!FilePathCheckValid(file_path.Value())) {
         APP_LOGI(
@@ -60,6 +59,7 @@ bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
         return false;
     }
 
+    uint32_t num_bytes;
     while (!feof(fp)) {
         num_bytes = fread(buf, 1, kZipBufSize, fp);
         if (num_bytes > 0) {

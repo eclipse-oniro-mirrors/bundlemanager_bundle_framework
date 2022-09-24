@@ -63,7 +63,7 @@ void UnzipFileExecute(napi_env env, void *data);
 napi_value UnwrapZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc);
 napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc);
 napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackInfo *asyncZipCallbackInfo);
-napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value args);
+napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv);
 bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg);
 
 /**
@@ -572,10 +572,6 @@ void ZipFileExecute(napi_env env, void *data)
 {
     APP_LOGD("NAPI_ZipFile_Promise_Execute, worker pool thread execute.");
     AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("NAPI_ZipFile_Async_Execute, input info parameters error.");
-        return;
-    }
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("NAPI_ZipFile_Promise_Execute, input info parameters error.");
         return;

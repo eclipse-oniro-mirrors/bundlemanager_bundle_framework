@@ -34,8 +34,14 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
     int32_t ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
+            if (work == nullptr) {
+                return;
+            }
             // JS Thread
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
+            if (asyncCallbackInfo == nullptr) {
+                return;
+            }
             napi_value result[ARGS_ONE] = {0};
             NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env,
                 napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]));
