@@ -52,10 +52,7 @@ enum GetRemoteAbilityInfoErrorCode : int32_t {
 };
 }
 
-AsyncWorkData::AsyncWorkData(napi_env napiEnv)
-{
-    env = napiEnv;
-}
+AsyncWorkData::AsyncWorkData(napi_env napiEnv) : env(napiEnv) {}
 
 AsyncWorkData::~AsyncWorkData()
 {
@@ -302,7 +299,7 @@ static int32_t InnerGetRemoteAbilityInfo(
     return ConvertResultCode(result);
 }
 
-static int32_t InnerGetRemoteAbilityInfos(const std::vector<ElementName> &elementNames, const std::string locale,
+static int32_t InnerGetRemoteAbilityInfos(const std::vector<ElementName> &elementNames, const std::string &locale,
     std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
     if (elementNames.size() == 0) {
@@ -366,7 +363,7 @@ napi_value GetRemoteAbilityInfo(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            ElementNameInfo* asyncCallbackInfo = (ElementNameInfo*)data;
+            ElementNameInfo* asyncCallbackInfo = reinterpret_cast<ElementNameInfo *>(data);
             if (!asyncCallbackInfo->errCode) {
                 asyncCallbackInfo->errCode =
                     InnerGetRemoteAbilityInfo(asyncCallbackInfo->elementName,
@@ -375,7 +372,7 @@ napi_value GetRemoteAbilityInfo(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            ElementNameInfo* asyncCallbackInfo = (ElementNameInfo*)data;
+            ElementNameInfo* asyncCallbackInfo = reinterpret_cast<ElementNameInfo *>(data);
             std::unique_ptr<ElementNameInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->errCode) {
@@ -453,7 +450,7 @@ napi_value GetRemoteAbilityInfos(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            ElementNameInfos* asyncCallbackInfo = (ElementNameInfos*)data;
+            ElementNameInfos* asyncCallbackInfo = reinterpret_cast<ElementNameInfos *>(data);
             if (!asyncCallbackInfo->errCode) {
                 asyncCallbackInfo->errCode =
                     InnerGetRemoteAbilityInfos(asyncCallbackInfo->elementNames,
@@ -462,7 +459,7 @@ napi_value GetRemoteAbilityInfos(napi_env env, napi_callback_info info)
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            ElementNameInfos* asyncCallbackInfo = (ElementNameInfos*)data;
+            ElementNameInfos* asyncCallbackInfo = reinterpret_cast<ElementNameInfos *>(data);
             std::unique_ptr<ElementNameInfos> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
             if (asyncCallbackInfo->errCode) {

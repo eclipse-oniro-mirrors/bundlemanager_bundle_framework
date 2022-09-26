@@ -199,7 +199,7 @@ static napi_value GetUndefinedValue(napi_env env)
     return jsObject;
 }
 
-static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, Query &query, napi_value jsObject)
+static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Query &query, napi_value jsObject)
 {
     if (uid != callingUid) {
         return;
@@ -2316,7 +2316,7 @@ static void ConvertDistro(napi_env env, napi_value &modulesObject, const OHOS::A
 }
 
 static void ConvertFormsInfo(napi_env env, napi_value &abilityObject,
-    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> forms)
+    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms)
 {
     napi_value formsArray;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &formsArray));

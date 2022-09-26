@@ -98,9 +98,11 @@ bool BmsDeviceManager::GetAllDeviceList(std::vector<std::string> &deviceIds)
         APP_LOGE("GetTrustedDeviceList failed");
         return false;
     }
-    for (auto &device : deviceList) {
-        deviceIds.emplace_back(device.deviceId);
-    }
+    std::transform(deviceList.begin(),
+        deviceList.end(),
+        std::back_inserter(deviceIds),
+        [](const auto &device) { return device.deviceId; });
+
     DistributedHardware::DmDeviceInfo dmDeviceInfo;
     int32_t ret =
         DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(BUNDLE_NAME, dmDeviceInfo);
