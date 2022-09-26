@@ -94,7 +94,6 @@ static int32_t GetFileContext(char *inputFile, char **contextBufPtr, uint32_t *b
 int32_t RPCIDStreamDecodeToBuffer(
     char *contextBuffer, uint32_t bufferLen, char **syscapSetBuf, uint32_t *syscapSetLength)
 {
-    errno_t ret;
     char *contextBufferTail = NULL;
     char *syscapBuf = NULL;
     uint32_t syscapBufLen;
@@ -154,7 +153,7 @@ int32_t RPCIDStreamDecodeToBuffer(
             return ERROR;
         }
 
-        ret = memcpy_s(bufferPtr, SINGLE_SYSCAP_LENGTH, SYSCAP_PREFIX_NAME, SYSCAP_PREFIX_NAME_LEN);
+        errno_t ret = memcpy_s(bufferPtr, SINGLE_SYSCAP_LENGTH, SYSCAP_PREFIX_NAME, SYSCAP_PREFIX_NAME_LEN);
         if (ret != EOK) {
             HILOG_ERROR(LOG_CORE, "context of \"os\" array is invaild\n");
             (void)free(syscapBuf);
