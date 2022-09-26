@@ -145,6 +145,14 @@ struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
+struct BundleInfoCallbackInfo : public BaseCallbackInfo {
+    explicit BundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    BundleInfo bundleInfo;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -163,10 +171,12 @@ napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
 napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
+napi_value GetBundleInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
+void CreateBundleFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
