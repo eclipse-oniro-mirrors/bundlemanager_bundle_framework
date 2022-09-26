@@ -451,7 +451,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
             if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-
+                return nullptr;
             } else if (valueType == napi_function) {
                 asyncCallbackInfo->userId = defaultUserid;
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -2142,7 +2142,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
             if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-
+                return nullptr;
             } else if (valueType == napi_function) {
                 asyncCallbackInfo->userId = defaultUserId;
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));

@@ -2001,9 +2001,9 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
             auto it = innerModuleInfos_.find(info.second.modulePackage);
             if (it == innerModuleInfos_.end()) {
                 APP_LOGE("can not find module %{public}s", info.second.modulePackage.c_str());
+            } else {
+                hapmoduleinfo->hashValue = it->second.hashValue;
             }
-            hapmoduleinfo->hashValue = it->second.hashValue;
-
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_HAP_MODULE_V9)
                 == GET_BUNDLE_INFO_WITH_HAP_MODULE_V9) {
                 bundleInfo.hapModuleInfos.emplace_back(*hapmoduleinfo);
