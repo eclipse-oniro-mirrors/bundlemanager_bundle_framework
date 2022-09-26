@@ -110,6 +110,7 @@ const std::string ANY_PERMISSION_CHANGE = "anyPermissionChange";
 
 const std::string GET_APPLICATION_INFO = "getApplicationInfo";
 const std::string GET_BUNDLE_INFO = "getBundleInfo";
+const std::string QUERY_ABILITY_BY_WANT = "queryAbilityByWant";
 
 const std::vector<int32_t> PACKINFO_FLAGS = {
     BundlePackFlag::GET_PACK_INFO_ALL,
@@ -132,6 +133,8 @@ struct PermissionsKey {
 
 static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
+static std::unordered_map<Query, napi_ref, QueryHash> abilityInfoCache;
+static std::mutex abilityInfoCacheMutex_;
 static std::mutex bundleMgrMutex_;
 static sptr<BundleMgrDeathRecipient> bundleMgrDeathRecipient(new (std::nothrow) BundleMgrDeathRecipient());
 }  // namespace
@@ -1679,6 +1682,16 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         [](napi_env env, void *data) {
             AsyncAbilityInfoCallbackInfo *asyncCallbackInfo = (AsyncAbilityInfoCallbackInfo *)data;
             if (!asyncCallbackInfo->err) {
+                {
+                    std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+                    auto item = abilityInfoCache.find(Query(asyncCallbackInfo->want.ToString(),
+                        QUERY_ABILITY_BY_WANT, asyncCallbackInfo->flags, asyncCallbackInfo->userId));
+                    if (item != abilityInfoCache.end()) {
+                        APP_LOGD("has cache,no need to query from host");
+                        asyncCallbackInfo->ret = true;
+                        return;
+                    }
+                }
                 asyncCallbackInfo->ret = InnerQueryAbilityInfos(env, asyncCallbackInfo->want, asyncCallbackInfo->flags,
                     asyncCallbackInfo->userId, asyncCallbackInfo->abilityInfos);
             }
@@ -1696,7 +1709,22 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                 if (asyncCallbackInfo->ret) {
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
                     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-                    ProcessAbilityInfos(env, result[1], asyncCallbackInfo->abilityInfos);
+                    // get from cache first
+                    std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+                    Query query(asyncCallbackInfo->want.ToString(), QUERY_ABILITY_BY_WANT,
+                        asyncCallbackInfo->flags, asyncCallbackInfo->userId);
+                    auto item = abilityInfoCache.find(query);
+                    if (item != abilityInfoCache.end()) {
+                        APP_LOGD("get abilityInfo from cache");
+                        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
+                    } else {
+                        ProcessAbilityInfos(env, result[1], asyncCallbackInfo->abilityInfos);
+                        napi_ref cacheAbilityInfo = nullptr;
+                        NAPI_CALL_RETURN_VOID(env,
+                            napi_create_reference(env, result[1], NAPI_RETURN_ONE, &cacheAbilityInfo));
+                        abilityInfoCache.clear();
+                        abilityInfoCache[query] = cacheAbilityInfo;
+                    }
                 } else {
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
                     NAPI_CALL_RETURN_VOID(env,
