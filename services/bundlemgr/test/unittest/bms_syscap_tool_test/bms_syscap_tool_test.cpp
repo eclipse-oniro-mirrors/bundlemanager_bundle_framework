@@ -190,5 +190,4 @@ HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0300, Function | SmallTest
     int32_t ret = RPCIDStreamDecodeToBuffer(inputFile, bufferLen, &syscapSetBuf, &syscapSetLength);
     EXPECT_EQ(ret, -1);
 }
-
 } // OHOS
