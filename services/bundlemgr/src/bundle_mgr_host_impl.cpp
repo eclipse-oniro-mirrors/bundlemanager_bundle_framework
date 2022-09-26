@@ -553,10 +553,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
 
         InnerBundleInfo info;
         BundleParser bundleParser;
-        AppPrivilegeCapability appPrivilegeCapability;
-        appPrivilegeCapability.allowMultiProcess = true;
-        appPrivilegeCapability.allowUsePrivilegeExtension = true;
-        ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
+        ret = bundleParser.Parse(realPath, info);
         if (ret != ERR_OK) {
             APP_LOGE("parse bundle info failed, error: %{public}d", ret);
             return false;
@@ -589,10 +586,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     }
     InnerBundleInfo info;
     BundleParser bundleParser;
-    AppPrivilegeCapability appPrivilegeCapability;
-    appPrivilegeCapability.allowMultiProcess = true;
-    appPrivilegeCapability.allowUsePrivilegeExtension = true;
-    ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
+    ret = bundleParser.Parse(realPath, info);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -634,10 +628,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     }
     InnerBundleInfo info;
     BundleParser bundleParser;
-    AppPrivilegeCapability appPrivilegeCapability;
-    appPrivilegeCapability.allowMultiProcess = true;
-    appPrivilegeCapability.allowUsePrivilegeExtension = true;
-    ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
+    ret = bundleParser.Parse(realPath, info);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         BundleUtil::DeleteDir(tempHapPath);
