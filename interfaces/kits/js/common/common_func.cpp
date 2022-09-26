@@ -438,6 +438,8 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
             return ERROR_ABILITY_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_PERMISSION_DENIED:
             return ERROR_PERMISSION_DENIED_ERROR;
+        case ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED:
+            return ERROR_PERMISSION_NOT_EXIST;
         default:
             return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }

@@ -2002,18 +2002,6 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
             if (it == innerModuleInfos_.end()) {
                 APP_LOGE("can not find module %{public}s", info.second.modulePackage.c_str());
             }
-            hapmoduleinfo->hashValue = it->second.hashValue;
-
-            if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_HAP_MODULE_V9)
-                == GET_BUNDLE_INFO_WITH_HAP_MODULE_V9) {
-                bundleInfo.hapModuleInfos.emplace_back(*hapmoduleinfo);
-                if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_METADATA_V9)
-                    != GET_BUNDLE_INFO_WITH_METADATA_V9) {
-                    for (HapModuleInfo &info : bundleInfo.hapModuleInfos) {
-                        info.metadata.clear();
-                    }
-                }
-            }
             bundleInfo.moduleNames.emplace_back(info.second.moduleName);
             bundleInfo.moduleDirs.emplace_back(info.second.modulePath);
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
