@@ -31,6 +31,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "quick_fix_boot_scanner.h"
 #include "quick_fix_data_mgr.h"
 #include "system_bundle_installer.h"
 
@@ -68,9 +69,11 @@ public:
     void AddInnerBundleInfo(const std::string &bundleName) const;
     void CheckQuickFixInfo(const std::string &bundleName, size_t size) const;
     void QueryAllInnerQuickFixInfo(std::map<std::string, InnerAppQuickFix> &innerQuickFixInfos) const;
+    void DeleteInnerAppQuickFix(const std::string &bundleName) const;
     ErrCode InstallBundle(const std::string &bundlePath) const;
     ErrCode UninstallBundle(const std::string &bundleName) const;
     void CreateQuickFileDir() const;
+    void DeleteQuickFileDir() const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
@@ -187,6 +190,12 @@ void BmsBundleQuickFixBootScannerTest::QueryAllInnerQuickFixInfo(std::map<std::s
     EXPECT_TRUE(ret);
 }
 
+void BmsBundleQuickFixBootScannerTest::DeleteInnerAppQuickFix(const std::string &bundleName) const
+{
+    EXPECT_NE(quickFixDataMgr_, nullptr) << "the quickFixDataMgr_ is nullptr";
+    quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName);
+}
+
 ErrCode BmsBundleQuickFixBootScannerTest::InstallBundle(const std::string &bundlePath) const
 {
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
@@ -256,6 +265,12 @@ void BmsBundleQuickFixBootScannerTest::CreateQuickFileDir() const
 
     bool res = SaveStringToFile(HAP_FILE_PATH, HAP_FILE_PATH);
     EXPECT_TRUE(res);
+}
+
+void BmsBundleQuickFixBootScannerTest::DeleteQuickFileDir() const
+{
+    bool ret = BundleUtil::DeleteDir(PATCH_PATH);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -464,5 +479,499 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0700
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_0800
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database empty
+ *           2. scan successfully
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0800, Function | SmallTest | Level0)
+{
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_0900
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database not empty
+ *           2. DEFAULT_STATUS
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0900, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEFAULT_STATUS, false);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1001
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database not empty
+ *           2. DELETE_END
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1001, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DELETE_END, false);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1002
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database not empty
+ *           2. DEPLOY_START
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1002, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_START, false);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1003
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database not empty
+ *           2. DEPLOY_END
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1003, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_END, false);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1004
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database not empty
+ *           2. SWITCH_ENABLE_START
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1004, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_ENABLE_START,
+        false);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1005
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database not empty
+ *           2. SWITCH_DISABLE_START
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1005, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_DISABLE_START);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1006
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. quick fix database not empty
+ *           2. SWITCH_DISABLE_START
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1006, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_DISABLE_START);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->ProcessQuickFixBootUp();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1007
+ * @tc.name: test QuickFixBootScanner
+ * @tc.desc: 1. state_ is nullptr
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1007, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->state_ = nullptr;
+        auto ret = scanner->ProcessState();
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1008
+ * @tc.name: test RestoreQuickFix
+ * @tc.desc: 1. quickFixInfoMap_ empty
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1008, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->RestoreQuickFix();
+        EXPECT_EQ(scanner->state_, nullptr);
+        EXPECT_TRUE(scanner->quickFixInfoMap_.empty());
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1009
+ * @tc.name: test RestoreQuickFix
+ * @tc.desc: 1. RestoreQuickFix, file patch exist
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1009, Function | SmallTest | Level0)
+{
+    auto ret = InstallBundle(BUNDLE_PATH);
+    EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
+    CreateQuickFileDir();
+
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->RestoreQuickFix();
+        EXPECT_EQ(scanner->state_, nullptr);
+        EXPECT_FALSE(scanner->quickFixInfoMap_.empty());
+    }
+    ret = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1010
+ * @tc.name: test RestoreQuickFix
+ * @tc.desc: 1. RestoreQuickFix, file patch exist
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1010, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->RestoreQuickFix();
+        EXPECT_EQ(scanner->state_, nullptr);
+        EXPECT_FALSE(scanner->quickFixInfoMap_.empty());
+    }
+    DeleteQuickFileDir();
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1011
+ * @tc.name: test RestoreQuickFix
+ * @tc.desc: 1. RestoreQuickFix, file patch exist
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1011, Function | SmallTest | Level0)
+{
+    auto ret = InstallBundle(BUNDLE_PATH);
+    EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
+    CreateQuickFileDir();
+
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->RestoreQuickFix();
+        EXPECT_EQ(scanner->state_, nullptr);
+        EXPECT_FALSE(scanner->quickFixInfoMap_.empty());
+    }
+    ret = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1012
+ * @tc.name: test RestoreQuickFix
+ * @tc.desc: 1. RestoreQuickFix, file patch exist
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1012, Function | SmallTest | Level0)
+{
+    auto ret = InstallBundle(BUNDLE_PATH);
+    EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
+    CreateQuickFileDir();
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    InnerAppQuickFix innerAppQuickFix;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    AddInnerAppQuickFix(innerAppQuickFix);
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->RestoreQuickFix();
+        EXPECT_EQ(scanner->state_, nullptr);
+        EXPECT_FALSE(scanner->quickFixInfoMap_.empty());
+    }
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+    ret = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1013
+ * @tc.name: test ProcessQuickFixDir
+ * @tc.desc: 1. ProcessQuickFixDir, empty paramater
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1013, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        std::vector<std::string> dirs;
+        scanner->ProcessQuickFixDir(dirs);
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
+    DeleteQuickFileDir();
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1014
+ * @tc.name: test ProcessQuickFixDir
+ * @tc.desc: 1. ProcessQuickFixDir
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1014, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        std::vector<std::string> dirs;
+        dirs.push_back(PATCH_PATH);
+        scanner->ProcessQuickFixDir(dirs);
+        EXPECT_FALSE(scanner->quickFixInfoMap_.empty());
+    }
+    DeleteQuickFileDir();
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1015
+ * @tc.name: test ProcessQuickFixDir
+ * @tc.desc: 1. ProcessQuickFixDir, invalid path
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1015, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->quickFixInfoMap_.clear();
+        std::vector<std::string> dirs;
+        dirs.push_back("wrong");
+        dirs.push_back("bundleName_1000wrong");
+        dirs.push_back("/bundleName");
+        scanner->ProcessQuickFixDir(dirs);
+        EXPECT_TRUE(scanner->quickFixInfoMap_.empty());
+    }
+    DeleteQuickFileDir();
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1016
+ * @tc.name: test ReprocessQuickFix
+ * @tc.desc: 1. ReprocessQuickFix, invalid path
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1016, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        auto ret = scanner->ReprocessQuickFix("", "");
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1017
+ * @tc.name: test ReprocessQuickFix
+ * @tc.desc: 1. ReprocessQuickFix, invalid path
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1017, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        auto ret = scanner->ReprocessQuickFix("", "");
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1018
+ * @tc.name: test ReprocessQuickFix
+ * @tc.desc: 1. ReprocessQuickFix
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1018, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        auto ret = scanner->ReprocessQuickFix(HAP_FILE_PATH, BUNDLE_NAME);
+        EXPECT_FALSE(ret);
+    }
+    DeleteQuickFileDir();
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1019
+ * @tc.name: test GetApplicationInfo
+ * @tc.desc: 1. GetApplicationInfo
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1019, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        ApplicationInfo info;
+        auto ret = scanner->GetApplicationInfo(BUNDLE_NAME, HAP_FILE_PATH, info);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1020
+ * @tc.name: test ProcessWithBundleHasQuickFixInfo
+ * @tc.desc: 1. ProcessWithBundleHasQuickFixInfo, quickFixVersion == fileVersion
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1020, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        int32_t quickFixVersion = 1000;
+        int32_t fileVersion = 1000;
+        auto ret = scanner->ProcessWithBundleHasQuickFixInfo(BUNDLE_NAME, HAP_FILE_PATH, quickFixVersion, fileVersion);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1021
+ * @tc.name: test ProcessWithBundleHasQuickFixInfo
+ * @tc.desc: 1. ProcessWithBundleHasQuickFixInfo, quickFixVersion > fileVersion
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1021, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        int32_t quickFixVersion = 1001;
+        int32_t fileVersion = 1000;
+        auto ret = scanner->ProcessWithBundleHasQuickFixInfo(BUNDLE_NAME, HAP_FILE_PATH, quickFixVersion, fileVersion);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1022
+ * @tc.name: test ProcessWithBundleHasQuickFixInfo
+ * @tc.desc: 1. ProcessWithBundleHasQuickFixInfo, quickFixVersion > fileVersion
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1022, Function | SmallTest | Level0)
+{
+    auto ret = InstallBundle(BUNDLE_PATH);
+    EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        int32_t quickFixVersion = 1001;
+        int32_t fileVersion = 1000;
+        auto ret = scanner->ProcessWithBundleHasQuickFixInfo(BUNDLE_NAME, HAP_FILE_PATH, quickFixVersion, fileVersion);
+        EXPECT_TRUE(ret);
+    }
+    ret = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1023
+ * @tc.name: test ProcessWithBundleHasQuickFixInfo
+ * @tc.desc: 1. ProcessWithBundleHasQuickFixInfo
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1023, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->invalidQuickFixDir_.push_back(PATCH_PATH);
+        scanner->RemoveInvalidDir();
+        int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
+        EXPECT_NE(patchPathExist, 0);
+    }
+    DeleteQuickFileDir();
 }
 } // OHOS
