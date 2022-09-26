@@ -1045,8 +1045,8 @@ public:
         return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
     }
 
-    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
+    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
+        std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1056,8 +1056,8 @@ public:
         return nullptr;
     }
 
-    virtual std::string GetStringById(
-        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+    virtual std::string GetStringById(const std::string &bundleName, const std::string &moduleName, uint32_t resId,
+        int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING)
     {
         return Constants::EMPTY_STRING;
     }

@@ -2822,8 +2822,8 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
     return reply.ReadBool();
 }
 
-std::string BundleMgrProxy::GetStringById(
-    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const std::string &moduleName,
+    uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     APP_LOGD("begin to GetStringById.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2842,7 +2842,6 @@ std::string BundleMgrProxy::GetStringById(
         APP_LOGE("fail to GetStringById due to write bundleName fail");
         return Constants::EMPTY_STRING;
     }
-
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetStringById due to write moduleName fail");
         return Constants::EMPTY_STRING;
@@ -2853,6 +2852,10 @@ std::string BundleMgrProxy::GetStringById(
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetStringById due to write userId fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteString(localeInfo)) {
+        APP_LOGE("fail to GetStringById due to write localeInfo fail");
         return Constants::EMPTY_STRING;
     }
     MessageParcel reply;
@@ -3085,7 +3088,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
 }
 
 ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
@@ -3109,6 +3112,10 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
     }
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetMediaData due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetMediaData due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;

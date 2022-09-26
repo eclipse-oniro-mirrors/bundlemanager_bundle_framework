@@ -752,15 +752,15 @@ public:
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
-    ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const;
+    ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
+        std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const;
 
     std::shared_mutex &GetStatusCallbackMutex();
 
     std::vector<sptr<IBundleStatusCallback>> GetCallBackList() const;
 
-    std::string GetStringById(
-        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId);
+    std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
+        uint32_t resId, int32_t userId, const std::string &localeInfo);
 
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
@@ -841,8 +841,8 @@ private:
     void GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &infos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
-    std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(
-        const std::string &bundleName, const std::string &moduleName, int32_t userId) const;
+    std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
+        const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;
 #endif
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
