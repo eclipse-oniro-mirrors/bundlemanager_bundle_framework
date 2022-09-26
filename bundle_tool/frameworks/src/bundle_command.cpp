@@ -92,10 +92,8 @@ const struct option LONG_OPTIONS_DUMP_DEPENDENCIES[] = {
 
 class CleanCacheCallbackImpl : public CleanCacheCallbackHost {
 public:
-    CleanCacheCallbackImpl()
-    {
-        signal_ = std::make_shared<std::promise<bool>>();
-    }
+    CleanCacheCallbackImpl() : signal_(std::make_shared<std::promise<bool>>())
+    {}
     virtual ~CleanCacheCallbackImpl() override
     {}
     virtual void OnCleanCacheFinished(bool error) override;
@@ -184,7 +182,6 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
 {
     int result = OHOS::ERR_OK;
     InstallFlag installFlag = InstallFlag::REPLACE_EXISTING;
-    int option = -1;
     int counter = 0;
     std::vector<std::string> bundlePath;
     int index = 0;
@@ -192,7 +189,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
     int32_t waittingTime = MINIMUM_WAITTING_TIME;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -370,7 +367,6 @@ ErrCode BundleManagerShellCommand::GetBundlePath(const std::string& param,
 ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string bundleName = "";
     std::string moduleName = "";
@@ -378,7 +374,7 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
     bool isKeepData = false;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -521,7 +517,6 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
 ErrCode BundleManagerShellCommand::RunAsDumpCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string dumpResults = "";
     std::string bundleName = "";
@@ -533,7 +528,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
     int32_t userId = Constants::ALL_USERID;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP.c_str(), LONG_OPTIONS_DUMP, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP.c_str(), LONG_OPTIONS_DUMP, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -684,14 +679,13 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
 ErrCode BundleManagerShellCommand::RunAsDumpDependenciesCommand()
 {
     int32_t result = OHOS::ERR_OK;
-    int32_t option = -1;
     int32_t counter = 0;
     std::string dumpResults;
     std::string bundleName;
     std::string moduleName;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP_DEPENDENCIES.c_str(),
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP_DEPENDENCIES.c_str(),
             LONG_OPTIONS_DUMP_DEPENDENCIES, nullptr);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -794,7 +788,6 @@ ErrCode BundleManagerShellCommand::ParseDependenciesCommand(int32_t option, std:
 ErrCode BundleManagerShellCommand::RunAsCleanCommand()
 {
     int32_t result = OHOS::ERR_OK;
-    int32_t option = -1;
     int32_t counter = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     bool cleanCache = false;
@@ -802,7 +795,7 @@ ErrCode BundleManagerShellCommand::RunAsCleanCommand()
     std::string bundleName = "";
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -941,14 +934,13 @@ ErrCode BundleManagerShellCommand::RunAsCleanCommand()
 ErrCode BundleManagerShellCommand::RunAsEnableCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string bundleName = "";
     std::string abilityName = "";
     int32_t userId = Constants::UNSPECIFIED_USERID;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1075,14 +1067,13 @@ ErrCode BundleManagerShellCommand::RunAsEnableCommand()
 ErrCode BundleManagerShellCommand::RunAsDisableCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     std::string bundleName = "";
     std::string abilityName = "";
     int32_t userId = Constants::UNSPECIFIED_USERID;
     while (true) {
         counter++;
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1203,7 +1194,6 @@ ErrCode BundleManagerShellCommand::RunAsDisableCommand()
 ErrCode BundleManagerShellCommand::RunAsGetCommand()
 {
     int result = OHOS::ERR_OK;
-    int option = -1;
     int counter = 0;
     while (true) {
         counter++;
@@ -1211,7 +1201,7 @@ ErrCode BundleManagerShellCommand::RunAsGetCommand()
             resultReceiver_.append(HELP_MSG_GET);
             return OHOS::ERR_INVALID_VALUE;
         }
-        option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET.c_str(), LONG_OPTIONS_GET, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
