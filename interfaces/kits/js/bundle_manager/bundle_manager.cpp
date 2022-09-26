@@ -2036,5 +2036,135 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
     callbackPtr.release();
     return promise;
 }
+
+static ErrCode InnerGetBundleInfos(int32_t flags,
+    int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetBundleInfosV9(flags, bundleInfos, userId);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+static void ProcessBundleInfos(
+    napi_env env, napi_value result, const std::vector<BundleInfo> &bundleInfos, int32_t flags)
+{
+    if (bundleInfos.size() == 0) {
+        APP_LOGD("bundleInfos is null");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : bundleInfos) {
+        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.name.c_str());
+        napi_value objBundleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
+        CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index, objBundleInfo));
+        index++;
+    }
+}
+
+void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
+{
+    BundleInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<BundleInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<BundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+        ProcessBundleInfos(env, result[1], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->flags);
+    } else {
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+void GetBundleInfosExec(napi_env env, void *data)
+{
+    BundleInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<BundleInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetBundleInfos(asyncCallbackInfo->flags,
+        asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
+}
+
+napi_value GetBundleInfos(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetBundleInfos called");
+    NapiArg args(env, info);
+    BundleInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfosCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<BundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    int32_t defaultUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Falgs %{public}d invalid!", asyncCallbackInfo->flags);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            }
+            if (args.GetArgc() == ARGS_SIZE_ONE) {
+                asyncCallbackInfo->userId = defaultUserId;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+
+            } else if (valueType == napi_function) {
+                asyncCallbackInfo->userId = defaultUserId;
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            } else {
+                APP_LOGE("param check error");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            break;
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfosCallbackInfo>(
+        env, asyncCallbackInfo, "GetBundleInfos", GetBundleInfosExec, GetBundleInfosComplete);
+    callbackPtr.release();
+    APP_LOGD("call NAPI_GetBundleInfos done.");
+    return promise;
+}
 }
 }

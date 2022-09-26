@@ -145,6 +145,14 @@ struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
+struct BundleInfosCallbackInfo : public BaseCallbackInfo {
+    explicit BundleInfosCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<BundleInfo> bundleInfos;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -163,6 +171,7 @@ napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
 napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
+napi_value GetBundleInfos(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
