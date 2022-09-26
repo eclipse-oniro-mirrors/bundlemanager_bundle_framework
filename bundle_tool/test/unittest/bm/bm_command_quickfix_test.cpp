@@ -17,11 +17,16 @@
 
 #define protected public
 #include "bundle_command.h"
+#include "quick_fix_command.h"
 #undef protected
 
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
+const int QUICK_FIX_COPY_FILES_FAILED = 4;
+const int QUICK_FIX_GET_BUNDLE_INFO_FAILED = 8;
+const int QUICK_FIX_INVALID_VALUE = 22;
+const int QUICK_FIX_OK = 0;
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -421,6 +426,117 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0600, TestSize.Level1)
     BundleManagerShellCommand cmd(argc, argv);
 
     EXPECT_EQ(cmd.ExecCommand(), "Get quick fix info failed with errno 8.\n");
+}
+
+/**
+ * @tc.name: Bm_Command_QuickFix_Query_0700
+ * @tc.desc: Test quickFixFiles is empty
+ * @tc.type: FUNC
+ * @tc.require: issueI5OCZV
+ */
+HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0700, TestSize.Level1)
+{
+    QuickFixCommand command;
+    std::vector<std::string> quickFixFiles;
+    std::string resultInfo;
+    auto ret = command.ApplyQuickFix(quickFixFiles, resultInfo);
+    EXPECT_EQ(resultInfo, "quick fix file is empty.\n");
+    EXPECT_EQ(ret, QUICK_FIX_INVALID_VALUE);
+}
+
+/**
+ * @tc.name: Bm_Command_QuickFix_Query_0800
+ * @tc.desc: Test dir not have hqf file
+ * @tc.type: FUNC
+ * @tc.require: issueI5OCZV
+ */
+HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0800, TestSize.Level1)
+{
+    QuickFixCommand command;
+    std::vector<std::string> quickFixFiles = { "/data/null" };
+    std::string resultInfo;
+    auto ret = command.ApplyQuickFix(quickFixFiles, resultInfo);
+    EXPECT_EQ(resultInfo, "apply quickfix failed with errno: 4.\n");
+    EXPECT_EQ(ret, QUICK_FIX_COPY_FILES_FAILED);
+}
+
+/**
+ * @tc.name: Bm_Command_QuickFix_Query_0900
+ * @tc.desc: Test empty bundleName
+ * @tc.type: FUNC
+ * @tc.require: issueI5OCZV
+ */
+HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0900, TestSize.Level1)
+{
+    QuickFixCommand command;
+    std::string bundleName;
+    std::string resultInfo;
+    auto ret = command.GetApplyedQuickFixInfo(bundleName, resultInfo);
+    EXPECT_EQ(resultInfo, "bundle name is empty.\n");
+    EXPECT_EQ(ret, QUICK_FIX_INVALID_VALUE);
+}
+
+/**
+ * @tc.name: Bm_Command_QuickFix_Query_1000
+ * @tc.desc: Test right bundleName
+ * @tc.type: FUNC
+ * @tc.require: issueI5OCZV
+ */
+HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_1000, TestSize.Level1)
+{
+    QuickFixCommand command;
+    std::string bundleName = "com.ohos.launcher";
+    std::string resultInfo;
+    auto ret = command.GetApplyedQuickFixInfo(bundleName, resultInfo);
+    EXPECT_EQ(ret, QUICK_FIX_OK);
+}
+
+/**
+ * @tc.name: Bm_Command_QuickFix_Query_1100
+ * @tc.desc: Test wrong bundleName
+ * @tc.type: FUNC
+ * @tc.require: issueI5OCZV
+ */
+HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_1100, TestSize.Level1)
+{
+    QuickFixCommand command;
+    std::string bundleName = "wrong";
+    std::string resultInfo;
+    auto ret = command.GetApplyedQuickFixInfo(bundleName, resultInfo);
+    EXPECT_EQ(ret, QUICK_FIX_GET_BUNDLE_INFO_FAILED);
+}
+
+/**
+ * @tc.name: Bm_Command_QuickFix_Query_1200
+ * @tc.desc: Test GetQuickFixInfoString with different type
+ * @tc.type: FUNC
+ * @tc.require: issueI5OCZV
+ */
+HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_1200, TestSize.Level1)
+{
+    QuickFixCommand command;
+    AAFwk::ApplicationQuickFixInfo quickFixInfo;
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo hq1;
+    hq1.moduleName = "step1";
+    hq1.hapSha256 = "step2";
+    hq1.hqfFilePath = "step3";
+    hqfInfos.emplace_back(hq1);
+    quickFixInfo.appqfInfo.hqfInfos = hqfInfos;
+    quickFixInfo.appqfInfo.type = AppExecFwk::QuickFixType::PATCH;
+    auto ret = command.GetQuickFixInfoString(quickFixInfo);
+    EXPECT_EQ(ret, "ApplicationQuickFixInfo:\n  bundle name: \n  bundle version code: 0\n  "
+        "bundle version name: \n  patch version code: 0\n  patch version name: \n  "
+        "cpu abi: \n  native library path: \n  type: patch\n  ModuelQuickFixInfo:\n    "
+        "module name: step1\n    module sha256: step2\n    "
+        "file path: step3\n");
+    quickFixInfo.appqfInfo.type = AppExecFwk::QuickFixType::HOT_RELOAD;
+    ret = command.GetQuickFixInfoString(quickFixInfo);
+    EXPECT_EQ(ret, "ApplicationQuickFixInfo:\n  bundle name: \n  bundle version code: 0\n  "
+        "bundle version name: \n  patch version code: 0\n  patch version name: \n  "
+        "cpu abi: \n  native library path: \n  type: hotreload\n  ModuelQuickFixInfo:\n    "
+        "module name: step1\n    module sha256: step2\n    "
+        "file path: step3\n");
 }
 } // namespace AAFwk
 } // namespace OHOS
