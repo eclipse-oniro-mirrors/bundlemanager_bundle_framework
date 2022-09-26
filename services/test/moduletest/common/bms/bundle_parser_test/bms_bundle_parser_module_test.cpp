@@ -35,9 +35,7 @@ public:
     {
         BundleParser bundleParser;
         InnerBundleInfo innerBundleInfo;
-        AppPrivilegeCapability appPrivilegeCapability;
-        ErrCode result = bundleParser.Parse(
-            pathStream.str(), appPrivilegeCapability, innerBundleInfo);
+        ErrCode result = bundleParser.Parse(pathStream.str(), innerBundleInfo);
         BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
         EXPECT_EQ(result, ERR_OK);
 
@@ -103,9 +101,7 @@ HWTEST_F(BmsBundleParserModuleTest, InvalidBundleProfileName_0300, Function | Me
     pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle14" << Constants::INSTALL_FILE_SUFFIX;
     BundleParser bundleParser;
     InnerBundleInfo innerBundleInfo;
-    AppPrivilegeCapability appPrivilegeCapability;
-    ErrCode result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << "fail, parser bundle success!";
 }
 
