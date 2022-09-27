@@ -4650,10 +4650,6 @@ static bool InnerSetApplicationEnabled(napi_env env, const std::string &bundleNa
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    {
-        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-        abilityInfoCache.clear();
-    }
     ErrCode result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
     if (result != ERR_OK) {
         APP_LOGE("InnerSetApplicationEnabled::SetApplicationEnabled");
@@ -4668,10 +4664,6 @@ static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::Ability
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
         return false;
-    }
-    {
-        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-        abilityInfoCache.clear();
     }
     ErrCode result = iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
     if (result != ERR_OK) {
@@ -4705,6 +4697,10 @@ static bool InnerCleanBundleCacheCallback(
 
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
 {
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
     size_t requireArgc = ARGS_SIZE_TWO;
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = { 0 };
@@ -4994,6 +4990,10 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
 
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
 {
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
     size_t requireArgc = ARGS_SIZE_TWO;
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = { 0 };
