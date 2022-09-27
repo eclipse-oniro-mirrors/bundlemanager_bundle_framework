@@ -582,6 +582,193 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_1200, Function | Sma
 }
 
 /**
+ * @tc.name: QueryExtensionAbilityInfosV9_1300
+ * @tc.desc: 1.query extensionAbilityInfos with invalid userId
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    int32_t userId = -1;
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, userId, infos);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.name: QueryExtensionAbilityInfosV9_1400
+ * @tc.desc: 1.query extensionAbilityInfos with not exist action
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1400, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.not.exist.xxx");
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
+    EXPECT_NE(result, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.name: QueryExtensionAbilityInfosV9_1500
+ * @tc.desc: 1.explicit query extensionAbilityInfos
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1500, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "extensionAbility_A", "");
+    want.SetElement(elementName);
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
+    EXPECT_EQ(result, ERR_OK);
+
+    int32_t flags = GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9 |
+        GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9 | GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9;
+    result = dataMgr->QueryExtensionAbilityInfosV9(want, flags, USERID, infos);
+    EXPECT_EQ(result, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.name: QueryExtensionAbilityInfosV9_1600
+ * @tc.desc: 1.explicit query extensionAbilityInfos, which not exists
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1600, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "NotExist", "");
+    want.SetElement(elementName);
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
+    EXPECT_NE(result, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.name: QueryExtensionAbilityInfosV9_1700
+ * @tc.desc: 1.query extensionAbilityInfos with empty want
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.name: QueryExtensionAbilityInfosV9_1800
+ * @tc.desc: 1.query extensionAbilityInfos in all scope
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1800, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
+    EXPECT_EQ(result, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.name: QueryExtensionAbilityInfosV9_1900
+ * @tc.desc: 1.query extensionAbilityInfos with more than one target
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1900, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.hello");
+    want.AddEntity("entity.hello");
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
+    EXPECT_EQ(result, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.name: QueryExtensionAbilityInfosV9_2000
+ * @tc.desc: 1.query extensionAbilityInfos with flags
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_2000, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.hello");
+    want.AddEntity("entity.hello");
+    int32_t flags = GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9 |
+        GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9 | GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9;
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, flags, USERID, infos);
+    EXPECT_EQ(result, ERR_OK);
+
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "", "");
+    want.SetElement(elementName);
+    result = dataMgr->QueryExtensionAbilityInfosV9(want, flags, USERID, infos);
+    EXPECT_EQ(result, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
  * @tc.number: QueryAbilityInfosV9_0100
  * @tc.name: test QueryAbilityInfosV9 proxy
  * @tc.desc: 1.query ability infos
@@ -609,10 +796,188 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0100, Function | MediumTest |
 
 /**
  * @tc.number: QueryAbilityInfosV9_0200
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.query ability infos with invalid userId
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0200, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    int32_t userId = -1;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, userId, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0300
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.query ability infos with not exist action
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0300, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.not.exist.xxx");
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0400
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.explicit query ability infos
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0400, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "MainAbility", "");
+    want.SetElement(elementName);
+
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    int32_t flags = GET_ABILITY_INFO_WITH_PERMISSION_V9 | GET_ABILITY_INFO_WITH_APPLICATION_V9 |
+        GET_ABILITY_INFO_WITH_METADATA_V9 | GET_ABILITY_INFO_WITH_DISABLE_V9;
+    ret = dataMgr->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0500
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.explicit query ability infos, which not exists
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0500, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "NotExist", "");
+    want.SetElement(elementName);
+
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0600
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.query ability infos with empty want
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0600, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0700
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.implicit query ability infos in all scope
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0700, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0800
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.implicit query ability infos with more than one target
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0800, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.hello");
+    want.AddEntity("entity.hello");
+
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "", "");
+    want.SetElement(elementName);
+    ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0900
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.implicit query ability infos with flags
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0900, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.hello");
+    want.AddEntity("entity.hello");
+
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = GET_ABILITY_INFO_WITH_PERMISSION_V9 | GET_ABILITY_INFO_WITH_APPLICATION_V9 |
+        GET_ABILITY_INFO_WITH_METADATA_V9 | GET_ABILITY_INFO_WITH_DISABLE_V9;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "", "");
+    want.SetElement(elementName);
+    ret = dataMgr->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_1000
  * @tc.name: test QueryAbilityInfosV9
  * @tc.desc: 1.query ability infos failed
  */
-HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0200, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_1000, Function | MediumTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -633,11 +998,11 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0200, Function | MediumTest |
 }
 
 /**
- * @tc.number: QueryAbilityInfosV9_0300
+ * @tc.number: QueryAbilityInfosV9_1100
  * @tc.name: test QueryAbilityInfosV9
  * @tc.desc: 1.query ability infos failed
  */
-HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0300, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_1100, Function | MediumTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);

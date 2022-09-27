@@ -21,6 +21,48 @@
                 ],
                 "srcEntrance": "./ets/MainAbility/MainAbility.ts",
                 "visible": true
+            },
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "SecondAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            },
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "ThirdAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
             }
         ],
         "deliveryWithInstall": true,
@@ -40,6 +82,36 @@
                         ],
                         "entities": [
                             "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "",
+                "type": "backup"
+            },
+            {
+                "name": "extensionAbility_B",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
+                        ]
+                    }
+                ],
+                "srcEntrance": "",
+                "type": "backup"
+            },
+            {
+                "name": "extensionAbility_C",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
                         ]
                     }
                 ],
