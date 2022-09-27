@@ -4650,6 +4650,10 @@ static bool InnerSetApplicationEnabled(napi_env env, const std::string &bundleNa
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
     ErrCode result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
     if (result != ERR_OK) {
         APP_LOGE("InnerSetApplicationEnabled::SetApplicationEnabled");
@@ -4664,6 +4668,10 @@ static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::Ability
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
         return false;
+    }
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
     }
     ErrCode result = iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
     if (result != ERR_OK) {
