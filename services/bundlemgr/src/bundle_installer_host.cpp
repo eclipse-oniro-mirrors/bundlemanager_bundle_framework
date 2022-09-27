@@ -406,6 +406,10 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
         APP_LOGE("install sandbox failed due to error parameters");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("InstallSandboxApp permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
     auto helper = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     if (helper == nullptr) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -428,6 +432,10 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
     if (appIndex <= INVALID_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("UninstallSandboxApp permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
     auto helper = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     if (helper == nullptr) {
