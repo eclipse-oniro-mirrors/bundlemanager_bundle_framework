@@ -32,8 +32,16 @@ struct PreBundleConfigInfo {
     bool singleton = false;
     bool runningResourcesApply = false;
     bool associatedWakeUp = false;
+    bool allowUsePrivilegeExtension = false;
+    bool allowMultiProcess = false;
+    bool formVisibleNotify = false;
+    bool allowQueryPriority = false;
+    bool allowExcludeFromMissions = false;
+    bool userDataClearable = true;
+    bool hideDesktopIcon = false;
     std::vector<std::string> allowCommonEvent;
     std::vector<std::string> appSignature;
+    std::vector<std::string> existInJsonFile;
 
     bool operator <(const PreBundleConfigInfo &preBundleConfigInfo) const
     {
@@ -47,8 +55,16 @@ struct PreBundleConfigInfo {
         singleton = false;
         runningResourcesApply = false;
         associatedWakeUp = false;
+        allowUsePrivilegeExtension = false;
+        allowMultiProcess = false;
+        formVisibleNotify = false;
+        allowQueryPriority = false;
+        allowExcludeFromMissions = false;
+        userDataClearable = true;
+        hideDesktopIcon = false;
         allowCommonEvent.clear();
         appSignature.clear();
+        existInJsonFile.clear();
     }
 
     std::string ToString() const
@@ -56,8 +72,15 @@ struct PreBundleConfigInfo {
         return "[ bundleName = " + bundleName
             + ", keepAlive = " + GetBoolStrVal(keepAlive)
             + ", singleton = " + GetBoolStrVal(singleton)
+            + ", runningResourcesApply = " + GetBoolStrVal(runningResourcesApply)
             + ", associatedWakeUp = " + GetBoolStrVal(associatedWakeUp)
-            + ", runningResourcesApply = " + GetBoolStrVal(runningResourcesApply) + "]";
+            + ", allowUsePrivilegeExtension = " + GetBoolStrVal(allowUsePrivilegeExtension)
+            + ", allowMultiProcess = " + GetBoolStrVal(allowMultiProcess)
+            + ", formVisibleNotify = " + GetBoolStrVal(formVisibleNotify)
+            + ", allowQueryPriority = " + GetBoolStrVal(allowQueryPriority)
+            + ", allowExcludeFromMissions = " + GetBoolStrVal(allowExcludeFromMissions)
+            + ", userDataClearable = " + GetBoolStrVal(userDataClearable)
+            + ", hideDesktopIcon = " + GetBoolStrVal(hideDesktopIcon) + "]";
     }
 };
 

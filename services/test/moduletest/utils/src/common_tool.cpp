@@ -21,7 +21,6 @@
 #include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <cstdlib>
 #include <string>
 
 #include "string_ex.h"

@@ -107,7 +107,6 @@ private:
 
     ErrCode ParseBundleInfo(
         const std::string &bundleFilePath,
-        const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &info,
         BundlePackInfo &packInfo) const;
 
@@ -132,6 +131,19 @@ private:
         AppPrivilegeCapability &appPrivilegeCapability);
     
     ErrCode CheckMainElement(const InnerBundleInfo &info);
+
+    void FetchPrivilegeCapabilityFromPreConfig(
+        const std::string &bundleName,
+        const std::string &appSignature,
+        AppPrivilegeCapability &appPrivilegeCapability);
+
+    bool MatchSignature(const std::vector<std::string> &appSignatures, const std::string &signature);
+
+    bool GetPrivilegeCapabilityValue(const std::vector<std::string> &existInJson,
+        const std::string &key, bool existInPreJson, bool existInProvision);
+
+    ErrCode ProcessBundleInfoByPrivilegeCapability(const AppPrivilegeCapability &appPrivilegeCapability,
+        InnerBundleInfo &innerBundleInfo);
 
     bool isContainEntry_ = false;
 };

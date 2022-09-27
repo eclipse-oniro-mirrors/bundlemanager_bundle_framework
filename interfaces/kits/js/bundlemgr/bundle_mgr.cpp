@@ -2996,11 +2996,12 @@ static bool InnerGetPermissionDef(napi_env env, const std::string &permissionNam
         APP_LOGE("can not get iBundleMgr");
         return false;
     };
-    bool ret = iBundleMgr->GetPermissionDef(permissionName, permissionDef);
-    if (!ret) {
+    ErrCode ret = iBundleMgr->GetPermissionDef(permissionName, permissionDef);
+    if (ret != NO_ERROR) {
         APP_LOGE("permissionName is not find");
+        return false;
     }
-    return ret;
+    return true;
 }
 
 /**
@@ -4697,6 +4698,10 @@ static bool InnerCleanBundleCacheCallback(
 
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
 {
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
     size_t requireArgc = ARGS_SIZE_TWO;
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = { 0 };
@@ -4986,6 +4991,10 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
 
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
 {
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
     size_t requireArgc = ARGS_SIZE_TWO;
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = { 0 };

@@ -2001,18 +2001,6 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
             auto it = innerModuleInfos_.find(info.second.modulePackage);
             if (it == innerModuleInfos_.end()) {
                 APP_LOGE("can not find module %{public}s", info.second.modulePackage.c_str());
-            } else {
-                hapmoduleinfo->hashValue = it->second.hashValue;
-            }
-            if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_HAP_MODULE_V9)
-                == GET_BUNDLE_INFO_WITH_HAP_MODULE_V9) {
-                bundleInfo.hapModuleInfos.emplace_back(*hapmoduleinfo);
-                if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_METADATA_V9)
-                    != GET_BUNDLE_INFO_WITH_METADATA_V9) {
-                    for (HapModuleInfo &info : bundleInfo.hapModuleInfos) {
-                        info.metadata.clear();
-                    }
-                }
             }
             bundleInfo.moduleNames.emplace_back(info.second.moduleName);
             bundleInfo.moduleDirs.emplace_back(info.second.modulePath);
@@ -2041,33 +2029,7 @@ void InnerBundleInfo::ProcessBundleFlags(
         }
     }
     GetBundleWithReqPermissionsV9(flags, bundleInfo);
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_ABILITY_V9)
-        == GET_BUNDLE_INFO_WITH_ABILITY_V9) {
-        if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_DISABLE_V9)
-            == GET_BUNDLE_INFO_WITH_DISABLE_V9) {
-            GetBundleWithAbilities(static_cast<uint32_t>(GET_BUNDLE_WITH_ABILITIES) |
-                static_cast<uint32_t>(GET_ABILITY_INFO_WITH_DISABLE), bundleInfo, userId);
-        } else {
-            GetBundleWithAbilities(GET_BUNDLE_WITH_ABILITIES, bundleInfo, userId);
-        }
-        if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_METADATA_V9)
-            != GET_BUNDLE_INFO_WITH_METADATA_V9) {
-            for (AbilityInfo &info : bundleInfo.abilityInfos) {
-                info.metaData.customizeData.clear();
-                info.metadata.clear();
-            }
-        }
-    }
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY_V9)
-        == GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY_V9) {
-        GetBundleWithExtension(GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfo, userId);
-        if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_METADATA_V9)
-            != GET_BUNDLE_INFO_WITH_METADATA_V9) {
-            for (ExtensionAbilityInfo &info : bundleInfo.extensionInfos) {
-                info.metadata.clear();
-            }
-        }
-    }
+    ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId);
     if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9)
         == GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9) {
         bundleInfo.signatureInfo.appId = bundleInfo.appId;
@@ -2117,6 +2079,84 @@ void InnerBundleInfo::GetModuleWithHashValue(
     }
 
     hapModuleInfo.hashValue = it->second.hashValue;
+}
+
+void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
+{
+    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_HAP_MODULE_V9)
+        != GET_BUNDLE_INFO_WITH_HAP_MODULE_V9) {
+        bundleInfo.hapModuleInfos.clear();
+        return;
+    }
+    for (const auto &info : innerModuleInfos_) {
+        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId);
+        if (hapmoduleinfo) {
+            auto it = innerModuleInfos_.find(info.second.modulePackage);
+            if (it == innerModuleInfos_.end()) {
+                APP_LOGE("can not find module %{public}s", info.second.modulePackage.c_str());
+            }
+            HapModuleInfo hapModuleInfo = *hapmoduleinfo;
+            hapModuleInfo.hashValue = it->second.hashValue;
+            hapModuleInfo.moduleSourceDir = info.second.modulePath;
+            if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_METADATA_V9)
+                != GET_BUNDLE_INFO_WITH_METADATA_V9) {
+                hapModuleInfo.metadata.clear();
+            }
+
+            GetBundleWithAbilitiesV9(flags, hapModuleInfo, userId);
+            GetBundleWithExtensionAbilitiesV9(flags, hapModuleInfo);
+            bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+        }
+    }
+}
+
+void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const
+{
+    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_ABILITY_V9)
+        != GET_BUNDLE_INFO_WITH_ABILITY_V9) {
+        hapModuleInfo.abilityInfos.clear();
+        return;
+    }
+    APP_LOGD("Get bundleInfo with abilities.");
+    for (auto &ability : baseAbilityInfos_) {
+        bool isEnabled = IsAbilityEnabled(ability.second, userId);
+        if (!(static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_DISABLE_V9)
+            && !isEnabled) {
+            APP_LOGW("%{public}s is disabled,", ability.second.name.c_str());
+            continue;
+        }
+        AbilityInfo abilityInfo = ability.second;
+        abilityInfo.enabled = isEnabled;
+
+        if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_METADATA_V9)
+            != GET_BUNDLE_INFO_WITH_METADATA_V9) {
+            abilityInfo.metaData.customizeData.clear();
+            abilityInfo.metadata.clear();
+        }
+        hapModuleInfo.abilityInfos.emplace_back(abilityInfo);
+    }
+}
+
+void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const
+{
+    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY_V9)
+        != GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY_V9) {
+        hapModuleInfo.extensionInfos.clear();
+        return;
+    }
+    APP_LOGD("Get bundleInfo with extensionAbilities.");
+    for (const auto &extensionInfo : baseExtensionInfos_) {
+        if (!extensionInfo.second.enabled) {
+            continue;
+        }
+        ExtensionAbilityInfo info = extensionInfo.second;
+
+        if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_METADATA_V9)
+            != GET_BUNDLE_INFO_WITH_METADATA_V9) {
+            info.metadata.clear();
+        }
+        hapModuleInfo.extensionInfos.emplace_back(info);
+    }
 }
 
 void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const

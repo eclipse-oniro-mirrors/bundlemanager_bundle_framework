@@ -1323,7 +1323,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
-    return true;
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetBundlePackInfo(
