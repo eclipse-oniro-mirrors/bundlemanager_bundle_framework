@@ -65,6 +65,7 @@ const std::string HAP_MODULE_INFO_HQF_INFO = "hqfInfo";
 const std::string HAP_MODULE_INFO_IS_LIB_ISOLATED = "isLibIsolated";
 const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string HAP_MODULE_INFO_CPU_ABI = "cpuAbi";
+const std::string HAP_MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
 }
 
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
@@ -170,6 +171,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     isLibIsolated = parcel.ReadBool();
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
+    moduleSourceDir = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -260,6 +262,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLibIsolated);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleSourceDir));
     return true;
 }
 
@@ -307,7 +310,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_HQF_INFO, hapModuleInfo.hqfInfo},
         {HAP_MODULE_INFO_IS_LIB_ISOLATED, hapModuleInfo.isLibIsolated},
         {HAP_MODULE_INFO_NATIVE_LIBRARY_PATH, hapModuleInfo.nativeLibraryPath},
-        {HAP_MODULE_INFO_CPU_ABI, hapModuleInfo.cpuAbi}
+        {HAP_MODULE_INFO_CPU_ABI, hapModuleInfo.cpuAbi},
+        {HAP_MODULE_INFO_MODULE_SOURCE_DIR, hapModuleInfo.moduleSourceDir}
     };
 }
 
@@ -651,6 +655,17 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_MODULE_SOURCE_DIR,
+        hapModuleInfo.moduleSourceDir,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGW("HapModuleInfo from_json error, error code : %{public}d", parseResult);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

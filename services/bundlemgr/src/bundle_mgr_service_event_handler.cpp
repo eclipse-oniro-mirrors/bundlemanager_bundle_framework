@@ -1243,12 +1243,9 @@ bool BMSEventHandler::ParseHapFiles(
     }
 
     BundleParser bundleParser;
-    AppPrivilegeCapability appPrivilegeCapability;
-    appPrivilegeCapability.allowMultiProcess = true;
-    appPrivilegeCapability.allowUsePrivilegeExtension = true;
     for (auto realPath : realPaths) {
         InnerBundleInfo innerBundleInfo;
-        ret = bundleParser.Parse(realPath, appPrivilegeCapability, innerBundleInfo);
+        ret = bundleParser.Parse(realPath, innerBundleInfo);
         if (ret != ERR_OK) {
             APP_LOGE("Parse bundle info failed, error: %{public}d", ret);
             continue;

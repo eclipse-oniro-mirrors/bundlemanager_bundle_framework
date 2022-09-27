@@ -68,10 +68,10 @@ const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const size_t NUMBER_ONE = 1;
 }  // namespace
 
-class BmsBundleInstallerTest : public testing::Test {
+class BmsBundleManagerTest : public testing::Test {
 public:
-    BmsBundleInstallerTest();
-    ~BmsBundleInstallerTest();
+    BmsBundleManagerTest();
+    ~BmsBundleManagerTest();
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp();
@@ -95,13 +95,13 @@ private:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
 };
 
-BmsBundleInstallerTest::BmsBundleInstallerTest()
+BmsBundleManagerTest::BmsBundleManagerTest()
 {}
 
-BmsBundleInstallerTest::~BmsBundleInstallerTest()
+BmsBundleManagerTest::~BmsBundleManagerTest()
 {}
 
-bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) const
+bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) const
 {
     auto installer = std::make_unique<SystemBundleInstaller>();
     InstallParam installParam;
@@ -113,7 +113,7 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
 }
 
-ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
+ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePath) const
 {
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (!installer) {
@@ -133,7 +133,7 @@ ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &fileP
     return receiver->GetResultCode();
 }
 
-ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePath) const
+ErrCode BmsBundleManagerTest::UpdateThirdPartyBundle(const std::string &filePath) const
 {
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (!installer) {
@@ -153,7 +153,7 @@ ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePa
     return receiver->GetResultCode();
 }
 
-ErrCode BmsBundleInstallerTest::UnInstallBundle(const std::string &bundleName) const
+ErrCode BmsBundleManagerTest::UnInstallBundle(const std::string &bundleName) const
 {
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (!installer) {
@@ -173,15 +173,15 @@ ErrCode BmsBundleInstallerTest::UnInstallBundle(const std::string &bundleName) c
     return receiver->GetResultCode();
 }
 
-void BmsBundleInstallerTest::SetUpTestCase()
+void BmsBundleManagerTest::SetUpTestCase()
 {
 }
 
-void BmsBundleInstallerTest::TearDownTestCase()
+void BmsBundleManagerTest::TearDownTestCase()
 {
 }
 
-void BmsBundleInstallerTest::SetUp()
+void BmsBundleManagerTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
@@ -192,13 +192,13 @@ void BmsBundleInstallerTest::SetUp()
     }
 }
 
-void BmsBundleInstallerTest::TearDown()
+void BmsBundleManagerTest::TearDown()
 {
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR);
 }
 
-void BmsBundleInstallerTest::CheckFileExist() const
+void BmsBundleManagerTest::CheckFileExist() const
 {
     int bundleCodeExist = access(BUNDLE_CODE_DIR.c_str(), F_OK);
     EXPECT_EQ(bundleCodeExist, 0) << "the bundle code dir does not exists: " << BUNDLE_CODE_DIR;
@@ -207,7 +207,7 @@ void BmsBundleInstallerTest::CheckFileExist() const
     EXPECT_EQ(bundleDataExist, 0) << "the bundle data dir does not exists: " << BUNDLE_DATA_DIR;
 }
 
-void BmsBundleInstallerTest::CheckFileNonExist() const
+void BmsBundleManagerTest::CheckFileNonExist() const
 {
     int bundleCodeExist = access(BUNDLE_CODE_DIR.c_str(), F_OK);
     EXPECT_NE(bundleCodeExist, 0) << "the bundle code dir exists: " << BUNDLE_CODE_DIR;
@@ -216,17 +216,17 @@ void BmsBundleInstallerTest::CheckFileNonExist() const
     EXPECT_NE(bundleDataExist, 0) << "the bundle data dir exists: " << BUNDLE_DATA_DIR;
 }
 
-const std::shared_ptr<BundleDataMgr> BmsBundleInstallerTest::GetBundleDataMgr() const
+const std::shared_ptr<BundleDataMgr> BmsBundleManagerTest::GetBundleDataMgr() const
 {
     return bundleMgrService_->GetDataMgr();
 }
 
-const std::shared_ptr<BundleInstallerManager> BmsBundleInstallerTest::GetBundleInstallerManager() const
+const std::shared_ptr<BundleInstallerManager> BmsBundleManagerTest::GetBundleInstallerManager() const
 {
     return manager_;
 }
 
-void BmsBundleInstallerTest::StopInstalldService() const
+void BmsBundleManagerTest::StopInstalldService() const
 {
     if (installdService_->IsServiceReady()) {
         installdService_->Stop();
@@ -234,7 +234,7 @@ void BmsBundleInstallerTest::StopInstalldService() const
     }
 }
 
-void BmsBundleInstallerTest::StopBundleService()
+void BmsBundleManagerTest::StopBundleService()
 {
     if (bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStop();
@@ -242,7 +242,7 @@ void BmsBundleInstallerTest::StopBundleService()
     }
 }
 
-void BmsBundleInstallerTest::CreateInstallerManager()
+void BmsBundleManagerTest::CreateInstallerManager()
 {
     if (manager_ != nullptr) {
         return;
@@ -255,7 +255,7 @@ void BmsBundleInstallerTest::CreateInstallerManager()
     EXPECT_NE(nullptr, manager_);
 }
 
-void BmsBundleInstallerTest::ClearBundleInfo()
+void BmsBundleManagerTest::ClearBundleInfo()
 {
     if (bundleMgrService_ == nullptr) {
         return;
@@ -289,7 +289,7 @@ void BmsBundleInstallerTest::ClearBundleInfo()
  *           2.query extensionAbilityInfos
  * @tc.require: SR000H0383
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0100, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -320,7 +320,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0100, Function | S
  *           2.query extensionAbilityInfos
  * @tc.require: AR000H035G
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0200, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -343,7 +343,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0200, Function | S
  *           2.query extensionAbilityInfos
  * @tc.require: AR000H035G
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -368,7 +368,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0300, Function | S
  *           2.query extensionAbilityInfos
  * @tc.require: AR000H035G
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0400, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0400, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -392,7 +392,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0400, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0500, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0500, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -418,7 +418,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0500, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0600, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0600, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -442,7 +442,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0600, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0700, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0700, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -466,7 +466,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0700, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0800, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0800, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -490,7 +490,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0800, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0900, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0900, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -516,7 +516,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0900, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1000, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_1000, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -540,7 +540,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1000, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_1100, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -564,7 +564,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1100, Function | S
  * @tc.type: FUNC
  * @tc.require: issueI5MZ33
  */
-HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_1200, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_THUMBNAIL_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -586,7 +586,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1200, Function | S
  * @tc.name: test QueryAbilityInfosV9 proxy
  * @tc.desc: 1.query ability infos
  */
-HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0100, Function | MediumTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -608,11 +608,61 @@ HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0100, Function | MediumTest
 }
 
 /**
+ * @tc.number: QueryAbilityInfosV9_0200
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.query ability infos failed
+ */
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0200, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", "");
+
+    std::vector<AbilityInfo> AbilityInfo;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, AbilityInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0300
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.query ability infos failed
+ */
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0300, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", "", "", "");
+
+    std::vector<AbilityInfo> AbilityInfo;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, AbilityInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
  * @tc.number: GetApplicationInfoV9_0100
  * @tc.name: test GetApplicationInfoV9 proxy
  * @tc.desc: 1.query ability infos
  */
-HWTEST_F(BmsBundleInstallerTest, GetApplicationInfoV9_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, GetApplicationInfoV9_0100, Function | MediumTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -639,7 +689,7 @@ HWTEST_F(BmsBundleInstallerTest, GetApplicationInfoV9_0100, Function | MediumTes
  * @tc.name: test GetApplicationInfoV9 proxy
  * @tc.desc: 1.query ability infos failed by empty bundle name
  */
-HWTEST_F(BmsBundleInstallerTest, GetApplicationInfoV9_0200, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, GetApplicationInfoV9_0200, Function | MediumTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -654,7 +704,7 @@ HWTEST_F(BmsBundleInstallerTest, GetApplicationInfoV9_0200, Function | MediumTes
  * @tc.name: test GetApplicationInfosV9 proxy
  * @tc.desc: 1.query ability infos success
  */
-HWTEST_F(BmsBundleInstallerTest, GetApplicationInfosV9_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, GetApplicationInfosV9_0100, Function | MediumTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);

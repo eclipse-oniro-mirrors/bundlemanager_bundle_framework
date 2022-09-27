@@ -38,6 +38,13 @@ const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
 const std::string APP_SIGNATURE = "app_signature";
 const std::string ASSOCIATED_WAKE_UP = "associatedWakeUp";
 const std::string RESOURCES_PATH = "/app/ohos.global.systemres";
+const std::string ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
+const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
+const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
+const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
+const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
+const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 }
 
 ErrCode PreBundleProfile::TransformTo(
@@ -242,6 +249,84 @@ ErrCode PreBundleProfile::TransformTo(
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_APP_DATA_NOT_CLEARED,
+            preBundleConfigInfo.userDataClearable,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_APP_MULTI_PROCESS,
+            preBundleConfigInfo.allowMultiProcess,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_APP_DESKTOP_ICON_HIDE,
+            preBundleConfigInfo.hideDesktopIcon,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_ABILITY_PRIORITY_QUERIED,
+            preBundleConfigInfo.allowQueryPriority,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
+            preBundleConfigInfo.allowExcludeFromMissions,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_APP_USE_PRIVILEGE_EXTENSION,
+            preBundleConfigInfo.allowUsePrivilegeExtension,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_FORM_VISIBLE_NOTIFY,
+            preBundleConfigInfo.formVisibleNotify,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        if (array.find(ALLOW_APP_DATA_NOT_CLEARED) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_DATA_NOT_CLEARED);
+            preBundleConfigInfo.userDataClearable = !preBundleConfigInfo.userDataClearable;
+        }
+        if (array.find(ALLOW_APP_MULTI_PROCESS) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_MULTI_PROCESS);
+        }
+        if (array.find(ALLOW_APP_DESKTOP_ICON_HIDE) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_DESKTOP_ICON_HIDE);
+        }
+        if (array.find(ALLOW_ABILITY_PRIORITY_QUERIED) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_ABILITY_PRIORITY_QUERIED);
+        }
+        if (array.find(ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS);
+        }
+        if (array.find(ALLOW_APP_USE_PRIVILEGE_EXTENSION) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_USE_PRIVILEGE_EXTENSION);
+        }
+        if (array.find(ALLOW_FORM_VISIBLE_NOTIFY) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_FORM_VISIBLE_NOTIFY);
+        }
         if (parseResult == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
             APP_LOGE("bundlename must exist, and it is empty here");
             continue;

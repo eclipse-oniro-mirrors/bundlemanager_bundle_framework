@@ -15,7 +15,6 @@
 
 #include "ipc/file_stat.h"
 
-#include "json_util.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
 
@@ -42,10 +41,8 @@ bool FileStat::Marshalling(Parcel &parcel) const
 FileStat *FileStat::Unmarshalling(Parcel &parcel)
 {
     FileStat *info = new (std::nothrow) FileStat();
-    if (info && !info->ReadFromParcel(parcel)) {
-        APP_LOGW("read from parcel failed");
-        delete info;
-        info = nullptr;
+    if (info) {
+        info->ReadFromParcel(parcel);
     }
     return info;
 }

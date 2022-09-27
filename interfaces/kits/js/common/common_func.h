@@ -94,6 +94,17 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
 
 static void ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef);
 
+static void ConvertRequestPermission(napi_env env, const RequestPermission &requestPermission, napi_value result);
+
+static void ConvertRequestPermissionUsedScene(napi_env env,
+    const RequestPermissionUsedScene &requestPermissionUsedScene, napi_value result);
+
+static void ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value);
+
+static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo);
+
+static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags);
+
 static void ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
     int32_t userId, napi_value bundleChangeInfo);
 
