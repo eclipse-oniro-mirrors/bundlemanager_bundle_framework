@@ -1057,4 +1057,47 @@ HWTEST_F(BmsBundleInstallerTest, GetBundleStats_001, Function | SmallTest | Leve
     }
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
+
+/**
+ * @tc.number: CreateInstallTempDir_0100
+ * @tc.name: test CreateInstallTempDir
+ * @tc.desc: 1.create install temp dir success
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2022;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::STREAM_INSTALL_DIR);
+    EXPECT_NE(res, "");
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0200
+ * @tc.name: test CreateInstallTempDir
+ * @tc.desc: 1.create install temp dir success
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0200, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2023;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::QUICK_FIX_DIR);
+    EXPECT_NE(res, "");
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0300
+ * @tc.name: test CreateInstallTempDir
+ * @tc.desc: 1.create install temp dir failed
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0300, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2023;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::UNKNOWN);
+    EXPECT_EQ(res, "");
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
 } // OHOS
