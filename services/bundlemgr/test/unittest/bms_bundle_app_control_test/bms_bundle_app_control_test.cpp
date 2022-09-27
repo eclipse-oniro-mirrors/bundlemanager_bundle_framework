@@ -270,4 +270,23 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0300, Function | SmallTe
     EXPECT_EQ(res2, ERR_OK);
 }
 
+/**
+ * @tc.number: AppInstallControlRule_0400
+ * @tc.name: test can not add app install control rule
+ * @tc.desc: 1.system run normally
+ *           2.AddAppInstallControlRule failed by empty appIds
+ */
+HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    std::vector<std::string> appIds;
+    auto res = appControlProxy->
+        AddAppInstallControlRule(appIds, AppInstallControlRuleType::ALLOWED_INSTALL, USERID);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+    auto res1 = appControlProxy->
+        DeleteAppInstallControlRule(appIds, USERID);
+    EXPECT_EQ(res1, ERR_INVALID_VALUE);
+}
+
 } // OHOS

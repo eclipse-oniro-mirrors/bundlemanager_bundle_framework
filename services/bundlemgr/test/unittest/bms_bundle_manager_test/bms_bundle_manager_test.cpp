@@ -332,7 +332,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0200, Function | S
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_QUERY_PARAM_ERROR);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
@@ -430,7 +430,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_0600, Function | S
     want.SetElementName("", BUNDLE_PREVIEW_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_QUERY_PARAM_ERROR);
 
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
@@ -528,7 +528,7 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfosV9_1000, Function | S
     want.SetElementName("", BUNDLE_THUMBNAIL_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_QUERY_PARAM_ERROR);
 
     UnInstallBundle(BUNDLE_THUMBNAIL_NAME);
 }
@@ -608,11 +608,11 @@ HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0100, Function | MediumTest
 }
 
 /**
- * @tc.number: GetApplicationInfoV9_0100
- * @tc.name: test GetApplicationInfoV9 proxy
+ * @tc.number: QueryAbilityInfosV9_0200
+ * @tc.name: test QueryAbilityInfosV9 proxy
  * @tc.desc: 1.query ability infos
  */
-HWTEST_F(BmsBundleInstallerTest, GetApplicationInfoV9_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0200, Function | MediumTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -620,41 +620,24 @@ HWTEST_F(BmsBundleInstallerTest, GetApplicationInfoV9_0100, Function | MediumTes
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    
     AAFwk::Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
-    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
-    std::vector<ExtensionAbilityInfo> infos;
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", "");
 
-    ApplicationInfo appInfo;
-    auto ret = dataMgr->GetApplicationInfoV9(BUNDLE_BACKUP_NAME, 0, USERID, appInfo);
+    std::vector<AbilityInfo> AbilityInfo;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, AbilityInfo);
     EXPECT_EQ(ret, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**
- * @tc.number: GetApplicationInfoV9_0100
- * @tc.name: test GetApplicationInfoV9 proxy
- * @tc.desc: 1.query ability infos failed by empty bundle name
+ * @tc.number: QueryAbilityInfosV9_0300
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.query ability infos
  */
-HWTEST_F(BmsBundleInstallerTest, GetApplicationInfoV9_0200, Function | MediumTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-
-    ApplicationInfo appInfo;
-    auto ret = dataMgr->GetApplicationInfoV9("", 0, USERID, appInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-}
-
-/**
- * @tc.number: GetApplicationInfosV9_0100
- * @tc.name: test GetApplicationInfosV9 proxy
- * @tc.desc: 1.query ability infos success
- */
-HWTEST_F(BmsBundleInstallerTest, GetApplicationInfosV9_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosV9_0300, Function | MediumTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -662,13 +645,15 @@ HWTEST_F(BmsBundleInstallerTest, GetApplicationInfosV9_0100, Function | MediumTe
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", "", "", "");
 
-    std::vector<ApplicationInfo> appInfos;
-    auto ret = dataMgr->GetApplicationInfosV9(0, USERID, appInfos);
+    std::vector<AbilityInfo> AbilityInfo;
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, AbilityInfo);
     EXPECT_EQ(ret, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
-
 }
-
 } // OHOS
