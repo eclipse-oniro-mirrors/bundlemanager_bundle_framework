@@ -2512,10 +2512,10 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
     napi_value thisArg = nullptr;
     void *data = nullptr;
-
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     APP_LOGD("argc = [%{public}zu]", argc);
     AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo = new AsyncBundlePackInfoCallbackInfo(env);
+    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
@@ -2539,13 +2539,13 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
         asyncCallbackInfo->err = INVALID_PARAM;
         asyncCallbackInfo->message = "flag mismatch";
     }
-
     napi_value promise = nullptr;
     if (asyncCallbackInfo->callback == nullptr) {
         NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
     } else {
         NAPI_CALL(env, napi_get_undefined(env,  &promise));
     }
+    callbackPtr.release();
     return GetBundlePackInfoWrap(env, promise, asyncCallbackInfo);
 }
 
@@ -2612,7 +2612,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     APP_LOGD("argc = [%{public}zu]", argc);
     std::string bundleName;
-    int32_t flags;
+    int32_t flags = 0;
     BundleOptions bundleOptions;
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
@@ -7160,6 +7160,7 @@ napi_value GetDispatcherVersion(napi_env env, napi_callback_info info)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
+    std::unique_ptr<AsyncDispatcherVersionCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (argc != PARAM0 && argc != PARAM1) {
         asyncCallbackInfo->err = PARAM_TYPE_ERROR;
         asyncCallbackInfo->message = "type mismatch";
@@ -7177,6 +7178,7 @@ napi_value GetDispatcherVersion(napi_env env, napi_callback_info info)
     } else {
         NAPI_CALL(env, napi_get_undefined(env, &promise));
     }
+    callbackPtr.release();
     return GetDispatcherVersionWrap(env, promise, asyncCallbackInfo);
 }
 
