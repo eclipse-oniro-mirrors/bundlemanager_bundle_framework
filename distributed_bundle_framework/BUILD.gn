@@ -20,7 +20,7 @@ group("inner_api_target") {
 group("jsapi_target") {
   deps = [
     "interfaces/kits/js/distributebundlemgr:jsapi_target",
-    "interfaces/kits/js/distributeBundle:jsapi_target_v9",
+    "interfaces/kits/js/distributedBundle:jsapi_target_v9",
   ]
 }
 

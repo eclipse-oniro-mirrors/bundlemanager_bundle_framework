@@ -28,7 +28,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-struct GetRemoteAbilityInfoCallbackInfo: public AsyncWorkData {
+struct GetRemoteAbilityInfoCallbackInfo {
     explicit GetRemoteAbilityInfoCallbackInfo(napi_env tmpEnv) : env(tmpEnv) {}
     virtual ~GetRemoteAbilityInfoCallbackInfo();
     napi_env env;
@@ -37,7 +37,7 @@ struct GetRemoteAbilityInfoCallbackInfo: public AsyncWorkData {
     napi_ref callbackRef = nullptr;
     std::vector<ElementName> elementNames;
     std::vector<RemoteAbilityInfo> remoteAbilityInfos;
-    std::string locale = "";
+    std::string local = "";
     int32_t err = 0;
     std::string message = "";
     bool isArray = false;

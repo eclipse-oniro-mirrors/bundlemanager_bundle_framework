@@ -14,8 +14,6 @@
  */
 #include "distributed_bundle.h"
 
-#include <mutex>
-
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
@@ -37,6 +35,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
 static ErrCode ConvertErrCode(ErrCode nativeErrCode)
 {
     switch (nativeErrCode) {
@@ -66,7 +65,7 @@ static bool ParseString(napi_env env, napi_value value, std::string& result)
         return false;
     }
     size_t size = 0;
-    if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
+    if (napi_get_value_string_utf8(env, value, nullptr, 0, &size) != napi_ok) {
         APP_LOGE("napi_get_value_string_utf8 error.");
         return false;
     }
@@ -78,29 +77,28 @@ static bool ParseString(napi_env env, napi_value value, std::string& result)
     }
     return true;
 }
-static std::mutex distributeBundleMgrMutex;
+
 static OHOS::sptr<OHOS::AppExecFwk::IDistributedBms> GetDistributedBundleMgr()
 {
     APP_LOGD("GetDistributedBundleMgr start");
-    static sptr<OHOS::AppExecFwk::IDistributedBms> distributeBundleMgr;
+    auto samgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        APP_LOGE("GetDistributedBundleMgr samgr is nullptr");
+        return nullptr;
+    }
+    auto remoteObject = samgr->GetSystemAbility(OHOS::DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        APP_LOGE("GetDistributedBundleMgr remoteObject is nullptr");
+        return nullptr;
+    }
+    auto distributeBundleMgr = OHOS::iface_cast<IDistributedBms>(remoteObject);
     if (distributeBundleMgr == nullptr) {
-        std::lock_guard<std::mutex> lock(distributeBundleMgrMutex);
-        auto samgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (samgr == nullptr) {
-            APP_LOGE("GetDistributedBundleMgr samgr is nullptr");
-            return distributeBundleMgr;
-        }
-        auto remoteObject = samgr->GetSystemAbility(OHOS::DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        if (remoteObject == nullptr) {
-            APP_LOGE("GetDistributedBundleMgr remoteObject is nullptr");
-            return distributeBundleMgr;
-        }
-        distributeBundleMgr = OHOS::iface_cast<IDistributedBms>(remoteObject);
+        APP_LOGE("GetDistributedBundleMgr distributeBundleMgr is nullptr");
+        return nullptr;
     }
     return distributeBundleMgr;
 }
 
-// 570281 参数不匹配
 static void ConvertElementName(napi_env env, napi_value objElementName, const ElementName &elementName)
 {
     napi_value nDeviceId;
@@ -157,7 +155,7 @@ static void ConvertRemoteAbilityInfos(
                  remoteAbilityInfo.label.c_str());
         napi_value objRemoteAbilityInfo = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objRemoteAbilityInfo));
-        ConvertRemoteAbilityInfo(env, objRemoteAbilityInfo, remoteAbilityInfo);
+        ConvertRemoteAbilityInfo(env, remoteAbilityInfo, objRemoteAbilityInfo);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objRemoteAbilityInfos, index, objRemoteAbilityInfo));
         index++;
     }
@@ -178,7 +176,7 @@ static bool ParseValueIfExist(napi_env env, napi_value args, const std::string &
     return true;
 }
 
-static bool ParseElementName(napi_env env,, napi_value args, OHOS::AppExecFwk::ElementName &elementName)
+static bool ParseElementName(napi_env env, napi_value args, OHOS::AppExecFwk::ElementName &elementName)
 {
     APP_LOGD("begin to parse ElementName");
     napi_valuetype valueType;
@@ -197,7 +195,7 @@ static bool ParseElementName(napi_env env,, napi_value args, OHOS::AppExecFwk::E
     napi_value prop = nullptr;
     std::string bundleName;
     status = napi_get_named_property(env, args, "bundleName", &prop);
-    if ((status != napi_ok) || !ParseString(env, args, bundleName)) {
+    if ((status != napi_ok) || !ParseString(env, prop, bundleName)) {
         APP_LOGE("begin to parse ElementName bundleName failed");
         return false;
     }
@@ -206,14 +204,15 @@ static bool ParseElementName(napi_env env,, napi_value args, OHOS::AppExecFwk::E
     prop = nullptr;
     status = napi_get_named_property(env, args, "abilityName", &prop);
     std::string abilityName;
-    if ((status != napi_ok) || !ParseString(env, args, abilityName)) {
+    if ((status != napi_ok) || !ParseString(env, prop, abilityName)) {
         APP_LOGE("begin to parse ElementName abilityName failed");
         return false;
     }
     elementName.SetAbilityName(abilityName);
 
     std::string moduleName;
-    if (!ParseModuleName(env, args, moduleName)) {
+    if (!ParseValueIfExist(env, args, "moduleName", moduleName)) {
+        APP_LOGE("begin to parse ElementName moduleName failed");
         return false;
     }
     elementName.SetModuleName(moduleName);
@@ -221,13 +220,17 @@ static bool ParseElementName(napi_env env,, napi_value args, OHOS::AppExecFwk::E
     return true;
 }
 
-static bool ParseElementNames(napi_env env, napi_value args, std::vector<ElementName> &elementNames)
+static bool ParseElementNames(napi_env env, napi_value args, bool &isArray, std::vector<ElementName> &elementNames)
 {
     APP_LOGD("begin to parse ElementNames");
-    bool isArray = false;
     NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
     if (!isArray) {
-        APP_LOGE("parseElementNames args not array");
+        APP_LOGD("parseElementNames args not array");
+        ElementName elementName;
+        if (ParseElementName(env, args, elementName)) {
+            elementNames.push_back(elementName);
+            return true;
+        }
         return false;
     }
     uint32_t arrayLength = 0;
@@ -296,7 +299,7 @@ int32_t InnerGetRemoteAbilityInfo(const std::vector<ElementName> &elementNames, 
 
 void GetRemoteAbilityInfoExec(napi_env env, void *data)
 {
-    GetBundleArchiveInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetRemoteAbilityInfoCallbackInfo*>(data);
+    GetRemoteAbilityInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetRemoteAbilityInfoCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
         return;
@@ -335,7 +338,7 @@ void GetRemoteAbilityInfoComplete(napi_env env, napi_status status, void *data)
     } else {
         napi_value callback = nullptr;
         napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback));
         NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
             sizeof(result) / sizeof(result[0]), result, &placeHolder));
     }
@@ -349,7 +352,7 @@ static napi_value GetRemoteAbilityInfoMethod(napi_env env, GetRemoteAbilityInfoC
         return nullptr;
     }
     napi_value promise = nullptr;
-    if (asyncCallbackInfo->callback == nullptr) {
+    if (asyncCallbackInfo->callbackRef == nullptr) {
         NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
     } else {
         NAPI_CALL(env, napi_get_undefined(env, &promise));
@@ -361,29 +364,6 @@ static napi_value GetRemoteAbilityInfoMethod(napi_env env, GetRemoteAbilityInfoC
         (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     return promise;
-}
-
-static bool ParseElementNames(napi_env env, napi_env argv, GetRemoteAbilityInfoCallbackInfo *asyncCallbackInfo)
-{
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is nullptr");
-        return false;
-    }
-    bool isArray = false;
-    NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
-    asyncCallbackInfo->isArray = isArray;
-    if (isArray) {
-        if (ParseElementNames(env, argv, asyncCallbackInfo->elementNames)) {
-            return true;
-        }
-    } else {
-        ElementName elementName;
-        if (ParseElementName(env, argv, elementName)) {
-            asyncCallbackInfo->elementNames.push_back(elementName);
-            return true;
-        }
-    }
-    return false;
 }
 
 napi_value GetRemoteAbilityInfo(napi_env env, napi_callback_info info)
@@ -406,22 +386,28 @@ napi_value GetRemoteAbilityInfo(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
-            if (!ParseElementNames(env, args[i], asyncCallbackInfo)) {
+            if (!ParseElementNames(env, args[i], asyncCallbackInfo->isArray, asyncCallbackInfo->elementNames)) {
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
-            if (!ParseString(env, asyncCallbackInfo->locale, args[i])) {
+            if (!ParseString(env, args[i], asyncCallbackInfo->local)) {
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_ONE || i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callbackRef));
+        } else if ((i == ARGS_POS_ONE || i == ARGS_POS_TWO)) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callbackRef));
+            }
             break;
         } else {
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
+    }
+    if (asyncCallbackInfo->elementNames.size() > GET_REMOTE_ABILITY_INFO_MAX_SIZE) {
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     auto promise = GetRemoteAbilityInfoMethod(env, asyncCallbackInfo, "GetRemoteAbilityInfo",
         GetRemoteAbilityInfoExec, GetRemoteAbilityInfoComplete);
