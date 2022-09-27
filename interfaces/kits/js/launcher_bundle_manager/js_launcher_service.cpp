@@ -13,18 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MONITOR_BUNDLE_MONITOR_H
-#define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MONITOR_BUNDLE_MONITOR_H
-
-#include "bundle_monitor_callback.h"
-#include "napi/native_api.h"
-#include "napi/native_common.h"
-#include "napi/native_node_api.h"
+#include "js_launcher_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-napi_value Register(napi_env env, napi_callback_info info);
-napi_value Unregister(napi_env env, napi_callback_info info);
+JSLauncherService::JSLauncherService()
+{
+    launcherService_ = new LauncherService();
 }
+
+JSLauncherService::~JSLauncherService() {}
+
+OHOS::sptr<LauncherService> JSLauncherService::GetLauncherService()
+{
+    return DelayedSingleton<JSLauncherService>::GetInstance()->launcherService_;
 }
-#endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MONITOR_BUNDLE_MONITOR_H
+}  // namespace AppExecFwk
+}  // namespace OHOS

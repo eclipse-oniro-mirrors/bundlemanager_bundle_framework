@@ -500,6 +500,15 @@ public:
     bool GetShortcutInfos(
         const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const;
     /**
+     * @brief Obtains the ShortcutInfo objects provided by a specified application on the device.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @return Returns errcode of the result.
+     */
+    ErrCode GetShortcutInfoV9(
+        const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const;
+    /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
      * @param commonEventInfos List of CommonEventInfo objects if obtained.

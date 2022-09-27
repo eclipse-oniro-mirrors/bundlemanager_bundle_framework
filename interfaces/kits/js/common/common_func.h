@@ -21,6 +21,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
+#include "launcher_ability_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -65,6 +66,8 @@ static void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &wa
 
 static bool ParseElementName(napi_env env, napi_value args, Want &want);
 
+static void ConvertElementName(napi_env env, napi_value elementInfo, const OHOS::AppExecFwk::ElementName &elementName);
+
 static bool ParseWant(napi_env env, napi_value args, Want &want);
 
 static bool ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& abilityInfo);
@@ -107,6 +110,18 @@ static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_v
 
 static void ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
     int32_t userId, napi_value bundleChangeInfo);
+
+static void ConvertLauncherAbilityInfo(napi_env env, const LauncherAbilityInfo &launcherAbility, napi_value value);
+
+static void ConvertLauncherAbilityInfos(napi_env env,
+    const std::vector<LauncherAbilityInfo> &launcherAbilities, napi_value value);
+
+static void ConvertShortcutIntent(napi_env env,
+    const OHOS::AppExecFwk::ShortcutIntent &shortcutIntent, napi_value value);
+
+static void ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value);
+
+static void ConvertShortCutInfos(napi_env env, std::vector<ShortcutInfo> &shortcutInfos, napi_value value);
 
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,

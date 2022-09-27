@@ -142,6 +142,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_FORMS_INFO_BY_APP, &BundleMgrHost::HandleGetFormsInfoByApp);
     funcMap_.emplace(IBundleMgr::Message::GET_FORMS_INFO_BY_MODULE, &BundleMgrHost::HandleGetFormsInfoByModule);
     funcMap_.emplace(IBundleMgr::Message::GET_SHORTCUT_INFO, &BundleMgrHost::HandleGetShortcutInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_SHORTCUT_INFO_V9, &BundleMgrHost::HandleGetShortcutInfoV9);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_COMMON_EVENT_INFO, &BundleMgrHost::HandleGetAllCommonEventInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_USER_MGR, &BundleMgrHost::HandleGetBundleUserMgr);
     funcMap_.emplace(IBundleMgr::Message::GET_DISTRIBUTE_BUNDLE_INFO, &BundleMgrHost::HandleGetDistributedBundleInfo);
@@ -1456,6 +1457,23 @@ ErrCode BundleMgrHost::HandleGetShortcutInfos(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundlename = data.ReadString();
+    std::vector<ShortcutInfo> infos;
+    ErrCode ret = GetShortcutInfoV9(bundlename, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write shortcut infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

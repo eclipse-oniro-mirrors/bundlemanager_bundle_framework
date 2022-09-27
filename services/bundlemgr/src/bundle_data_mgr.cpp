@@ -2552,6 +2552,27 @@ bool BundleDataMgr::GetShortcutInfos(
     return true;
 }
 
+ErrCode BundleDataMgr::GetShortcutInfoV9(
+    const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("input invalid userid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName,
+        BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("ExplicitQueryExtensionInfoV9 failed");
+        return ret;
+    }
+
+    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    return ERR_OK;
+}
+
 bool BundleDataMgr::GetAllCommonEventInfo(const std::string &eventKey,
     std::vector<CommonEventInfo> &commonEventInfos) const
 {
@@ -2669,7 +2690,6 @@ bool BundleDataMgr::SaveInnerBundleInfo(const InnerBundleInfo &info) const
     APP_LOGE("save install InnerBundleInfo failed!");
     return false;
 }
-
 
 bool BundleDataMgr::GetInnerBundleUserInfoByUserId(const std::string &bundleName,
     int32_t userId, InnerBundleUserInfo &innerBundleUserInfo) const
