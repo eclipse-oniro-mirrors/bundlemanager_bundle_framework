@@ -145,6 +145,29 @@ struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
+struct Query {
+    std::string bundleName_;
+    std::string interfaceType_;
+    int32_t flags_ = 0;
+    int32_t userId_ = Constants::UNSPECIFIED_USERID;
+    Query(const std::string &bundleName, const std::string &interfaceType, int32_t flags, int32_t userId)
+        : bundleName_(bundleName), interfaceType_(interfaceType), flags_(flags), userId_(userId) {}
+
+    bool operator==(const Query &query) const
+    {
+        return bundleName_ == query.bundleName_ && interfaceType_ == query.interfaceType_ &&
+            flags_ == query.flags_ && userId_ == query.userId_;
+    }
+};
+
+struct QueryHash  {
+    size_t operator()(const Query &query) const
+    {
+        return std::hash<std::string>()(query.bundleName_) ^ std::hash<std::string>()(query.interfaceType_) ^
+            std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_);
+    }
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);

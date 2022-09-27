@@ -53,7 +53,6 @@ const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-const std::string PERMISSIONNAME = "ohos.permission.READ_CALENDAR";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
@@ -4438,7 +4437,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0100, Function | SmallTest | Le
     auto testRet = bundleMgrProxy->GetBundlePackInfo(
         appName, GET_PACK_INFO_ALL, bundlePackInfo, USERID);
     EXPECT_EQ(testRet, ERR_OK);
-    
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -4734,10 +4733,12 @@ HWTEST_F(ActsBmsKitSystemTest, GetIconById_0100, Function | SmallTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0100, Function | SmallTest | Level1)
 {
-    PermissionDef permissionDef;
+    std::string permissionName = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+    PermissionDef info;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool res = bundleMgrProxy->GetPermissionDef(PERMISSIONNAME, permissionDef);
-    EXPECT_FALSE(res);
+    int32_t ret = bundleMgrProxy->GetPermissionDef(permissionName, info);
+    EXPECT_EQ(info.permissionName, permissionName);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
