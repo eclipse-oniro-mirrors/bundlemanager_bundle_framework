@@ -1057,4 +1057,53 @@ HWTEST_F(BmsBundleInstallerTest, GetBundleStats_001, Function | SmallTest | Leve
     }
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
+
+/**
+ * @tc.number: CreateInstallTempDir_0100
+ * @tc.name: test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a big bundle,whose size is over 50M
+ *           2.install the bundle
+ *           3.get ERR_INSTALL_INVALID_HAP_SIZE
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2022;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::STREAM_INSTALL_DIR);
+    EXPECT_NE(res, "");
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0200
+ * @tc.name: test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a big bundle,whose size is over 50M
+ *           2.install the bundle
+ *           3.get ERR_INSTALL_INVALID_HAP_SIZE
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0200, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2023;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::QUICK_FIX_DIR);
+    EXPECT_NE(res, "");
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0300
+ * @tc.name: test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a big bundle,whose size is over 50M
+ *           2.install the bundle
+ *           3.get ERR_INSTALL_INVALID_HAP_SIZE
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0300, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2023;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::UNKNOWN);
+    EXPECT_EQ(res, "");
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
 } // OHOS
