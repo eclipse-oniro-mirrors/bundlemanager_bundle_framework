@@ -108,11 +108,56 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   }
 }
 
+ohos_unittest("BmsInstallDaemonHostImplTest") {
+  use_exceptions = true
+  module_out_path = module_output_path
+
+  sources = [
+    "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
+    "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
+    "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
+    "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+  ]
+
+  sources += [ "bms_install_daemon_host_impl_test.cpp" ]
+
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "${services_path}/bundlemgr:bundle_parser",
+  ]
+
+  external_deps = [
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+  defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
+  if (build_selinux) {
+    external_deps += [ "selinux:libhap_restorecon" ]
+    cflags += [ "-DWITH_SELINUX" ]
+  }
+  if (global_resmgr_enable) {
+    defines += [ "GLOBAL_RESMGR_ENABLE" ]
+    external_deps += [ "resource_management:global_resmgr" ]
+  }
+}
+
 group("unittest") {
   testonly = true
 
   if (ability_runtime_enable) {
     deps = [
+      ":BmsInstallDaemonHostImplTest",
       ":BmsInstallDaemonIpcTest",
       ":BmsInstallDaemonTest",
     ]
