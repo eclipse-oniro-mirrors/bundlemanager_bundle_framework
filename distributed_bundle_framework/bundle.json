@@ -29,7 +29,7 @@
                 "hiviewdfx_hilog_native",
                 "i18n",
                 "ipc",
-                "multimedia_image_standard",
+                "multimedia_image_framework",
                 "napi",
                 "os_account",
                 "resource_management",
