@@ -24,6 +24,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
+}
+
 DistributedBmsHost::DistributedBmsHost()
 {
     APP_LOGI("DistributedBmsHost instance is created");
@@ -241,6 +245,10 @@ template<typename T>
 bool DistributedBmsHost::GetParcelableInfos(Parcel &data, std::vector<T> &parcelableInfos)
 {
     int32_t infoSize = data.ReadInt32();
+    if (infoSize > GET_REMOTE_ABILITY_INFO_MAX_SIZE) {
+        APP_LOGE("GetParcelableInfos elements num exceeds the limit %{public}d", GET_REMOTE_ABILITY_INFO_MAX_SIZE);
+        return false;
+    }
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(data.ReadParcelable<T>());
         if (!info) {

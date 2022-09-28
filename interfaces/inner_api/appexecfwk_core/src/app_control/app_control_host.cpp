@@ -22,6 +22,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr int32_t ADD_CONTROL_RULE_MAX_SIZE = 500;
+}
 AppControlHost::AppControlHost()
 {
     APP_LOGD("create AppControlHost.");
@@ -201,6 +204,10 @@ template<typename T>
 bool AppControlHost::ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos)
 {
     int32_t infoSize = data.ReadInt32();
+    if (infoSize > ADD_CONTROL_RULE_MAX_SIZE) {
+        APP_LOGE("ReadParcelableVector elements num exceeds the limit %{public}d", ADD_CONTROL_RULE_MAX_SIZE);
+        return false;
+    }
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(data.ReadParcelable<T>());
         if (info == nullptr) {
