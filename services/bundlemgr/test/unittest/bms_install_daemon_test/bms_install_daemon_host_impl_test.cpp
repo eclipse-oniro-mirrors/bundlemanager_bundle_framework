@@ -73,12 +73,12 @@ sptr<InstalldHostImpl> BmsInstallDaemonHostImplTest::GetInstalldHostImpl()
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000100
+ * @tc.number: InstalldHostImplTest_
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CreateBundleDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000100, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -88,12 +88,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000100, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000200
+ * @tc.number: InstalldHostImplTest_0200
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling ExtractModuleFiles of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000200, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -103,12 +103,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000200, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000300
+ * @tc.number: InstalldHostImplTest_0300
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling RenameModuleDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000300, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0300, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -118,12 +118,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000300, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000400
+ * @tc.number: InstalldHostImplTest_0400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CreateBundleDataDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000400, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0400, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -133,12 +133,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000400, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000500
+ * @tc.number: InstalldHostImplTest_0500
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling RemoveBundleDataDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000500, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0500, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -148,12 +148,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000500, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000600
+ * @tc.number: InstalldHostImplTest_0600
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling RemoveModuleDataDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000600, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0600, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -163,12 +163,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000600, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000700
+ * @tc.number: InstalldHostImplTest_0700
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling RemoveDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000700, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -178,12 +178,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000700, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000800
+ * @tc.number: InstalldHostImplTest_0800
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CleanBundleDataDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000800, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0800, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -193,12 +193,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000800, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01000900
+ * @tc.number: InstalldHostImplTest_0900
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling GetBundleStats of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000900, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0900, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -209,12 +209,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01000900, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001000
+ * @tc.number: InstalldHostImplTest_1000
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling SetDirApl of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001000, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1000, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -224,12 +224,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001000, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001100
+ * @tc.number: InstalldHostImplTest_1100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling GetBundleCachePath of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001100, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1100, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -240,12 +240,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001100, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001200
+ * @tc.number: InstalldHostImplTest_1200
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling ScanDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001200, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -256,12 +256,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001200, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001300
+ * @tc.number: InstalldHostImplTest_1300
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling MoveFile of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001300, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1300, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -271,12 +271,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001300, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001400
+ * @tc.number: InstalldHostImplTest_1400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CopyFile of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001400, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1400, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -286,12 +286,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001400, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001500
+ * @tc.number: InstalldHostImplTest_1500
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling Mkdir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001500, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1500, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -301,12 +301,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001500, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001600
+ * @tc.number: InstalldHostImplTest_1600
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling GetFileStat of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001600, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1600, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -317,12 +317,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001600, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001700
+ * @tc.number: InstalldHostImplTest_1700
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling ExtractDiffFiles of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001700, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -332,12 +332,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001700, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001800
+ * @tc.number: InstalldHostImplTest_1800
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling ApplyDiffPatch of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001800, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1800, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -347,12 +347,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001800, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01001900
+ * @tc.number: InstalldHostImplTest_1900
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling IsExistDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001900, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1900, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -363,12 +363,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01001900, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01002000
+ * @tc.number: InstalldHostImplTest_2000
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling IsDirEmpty of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002000, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2000, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -379,12 +379,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002000, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01002100
+ * @tc.number: InstalldHostImplTest_2100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling ObtainQuickFixFileDir of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002100, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2100, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -395,12 +395,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002100, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01002200
+ * @tc.number: InstalldHostImplTest_2200
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CopyFiles of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002200, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
@@ -411,12 +411,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002200, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01002300
+ * @tc.number: InstalldHostImplTest_2300
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CopyFiles of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002300, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2300, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -426,12 +426,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002300, Function |
 }
 
 /**
- * @tc.number: InstalldHostImplTest_01002400
+ * @tc.number: InstalldHostImplTest_2400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CopyFiles of hostImpl
  * @tc.require: issueI5T6P3
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_01002400, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2400, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
