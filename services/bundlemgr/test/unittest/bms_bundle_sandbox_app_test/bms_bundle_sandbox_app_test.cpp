@@ -120,6 +120,7 @@ ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int3
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
     return installer->InstallSandboxApp(bundleName, dplType, userId, appIndex);
@@ -130,6 +131,7 @@ ErrCode BmsSandboxAppTest::UninstallSandboxApp(const std::string &bundleName, in
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
     return installer->UninstallSandboxApp(bundleName, appIndex, userId);
