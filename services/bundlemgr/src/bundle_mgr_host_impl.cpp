@@ -1814,15 +1814,15 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
     return true;
 }
 
-std::string BundleMgrHostImpl::GetStringById(
-    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,
+    uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return Constants::EMPTY_STRING;
     }
-    return dataMgr->GetStringById(bundleName, moduleName, resId, userId);
+    return dataMgr->GetStringById(bundleName, moduleName, resId, userId, localeInfo);
 }
 
 std::string BundleMgrHostImpl::GetIconById(
@@ -1950,7 +1950,7 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
 }
 
 ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId)
 {
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
@@ -1961,7 +1961,7 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    if (!dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len)) {
+    if (!dataMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len, userId)) {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return ERR_OK;

@@ -1822,13 +1822,14 @@ ErrCode BundleMgrHost::HandleGetStringById(MessageParcel &data, MessageParcel &r
     std::string moduleName = data.ReadString();
     uint32_t resId = data.ReadUint32();
     int32_t userId = data.ReadInt32();
+    std::string localeInfo = data.ReadString();
     APP_LOGD("GetStringById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), resId);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("fail to GetStringById due to params empty");
         return ERR_INVALID_VALUE;
     }
-    std::string label = GetStringById(bundleName, moduleName, resId, userId);
+    std::string label = GetStringById(bundleName, moduleName, resId, userId, localeInfo);
     if (!reply.WriteString(label)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2172,12 +2173,13 @@ ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &re
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
     std::string moduleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
 
     APP_LOGI("HandleGetMediaData:%{public}s, %{public}s, %{public}s", bundleName.c_str(),
         abilityName.c_str(), moduleName.c_str());
     std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
     size_t len = 0;
-    ErrCode ret = GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
+    ErrCode ret = GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
