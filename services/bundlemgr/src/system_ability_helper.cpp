@@ -67,7 +67,10 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
         APP_LOGE("fail to find the app mgr service to kill application");
         return -1;
     }
-    return abilityMgrProxy->UninstallApp(bundleName, uid);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    auto ret = abilityMgrProxy->UninstallApp(bundleName, uid);
+    IPCSkeleton::SetCallingIdentity(identity);
+    return ret;
 #else
     return 0;
 #endif
