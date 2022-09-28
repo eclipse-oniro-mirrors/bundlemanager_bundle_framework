@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("../../../../dbms.gni")
 
 ohos_shared_library("distributedbundle") {
-  include_dirs = [ "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common" ]
+  include_dirs = [ "${kits_path}/js/common" ]
   defines = [
     "APP_LOG_TAG = \"DistributedBundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
@@ -23,8 +23,6 @@ ohos_shared_library("distributedbundle") {
   sources = [
     "distributed_bundle.cpp",
     "native_module.cpp",
-    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common/business_error.cpp",
-    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common/napi_arg.cpp",
   ]
 
   configs = [ "${dbms_services_path}:distributed_bms_config" ]
@@ -32,11 +30,13 @@ ohos_shared_library("distributedbundle") {
   deps = [
     "${common_path}:libappexecfwk_common",
     "${dbms_inner_api_path}:dbms_fwk",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
 
   external_deps = [
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

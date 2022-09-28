@@ -19,27 +19,17 @@
 #include <vector>
 #include <string>
 
-#include "napi/native_api.h"
-#include "napi/native_common.h"
-#include "napi/native_node_api.h"
-#include "application_info.h"
+#include "base_cb_info.h"
 #include "element_name.h"
 #include "remote_ability_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-struct GetRemoteAbilityInfoCallbackInfo {
-    explicit GetRemoteAbilityInfoCallbackInfo(napi_env tmpEnv) : env(tmpEnv) {}
-    virtual ~GetRemoteAbilityInfoCallbackInfo();
-    napi_env env;
-    napi_async_work asyncWork = nullptr;
-    napi_deferred deferred = nullptr;
-    napi_ref callbackRef = nullptr;
+struct GetRemoteAbilityInfoCallbackInfo : public BaseCallbackInfo {
+    explicit GetRemoteAbilityInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::vector<ElementName> elementNames;
     std::vector<RemoteAbilityInfo> remoteAbilityInfos;
     std::string local = "";
-    int32_t err = 0;
-    std::string message = "";
     bool isArray = false;
 };
 
