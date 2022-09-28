@@ -27,16 +27,16 @@ namespace AppExecFwk {
 // object must operater on js thread
 class EventListener {
 public:
-    explicit EventListener(napi_env env, std::string type);
+    explicit EventListener(napi_env env, const std::string& type);
     virtual ~EventListener();
     void Add(napi_env env, napi_value handler);
     void Delete(napi_env env, napi_value handler);
     void DeleteAll();
-    bool HasSameEnv(napi_env env);
+    bool HasSameEnv(napi_env env) const;
     void Emit(std::string &bundleName, int32_t userId);
 private:
     bool Find(napi_value handler);
-    void EmitOnUV(std::string &bundleName, int32_t userId, napi_ref callbackRef);
+    void EmitOnUV(const std::string &bundleName, int32_t userId, napi_ref callbackRef);
 private:
     napi_env env_;
     std::string type_;
