@@ -246,6 +246,8 @@ struct AbilityInfo : public Parcelable {
     uint32_t minWindowWidth = 0;
     uint32_t maxWindowHeight = 0;
     uint32_t minWindowHeight = 0;
+    // for NAPI, save self query cache
+    int32_t uid = -1;
 
     // unused
     std::string originalBundleName;
