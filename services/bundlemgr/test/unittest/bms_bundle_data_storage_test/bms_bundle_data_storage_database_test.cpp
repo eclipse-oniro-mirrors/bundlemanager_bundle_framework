@@ -1187,3 +1187,136 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0100, Function | SmallTest |
     InnerBundleInfo innerBundleInfo;
     EXPECT_EQ(innerBundleInfo.FromJson(innerBundleInfoJson_), OHOS::ERR_OK);
 }
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: Test MatchLauncher
+ * @tc.desc: 1.Test the MatchLauncher of InnerBundleInfoCpp
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0100, Function | SmallTest | Level1)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction("");
+    Skill skill;
+    bool ret = skill.MatchLauncher(want);
+    EXPECT_EQ(ret, false);
+
+    std::vector<std::string> actions;
+    actions.emplace_back("action1");
+    skill.actions = actions;
+    want.SetAction("action1");
+    ret = skill.MatchLauncher(want);
+    EXPECT_EQ(ret, true);
+
+    want.AddEntity("entry");
+    ret = skill.MatchLauncher(want);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0200
+ * @tc.name: Test Match
+ * @tc.desc: Use Match to match different Uri And Type of InnerBundleInfoCpp
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0200, Function | SmallTest | Level1)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction("action1");
+    Skill skill;
+    std::vector<std::string> actions;
+    actions.emplace_back("action1");
+    skill.actions = actions;
+
+    std::vector<SkillUri> uris;
+    SkillUri uri1;
+    uri1.scheme = "uriString";
+    uri1.type = "image/*";
+    uris.emplace_back(uri1);
+    skill.uris = uris;
+    bool ret = skill.Match(want);
+    EXPECT_EQ(ret, false);
+
+    SkillUri uri2;
+    uris.emplace_back(uri2);
+    skill.uris = uris;
+    ret = skill.Match(want);
+    EXPECT_EQ(ret, true);
+
+    std::string type = "text/xml";
+    std::string uri = "uriString";
+    want.SetUri(uri);
+    want.SetType(type);
+    ret = skill.Match(want);
+    EXPECT_EQ(ret, false);
+
+    type = "*/*";
+    want.SetType(type);
+    ret = skill.Match(want);
+    EXPECT_EQ(ret, true);
+
+    SkillUri uri3;
+    uri3.host = "host";
+    uris.insert(uris.begin(), uri3);
+    skill.uris = uris;
+    ret = skill.Match(want);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0300
+ * @tc.name: Test from_json
+ * @tc.desc: 1.Test the from_json of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0300, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["accessTokenId"] = 1;
+    jsonObject["appIndex"] = 1;
+    jsonObject["userId"] = 101;
+    SandboxAppPersistentInfo info;
+    from_json(jsonObject, info);
+    EXPECT_EQ(info.accessTokenId, 1);
+    EXPECT_EQ(info.appIndex, 1);
+    EXPECT_EQ(info.userId, 101);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0400
+ * @tc.name: Test BuildDefaultUserInfo
+ * @tc.desc: 1.Use FromJson to call BuildDefaultUserInfo of InnerBundleInfoCpp
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "test";
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    nlohmann::json jsonObject;
+    info.FromJson(jsonObject);
+    EXPECT_EQ(applicationInfo.bundleName, "test");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0500
+ * @tc.name: Test FindHapModuleInfo
+ * @tc.desc: 1.Test the FindHapModuleInfo of InnerBundleInfoCpp
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "modulePackage";
+    hqfInfos.emplace_back(hqfInfo);
+    info.SetQuickFixHqfInfos(hqfInfos);
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_HAR;
+    innerModuleInfos["modulePackage"] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    auto it = info.FindHapModuleInfo("modulePackage", 100);
+    EXPECT_EQ(it->hqfInfo.moduleName, "modulePackage");
+}
