@@ -3638,6 +3638,10 @@ static void ConvertInstallResult(InstallResult &installResult)
  */
 napi_value Install(napi_env env, napi_callback_info info)
 {
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
     APP_LOGI("Install called");
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
@@ -3942,6 +3946,10 @@ static void InnerUninstall(
  */
 napi_value Uninstall(napi_env env, napi_callback_info info)
 {
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
     APP_LOGI("Uninstall called");
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
