@@ -718,6 +718,11 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
         innerBundleInfo.GetApplicationInfo(
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId, info.applicationInfo);
     }
+    // set uid for NAPI cache use
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        info.uid = innerBundleUserInfo.uid;
+    }
     return true;
 }
 
