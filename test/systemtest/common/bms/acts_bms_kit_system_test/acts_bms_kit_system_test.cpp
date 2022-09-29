@@ -4909,7 +4909,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0100, Function | Sma
     int32_t userId = 100;
     std::vector<ExtensionAbilityInfo> extensions;
     ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, flags, userId, extensions);
-    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -4927,7 +4927,26 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0200, Function | Sma
     int32_t userId = 100;
     std::vector<ExtensionAbilityInfo> extensions;
     ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, flags, userId, extensions);
-    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0300
+ * @tc.name: test QueryExtensionAbilityInfosV9 proxy
+ * @tc.desc: 1.system run normally
+ *           2.return ERR_OK
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    Want want;
+    want.SetAction("action.system.home");
+    int32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -5240,25 +5259,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0100, Function | SmallTest | Level1)
     size_t len = 0;
     ErrCode ret = bundleMgrProxy->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
     EXPECT_NE(ret, ERR_OK);
-}
-
-/**
- * @tc.number: QueryExtensionAbilityInfosV9_0300
- * @tc.name: test QueryExtensionAbilityInfosV9 proxy
- * @tc.desc: 1.system run normally
- *           2.return ERR_OK
- */
-HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    Want want;
-    want.SetAction("action.system.home");
-    int32_t flags = 0;
-    int32_t userId = 100;
-    std::vector<ExtensionAbilityInfo> extensionInfos;
-    ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
-    EXPECT_EQ(ret, ERR_OK);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
