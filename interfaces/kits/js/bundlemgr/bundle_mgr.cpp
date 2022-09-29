@@ -220,7 +220,7 @@ static void HandleAbilityInfoCache(
     if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
         return;
     }
-    int32_t explicitQueryResultLen = 1;
+    uint32_t explicitQueryResultLen = 1;
     if (info->abilityInfos.size() != explicitQueryResultLen ||
         info->abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
         return;
