@@ -56,7 +56,7 @@
                 "ipc",
                 "jsoncpp",
                 "libuv",
-                "multimedia_image_standard",
+                "multimedia_image_framework",
                 "napi",
                 "os_account",
                 "power_manager",
