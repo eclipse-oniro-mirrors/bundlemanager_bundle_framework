@@ -771,6 +771,11 @@ public:
     {
         return false;
     }
+
+    virtual ErrCode GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
@@ -1175,6 +1180,7 @@ public:
         GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
+        GET_SHORTCUT_INFO_V9,
     };
 };
 }  // namespace AppExecFwk
