@@ -32,7 +32,6 @@
 #include "distributed_bms_proxy.h"
 #endif
 #include "element_name.h"
-#include "hitrace_meter.h"
 #include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -133,7 +132,6 @@ bool BundleMgrHostImpl::GetBundleInfo(
 bool BundleMgrHostImpl::GetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
     if (!VerifyQueryPermission(bundleName)) {
@@ -965,7 +963,6 @@ bool BundleMgrHostImpl::UnregisterBundleStatusCallback()
 bool BundleMgrHostImpl::DumpInfos(
     const DumpFlag flag, const std::string &bundleName, int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -993,7 +990,6 @@ bool BundleMgrHostImpl::DumpInfos(
 
 bool BundleMgrHostImpl::DumpAllBundleInfoNames(int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("DumpAllBundleInfoNames begin");
     if (userId != Constants::ALL_USERID) {
         return DumpAllBundleInfoNamesByUserId(userId, result);
@@ -1010,7 +1006,6 @@ bool BundleMgrHostImpl::DumpAllBundleInfoNames(int32_t userId, std::string &resu
 
 bool BundleMgrHostImpl::DumpAllBundleInfoNamesByUserId(int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("DumpAllBundleInfoNamesByUserId begin");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -1039,7 +1034,6 @@ bool BundleMgrHostImpl::DumpAllBundleInfoNamesByUserId(int32_t userId, std::stri
 bool BundleMgrHostImpl::DumpBundleInfo(
     const std::string &bundleName, int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("DumpBundleInfo begin");
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     if (userId == Constants::ALL_USERID) {
@@ -1080,7 +1074,6 @@ bool BundleMgrHostImpl::DumpBundleInfo(
 bool BundleMgrHostImpl::DumpShortcutInfo(
     const std::string &bundleName, int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("DumpShortcutInfo begin");
     std::vector<ShortcutInfo> shortcutInfos;
     if (userId == Constants::ALL_USERID) {
