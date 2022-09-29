@@ -41,7 +41,7 @@
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
-#include "locale_config.h"
+#include "locale_info.h"
 #endif
 #include "nlohmann/json.hpp"
 #include "free_install_params.h"
@@ -3447,8 +3447,8 @@ void BundleDataMgr::GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int
     }
 }
 
-std::string BundleDataMgr::GetStringById(
-    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+std::string BundleDataMgr::GetStringById(const std::string &bundleName, const std::string &moduleName,
+    uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     APP_LOGD("GetStringById:%{public}s , %{public}s, %{public}d", bundleName.c_str(), moduleName.c_str(), resId);
 #ifdef GLOBAL_RESMGR_ENABLE
@@ -3500,7 +3500,7 @@ std::string BundleDataMgr::GetIconById(
 
 #ifdef GLOBAL_RESMGR_ENABLE
 std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceManager(
-    const std::string &bundleName, const std::string &moduleName, int32_t userId) const
+    const std::string &bundleName, const std::string &moduleName, int32_t userId, const std::string &localeInfo) const
 {
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId)) {
@@ -3525,10 +3525,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
 #ifdef GLOBAL_I18_ENABLE
-    std::string language = Global::I18n::LocaleConfig::GetSystemLanguage();
-    std::string locale = Global::I18n::LocaleConfig::GetSystemLocale();
-    std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
-    resConfig->SetLocaleInfo(language.c_str(), locale.c_str(), region.c_str());
+    std::map<std::string, std::string> configs;
+    OHOS::Global::I18n::LocaleInfo locale(localeInfo, configs);
+    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resourceManager->UpdateResConfig(*resConfig);
     return resourceManager;
@@ -3865,7 +3864,7 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
 #endif
 
 ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const
 {
     APP_LOGI("begin to GetMediaData.");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -3879,13 +3878,13 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId());
+    auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId(userId));
     if (!ability) {
         APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, moduleName, GetUserId());
+        GetResourceManager(bundleName, moduleName, GetUserId(userId));
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
