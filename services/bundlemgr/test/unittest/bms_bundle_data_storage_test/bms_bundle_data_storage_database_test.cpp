@@ -171,6 +171,7 @@ protected:
                     "minWindowWidth":0,
                     "maxWindowHeight":0,
                     "minWindowHeight":0,
+                    "uid": -1,
                     "applicationName": "com.ohos.launcher",
                     "backgroundModes": 0,
                     "bundleName": "com.ohos.launcher",
