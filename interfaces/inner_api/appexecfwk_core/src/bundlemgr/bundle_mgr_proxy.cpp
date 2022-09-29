@@ -15,6 +15,7 @@
 
 #include "bundle_mgr_proxy.h"
 
+#include <numeric>
 #include <unistd.h>
 
 #include "ipc_types.h"
@@ -1674,9 +1675,7 @@ bool BundleMgrProxy::DumpInfos(
         APP_LOGE("fail to dump from reply");
         return false;
     }
-    for (auto &dumpinfo : dumpInfos) {
-        result += dumpinfo;
-    }
+    result = std::accumulate(dumpInfos.begin(), dumpInfos.end(), result);
     return true;
 }
 

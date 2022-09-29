@@ -1632,7 +1632,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    ErrCode result = ERR_OK;
+    ErrCode result;
     Want want;
     ElementName elementName("", bundleName, info.abilityName, info.moduleName);
     want.SetElement(elementName);

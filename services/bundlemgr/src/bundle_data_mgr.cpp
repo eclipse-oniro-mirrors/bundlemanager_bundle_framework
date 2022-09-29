@@ -1334,7 +1334,7 @@ ErrCode BundleDataMgr::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId) const
 {
     APP_LOGD("Service BundleDataMgr GetBundlePackInfo start");
-    int32_t requestUserId = Constants::INVALID_USERID;
+    int32_t requestUserId;
     if (userId == Constants::UNSPECIFIED_USERID) {
         requestUserId = GetUserIdByCallingUid();
     } else {
@@ -1558,9 +1558,7 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
         APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
         return spaceSize;
     }
-    for (const auto &size : bundleStats) {
-        spaceSize += size;
-    }
+    spaceSize = std::accumulate(bundleStats.begin(), bundleStats.end(), spaceSize);
     APP_LOGI("%{public}s spaceSize:%{public}" PRId64, bundleName.c_str(), spaceSize);
     return spaceSize;
 }
@@ -2367,8 +2365,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
                 std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
-                auto infoItem = bundleIdMap_.find(bundleId);
-                if (infoItem == bundleIdMap_.end()) {
+                auto item = bundleIdMap_.find(bundleId);
+                if (item == bundleIdMap_.end()) {
                     bundleIdMap_.emplace(bundleId, innerBundleUserInfo.bundleName);
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
@@ -3803,9 +3801,9 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         std::string key;
         key.append(bundleName).append(".").append(abilityInfo.package).append(".").append(abilityName);
         APP_LOGD("begin to find ability skills, key : %{public}s.", key.c_str());
-        for (const auto& item : innerBundleInfo.GetInnerSkillInfos()) {
-            if (item.first == key) {
-                skills = item.second;
+        for (const auto& infoItem : innerBundleInfo.GetInnerSkillInfos()) {
+            if (infoItem.first == key) {
+                skills = infoItem.second;
                 APP_LOGD("find ability skills success.");
                 break;
             }
@@ -3814,9 +3812,9 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         std::string key;
         key.append(bundleName).append(".").append(moduleName).append(".").append(extensionName);
         APP_LOGD("begin to find extension skills, key : %{public}s.", key.c_str());
-        for (const auto& item : innerBundleInfo.GetExtensionSkillInfos()) {
-            if (item.first == key) {
-                skills = item.second;
+        for (const auto& infoItem : innerBundleInfo.GetExtensionSkillInfos()) {
+            if (infoItem.first == key) {
+                skills = infoItem.second;
                 APP_LOGD("find extension skills success.");
                 break;
             }

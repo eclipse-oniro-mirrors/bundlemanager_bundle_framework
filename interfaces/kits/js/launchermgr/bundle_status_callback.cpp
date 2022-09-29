@@ -43,7 +43,7 @@ BundleStatusCallback::~BundleStatusCallback()
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
             // JS Thread
-            DelRefCallbackInfo* delRefCallbackInfo =  reinterpret_cast<DelRefCallbackInfo*>(work->data);
+            DelRefCallbackInfo* delRefCallbackInfo = reinterpret_cast<DelRefCallbackInfo*>(work->data);
             if (delRefCallbackInfo == nullptr) {
                 return;
             }

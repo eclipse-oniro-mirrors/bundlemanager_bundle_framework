@@ -147,10 +147,7 @@ void BundleMgrDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteOb
     bundleMgr_ = nullptr;
 };
 
-AsyncWorkData::AsyncWorkData(napi_env napiEnv)
-{
-    env = napiEnv;
-}
+AsyncWorkData::AsyncWorkData(napi_env napiEnv) : env(napiEnv) {}
 
 AsyncWorkData::~AsyncWorkData()
 {
