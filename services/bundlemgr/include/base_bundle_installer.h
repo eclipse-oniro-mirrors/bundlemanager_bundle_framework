@@ -453,6 +453,10 @@ private:
     ErrCode CheckHapModleOrType(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
+    bool UninstallAppControl(const std::string &appId, int32_t userId);
+    ErrCode InstallAppControl(
+        const std::vector<std::string> &installAppIds, int32_t userId);
+
 private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;

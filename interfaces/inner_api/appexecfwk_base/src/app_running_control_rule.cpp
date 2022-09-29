@@ -24,21 +24,14 @@ namespace AppExecFwk {
 bool AppRunningControlRule::ReadFromParcel(Parcel &parcel)
 {
     appId = Str16ToStr8(parcel.ReadString16());
-    ruleType = static_cast<AppRunningControlRuleType>(parcel.ReadInt32());
-    std::unique_ptr<AppRunningControlRuleParam> ruleParamPtr(parcel.ReadParcelable<AppRunningControlRuleParam>());
-    if (ruleParamPtr == nullptr) {
-        APP_LOGE("ReadParcelable<AppRunningControlRuleParam> failed");
-        return false;
-    }
-    ruleParam = *ruleParamPtr;
+    controlMessage = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
 bool AppRunningControlRule::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(ruleType));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &ruleParam);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(controlMessage));
     return true;
 }
 

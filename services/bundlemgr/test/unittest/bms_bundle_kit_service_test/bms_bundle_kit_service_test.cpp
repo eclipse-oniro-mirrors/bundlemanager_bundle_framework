@@ -5001,13 +5001,13 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_005, Function | SmallTest | Level1
 
 /**
  * @tc.number: Marshalling_006
- * @tc.name: AppRunningControlRuleParam Marshalling
- * @tc.desc: 1.Test the marshalling of AppRunningControlRuleParam
+ * @tc.name: AppRunningControlRule Marshalling
+ * @tc.desc: 1.Test the marshalling of AppRunningControlRule
  */
 HWTEST_F(BmsBundleKitServiceTest, Marshalling_006, Function | SmallTest | Level1)
 {
-    AppRunningControlRuleParam param;
-    param.controlWant = nullptr;
+    AppRunningControlRule param;
+    param.appId = "appId";
     param.controlMessage = "Success";
     Parcel parcel;
     bool ret = param.Marshalling(parcel);
@@ -5181,39 +5181,22 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_002, Function | SmallTest | Leve
 
 /**
  * @tc.number: Unmarshalling_003
- * @tc.name: AppRunningControlRuleParam Unmarshalling
- * @tc.desc: 1.Test the Unmarshalling of AppRunningControlRuleParam
+ * @tc.name: AppRunningControlRule Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of AppRunningControlRule
  */
 HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_003, Function | SmallTest | Level1)
 {
-    AppRunningControlRuleParam param1;
-    param1.controlWant = nullptr;
+    AppRunningControlRule param1;
+    param1.appId = "appId";
     param1.controlMessage = "Success";
     Parcel parcel;
-    AppRunningControlRuleParam param2;
+    AppRunningControlRule param2;
     auto ret1 = param1.Marshalling(parcel);
     EXPECT_EQ(ret1, true);
     auto ret2 = param2.Unmarshalling(parcel);
     EXPECT_NE(ret2, nullptr);
-    EXPECT_EQ(param1.controlWant, ret2->controlWant);
+    EXPECT_EQ(param1.appId, ret2->appId);
     EXPECT_EQ(param1.controlMessage, ret2->controlMessage);
-}
-
-/**
- * @tc.number: Unmarshalling_004
- * @tc.name: AppqfInfo Unmarshalling
- * @tc.desc: 1.Test the Unmarshalling Failed of AppqfInfo
- */
-HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_004, Function | SmallTest | Level1)
-{
-    AppRunningControlRuleParam wrongHqfInfo;
-    wrongHqfInfo.controlWant = nullptr;
-    AppqfInfo info;
-    Parcel parcel;
-    bool ret1 = wrongHqfInfo.Marshalling(parcel);
-    EXPECT_EQ(ret1, true);
-    auto ret2 = info.Unmarshalling(parcel);
-    EXPECT_EQ(ret2, nullptr);
 }
 
 /**
@@ -5236,23 +5219,6 @@ HWTEST_F(BmsBundleKitServiceTest, ReadFromParcelOfAppqfInfo_001, Function | Smal
     auto ret1 = param1.Marshalling(parcel);
     EXPECT_TRUE(ret1);
     auto ret2 = param2.ReadFromParcel(parcel);
-    EXPECT_TRUE(ret2);
-}
-
-/**
- * @tc.number: AppRunningControlRuleParam_001
- * @tc.name: ReadFromParcel
- * @tc.desc: 1.Test ReadFromParcel of AppRunningControlRuleParam
- */
-HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleParam_001, Function | SmallTest | Level1)
-{
-    AppRunningControlRuleParam param;
-    param.controlWant = std::make_shared<Want>();
-    param.controlMessage = "Success";
-    Parcel parcel;
-    auto ret1 = param.Marshalling(parcel);
-    EXPECT_EQ(ret1, true);
-    auto ret2 = param.ReadFromParcel(parcel);
     EXPECT_TRUE(ret2);
 }
 

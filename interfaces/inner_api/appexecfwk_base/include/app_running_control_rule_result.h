@@ -18,18 +18,16 @@
 
 #include <string>
 
-#include "app_running_control_rule_param.h"
 #include "parcel.h"
 #include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 struct AppRunningControlRuleResult : public Parcelable {
-    AppRunningControlRuleParam ruleParam;
-    AppRunningControlRuleType ruleType;
+    std::string controlMessage;
+    std::shared_ptr<AAFwk::Want> controlWant = nullptr;
 
     void ExecuteControlRule();
-    AppRunningControlRuleType GetAppRunningControlRuleType();
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static AppRunningControlRuleResult *Unmarshalling(Parcel &parcel);
