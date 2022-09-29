@@ -23,6 +23,8 @@
 #include "appexecfwk_errors.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
+#include "directory_ex.h"
+#include "file_ex.h"
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
@@ -61,6 +63,10 @@ const std::string PROVISION_TYPE_RELEASE = "release";
 const std::string RESULT_CODE = "resultCode";
 const std::string PATCH_PATH = "patch_1";
 const std::string MODULE_NAME = "entry";
+const std::string FILE1_PATH = "/data/test/hello.hqf";
+const std::string FILE2_PATH = "/data/test/world.hqf";
+const std::string FILE3_PATH = "/data/test/world.hap";
+const std::string INVALID_FILE_SUFFIX_PATH = "/data/test/invalidSuffix.txt";
 }  // namespace
 
 class BmsBundleQuickFixTest : public testing::Test {
@@ -86,6 +92,8 @@ public:
     void StartInstalldService() const;
     void StartBundleService();
     sptr<IQuickFixManager> GetQuickFixManagerProxy();
+    void CreateFiles(const std::vector<std::string>& sourceFiles);
+    void DeleteFiles(const std::vector<std::string>& destFiles);
 
 private:
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
@@ -333,6 +341,21 @@ sptr<IQuickFixManager> BmsBundleQuickFixTest::GetQuickFixManagerProxy()
     }
     return bundleMgr->GetQuickFixManagerProxy();
 }
+
+void BmsBundleQuickFixTest::CreateFiles(const std::vector<std::string>& sourceFiles)
+{
+    for (const auto& path : sourceFiles) {
+        SaveStringToFile(path, path);
+    }
+}
+
+void BmsBundleQuickFixTest::DeleteFiles(const std::vector<std::string>& destFiles)
+{
+    for (const auto& path : destFiles) {
+        RemoveFile(path);
+    }
+}
+
 /**
  * @tc.number: BmsBundleQuickFixTest_0001
  * Function: CheckAppQuickFixInfos
@@ -1430,6 +1453,169 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0045, Function | SmallTest
         InnerAppQuickFix innerAppQuickFix;
         ErrCode ret = switcher->InnerSwitchQuickFix(BUNDLE_NAME, innerAppQuickFix, false);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO);
+    }
+
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0046
+ * Function: ToDeployEndStatus
+ * @tc.name: test ToDeployEndStatus
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ToDeployEndStatus nativeLibraryPath empty
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0046, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
+        InnerAppQuickFix newInnerAppQuickFix;
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        InnerAppQuickFix oldInnerAppQuickFix;
+        ErrCode ret = deployer->ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0047
+ * Function: ToDeployEndStatus
+ * @tc.name: test ToDeployEndStatus
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ToDeployEndStatus nativeLibraryPath not empty
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0047, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        InnerAppQuickFix newInnerAppQuickFix;
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        InnerAppQuickFix oldInnerAppQuickFix;
+        ErrCode ret = deployer->ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0048
+ * Function: ToDeployEndStatus
+ * @tc.name: test ToDeployEndStatus
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ToDeployEndStatus nativeLibraryPath not empty
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0048, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        InnerAppQuickFix newInnerAppQuickFix;
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        InnerAppQuickFix oldInnerAppQuickFix;
+        ErrCode ret = deployer->ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0049
+ * Function: ProcessBundleFilePaths
+ * @tc.name: test ProcessBundleFilePaths
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ProcessBundleFilePaths
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0049, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> sourceFiles {FILE1_PATH, FILE2_PATH};
+        CreateFiles(sourceFiles);
+        std::vector<std::string> realFilePaths;
+        ErrCode ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
+        EXPECT_EQ(ret, ERR_OK);
+        DeleteFiles(sourceFiles);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0050
+ * Function: ProcessBundleFilePaths
+ * @tc.name: test ProcessBundleFilePaths
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ProcessBundleFilePaths
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0050, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> sourceFiles {FILE1_PATH, FILE2_PATH, INVALID_FILE_SUFFIX_PATH};
+        CreateFiles(sourceFiles);
+        std::vector<std::string> realFilePaths;
+        ErrCode ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+        DeleteFiles(sourceFiles);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0051
+ * Function: ProcessBundleFilePaths
+ * @tc.name: test ProcessBundleFilePaths
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ProcessBundleFilePaths
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0051, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> sourceFiles {FILE1_PATH, FILE2_PATH, FILE3_PATH};
+        CreateFiles(sourceFiles);
+        std::vector<std::string> realFilePaths;
+        ErrCode ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+        DeleteFiles(sourceFiles);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0052
+ * Function: CheckCommonWithInstalledBundle
+ * @tc.name: test CheckPatchWithInstalledBundle
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CheckPatchWithInstalledBundle, signature info not same
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0052, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_DEBUG);
+
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.versionCode = 2;
+        BundleInfo bundleInfo;
+        ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+        Security::Verify::ProvisionInfo provisionInfo;
+        QuickFixChecker checker;
+        ret = checker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo, provisionInfo);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
