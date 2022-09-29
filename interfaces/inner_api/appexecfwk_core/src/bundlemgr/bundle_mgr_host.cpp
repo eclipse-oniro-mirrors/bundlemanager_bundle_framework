@@ -520,7 +520,6 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
     int32_t userId = data.ReadInt32();
 
     std::vector<BundleInfo> infos;
-    reply.SetDataCapacity(Constants::MAX_CAPACITY_BUNDLES);
     auto ret = GetBundleInfosV9(flags, infos, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
