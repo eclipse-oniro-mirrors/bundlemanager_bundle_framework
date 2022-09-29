@@ -19,6 +19,7 @@
         "package":"com.system.hiworld.example.h1",
         "name":"bmsSystemBundle1",
         "deviceType": [
+            "default",
             "tv",
             "car"
         ],
