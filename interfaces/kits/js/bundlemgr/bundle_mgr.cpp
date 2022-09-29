@@ -1706,7 +1706,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                 {
                     std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
                     auto item = abilityInfoCache.find(Query(asyncCallbackInfo->want.ToString(),
-                        QUERY_ABILITY_BY_WANT, asyncCallbackInfo->flags, asyncCallbackInfo->userId));
+                        QUERY_ABILITY_BY_WANT, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
                     if (item != abilityInfoCache.end()) {
                         APP_LOGD("has cache,no need to query from host");
                         asyncCallbackInfo->ret = true;
@@ -1733,7 +1733,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                     // get from cache first
                     std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
                     Query query(asyncCallbackInfo->want.ToString(), QUERY_ABILITY_BY_WANT,
-                        asyncCallbackInfo->flags, asyncCallbackInfo->userId);
+                        asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
                     auto item = abilityInfoCache.find(query);
                     if (item != abilityInfoCache.end()) {
                         APP_LOGD("get abilityInfo from cache");
@@ -1962,7 +1962,7 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
         userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     napi_value nApplicationInfo = nullptr;
-    auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId));
+    auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId, env));
     if (item != cache.end()) {
         APP_LOGD("getApplicationInfo param from cache");
         NAPI_CALL(env,
@@ -1982,7 +1982,7 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
     }
     NAPI_CALL(env, napi_create_object(env, &nApplicationInfo));
     ConvertApplicationInfo(env, nApplicationInfo, appInfo);
-    Query query = Query(bundleName, GET_APPLICATION_INFO, flags, userId);
+    Query query = Query(bundleName, GET_APPLICATION_INFO, flags, userId, env);
     CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, nApplicationInfo);
     return nApplicationInfo;
 }
@@ -2653,7 +2653,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
         bundleOptions.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     napi_value nBundleInfo = nullptr;
-    auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, bundleOptions.userId));
+    auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, bundleOptions.userId, env));
     if (item != cache.end()) {
         APP_LOGD("GetBundleInfo param from cache");
         NAPI_CALL(env,
@@ -2672,7 +2672,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     }
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     ConvertBundleInfo(env, nBundleInfo, bundleInfo);
-    Query query = Query(bundleName, GET_BUNDLE_INFO, flags, bundleOptions.userId);
+    Query query = Query(bundleName, GET_BUNDLE_INFO, flags, bundleOptions.userId, env);
     CheckToCache(env, bundleInfo.applicationInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     return nBundleInfo;
 }
