@@ -1198,6 +1198,13 @@ public:
         return skillInfos_;
     }
     /**
+     * @brief Fetch all extensionAbilityInfos, can be modify.
+     */
+    std::map<std::string, ExtensionAbilityInfo> &FetchInnerExtensionInfos()
+    {
+        return baseExtensionInfos_;
+    }
+    /**
      * @brief Obtains all extensionAbilityInfos.
      */
     const std::map<std::string, ExtensionAbilityInfo> &GetInnerExtensionInfos() const

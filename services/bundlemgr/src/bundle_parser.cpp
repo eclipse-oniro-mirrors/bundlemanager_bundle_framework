@@ -97,7 +97,6 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
 
 ErrCode BundleParser::Parse(
     const std::string &pathName,
-    const AppPrivilegeCapability &appPrivilegeCapability,
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGI("parse from %{private}s", pathName.c_str());
@@ -119,13 +118,13 @@ ErrCode BundleParser::Parse(
         innerBundleInfo.SetIsNewVersion(true);
         ModuleProfile moduleProfile;
         return moduleProfile.TransformTo(
-            outStream, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+            outStream, bundleExtractor, innerBundleInfo);
     }
     APP_LOGD("config.json transform to InnerBundleInfo");
     innerBundleInfo.SetIsNewVersion(false);
     BundleProfile bundleProfile;
     ErrCode ret = bundleProfile.TransformTo(
-        outStream, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        outStream, bundleExtractor, innerBundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("transform stream to innerBundleInfo failed %{public}d", ret);
         return ret;

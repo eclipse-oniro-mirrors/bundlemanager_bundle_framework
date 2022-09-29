@@ -486,10 +486,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
 
         InnerBundleInfo info;
         BundleParser bundleParser;
-        AppPrivilegeCapability appPrivilegeCapability;
-        appPrivilegeCapability.allowMultiProcess = true;
-        appPrivilegeCapability.allowUsePrivilegeExtension = true;
-        ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
+        ret = bundleParser.Parse(realPath, info);
         if (ret != ERR_OK) {
             APP_LOGE("parse bundle info failed, error: %{public}d", ret);
             return false;
@@ -535,10 +532,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &hap
     }
     InnerBundleInfo info;
     BundleParser bundleParser;
-    AppPrivilegeCapability appPrivilegeCapability;
-    appPrivilegeCapability.allowMultiProcess = true;
-    appPrivilegeCapability.allowUsePrivilegeExtension = true;
-    ret = bundleParser.Parse(realPath, appPrivilegeCapability, info);
+    ret = bundleParser.Parse(realPath, info);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         BundleUtil::DeleteDir(tempHapPath);
