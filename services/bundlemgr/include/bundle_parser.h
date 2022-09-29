@@ -33,13 +33,11 @@ public:
     /**
      * @brief Parse bundle by the path name, then save in innerBundleInfo info.
      * @param pathName Indicates the path of Bundle.
-     * @param appPrivilegeCapability Indicates the appPrivilegeCapability of Bundle
      * @param innerBundleInfo Indicates the obtained InnerBundleInfo object.
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
     ErrCode Parse(
         const std::string &pathName,
-        const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &innerBundleInfo) const;
 
     ErrCode ParsePackInfo(const std::string &pathName, BundlePackInfo &bundlePackInfo) const;

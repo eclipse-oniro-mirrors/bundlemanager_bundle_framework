@@ -341,9 +341,8 @@ void BmsBundleParserTest::CheckNoPropProfileParseApp(const std::string &propKey,
     profileFileBuffer << errorProfileJson.dump();
 
     BundleExtractor bundleExtractor("");
-    AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleProfile.TransformTo(
-        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, expectCode);
 }
 
@@ -359,9 +358,8 @@ void BmsBundleParserTest::CheckNoPropProfileParseDeviceConfig(
     profileFileBuffer << errorProfileJson.dump();
 
     BundleExtractor bundleExtractor("");
-    AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleProfile.TransformTo(
-        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, expectCode);
 }
 
@@ -376,9 +374,8 @@ void BmsBundleParserTest::CheckNoPropProfileParseModule(const std::string &propK
     profileFileBuffer << errorProfileJson.dump();
 
     BundleExtractor bundleExtractor("");
-    AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleProfile.TransformTo(
-        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, expectCode);
 }
 
@@ -391,9 +388,8 @@ void BmsBundleParserTest::CheckProfilePermission(const nlohmann::json &checkedPr
     profileFileBuffer << checkedProfileJson.dump();
     
     BundleExtractor bundleExtractor("");
-    AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleProfile.TransformTo(
-        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
 
@@ -406,9 +402,8 @@ void BmsBundleParserTest::CheckProfileForms(const nlohmann::json &checkedProfile
     profileFileBuffer << checkedProfileJson.dump();
 
     BundleExtractor bundleExtractor("");
-    AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleProfile.TransformTo(
-        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) << profileFileBuffer.str();
 }
 
@@ -421,9 +416,8 @@ void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProf
     profileFileBuffer << checkedProfileJson.dump();
 
     BundleExtractor bundleExtractor("");
-    AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleProfile.TransformTo(
-        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) << profileFileBuffer.str();
 }
 
@@ -452,9 +446,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_0200, Function | SmallTest | Level0)
     BundleParser bundleParser;
     InnerBundleInfo innerBundleInfo;
     pathStream_ << RESOURCE_ROOT_PATH << UNKOWN_PATH << INSTALL_FILE_SUFFIX;
-    AppPrivilegeCapability appPrivilegeCapability;
-    ErrCode result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -661,21 +653,17 @@ HWTEST_F(BmsBundleParserTest, TestParse_1600, Function | SmallTest | Level0)
     BundleParser bundleParser;
     InnerBundleInfo innerBundleInfo;
     pathStream_ << RESOURCE_ROOT_PATH << "demo.error_type";
-    AppPrivilegeCapability appPrivilegeCapability;
-    ErrCode result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 
     pathStream_.str("");
     pathStream_ << RESOURCE_ROOT_PATH << "demo.";
-    result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 
     pathStream_.str("");
     pathStream_ << RESOURCE_ROOT_PATH << "bundle_suffix_test.BUNDLE";
-    result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -695,9 +683,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_1700, Function | SmallTest | Level1)
         pathStream_ << "test/";
     }
     pathStream_ << NEW_APP << INSTALL_FILE_SUFFIX;
-    AppPrivilegeCapability appPrivilegeCapability;
-    ErrCode result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED) << pathStream_.str();
 }
 
@@ -717,9 +703,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_1800, Function | SmallTest | Level1)
         pathStream_ << "test/";
     }
     pathStream_ << NEW_APP << INSTALL_FILE_SUFFIX;
-    AppPrivilegeCapability appPrivilegeCapability;
-    ErrCode result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -736,9 +720,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_1900, Function | SmallTest | Level1)
     pathStream_ << RESOURCE_ROOT_PATH;
     std::string specialChars = "~!@#$%^&*(){}[]:;'?<>,.|`/./+_-";
     pathStream_ << specialChars << "new" << INSTALL_FILE_SUFFIX;
-    AppPrivilegeCapability appPrivilegeCapability;
-    ErrCode result = bundleParser.Parse(
-        pathStream_.str(), appPrivilegeCapability, innerBundleInfo);
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -968,9 +950,8 @@ HWTEST_F(BmsBundleParserTest, TestParse_2800, Function | SmallTest | Level1)
     profileFileBuffer << formsJson.dump();
     
     BundleExtractor bundleExtractor("");
-    AppPrivilegeCapability appPrivilegeCapability;
     ErrCode result = bundleProfile.TransformTo(
-        profileFileBuffer, bundleExtractor, appPrivilegeCapability, innerBundleInfo);
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
     innerBundleInfo.GetFormsInfoByApp(formInfos);
     int newSupportDimension = 5;
