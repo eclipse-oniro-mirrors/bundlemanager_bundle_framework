@@ -256,8 +256,10 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
@@ -366,8 +368,10 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
@@ -480,8 +484,10 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_THREE) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_THREE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
@@ -588,8 +594,10 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
