@@ -591,7 +591,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID); // to do : should change to GetBundleInfoV9
+    info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     return ERR_OK;
 }
 
@@ -637,7 +637,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     BundleUtil::DeleteDir(tempHapPath);
     APP_LOGD("verify permission success, begin to GetBundleArchiveInfo");
     if (fromV9) {
-        // to do : GetBundleInfoV9
+        info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     } else {
         info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     }

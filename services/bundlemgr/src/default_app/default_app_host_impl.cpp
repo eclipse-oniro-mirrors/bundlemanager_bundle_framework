@@ -62,6 +62,10 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
         APP_LOGE("DataMgr is nullptr.");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId not exist.");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     Element element;
     bool ret = dataMgr->GetElement(userId, elementName, element);
     if (!ret) {

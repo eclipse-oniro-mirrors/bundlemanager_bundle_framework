@@ -51,7 +51,7 @@ private:
     bool IsElementEmpty(const Element& element) const;
     bool IsElementValid(int32_t userId, const std::string& type, const Element& element) const;
     bool IsUserIdExist(int32_t userId) const;
-    bool VerifyUserIdAndType(int32_t userId, const std::string& type) const;
+    ErrCode VerifyUserIdAndType(int32_t userId, const std::string& type) const;
     bool IsBrowserSkillsValid(const std::vector<Skill>& skills) const;
     bool IsImageSkillsValid(const std::vector<Skill>& skills) const;
     bool IsAudioSkillsValid(const std::vector<Skill>& skills) const;

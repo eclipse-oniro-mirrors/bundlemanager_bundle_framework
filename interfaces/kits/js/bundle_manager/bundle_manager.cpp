@@ -66,25 +66,26 @@ void GetBundleArchiveInfoComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<GetBundleArchiveInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
+    napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        // to do : convert bundleInfo
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        CommonFunc::ConvertBundleInfo(env,
+            asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
         } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
         }
     } else {
         napi_value callback = nullptr;
         napi_value placeHolder = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
         NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
     }
 }
 
