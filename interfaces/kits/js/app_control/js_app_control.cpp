@@ -53,7 +53,8 @@ static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    return appControlProxy->GetDisposedStatus(appId, disposedWant);
+    ErrCode ret = appControlProxy->GetDisposedStatus(appId, disposedWant);
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& disposedWant)
@@ -63,7 +64,8 @@ static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& 
         APP_LOGE("AppControlProxy is null.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    return appControlProxy->SetDisposedStatus(appId, disposedWant);
+    ErrCode ret = appControlProxy->SetDisposedStatus(appId, disposedWant);
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
@@ -73,7 +75,8 @@ static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
         APP_LOGE("AppControlProxy is null.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    return appControlProxy->DeleteDisposedStatus(appId);
+    ErrCode ret = appControlProxy->DeleteDisposedStatus(appId);
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 void SetDisposedStatusExec(napi_env env, void *data)
