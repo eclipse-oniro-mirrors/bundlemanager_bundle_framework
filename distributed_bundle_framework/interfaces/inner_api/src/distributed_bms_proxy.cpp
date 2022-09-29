@@ -178,15 +178,15 @@ bool DistributedBmsProxy::GetDistributedBundleInfo(const std::string &networkId,
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetDistributedBundleInfo due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return false;
     }
     if (!data.WriteString(networkId)) {
         APP_LOGE("DistributedBmsProxy GetDistributedBundleInfo write networkId error");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return false;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("DistributedBmsProxy GetDistributedBundleInfo write bundleName error");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return false;
     }
     int32_t result = GetParcelableInfo<DistributedBundleInfo>(
         IDistributedBms::Message::GET_DISTRIBUTED_BUNDLE_INFO, data, distributedBundleInfo);

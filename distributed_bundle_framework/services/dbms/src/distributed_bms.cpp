@@ -257,21 +257,26 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
         APP_LOGE("GetCurrentUserId failed");
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
-    AbilityInfo abilityInfo;
+    std::vector<AbilityInfo> abilityInfos;
     OHOS::AAFwk::Want want;
     want.SetElement(elementName);
-    if (!iBundleMgr->QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, userId, abilityInfo)) {
+    ErrCode ret = iBundleMgr->QueryAbilityInfosV9(want, GET_ABILITY_INFO_WITH_APPLICATION_V9, userId, abilityInfos);
+    if (ret != ERR_OK) {
         APP_LOGE("DistributedBms QueryAbilityInfo failed");
+        return ret;
+    }
+    if (abilityInfos.empty()) {
+        APP_LOGE("DistributedBms QueryAbilityInfo abilityInfos empty");
         return ERR_APPEXECFWK_FAILED_GET_ABILITY_INFO;
     }
     std::string label = iBundleMgr->GetStringById(
-        abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.labelId, userId, localeInfo);
+        abilityInfos[0].bundleName, abilityInfos[0].moduleName, abilityInfos[0].labelId, userId, localeInfo);
     if (label.empty()) {
-        APP_LOGE("DistributedBms QueryAbilityInfo failed");
+        APP_LOGE("DistributedBms QueryAbilityInfo label empty");
         return ERR_APPEXECFWK_FAILED_GET_ABILITY_INFO;
     }
     remoteAbilityInfo.label = label;
-    return GetAbilityIconByContent(abilityInfo, userId, remoteAbilityInfo);
+    return GetAbilityIconByContent(abilityInfos[0], userId, remoteAbilityInfo);
 }
 
 int32_t DistributedBms::GetAbilityIconByContent(

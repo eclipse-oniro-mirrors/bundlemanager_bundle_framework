@@ -133,7 +133,7 @@ static bool ParseElementName(napi_env env, napi_value args, OHOS::AppExecFwk::El
         return false;
     }
     std::string deviceId;
-    if (!CommonFunc::ParseStringPropertyFromObject(env, args, "deviceId", false, deviceId)) {
+    if (!CommonFunc::ParseStringPropertyFromObject(env, args, "deviceId", true, deviceId)) {
         APP_LOGE("begin to parse ElementName deviceId failed");
         return false;
     }
