@@ -34,10 +34,10 @@ AppControlProxy::~AppControlProxy()
 ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string> &appIds,
     const AppInstallControlRuleType controlRuleType, int32_t userId)
 {
-    APP_LOGI("begin to call AddAppInstallControlRule.");
+    APP_LOGD("begin to call AddAppInstallControlRule.");
     if (appIds.empty()) {
         APP_LOGE("AddAppInstallControlRule failed due to params error.");
-        return ERR_INVALID_VALUE;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -63,10 +63,10 @@ ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string>
 
 ErrCode AppControlProxy::DeleteAppInstallControlRule(const std::vector<std::string> &appIds, int32_t userId)
 {
-    APP_LOGI("begin to call DeleteAppInstallControlRule.");
+    APP_LOGD("begin to call DeleteAppInstallControlRule.");
     if (appIds.empty()) {
         APP_LOGE("DeleteAppInstallControlRule failed due to params error.");
-        return ERR_INVALID_VALUE;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -89,7 +89,7 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(const std::vector<std::stri
 ErrCode AppControlProxy::DeleteAppInstallControlRule(
     const AppInstallControlRuleType controlRuleType, int32_t userId)
 {
-    APP_LOGI("begin to call DeleteAppInstallControlRule.");
+    APP_LOGD("begin to call DeleteAppInstallControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -111,7 +111,7 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(
 ErrCode AppControlProxy::GetAppInstallControlRule(
     const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds)
 {
-    APP_LOGI("begin to call GetAppInstallControlRule.");
+    APP_LOGD("begin to call GetAppInstallControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -131,10 +131,10 @@ ErrCode AppControlProxy::GetAppInstallControlRule(
 ErrCode AppControlProxy::AddAppRunningControlRule(
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    APP_LOGI("begin to call AddAppRunningControlRule.");
+    APP_LOGD("begin to call AddAppRunningControlRule.");
     if (controlRules.empty()) {
         APP_LOGE("AddAppRunningControlRule failed due to params error.");
-        return ERR_INVALID_VALUE;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -155,10 +155,10 @@ ErrCode AppControlProxy::AddAppRunningControlRule(
 ErrCode AppControlProxy::DeleteAppRunningControlRule(
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    APP_LOGI("begin to call delete AppRunningControlRules.");
+    APP_LOGD("begin to call delete AppRunningControlRules.");
     if (controlRules.empty()) {
         APP_LOGE("DeleteAppRunningControlRule failed due to params error.");
-        return ERR_INVALID_VALUE;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -180,7 +180,7 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(
 
 ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
 {
-    APP_LOGI("begin to call delete appRunningControlRuleType.");
+    APP_LOGD("begin to call delete appRunningControlRuleType.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -197,7 +197,7 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
 
 ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
 {
-    APP_LOGI("begin to call GetAppInstallControlRule.");
+    APP_LOGD("begin to call GetAppInstallControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -213,7 +213,7 @@ ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<st
 ErrCode AppControlProxy::GetAppRunningControlRule(
     const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
-    APP_LOGI("begin to call GetAppRunningControlRuleResult.");
+    APP_LOGD("begin to call GetAppRunningControlRuleResult.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -332,7 +332,7 @@ bool AppControlProxy::WriteParcelableVector(const std::vector<T> &parcelableVect
         return false;
     }
 
-    for (auto &parcelable : parcelableVector) {
+    for (const auto &parcelable : parcelableVector) {
         if (!data.WriteParcelable(&parcelable)) {
             APP_LOGE("write ParcelableVector failed");
             return false;
@@ -387,7 +387,7 @@ int32_t AppControlProxy::SendRequest(IAppControlMgr::Message code, MessageParcel
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         APP_LOGE("failed to send request %{public}d due to remote object null.", code);
-        return ERR_INVALID_OPERATION;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     int32_t result = remote->SendRequest(code, data, reply, option);
     if (result != NO_ERROR) {

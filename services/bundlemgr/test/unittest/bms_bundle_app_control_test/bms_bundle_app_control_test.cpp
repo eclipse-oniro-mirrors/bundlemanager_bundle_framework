@@ -215,10 +215,10 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTe
     std::vector<std::string> appIds;
     auto res = appControlProxy->
         AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
-    EXPECT_EQ(res, ERR_INVALID_VALUE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     auto res1 = appControlProxy->
         DeleteAppInstallControlRule(appIds, USERID);
-    EXPECT_EQ(res1, ERR_INVALID_VALUE);
+    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     auto res2 = appControlProxy->
         DeleteAppInstallControlRule(AppInstallControlRuleType::ALLOWED_INSTALL, USERID);
     EXPECT_EQ(res2, ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED);
@@ -283,10 +283,10 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTe
     std::vector<std::string> appIds;
     auto res = appControlProxy->
         AddAppInstallControlRule(appIds, AppInstallControlRuleType::ALLOWED_INSTALL, USERID);
-    EXPECT_EQ(res, ERR_INVALID_VALUE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     auto res1 = appControlProxy->
         DeleteAppInstallControlRule(appIds, USERID);
-    EXPECT_EQ(res1, ERR_INVALID_VALUE);
+    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 /**
@@ -304,10 +304,10 @@ HWTEST_F(BmsBundleAppControlTest, AddAppRunningControlRule_0100, Function | Smal
 
     ErrCode res = appControlProxy->
         AddAppRunningControlRule(controlRules, USERID);
-    EXPECT_EQ(res, ERR_INVALID_VALUE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     ErrCode res1 = appControlProxy->
         DeleteAppRunningControlRule(controlRules, USERID);
-    EXPECT_EQ(res1, ERR_INVALID_VALUE);
+    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 } // OHOS

@@ -34,7 +34,6 @@ AppControlManagerHostImpl::AppControlManagerHostImpl()
     };
     ruleTypeMap_ = {
         {AppInstallControlRuleType::DISALLOWED_UNINSTALL, AppControlConstants::APP_DISALLOWED_UNINSTALL},
-        {AppInstallControlRuleType::DISALLOWED_INSTALL, AppControlConstants::APP_DISALLOWED_INSTALL},
         {AppInstallControlRuleType::ALLOWED_INSTALL, AppControlConstants::APP_ALLOWED_INSTALL}
     };
 }

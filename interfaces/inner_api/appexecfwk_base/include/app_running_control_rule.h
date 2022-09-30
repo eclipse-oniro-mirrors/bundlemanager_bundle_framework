@@ -18,16 +18,13 @@
 
 #include <string>
 
-#include "app_running_control_rule_param.h"
 #include "parcel.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 struct AppRunningControlRule : public Parcelable {
     std::string appId;
-    AppRunningControlRuleType ruleType = AppRunningControlRuleType::DISALLOWED_RUNNING_NOW;
-    AppRunningControlRuleParam ruleParam;
+    std::string controlMessage;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

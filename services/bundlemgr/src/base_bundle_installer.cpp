@@ -20,6 +20,7 @@
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #endif
+#include "app_control_constants.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -257,6 +258,54 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     APP_LOGD("finish to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
     return result;
+}
+
+bool BaseBundleInstaller::UninstallAppControl(const std::string &appId, int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::vector<std::string> appIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
+        return false;
+    }
+    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
+        return true;
+    }
+    APP_LOGW("bundle info is not existed");
+    return false;
+#else
+    APP_LOGW("app control is disable");
+    return true;
+#endif
+}
+
+ErrCode BaseBundleInstaller::InstallAppControl(
+    const std::vector<std::string> &installAppIds, int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::vector<std::string> appIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
+        return ret;
+    }
+    if (appIds.empty()) {
+        return ERR_OK;
+    }
+    for (const auto &installAppId : installAppIds) {
+        if (std::find(appIds.begin(), appIds.end(), installAppId) == appIds.end()) {
+            APP_LOGE("appId:%{public}s is dis allow install", installAppId.c_str());
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_INSTALL;
+        }
+    }
+    return ERR_OK;
+#else
+    APP_LOGW("app control is disable"); 
+    return ERR_OK;
+#endif
 }
 
 void BaseBundleInstaller::UpdateInstallerState(const InstallerState state)
@@ -514,6 +563,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "parse haps file failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
+    // check hap is allow install by app control
+    std::vector<std::string> installAppIds;
+    for (const auto &info : newInfos) {
+        installAppIds.emplace_back(info.second.GetAppId());
+    }
+    result = InstallAppControl(installAppIds, userId_);
+    CHECK_RESULT(result, "install app control failed %{public}d");
+
     // check hap hash param
     result = CheckHapHashParams(newInfos, installParam.hashParams);
     CHECK_RESULT(result, "check hap hash param failed %{public}d");
@@ -722,6 +779,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
+    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
+        APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_UNINSTALL;
+    }
+
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
@@ -813,6 +875,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGE("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+
+    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
+        APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_UNINSTALL;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -937,6 +1004,12 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         InnerBundleInfo oldInfo;
         bool isAppExist = dataMgr_->GetInnerBundleInfo(bundleName, oldInfo);
         if (isAppExist) {
+            std::vector<std::string> installAppIds(1, oldInfo.GetAppId());
+            ErrCode result = InstallAppControl(installAppIds, userId_);
+            if (result != ERR_OK) {
+                APP_LOGE("appid:%{private}s check install app control failed", oldInfo.GetAppId().c_str());
+                return result;
+            }
             dataMgr_->EnableBundle(bundleName);
             versionCode_ = oldInfo.GetVersionCode();
             if (oldInfo.HasInnerBundleUserInfo(userId_)) {
@@ -959,7 +1032,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             accessTokenId_ = CreateAccessTokenId(oldInfo);
             oldInfo.SetAccessTokenId(accessTokenId_, userId_);
-            ErrCode result = GrantRequestPermissions(oldInfo, accessTokenId_);
+            result = GrantRequestPermissions(oldInfo, accessTokenId_);
             if (result != ERR_OK) {
                 return result;
             }

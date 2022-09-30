@@ -18,7 +18,6 @@
 
 #include "app_control_host.h"
 #include "app_control_manager.h"
-#include "app_running_control_rule_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
