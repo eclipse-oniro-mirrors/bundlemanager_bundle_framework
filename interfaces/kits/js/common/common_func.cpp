@@ -55,6 +55,7 @@ constexpr const char* DESCRIPTION = "description";
 constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON = "icon";
 constexpr const char* ICON_ID = "iconId";
+constexpr const char* APPLICATION_INFO = "applicationInfo";
 }
 using Want = OHOS::AAFwk::Want;
 
@@ -693,7 +694,16 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDeviceTypes, idx, nDeviceType));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "deviceTypes", nDeviceTypes));
-    // ConvertApplicationInfo
+
+    napi_value nApplicationInfo;
+    if (!abilityInfo.applicationInfo.name.empty()) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nApplicationInfo));
+        ConvertApplicationInfo(env, nApplicationInfo, abilityInfo.applicationInfo);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nApplicationInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, APPLICATION_INFO, nApplicationInfo));
+
     napi_value nMetadata;
     size = abilityInfo.metadata.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
@@ -796,7 +806,16 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, i, permission));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, PERMISSIONS, nPermissions));
-    // ConvertApplicationInfo
+
+    napi_value nApplicationInfo;
+    if (!extensionInfo.applicationInfo.name.empty()) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nApplicationInfo));
+        ConvertApplicationInfo(env, nApplicationInfo, extensionInfo.applicationInfo);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nApplicationInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, APPLICATION_INFO, nApplicationInfo));
+
     napi_value nMetadata;
     size = extensionInfo.metadata.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
