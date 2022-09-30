@@ -93,21 +93,23 @@ void DefaultAppMgr::Init()
 
 ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
-    bool ret = VerifyUserIdAndType(userId, type);
-    if (!ret) {
+    if (VerifyUserIdAndType(userId, type) != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        isDefaultApp = false;
+        return ERR_OK;
     }
     Element element;
-    ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfo failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        isDefaultApp = false;
+        return ERR_OK;
     }
     ret = IsElementValid(userId, type, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        isDefaultApp = false;
+        return ERR_OK;
     }
     // get bundle name via calling uid
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -128,10 +130,10 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 
 ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
-    bool ret = VerifyUserIdAndType(userId, type);
-    if (!ret) {
+    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return errCode;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_GET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.GET_DEFAULT_APPLICATION failed.");
@@ -150,17 +152,17 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
 {
-    bool ret = VerifyUserIdAndType(userId, type);
-    if (!ret) {
+    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return errCode;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     // clear default app
-    ret = IsElementEmpty(element);
+    bool ret = IsElementEmpty(element);
     if (ret) {
         APP_LOGD("clear default app.");
         ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
@@ -187,17 +189,17 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
-    bool ret = VerifyUserIdAndType(userId, type);
-    if (!ret) {
+    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return errCode;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     Element element;
-    ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, type, element);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, type, element);
     if (!ret) {
         APP_LOGD("directly delete default info.");
         if (defaultAppDb_->DeleteDefaultApplicationInfo(userId, type)) {
@@ -603,19 +605,19 @@ bool DefaultAppMgr::IsUserIdExist(int32_t userId) const
     return dataMgr->HasUserId(userId);
 }
 
-bool DefaultAppMgr::VerifyUserIdAndType(int32_t userId, const std::string& type) const
+ErrCode DefaultAppMgr::VerifyUserIdAndType(int32_t userId, const std::string& type) const
 {
     bool ret = IsUserIdExist(userId);
     if (!ret) {
         APP_LOGW("userId %{public}d doesn't exist.", userId);
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     ret = IsTypeValid(type);
     if (!ret) {
         APP_LOGW("invalid type %{public}s, not app type or file type.", type.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return true;
+    return ERR_OK;
 }
 
 bool DefaultAppMgr::IsElementEmpty(const Element& element) const
