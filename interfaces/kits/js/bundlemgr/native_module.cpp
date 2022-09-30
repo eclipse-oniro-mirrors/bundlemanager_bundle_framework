@@ -53,8 +53,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "getLaunchWantForBundle", moduleName, JsBundleMgr::GetLaunchWantForBundle);
     BindNativeFunction(*engine, *object, "isAbilityEnabled", moduleName, JsBundleMgr::IsAbilityEnabled);
     BindNativeFunction(*engine, *object, "isApplicationEnabled", moduleName, JsBundleMgr::IsApplicationEnabled);
-    BindNativeFunction(*engine, *object, "getApplicationInfoSync", moduleName, JsBundleMgr::GetApplicationInfoSync);
-    BindNativeFunction(*engine, *object, "getBundleInfoSync", moduleName, JsBundleMgr::GetBundleInfoSync);
 
     return exports;
 }
