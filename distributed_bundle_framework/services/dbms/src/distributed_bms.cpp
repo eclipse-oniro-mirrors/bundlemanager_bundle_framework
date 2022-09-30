@@ -217,6 +217,10 @@ int32_t DistributedBms::GetRemoteAbilityInfos(
 int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &elementNames,
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
+    if (elementNames.empty()) {
+        APP_LOGE("GetDistributedBundle failed due to elementNames empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
     auto iDistBundleMgr = GetDistributedBundleMgr(elementNames[0].GetDeviceID());
     int32_t resultCode;
     if (!iDistBundleMgr) {
