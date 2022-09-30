@@ -508,6 +508,15 @@ public:
     bool GetShortcutInfos(
         const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const;
     /**
+     * @brief Obtains the ShortcutInfo objects provided by a specified application on the device.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @return Returns errcode of the result.
+     */
+    ErrCode GetShortcutInfoV9(
+        const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const;
+    /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
      * @param commonEventInfos List of CommonEventInfo objects if obtained.
@@ -751,15 +760,15 @@ public:
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
-    ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const;
+    ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
+        std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const;
 
     std::shared_mutex &GetStatusCallbackMutex();
 
     std::vector<sptr<IBundleStatusCallback>> GetCallBackList() const;
 
-    std::string GetStringById(
-        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId);
+    std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
+        uint32_t resId, int32_t userId, const std::string &localeInfo);
 
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
@@ -841,8 +850,8 @@ private:
     void GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &infos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
-    std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(
-        const std::string &bundleName, const std::string &moduleName, int32_t userId) const;
+    std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
+        const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;
 #endif
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;

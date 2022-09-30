@@ -66,25 +66,26 @@ void GetBundleArchiveInfoComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<GetBundleArchiveInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
+    napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        // to do : convert bundleInfo
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        CommonFunc::ConvertBundleInfo(env,
+            asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
     } else {
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
         } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
         }
     } else {
         napi_value callback = nullptr;
         napi_value placeHolder = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
         NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
     }
 }
 
@@ -115,8 +116,10 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
             CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
@@ -333,8 +336,10 @@ napi_value GetBundleNameByUid(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
             CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->uid);
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
@@ -680,8 +685,11 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_THREE) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_THREE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+            break;
         } else {
             APP_LOGE("param check error");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
@@ -802,8 +810,11 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_FOUR) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_FOUR) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+            break;
         } else {
             APP_LOGE("param check error");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
@@ -1632,7 +1643,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    ErrCode result = ERR_OK;
+    ErrCode result;
     Want want;
     ElementName elementName("", bundleName, info.abilityName, info.moduleName);
     want.SetElement(elementName);

@@ -20,9 +20,16 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+#ifdef BUNDLE_FRAMEWORK_RETURN_FALSE
+bool InstalldPermissionMgr::VerifyCallingPermission(int32_t uid)
+{
+    return false;
+}
+#else
 bool InstalldPermissionMgr::VerifyCallingPermission(int32_t uid)
 {
     return true;
 }
+#endif
 } // AppExecFwk
 } // OHOS

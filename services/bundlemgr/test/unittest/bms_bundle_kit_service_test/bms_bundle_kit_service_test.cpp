@@ -5001,13 +5001,13 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_005, Function | SmallTest | Level1
 
 /**
  * @tc.number: Marshalling_006
- * @tc.name: AppRunningControlRuleParam Marshalling
- * @tc.desc: 1.Test the marshalling of AppRunningControlRuleParam
+ * @tc.name: AppRunningControlRule Marshalling
+ * @tc.desc: 1.Test the marshalling of AppRunningControlRule
  */
 HWTEST_F(BmsBundleKitServiceTest, Marshalling_006, Function | SmallTest | Level1)
 {
-    AppRunningControlRuleParam param;
-    param.controlWant = nullptr;
+    AppRunningControlRule param;
+    param.appId = "appId";
     param.controlMessage = "Success";
     Parcel parcel;
     bool ret = param.Marshalling(parcel);
@@ -5093,6 +5093,45 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_008, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: Marshalling_009
+ * @tc.name: HqfInfo Marshalling
+ * @tc.desc: 1.Test the marshalling of HqfInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_009, Function | SmallTest | Level1)
+{
+    HqfInfo info;
+    info.moduleName = "module";
+    info.hapSha256 = "sha256";
+    info.cpuAbi = "apu";
+    info.nativeLibraryPath = "/data";
+
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Marshalling_010
+ * @tc.name: AppqfInfo Marshalling
+ * @tc.desc: 1.Test the marshalling of AppqfInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_010, Function | SmallTest | Level1)
+{
+    AppqfInfo info;
+    info.versionName = "1.0";
+    info.cpuAbi = "apu";
+    info.nativeLibraryPath = "/data";
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo hqfInfo;
+    hqfInfos.emplace_back(hqfInfo);
+    info.hqfInfos = hqfInfos;
+
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: Unmarshalling_001
  * @tc.name: RequestPermissionUsedScene Unmarshalling
  * @tc.desc: 1.Test the marshalling of RequestPermissionUsedScene
@@ -5142,38 +5181,44 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_002, Function | SmallTest | Leve
 
 /**
  * @tc.number: Unmarshalling_003
- * @tc.name: AppRunningControlRuleParam Unmarshalling
- * @tc.desc: 1.Test the Unmarshalling of AppRunningControlRuleParam
+ * @tc.name: AppRunningControlRule Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of AppRunningControlRule
  */
 HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_003, Function | SmallTest | Level1)
 {
-    AppRunningControlRuleParam param1;
-    param1.controlWant = nullptr;
+    AppRunningControlRule param1;
+    param1.appId = "appId";
     param1.controlMessage = "Success";
     Parcel parcel;
-    AppRunningControlRuleParam param2;
+    AppRunningControlRule param2;
     auto ret1 = param1.Marshalling(parcel);
     EXPECT_EQ(ret1, true);
     auto ret2 = param2.Unmarshalling(parcel);
     EXPECT_NE(ret2, nullptr);
-    EXPECT_EQ(param1.controlWant, ret2->controlWant);
+    EXPECT_EQ(param1.appId, ret2->appId);
     EXPECT_EQ(param1.controlMessage, ret2->controlMessage);
 }
 
 /**
- * @tc.number: AppRunningControlRuleParam_001
+ * @tc.number: ReadFromParcelOfAppqfInfo_001
  * @tc.name: ReadFromParcel
- * @tc.desc: 1.Test ReadFromParcel of AppRunningControlRuleParam
+ * @tc.desc: 1.Test ReadFromParcel of AppqfInfo
  */
-HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleParam_001, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, ReadFromParcelOfAppqfInfo_001, Function | SmallTest | Level1)
 {
-    AppRunningControlRuleParam param;
-    param.controlWant = std::make_shared<Want>();
-    param.controlMessage = "Success";
+    AppqfInfo param1;
+    AppqfInfo param2;
+    param1.versionName = "1.0";
+    param1.cpuAbi = "apu";
+    param1.nativeLibraryPath = "/data";
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo info;
+    hqfInfos.emplace_back(info);
+    param1.hqfInfos = hqfInfos;
     Parcel parcel;
-    auto ret1 = param.Marshalling(parcel);
-    EXPECT_EQ(ret1, true);
-    auto ret2 = param.ReadFromParcel(parcel);
+    auto ret1 = param1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    auto ret2 = param2.ReadFromParcel(parcel);
     EXPECT_TRUE(ret2);
 }
 

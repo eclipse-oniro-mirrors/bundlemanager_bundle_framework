@@ -35,6 +35,12 @@ struct FormWindow {
     int32_t designWidth = 720;
     bool autoDesignWidth = false;
 };
+
+enum class FormType {
+    JAVA = 0,
+    JS = 1,
+    ETS = 2,
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_FORM_INFO_BASE_H

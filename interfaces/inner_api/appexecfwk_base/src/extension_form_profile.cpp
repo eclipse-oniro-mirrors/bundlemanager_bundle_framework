@@ -37,7 +37,10 @@ const std::map<std::string, int32_t> dimensionMap = {
     {"4*4", 4},
     {"2*1", 5}
 };
-
+const std::map<std::string, FormType> formTypeMap = {
+    {"JS", FormType::JS},
+    {"eTS", FormType::ETS}
+};
 struct Window {
     int32_t designWidth = 720;
     bool autoDesignWidth = false;
@@ -55,6 +58,7 @@ struct ExtensionFormProfileInfo {
     Window window;
     std::string colorMode = "auto";
     std::string formConfigAbility;
+    std::string type = "JS";
     bool formVisibleNotify = false;
     bool isDefault = false;
     bool updateEnabled = false;
@@ -158,6 +162,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::FORM_CONFIG_ABILITY,
         extensionFormProfileInfo.formConfigAbility,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::TYPE,
+        extensionFormProfileInfo.type,
         JsonType::STRING,
         false,
         parseResult,
@@ -302,6 +314,10 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         [&form](const auto &item) { return item.first == form.colorMode; });
     if (colorMode != formColorModeMap.end()) {
         info.colorMode = colorMode->second;
+    }
+    auto formType = formTypeMap.find(form.type);
+    if (formType != formTypeMap.end()) {
+        info.type = formType->second;
     }
 
     info.formConfigAbility = form.formConfigAbility;

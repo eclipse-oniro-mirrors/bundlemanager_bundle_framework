@@ -47,8 +47,8 @@ ohos_shared_library("bundlemanager") {
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
     external_deps += [
-      "multimedia_image_standard:image",
-      "multimedia_image_standard:image_native",
+      "multimedia_image_framework:image",
+      "multimedia_image_framework:image_native",
     ]
   }
 

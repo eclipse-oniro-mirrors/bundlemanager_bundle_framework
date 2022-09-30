@@ -56,7 +56,7 @@
                 "ipc",
                 "jsoncpp",
                 "libuv",
-                "multimedia_image_standard",
+                "multimedia_image_framework",
                 "napi",
                 "os_account",
                 "power_manager",
@@ -86,7 +86,6 @@
                         "ability_info.h",
                         "appexecfwk_errors.h",
                         "application_info.h",
-                        "app_running_control_rule_param.h",
                         "bundle_info.h"
                       ]
                     },

@@ -29,6 +29,7 @@ group("napi_packages") {
       "default_app:defaultappmanager",
       "free_install:freeinstall",
       "installer:installer",
+      "launcher_bundle_manager:launcherbundlemanager",
       "launchermgr:innerbundlemanager",
       "package:package",
     ]

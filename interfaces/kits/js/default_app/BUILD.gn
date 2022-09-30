@@ -19,6 +19,7 @@ ohos_shared_library("defaultappmanager") {
     "//third_party/node/src",
     "//third_party/libuv/include",
     "//utils/system/safwk/native/include",
+    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
   ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
@@ -26,7 +27,10 @@ ohos_shared_library("defaultappmanager") {
   ]
   sources = [ "native_module.cpp" ]
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "../common:bundle_napi_common",
+  ]
 
   external_deps = [
     "c_utils:utils",

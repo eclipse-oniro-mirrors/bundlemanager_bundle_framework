@@ -164,7 +164,6 @@ void BmsDeviceManager::DeviceInitCallBack::OnRemoteDied()
 void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     APP_LOGI("DeviceInitCallBack OnDeviceOnline");
-    BmsDeviceManager::StartDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
 
 void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -192,7 +191,8 @@ void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceChanged(const Distributed
 
 void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    APP_LOGD("DeviceInitCallBack OnDeviceReady");
+    APP_LOGI("DeviceInitCallBack OnDeviceReady");
+    BmsDeviceManager::StartDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
 }
 }

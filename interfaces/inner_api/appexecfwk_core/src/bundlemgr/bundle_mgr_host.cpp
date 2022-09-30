@@ -144,6 +144,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_FORMS_INFO_BY_APP, &BundleMgrHost::HandleGetFormsInfoByApp);
     funcMap_.emplace(IBundleMgr::Message::GET_FORMS_INFO_BY_MODULE, &BundleMgrHost::HandleGetFormsInfoByModule);
     funcMap_.emplace(IBundleMgr::Message::GET_SHORTCUT_INFO, &BundleMgrHost::HandleGetShortcutInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_SHORTCUT_INFO_V9, &BundleMgrHost::HandleGetShortcutInfoV9);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_COMMON_EVENT_INFO, &BundleMgrHost::HandleGetAllCommonEventInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_USER_MGR, &BundleMgrHost::HandleGetBundleUserMgr);
     funcMap_.emplace(IBundleMgr::Message::GET_DISTRIBUTE_BUNDLE_INFO, &BundleMgrHost::HandleGetDistributedBundleInfo);
@@ -1483,6 +1484,23 @@ ErrCode BundleMgrHost::HandleGetShortcutInfos(MessageParcel &data, MessageParcel
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundlename = data.ReadString();
+    std::vector<ShortcutInfo> infos;
+    ErrCode ret = GetShortcutInfoV9(bundlename, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write shortcut infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetAllCommonEventInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1971,13 +1989,14 @@ ErrCode BundleMgrHost::HandleGetStringById(MessageParcel &data, MessageParcel &r
     std::string moduleName = data.ReadString();
     uint32_t resId = data.ReadUint32();
     int32_t userId = data.ReadInt32();
+    std::string localeInfo = data.ReadString();
     APP_LOGD("GetStringById bundleName: %{public}s, moduleName: %{public}s, resId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), resId);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("fail to GetStringById due to params empty");
         return ERR_INVALID_VALUE;
     }
-    std::string label = GetStringById(bundleName, moduleName, resId, userId);
+    std::string label = GetStringById(bundleName, moduleName, resId, userId, localeInfo);
     if (!reply.WriteString(label)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2321,12 +2340,12 @@ ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &re
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
     std::string moduleName = data.ReadString();
-
+    int32_t userId = data.ReadInt32();
     APP_LOGI("HandleGetMediaData:%{public}s, %{public}s, %{public}s", bundleName.c_str(),
         abilityName.c_str(), moduleName.c_str());
     std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
     size_t len = 0;
-    ErrCode ret = GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
+    ErrCode ret = GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

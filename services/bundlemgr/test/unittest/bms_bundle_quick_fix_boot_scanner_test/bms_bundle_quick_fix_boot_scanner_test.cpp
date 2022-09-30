@@ -974,4 +974,22 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1023
     }
     DeleteQuickFileDir();
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1024
+ * @tc.name: test ProcessWithBundleHasQuickFixInfo
+ * @tc.desc: 1. ProcessWithBundleHasQuickFixInfo, quickFixVersion < fileVersion
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1024, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        int32_t quickFixVersion = 1000;
+        int32_t fileVersion = 1001;
+        auto ret = scanner->ProcessWithBundleHasQuickFixInfo(BUNDLE_NAME, HAP_FILE_PATH, quickFixVersion, fileVersion);
+        EXPECT_FALSE(ret);
+    }
+}
 } // OHOS

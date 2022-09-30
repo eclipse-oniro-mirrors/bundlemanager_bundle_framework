@@ -8,14 +8,15 @@
         "process":"bba",
         "mainElement":"MainAbility",
         "deviceTypes":[
-             "car",
-             "liteWearable",
-             "phone",
-             "smartVision",
-             "tablet",
-             "tv",
-             "wearable",
-             "router"
+            "default",
+            "car",
+            "liteWearable",
+            "phone",
+            "smartVision",
+            "tablet",
+            "tv",
+            "wearable",
+            "router"
         ],
         "deliveryWithInstall":true,
         "installationFree":false,

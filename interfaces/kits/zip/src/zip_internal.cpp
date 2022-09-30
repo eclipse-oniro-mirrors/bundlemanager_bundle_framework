@@ -46,7 +46,7 @@ void *FdOpenFileFunc(void *opaque, const char *filename, int mode)
     else if (modeInner & ZLIB_FILEFUNC_MODE_CREATE)
         mode_fopen = "wb";
 
-    if ((filename != nullptr) && (mode_fopen != nullptr)) {
+    if (mode_fopen != nullptr) {
         int fd = dup(*static_cast<int *>(opaque));
         if (fd != -1)
             file = fdopen(fd, mode_fopen);
@@ -126,7 +126,7 @@ uLong ReadZipBuffer(void *opaque, void *, void *buf, uLong size)
     }
 
     size_t remaining_bytes = buffer->length - buffer->offset;
-    if (!buffer || !buffer->data || !remaining_bytes) {
+    if (!buffer->data || !remaining_bytes) {
         return 0;
     }
     size = std::min(size, static_cast<uLong>(remaining_bytes));

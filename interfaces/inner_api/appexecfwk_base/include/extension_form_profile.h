@@ -33,6 +33,7 @@ const std::string WINDOW_DESIGN_WIDTH = "designWidth";
 const std::string WINDOW_AUTO_DESIGN_WIDTH = "autoDesignWidth";
 const std::string COLOR_MODE = "colorMode";
 const std::string FORM_CONFIG_ABILITY = "formConfigAbility";
+const std::string TYPE = "type";
 const std::string FORM_VISIBLE_NOTIFY = "formVisibleNotify";
 const std::string IS_DEFAULT = "isDefault";
 const std::string UPDATE_ENABLED = "updateEnabled";

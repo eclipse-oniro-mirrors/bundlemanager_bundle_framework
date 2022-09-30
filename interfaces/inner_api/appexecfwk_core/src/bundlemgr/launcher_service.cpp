@@ -25,6 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::bundleMgr_ = nullptr;
 std::mutex LauncherService::bundleMgrMutex_;
+const char* EMPTY_STRING = "";
 
 LauncherService::LauncherService()
 {
@@ -375,5 +376,137 @@ bool LauncherService::GetShortcutInfos(
     }
     return true;
 }
+
+void LauncherService::InitWant(Want &want, const std::string &bundleName)
+{
+    want.SetAction(Want::ACTION_HOME);
+    want.AddEntity(Want::ENTITY_HOME);
+    if (!bundleName.empty()) {
+        ElementName elementName;
+        elementName.SetBundleName(bundleName);
+        want.SetElement(elementName);
+    }
+}
+
+void LauncherService::ConvertAbilityToLauncherAbility(const AbilityInfo &ability, LauncherAbilityInfo &launcherAbility,
+    const BundleInfo &bundleInfo, const int32_t userId)
+{
+    launcherAbility.applicationInfo = ability.applicationInfo;
+    launcherAbility.labelId = ability.labelId;
+    launcherAbility.iconId = ability.iconId;
+    ElementName elementName;
+    elementName.SetBundleName(ability.bundleName);
+    elementName.SetModuleName(ability.moduleName);
+    elementName.SetAbilityName(ability.name);
+    elementName.SetDeviceID(ability.deviceId);
+    launcherAbility.elementName = elementName;
+    launcherAbility.userId = userId;
+    launcherAbility.installTime = bundleInfo.installTime;
+}
+
+ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundleName, const int32_t userId,
+    std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
+{
+    APP_LOGD("GetLauncherAbilityByBundleName called");
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+
+    Want want;
+    InitWant(want, bundleName);
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flag = AbilityInfoFlagV9::GET_ABILITY_INFO_WITH_APPLICATION_V9;
+    ErrCode err = iBundleMgr->QueryAbilityInfosV9(want, flag, userId, abilityInfos);
+    if (err != ERR_OK) {
+        APP_LOGE("QueryAbilityInfosV9 failed");
+        return err;
+    }
+    BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
+    BundleInfo bundleInfo;
+    if (!iBundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId)) {
+        APP_LOGE("Get bundle info failed");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (bundleInfo.applicationInfo.hideDesktopIcon) {
+        APP_LOGW("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+
+    for (const auto &ability : abilityInfos) {
+        if (ability.bundleName != bundleName || !ability.enabled) {
+            continue;
+        }
+        LauncherAbilityInfo info;
+        ConvertAbilityToLauncherAbility(ability, info, bundleInfo, userId);
+        launcherAbilityInfos.push_back(info);
+    }
+    return ERR_OK;
+}
+
+ErrCode LauncherService::GetAllLauncherAbility(const int32_t userId,
+    std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
+{
+    APP_LOGD("GetAllLauncherAbility called");
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+
+    Want want;
+    InitWant(want, EMPTY_STRING);
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flag = AbilityInfoFlagV9::GET_ABILITY_INFO_WITH_APPLICATION_V9;
+    ErrCode err = iBundleMgr->QueryAbilityInfosV9(want, flag, userId, abilityInfos);
+    if (err != ERR_OK) {
+        APP_LOGE("QueryAbilityInfosV9 failed");
+        return err;
+    }
+    for (const auto &ability : abilityInfos) {
+        if (!ability.enabled || ability.applicationInfo.hideDesktopIcon) {
+            continue;
+        }
+        BundleInfo bundleInfo;
+        BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
+        if (!iBundleMgr->GetBundleInfo(ability.bundleName, flags, bundleInfo, userId)) {
+            APP_LOGW("Get bundle info failed for %{public}s",  ability.bundleName.c_str());
+            continue;
+        }
+        LauncherAbilityInfo info;
+        ConvertAbilityToLauncherAbility(ability, info, bundleInfo, userId);
+        launcherAbilityInfos.push_back(info);
+    }
+    return ERR_OK;
+}
+
+ErrCode LauncherService::GetShortcutInfoV9(
+    const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    std::vector<ShortcutInfo> infos;
+    ErrCode errCode = iBundleMgr->GetShortcutInfoV9(bundleName, infos);
+    if (errCode != ERR_OK) {
+        return errCode;
+    }
+    if (infos.empty()) {
+        APP_LOGI("ShortcutInfo is not exist for this bundle");
+        return ERR_OK;
+    }
+
+    for (ShortcutInfo shortcutInfo : infos) {
+        if (bundleName == shortcutInfo.bundleName) {
+            shortcutInfos.emplace_back(shortcutInfo);
+        }
+    }
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

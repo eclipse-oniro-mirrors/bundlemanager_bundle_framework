@@ -41,7 +41,7 @@
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
-#include "locale_config.h"
+#include "locale_info.h"
 #endif
 #include "nlohmann/json.hpp"
 #include "free_install_params.h"
@@ -546,7 +546,6 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
         APP_LOGE("ability not found");
         return false;
     }
-
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
 }
 
@@ -719,6 +718,11 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
         innerBundleInfo.GetApplicationInfo(
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId, info.applicationInfo);
+    }
+    // set uid for NAPI cache use
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        info.uid = innerBundleUserInfo.uid;
     }
     return true;
 }
@@ -1330,7 +1334,7 @@ ErrCode BundleDataMgr::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId) const
 {
     APP_LOGD("Service BundleDataMgr GetBundlePackInfo start");
-    int32_t requestUserId = Constants::INVALID_USERID;
+    int32_t requestUserId;
     if (userId == Constants::UNSPECIFIED_USERID) {
         requestUserId = GetUserIdByCallingUid();
     } else {
@@ -1608,9 +1612,7 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
         APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
         return spaceSize;
     }
-    for (const auto &size : bundleStats) {
-        spaceSize += size;
-    }
+    spaceSize = std::accumulate(bundleStats.begin(), bundleStats.end(), spaceSize);
     APP_LOGI("%{public}s spaceSize:%{public}" PRId64, bundleName.c_str(), spaceSize);
     return spaceSize;
 }
@@ -2417,8 +2419,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
                 std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
-                auto infoItem = bundleIdMap_.find(bundleId);
-                if (infoItem == bundleIdMap_.end()) {
+                auto item = bundleIdMap_.find(bundleId);
+                if (item == bundleIdMap_.end()) {
                     bundleIdMap_.emplace(bundleId, innerBundleUserInfo.bundleName);
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
@@ -2606,6 +2608,27 @@ bool BundleDataMgr::GetShortcutInfos(
     return true;
 }
 
+ErrCode BundleDataMgr::GetShortcutInfoV9(
+    const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("input invalid userid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName,
+        BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("ExplicitQueryExtensionInfoV9 failed");
+        return ret;
+    }
+
+    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    return ERR_OK;
+}
+
 bool BundleDataMgr::GetAllCommonEventInfo(const std::string &eventKey,
     std::vector<CommonEventInfo> &commonEventInfos) const
 {
@@ -2723,7 +2746,6 @@ bool BundleDataMgr::SaveInnerBundleInfo(const InnerBundleInfo &info) const
     APP_LOGE("save install InnerBundleInfo failed!");
     return false;
 }
-
 
 bool BundleDataMgr::GetInnerBundleUserInfoByUserId(const std::string &bundleName,
     int32_t userId, InnerBundleUserInfo &innerBundleUserInfo) const
@@ -3477,8 +3499,8 @@ void BundleDataMgr::GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int
     }
 }
 
-std::string BundleDataMgr::GetStringById(
-    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+std::string BundleDataMgr::GetStringById(const std::string &bundleName, const std::string &moduleName,
+    uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     APP_LOGD("GetStringById:%{public}s , %{public}s, %{public}d", bundleName.c_str(), moduleName.c_str(), resId);
 #ifdef GLOBAL_RESMGR_ENABLE
@@ -3530,7 +3552,7 @@ std::string BundleDataMgr::GetIconById(
 
 #ifdef GLOBAL_RESMGR_ENABLE
 std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceManager(
-    const std::string &bundleName, const std::string &moduleName, int32_t userId) const
+    const std::string &bundleName, const std::string &moduleName, int32_t userId, const std::string &localeInfo) const
 {
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId)) {
@@ -3555,10 +3577,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
 #ifdef GLOBAL_I18_ENABLE
-    std::string language = Global::I18n::LocaleConfig::GetSystemLanguage();
-    std::string locale = Global::I18n::LocaleConfig::GetSystemLocale();
-    std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
-    resConfig->SetLocaleInfo(language.c_str(), locale.c_str(), region.c_str());
+    std::map<std::string, std::string> configs;
+    OHOS::Global::I18n::LocaleInfo locale(localeInfo, configs);
+    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resourceManager->UpdateResConfig(*resConfig);
     return resourceManager;
@@ -3834,9 +3855,9 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         std::string key;
         key.append(bundleName).append(".").append(abilityInfo.package).append(".").append(abilityName);
         APP_LOGD("begin to find ability skills, key : %{public}s.", key.c_str());
-        for (const auto& item : innerBundleInfo.GetInnerSkillInfos()) {
-            if (item.first == key) {
-                skills = item.second;
+        for (const auto& infoItem : innerBundleInfo.GetInnerSkillInfos()) {
+            if (infoItem.first == key) {
+                skills = infoItem.second;
                 APP_LOGD("find ability skills success.");
                 break;
             }
@@ -3845,9 +3866,9 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         std::string key;
         key.append(bundleName).append(".").append(moduleName).append(".").append(extensionName);
         APP_LOGD("begin to find extension skills, key : %{public}s.", key.c_str());
-        for (const auto& item : innerBundleInfo.GetExtensionSkillInfos()) {
-            if (item.first == key) {
-                skills = item.second;
+        for (const auto& infoItem : innerBundleInfo.GetExtensionSkillInfos()) {
+            if (infoItem.first == key) {
+                skills = infoItem.second;
                 APP_LOGD("find extension skills success.");
                 break;
             }
@@ -3895,7 +3916,7 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
 #endif
 
 ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) const
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const
 {
     APP_LOGI("begin to GetMediaData.");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -3909,13 +3930,13 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId());
+    auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId(userId));
     if (!ability) {
         APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, moduleName, GetUserId());
+        GetResourceManager(bundleName, moduleName, GetUserId(userId));
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;

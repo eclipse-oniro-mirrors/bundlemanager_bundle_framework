@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 napi_value Register(napi_env env, napi_callback_info info);
-napi_value UnRegister(napi_env env, napi_callback_info info);
+napi_value Unregister(napi_env env, napi_callback_info info);
 }
 }
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MONITOR_BUNDLE_MONITOR_H

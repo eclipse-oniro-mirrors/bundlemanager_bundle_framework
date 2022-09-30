@@ -215,10 +215,10 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTe
     std::vector<std::string> appIds;
     auto res = appControlProxy->
         AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
-    EXPECT_EQ(res, ERR_INVALID_VALUE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     auto res1 = appControlProxy->
         DeleteAppInstallControlRule(appIds, USERID);
-    EXPECT_EQ(res1, ERR_INVALID_VALUE);
+    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     auto res2 = appControlProxy->
         DeleteAppInstallControlRule(AppInstallControlRuleType::ALLOWED_INSTALL, USERID);
     EXPECT_EQ(res2, ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED);
@@ -268,6 +268,46 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0300, Function | SmallTe
     EXPECT_EQ(res, ERR_OK);
     EXPECT_EQ(res1, ERR_OK);
     EXPECT_EQ(res2, ERR_OK);
+}
+
+/**
+ * @tc.number: AppInstallControlRule_0400
+ * @tc.name: test can not add app install control rule
+ * @tc.desc: 1.system run normally
+ *           2.AddAppInstallControlRule failed by empty appIds
+ */
+HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    std::vector<std::string> appIds;
+    auto res = appControlProxy->
+        AddAppInstallControlRule(appIds, AppInstallControlRuleType::ALLOWED_INSTALL, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    auto res1 = appControlProxy->
+        DeleteAppInstallControlRule(appIds, USERID);
+    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: AddAppRunningControlRule_0100
+ * @tc.name: test can not add app install control rule
+ * @tc.desc: 1.system run normally
+ *           2.AddAppRunningControlRule failed by empty controlRules
+ */
+HWTEST_F(BmsBundleAppControlTest, AddAppRunningControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    const std::vector<AppRunningControlRule> controlRules;
+    seteuid(537);
+
+    ErrCode res = appControlProxy->
+        AddAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    ErrCode res1 = appControlProxy->
+        DeleteAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 } // OHOS

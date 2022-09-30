@@ -782,6 +782,11 @@ public:
     {
         return false;
     }
+
+    virtual ErrCode GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
@@ -1051,8 +1056,8 @@ public:
         return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
     }
 
-    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
+    virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
+        std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1062,8 +1067,8 @@ public:
         return nullptr;
     }
 
-    virtual std::string GetStringById(
-        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+    virtual std::string GetStringById(const std::string &bundleName, const std::string &moduleName, uint32_t resId,
+        int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING)
     {
         return Constants::EMPTY_STRING;
     }
@@ -1187,6 +1192,7 @@ public:
         GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9,
+        GET_SHORTCUT_INFO_V9,
     };
 };
 }  // namespace AppExecFwk

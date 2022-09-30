@@ -217,6 +217,10 @@ int32_t DistributedBms::GetRemoteAbilityInfos(
 int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &elementNames,
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
+    if (elementNames.empty()) {
+        APP_LOGE("GetDistributedBundle failed due to elementNames empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
     auto iDistBundleMgr = GetDistributedBundleMgr(elementNames[0].GetDeviceID());
     int32_t resultCode;
     if (!iDistBundleMgr) {
@@ -253,19 +257,6 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
         APP_LOGE("GetCurrentUserId failed");
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
-
-    BundleInfo bundleInfo;
-    if (!iBundleMgr->GetBundleInfo(elementName.GetBundleName(), 1, bundleInfo, userId)) {
-        APP_LOGE("DistributedBms GetBundleInfo failed");
-        return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
-    }
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager = nullptr;
-    resourceManager = GetResourceManager(bundleInfo, localeInfo);
-    if (resourceManager == nullptr) {
-        APP_LOGE("DistributedBms InitResourceManager failed");
-        return ERR_APPEXECFWK_FAILED_GET_RESOURCEMANAGER;
-    }
-
     AbilityInfo abilityInfo;
     OHOS::AAFwk::Want want;
     want.SetElement(elementName);
@@ -273,56 +264,31 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
         APP_LOGE("DistributedBms QueryAbilityInfo failed");
         return ERR_APPEXECFWK_FAILED_GET_ABILITY_INFO;
     }
-    remoteAbilityInfo.elementName = elementName;
-    int32_t labelError = GetAbilityLabel(resourceManager, abilityInfo, remoteAbilityInfo);
-    if (labelError != OHOS::NO_ERROR) {
-        return labelError;
+    std::string label = iBundleMgr->GetStringById(
+        abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.labelId, userId, localeInfo);
+    if (label.empty()) {
+        APP_LOGE("DistributedBms QueryAbilityInfo failed");
+        return ERR_APPEXECFWK_FAILED_GET_ABILITY_INFO;
     }
-    if (!abilityInfo.hapPath.empty()) {
-        return GetAbilityIconByContent(resourceManager, abilityInfo, localeInfo, remoteAbilityInfo);
-    }
-    
-    return GetAbilityIconByFile(resourceManager, abilityInfo, localeInfo, remoteAbilityInfo);
-}
-
-int32_t DistributedBms::GetAbilityLabel(std::shared_ptr<Global::Resource::ResourceManager> &resourceManager,
-    const AbilityInfo &abilityInfo, RemoteAbilityInfo &remoteAbilityInfo)
-{
-    OHOS::Global::Resource::RState errval =
-        resourceManager->GetStringById(static_cast<uint32_t>(abilityInfo.labelId), remoteAbilityInfo.label);
-    if (errval != OHOS::Global::Resource::RState::SUCCESS) {
-        APP_LOGE("DistributedBms GetStringById failed");
-        return ERR_APPEXECFWK_FAILED_GET_RESOURCEMANAGER;
-    }
-    APP_LOGD("DistributedBms GetAbilityInfo label:%{public}s", remoteAbilityInfo.label.c_str());
-    return OHOS::NO_ERROR;
-}
-
-int32_t DistributedBms::Base64WithoutCompress(std::unique_ptr<uint8_t[]> &imageContent, size_t imageContentSize,
-    RemoteAbilityInfo &remoteAbilityInfo)
-{
-    std::string imageType;
-    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
-    if (!imageCompress->GetImageTypeString(imageContent, imageContentSize, imageType)) {
-        return ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE;
-    }
-    if (!GetMediaBase64(imageContent, static_cast<int64_t>(imageContentSize), imageType, remoteAbilityInfo.icon)) {
-        APP_LOGE("DistributedBms GetMediaBase64 failed");
-        return ERR_APPEXECFWK_ENCODE_BASE64_FILE_FAILED;
-    }
-    return OHOS::NO_ERROR;
+    remoteAbilityInfo.label = label;
+    return GetAbilityIconByContent(abilityInfo, userId, remoteAbilityInfo);
 }
 
 int32_t DistributedBms::GetAbilityIconByContent(
-    const std::shared_ptr<Global::Resource::ResourceManager> &resourceManager,
-    const AbilityInfo &abilityInfo, const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
+    const AbilityInfo &abilityInfo, int32_t userId, RemoteAbilityInfo &remoteAbilityInfo)
 {
+    auto iBundleMgr = GetBundleMgr();
+    if (!iBundleMgr) {
+        APP_LOGE("DistributedBms GetBundleMgr failed");
+        return ERR_APPEXECFWK_FAILED_SERVICE_DIED;
+    }
     std::unique_ptr<uint8_t[]> imageContent;
     size_t imageContentSize = 0;
-    OHOS::Global::Resource::RState imageContentErrval =
-        resourceManager->GetMediaDataById(static_cast<uint32_t>(abilityInfo.iconId), imageContentSize, imageContent);
-    if (imageContentErrval != OHOS::Global::Resource::RState::SUCCESS) {
-        return ERR_APPEXECFWK_FAILED_GET_RESOURCEMANAGER;
+    ErrCode ret = iBundleMgr->GetMediaData(abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.name,
+        imageContent, imageContentSize, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("DistributedBms GetMediaData failed");
+        return ret;
     }
     APP_LOGD("imageContentSize is %{public}d", static_cast<int32_t>(imageContentSize));
     std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
@@ -344,37 +310,17 @@ int32_t DistributedBms::GetAbilityIconByContent(
     return OHOS::NO_ERROR;
 }
 
-int32_t DistributedBms::GetAbilityIconByFile(const std::shared_ptr<Global::Resource::ResourceManager> &resourceManager,
-    const AbilityInfo &abilityInfo, const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
+int32_t DistributedBms::Base64WithoutCompress(std::unique_ptr<uint8_t[]> &imageContent, size_t imageContentSize,
+    RemoteAbilityInfo &remoteAbilityInfo)
 {
-    std::string iconPath;
-    OHOS::Global::Resource::RState iconPathErrval =
-        resourceManager->GetMediaById(static_cast<uint32_t>(abilityInfo.iconId), iconPath);
-    if (iconPathErrval != OHOS::Global::Resource::RState::SUCCESS) {
-        APP_LOGE("DistributedBms GetStringById  iconPath failed");
-        return ERR_APPEXECFWK_FAILED_GET_RESOURCEMANAGER;
-    }
+    std::string imageType;
     std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
-    std::unique_ptr<uint8_t[]> imageContent;
-    int64_t imageContentSize = 0;
-    if (!imageCompress->GetImageFileInfo(iconPath, imageContent, imageContentSize)) {
-        APP_LOGE("GetImageFileInfo failed!");
-        return ERR_APPEXECFWK_FAILED_GET_RESOURCEMANAGER;
+    if (!imageCompress->GetImageTypeString(imageContent, imageContentSize, imageType)) {
+        return ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE;
     }
-    if (imageCompress->IsImageNeedCompressBySize(imageContentSize)) {
-        std::unique_ptr<uint8_t[]> compressData;
-        int64_t compressSize = 0;
-        std::string imageType;
-        if (!imageCompress->CompressImageByContent(imageContent, imageContentSize,
-            compressData, compressSize, imageType)) {
-            return Base64WithoutCompress(imageContent, imageContentSize, remoteAbilityInfo);
-        }
-        if (!GetMediaBase64(compressData, compressSize, imageType, remoteAbilityInfo.icon)) {
-            APP_LOGE("DistributedBms GetMediaBase64 failed");
-            return ERR_APPEXECFWK_ENCODE_BASE64_FILE_FAILED;
-        }
-    } else {
-        return Base64WithoutCompress(imageContent, imageContentSize, remoteAbilityInfo);
+    if (!GetMediaBase64(imageContent, static_cast<int64_t>(imageContentSize), imageType, remoteAbilityInfo.icon)) {
+        APP_LOGE("DistributedBms GetMediaBase64 failed");
+        return ERR_APPEXECFWK_ENCODE_BASE64_FILE_FAILED;
     }
     return OHOS::NO_ERROR;
 }
@@ -416,36 +362,6 @@ bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, cons
 {
     return DistributedDataStorage::GetInstance()->GetStorageDistributeInfo(
         networkId, bundleName, distributedBundleInfo);
-}
-
-std::shared_ptr<Global::Resource::ResourceManager> DistributedBms::GetResourceManager(
-    const AppExecFwk::BundleInfo &bundleInfo, const std::string &localeInfo)
-{
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    for (const HapModuleInfo &hapModuleInfo : bundleInfo.hapModuleInfos) {
-        std::string moduleResPath = hapModuleInfo.hapPath.empty() ? hapModuleInfo.resourcePath : hapModuleInfo.hapPath;
-        if (!moduleResPath.empty()) {
-            if (!resourceManager->AddResource(moduleResPath.c_str())) {
-                APP_LOGE("DistributedBms::InitResourceManager AddResource failed");
-            }
-        }
-    }
-    APP_LOGD("DistributedBms::InitResourceManager locale:%{public}s", localeInfo.c_str());
-    std::map<std::string, std::string> configs;
-    OHOS::Global::I18n::LocaleInfo locale(localeInfo, configs);
-    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
-    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
-    resourceManager->UpdateResConfig(*resConfig);
-    if (resConfig->GetLocaleInfo() != nullptr) {
-        APP_LOGD("DistributedBms::InitResourceManager language: %{public}s, script: %{public}s, region: %{public}s,",
-            resConfig->GetLocaleInfo()->getLanguage(),
-            resConfig->GetLocaleInfo()->getScript(),
-            resConfig->GetLocaleInfo()->getCountry());
-    } else {
-        APP_LOGW("DistributedBms::InitResourceManager language: GetLocaleInfo is null.");
-    }
-
-    return resourceManager;
 }
 
 std::unique_ptr<char[]> DistributedBms::EncodeBase64(std::unique_ptr<uint8_t[]> &data, int srcLen)

@@ -34,7 +34,7 @@ BundleMonitorCallback::BundleMonitorCallback(const EventFwk::CommonEventSubscrib
 
 BundleMonitorCallback::~BundleMonitorCallback() {}
 
-void BundleMonitorCallback::BundleMonitorOn(napi_env env, napi_value handler, std::string &type)
+void BundleMonitorCallback::BundleMonitorOn(napi_env env, napi_value handler, const std::string &type)
 {
     APP_LOGD("BundleMonitorOn Enter");
     if (type != ADD && type != UPDATE && type != REMOVE) {
@@ -51,7 +51,7 @@ void BundleMonitorCallback::BundleMonitorOn(napi_env env, napi_value handler, st
 }
 
 void BundleMonitorCallback::EventListenerAdd(napi_env env, napi_value handler,
-    std::vector<std::shared_ptr<EventListener>> &eventListeners, std::string &type)
+    std::vector<std::shared_ptr<EventListener>> &eventListeners, const std::string &type)
 {
     bool hasListener = false;
     for (uint32_t i = 0; i < eventListeners.size(); ++i) {
@@ -67,7 +67,7 @@ void BundleMonitorCallback::EventListenerAdd(napi_env env, napi_value handler,
     }
 }
 
-void BundleMonitorCallback::BundleMonitorOff(napi_env env, napi_value handler, std::string &type)
+void BundleMonitorCallback::BundleMonitorOff(napi_env env, napi_value handler, const std::string &type)
 {
     APP_LOGD("BundleMonitorOff Enter");
     if (type != ADD && type != UPDATE && type != REMOVE) {
@@ -83,7 +83,7 @@ void BundleMonitorCallback::BundleMonitorOff(napi_env env, napi_value handler, s
     }
 }
 
-void BundleMonitorCallback::BundleMonitorOff(napi_env env, std::string &type)
+void BundleMonitorCallback::BundleMonitorOff(napi_env env, const std::string &type)
 {
     APP_LOGD("BundleMonitorOff Enter");
     if (type != ADD && type != UPDATE && type != REMOVE) {

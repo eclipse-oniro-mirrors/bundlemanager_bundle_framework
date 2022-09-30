@@ -15,6 +15,7 @@
 
 #include "bundle_mgr_proxy.h"
 
+#include <numeric>
 #include <unistd.h>
 
 #include "ipc_types.h"
@@ -1710,9 +1711,7 @@ bool BundleMgrProxy::DumpInfos(
         APP_LOGE("fail to dump from reply");
         return false;
     }
-    for (auto &dumpinfo : dumpInfos) {
-        result += dumpinfo;
-    }
+    result = std::accumulate(dumpInfos.begin(), dumpInfos.end(), result);
     return true;
 }
 
@@ -2199,6 +2198,27 @@ bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetShortcutInfos due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetShortcutInfos due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetShortcutInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ShortcutInfo>(IBundleMgr::Message::GET_SHORTCUT_INFO_V9, data, shortcutInfos);
 }
 
 bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vector<CommonEventInfo> &commonEventInfos)
@@ -2837,8 +2857,8 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
     return reply.ReadBool();
 }
 
-std::string BundleMgrProxy::GetStringById(
-    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const std::string &moduleName,
+    uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     APP_LOGD("begin to GetStringById.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2857,7 +2877,6 @@ std::string BundleMgrProxy::GetStringById(
         APP_LOGE("fail to GetStringById due to write bundleName fail");
         return Constants::EMPTY_STRING;
     }
-
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetStringById due to write moduleName fail");
         return Constants::EMPTY_STRING;
@@ -2868,6 +2887,10 @@ std::string BundleMgrProxy::GetStringById(
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetStringById due to write userId fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteString(localeInfo)) {
+        APP_LOGE("fail to GetStringById due to write localeInfo fail");
         return Constants::EMPTY_STRING;
     }
     MessageParcel reply;
@@ -3100,7 +3123,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
 }
 
 ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
@@ -3124,6 +3147,10 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
     }
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetMediaData due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetMediaData due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;

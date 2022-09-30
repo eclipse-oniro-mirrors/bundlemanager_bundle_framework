@@ -21,7 +21,7 @@
 #include <functional>
 #include <vector>
 
-#include "utils/native/base/include/errors.h"
+#include "errors.h"
 
 namespace OHOS {
 namespace AppExecFwk {
