@@ -25,6 +25,7 @@
 #include "bundle_death_recipient.h"
 #include "bundle_mgr_interface.h"
 #include "cleancache_callback.h"
+#include "js_runtime_utils.h"
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 #include "pixel_map.h"
 #endif
@@ -410,6 +411,105 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
 void CreateExtensionFlagObject(napi_env env, napi_value value);
 void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateUpgradeFlagObject(napi_env env, napi_value value);
+class JsBundleMgr {
+public:
+    JsBundleMgr() = default;
+    ~JsBundleMgr() = default;
+
+    struct JsExtensionAbilityInfos {
+        OHOS::AAFwk::Want want;
+        int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
+        std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> extensionInfos;
+        int32_t flags = 0;
+        int32_t userId = Constants::UNSPECIFIED_USERID;
+    };
+
+    struct JsAbilityInfo {
+        std::string bundleName;
+        std::string abilityName;
+        std::string moduleName = "";
+        bool hasModuleName = false;
+        OHOS::AppExecFwk::AbilityInfo abilityInfo;
+        bool ret= false;
+    };
+
+    struct JsNameForUid {
+        std::string bundleName;
+        int32_t uid;
+        bool ret = false;
+    };
+
+    struct JsAbilityLabel {
+        std::string bundleName;
+        std::string className;
+        std::string moduleName = "";
+        bool hasModuleName = false;
+        std::string abilityLabel;
+    };
+
+    struct JsAbilityIcon {
+        std::string bundleName;
+        std::string abilityName;
+        std::string moduleName = "";
+        bool hasModuleName = false;
+    };
+    static void Finalizer(NativeEngine *engine, void *data, void *hint);
+    static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetBundleArchiveInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
+    std::string errMessage_;
+
+private:
+    NativeValue* OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnGetApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnGetBundleArchiveInfo(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* CreateCustomizeMetaDatas(
+        NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
+        
+    NativeValue* CreateInnerMetaDatas(
+        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>>  metaData);
+    NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> metaData);
+    NativeValue* CreateCustomizeMetaData(NativeEngine &engine, const CustomizeData &customizeData);
+    NativeValue* CreateInnerMetaData(NativeEngine &engine, const Metadata &metadata);
+    NativeValue* CreateResource(NativeEngine &engine, const Resource &resource);
+    NativeValue* CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos);
+    NativeValue* CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo);
+    NativeValue* CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo);
+    NativeValue* CreateExtensionInfo(
+        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfo);
+    NativeValue* CreateExtensionInfo(
+        NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
+    NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);
+    int32_t InitGetAbilityInfo (NativeEngine &engine, NativeCallbackInfo &info,
+        NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
+    NativeValue* CreateAbilityInfo(NativeEngine &engine,  const AbilityInfo &abilityInfo);
+    NativeValue* CreateMetaData(NativeEngine &engine, const MetaData &metaData);
+    NativeValue* CreateSupportWindowMode(NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes);
+    NativeValue* CreateUsedScene(NativeEngine &engine, const RequestPermissionUsedScene &usedScene);
+    NativeValue* CreateAppInfos(NativeEngine &engine, const std::vector<ApplicationInfo> &appInfos);
+    NativeValue* CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos);
+    NativeValue* CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo);
+    NativeValue* CreateAbilityInfos(NativeEngine &engine,  const std::vector<AbilityInfo> &abilityInfos);
+    NativeValue* CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos);
+    NativeValue* CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo);
+    NativeValue* CreateRequestPermissions(NativeEngine &engine, const std::vector<RequestPermission> &requestPermissions);
+    NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
+    NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
+    NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
+    NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
+    bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    bool UnwarpBundleOptionsParams(
+        NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool &result);
+};
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* BUNDLE_MGR_H */
