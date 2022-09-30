@@ -69,10 +69,11 @@ void GetBundleArchiveInfoComplete(napi_env env, napi_status status, void *data)
     napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertBundleInfo(env,
             asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[ARGS_POS_ZERO] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
