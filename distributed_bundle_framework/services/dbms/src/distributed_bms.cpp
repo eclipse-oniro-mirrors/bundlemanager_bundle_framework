@@ -248,14 +248,14 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
     APP_LOGI("DistributedBms GetAbilityInfo bundleName:%{public}s , abilityName:%{public}s, localeInfo:%{public}s",
         elementName.GetBundleName().c_str(), elementName.GetAbilityName().c_str(), localeInfo.c_str());
     auto iBundleMgr = GetBundleMgr();
-    if (!iBundleMgr) {
+    if (iBundleMgr == nullptr) {
         APP_LOGE("DistributedBms GetBundleMgr failed");
-        return ERR_APPEXECFWK_FAILED_SERVICE_DIED;
+        return ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     }
     int userId = AccountManagerHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGE("GetCurrentUserId failed");
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::vector<AbilityInfo> abilityInfos;
     OHOS::AAFwk::Want want;
