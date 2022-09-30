@@ -23,6 +23,9 @@
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "if_system_ability_manager.h"
+#include "inner_app_quick_fix.h"
+#include "quick_fix_data_mgr.h"
+#include "quick_fix_manager_rdb.h"
 
 #define private public
 
@@ -35,6 +38,11 @@ const std::string FILE1_PATH = "/data/test/hello.hqf";
 const std::string FILE2_PATH = "/data/test/world.hqf";
 const std::string INVALID_FILE_SUFFIX_PATH = "/data/test/invalidSuffix.txt";
 const std::string NOT_EXIST_FILE_PATH = "/data/test/notExist.hqf";
+const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
+const uint32_t QUICK_FIX_VERSION_CODE = 1;
+const uint32_t BUNDLE_VERSION_CODE = 1;
+const std::string QUICK_FIX_VERSION_NAME = "1.0";
+const std::string BUNDLE_VERSION_NAME = "1.0";
 }
 
 class BmsBundleQuickFixManagerTest : public testing::Test {
@@ -49,6 +57,7 @@ public:
     void CreateFiles(const std::vector<std::string>& sourceFiles);
     void DeleteFiles(const std::vector<std::string>& destFiles);
     static std::vector<std::string> sourceFiles;
+    AppQuickFix CreateAppQuickFix();
 };
 
 BmsBundleQuickFixManagerTest::BmsBundleQuickFixManagerTest()
@@ -68,6 +77,24 @@ void BmsBundleQuickFixManagerTest::SetUp()
 
 void BmsBundleQuickFixManagerTest::TearDown()
 {}
+
+AppQuickFix BmsBundleQuickFixManagerTest::CreateAppQuickFix()
+{
+    AppqfInfo appInfo;
+    appInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    appInfo.versionName = QUICK_FIX_VERSION_NAME;
+    appInfo.type = QuickFixType::PATCH;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "entry";
+    hqfInfo.type = QuickFixType::PATCH;
+    appInfo.hqfInfos.push_back(hqfInfo);
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    appQuickFix.versionCode = BUNDLE_VERSION_CODE;
+    appQuickFix.versionName = BUNDLE_VERSION_NAME;
+    appQuickFix.deployingAppqfInfo = appInfo;
+    return appQuickFix;
+}
 
 sptr<IQuickFixManager> BmsBundleQuickFixManagerTest::GetQuickFixManagerProxy()
 {
@@ -187,5 +214,99 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0400, Function |
     auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     APP_LOGI("end of BmsBundleQuickFixManager_0400.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_0500
+ * @tc.name: test SaveInnerAppQuickFix
+ * @tc.desc: SaveInnerAppQuickFix
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0500, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_0500.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        innerAppQuickFix.SetAppQuickFix(CreateAppQuickFix());
+        auto ret = dataMgr->SaveInnerAppQuickFix(innerAppQuickFix);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->DeleteInnerAppQuickFix(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_0500.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_0600
+ * @tc.name: test QueryInnerAppQuickFix
+ * @tc.desc: QueryInnerAppQuickFix
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0600, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_0600.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        innerAppQuickFix.SetAppQuickFix(CreateAppQuickFix());
+        auto ret = dataMgr->SaveInnerAppQuickFix(innerAppQuickFix);
+        EXPECT_TRUE(ret);
+        InnerAppQuickFix newInnerAppQuickFix;
+        ret = dataMgr->QueryInnerAppQuickFix(BUNDLE_NAME, newInnerAppQuickFix);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(BUNDLE_NAME, newInnerAppQuickFix.GetAppQuickFix().bundleName);
+        ret = dataMgr->DeleteInnerAppQuickFix(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_0600.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_0700
+ * @tc.name: test QueryAllInnerAppQuickFix
+ * @tc.desc: QueryAllInnerAppQuickFix
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0700, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_0700.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        innerAppQuickFix.SetAppQuickFix(CreateAppQuickFix());
+        auto ret = dataMgr->SaveInnerAppQuickFix(innerAppQuickFix);
+        EXPECT_TRUE(ret);
+        std::map<std::string, InnerAppQuickFix> newInnerAppQuickFixes;
+        ret = dataMgr->QueryAllInnerAppQuickFix(newInnerAppQuickFixes);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(newInnerAppQuickFixes.empty());
+        ret = dataMgr->DeleteInnerAppQuickFix(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_0700.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_0800
+ * @tc.name: test QueryAllInnerAppQuickFix
+ * @tc.desc: QueryAllInnerAppQuickFix
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_0800.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        std::map<std::string, InnerAppQuickFix> newInnerAppQuickFixes;
+        bool ret = dataMgr->QueryAllInnerAppQuickFix(newInnerAppQuickFixes);
+        EXPECT_FALSE(ret);
+        EXPECT_TRUE(newInnerAppQuickFixes.empty());
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_0800.");
 }
 }
