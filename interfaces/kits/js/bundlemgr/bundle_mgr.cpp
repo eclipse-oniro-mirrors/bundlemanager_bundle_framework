@@ -42,7 +42,7 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS;
 using namespace OHOS::AAFwk;
-using namespace OHOS::AppEJsBundleMgr::xecFwk;
+using namespace OHOS::AppxecFwk;
 using namespace OHOS::AbilityRuntime;
 
 namespace {
