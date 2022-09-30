@@ -82,7 +82,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     defaultFlag = formInfo.isDefault;
     formVisibleNotify = formInfo.formVisibleNotify;
     updateEnabled = formInfo.updateEnabled;
-    type = FormType::JS;
+    type = formInfo.type;
     colorMode = formInfo.colorMode;
     for (const auto &dimension : formInfo.supportDimensions) {
         supportDimensions.push_back(dimension);
