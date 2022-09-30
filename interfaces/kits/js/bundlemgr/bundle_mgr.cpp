@@ -42,7 +42,7 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS;
 using namespace OHOS::AAFwk;
-using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppEJsBundleMgr::xecFwk;
 using namespace OHOS::AbilityRuntime;
 
 namespace {
@@ -7750,8 +7750,7 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(
     return arrayValue;
 }
 
-NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine,
-    const ExtensionAbilityInfo &extensionInfos)
+NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfos)
 {
     APP_LOGI("CreateExtensionInfo is called.");
     auto objContext = engine.CreateObject();
@@ -7818,7 +7817,7 @@ NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityI
     object->SetProperty("launchMode", CreateJsValue(engine, static_cast<int32_t>(abilityInfo.launchMode)));
 
     if (!abilityInfo.isModuleJson) {
-        object->SetProperty("backgroundModes",CreateJsValue(engine, abilityInfo.backgroundModes));
+        object->SetProperty("backgroundModes", CreateJsValue(engine, abilityInfo.backgroundModes));
     } else {
         object->SetProperty("backgroundModes", CreateJsValue(engine, 0));
     }
@@ -8425,7 +8424,7 @@ NativeValue* JsBundleMgr::OnIsApplicationEnabled(NativeEngine &engine, NativeCal
         errCode = INVALID_PARAM;
     } else if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
         APP_LOGE("conversion failed!");
-        errCode= INVALID_PARAM;
+        errCode = INVALID_PARAM;
     }
     AsyncTask::CompleteCallback complete = [bundleName, errCode, info]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {

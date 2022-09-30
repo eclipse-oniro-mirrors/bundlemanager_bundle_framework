@@ -486,7 +486,7 @@ private:
     NativeValue* CreateExtensionInfo(
         NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
     NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);
-    int32_t InitGetAbilityInfo (NativeEngine &engine, NativeCallbackInfo &info,
+    int32_t InitGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info,
         NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
     NativeValue* CreateAbilityInfo(NativeEngine &engine,  const AbilityInfo &abilityInfo);
     NativeValue* CreateMetaData(NativeEngine &engine, const MetaData &metaData);
@@ -498,7 +498,8 @@ private:
     NativeValue* CreateAbilityInfos(NativeEngine &engine,  const std::vector<AbilityInfo> &abilityInfos);
     NativeValue* CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos);
     NativeValue* CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo);
-    NativeValue* CreateRequestPermissions(NativeEngine &engine, const std::vector<RequestPermission> &requestPermissions);
+    NativeValue* CreateRequestPermissions(NativeEngine &engine,
+        const std::vector<RequestPermission> &requestPermissions);
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
     NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
