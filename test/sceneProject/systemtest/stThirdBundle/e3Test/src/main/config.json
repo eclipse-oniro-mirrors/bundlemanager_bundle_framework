@@ -38,6 +38,7 @@
         "name": "bmsThirdBundle1",
         "description": "$string:description_application",
         "deviceType": [
+            "default",
             "tv",
             "car"
         ],

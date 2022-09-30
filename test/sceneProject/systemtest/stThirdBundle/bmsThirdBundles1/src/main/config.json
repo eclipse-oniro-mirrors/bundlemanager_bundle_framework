@@ -1,70 +1,74 @@
 {
     "app":{
-        "bundleName": "com.system.hiworld.examples1",
-        "vendor": "example",
-        "version": {
-            "code": 1,
-            "name": "1.0"
+        "bundleName":"com.system.hiworld.examples1",
+        "vendor":"example",
+        "version":{
+            "code":1,
+            "name":"1.0"
         },
-       "apiVersion": {
-          "compatible": 3,
-          "target": 3
-       }
-    },
-    "deviceConfig": {
-        "default": {
+        "apiVersion":{
+            "compatible":3,
+            "target":3
         }
     },
-    "module": {
+    "deviceConfig":{
+        "default":{
+
+        }
+    },
+    "module":{
         "package":"com.system.hiworld.example.h1",
         "name":"bmsThirdBundle1",
-        "deviceType": [
+        "deviceType":[
             "default"
         ],
-        "distro": {
-            "deliveryWithInstall": true,
-            "moduleName": "testability",
-            "moduleType": "entry"
+        "distro":{
+            "deliveryWithInstall":true,
+            "moduleName":"testability",
+            "moduleType":"entry"
         },
-        "abilities": [{
-        	"name": "bmsThirdBundle_A1",
-        	"description": "himusic main ability",
-        	"icon": "$media:ic_launcher",
-        	"label": "bmsThirdBundle_A1 Ability",
-        	"launchType": "standard",
-        	"orientation": "unspecified",
-        	"permissions": [
-        	],
-        	"visible": true,
-        	"skills": [
-          		{
-            			"actions": [
-              			"action.system.home"
-            			],
-            			"entities": [
-              			"entity.system.home"
-            			]
-          		}
-               ],
-        	"directLaunch": false,
-        	"configChanges": [
-          	"locale",
-          	"layout",
-          	"fontSize",
-          	"orientation"
-        	],
-        	"type": "page",
-        	"formsEnabled": false
-      	}],
-          "js": [
+        "abilities":[
             {
-                "pages": [
+                "name":"bmsThirdBundle_A1",
+                "description":"himusic main ability",
+                "icon":"$media:ic_launcher",
+                "label":"bmsThirdBundle_A1 Ability",
+                "launchType":"standard",
+                "orientation":"unspecified",
+                "permissions":[
+
+                ],
+                "visible":true,
+                "skills":[
+                    {
+                        "actions":[
+                            "action.system.home"
+                        ],
+                        "entities":[
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "directLaunch":false,
+                "configChanges":[
+                    "locale",
+                    "layout",
+                    "fontSize",
+                    "orientation"
+                ],
+                "type":"page",
+                "formsEnabled":false
+            }
+        ],
+        "js":[
+            {
+                "pages":[
                     "pages/index/index"
                 ],
-                "name": "default",
-                "window": {
-                    "designWidth": 720,
-                    "autoDesignWidth": true
+                "name":"default",
+                "window":{
+                    "designWidth":720,
+                    "autoDesignWidth":true
                 }
             }
         ]
