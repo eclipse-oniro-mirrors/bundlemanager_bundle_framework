@@ -473,6 +473,10 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
             return ERROR_DEVICE_ID_NOT_EXIST;
         case ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST:
             return ERROR_PROFILE_NOT_EXIST;
+        case ERR_ZLIB_SRC_FILE_DISABLED:
+            return ERR_ZLIB_SRC_FILE_INVALID;
+        case ERR_ZLIB_DEST_FILE_DISABLED:
+            return ERR_ZLIB_DEST_FILE_INVALID;
         default:
             return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
