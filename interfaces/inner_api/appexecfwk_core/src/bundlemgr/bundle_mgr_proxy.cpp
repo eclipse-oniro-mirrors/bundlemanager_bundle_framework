@@ -396,7 +396,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -428,7 +428,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -1684,9 +1684,13 @@ ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to IsModuleRemovable of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || moduleName.empty()) {
-        APP_LOGE("fail to IsModuleRemovable due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsModuleRemovable due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("fail to IsModuleRemovable due to moduleName empty");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -1786,9 +1790,13 @@ ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetModuleUpgradeFlag of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || moduleName.empty()) {
-        APP_LOGE("fail to SetModuleUpgradeFlag due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetModuleUpgradeFlag due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("fail to SetModuleUpgradeFlag due to moduleName empty");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
     MessageParcel data;
