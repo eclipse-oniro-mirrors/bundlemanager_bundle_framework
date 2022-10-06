@@ -143,6 +143,7 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
         }
     } else {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<HapModuleRemovableCallbackInfo>(
         env, asyncCallbackInfo, RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE,
@@ -249,6 +250,7 @@ napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
     } else {
         APP_LOGE("parameters error");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<SetHapModuleUpgradeFlagCallbackInfo>(

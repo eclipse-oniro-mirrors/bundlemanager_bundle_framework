@@ -32,9 +32,9 @@ static void ThrowParameterTypeError(napi_env env, int32_t err,
 static void ThrowTooFewParametersError(napi_env env, int32_t err);
 
 static napi_value CreateCommonError(napi_env env, int32_t err,
-    const std::string& msgOne = "", const std::string& msgTwo = "");
+    const std::string &functionName = "", const std::string &permissionName = "");
 
-static napi_value CreateError(napi_env env, int32_t err, const std::string& msg);
+static napi_value CreateError(napi_env env, int32_t err, const std::string &msg);
 };
 }
 }

@@ -22,9 +22,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* ERR_MSG_BUSINESS_ERROR = "BusinessError $: ";
 constexpr const char* ERR_MSG_PERMISSION_DENIED_ERROR =
     "Permission denied. An attempt was made to $ forbidden by permission: $.";
-constexpr const char* ERR_MSG_PARAM_TYPE_ERROR = "Parameter error. The type of \"$\" must be $.";
+constexpr const char* ERR_MSG_PARAM_TYPE_ERROR = "Parameter error. The type of $ must be $.";
 constexpr const char* ERR_MSG_ABILITY_NOT_SUPPORTED =
     "Capability not supported. Function $ can not work correctly due to limited device capabilities.";
 constexpr const char* ERR_MSG_BUNDLE_NOT_EXIST = "The specified bundle name was not found.";
@@ -107,18 +108,22 @@ napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::stri
 }
 
 napi_value BusinessError::CreateCommonError(
-    napi_env env, int32_t err, const std::string& msgOne, const std::string& msgTwo)
+    napi_env env, int32_t err, const std::string &functionName, const std::string &permissionName)
 {
-    std::string errMessage = "";
-    if (ERR_MSG_MAP.find(err) != ERR_MSG_MAP.end()) {
-        errMessage = ERR_MSG_MAP[err];
-    }
+    std::string errMessage = ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find("$");
     if (iter != std::string::npos) {
-        errMessage = errMessage.replace(iter, 1, msgOne);
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+    if (ERR_MSG_MAP.find(err) != ERR_MSG_MAP.end()) {
+        errMessage += ERR_MSG_MAP[err];
+    }
+    iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, functionName);
         iter = errMessage.find("$");
         if (iter != std::string::npos) {
-            errMessage = errMessage.replace(iter, 1, msgTwo);
+            errMessage = errMessage.replace(iter, 1, permissionName);
         }
     }
     return CreateError(env, err, errMessage);
