@@ -15,8 +15,85 @@
 
 #include "business_error.h"
 
+#include <unordered_map>
+
+#include "bundle_errors.h"
+
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* ERR_MSG_PERMISSION_DENIED_ERROR =
+    "Permission denied. An attempt was made to $ forbidden by permission: $.";
+constexpr const char* ERR_MSG_PARAM_TYPE_ERROR = "Parameter error. The type of \"$\" must be $.";
+constexpr const char* ERR_MSG_ABILITY_NOT_SUPPORTED =
+    "Capability not supported. Function $ can not work correctly due to limited device capabilities.";
+constexpr const char* ERR_MSG_BUNDLE_NOT_EXIST = "The specified bundle name was not found.";
+constexpr const char* ERR_MSG_MODULE_NOT_EXIST = "The specified module name was not found.";
+constexpr const char* ERR_MSG_ABILITY_NOT_EXIST = "The specified ability name was not found.";
+constexpr const char* ERR_MSG_INVALID_USER_ID = "The specified user id was not found.";
+constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId was not found.";
+constexpr const char* ERR_MSG_PERMISSION_NOT_EXIST = "The specified permission was not found.";
+constexpr const char* ERR_MSG_DEVICE_ID_NOT_EXIST = "The specified deviceId was not found.";
+constexpr const char* ERR_MSG_INSTALL_PARSE_FAILED = "Failed to install the hap since the hap fails to be parsed.";
+constexpr const char* ERR_MSG_INSTALL_VERIFY_SIGNATURE_FAILED =
+    "Failed to install the hap since the hap signature fails to be verified.";
+constexpr const char* ERR_MSG_INSTALL_HAP_FILEPATH_INVALID =
+    "Failed to install the hap since the path of the hap is invalid.";
+constexpr const char* ERR_MSG_INSTALL_HAP_SIZE_TOO_LARGE =
+    "Failed to install the hap since the hap was too large.";
+constexpr const char* ERR_MSG_INSTALL_INCORRECT_SUFFIX =
+    "Failed to install the hap since the extension name of the hap was not .hap.";
+constexpr const char* ERR_MSG_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT =
+    "Failed to install haps since the configuration information of multi haps was inconsistent.";
+constexpr const char* ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT =
+    "Failed to install the hap since the system disk space was insufficient.";
+constexpr const char* ERR_MSG_INSTALL_VERSION_DOWNGRADE =
+    "Failed to install the hap since the version of the newly installed hap was too early.";
+constexpr const char* ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED = "The preinstalled app cannot be uninstalled.";
+constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR = "Parameter error. Too few parameters.";
+constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "";
+static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
+    { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
+    { ERROR_PARAM_CHECK_ERROR, ERR_MSG_PARAM_TYPE_ERROR },
+    { ERROR_SYSTEM_ABILITY_NOT_FOUND, ERR_MSG_ABILITY_NOT_SUPPORTED },
+    { ERROR_BUNDLE_NOT_EXIST, ERR_MSG_BUNDLE_NOT_EXIST },
+    { ERROR_MODULE_NOT_EXIST, ERR_MSG_MODULE_NOT_EXIST },
+    { ERROR_ABILITY_NOT_EXIST, ERR_MSG_ABILITY_NOT_EXIST },
+    { ERROR_INVALID_USER_ID, ERR_MSG_INVALID_USER_ID },
+    { ERROR_INVALID_APPID, ERR_MSG_APPID_NOT_EXIST },
+    { ERROR_PERMISSION_NOT_EXIST, ERR_MSG_PERMISSION_NOT_EXIST },
+    { ERROR_DEVICE_ID_NOT_EXIST, ERR_MSG_DEVICE_ID_NOT_EXIST },
+    { ERROR_INSTALL_PARSE_FAILED, ERR_MSG_INSTALL_PARSE_FAILED },
+    { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, ERR_MSG_INSTALL_VERIFY_SIGNATURE_FAILED },
+    { ERROR_INSTALL_HAP_FILEPATH_INVALID, ERR_MSG_INSTALL_HAP_FILEPATH_INVALID },
+    { ERROR_INSTALL_HAP_SIZE_TOO_LARGE, ERR_MSG_INSTALL_HAP_SIZE_TOO_LARGE },
+    { ERROR_INSTALL_INCORRECT_SUFFIX, ERR_MSG_INSTALL_INCORRECT_SUFFIX },
+    { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, ERR_MSG_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+    { ERROR_INSTALL_NO_DISK_SPACE_LEFT, ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT },
+    { ERROR_INSTALL_VERSION_DOWNGRADE, ERR_MSG_INSTALL_VERSION_DOWNGRADE },
+    { ERROR_UNINSTALL_PREINSTALL_APP_FAILED, ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED },
+    { ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION }
+};
+}
+
+void BusinessError::ThrowError(napi_env env, int32_t err, const std::string &msg)
+{
+    napi_value error = CreateError(env, err, msg);
+    napi_throw(env, error);
+}
+
+void BusinessError::ThrowParameterTypeError(napi_env env, int32_t err,
+    const std::string &parameter, const std::string &type)
+{
+    napi_value error = CreateCommonError(env, err, parameter, type);
+    napi_throw(env, error);
+}
+
+void BusinessError::ThrowTooFewParametersError(napi_env env, int32_t err)
+{
+    ThrowError(env, err, ERR_MSG_PARAM_NUMBER_ERROR);
+}
+
 napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::string& msg)
 {
     napi_value businessError = nullptr;
@@ -27,6 +104,24 @@ napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::stri
     napi_create_error(env, nullptr, errorMessage, &businessError);
     napi_set_named_property(env, businessError, "code", errorCode);
     return businessError;
+}
+
+napi_value BusinessError::CreateCommonError(
+    napi_env env, int32_t err, const std::string& msgOne, const std::string& msgTwo)
+{
+    std::string errMessage = "";
+    if (ERR_MSG_MAP.find(err) != ERR_MSG_MAP.end()) {
+        errMessage = ERR_MSG_MAP[err];
+    }
+    auto iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, msgOne);
+        iter = errMessage.find("$");
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, msgTwo);
+        }
+    }
+    return CreateError(env, err, errMessage);
 }
 }
 }
