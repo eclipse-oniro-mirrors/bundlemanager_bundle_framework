@@ -34,12 +34,9 @@ using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
 namespace {
-constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr int32_t PARAM0 = 0;
-constexpr int32_t PARAM1 = 1;
-constexpr int32_t NAPI_RETURN_ONE = 1;
 constexpr int32_t INVALID_PARAM = 2;
 constexpr int32_t INVALID_NUMBER = 202;
 }
