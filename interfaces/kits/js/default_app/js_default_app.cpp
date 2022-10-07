@@ -23,11 +23,13 @@
 #include "bundle_mgr_proxy.h"
 #include "business_error.h"
 #include "common_func.h"
+#include "hilog_wrapper.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
+#include "js_runtime_utils.h"
 #include "system_ability_definition.h"
 
 using namespace OHOS::AbilityRuntime;
