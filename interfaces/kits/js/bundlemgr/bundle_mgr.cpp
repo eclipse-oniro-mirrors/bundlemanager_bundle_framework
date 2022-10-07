@@ -7022,6 +7022,27 @@ static bool InnerQueryExtensionInfo(napi_env env, AsyncExtensionInfoCallbackInfo
     }
 }
 
+static bool InnerQueryExtensionInfo(const OHOS::AppExecFwk::Want want, const int32_t &extensionType,
+    const int32_t &flags, const int32_t &userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    APP_LOGD("action:%{public}s, uri:%{private}s, type:%{public}s, flags:%{public}d",
+        want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(), flags);
+
+    if (extensionType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
+        APP_LOGD("query extensionAbilityInfo without type");
+        return iBundleMgr->QueryExtensionAbilityInfos(want, flags, userId, extensionInfos);
+    } else {
+        auto type = static_cast<ExtensionAbilityType>(extensionType);
+        APP_LOGD("query extensionAbilityInfo with type");
+        return iBundleMgr->QueryExtensionAbilityInfos(want, type, flags, userId, extensionInfos);
+    }
+}
+
 /**
  * Promise and async callback
  */
