@@ -175,103 +175,20 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
     APP_LOGD("ConvertBundleInfo done");
 }
 
-static ErrCode InnerIsDefaultApplication(DefaultAppCallbackInfo *info)
+static bool InnerIsDefaultApplication(const std::string& type)
 {
-    if (info == nullptr) {
-        APP_LOGE("info is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
     auto defaultAppProxy = GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
-        APP_LOGE("defaultAppProxy is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+        APP_LOGE("defaultAppProxy is null.");
+        return false;
     }
-    ErrCode ret = defaultAppProxy->IsDefaultApplication(info->type, info->isDefaultApp);
+    bool isDefaultApp = false;
+    ErrCode ret = defaultAppProxy->IsDefaultApplication(type, isDefaultApp);
     APP_LOGD("IsDefaultApplication ErrCode : %{public}d", ret);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-void IsDefaultApplicationExec(napi_env env, void *data)
-{
-    DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return;
+    if (ret == ERR_OK) {
+        return isDefaultApp;
     }
-    asyncCallbackInfo->err = InnerIsDefaultApplication(asyncCallbackInfo);
-}
-
-void IsDefaultApplicationComplete(napi_env env, napi_status status, void *data)
-{
-    DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
-        return;
-    }
-    std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[ARGS_SIZE_TWO] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isDefaultApp, &result[ARGS_POS_ONE]));
-    } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
-    }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
-}
-
-napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("begin of IsDefaultApplication");
-    NapiArg args(env, info);
-    DefaultAppCallbackInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
-        return nullptr;
-    }
-    std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
-                APP_LOGE("type invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            }
-            break;
-        } else {
-            APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-            return nullptr;
-        }
-    }
-    auto promise = CommonFunc::AsyncCallNativeMethod<DefaultAppCallbackInfo>(
-        env, asyncCallbackInfo, "IsDefaultApplication", IsDefaultApplicationExec, IsDefaultApplicationComplete);
-    callbackPtr.release();
-    APP_LOGD("call IsDefaultApplication done");
-    return promise;
+    return false;
 }
 
 static ErrCode InnerGetDefaultApplication(DefaultAppCallbackInfo *info)
@@ -610,6 +527,50 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call ResetDefaultApplication done");
     return promise;
+}
+
+void JsDefaultApp::JsFinalizer(NativeEngine *engine, void *data, void *hint)
+{
+    APP_LOGD("JsDefaultApp::Finalizer is called");
+    std::unique_ptr<JsDefaultApp>(static_cast<JsDefaultApp*>(data));
+}
+
+NativeValue* JsDefaultApp::JsIsDefaultApplication(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsDefaultApp *me = CheckParamsAndGetThis<JsDefaultApp>(engine, info);
+    return (me != nullptr) ? me->OnIsDefaultApplication(*engine, *info) : nullptr;
+}
+
+NativeValue* JsDefaultApp::OnIsDefaultApplication(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = NO_ERROR;
+    std::string strType("");
+    if (info.argc < ARGS_SIZE_ONE || info.argc > ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments.");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
+        ConvertFromJsValue(engine, info.argv[PARAM0], strType);
+    } else {
+        errCode = PARAM_TYPE_ERROR;
+    }
+    AsyncTask::CompleteCallback complete = [errCode, strType](
+            NativeEngine &engine, AsyncTask &task, int32_t status) {
+        if (errCode != NO_ERROR) {
+            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
+            return;
+        }
+
+        std::string type(strType);
+        auto result = InnerIsDefaultApplication(type);
+        task.Resolve(engine, CreateJsValue(engine, result));
+    };
+    NativeValue *lastParam = (info.argc == ARGS_SIZE_ONE) ? nullptr : info.argv[PARAM1];
+    NativeValue *result = nullptr;
+    AsyncTask::Schedule("JsDefaultApp::OnIsDefaultApplication",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
 }
 }
 }

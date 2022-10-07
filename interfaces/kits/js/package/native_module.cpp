@@ -21,20 +21,45 @@
 #include "package.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "js_runtime_utils.h"
+#include "napi/native_node_api.h"
 
+using namespace OHOS::AbilityRuntime;
 namespace OHOS {
 namespace AppExecFwk {
 EXTERN_C_START
 /*
  * function for module exports
  */
+
+static NativeValue* JsPackageInit(NativeEngine *engine, NativeValue *exports)
+{
+    APP_LOGE("JsPackageInit is called");
+    if (engine == nullptr || exports == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeObject* object = OHOS::AbilityRuntime::ConvertNativeValueTo<NativeObject>(exports);
+    if (object == nullptr) {
+        APP_LOGE("object is nullptr");
+        return nullptr;
+    }
+
+    std::unique_ptr<JsPackage> jsPackage = std::make_unique<JsPackage>();
+    object->SetNativePointer(jsPackage.release(), JsPackage::Finalizer, nullptr);
+
+    const char *moduleName = "JsPackage";
+    OHOS::AbilityRuntime::BindNativeFunction(*engine, *object, "hasInstalled", moduleName, JsPackage::HasInstalled);
+    
+    return exports;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
-    napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("hasInstalled", HasInstalled),
-    };
-    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
-    return exports;
+    HILOG_INFO("napi_moudule Init start ...");
+    return reinterpret_cast<napi_value>(JsPackageInit(reinterpret_cast<NativeEngine*>(env),
+        reinterpret_cast<NativeValue*>(exports)));
 }
 EXTERN_C_END
 

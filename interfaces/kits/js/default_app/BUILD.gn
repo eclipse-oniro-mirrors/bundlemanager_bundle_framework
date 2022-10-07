@@ -33,6 +33,8 @@ ohos_shared_library("defaultappmanager") {
   ]
 
   external_deps = [
+    "ability_runtime:runtime",
+    "ability_runtime:abilitykit_native",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

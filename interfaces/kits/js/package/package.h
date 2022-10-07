@@ -35,7 +35,20 @@ struct CheckPackageHasInstalledOptions {
     int32_t errCode = 0;
     ~CheckPackageHasInstalledOptions();
 };
-napi_value HasInstalled(napi_env env, napi_callback_info info);
+class JsPackage {
+public:
+    JsPackage() = default;
+    ~JsPackage() = default;
+
+    static void Finalizer(NativeEngine *engine, void *data, void *hint);
+    static NativeValue* HasInstalled(NativeEngine *engine, NativeCallbackInfo *info);
+private:
+    NativeValue* OnHasInstalled(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* CreateHasInstalled(NativeEngine &engine, const OHOS::AppExecFwk::CheckPackageHasInstalledOptions &
+        hasInstalledOptions);
+    void JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, NativeCallbackInfo &info,
+        OHOS::AppExecFwk::CheckPackageHasInstalledOptions *hasInstalledOptions);
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* APPEXECFWK_STANDARD_KITS_APPKIT_NAPI_PACKAGE_PACKAGE_H */
