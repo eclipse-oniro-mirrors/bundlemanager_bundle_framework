@@ -43,6 +43,7 @@ namespace AppExecFwk {
 using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AbilityRuntime;
 
 namespace {
 constexpr size_t NAPI_ERR_NO_ERROR = 0;
