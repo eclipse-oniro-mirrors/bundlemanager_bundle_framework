@@ -197,7 +197,7 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
     int32_t resultCode;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
-        resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
+        resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
         resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
@@ -225,7 +225,7 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
     int32_t resultCode;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
-        resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
+        resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
         resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
@@ -248,9 +248,9 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
     APP_LOGI("DistributedBms GetAbilityInfo bundleName:%{public}s , abilityName:%{public}s, localeInfo:%{public}s",
         elementName.GetBundleName().c_str(), elementName.GetAbilityName().c_str(), localeInfo.c_str());
     auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
+    if (!iBundleMgr) {
         APP_LOGE("DistributedBms GetBundleMgr failed");
-        return ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
+        return ERR_APPEXECFWK_FAILED_SERVICE_DIED;
     }
     int userId = AccountManagerHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
