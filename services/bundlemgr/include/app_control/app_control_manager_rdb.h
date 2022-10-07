@@ -53,6 +53,8 @@ public:
     virtual ErrCode GetDisposedStatus(const std::string &callingNmae, const std::string &controlRuleType,
         const std::string &appId, Want& want) override;
 private:
+    ErrCode DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,
+        const std::string &appId, int32_t userId);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
 } // namespace AppExecFwk
