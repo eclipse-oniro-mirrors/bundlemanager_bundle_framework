@@ -197,7 +197,7 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
     int32_t resultCode;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
-        resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
+        resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
         resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
@@ -225,7 +225,7 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
     int32_t resultCode;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
-        resultCode = ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY;
+        resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
         resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
@@ -255,23 +255,28 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
     int userId = AccountManagerHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGE("GetCurrentUserId failed");
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    AbilityInfo abilityInfo;
+    std::vector<AbilityInfo> abilityInfos;
     OHOS::AAFwk::Want want;
     want.SetElement(elementName);
-    if (!iBundleMgr->QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, userId, abilityInfo)) {
+    ErrCode ret = iBundleMgr->QueryAbilityInfosV9(want, GET_ABILITY_INFO_WITH_APPLICATION_V9, userId, abilityInfos);
+    if (ret != ERR_OK) {
         APP_LOGE("DistributedBms QueryAbilityInfo failed");
+        return ret;
+    }
+    if (abilityInfos.empty()) {
+        APP_LOGE("DistributedBms QueryAbilityInfo abilityInfos empty");
         return ERR_APPEXECFWK_FAILED_GET_ABILITY_INFO;
     }
     std::string label = iBundleMgr->GetStringById(
-        abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.labelId, userId, localeInfo);
+        abilityInfos[0].bundleName, abilityInfos[0].moduleName, abilityInfos[0].labelId, userId, localeInfo);
     if (label.empty()) {
-        APP_LOGE("DistributedBms QueryAbilityInfo failed");
+        APP_LOGE("DistributedBms QueryAbilityInfo label empty");
         return ERR_APPEXECFWK_FAILED_GET_ABILITY_INFO;
     }
     remoteAbilityInfo.label = label;
-    return GetAbilityIconByContent(abilityInfo, userId, remoteAbilityInfo);
+    return GetAbilityIconByContent(abilityInfos[0], userId, remoteAbilityInfo);
 }
 
 int32_t DistributedBms::GetAbilityIconByContent(

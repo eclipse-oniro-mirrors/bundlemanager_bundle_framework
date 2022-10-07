@@ -75,7 +75,7 @@ int DistributedBmsHost::HandleGetRemoteAbilityInfo(Parcel &data, Parcel &reply)
     APP_LOGI("DistributedBmsHost handle get remote ability info");
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     std::unique_ptr<ElementName> elementName(data.ReadParcelable<ElementName>());
     if (!elementName) {
@@ -105,7 +105,7 @@ int DistributedBmsHost::HandleGetRemoteAbilityInfos(Parcel &data, Parcel &reply)
     APP_LOGI("DistributedBmsHost handle get remote ability infos");
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     std::vector<ElementName> elementNames;
     if (!GetParcelableInfos<ElementName>(data, elementNames)) {
