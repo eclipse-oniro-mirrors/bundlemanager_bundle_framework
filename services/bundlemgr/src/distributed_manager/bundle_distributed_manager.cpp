@@ -100,48 +100,26 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
     std::vector<int> values = jsonObject[Constants::CHARACTER_OS_SYSCAP].get<std::vector<int>>();
-    int intValues[PCID_MAIN_BYTES];
-    int i = 0;
+    std::string pcId;
     for (int value : values) {
-        intValues[i++] = value;
-    }
-    char (*osOutput)[SINGLE_SYSCAP_LEN] = nullptr;
-    ScopeGuard osOutputGuard([&osOutput] {
-        if (osOutput != nullptr) {
-            free(osOutput);
-        }
-    });
-    int32_t osLength;
-    if (!DecodeOsSyscap((char *)intValues, &osOutput, &osLength)) {
-        APP_LOGE("decode os sys cap failed");
-        return ErrorCode::DECODE_SYS_CAP_FAILED;
+        pcId = pcId + std::to_string(value) + ",";
     }
     std::string capabilities = jsonObject[Constants::CHARACTER_PRIVATE_SYSCAP];
-    char (*priOutput)[SINGLE_SYSCAP_LEN] = nullptr;
-    ScopeGuard priOutputGuard([&priOutput] {
-        if (priOutput != nullptr) {
-            free(priOutput);
-        }
-    });
-    int32_t priLength;
-    if (!DecodePrivateSyscap((char *)capabilities.c_str(), &priOutput, &priLength)) {
-        APP_LOGE("decode private sys cap failed");
-        return ErrorCode::DECODE_SYS_CAP_FAILED;
+    if (capabilities.empty()) {
+        pcId = pcId.substr(0, pcId.length() - 1);
+    } else {
+        pcId = pcId + capabilities;
     }
-    for (auto &id : rpcIdResult.abilityInfo.rpcId) {
+    APP_LOGD("sysCap pcId:%{public}s", pcId.c_str());
+    for (auto &rpcId : rpcIdResult.abilityInfo.rpcId) {
+        APP_LOGD("sysCap rpcId:%{public}s", rpcId.c_str());
         CompareError compareError = {{0}, 0, 0};
-        if (osLength != 0) {
-            if (ComparePcidString(*osOutput, const_cast<char *>(id.c_str()), &compareError) != 0) {
-                return ErrorCode::COMPARE_PC_ID_FAILED;
-            }
-        }
-        if (priLength != 0) {
-            if (ComparePcidString(*priOutput, const_cast<char *>(id.c_str()), &compareError) != 0) {
-                return ErrorCode::COMPARE_PC_ID_FAILED;
-            }
+        int32_t ret = ComparePcidString(pcId.c_str(), rpcId.c_str(), &compareError);
+        if (ret != 0) {
+            APP_LOGE("ComparePcIdString failed errCode:%{public}d", ret);
+            return ErrorCode::COMPARE_PC_ID_FAILED;
         }
     }
-    APP_LOGD("decode Os syscap:%{public}s, private syscap:%{public}s", *osOutput, *priOutput);
     return ErrorCode::NO_ERROR;
 }
 
