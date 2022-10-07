@@ -7681,6 +7681,383 @@ NativeValue* JsBundleMgr::CreateCustomizeMetaData(NativeEngine &engine, const Cu
     return objContext;
 }
 
+NativeValue* JsBundleMgr::CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo)
+{
+    APP_LOGI("CreateAppInfo is called.");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, appInfo.name));
+    object->SetProperty("codePath", CreateJsValue(engine, appInfo.codePath));
+    object->SetProperty("accessTokenId", CreateJsValue(engine, appInfo.accessTokenId));
+    object->SetProperty("description", CreateJsValue(engine, appInfo.description));
+    object->SetProperty("descriptionId", CreateJsValue(engine, appInfo.descriptionId));
+    object->SetProperty("icon", CreateJsValue(engine, appInfo.iconPath));
+    object->SetProperty("iconId", CreateJsValue(engine, appInfo.iconId));
+    object->SetProperty("label", CreateJsValue(engine, appInfo.label));
+    object->SetProperty("labelId", CreateJsValue(engine, appInfo.labelId));
+    object->SetProperty("systemApp", CreateJsValue(engine, appInfo.isSystemApp));
+    object->SetProperty("supportedModes", CreateJsValue(engine, appInfo.supportedModes));
+    object->SetProperty("process", CreateJsValue(engine, appInfo.process));
+    object->SetProperty("iconIndex", CreateJsValue(engine, appInfo.iconId));
+    object->SetProperty("labelIndex", CreateJsValue(engine, appInfo.labelId));
+    object->SetProperty("entryDir", CreateJsValue(engine, appInfo.entryDir));
+    object->SetProperty("permissions", CreateNativeArray(engine, appInfo.permissions));
+    object->SetProperty("moduleSourceDirs", CreateNativeArray(engine, appInfo.moduleSourceDirs));
+    object->SetProperty("moduleInfos", CreateModuleInfos(engine, appInfo.moduleInfos));
+    object->SetProperty("metaData", CreateCustomizeMetaDatas(engine, appInfo.metaData));
+    object->SetProperty("metadata", CreateInnerMetaDatas(engine, appInfo.metadata));
+    object->SetProperty("enabled", CreateJsValue(engine, appInfo.enabled));
+    object->SetProperty("uid", CreateJsValue(engine, appInfo.uid));
+    object->SetProperty("entityType", CreateJsValue(engine, appInfo.entityType));
+    object->SetProperty("removable", CreateJsValue(engine, appInfo.removable));
+    object->SetProperty("fingerprint", CreateJsValue(engine, appInfo.fingerprint));
+    object->SetProperty("iconResource", CreateResource(engine, appInfo.iconResource));
+    object->SetProperty("labelResource", CreateResource(engine, appInfo.labelResource));
+    object->SetProperty("descriptionResource", CreateResource(engine, appInfo.descriptionResource));
+    object->SetProperty("appDistributionType", CreateJsValue(engine, appInfo.appDistributionType));
+    object->SetProperty("appProvisionType", CreateJsValue(engine, appInfo.appProvisionType));
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateResource(NativeEngine &engine, const Resource &resource)
+{
+    APP_LOGI("CreateResource is called.");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("bundleName", CreateJsValue(engine, resource.bundleName));
+    object->SetProperty("moduleName", CreateJsValue(engine, resource.moduleName));
+    object->SetProperty("id", CreateJsValue(engine, resource.id));
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos)
+{
+    APP_LOGI("CreateModuleInfos is called.");
+    NativeValue *arrayValue = engine.CreateArray(moduleInfos.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    for (uint32_t i = 0; i < moduleInfos.size(); i++) {
+        array->SetElement(i, CreateModuleInfo(engine, moduleInfos.at(i)));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo)
+{
+    APP_LOGI("CreateModuleInfo is called.");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("moduleName", CreateJsValue(engine, modInfo.moduleName));
+    object->SetProperty("moduleSourceDir", CreateJsValue(engine, modInfo.moduleSourceDir));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos)
+{
+    NativeValue *arrayValue = engine.CreateArray(bundleInfos.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (const auto &bundleInfo : bundleInfos) {
+        array->SetElement(index++, CreateBundleInfo(engine, bundleInfo));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo)
+{
+    APP_LOGI("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, bundleInfo.name));
+    object->SetProperty("vendor", CreateJsValue(engine, bundleInfo.vendor));
+    object->SetProperty("versionCode", CreateJsValue(engine, bundleInfo.versionCode));
+    object->SetProperty("versionName", CreateJsValue(engine, bundleInfo.versionName));
+    object->SetProperty("cpuAbi", CreateJsValue(engine, bundleInfo.cpuAbi));
+    object->SetProperty("appId", CreateJsValue(engine, bundleInfo.appId));
+    object->SetProperty("entryModuleName", CreateJsValue(engine, bundleInfo.entryModuleName));
+    object->SetProperty("compatibleVersion", CreateJsValue(engine, bundleInfo.compatibleVersion));
+    object->SetProperty("targetVersion", CreateJsValue(engine, bundleInfo.targetVersion));
+    object->SetProperty("uid", CreateJsValue(engine, bundleInfo.uid));
+    object->SetProperty("installTime", CreateJsValue(engine, bundleInfo.installTime));
+    object->SetProperty("updateTime", CreateJsValue(engine, bundleInfo.updateTime));
+    object->SetProperty("appInfo", CreateAppInfo(engine, bundleInfo.applicationInfo));
+    object->SetProperty("abilityInfos", CreateAbilityInfos(engine, bundleInfo.abilityInfos));
+    object->SetProperty("hapModuleInfos", CreateHapModuleInfos(engine, bundleInfo.hapModuleInfos));
+    object->SetProperty("reqPermissions", CreateNativeArray(engine, bundleInfo.reqPermissions));
+    object->SetProperty("reqPermissionStates", CreateNativeArray(engine, bundleInfo.reqPermissionStates));
+    object->SetProperty("isCompressNativeLibs", CreateJsValue(engine, true));
+    object->SetProperty("isSilentInstallation", CreateJsValue(engine, std::string("")));
+    object->SetProperty("type", CreateJsValue(engine, std::string("")));
+    object->SetProperty("reqPermissionDetails", CreateRequestPermissions(engine, bundleInfo.reqPermissionDetails));
+    object->SetProperty("minCompatibleVersionCode", CreateJsValue(engine, bundleInfo.minCompatibleVersionCode));
+    object->SetProperty("entryInstallationFree", CreateJsValue(engine, bundleInfo.entryInstallationFree));
+    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, bundleInfo.extensionInfos));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateAbilityInfos(NativeEngine &engine,  const std::vector<AbilityInfo> &abilityInfos)
+{
+    NativeValue *arrayValue = engine.CreateArray(abilityInfos.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (const auto &abilityInfo : abilityInfos) {
+        array->SetElement(index++, CreateAbilityInfo(engine, abilityInfo));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
+    NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData)
+{
+    APP_LOGI("CreateCustomizeMetaDatas is called.");
+    NativeValue *objValue = engine.CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    for (const auto &item : metaData) {
+        NativeValue *arrayValue = engine.CreateArray(item.second.size());
+        NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+        for (size_t i = 0; i < item.second.size(); i++) {
+            array->SetElement(i, CreateCustomizeMetaData(engine, item.second[i]));
+        }
+        object->SetProperty(item.first.c_str(), arrayValue);
+    }
+    return objValue;
+}
+
+NativeValue* JsBundleMgr::CreateExtensionInfo(
+    NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
+{
+    APP_LOGI("CreateExtensionInfo is called.");
+    NativeValue *arrayValue = engine.CreateArray(extensionInfos.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (const auto &extensionInfo : extensionInfos) {
+        array->SetElement(index++, CreateExtensionInfo(engine, extensionInfo));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine,
+    const ExtensionAbilityInfo &extensionInfos)
+{
+    APP_LOGI("CreateExtensionInfo is called.");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfos.bundleName));
+    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfos.moduleName));
+    object->SetProperty("name", CreateJsValue(engine, extensionInfos.name));
+    object->SetProperty("labelId", CreateJsValue(engine, extensionInfos.labelId));
+    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfos.descriptionId));
+    object->SetProperty("iconId", CreateJsValue(engine, extensionInfos.iconId));
+    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfos.visible));
+    object->SetProperty("extensionAbilityType",
+        CreateJsValue(engine, static_cast<int32_t>(extensionInfos.type)));
+    object->SetProperty("permissions", CreateNativeArray(engine, extensionInfos.permissions));
+    object->SetProperty("applicationInfo", CreateAppInfo(engine, extensionInfos.applicationInfo));
+    object->SetProperty("metadata", CreateInnerMetaDatas(engine, extensionInfos.metadata));
+    object->SetProperty("enabled", CreateJsValue(engine, extensionInfos.enabled));
+    object->SetProperty("readPermission", CreateJsValue(engine, extensionInfos.readPermission));
+    object->SetProperty("writePermission", CreateJsValue(engine, extensionInfos.writePermission));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos)
+{
+    NativeValue *arrayValue = engine.CreateArray(hapModuleInfos.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (const auto &hapModuleInfo : hapModuleInfos) {
+        array->SetElement(index++, CreateHapModuleInfo(engine, hapModuleInfo));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo)
+{
+    APP_LOGI("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, hapModuleInfo.name));
+    object->SetProperty("moduleName", CreateJsValue(engine, hapModuleInfo.moduleName));
+    object->SetProperty("description", CreateJsValue(engine, hapModuleInfo.description));
+    object->SetProperty("descriptionId", CreateJsValue(engine, hapModuleInfo.descriptionId));
+    object->SetProperty("icon", CreateJsValue(engine, hapModuleInfo.iconPath));
+    object->SetProperty("label", CreateJsValue(engine, hapModuleInfo.label));
+    object->SetProperty("hashValue", CreateJsValue(engine, hapModuleInfo.hashValue));
+    object->SetProperty("labelId", CreateJsValue(engine, hapModuleInfo.labelId));
+    object->SetProperty("iconId", CreateJsValue(engine, hapModuleInfo.iconId));
+    object->SetProperty("backgroundImg", CreateJsValue(engine, hapModuleInfo.backgroundImg));
+    object->SetProperty("supportedModes", CreateJsValue(engine, hapModuleInfo.supportedModes));
+    object->SetProperty("reqCapabilities", CreateNativeArray(engine, hapModuleInfo.reqCapabilities));
+    object->SetProperty("deviceTypes", CreateNativeArray(engine, hapModuleInfo.deviceTypes));
+    object->SetProperty("abilityInfo", CreateAbilityInfos(engine, hapModuleInfo.abilityInfos));
+    object->SetProperty("mainAbilityName", CreateJsValue(engine, hapModuleInfo.mainAbility));
+    object->SetProperty("installationFree", CreateJsValue(engine, hapModuleInfo.installationFree));
+    object->SetProperty("mainElementName", CreateJsValue(engine, hapModuleInfo.mainElementName));
+    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, hapModuleInfo.extensionInfos));
+    object->SetProperty("metadata", CreateInnerMetaDatas(engine, hapModuleInfo.metadata));
+
+    return objContext;
+}
+
+NativeValue *JsBundleMgr::CreateRequestPermissions(
+    NativeEngine &engine, const std::vector<RequestPermission> &requestPermissions)
+{
+    NativeValue *arrayValue = engine.CreateArray(requestPermissions.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (const auto &requestPermission : requestPermissions) {
+        array->SetElement(index++, CreateRequestPermission(engine, requestPermission));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission)
+{
+    APP_LOGI("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, requestPermission.name));
+    object->SetProperty("reason", CreateJsValue(engine, requestPermission.reason));
+    object->SetProperty("reasonId", CreateJsValue(engine, requestPermission.reasonId));
+    object->SetProperty("usedScene", CreateUsedScene(engine, requestPermission.usedScene));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateUsedScene(NativeEngine &engine, const RequestPermissionUsedScene &usedScene)
+{
+    APP_LOGI("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("abilities", CreateNativeArray(engine, usedScene.abilities));
+    object->SetProperty("when", CreateJsValue(engine, usedScene.when));
+
+    return objContext;
+}
+
+bool JsBundleMgr::UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
+{
+    bool flagCall = true;
+    if (info.argc == ARGS_SIZE_ONE) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_TWO && info.argv[PARAM1]->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM1], userId)) {
+            APP_LOGE("input params string error");
+        }
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_TWO && info.argv[PARAM1]->TypeOf() == NATIVE_FUNCTION) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    } else if (info.argc == ARGS_SIZE_THREE) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM1], userId)) {
+            APP_LOGE("input params string error");
+        }
+    }
+
+    return flagCall;
+}
+
+bool JsBundleMgr::UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
+{
+    bool flagCall = true;
+    if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FOUR && info.argv[PARAM3]->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FIVE) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+    }
+
+    return flagCall;
+}
+
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
 {
     APP_LOGI("JsBundleMgr::Finalizer is called");
