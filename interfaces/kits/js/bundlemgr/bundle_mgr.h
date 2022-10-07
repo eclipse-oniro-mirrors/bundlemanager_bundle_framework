@@ -455,6 +455,7 @@ public:
         bool hasModuleName = false;
     };
 
+    static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
