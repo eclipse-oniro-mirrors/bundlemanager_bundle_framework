@@ -30,15 +30,12 @@ struct CheckPackageHasInstalledResponse {
     bool result = false;
 };
 struct CheckPackageHasInstalledOptions {
-    napi_env env = nullptr;
-    napi_async_work asyncWork = nullptr;
-    napi_ref successRef = nullptr;
-    napi_ref failRef = nullptr;
-    napi_ref completeRef = nullptr;
+    std::unique_ptr<NativeReference> jsSuccessRef = nullptr;
+    std::unique_ptr<NativeReference> jsFailRef = nullptr;
+    std::unique_ptr<NativeReference> jsCompleteRef = nullptr;
     std::string bundleName;
     bool isString = false;
     CheckPackageHasInstalledResponse response;
-    int32_t errCode = 0;
     ~CheckPackageHasInstalledOptions();
 };
 class JsPackage {

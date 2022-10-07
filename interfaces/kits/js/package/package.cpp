@@ -46,25 +46,17 @@ constexpr int32_t INVALID_NUMBER = 202;
 
 CheckPackageHasInstalledOptions::~CheckPackageHasInstalledOptions()
 {
-    if (successRef) {
+    if (jsSuccessRef) {
         APP_LOGD("CheckPackageHasInstalledOptions::~CheckPackageHasInstalledOptions delete successRef");
-        napi_delete_reference(env, successRef);
-        successRef = nullptr;
+        jsSuccessRef = nullptr;
     }
-    if (failRef) {
+    if (jsFailRef) {
         APP_LOGD("CheckPackageHasInstalledOptions::~CheckPackageHasInstalledOptions delete failRef");
-        napi_delete_reference(env, failRef);
-        failRef = nullptr;
+        jsFailRef = nullptr;
     }
-    if (completeRef) {
+    if (jsCompleteRef) {
         APP_LOGD("CheckPackageHasInstalledOptions::~CheckPackageHasInstalledOptions delete completeRef");
-        napi_delete_reference(env, completeRef);
-        completeRef = nullptr;
-    }
-    if (asyncWork) {
-        APP_LOGD("CheckPackageHasInstalledOptions::~CheckPackageHasInstalledOptions delete callbackRef");
-        napi_delete_async_work(env, asyncWork);
-        asyncWork = nullptr;
+        jsCompleteRef = nullptr;
     }
 }
 
