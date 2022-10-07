@@ -86,7 +86,8 @@ static napi_value DefaultAppExport(napi_env env, napi_value exports)
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     APP_LOGD("init js default app success.");
-    return exports;
+    return reinterpret_cast<napi_value>(JsDefaultAppInit(reinterpret_cast<NativeEngine*>(env),
+        reinterpret_cast<NativeValue*>(exports)));
 }
 
 static napi_module default_app_module = {
