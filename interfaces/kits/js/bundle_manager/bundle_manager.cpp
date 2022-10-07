@@ -1615,6 +1615,10 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            } else {
+                APP_LOGE("GetLaunchWantForBundle param check error");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
             break;
         } else {
@@ -1642,6 +1646,11 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
     if (!iBundleMgr->ObtainCallingBundleName(bundleName)) {
         APP_LOGE("InnerGetProfile failed when obtain calling bundelName");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    if (info.abilityName.empty() || info.moduleName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty abilityName or moduleName");
+        return ERROR_PARAM_CHECK_ERROR;
     }
 
     ErrCode result;
