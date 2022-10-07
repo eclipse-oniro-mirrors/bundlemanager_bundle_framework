@@ -30,6 +30,7 @@
 #include "napi_constants.h"
 #include "system_ability_definition.h"
 
+using namespace OHOS::AbilityRuntime;
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;

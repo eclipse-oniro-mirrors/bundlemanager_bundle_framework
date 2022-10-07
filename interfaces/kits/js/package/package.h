@@ -14,9 +14,15 @@
  */
 #ifndef APPEXECFWK_STANDARD_KITS_APPKIT_NAPI_PACKAGE_PACKAGE_H
 #define APPEXECFWK_STANDARD_KITS_APPKIT_NAPI_PACKAGE_PACKAGE_H
+#include <native_engine/native_value.h>
+
+#include "hilog_wrapper.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "nlohmann/json.hpp"
+#include "js_runtime_utils.h"
+#include "js_runtime.h"
 
 namespace OHOS {
 namespace AppExecFwk {
