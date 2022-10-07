@@ -461,6 +461,7 @@ public:
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    std::string errMessage_;
 
 private:
     NativeValue* OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
