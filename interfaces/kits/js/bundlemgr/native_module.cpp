@@ -24,10 +24,38 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using namespace OHOS::AbilityRuntime;
 EXTERN_C_START
 /*
  * function for module exports
  */
+static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
+{
+    APP_LOGI("JsBundleMgrInit is called");
+    if (engine == nullptr || exports == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeObject* object = ConvertNativeValueTo<NativeObject>(exports);
+    if (object == nullptr) {
+        APP_LOGE("object is nullptr");
+        return nullptr;
+    }
+
+    std::unique_ptr<JsBundleMgr> jsBundleMgr = std::make_unique<JsBundleMgr>();
+    object->SetNativePointer(jsBundleMgr.release(), JsBundleMgr::Finalizer, nullptr);
+
+    const char *moduleName = "JsBundleMgr";
+    BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
+    BindNativeFunction(*engine, *object, "queryExtensionAbilityInfos", moduleName,
+        JsBundleMgr::QueryExtensionAbilityInfos);
+    BindNativeFunction(*engine, *object, "getNameForUid", moduleName, JsBundleMgr::GetNameForUid);
+    BindNativeFunction(*engine, *object, "getAbilityInfo", moduleName, JsBundleMgr::GetAbilityInfo);
+    BindNativeFunction(*engine, *object, "getAbilityLabel", moduleName, JsBundleMgr::GetAbilityLabel);
+    return exports;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_value nAbilityType = nullptr;
@@ -105,7 +133,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
         DECLARE_NAPI_FUNCTION("getApplicationInfo", GetApplicationInfo),
         DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
-        DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfo", GetBundleInfo),
         DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
@@ -123,10 +150,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isApplicationEnabled", IsApplicationEnabled),
         DECLARE_NAPI_FUNCTION("isModuleRemovable", IsModuleRemovable),
         DECLARE_NAPI_FUNCTION("setModuleUpgradeFlag", SetModuleUpgradeFlag),
-        DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfos", QueryExtensionInfoByWant),
-        DECLARE_NAPI_FUNCTION("getNameForUid", GetNameForUid),
-        DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfo),
-        DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
         DECLARE_NAPI_FUNCTION("getAbilityIcon", GetAbilityIcon),
         DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
@@ -169,7 +192,8 @@ static napi_value Init(napi_env env, napi_value exports)
             &m_classBundleInstaller));
     napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
     APP_LOGI("-----Init end------");
-    return exports;
+    return reinterpret_cast<napi_value>(JsBundleMgrInit(reinterpret_cast<NativeEngine*>(env),
+        reinterpret_cast<NativeValue*>(exports)));
 }
 EXTERN_C_END
 
