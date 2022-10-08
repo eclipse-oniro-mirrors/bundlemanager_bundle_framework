@@ -26,37 +26,29 @@ namespace {
 }
 void AppRunningControlRuleResult::ExecuteControlRule()
 {
-    if (ruleParam.controlWant != nullptr) {
-        APP_LOGI("ExecuteControlRule want:%{public}s", ruleParam.controlWant->ToString().c_str());
+    if (controlWant != nullptr) {
+        APP_LOGI("ExecuteControlRule want:%{public}s", controlWant->ToString().c_str());
+        return;
     }
-    if (ruleParam.controlMessage.empty()) {
+    if (controlMessage.empty()) {
         APP_LOGI("ExecuteControlRule control message:%{public}s", APP_CONTROL_EDM_DEFAULT_MESSAGE.c_str());
         return;
     }
-    APP_LOGI("ExecuteControlRule control message:%{public}s", ruleParam.controlMessage.c_str());
-}
-
-AppRunningControlRuleType AppRunningControlRuleResult::GetAppRunningControlRuleType()
-{
-    return ruleType;
+    APP_LOGI("ExecuteControlRule control message:%{public}s", controlMessage.c_str());
 }
 
 bool AppRunningControlRuleResult::ReadFromParcel(Parcel &parcel)
 {
-    std::unique_ptr<AppRunningControlRuleParam> ruleParamPtr(parcel.ReadParcelable<AppRunningControlRuleParam>());
-    if (ruleParamPtr == nullptr) {
-        APP_LOGE("ReadParcelable<AppRunningControlRuleParam> failed");
-        return false;
-    }
-    ruleParam = *ruleParamPtr;
-    ruleType = static_cast<AppRunningControlRuleType>(parcel.ReadInt32());
+    controlMessage = Str16ToStr8(parcel.ReadString16());
+    std::shared_ptr<AAFwk::Want> want(parcel.ReadParcelable<AAFwk::Want>());
+    controlWant = want;
     return true;
 }
 
 bool AppRunningControlRuleResult::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &ruleParam);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(ruleType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(controlMessage));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, controlWant.get());
     return true;
 }
 

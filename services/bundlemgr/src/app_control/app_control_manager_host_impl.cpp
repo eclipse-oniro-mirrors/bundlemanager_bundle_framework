@@ -34,7 +34,6 @@ AppControlManagerHostImpl::AppControlManagerHostImpl()
     };
     ruleTypeMap_ = {
         {AppInstallControlRuleType::DISALLOWED_UNINSTALL, AppControlConstants::APP_DISALLOWED_UNINSTALL},
-        {AppInstallControlRuleType::DISALLOWED_INSTALL, AppControlConstants::APP_DISALLOWED_INSTALL},
         {AppInstallControlRuleType::ALLOWED_INSTALL, AppControlConstants::APP_ALLOWED_INSTALL}
     };
 }
@@ -51,7 +50,7 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
@@ -66,7 +65,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const std::vector
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppInstallControlRule(callingName, appIds, userId);
 }
@@ -79,7 +78,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
@@ -96,7 +95,7 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
@@ -111,7 +110,7 @@ ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->AddAppRunningControlRule(callingName, controlRules, userId);
 }
@@ -122,7 +121,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppRunningControlRule(callingName, controlRules, userId);
 }
@@ -132,7 +131,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppRunningControlRule(callingName, userId);
 }
@@ -142,7 +141,7 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(int32_t userId, std:
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppRunningControlRule(callingName, userId, appIds);
 }
@@ -153,7 +152,7 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
         APP_LOGW("calling permission denied");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRuleResult);
 }

@@ -31,6 +31,7 @@ struct ExtensionFormInfo {
     FormWindow window;
     FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
     std::string formConfigAbility;
+    FormType type = FormType::JS;
     bool formVisibleNotify = false;
     bool isDefault = false;
     bool updateEnabled = false;

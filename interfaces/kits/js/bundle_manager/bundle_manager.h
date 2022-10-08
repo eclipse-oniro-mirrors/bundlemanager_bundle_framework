@@ -150,13 +150,14 @@ struct Query {
     std::string interfaceType_;
     int32_t flags_ = 0;
     int32_t userId_ = Constants::UNSPECIFIED_USERID;
-    Query(const std::string &bundleName, const std::string &interfaceType, int32_t flags, int32_t userId)
-        : bundleName_(bundleName), interfaceType_(interfaceType), flags_(flags), userId_(userId) {}
+    napi_env env_;
+    Query(const std::string &bundleName, const std::string &interfaceType,int32_t flags, int32_t userId, napi_env env)
+        : bundleName_(bundleName), interfaceType_(interfaceType), flags_(flags), userId_(userId), env_(env) {}
 
     bool operator==(const Query &query) const
     {
         return bundleName_ == query.bundleName_ && interfaceType_ == query.interfaceType_ &&
-            flags_ == query.flags_ && userId_ == query.userId_;
+            flags_ == query.flags_ && userId_ == query.userId_ && env_ == query.env_;
     }
 };
 
@@ -166,6 +167,14 @@ struct QueryHash  {
         return std::hash<std::string>()(query.bundleName_) ^ std::hash<std::string>()(query.interfaceType_) ^
             std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_);
     }
+};
+
+struct BundleInfosCallbackInfo : public BaseCallbackInfo {
+    explicit BundleInfosCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<BundleInfo> bundleInfos;
 };
 
 struct BundleInfoCallbackInfo : public BaseCallbackInfo {
@@ -194,7 +203,10 @@ napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
 napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
+napi_value GetBundleInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info);
+napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

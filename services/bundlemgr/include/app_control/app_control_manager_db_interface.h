@@ -47,7 +47,7 @@ public:
     virtual ErrCode GetAppRunningControlRule(const std::string &callingName,
         int32_t userId, std::vector<std::string> &appIds) = 0;
     virtual ErrCode GetAppRunningControlRule(const std::string &appId,
-        int32_t userId, AppRunningControlRule &controlRule) = 0;
+        int32_t userId, AppRunningControlRuleResult &controlRuleResult) = 0;
 
     virtual ErrCode SetDisposedStatus(const std::string &callingName,
         const std::string &controlRuleType, const std::string &appId, const Want& want) = 0;

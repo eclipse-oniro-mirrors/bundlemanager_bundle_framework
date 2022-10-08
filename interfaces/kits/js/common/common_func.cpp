@@ -55,6 +55,7 @@ constexpr const char* DESCRIPTION = "description";
 constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON = "icon";
 constexpr const char* ICON_ID = "iconId";
+constexpr const char* APPLICATION_INFO = "applicationInfo";
 }
 using Want = OHOS::AAFwk::Want;
 
@@ -423,6 +424,34 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
     return true;
 }
 
+void CommonFunc::ConvertElementName(napi_env env, napi_value elementInfo,
+    const OHOS::AppExecFwk::ElementName &elementName)
+{
+    // wrap deviceId
+    napi_value deviceId;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetDeviceID().c_str(), NAPI_AUTO_LENGTH, &deviceId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "deviceId", deviceId));
+
+    // wrap bundleName
+    napi_value bundleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetBundleName().c_str(), NAPI_AUTO_LENGTH, &bundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "bundleName", bundleName));
+
+    // wrap moduleName
+    napi_value moduleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetModuleName().c_str(), NAPI_AUTO_LENGTH, &moduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "moduleName", moduleName));
+
+    // wrap abilityName
+    napi_value abilityName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetAbilityName().c_str(), NAPI_AUTO_LENGTH, &abilityName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "abilityName", abilityName));
+}
+
 ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
 {
     switch (nativeErrCode) {
@@ -440,6 +469,8 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
             return ERROR_PERMISSION_DENIED_ERROR;
         case ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED:
             return ERROR_PERMISSION_NOT_EXIST;
+        case ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST:
+            return ERROR_DEVICE_ID_NOT_EXIST;
         default:
             return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
@@ -665,7 +696,16 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDeviceTypes, idx, nDeviceType));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "deviceTypes", nDeviceTypes));
-    // ConvertApplicationInfo
+
+    napi_value nApplicationInfo;
+    if (!abilityInfo.applicationInfo.name.empty()) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nApplicationInfo));
+        ConvertApplicationInfo(env, nApplicationInfo, abilityInfo.applicationInfo);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nApplicationInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, APPLICATION_INFO, nApplicationInfo));
+
     napi_value nMetadata;
     size = abilityInfo.metadata.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
@@ -768,7 +808,16 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, i, permission));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, PERMISSIONS, nPermissions));
-    // ConvertApplicationInfo
+
+    napi_value nApplicationInfo;
+    if (!extensionInfo.applicationInfo.name.empty()) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nApplicationInfo));
+        ConvertApplicationInfo(env, nApplicationInfo, extensionInfo.applicationInfo);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nApplicationInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, APPLICATION_INFO, nApplicationInfo));
+
     napi_value nMetadata;
     size = extensionInfo.metadata.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
@@ -1224,5 +1273,158 @@ void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundle
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, userId, &nUserId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "userId", nUserId));
 }
+
+void CommonFunc::ConvertLauncherAbilityInfo(napi_env env,
+    const LauncherAbilityInfo &launcherAbility, napi_value value)
+{
+    // wrap labelId
+    napi_value labelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbility.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", labelId));
+
+    // wrap iconId
+    napi_value iconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbility.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", iconId));
+
+    // wrap userId
+    napi_value userId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbility.userId, &userId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "userId", userId));
+
+    // wrap installTime
+    napi_value installTime;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, launcherAbility.installTime, &installTime));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "installTime", installTime));
+
+    // wrap elementName
+    napi_value elementName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &elementName));
+    ConvertElementName(env, elementName, launcherAbility.elementName);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "elementName", elementName));
+
+    // wrap application
+    napi_value appInfo;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &appInfo));
+    ConvertApplicationInfo(env, appInfo, launcherAbility.applicationInfo);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "applicationInfo", appInfo));
+}
+
+void CommonFunc::ConvertLauncherAbilityInfos(napi_env env,
+    const std::vector<LauncherAbilityInfo> &launcherAbilities, napi_value value)
+{
+    if (launcherAbilities.empty()) {
+        return;
+    }
+    size_t index = 0;
+    for (const auto &launcherAbility : launcherAbilities) {
+        napi_value launcherAbilityObj = nullptr;
+        napi_create_object(env, &launcherAbilityObj);
+        ConvertLauncherAbilityInfo(env, launcherAbility, launcherAbilityObj);
+        napi_set_element(env, value, index, launcherAbilityObj);
+        ++index;
+    }
+}
+
+void CommonFunc::ConvertShortcutIntent(napi_env env,
+    const OHOS::AppExecFwk::ShortcutIntent &shortcutIntent, napi_value value)
+{
+    napi_value nTargetBundle;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.targetBundle.c_str(), NAPI_AUTO_LENGTH, &nTargetBundle));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "targetBundle", nTargetBundle));
+
+    napi_value nTargetModule;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.targetModule.c_str(), NAPI_AUTO_LENGTH, &nTargetModule));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "targetModule", nTargetModule));
+
+    napi_value nTargetClass;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "targetClass", nTargetClass));
+}
+
+void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value)
+{
+    // wrap id
+    napi_value shortId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, shortcutInfo.id.c_str(), NAPI_AUTO_LENGTH, &shortId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "id", shortId));
+    // wrap bundleName
+    napi_value bundleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &bundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "bundleName", bundleName));
+    // wrap moduleName
+    napi_value moduleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &moduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "moduleName", moduleName));
+    // wrap hostAbility
+    napi_value hostAbility;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutInfo.hostAbility.c_str(), NAPI_AUTO_LENGTH, &hostAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "hostAbility", hostAbility));
+    // wrap icon
+    napi_value icon;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, shortcutInfo.icon.c_str(), NAPI_AUTO_LENGTH, &icon));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "icon", icon));
+    // wrap iconId
+    napi_value iconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", iconId));
+    // wrap label
+    napi_value label;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, shortcutInfo.label.c_str(), NAPI_AUTO_LENGTH, &label));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "label", label));
+    // wrap labelId
+    napi_value labelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", labelId));
+    // wrap disableMessage
+    napi_value disableMessage;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutInfo.disableMessage.c_str(), NAPI_AUTO_LENGTH, &disableMessage));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "disableMessage", disableMessage));
+    // wrap wants
+    napi_value intents;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &intents));
+    for (size_t index = 0; index < shortcutInfo.intents.size(); ++index) {
+        napi_value intent;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &intent));
+        ConvertShortcutIntent(env, shortcutInfo.intents[index], intent);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, intents, index, intent));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "wants", intents));
+    // wrap isStatic
+    napi_value isStatic;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, shortcutInfo.isStatic, &isStatic));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isStatic", isStatic));
+    // wrap isHomeShortcut
+    napi_value isHomeShortcut;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, shortcutInfo.isHomeShortcut, &isHomeShortcut));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isHomeShortcut", isHomeShortcut));
+    // wrap isEnabled
+    napi_value isEnabled;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, shortcutInfo.isEnables, &isEnabled));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isEnabled", isEnabled));
+}
+
+void CommonFunc::ConvertShortCutInfos(napi_env env, std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
+{
+    if (shortcutInfos.empty()) {
+        return;
+    }
+    size_t index = 0;
+    for (const auto &shortcutInfo : shortcutInfos) {
+        napi_value shortcutObj = nullptr;
+        napi_create_object(env, &shortcutObj);
+        ConvertShortCutInfo(env, shortcutInfo, shortcutObj);
+        napi_set_element(env, value, index, shortcutObj);
+        ++index;
+    }
+}
+
 }
 }

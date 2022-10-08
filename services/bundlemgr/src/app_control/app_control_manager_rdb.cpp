@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -26,17 +27,16 @@ namespace {
 
     const int32_t APP_ID_INDEX = 4;
     const int32_t CONTROL_MESSAGE_INDEX = 5;
-    const int32_t CONTROL_RULE_TYPE_INDEX = 6;
-    const int32_t DISPOSED_STATUS_INDEX = 7;
+    const int32_t DISPOSED_STATUS_INDEX = 6;
     // app control table key
     const std::string CALLING_NAME = "CALLING_NAME";
     const std::string APP_CONTROL_LIST = "APP_CONTROL_LIST";
     const std::string USER_ID = "USER_ID";
     const std::string APP_ID = "APP_ID";
     const std::string CONTROL_MESSAGE = "CONTROL_MESSAGE";
-    const std::string CONTROL_RULE_TYPE = "CONTROL_RULE_TYPE";
     const std::string DISPOSED_STATUS = "DISPOSED_STATUS";
     const std::string PRIORITY = "PRIORITY";
+    const std::string TIME_STAMP = "TIME_STAMP";
 
     enum class PRIORITY {
         EDM = 100,
@@ -54,7 +54,7 @@ AppControlManagerRdb::AppControlManagerRdb()
         + APP_CONTROL_RDB_TABLE_NAME
         + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, CALLING_NAME TEXT NOT NULL, "
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
-        + "CONTROL_RULE_TYPE INTEGER, DISPOSED_STATUS TEXT, PRIORITY INTEGER);");
+        + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER);");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
 }
 
@@ -66,18 +66,19 @@ AppControlManagerRdb::~AppControlManagerRdb()
 ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callingName,
     const std::vector<std::string> &appIds, const std::string &controlRuleType, int32_t userId)
 {
-    ErrCode code = DeleteAppInstallControlRule(callingName, controlRuleType, userId);
-    if (code != ERR_OK) {
-        APP_LOGW("DeleteAppInstallControlRule failed.");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-    }
+    int64_t timeStamp = BundleUtil::GetCurrentTime();
     std::vector<NativeRdb::ValuesBucket> valuesBuckets;
     for (auto appId : appIds) {
+        ErrCode result = DeleteOldControlRule(callingName, controlRuleType, appId, userId);
+        if (result != ERR_OK) {
+            return result;
+        }
         NativeRdb::ValuesBucket valuesBucket;
         valuesBucket.PutString(CALLING_NAME, callingName);
         valuesBucket.PutString(APP_CONTROL_LIST, controlRuleType);
         valuesBucket.PutInt(USER_ID, static_cast<int>(userId));
         valuesBucket.PutString(APP_ID, appId);
+        valuesBucket.PutInt(TIME_STAMP, timeStamp);
         valuesBuckets.emplace_back(valuesBucket);
     }
     int64_t insertNum = 0;
@@ -96,7 +97,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
 ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &callingName,
     const std::vector<std::string> &appIds, int32_t userId)
 {
-    for (auto appId : appIds) {
+    for (const auto &appId : appIds) {
         NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
         absRdbPredicates.EqualTo(CALLING_NAME, callingName);
         absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
@@ -170,27 +171,22 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
 ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callingName,
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    ErrCode code = DeleteAppRunningControlRule(callingName, userId);
-    if (code != ERR_OK) {
-        APP_LOGW("DeleteAppRunningControlRule failed.");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-    }
-
+    int64_t timeStamp = BundleUtil::GetCurrentTime();
     std::vector<NativeRdb::ValuesBucket> valuesBuckets;
     for (auto &controlRule : controlRules) {
+        ErrCode result = DeleteOldControlRule(callingName, RUNNING_CONTROL, controlRule.appId, userId);
+        if (result != ERR_OK) {
+            return result;
+        }
         NativeRdb::ValuesBucket valuesBucket;
         valuesBucket.PutString(CALLING_NAME, callingName);
         valuesBucket.PutString(APP_CONTROL_LIST, RUNNING_CONTROL);
         valuesBucket.PutInt(USER_ID, static_cast<int>(userId));
         valuesBucket.PutString(APP_ID, controlRule.appId);
-        valuesBucket.PutString(CONTROL_MESSAGE, controlRule.ruleParam.controlMessage);
-        valuesBucket.PutInt(CONTROL_RULE_TYPE, static_cast<int>(controlRule.ruleType));
-        if (controlRule.ruleParam.controlWant != nullptr) {
-            valuesBucket.PutString(DISPOSED_STATUS, controlRule.ruleParam.controlWant->ToString());
-        } else {
-            valuesBucket.PutString(DISPOSED_STATUS, "default");
-        }
+        valuesBucket.PutString(CONTROL_MESSAGE, controlRule.controlMessage);
+        valuesBucket.PutString(DISPOSED_STATUS, "default");
         valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::EDM));
+        valuesBucket.PutInt(TIME_STAMP, timeStamp);
         valuesBuckets.emplace_back(valuesBucket);
     }
     int64_t insertNum = 0;
@@ -279,7 +275,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
 }
 
 ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
-    int32_t userId, AppRunningControlRule &controlRule)
+    int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_ID, appId);
@@ -306,16 +302,9 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    AppRunningControlRuleParam ruleParam;
-    ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, ruleParam.controlMessage);
+    ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, controlRuleResult.controlMessage);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GetString appId failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-    }
-    int32_t ruleType = static_cast<int>(AppRunningControlRuleType::UNSPECIFIED);
-    ret = absSharedResultSet->GetInt(CONTROL_RULE_TYPE_INDEX, ruleType);
-    if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GetString ruleType failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     std::string wantString;
@@ -324,10 +313,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         APP_LOGE("GetString controlWant failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    ruleParam.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
-    controlRule.ruleParam = ruleParam;
-    controlRule.ruleType = static_cast<AppRunningControlRuleType>(ruleType);
-    controlRule.appId = appId;
+    controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
     return ERR_OK;
 }
 
@@ -337,15 +323,17 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     APP_LOGD("rdb begin to SetDisposedStatus");
     ErrCode code = DeleteDisposedStatus(callingName, controlRuleType, appId);
     if (code != ERR_OK) {
-        APP_LOGW("DeleteDisposedStatus failed.");
+        APP_LOGE("DeleteDisposedStatus failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
+    int64_t timeStamp = BundleUtil::GetCurrentTime();
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(CALLING_NAME, callingName);
     valuesBucket.PutString(APP_CONTROL_LIST, controlRuleType);
     valuesBucket.PutString(APP_ID, appId);
     valuesBucket.PutString(DISPOSED_STATUS, want.ToString());
     valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::APP_MARKET));
+    valuesBucket.PutInt(TIME_STAMP, timeStamp);
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
         APP_LOGE("SetDisposedStatus callingName:%{public}s controlRuleType:%{public}s appId:%{public}s failed.",
@@ -398,6 +386,23 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     want = *Want::FromString(wantString);
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,
+    const std::string &appId, int32_t userId)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, controlRuleType);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_ID, appId);
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        APP_LOGE("DeleteOldControlRule %{public}s, %{public}s, %{public}s, %{public}d failed.",
+            callingName.c_str(), appId.c_str(), controlRuleType.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     return ERR_OK;
 }
 }

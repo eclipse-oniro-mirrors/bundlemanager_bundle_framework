@@ -61,6 +61,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getProfileByAbility", GetProfileByAbility),
         DECLARE_NAPI_FUNCTION("getProfileByExtensionAbility", GetProfileByExAbility),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
+        DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfo", GetBundleInfo),
         DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityFlag", extensionFlag),
@@ -69,6 +70,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllApplicationInfo", GetApplicationInfos),
         DECLARE_NAPI_PROPERTY("ApplicationFlag", applicationFlag),
         DECLARE_NAPI_PROPERTY("BundleFlag", bundleFlag),
+        DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
+        DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

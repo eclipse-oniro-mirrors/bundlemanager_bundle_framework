@@ -172,6 +172,14 @@ public:
     virtual bool GetBundleInfos(int32_t flags,
         std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
+     * @brief Obtains BundleInfo of all bundles available in the system.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfos is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
+    /**
      * @brief Obtains the application UID based on the given bundle name and user ID.
      * @param bundleName Indicates the bundle name of the application.
      * @param userId Indicates the user ID.
@@ -566,6 +574,15 @@ public:
      * @return Returns true if GetShortcutInfos successfully; returns false otherwise.
      */
     virtual bool GetShortcutInfos(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos) override;
+
+    /**
+     * @brief Obtains the ShortcutInfo objects provided by a specified application on the device.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @return Returns errCode of result.
+     */
+    virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
+        std::vector<ShortcutInfo> &shortcutInfos) override;
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
@@ -737,11 +754,11 @@ public:
         HapModuleInfo &info) override;
 
     virtual ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len) override;
+        const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) override;
 
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
-    virtual std::string GetStringById(
-        const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId) override;
+    virtual std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
+        uint32_t resId, int32_t userId, const std::string &localeInfo) override;
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
     virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;

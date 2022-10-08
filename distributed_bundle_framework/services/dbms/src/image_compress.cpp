@@ -174,11 +174,11 @@ bool ImageCompress::CompressImageByContent(const std::unique_ptr<uint8_t[]> &fil
     APP_LOGD("compressedSize is %{public}d", static_cast<int32_t>(compressedSize));
     uint8_t *result = compressedData.get();
     if (memcpy_s(result, compressedSize, resultBuffer, compressedSize) != EOK) {
-        delete resultBuffer;
+        free(resultBuffer);
         APP_LOGE("memcpy_s to compressedData failed!");
         return false;
     }
-    delete resultBuffer;
+    free(resultBuffer);
     return true;
 }
 }

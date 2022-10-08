@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-EventListener::EventListener(napi_env env, std::string type) : env_(env), type_(type) {}
+EventListener::EventListener(napi_env env, const std::string& type) : env_(env), type_(type) {}
 
 EventListener::~EventListener() {}
 
@@ -87,7 +87,7 @@ void EventListener::Emit(std::string &bundleName, int32_t userId)
     }
 }
 
-void EventListener::EmitOnUV(std::string &bundleName, int32_t userId, napi_ref callbackRef)
+void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi_ref callbackRef)
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -129,16 +129,12 @@ void EventListener::EmitOnUV(std::string &bundleName, int32_t userId, napi_ref c
             }
         });
     if (ret != 0) {
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-        }
-        if (work != nullptr) {
-            delete work;
-        }
+        delete asyncCallbackInfo;
+        delete work;
     }
 }
 
-bool EventListener::HasSameEnv(napi_env env)
+bool EventListener::HasSameEnv(napi_env env) const
 {
     return env_ == env;
 }

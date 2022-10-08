@@ -171,7 +171,8 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_001, Function | SmallTest |
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    std::string label = dataMgr->GetStringById(BUNDLE_NAME, MODULE_NAME, APP_LABEL_ID, USER_ID);
+    std::string label = dataMgr->GetStringById(
+        BUNDLE_NAME, MODULE_NAME, APP_LABEL_ID, USER_ID, Constants::EMPTY_STRING);
     EXPECT_EQ(label, APP_LABEL);
 }
 
@@ -186,10 +187,12 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_002, Function | SmallTest |
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    std::string label = dataMgr->GetStringById(BUNDLE_NAME, MODULE_NAME, ABILITY_LABEL_ID, USER_ID);
+    std::string label = dataMgr->GetStringById(
+        BUNDLE_NAME, MODULE_NAME, ABILITY_LABEL_ID, USER_ID, Constants::EMPTY_STRING);
     EXPECT_EQ(label, ABILITY_LABEL);
 
-    std::string description = dataMgr->GetStringById(BUNDLE_NAME, MODULE_NAME, DESCRIPTION_ID, USER_ID);
+    std::string description = dataMgr->GetStringById(
+        BUNDLE_NAME, MODULE_NAME, DESCRIPTION_ID, USER_ID, Constants::EMPTY_STRING);
     EXPECT_EQ(description, DESCRIPTION);
 }
 
@@ -205,7 +208,8 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_003, Function | SmallTest |
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
-    std::string description = dataMgr->GetStringById("", MODULE_NAME, ABILITY_LABEL_ID, USER_ID);
+    std::string description = dataMgr->GetStringById(
+        "", MODULE_NAME, ABILITY_LABEL_ID, USER_ID, Constants::EMPTY_STRING);
     EXPECT_EQ(description, "");
 }
 
@@ -221,7 +225,8 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_004, Function | SmallTest |
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
-    std::string abilityLabel = dataMgr->GetStringById(BUNDLE_NAME, "", ABILITY_LABEL_ID, USER_ID);
+    std::string abilityLabel = dataMgr->GetStringById(
+        BUNDLE_NAME, "", ABILITY_LABEL_ID, USER_ID, Constants::EMPTY_STRING);
     EXPECT_EQ(abilityLabel, ABILITY_LABEL);
 }
 
@@ -237,7 +242,8 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_005, Function | SmallTest |
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
-    std::string description = dataMgr->GetStringById(BUNDLE_NAME, MODULE_NAME, 0, USER_ID);
+    std::string description = dataMgr->GetStringById(
+        BUNDLE_NAME, MODULE_NAME, 0, USER_ID, Constants::EMPTY_STRING);
     EXPECT_EQ(description, "");
 }
 
@@ -253,7 +259,8 @@ HWTEST_F(BmsBundleResourceManagerTest, GetStringById_006, Function | SmallTest |
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
-    std::string description = dataMgr->GetStringById(BUNDLE_NAME, MODULE_NAME, ABILITY_LABEL_ID, 0);
+    std::string description = dataMgr->GetStringById(
+        BUNDLE_NAME, MODULE_NAME, ABILITY_LABEL_ID, 0, Constants::EMPTY_STRING);
     EXPECT_EQ(description, "");
 }
 

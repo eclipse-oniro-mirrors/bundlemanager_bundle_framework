@@ -44,7 +44,7 @@ public:
     virtual ErrCode GetAppRunningControlRule(const std::string &callingName,
         int32_t userId, std::vector<std::string> &appIds) override;
     virtual ErrCode GetAppRunningControlRule(const std::string &appId,
-        int32_t userId, AppRunningControlRule &controlRule) override;
+        int32_t userId, AppRunningControlRuleResult &controlRuleResult) override;
 
     virtual ErrCode SetDisposedStatus(const std::string &callingName, const std::string &controlRuleType,
         const std::string &appId, const Want& want) override;
@@ -53,6 +53,8 @@ public:
     virtual ErrCode GetDisposedStatus(const std::string &callingNmae, const std::string &controlRuleType,
         const std::string &appId, Want& want) override;
 private:
+    ErrCode DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,
+        const std::string &appId, int32_t userId);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
 } // namespace AppExecFwk

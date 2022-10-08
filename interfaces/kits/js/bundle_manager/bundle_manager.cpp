@@ -36,6 +36,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string GET_APPLICATION_INFO = "getApplicationInfo";
+const std::string GET_BUNDLE_INFO = "getBundleInfo";
 }
 using namespace OHOS::AAFwk;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
@@ -71,25 +72,27 @@ void GetBundleArchiveInfoComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<GetBundleArchiveInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[2] = {0};
+    napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        // to do : convert bundleInfo
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertBundleInfo(env,
+            asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[ARGS_POS_ZERO] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
         } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
         }
     } else {
         napi_value callback = nullptr;
         napi_value placeHolder = nullptr;
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
         NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
     }
 }
 
@@ -120,8 +123,10 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
             CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
@@ -338,8 +343,10 @@ napi_value GetBundleNameByUid(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
             CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->uid);
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
             break;
         } else {
             APP_LOGE("param check error");
@@ -383,7 +390,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         } else if (i == ARGS_SIZE_ONE) {
             if (valueType == napi_number) {
                 if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
-                    APP_LOGE("Falgs %{public}d invalid!", asyncCallbackInfo->flags);
+                    APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 }
                 if (args.GetArgc() == ARGS_SIZE_TWO) {
@@ -448,7 +455,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
-                APP_LOGE("Falgs %{public}d invalid!", asyncCallbackInfo->flags);
+                APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
             }
             if (args.GetArgc() == ARGS_SIZE_ONE) {
@@ -458,7 +465,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
             if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-
+                return nullptr;
             } else if (valueType == napi_function) {
                 asyncCallbackInfo->userId = defaultUserId;
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -685,8 +692,11 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_THREE) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_THREE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+            break;
         } else {
             APP_LOGE("param check error");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
@@ -807,8 +817,11 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_FOUR) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_FOUR) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+            break;
         } else {
             APP_LOGE("param check error");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
@@ -1637,7 +1650,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    ErrCode result = ERR_OK;
+    ErrCode result;
     Want want;
     ElementName elementName("", bundleName, info.abilityName, info.moduleName);
     want.SetElement(elementName);
@@ -2057,7 +2070,7 @@ static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Qu
     cache[query] = cacheApplicationInfo;
 }
 
-napi_value GetApplicationInfoSyncV9(napi_env env, napi_callback_info info)
+napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetApplicationInfoSync call");
     NapiArg args(env, info);
@@ -2072,25 +2085,23 @@ napi_value GetApplicationInfoSyncV9(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == 0) && (valueType == napi_string)) {
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], bundleName)) {
                 APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == ARGS_SIZE_ONE) && valueType == napi_number) {
+        } else if ((i == ARGS_POS_ONE) && valueType == napi_number) {
             if (!CommonFunc::ParseInt(env, args[i], flags)) {
                 APP_LOGE("parseInt failed");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if (i == PARAM2) {
-            if (valueType == napi_number) {
-                if (!CommonFunc::ParseInt(env, args[i], userId)) {
-                    APP_LOGE("parseInt failed");
-                    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                    return nullptr;
-                }
+        } else if (i == ARGS_POS_TWO) {
+            if ((valueType == napi_number) && (!CommonFunc::ParseInt(env, args[i], userId))) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -2102,7 +2113,7 @@ napi_value GetApplicationInfoSyncV9(napi_env env, napi_callback_info info)
         userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     napi_value nApplicationInfo = nullptr;
-    auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId));
+    auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId, env));
     if (item != cache.end()) {
         APP_LOGD("getApplicationInfo param from cache");
         NAPI_CALL(env,
@@ -2117,19 +2128,19 @@ napi_value GetApplicationInfoSyncV9(napi_env env, napi_callback_info info)
     }
     AppExecFwk::ApplicationInfo appInfo;
     ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, flags, userId, appInfo);
-    if (!ret) {
+    if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfo failed");
         BusinessError::ThrowError(env, CommonFunc::ConvertErrCode(ret));
         return nullptr;
     }
     NAPI_CALL(env, napi_create_object(env, &nApplicationInfo));
     CommonFunc::ConvertApplicationInfo(env, nApplicationInfo, appInfo);
-    Query query = Query(bundleName, GET_APPLICATION_INFO, flags, userId);
+    Query query = Query(bundleName, GET_APPLICATION_INFO, flags, userId, env);
     CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, nApplicationInfo);
     return nApplicationInfo;
 }
 
-napi_value GetBundleInfoSyncV9(napi_env env, napi_callback_info info)
+napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetBundleInfoSync call");
     NapiArg args(env, info);
@@ -2144,25 +2155,23 @@ napi_value GetBundleInfoSyncV9(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, args[i], &valueType));
-        if ((i == PARAM0) && (valueType == napi_string)) {
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], bundleName)) {
                 APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if ((i == PARAM1) && valueType == napi_number) {
+        } else if ((i == ARGS_POS_ONE) && valueType == napi_number) {
             if (!CommonFunc::ParseInt(env, args[i], flags)) {
                 APP_LOGE("parseInt failed");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
-        } else if (i == PARAM2) {
-            if (valueType == napi_number) {
-                if (!CommonFunc::ParseInt(env, args[i], userId)) {
-                    APP_LOGE("parseInt failed");
-                    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                    return nullptr;
-                }
+        } else if (i == ARGS_POS_TWO) {
+            if ((valueType == napi_number) && (!CommonFunc::ParseInt(env, args[i], userId))) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -2174,7 +2183,7 @@ napi_value GetBundleInfoSyncV9(napi_env env, napi_callback_info info)
         userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     napi_value nBundleInfo = nullptr;
-    auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, userId));
+    auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, userId, env));
     if (item != cache.end()) {
         APP_LOGD("GetBundleInfo param from cache");
         NAPI_CALL(env,
@@ -2195,10 +2204,22 @@ napi_value GetBundleInfoSyncV9(napi_env env, napi_callback_info info)
         return nullptr;
     }
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
-    CommonFunc::ConvertBundleInfo(env, nBundleInfo, bundleInfo);
-    Query query = Query(bundleName, GET_BUNDLE_INFO, flags, .userId);
+    CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
+    Query query = Query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
     CheckToCache(env, bundleInfo.applicationInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     return nBundleInfo;
+}
+
+static ErrCode InnerGetBundleInfos(int32_t flags,
+    int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetBundleInfosV9(flags, bundleInfos, userId);
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 void CreateBundleFlagObject(napi_env env, napi_value value)
@@ -2268,6 +2289,56 @@ static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
     }
     ErrCode ret = iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
     return CommonFunc::ConvertErrCode(ret);
+}
+
+static void ProcessBundleInfos(
+    napi_env env, napi_value result, const std::vector<BundleInfo> &bundleInfos, int32_t flags)
+{
+    if (bundleInfos.size() == 0) {
+        APP_LOGD("bundleInfos is null");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : bundleInfos) {
+        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.name.c_str());
+        napi_value objBundleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
+        CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index, objBundleInfo));
+        index++;
+    }
+}
+
+void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
+{
+    BundleInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<BundleInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<BundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+        ProcessBundleInfos(env, result[1], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->flags);
+    } else {
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
 }
 
 void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
@@ -2341,8 +2412,9 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_SIZE_ONE && valueType == napi_number) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
-                APP_LOGE("Falgs %{public}d invalid!", asyncCallbackInfo->flags);
+                APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
             if (args.GetArgc() == ARGS_SIZE_TWO) {
                 asyncCallbackInfo->userId = defaultUserId;
@@ -2370,6 +2442,75 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "GetBundleInfo", GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfo done.");
+    return promise;
+}
+
+void GetBundleInfosExec(napi_env env, void *data)
+{
+    BundleInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<BundleInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetBundleInfos(asyncCallbackInfo->flags,
+        asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
+}
+
+napi_value GetBundleInfos(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetBundleInfos called");
+    NapiArg args(env, info);
+    BundleInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfosCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<BundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    int32_t defaultUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+            if (args.GetArgc() == ARGS_SIZE_ONE) {
+                asyncCallbackInfo->userId = defaultUserId;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            } else if (valueType == napi_function) {
+                asyncCallbackInfo->userId = defaultUserId;
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            } else {
+                APP_LOGE("param check error");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            break;
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfosCallbackInfo>(
+        env, asyncCallbackInfo, "GetBundleInfos", GetBundleInfosExec, GetBundleInfosComplete);
+    callbackPtr.release();
+    APP_LOGD("call NAPI_GetBundleInfos done.");
     return promise;
 }
 }

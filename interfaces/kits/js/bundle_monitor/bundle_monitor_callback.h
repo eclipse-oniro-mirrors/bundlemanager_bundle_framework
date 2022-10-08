@@ -35,13 +35,13 @@ class BundleMonitorCallback : public EventFwk::CommonEventSubscriber {
 public:
     explicit BundleMonitorCallback(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~BundleMonitorCallback();
-    void BundleMonitorOn(napi_env env, napi_value handler, std::string &type);
-    void BundleMonitorOff(napi_env env, napi_value handler, std::string &type);
-    void BundleMonitorOff(napi_env env, std::string &type);
+    void BundleMonitorOn(napi_env env, napi_value handler, const std::string &type);
+    void BundleMonitorOff(napi_env env, napi_value handler, const std::string &type);
+    void BundleMonitorOff(napi_env env, const std::string &type);
     void OnReceiveEvent(const EventFwk::CommonEventData &eventData);
 private:
     void EventListenerAdd(napi_env env, napi_value handler,
-        std::vector<std::shared_ptr<EventListener>> &eventListeners, std::string &type);
+        std::vector<std::shared_ptr<EventListener>> &eventListeners, const std::string &type);
     void EventListenerDelete(napi_env env, napi_value handler,
         std::vector<std::shared_ptr<EventListener>> &eventListeners);
     void EventListenerDeleteAll(napi_env env, std::vector<std::shared_ptr<EventListener>> &eventListeners);

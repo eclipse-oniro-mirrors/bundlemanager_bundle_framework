@@ -38,6 +38,7 @@
             }
         ],
         "deviceType": [
+            "default",
             "tablet"
         ],
         "mainAbility": "com.example.l1jsdemo.MainAbility",

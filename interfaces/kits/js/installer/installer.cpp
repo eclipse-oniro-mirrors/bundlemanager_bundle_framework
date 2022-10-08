@@ -96,7 +96,7 @@ AsyncGetBundleInstallerCallbackInfo::~AsyncGetBundleInstallerCallbackInfo()
 
 void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
 {
-    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo = (AsyncGetBundleInstallerCallbackInfo *)data;
+    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
 
     napi_value m_classBundleInstaller = nullptr;
@@ -533,7 +533,7 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
 
 void InstallExecuter(napi_env env, void *data)
 {
-    AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+    AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is nullptr");
         return;
@@ -580,7 +580,7 @@ void InstallExecuter(napi_env env, void *data)
 
 void OperationCompleted(napi_env env, napi_status status, void *data)
 {
-    AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+    AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[SECOND_PARAM]));
@@ -676,7 +676,7 @@ napi_value Install(napi_env env, napi_callback_info info)
 
 void UninstallOrRecoverExecuter(napi_env env, void *data)
 {
-    AsyncInstallCallbackInfo *asyncCallbackInfo = (AsyncInstallCallbackInfo *)data;
+    AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is nullptr");
         return;

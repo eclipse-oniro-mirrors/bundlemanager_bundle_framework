@@ -18,6 +18,7 @@
         "package": "com.third.hiworld.example.h2",
         "name": "bmsThirdBundle9",
         "deviceType": [
+            "default",
             "tv",
             "car"
         ],

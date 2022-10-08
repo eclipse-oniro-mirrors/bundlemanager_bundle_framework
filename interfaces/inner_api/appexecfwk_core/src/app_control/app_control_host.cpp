@@ -83,7 +83,7 @@ ErrCode AppControlHost::HandleAddAppInstallControlRule(MessageParcel& data, Mess
     int32_t appIdSize = data.ReadInt32();
     if (appIdSize > AppControlConstants::LIST_MAX_SIZE) {
         APP_LOGE("HandleAddAppInstallControlRule parameter is invalid");
-        return ERR_INVALID_VALUE;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     for (int32_t i = 0; i < appIdSize; i++) {
         appIds.emplace_back(data.ReadString());
@@ -103,7 +103,7 @@ ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, M
     int32_t appIdSize = data.ReadInt32();
     if (appIdSize > AppControlConstants::LIST_MAX_SIZE) {
         APP_LOGE("HandleDeleteAppInstallControlRule parameter is invalid");
-        return ERR_INVALID_VALUE;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     for (int32_t i = 0; i < appIdSize; i++) {
         appIds.emplace_back(data.ReadString());

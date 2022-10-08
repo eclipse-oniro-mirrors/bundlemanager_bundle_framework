@@ -222,7 +222,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0100, Function | SmallTest
     EXPECT_NE(defaultAppProxy, nullptr);
     bool isDefaultApp = false;
     ErrCode result = defaultAppProxy->IsDefaultApplication(DEFAULT_APP_VIDEO, isDefaultApp);
-    EXPECT_NE(result, ERR_OK);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
 }
 
 /**
@@ -554,7 +555,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1500, Function | SmallTest
     for (const std::string& invalidType : invalidTypeSet) {
         bool isDefaultApp = false;
         ErrCode result = defaultAppProxy->IsDefaultApplication(invalidType, isDefaultApp);
-        EXPECT_NE(result, ERR_OK);
+        EXPECT_EQ(result, ERR_OK);
+        EXPECT_FALSE(isDefaultApp);
     }
 }
 

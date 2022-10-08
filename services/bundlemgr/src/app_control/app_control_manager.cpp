@@ -116,19 +116,12 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleInfo bundleInfo;
-    bool ret = dataMgr->GetBundleInfo(bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, bundleInfo, userId);
-    if (!ret) {
-        APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, bundleInfo, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("DataMgr GetBundleInfoV9 failed");
+        return ret;
     }
-    AppRunningControlRule controlRule;
-    ErrCode errCode = appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRule);
-    if (errCode != ERR_OK) {
-        return errCode;
-    }
-    controlRuleResult.ruleParam = controlRule.ruleParam;
-    controlRuleResult.ruleType = controlRule.ruleType;
-    return errCode;
+    return appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRuleResult);
 }
 }
 }

@@ -28,7 +28,6 @@ namespace OHOS {
 namespace AppExecFwk {
 enum class AppInstallControlRuleType {
     DISALLOWED_UNINSTALL = 0,
-    DISALLOWED_INSTALL,
     ALLOWED_INSTALL,
     UNSPECIFIED,
 };

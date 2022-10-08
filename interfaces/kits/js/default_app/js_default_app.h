@@ -20,6 +20,7 @@
 #include "bundle_info.h"
 #include "want.h"
 #endif
+#include "base_cb_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -27,21 +28,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-struct DefaultAppInfo {
-    explicit DefaultAppInfo(napi_env napiEnv);
-    ~DefaultAppInfo();
+struct DefaultAppCallbackInfo : public BaseCallbackInfo {
+    explicit DefaultAppCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
     int32_t userId = 0;
     std::string type;
     OHOS::AAFwk::Want want;
     BundleInfo bundleInfo;
-    bool result = false;
-    int32_t errCode = 0;
-    std::string errMsg;
-    napi_env env = nullptr;
-    napi_async_work asyncWork = nullptr;
-    napi_deferred deferred = nullptr;
-    napi_ref callback = nullptr;
+    bool isDefaultApp = false;
 };
 #endif
 

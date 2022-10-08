@@ -127,6 +127,13 @@ private:
      */
     ErrCode HandleGetBundleInfosWithIntFlags(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetBundleInfo function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetBundleNameForUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -465,6 +472,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetShortcutInfos(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the HandleGetShortcutInfo function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns err_code of result.
+     */
+    ErrCode HandleGetShortcutInfoV9(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleGetAllCommonEventInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "appexecfwk_errors.h"
 #include "bundle_mgr_interface.h"
 #include "securec.h"
 #include "system_ability_definition.h"
@@ -107,6 +108,34 @@ public:
      * @return Returns true if the function is successfully called; returns false otherwise.
      */
     virtual bool GetAllLauncherAbilityInfos(int32_t userId, std::vector<LauncherAbilityInfo> &launcherAbilityInfos);
+    /**
+     * @brief Obtains information about the launcher ability of input bundleName and userId.
+     * @param bundleName Indicates the bundleName of the application.
+     * @param userId Indicates the id for the user.
+     * @param launcherAbilityInfos Indicates the obtained vector of the input bundle.
+     * @return Returns ERR code of the result.
+     */
+    ErrCode GetLauncherAbilityByBundleName(const std::string &bundleName, const int32_t userId,
+        std::vector<LauncherAbilityInfo> &launcherAbilityInfos);
+    /**
+     * @brief Obtains information about the launcher ability of input bundleName and userId.
+     * @param userId Indicates the id for the user.
+     * @param launcherAbilityInfos Indicates the obtained vector of all launcher bundle.
+     * @return Returns ERR code of the result.
+     */
+    ErrCode GetAllLauncherAbility(const int32_t userId, std::vector<LauncherAbilityInfo> &launcherAbilityInfos);
+    /**
+     * @brief Obtains information about the shortcuts of the application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param launcherShortcutInfo List of LauncherShortcutInfo objects if obtained.
+     * @return Returns err code of result.
+     */
+    ErrCode GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos);
+
+private:
+    void InitWant(Want &want, const std::string &bundleName);
+    void ConvertAbilityToLauncherAbility(const AbilityInfo &ability, LauncherAbilityInfo &launcherAbility,
+        const BundleInfo &bundleInfo, const int32_t userId);
 
 private:
     void init();

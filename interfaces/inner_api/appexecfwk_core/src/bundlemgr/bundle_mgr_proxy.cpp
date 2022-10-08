@@ -15,6 +15,7 @@
 
 #include "bundle_mgr_proxy.h"
 
+#include <numeric>
 #include <unistd.h>
 
 #include "ipc_types.h"
@@ -395,7 +396,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -427,7 +428,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -520,6 +521,42 @@ bool BundleMgrProxy::GetBundleInfos(
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get bundle infos");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host returns error, error code: %{public}d.", res);
+        return res;
+    }
+
+    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
+        APP_LOGE("failed to GetBundleInfosV9 from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
@@ -1674,9 +1711,7 @@ bool BundleMgrProxy::DumpInfos(
         APP_LOGE("fail to dump from reply");
         return false;
     }
-    for (auto &dumpinfo : dumpInfos) {
-        result += dumpinfo;
-    }
+    result = std::accumulate(dumpInfos.begin(), dumpInfos.end(), result);
     return true;
 }
 
@@ -1685,9 +1720,13 @@ ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const s
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to IsModuleRemovable of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || moduleName.empty()) {
-        APP_LOGE("fail to IsModuleRemovable due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsModuleRemovable due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("fail to IsModuleRemovable due to moduleName empty");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -1787,9 +1826,13 @@ ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetModuleUpgradeFlag of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || moduleName.empty()) {
-        APP_LOGE("fail to SetModuleUpgradeFlag due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetModuleUpgradeFlag due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("fail to SetModuleUpgradeFlag due to moduleName empty");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -2163,6 +2206,27 @@ bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetShortcutInfos due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetShortcutInfos due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetShortcutInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ShortcutInfo>(IBundleMgr::Message::GET_SHORTCUT_INFO_V9, data, shortcutInfos);
 }
 
 bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vector<CommonEventInfo> &commonEventInfos)
@@ -2801,8 +2865,8 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
     return reply.ReadBool();
 }
 
-std::string BundleMgrProxy::GetStringById(
-    const std::string &bundleName, const std::string &moduleName, uint32_t resId, int32_t userId)
+std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const std::string &moduleName,
+    uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     APP_LOGD("begin to GetStringById.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2821,7 +2885,6 @@ std::string BundleMgrProxy::GetStringById(
         APP_LOGE("fail to GetStringById due to write bundleName fail");
         return Constants::EMPTY_STRING;
     }
-
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetStringById due to write moduleName fail");
         return Constants::EMPTY_STRING;
@@ -2832,6 +2895,10 @@ std::string BundleMgrProxy::GetStringById(
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetStringById due to write userId fail");
+        return Constants::EMPTY_STRING;
+    }
+    if (!data.WriteString(localeInfo)) {
+        APP_LOGE("fail to GetStringById due to write localeInfo fail");
         return Constants::EMPTY_STRING;
     }
     MessageParcel reply;
@@ -3064,7 +3131,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
 }
 
 ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len)
+    const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
@@ -3088,6 +3155,10 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
     }
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetMediaData due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetMediaData due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;

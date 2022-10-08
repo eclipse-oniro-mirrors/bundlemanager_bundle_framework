@@ -147,10 +147,7 @@ void BundleMgrDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteOb
     bundleMgr_ = nullptr;
 };
 
-AsyncWorkData::AsyncWorkData(napi_env napiEnv)
-{
-    env = napiEnv;
-}
+AsyncWorkData::AsyncWorkData(napi_env napiEnv) : env(napiEnv) {}
 
 AsyncWorkData::~AsyncWorkData()
 {
@@ -209,6 +206,27 @@ static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Qu
     napi_ref cacheApplicationInfo = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheApplicationInfo));
     cache[query] = cacheApplicationInfo;
+}
+
+static void HandleAbilityInfoCache(
+    napi_env env, const Query &query, const AsyncAbilityInfoCallbackInfo *info, napi_value jsObject)
+{
+    if (info == nullptr) {
+        return;
+    }
+    ElementName element = info->want.GetElement();
+    if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
+        return;
+    }
+    uint32_t explicitQueryResultLen = 1;
+    if (info->abilityInfos.size() != explicitQueryResultLen ||
+        info->abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
+        return;
+    }
+    napi_ref cacheAbilityInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
+    abilityInfoCache.clear();
+    abilityInfoCache[query] = cacheAbilityInfo;
 }
 
 static bool CheckIsSystemApp()
@@ -1729,11 +1747,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
                     } else {
                         ProcessAbilityInfos(env, result[1], asyncCallbackInfo->abilityInfos);
-                        napi_ref cacheAbilityInfo = nullptr;
-                        NAPI_CALL_RETURN_VOID(env,
-                            napi_create_reference(env, result[1], NAPI_RETURN_ONE, &cacheAbilityInfo));
-                        abilityInfoCache.clear();
-                        abilityInfoCache[query] = cacheAbilityInfo;
+                        HandleAbilityInfoCache(env, query, asyncCallbackInfo, result[1]);
                     }
                 } else {
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
