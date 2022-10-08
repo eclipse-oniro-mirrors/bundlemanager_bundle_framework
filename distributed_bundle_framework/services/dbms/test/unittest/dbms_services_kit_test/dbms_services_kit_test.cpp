@@ -109,7 +109,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0002, Function | SmallTest | L
     if (distributedBms != nullptr) {
         ElementName name;
         RemoteAbilityInfo info;
-        auto ret = distributedBms->GetRemoteAbilityInfo(name,"", info);
+        auto ret = distributedBms->GetRemoteAbilityInfo(name, "", info);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
 }
@@ -128,7 +128,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0003, Function | SmallTest | L
     if (distributedBms != nullptr) {
         ElementName name;
         RemoteAbilityInfo info;
-        auto ret = distributedBms->GetRemoteAbilityInfo(name,"", info);
+        auto ret = distributedBms->GetRemoteAbilityInfo(name, "", info);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
 }
