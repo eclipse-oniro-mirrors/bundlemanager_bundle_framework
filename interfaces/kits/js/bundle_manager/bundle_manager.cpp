@@ -451,6 +451,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Falgs %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
             if (args.GetArgc() == ARGS_SIZE_ONE) {
                 asyncCallbackInfo->userId = defaultUserId;
@@ -459,7 +460,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
             if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-
+                return nullptr;
             } else if (valueType == napi_function) {
                 asyncCallbackInfo->userId = defaultUserId;
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -1675,7 +1676,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
 
         if (!client.GetProfileFromAbility(abilityInfos[0], info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
-            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST;
         }
 
         return ERR_OK;
