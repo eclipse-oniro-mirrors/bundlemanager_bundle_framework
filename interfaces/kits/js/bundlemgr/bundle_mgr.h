@@ -430,7 +430,7 @@ public:
         std::string moduleName = "";
         bool hasModuleName = false;
         OHOS::AppExecFwk::AbilityInfo abilityInfo;
-        bool ret= false;
+        bool ret = false;
     };
 
     struct JsNameForUid {
@@ -473,7 +473,7 @@ private:
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
         
     NativeValue* CreateInnerMetaDatas(
-        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>>  metaData);
+        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> metaData);
     NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> metaData);
     NativeValue* CreateCustomizeMetaData(NativeEngine &engine, const CustomizeData &customizeData);
     NativeValue* CreateInnerMetaData(NativeEngine &engine, const Metadata &metadata);
@@ -495,7 +495,7 @@ private:
     NativeValue* CreateAppInfos(NativeEngine &engine, const std::vector<ApplicationInfo> &appInfos);
     NativeValue* CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos);
     NativeValue* CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo);
-    NativeValue* CreateAbilityInfos(NativeEngine &engine,  const std::vector<AbilityInfo> &abilityInfos);
+    NativeValue* CreateAbilityInfos(NativeEngine &engine, const std::vector<AbilityInfo> &abilityInfos);
     NativeValue* CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos);
     NativeValue* CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo);
     NativeValue* CreateRequestPermissions(NativeEngine &engine,

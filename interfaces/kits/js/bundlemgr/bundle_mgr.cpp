@@ -7647,7 +7647,6 @@ NativeValue* JsBundleMgr::CreateInnerMetaData(NativeEngine &engine, const Metada
     return objContext;
 }
 
-
 NativeValue* JsBundleMgr::CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo)
 {
     APP_LOGD("CreateModuleInfo is called.");
