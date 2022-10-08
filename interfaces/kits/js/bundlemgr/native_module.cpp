@@ -31,7 +31,7 @@ EXTERN_C_START
  */
 static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
 {
-    APP_LOGI("JsBundleMgrInit is called");
+    APP_LOGD("JsBundleMgrInit is called");
     if (engine == nullptr || exports == nullptr) {
         APP_LOGE("Invalid input parameters");
         return nullptr;
@@ -191,7 +191,7 @@ static napi_value Init(napi_env env, napi_value exports)
             properties,
             &m_classBundleInstaller));
     napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
-    APP_LOGI("-----Init end------");
+    APP_LOGI("Init end");
     return reinterpret_cast<napi_value>(JsBundleMgrInit(reinterpret_cast<NativeEngine*>(env),
         reinterpret_cast<NativeValue*>(exports)));
 }

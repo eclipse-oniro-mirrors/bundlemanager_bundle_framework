@@ -7528,7 +7528,7 @@ static bool InnerGetLaunchWantForBundle(const std::string &bundleName, Want &wan
 
     ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want);
     if (ret != ERR_OK) {
-        APP_LOGE("-----launchWantForBundle is not find-----");
+        APP_LOGE("launchWantForBundle is not find");
         return false;
     }
 
@@ -7544,14 +7544,14 @@ static bool InnerGetArchiveInfo(const std::string &hapFilePath, const int32_t fl
     };
     bool ret = iBundleMgr->GetBundleArchiveInfo(hapFilePath, flags, bundleInfo);
     if (!ret) {
-        APP_LOGD("ArchiveInfo not found");
+        APP_LOGE("ArchiveInfo not found");
     }
     return ret;
 }
 
 NativeValue* JsBundleMgr::CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos)
 {
-    APP_LOGI("CreateModuleInfos is called.");
+    APP_LOGD("CreateModuleInfos is called.");
     NativeValue *arrayValue = engine.CreateArray(moduleInfos.size());
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     for (uint32_t i = 0; i < moduleInfos.size(); i++) {
@@ -7563,7 +7563,7 @@ NativeValue* JsBundleMgr::CreateModuleInfos(NativeEngine &engine, const std::vec
 NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
     NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData)
 {
-    APP_LOGI("CreateCustomizeMetaDatas is called.");
+    APP_LOGD("CreateCustomizeMetaDatas is called.");
     NativeValue *objValue = engine.CreateObject();
     NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
     for (const auto &item : metaData) {
@@ -7580,7 +7580,7 @@ NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
 NativeValue* JsBundleMgr::CreateInnerMetaDatas(
     NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> metaData)
 {
-    APP_LOGI("CreateInnerMetaDatas is called.");
+    APP_LOGD("CreateInnerMetaDatas is called.");
     NativeValue *objValue = engine.CreateObject();
     NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
     for (const auto &item : metaData) {
@@ -7596,7 +7596,7 @@ NativeValue* JsBundleMgr::CreateInnerMetaDatas(
 
 NativeValue* JsBundleMgr::CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> metaData)
 {
-    APP_LOGI("CreateInnerMetaDatas is called.");
+    APP_LOGD("CreateInnerMetaDatas is called.");
     NativeValue *arrayValue = engine.CreateArray(metaData.size());
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     for (size_t i = 0; i < metaData.size(); i++) {
@@ -7607,7 +7607,7 @@ NativeValue* JsBundleMgr::CreateInnerMetaDatas(NativeEngine &engine, const std::
 
 NativeValue* JsBundleMgr::CreateCustomizeMetaData(NativeEngine &engine, const CustomizeData &customizeData)
 {
-    APP_LOGI("CreateCustomizeMetaData is called.");
+    APP_LOGD("CreateCustomizeMetaData is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7628,7 +7628,7 @@ NativeValue* JsBundleMgr::CreateCustomizeMetaData(NativeEngine &engine, const Cu
 
 NativeValue* JsBundleMgr::CreateInnerMetaData(NativeEngine &engine, const Metadata &metadata)
 {
-    APP_LOGI("CreateInnerMetaData is called.");
+    APP_LOGD("CreateInnerMetaData is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7650,7 +7650,7 @@ NativeValue* JsBundleMgr::CreateInnerMetaData(NativeEngine &engine, const Metada
 
 NativeValue* JsBundleMgr::CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo)
 {
-    APP_LOGI("CreateModuleInfo is called.");
+    APP_LOGD("CreateModuleInfo is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7671,7 +7671,7 @@ NativeValue* JsBundleMgr::CreateModuleInfo(NativeEngine &engine, const ModuleInf
 
 NativeValue* JsBundleMgr::CreateResource(NativeEngine &engine, const Resource &resource)
 {
-    APP_LOGI("CreateResource is called.");
+    APP_LOGD("CreateResource is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7692,7 +7692,7 @@ NativeValue* JsBundleMgr::CreateResource(NativeEngine &engine, const Resource &r
 
 NativeValue* JsBundleMgr::CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo)
 {
-    APP_LOGI("CreateAppInfo is called.");
+    APP_LOGD("CreateAppInfo is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7741,7 +7741,7 @@ NativeValue* JsBundleMgr::CreateAppInfo(NativeEngine &engine, const ApplicationI
 NativeValue* JsBundleMgr::CreateExtensionInfo(
     NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
-    APP_LOGI("CreateExtensionInfo is called.");
+    APP_LOGD("CreateExtensionInfo is called.");
     NativeValue *arrayValue = engine.CreateArray(extensionInfos.size());
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     for (size_t i = 0; i < extensionInfos.size(); i++) {
@@ -7752,7 +7752,7 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(
 
 NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfos)
 {
-    APP_LOGI("CreateExtensionInfo is called.");
+    APP_LOGD("CreateExtensionInfo is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7786,7 +7786,7 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const Extens
 
 NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityInfo &abilityInfo)
 {
-    APP_LOGI("CreateAbilityInfo is called.");
+    APP_LOGD("CreateAbilityInfo is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7846,7 +7846,7 @@ NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityI
 
 NativeValue* JsBundleMgr::CreateMetaData(NativeEngine &engine, const MetaData &metaData)
 {
-    APP_LOGI("CreateMetaData is called.");
+    APP_LOGD("CreateMetaData is called.");
     NativeValue *arrayValue = engine.CreateArray(metaData.customizeData.size());
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     for (size_t i = 0; i < metaData.customizeData.size(); i++) {
@@ -7858,7 +7858,7 @@ NativeValue* JsBundleMgr::CreateMetaData(NativeEngine &engine, const MetaData &m
 NativeValue* JsBundleMgr::CreateSupportWindowMode(
     NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes)
 {
-    APP_LOGI("CreateSupportWindowMode is called.");
+    APP_LOGD("CreateSupportWindowMode is called.");
     NativeValue *arrayValue = engine.CreateArray(windowModes.size());
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     for (size_t i = 0; i < windowModes.size(); i++) {
@@ -7892,7 +7892,7 @@ NativeValue *JsBundleMgr::CreateRequestPermissions(
 
 NativeValue* JsBundleMgr::CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission)
 {
-    APP_LOGI("called");
+    APP_LOGD("CreateRequestPermission is called");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7915,7 +7915,7 @@ NativeValue* JsBundleMgr::CreateRequestPermission(NativeEngine &engine, const Re
 
 NativeValue* JsBundleMgr::CreateUsedScene(NativeEngine &engine, const RequestPermissionUsedScene &usedScene)
 {
-    APP_LOGI("called");
+    APP_LOGD("CreateUsedScene is called");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7936,7 +7936,7 @@ NativeValue* JsBundleMgr::CreateUsedScene(NativeEngine &engine, const RequestPer
 
 NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo)
 {
-    APP_LOGI("called");
+    APP_LOGD("called");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -7998,7 +7998,7 @@ NativeValue* JsBundleMgr::CreateHapModuleInfos(NativeEngine &engine, const std::
 
 NativeValue* JsBundleMgr::CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo)
 {
-    APP_LOGI("called");
+    APP_LOGD("CreateHapModuleInfo is called");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -8046,7 +8046,7 @@ NativeValue* JsBundleMgr::CreateProfiles(NativeEngine &engine, const std::vector
 
 NativeValue* JsBundleMgr::CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want)
 {
-    APP_LOGI("called");
+    APP_LOGD("CreateWant is called");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
         APP_LOGE("CreateObject failed");
@@ -8157,7 +8157,7 @@ bool JsBundleMgr::UnwarpBundleOptionsParams(
 
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
 {
-    APP_LOGI("JsBundleMgr::Finalizer is called");
+    APP_LOGD("JsBundleMgr::Finalizer is called");
     std::unique_ptr<JsBundleMgr>(static_cast<JsBundleMgr*>(data));
 }
 
@@ -8200,7 +8200,7 @@ NativeValue* JsBundleMgr::IsApplicationEnabled(NativeEngine *engine, NativeCallb
 
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_ONE) {
         APP_LOGE("wrong number of arguments!");
@@ -8238,7 +8238,7 @@ NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCa
 
 NativeValue* JsBundleMgr::OnGetApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     if (info.argc > ARGS_SIZE_FOUR || info.argc < ARGS_SIZE_TWO) {
         APP_LOGE("wrong number of arguments!");
@@ -8292,7 +8292,7 @@ NativeValue* JsBundleMgr::OnGetApplicationInfo(NativeEngine &engine, NativeCallb
 
 NativeValue* JsBundleMgr::OnGetBundleArchiveInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
         APP_LOGE("wrong number of arguments!");
@@ -8336,7 +8336,7 @@ NativeValue* JsBundleMgr::OnGetBundleArchiveInfo(NativeEngine &engine, NativeCal
 
 NativeValue* JsBundleMgr::OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
         APP_LOGE("wrong number of arguments!");
@@ -8374,7 +8374,7 @@ NativeValue* JsBundleMgr::OnGetLaunchWantForBundle(NativeEngine &engine, NativeC
 
 NativeValue* JsBundleMgr::OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGE("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     auto env = reinterpret_cast<napi_env>(&engine);
     auto inputAbilityInfo = reinterpret_cast<napi_value>(info.argv[PARAM0]);
@@ -8412,7 +8412,7 @@ NativeValue* JsBundleMgr::OnIsAbilityEnabled(NativeEngine &engine, NativeCallbac
 
 NativeValue* JsBundleMgr::OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGE("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     std::string bundleName;
     if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
