@@ -1495,6 +1495,60 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
     return find;
 }
 
+ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) const
+{
+    if (userId == Constants::ALL_USERID) {
+        return GetAllBundleInfosV9(flags, bundleInfos);
+    }
+
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    for (const auto &item : bundleInfos_) {
+        InnerBundleInfo innerBundleInfo;
+        if (GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, requestUserId) != ERR_OK) {
+            continue;
+        }
+
+        BundleInfo bundleInfo;
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
+            continue;
+        }
+        bundleInfos.emplace_back(bundleInfo);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        if (info.IsDisabled()) {
+            APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
+            continue;
+        }
+        BundleInfo bundleInfo;
+        info.GetBundleInfoV9(flags, bundleInfo, Constants::ALL_USERID);
+        bundleInfos.emplace_back(bundleInfo);
+    }
+    return ERR_OK;
+}
+
 bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) const
 {
     InnerBundleInfo innerBundleInfo;

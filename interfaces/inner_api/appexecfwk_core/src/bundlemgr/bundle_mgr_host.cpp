@@ -83,6 +83,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFOS, &BundleMgrHost::HandleGetBundleInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS,
         &BundleMgrHost::HandleGetBundleInfosWithIntFlags);
+    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9,
+        &BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_NAME_FOR_UID, &BundleMgrHost::HandleGetBundleNameForUid);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLES_FOR_UID, &BundleMgrHost::HandleGetBundlesForUid);
     funcMap_.emplace(IBundleMgr::Message::GET_NAME_FOR_UID, &BundleMgrHost::HandleGetNameForUid);
@@ -504,6 +506,27 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<BundleInfo> infos;
+    auto ret = GetBundleInfosV9(flags, infos, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
         if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

@@ -523,6 +523,42 @@ bool BundleMgrProxy::GetBundleInfos(
     return true;
 }
 
+ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get bundle infos");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host returns error, error code: %{public}d.", res);
+        return res;
+    }
+
+    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
+        APP_LOGE("failed to GetBundleInfosV9 from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     if (bundleName.empty()) {

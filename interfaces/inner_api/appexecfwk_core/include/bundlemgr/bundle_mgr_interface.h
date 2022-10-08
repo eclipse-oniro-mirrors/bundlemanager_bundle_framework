@@ -224,6 +224,17 @@ public:
         return false;
     }
     /**
+     * @brief Obtains BundleInfo of all bundles available in the system.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfos is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains the application UID based on the given bundle name and user ID.
      * @param bundleName Indicates the bundle name of the application.
      * @param userId Indicates the user ID.
@@ -1180,6 +1191,7 @@ public:
         GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
+        GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9,
         GET_SHORTCUT_INFO_V9,
     };
 };
