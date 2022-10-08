@@ -22,6 +22,7 @@ config("tools_bm_config") {
     "${common_path}/log/include",
     "${kits_path}/js/bundlemgr",
     "//third_party/json/include",
+    "//third_party/jsoncpp/include",
     "//utils/system/safwk/native/include",
   ]
 
@@ -89,6 +90,7 @@ ohos_source_set("tools_test_bm_source_set") {
   ]
 
   public_configs = [ ":tools_bm_config" ]
+  public_configs += [ "//third_party/jsoncpp:jsoncpp_config" ]
 
   cflags = []
   if (target_cpu == "arm") {

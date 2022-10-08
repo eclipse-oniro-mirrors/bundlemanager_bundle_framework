@@ -20,7 +20,9 @@
 #include <future>
 #include <getopt.h>
 #include <iostream>
+#include <json/json.h>
 #include <set>
+#include <sstream>
 #include <unistd.h>
 #include <vector>
 
@@ -121,6 +123,23 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "  getStr      obtain the value of label by given bundle name, module name and label id\n"
                              "  getIcon     obtain the value of icon by given bundle name, module name,\n"
                              "              density and icon id\n"
+                             "  addAppInstallRule     obtain the value of install controlRule by given some app id\n"
+                             "                        control rule type and user id\n"
+                             "  getAppInstallRule     obtain the value of install controlRule by given some app id\n"
+                             "                        rule type and user id\n"
+                             "  deleteAppInstallRule  obtain the value of install controlRule by given some app id\n"
+                             "                        and user id\n"
+                             "  cleanAppInstallRule   obtain the value of install controlRule by given rule type\n"
+                             "                        and user id\n"
+                             "  addAppRunningRule     obtain the value of app running control rule by given controlRule\n"
+                             "                        and user id\n"
+                             "  deleteAppRunningRule  obtain the value of app running control rule by given controlRule\n"
+                             "                        and user id\n"
+                             "  cleanAppRunningRule   obtain the value of app running control rule by given user id\n"
+                             "  getAllAppRunningRule  obtain the value of app running control rule by given user id\n"
+                             "                        and some app id\n"
+                             "  getAppRunningRule     obtain the value of app running control rule by given bundleName\n"
+                             "                        user id and controlRuleResult\n"
                              "  deployQuickFix      deploy a quick fix patch of an already installed bundle\n"
                              "  switchQuickFix      switch a quick fix patch of an already installed bundle\n"
                              "  deleteQuickFix      delete a quick fix patch of an already installed bundle\n"
@@ -205,6 +224,110 @@ const std::string HELP_MSG_NO_GETICON_OPTION =
     "and a density with '-d' or '--density' \n"
     "and a iconid with '-i' or '--id' \n";
 
+const std::string HELP_MSG_ADD_INSTALL_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool addAppInstallRule -a <app-id> -t <control-rule-type> -u <user-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -a, --app-id <app-id>                  specify app id of the application\n"
+    "  -t, --control-rule-type                specify control type of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_GET_INSTALL_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool getAppInstallRule -t <control-rule-type> -u <user-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -t, --control-rule-type                specify control type of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_DELETE_INSTALL_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool deleteAppInstallRule -a <app-id> -u <user-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -a, --app-id <app-id>                  specify app id of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_CLEAN_INSTALL_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool cleanAppInstallRule -t <control-rule-type> -u <user-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -t, --control-rule-type                specify control type of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_ADD_APP_RUNNING_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool addAppRunningRule -c <control-rule> -u <user-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -c, --control-rule                     specify control rule of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_DELETE_APP_RUNNING_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool deleteAppRunningRule -c <control-rule> -u <user-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -c, --control-rule                     specify control rule of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_CLEAN_APP_RUNNING_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool cleanAppRunningRule -u <user-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_GET_ALL_APP_RUNNING_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool getAllAppRunningRule -u <user-id> -a <app-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -a, --app-id <app-id>                  specify app id of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_GET_APP_RUNNING_RULE =
+    "usage: bundle_test_tool <options>\n"
+    "eg:bundle_test_tool getAppRunningRule -n <bundle-name> -a <app-id> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       specify bundle name of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
+const std::string HELP_MSG_NO_ADD_INSTALL_RULE_OPTION =
+    "error: you must specify a app id with '-a' or '--app-id' \n"
+    "and a control type with '-t' or '--control-rule-type' \n"
+    "and a userid with '-u' or '--user-id' \n";
+
+const std::string HELP_MSG_NO_GET_INSTALL_RULE_OPTION =
+    "error: you must specify a control type with '-t' or '--control-rule-type' \n"
+    "and a userid with '-u' or '--user-id' \n";
+
+const std::string HELP_MSG_NO_DELETE_INSTALL_RULE_OPTION =
+    "error: you must specify a control type with '-a' or '--app-id' \n"
+    "and a userid with '-u' or '--user-id' \n";
+
+const std::string HELP_MSG_NO_CLEAN_INSTALL_RULE_OPTION =
+    "error: you must specify a control type with '-t' or '--control-rule-type' \n"
+    "and a userid with '-u' or '--user-id' \n";
+
+const std::string HELP_MSG_NO_APP_RUNNING_RULE_OPTION =
+    "error: you must specify a app running type with '-c' or '--control-rule' \n"
+    "and a userid with '-u' or '--user-id' \n";
+
+const std::string HELP_MSG_NO_CLEAN_APP_RUNNING_RULE_OPTION =
+    "error: you must specify a app running type with a userid '-u' or '--user-id \n";
+
+const std::string HELP_MSG_NO_GET_ALL_APP_RUNNING_RULE_OPTION =
+    "error: you must specify a app running type with '-a' or '--app-id' \n"
+    "and a userid with '-u' or '--user-id' \n";
+
+const std::string HELP_MSG_NO_GET_APP_RUNNING_RULE_OPTION =
+    "error: you must specify a app running type with '-n' or '--bundle-name' \n"
+    "and a userid with '-u' or '--user-id' \n";
+
 const std::string HELP_MSG_DEPLOY_QUICK_FIX =
     "usage: bundle_test_tool deploy quick fix <options>\n"
     "eg:bundle_test_tool deployQuickFix -p <quickFixPath> \n"
@@ -259,6 +382,10 @@ const std::string STRING_GET_STRING_NG = "error: failed to get label \n";
 
 const std::string STRING_GET_ICON_NG = "error: failed to get icon \n";
 
+const std::string STRING_ADD_RULE_NG = "error: failed to add rule \n";
+const std::string STRING_GET_RULE_NG = "error: failed to get rule \n";
+const std::string STRING_DEL_RULE_NG = "error: failed to del rule \n";
+
 const std::string STRING_DEPLOY_QUICK_FIX_OK = "deploy quick fix successfully\n";
 const std::string STRING_DEPLOY_QUICK_FIX_NG = "deploy quick fix failed\n";
 const std::string HELP_MSG_NO_QUICK_FIX_PATH_OPTION = "need a quick fix patch path\n";
@@ -309,6 +436,18 @@ const struct option LONG_OPTIONS_GET[] = {
     {nullptr, 0, nullptr, 0},
 };
 
+const std::string SHORT_OPTIONS_RULE = "ha:c:n:r:t:u:";
+const struct option LONG_OPTIONS_RULE[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"app-id", required_argument, nullptr, 'a'},
+    {"control-rule", required_argument, nullptr, 'c'},
+    {"bundle-name", required_argument, nullptr, 'n'},
+    {"rule-result", required_argument, nullptr, 'r'},
+    {"control-rule-type", required_argument, nullptr, 't'},
+    {"user-id", required_argument, nullptr, 'u'},
+    {nullptr, 0, nullptr, 0},
+};
+
 const std::string SHORT_OPTIONS_QUICK_FIX = "hp:n:e:";
 const struct option LONG_OPTIONS_QUICK_FIX[] = {
     {"help", no_argument, nullptr, 'h'},
@@ -344,6 +483,15 @@ ErrCode BundleTestTool::CreateCommandMap()
         {"dumpSandbox", std::bind(&BundleTestTool::RunAsDumpSandboxCommand, this)},
         {"getStr", std::bind(&BundleTestTool::RunAsGetStringCommand, this)},
         {"getIcon", std::bind(&BundleTestTool::RunAsGetIconCommand, this)},
+        {"addAppInstallRule", std::bind(&BundleTestTool::RunAsAddInstallRuleCommand, this)},
+        {"getAppInstallRule", std::bind(&BundleTestTool::RunAsGetInstallRuleCommand, this)},
+        {"deleteAppInstallRule", std::bind(&BundleTestTool::RunAsDeleteInstallRuleCommand, this)},
+        {"cleanAppInstallRule", std::bind(&BundleTestTool::RunAsCleanInstallRuleCommand, this)},
+        {"addAppRunningRule", std::bind(&BundleTestTool::RunAsAddAppRunningRuleCommand, this)},
+        {"deleteAppRunningRule", std::bind(&BundleTestTool::RunAsDeleteAppRunningRuleCommand, this)},
+        {"cleanAppRunningRule", std::bind(&BundleTestTool::RunAsCleanAppRunningRuleCommand, this)},
+        {"getAllAppRunningRule", std::bind(&BundleTestTool::RunAsGetAllAppRunningRuleCommand, this)},
+        {"getAppRunningRule", std::bind(&BundleTestTool::RunAsGetAppRunningRuleCommand, this)},
         {"deployQuickFix", std::bind(&BundleTestTool::RunAsDeployQuickFix, this)},
         {"switchQuickFix", std::bind(&BundleTestTool::RunAsSwitchQuickFix, this)},
         {"deleteQuickFix", std::bind(&BundleTestTool::RunAsDeleteQuickFix, this)},
@@ -1223,6 +1371,730 @@ ErrCode BundleTestTool::RunAsGetIconCommand()
             resultReceiver_.append(STRING_GET_ICON_NG);
             return result;
         }
+        resultReceiver_.append(results);
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckAddInstallRuleCorrectOption(
+    int option, const std::string &commandName, std::vector<std::string> &appId, int &controlRuleType, int &userId)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'a': {
+            std::string arrayAppId = optarg;
+            std::stringstream array(arrayAppId);
+            std::string object;
+            while (getline(array, object, ','))
+            {
+                appId.emplace_back(object);
+            }
+            APP_LOGD("bundle_test_tool %{public}s -a %{public}s", commandName.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 't': {
+            StringToInt(optarg, commandName, controlRuleType, ret);
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsAddInstallRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "addAppInstallRule";
+    std::vector<std::string> appId;
+    int userId = 100;
+    int ruleType = 0;
+    APP_LOGD("RunAsAddInstallRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getStr with no option.");
+                resultReceiver_.append(HELP_MSG_NO_ADD_INSTALL_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        int rule = 0;
+        int temp = 0;
+        result = !CheckAddInstallRuleCorrectOption(option, commandName, appId, rule, temp)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        ruleType = option == 't' ? rule : ruleType;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_ADD_INSTALL_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto rule_ = static_cast<AppInstallControlRuleType>(ruleType);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        int res = appControlProxy->AddAppInstallControlRule(appId, rule_, userId);
+        if (!res) {
+            resultReceiver_.append(STRING_ADD_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsAddInstallRuleCommand Success \n";
+        resultReceiver_.append("results");
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckGetInstallRuleCorrectOption(
+    int option, const std::string &commandName, int &controlRuleType, int &userId, std::vector<std::string> &appId)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'a': {
+            std::string arrayAppId = optarg;
+            std::stringstream array(arrayAppId);
+            std::string object;
+            while (getline(array, object, ','))
+            {
+                appId.emplace_back(object);
+            }
+            APP_LOGD("bundle_test_tool %{public}s -a %{public}s", commandName.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 't': {
+            StringToInt(optarg, commandName, controlRuleType, ret);
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsGetInstallRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::vector<std::string> appId;
+    std::string commandName = "getAppInstallRule";
+    int userId = 100;
+    int ruleType = 0;
+    APP_LOGD("RunAsGetInstallRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_GET_INSTALL_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        int rule = 0;
+        int temp = 0;
+        result = !CheckGetInstallRuleCorrectOption(option, commandName, rule, temp, appId)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        ruleType = option == 't' ? rule : ruleType;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_GET_INSTALL_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        auto rule_ = static_cast<AppInstallControlRuleType>(ruleType);
+        int res = appControlProxy->GetAppInstallControlRule(rule_, userId, appId);
+        if (!res) {
+            resultReceiver_.append(STRING_GET_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsGetInstallRuleCommand Success \n";
+        resultReceiver_.append("results");
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckDeleteInstallRuleCorrectOption(
+    int option, const std::string &commandName, std::vector<std::string> &appId, int &userId)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'a': {
+            std::string arrayAppId = optarg;
+            std::stringstream array(arrayAppId);
+            std::string object;
+            while (getline(array, object, ','))
+            {
+                appId.emplace_back(object);
+            }
+            APP_LOGD("bundle_test_tool %{public}s -a %{public}s", commandName.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsDeleteInstallRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "deleteAppInstallRule";
+    std::vector<std::string> appId;
+    int userId = 100;
+    APP_LOGD("RunAsDeleteInstallRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_DELETE_INSTALL_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        int temp = 0;
+        result = !CheckDeleteInstallRuleCorrectOption(option, commandName, appId, temp)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_DELETE_INSTALL_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        int res = appControlProxy->DeleteAppInstallControlRule(appId, userId);
+        if (!res) {
+            resultReceiver_.append(STRING_DEL_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsDeleteInstallRuleCommand Success \n";
+        resultReceiver_.append("results");
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckCleanInstallRuleCorrectOption(
+    int option, const std::string &commandName, int &controlRuleType, int &userId)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 't': {
+            StringToInt(optarg, commandName, controlRuleType, ret);
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsCleanInstallRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "cleanAppInstallRule";
+    int userId = 100;
+    int ruleType = 0;
+    APP_LOGD("RunAsCleanInstallRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_CLEAN_INSTALL_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        int rule = 0;
+        int temp = 0;
+        result = !CheckCleanInstallRuleCorrectOption(option, commandName, rule, temp)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        ruleType = option == 't' ? rule : ruleType;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_CLEAN_INSTALL_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto rule_ = static_cast<AppInstallControlRuleType>(ruleType);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        int res = appControlProxy->DeleteAppInstallControlRule(rule_, userId);
+        if (!res) {
+            resultReceiver_.append(STRING_DEL_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsCleanInstallRuleCommand Success \n";
+        resultReceiver_.append(results);
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckAppRunningRuleCorrectOption(int option, const std::string &commandName,
+    std::vector<AppRunningControlRule> &controlRule, int &userId)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'c': {
+            std::string arrayJsonRule = optarg;
+            std::stringstream array(arrayJsonRule);
+            std::string object;
+            while (getline(array, object, ','))
+            {
+                Json::Reader reader;
+                Json::Value json;
+                reader.parse(optarg,json);
+                AppRunningControlRule rule;
+                rule.appId = json["appId"].asString();
+                rule.controlMessage = json["controlMessage"].asString();
+                controlRule.emplace_back(rule);
+            }
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsAddAppRunningRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "addAppRunningRule";
+    int userId = 100;
+    std::vector<AppRunningControlRule> controlRule;
+    APP_LOGD("RunAsAddAppRunningRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_APP_RUNNING_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+
+        int temp = 0;
+        result = !CheckAppRunningRuleCorrectOption(option, commandName, controlRule, temp)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_ADD_APP_RUNNING_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        int res = appControlProxy->AddAppRunningControlRule(controlRule, userId);
+        if (!res) {
+            resultReceiver_.append(STRING_ADD_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsAddAppRunningRuleCommand Success \n";
+        resultReceiver_.append(results);
+    }
+    return result;
+}
+
+ErrCode BundleTestTool::RunAsDeleteAppRunningRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "addAppRunningRule";
+    int userId = 100;
+    std::vector<AppRunningControlRule> controlRule;
+    APP_LOGD("RunAsDeleteAppRunningRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_APP_RUNNING_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+
+        int temp = 0;
+        result = !CheckAppRunningRuleCorrectOption(option, commandName, controlRule, temp)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_DELETE_APP_RUNNING_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        int res = appControlProxy->DeleteAppRunningControlRule(controlRule, userId);
+        if (!res) {
+            resultReceiver_.append(STRING_DEL_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsDeleteAppRunningRuleCommand Success \n";
+        resultReceiver_.append(results);
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckCleanAppRunningRuleCorrectOption(
+    int option, const std::string &commandName, int &userId)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsCleanAppRunningRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "addAppRunningRule";
+    int userId = 100;
+    APP_LOGD("RunAsCleanAppRunningRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_CLEAN_APP_RUNNING_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+
+        int temp = 0;
+        result = !CheckCleanAppRunningRuleCorrectOption(option, commandName, temp)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_CLEAN_APP_RUNNING_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        int res = appControlProxy->DeleteAppRunningControlRule(userId);
+        if (!res) {
+            resultReceiver_.append(STRING_DEL_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsCleanAppRunningRuleCommand Success \n";
+        resultReceiver_.append(results);
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckGetAllAppRunningRuleCorrectOption(int option, const std::string &commandName, int32_t userId,
+    std::vector<std::string> &appIds)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'a': {
+            std::string arrayAppId = optarg;
+            std::stringstream array(arrayAppId);
+            std::string object;
+            while (getline(array, object, ','))
+            {
+                appIds.emplace_back(object);
+            }
+            APP_LOGD("bundle_test_tool %{public}s -a %{public}s", commandName.c_str(), argv_[optind - 1]);
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsGetAllAppRunningRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "addAppRunningRule";
+    int userId = 100;
+    std::vector<std::string> appIds;
+    APP_LOGD("RunAsGetAllAppRunningRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_GET_ALL_APP_RUNNING_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+
+        int temp = 0;
+        result = !CheckGetAllAppRunningRuleCorrectOption(option, commandName, temp, appIds)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_GET_ALL_APP_RUNNING_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        int res = appControlProxy->GetAppRunningControlRule(userId, appIds);
+        if (!res) {
+            resultReceiver_.append(STRING_GET_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsGetAllAppRunningRuleCommand Success \n";
+        resultReceiver_.append(results);
+    }
+    return result;
+}
+
+bool BundleTestTool::CheckGetAppRunningRuleCorrectOption(int option, const std::string &commandName,
+    std::string &bundleName, int32_t userId)
+{
+    bool ret = true;
+    switch (option) {
+        case 'h': {
+            APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
+            ret = false;
+            break;
+        }
+        case 'n': {
+            APP_LOGD("'bundle_test_tool %{public}s %{public}s'", commandName.c_str(), argv_[optind - 1]);
+            bundleName = optarg;
+            break;
+        }
+        case 'u': {
+            StringToInt(optarg, commandName, userId, ret);
+            break;
+        }
+        default: {
+            std::string unknownOption = "";
+            std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+            APP_LOGD("bundle_test_tool %{public}s with an unknown option.", commandName.c_str());
+            resultReceiver_.append(unknownOptionMsg);
+            ret = false;
+            break;
+        }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsGetAppRunningRuleCommand()
+{
+    int result = OHOS::ERR_OK;
+    int option = -1;
+    int counter = 0;
+    std::string commandName = "addAppRunningRule";
+    int userId = 100;
+    std::string bundleName;
+    APP_LOGD("RunAsGetAppRunningRuleCommand is start");
+    while (true) {
+        counter++;
+        option = getopt_long(argc_, argv_, SHORT_OPTIONS_RULE.c_str(), LONG_OPTIONS_RULE, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                APP_LOGD("bundle_test_tool getRule with no option.");
+                resultReceiver_.append(HELP_MSG_NO_GET_APP_RUNNING_RULE_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+
+        int temp = 0;
+        result = !CheckGetAppRunningRuleCorrectOption(option, commandName, bundleName, temp)
+            ? OHOS::ERR_INVALID_VALUE : result;
+        userId = option == 'u' ? temp : userId;
+    }
+
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_GET_APP_RUNNING_RULE);
+    } else {
+        int euid = 537;
+        seteuid(euid);
+        auto appControlProxy = bundleMgrProxy_->GetAppControlProxy();
+        AppRunningControlRuleResult controlRuleResult;
+        int res = appControlProxy->GetAppRunningControlRule(bundleName, userId, controlRuleResult);
+        if (!res) {
+            resultReceiver_.append(STRING_GET_RULE_NG);
+            return result;
+        }
+        std::string results = "RunAsGetAppRunningRuleCommand Success \n";
         resultReceiver_.append(results);
     }
     return result;
