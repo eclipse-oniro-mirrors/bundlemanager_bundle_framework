@@ -70,6 +70,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllApplicationInfo", GetApplicationInfos),
         DECLARE_NAPI_PROPERTY("ApplicationFlag", applicationFlag),
         DECLARE_NAPI_PROPERTY("BundleFlag", bundleFlag),
+        DECLARE_NAPI_FUNCTION("getBundleInfoForSelf", GetBundleInfoForSelf),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

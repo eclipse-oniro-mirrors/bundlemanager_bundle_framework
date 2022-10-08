@@ -2356,5 +2356,56 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
     APP_LOGD("call NAPI_GetBundleInfos done.");
     return promise;
 }
+
+napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetBundleInfoForSelf called");
+    NapiArg args(env, info);
+    BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO && valueType == napi_number) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    int uid = IPCSkeleton::GetCallingUid();
+    asyncCallbackInfo->userId = uid / Constants::BASE_USER_RANGE;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    bool ret = iBundleMgr->GetBundleNameForUid(uid, asyncCallbackInfo->bundleName);
+    if (!ret) {
+        APP_LOGE("GetBundleNameForUid failed");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_NOT_EXIST);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoExec, GetBundleInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetBundleInfoForSelf done.");
+    return promise;
+}
 }
 }
