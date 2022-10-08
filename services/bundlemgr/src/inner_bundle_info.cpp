@@ -1889,15 +1889,19 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         if (info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
-        if ((static_cast<uint32_t>(flags) & ApplicationFlagV9::GET_APPLICATION_INFO_WITH_PERMISSION_V9) ==
-            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_PERMISSION_V9) {
+        if (((static_cast<uint32_t>(flags) & ApplicationFlagV9::GET_APPLICATION_INFO_WITH_PERMISSION_V9) ==
+            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_PERMISSION_V9) ||
+            ((static_cast<uint32_t>(flags) & ApplicationFlagV9::GET_ALL_APPLICATION_INFO_V9) ==
+            ApplicationFlagV9::GET_ALL_APPLICATION_INFO_V9)) {
             std::transform(info.second.requestPermissions.begin(),
                 info.second.requestPermissions.end(),
                 std::back_inserter(appInfo.permissions),
                 [](const auto &p) { return p.name; });
         }
         if ((static_cast<uint32_t>(flags) & ApplicationFlagV9::GET_APPLICATION_INFO_WITH_METADATA_V9) ==
-            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_METADATA_V9) {
+            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_METADATA_V9 ||
+            (static_cast<uint32_t>(flags) & ApplicationFlagV9::GET_ALL_APPLICATION_INFO_V9) ==
+            ApplicationFlagV9::GET_ALL_APPLICATION_INFO_V9) {
             bool isModuleJson = info.second.isModuleJson;
             if (!isModuleJson && info.second.metaData.customizeData.size() > 0) {
                 appInfo.metaData[info.second.moduleName] = info.second.metaData.customizeData;
