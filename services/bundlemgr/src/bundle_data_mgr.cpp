@@ -1187,7 +1187,12 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
 
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-    auto ret = GetInnerBundleInfoWithFlagsV9(appName, flags, innerBundleInfo, requestUserId);
+    int32_t flag = 0;
+    if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE_V9)
+        == GET_APPLICATION_INFO_WITH_DISABLE_V9) {
+        flag = GET_BUNDLE_INFO_WITH_DISABLE_V9;
+    }
+    auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed");
         return ret;
@@ -1318,7 +1323,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
-    auto ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
+    auto ret = GetInnerBundleInfoWithBundleFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoV9 failed, error code: %{public}d", ret);
         return ret;
@@ -1977,6 +1982,40 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)
+        && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
+        APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+    info = innerBundleInfo;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName,
+    const int32_t flags, InnerBundleInfo &info, int32_t userId) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    APP_LOGD("GetInnerBundleInfoWithFlagsV9: %{public}s", bundleName.c_str());
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("GetInnerBundleInfoWithFlagsV9: bundleName not find");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    if (innerBundleInfo.IsDisabled()) {
+        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    if (!(static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_DISABLE_V9)
         && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
         APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;

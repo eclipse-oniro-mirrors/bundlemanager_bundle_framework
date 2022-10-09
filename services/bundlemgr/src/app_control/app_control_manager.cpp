@@ -116,7 +116,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleInfo bundleInfo;
-    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, bundleInfo, userId);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, BundleFlagV9::GET_BUNDLE_INFO_WITH_DISABLE_V9, bundleInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("DataMgr GetBundleInfoV9 failed");
         return ret;
