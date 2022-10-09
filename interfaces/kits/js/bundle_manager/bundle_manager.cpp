@@ -451,6 +451,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
             if (args.GetArgc() == ARGS_SIZE_ONE) {
                 asyncCallbackInfo->userId = defaultUserId;
@@ -1615,6 +1616,10 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            } else {
+                APP_LOGE("GetLaunchWantForBundle param check error");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
             break;
         } else {
@@ -1644,6 +1649,11 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    if (info.abilityName.empty() || info.moduleName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty abilityName or moduleName");
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+
     ErrCode result;
     Want want;
     ElementName elementName("", bundleName, info.abilityName, info.moduleName);
@@ -1666,7 +1676,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
 
         if (!client.GetProfileFromAbility(abilityInfos[0], info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
-            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST;
         }
 
         return ERR_OK;

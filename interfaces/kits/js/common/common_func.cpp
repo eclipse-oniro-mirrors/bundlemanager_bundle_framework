@@ -471,6 +471,8 @@ ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
             return ERROR_PERMISSION_NOT_EXIST;
         case ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST:
             return ERROR_DEVICE_ID_NOT_EXIST;
+        case ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST:
+            return ERROR_PROFILE_NOT_EXIST;
         default:
             return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
