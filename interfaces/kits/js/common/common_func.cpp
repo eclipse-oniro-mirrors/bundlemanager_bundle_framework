@@ -548,6 +548,58 @@ bool CommonFunc::ParseWant(napi_env env, napi_value args, Want &want)
     return true;
 }
 
+bool CommonFunc::ParseWantWithoutVerification(napi_env env, napi_value args, Want &want)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
+    if (valueType != napi_object) {
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, args, BUNDLE_NAME, &prop);
+    std::string bundleName = GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, MODULE_NAME, &prop);
+    std::string moduleName = GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, ABILITY_NAME, &prop);
+    std::string abilityName = GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, URI, &prop);
+    std::string uri = GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, TYPE, &prop);
+    std::string type = GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, ACTION, &prop);
+    std::string action = GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, ENTITIES, &prop);
+    std::vector<std::string> entities;
+    ParseStringArray(env, entities, prop);
+    for (size_t idx = 0; idx < entities.size(); ++idx) {
+        APP_LOGD("entity:%{public}s", entities[idx].c_str());
+        want.AddEntity(entities[idx]);
+    }
+    prop = nullptr;
+    int32_t flags = 0;
+    napi_get_named_property(env, args, FLAGS, &prop);
+    napi_typeof(env, prop, &valueType);
+    if (valueType == napi_number) {
+        napi_get_value_int32(env, prop, &flags);
+    }
+    prop = nullptr;
+    napi_get_named_property(env, args, DEVICE_ID, &prop);
+    std::string deviceId = GetStringFromNAPI(env, prop);
+    want.SetAction(action);
+    want.SetUri(uri);
+    want.SetType(type);
+    want.SetFlags(flags);
+    ElementName elementName(deviceId, bundleName, abilityName, moduleName);
+    want.SetElement(elementName);
+    return true;
+}
+
 void CommonFunc::ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo, napi_value value)
 {
     napi_value nMaxWindowRatio;
