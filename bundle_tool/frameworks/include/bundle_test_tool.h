@@ -53,8 +53,8 @@ private:
     ErrCode RunAsAddAppRunningRuleCommand();
     ErrCode RunAsDeleteAppRunningRuleCommand();
     ErrCode RunAsCleanAppRunningRuleCommand();
-    ErrCode RunAsGetAllAppRunningRuleCommand();
-    ErrCode RunAsGetAppRunningRuleCommand();
+    ErrCode RunAsGetAppRunningControlRuleCommand();
+    ErrCode RunAsGetAppRunningControlRuleResultCommand();
     ErrCode RunAsDeployQuickFix();
     ErrCode RunAsSwitchQuickFix();
     ErrCode RunAsDeleteQuickFix();
@@ -75,20 +75,21 @@ private:
     bool CheckSandboxErrorOption(int option, int counter, const std::string &commandName);
     bool CheckGetStringCorrectOption(int option, const std::string &commandName, int &temp, std::string &name);
     bool CheckGetIconCorrectOption(int option, const std::string &commandName, int &temp, std::string &name);
-    bool CheckAddInstallRuleCorrectOption(int option, const std::string &commandName,
-        std::vector<std::string> &appId, int &controlRuleType, int &userId);
-    bool CheckGetInstallRuleCorrectOption(int option, const std::string &commandName, int &controlRuleType, int &userId,
-        std::vector<std::string> &appId);
-    bool CheckDeleteInstallRuleCorrectOption(int option, const std::string &commandName,
-        std::vector<std::string> &appId, int &userId);
-    bool CheckCleanInstallRuleCorrectOption(int option, const std::string &commandName, int &controlRuleType, int &userId);
-    bool CheckAppRunningRuleCorrectOption(int option, const std::string &commandName,
-        std::vector<AppRunningControlRule> &controlRule, int &userId);
-    bool CheckCleanAppRunningRuleCorrectOption(int option, const std::string &commandName, int &userId);
-    bool CheckGetAllAppRunningRuleCorrectOption(int option, const std::string &commandName, int32_t userId,
-        std::vector<std::string> &appIds);
-    bool CheckGetAppRunningRuleCorrectOption(int option, const std::string &commandName,
-        std::string &bundleName, int32_t userId);
+    ErrCode CheckAddInstallRuleCorrectOption(int option, const std::string &commandName,
+        std::vector<std::string> &appIds, int &controlRuleType, int &userId, int &euid);
+    ErrCode CheckGetInstallRuleCorrectOption(int option, const std::string &commandName, int &controlRuleType,
+        int &userId, std::vector<std::string> &appIds, int &euid);
+    ErrCode CheckDeleteInstallRuleCorrectOption(int option, const std::string &commandName,
+        int &controlRuleType, std::vector<std::string> &appIds, int &userId, int &euid);
+    ErrCode CheckCleanInstallRuleCorrectOption(int option, const std::string &commandName,
+        int &controlRuleType, int &userId, int &euid);
+    ErrCode CheckAppRunningRuleCorrectOption(int option, const std::string &commandName,
+        std::vector<AppRunningControlRule> &controlRule, int &userId, int &euid);
+    ErrCode CheckCleanAppRunningRuleCorrectOption(int option, const std::string &commandName, int &userId, int &euid);
+    ErrCode CheckGetAppRunningRuleCorrectOption(int option, const std::string &commandName, int32_t userId,
+        std::vector<std::string> &appIdss, int &euid);
+    ErrCode CheckGetAppRunningRuleResultCorrectOption(int option, const std::string &commandName,
+        std::string &bundleName, int32_t userId, int &euid);
     bool CheckSandboxCorrectOption(int option, const std::string &commandName, int &data, std::string &bundleName);
     ErrCode InstallSandboxOperation(
         const std::string &bundleName, const int32_t userId, const int32_t dlpType, int32_t &appIndex) const;
