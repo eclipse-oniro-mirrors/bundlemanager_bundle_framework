@@ -743,6 +743,8 @@ public:
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    ErrCode GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName, int32_t flags,
+        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
     void DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
