@@ -47,11 +47,11 @@ public:
         int32_t userId, AppRunningControlRuleResult &controlRuleResult) override;
 
     virtual ErrCode SetDisposedStatus(const std::string &callingName, const std::string &controlRuleType,
-        const std::string &appId, const Want& want) override;
+        const std::string &appId, const Want& want, int32_t userId) override;
     virtual ErrCode DeleteDisposedStatus(const std::string &callingName, const std::string &controlRuleType,
-        const std::string &appId) override;
+        const std::string &appId, int32_t userId) override;
     virtual ErrCode GetDisposedStatus(const std::string &callingNmae, const std::string &controlRuleType,
-        const std::string &appId, Want& want) override;
+        const std::string &appId, Want& want, int32_t userId) override;
 private:
     ErrCode DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,
         const std::string &appId, int32_t userId);

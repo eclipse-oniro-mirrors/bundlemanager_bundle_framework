@@ -53,6 +53,7 @@ public:
 
     virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) override;
 private:
+    int32_t GetCallingUserId();
     std::string GetCallingName();
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);
     std::unordered_map<int32_t, std::string> callingNameMap_;
