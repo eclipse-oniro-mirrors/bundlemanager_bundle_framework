@@ -178,6 +178,12 @@ std::string AppControlManagerHostImpl::GetControlRuleType(const AppInstallContro
     return item->second;
 }
 
+int32_t AppControlManagerHostImpl::GetCallingUserId()
+{
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    return uid / Constants::BASE_USER_RANGE;
+}
+
 ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
 {
     APP_LOGD("host begin to SetDisposedStatus");
@@ -185,7 +191,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want);
+    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want, GetCallingUserId());
     if (ret != ERR_OK) {
         APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
     }
@@ -199,7 +205,7 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId);
+    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId, GetCallingUserId());
     if (ret != ERR_OK) {
         APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
     }
@@ -213,7 +219,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
         APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want);
+    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want, GetCallingUserId());
     if (ret != ERR_OK) {
         APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
     }

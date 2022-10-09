@@ -92,19 +92,22 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
 }
 
-ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want)
+ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId)
 {
-    return appControlManagerDb_->SetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
+    return appControlManagerDb_->SetDisposedStatus(
+        PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want, userId);
 }
 
-ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId)
+ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
-    return appControlManagerDb_->DeleteDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId);
+    return appControlManagerDb_->DeleteDisposedStatus(
+        PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, userId);
 }
 
-ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want)
+ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want, int32_t userId)
 {
-    return appControlManagerDb_->GetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
+    return appControlManagerDb_->GetDisposedStatus(
+        PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want, userId);
 }
 
 ErrCode AppControlManager::GetAppRunningControlRule(

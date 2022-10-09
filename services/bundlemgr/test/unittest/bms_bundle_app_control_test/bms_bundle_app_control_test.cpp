@@ -390,4 +390,6 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0400, Function | SmallTe
     res = appControlProxy->GetAppRunningControlRule(USERID, appIds);
     EXPECT_EQ(res, ERR_OK);
 }
+
+
 } // OHOS
