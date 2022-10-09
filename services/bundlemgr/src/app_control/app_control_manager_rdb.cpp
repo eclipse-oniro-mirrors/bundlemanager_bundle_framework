@@ -24,7 +24,7 @@ namespace AppExecFwk {
 namespace {
     const std::string APP_CONTROL_RDB_TABLE_NAME = "app_control";
     const std::string RUNNING_CONTROL = "RunningControl";
-
+    const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
     const int32_t APP_ID_INDEX = 4;
     const int32_t CONTROL_MESSAGE_INDEX = 5;
     const int32_t DISPOSED_STATUS_INDEX = 6;
@@ -304,8 +304,11 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     }
     ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, controlRuleResult.controlMessage);
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GetString appId failed, ret: %{public}d", ret);
+        APP_LOGE("GetString controlMessage failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (controlRuleResult.controlMessage.empty()) {
+        controlRuleResult.controlMessage = APP_CONTROL_EDM_DEFAULT_MESSAGE;
     }
     std::string wantString;
     ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, wantString);
