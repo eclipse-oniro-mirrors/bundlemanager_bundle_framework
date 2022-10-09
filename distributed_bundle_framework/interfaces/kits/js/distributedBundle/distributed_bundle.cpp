@@ -38,6 +38,8 @@ namespace AppExecFwk {
 namespace {
 constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
 const std::string RESOURCE_NAME_GET_REMOTE_ABILITY_INFO = "GetRemoteAbilityInfo";
+const std::string PARAMETER_ELEMENT_NAME = "elementName";
+const std::string PARAMETER_LOCALE = "locale";
 }
 
 static OHOS::sptr<OHOS::AppExecFwk::IDistributedBms> GetDistributedBundleMgr()
@@ -233,7 +235,7 @@ void GetRemoteAbilityInfoExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = InnerGetRemoteAbilityInfo(asyncCallbackInfo->elementNames,
-        asyncCallbackInfo->local, asyncCallbackInfo->isArray, asyncCallbackInfo->remoteAbilityInfos);
+        asyncCallbackInfo->locale, asyncCallbackInfo->isArray, asyncCallbackInfo->remoteAbilityInfos);
 }
 
 void GetRemoteAbilityInfoComplete(napi_env env, napi_status status, void *data)
@@ -255,7 +257,8 @@ void GetRemoteAbilityInfoComplete(napi_env env, napi_status status, void *data)
             ConvertRemoteAbilityInfo(env, asyncCallbackInfo->remoteAbilityInfos[0], result[ARGS_SIZE_ONE]);
         }
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            RESOURCE_NAME_GET_REMOTE_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == SUCCESS) {
@@ -279,40 +282,34 @@ napi_value GetRemoteAbilityInfo(napi_env env, napi_callback_info info)
     GetRemoteAbilityInfoCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) GetRemoteAbilityInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
     std::unique_ptr<GetRemoteAbilityInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid.");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
-            if (!ParseElementNames(env, args[i], asyncCallbackInfo->isArray, asyncCallbackInfo->elementNames)) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                return nullptr;
-            }
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->local)) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                return nullptr;
-            }
-        } else if ((i == ARGS_POS_ONE || i == ARGS_POS_TWO)) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            }
+        if ((i == ARGS_POS_ZERO) && (!ParseElementNames(env, args[i], asyncCallbackInfo->isArray,
+            asyncCallbackInfo->elementNames))) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+                PARAMETER_ELEMENT_NAME, TYPE_OBJECT);
+            return nullptr;
+        } else if (((i == ARGS_POS_ONE) && (valueType == napi_function)) ||
+                   ((i == ARGS_POS_TWO) && (valueType == napi_function))) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             break;
-        } else {
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        } else if ((i == ARGS_POS_ONE) && !CommonFunc::ParseString(env, args[i], asyncCallbackInfo->locale)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETER_LOCALE, TYPE_STRING);
             return nullptr;
         }
     }
     if (asyncCallbackInfo->elementNames.size() > GET_REMOTE_ABILITY_INFO_MAX_SIZE) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
+            "BusinessError 401: The number of ElementNames is greater than 10");
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetRemoteAbilityInfoCallbackInfo>(env, asyncCallbackInfo,
