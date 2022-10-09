@@ -203,8 +203,9 @@ const std::shared_ptr<BundleDataMgr> BmsBundleAppControlTest::GetBundleDataMgr()
 /**
  * @tc.number: AppInstallControlRule_0100
  * @tc.name: test can not add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.AddAppInstallControlRule
+ *           2.AddAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTest | Level1)
 {
@@ -228,8 +229,9 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTe
 /**
  * @tc.number: AppInstallControlRule_0200
  * @tc.name: test can not add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.DeleteAppInstallControlRule
+ *           2.DeleteAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0200, Function | SmallTest | Level1)
 {
@@ -250,10 +252,9 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0200, Function | SmallTe
 /**
  * @tc.number: AppInstallControlRule_0300
  * @tc.name: test can  add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.AddAppInstallControlRule success
- *           3.DeleteAppInstallControlRule success
- *           4.GetAppInstallControlRule success
+ *           2.DeleteAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0300, Function | SmallTest | Level1)
 {
@@ -270,8 +271,9 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0300, Function | SmallTe
 /**
  * @tc.number: AppInstallControlRule_0400
  * @tc.name: test can not add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.GetAppInstallControlRule
+ *           2.GetAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTest | Level1)
 {
@@ -295,7 +297,8 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0100
  * @tc.name: test running control rule
- * @tc.desc: 1.AddAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.AddAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0100, Function | SmallTest | Level1)
 {
@@ -319,7 +322,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0100, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0200
  * @tc.name: test running control rule
- * @tc.desc: 1.DeleteAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.DeleteAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0200, Function | SmallTest | Level1)
 {
@@ -345,7 +349,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0200, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0300
  * @tc.name: test running control rule
- * @tc.desc: 1.DeleteAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.DeleteAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0300, Function | SmallTest | Level1)
 {
@@ -369,7 +374,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0300, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0400
  * @tc.name: test running control rule
- * @tc.desc: 1.GetAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.GetAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0400, Function | SmallTest | Level1)
 {
