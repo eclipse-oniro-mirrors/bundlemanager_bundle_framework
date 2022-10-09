@@ -180,8 +180,7 @@ std::string AppControlManagerHostImpl::GetControlRuleType(const AppInstallContro
 
 int32_t AppControlManagerHostImpl::GetCallingUserId()
 {
-    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
-    return uid / Constants::BASE_USER_RANGE;
+    return OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
 }
 
 ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
