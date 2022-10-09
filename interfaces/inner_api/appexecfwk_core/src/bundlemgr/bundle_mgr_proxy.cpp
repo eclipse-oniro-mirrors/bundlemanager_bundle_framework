@@ -1536,7 +1536,11 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || !cleanCacheCallback) {
+    if (bundleName.empty()) {
+        APP_LOGE("fail to CleanBundleCacheFiles due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (cleanCacheCallback == nullptr) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }

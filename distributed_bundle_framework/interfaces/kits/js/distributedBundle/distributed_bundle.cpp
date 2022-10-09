@@ -142,14 +142,14 @@ static bool ParseElementName(napi_env env, napi_value args, OHOS::AppExecFwk::El
     elementName.SetDeviceID(deviceId);
 
     std::string bundleName;
-    if (!CommonFunc::ParseStringPropertyFromObject(env, args, "bundleName", true, deviceId)) {
+    if (!CommonFunc::ParseStringPropertyFromObject(env, args, "bundleName", true, bundleName)) {
         APP_LOGE("begin to parse ElementName bundleName failed");
         return false;
     }
     elementName.SetBundleName(bundleName);
 
     std::string abilityName;
-    if (!CommonFunc::ParseStringPropertyFromObject(env, args, "abilityName", true, deviceId)) {
+    if (!CommonFunc::ParseStringPropertyFromObject(env, args, "abilityName", true, abilityName)) {
         APP_LOGE("begin to parse ElementName abilityName failed");
         return false;
     }
