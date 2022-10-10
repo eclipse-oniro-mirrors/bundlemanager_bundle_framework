@@ -96,7 +96,8 @@ AsyncGetBundleInstallerCallbackInfo::~AsyncGetBundleInstallerCallbackInfo()
 
 void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
 {
-    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
+    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
 
     napi_value m_classBundleInstaller = nullptr;
@@ -717,7 +718,8 @@ void UninstallOrRecoverExecuter(napi_env env, void *data)
     APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
 }
 
-napi_value UninstallOrRecover(napi_env env, napi_callback_info info, std::unique_ptr<AsyncInstallCallbackInfo> &callbackPtr)
+napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
+    std::unique_ptr<AsyncInstallCallbackInfo> &callbackPtr)
 {
     APP_LOGD("UninstallOrRecover by bundleName called");
     // obtain arguments of install interface

@@ -247,7 +247,8 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0200, Function | SmallTe
         appIds, USERID);
     EXPECT_EQ(res2, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     seteuid(537);
-    auto res3 = appControlProxy->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
+    auto res3 =
+        appControlProxy->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
     EXPECT_EQ(res3, ERR_OK);
 }
 

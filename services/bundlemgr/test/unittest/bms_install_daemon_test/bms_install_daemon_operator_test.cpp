@@ -158,7 +158,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0600, Function | Sma
     std::string path;
     auto ret = InstalldOperator::MkRecursiveDir(path, false);
     EXPECT_FALSE(ret);
-    
 }
 
 /**
