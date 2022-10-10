@@ -47,6 +47,9 @@ constexpr const char* WRONG_PARAM_TYPE = "wrong param type";
 constexpr const char* OUT_OF_MEMORY = "out of memory";
 } // namespace
 using namespace OHOS::AAFwk;
+namespace {
+const std::string PARAMETER_BUNDLE_NAME = "bundleName";
+}
 
 static ErrCode InnerGetBundleArchiveInfo(std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
@@ -1464,7 +1467,8 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            "CleanBundleCacheFiles", Constants::PERMISSION_REMOVECACHEFILE);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -1488,36 +1492,33 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
     CleanBundleCacheCallbackInfo *asyncCallbackInfo = new (std::nothrow) CleanBundleCacheCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("CleanBundleCacheFiles asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<CleanBundleCacheCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("CleanBundleCacheFiles napi func init failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     size_t maxArgc = args.GetMaxArgc();
-    for (size_t i = 0; i < maxArgc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("CleanBundleCacheFiles bundleName is not a string!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else {
-                APP_LOGD("CleanBundleCacheFiles extra arg ignored");
-            }
-        } else {
-            APP_LOGE("CleanBundleCacheFiles arg err!");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+    if (maxArgc >= ARGS_SIZE_ONE) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+            APP_LOGE("CleanBundleCacheFiles bundleName is not a string!");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETER_BUNDLE_NAME, TYPE_STRING);
             return nullptr;
         }
+        if (maxArgc >= ARGS_SIZE_TWO) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        }
+    } else {
+        APP_LOGE("param error.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<CleanBundleCacheCallbackInfo>(
         env, asyncCallbackInfo, "CleanBundleCacheFiles", CleanBundleCacheFilesExec, CleanBundleCacheFilesComplete);
