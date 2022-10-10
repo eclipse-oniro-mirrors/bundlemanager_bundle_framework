@@ -95,11 +95,12 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
 }
 
 ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &callingName,
-    const std::vector<std::string> &appIds, int32_t userId)
+    const std::string &controlRuleType, const std::vector<std::string> &appIds, int32_t userId)
 {
     for (const auto &appId : appIds) {
         NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
         absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+        absRdbPredicates.EqualTo(APP_CONTROL_LIST, controlRuleType);
         absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
         absRdbPredicates.EqualTo(APP_ID, appId);
         bool ret = rdbDataManager_->DeleteData(absRdbPredicates);

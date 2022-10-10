@@ -280,12 +280,12 @@ bool BaseBundleInstaller::UninstallAppControl(const std::string &appId, int32_t 
         AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
     if (ret != ERR_OK) {
         APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
-        return false;
+        return true;
     }
     if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
         return true;
     }
-    APP_LOGW("bundle info is not existed");
+    APP_LOGW("appId is not removable");
     return false;
 #else
     APP_LOGW("app control is disable");
