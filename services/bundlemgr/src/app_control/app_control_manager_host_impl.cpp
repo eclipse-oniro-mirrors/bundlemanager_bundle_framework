@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 }
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
@@ -193,7 +193,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
 {
     APP_LOGD("host begin to SetDisposedStatus");
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
-        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     ErrCode ret = appControlManager_->SetDisposedStatus(appId, want, GetCallingUserId());
@@ -207,12 +207,12 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
 {
     APP_LOGD("host begin to DeleteDisposedStatus");
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
-        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     ErrCode ret = appControlManager_->DeleteDisposedStatus(appId, GetCallingUserId());
     if (ret != ERR_OK) {
-        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+        APP_LOGW("host DeletetDisposedStatus error:%{public}d", ret);
     }
     return ret;
 }
@@ -221,12 +221,12 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
 {
     APP_LOGE("host begin to GetDisposedStatus");
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
-        APP_LOGW("verify permission ohos.permission.GET_BUNDLE_INFO_PRIVILEGED failed");
+        APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     ErrCode ret = appControlManager_->GetDisposedStatus(appId, want, GetCallingUserId());
     if (ret != ERR_OK) {
-        APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
+        APP_LOGW("host GetDisposedStatus error:%{public}d", ret);
     }
     return ret;
 }
