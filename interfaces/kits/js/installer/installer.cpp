@@ -718,7 +718,8 @@ void UninstallOrRecoverExecuter(napi_env env, void *data)
     APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
 }
 
-napi_value UninstallOrRecover(napi_env env, napi_callback_info info, std::unique_ptr<AsyncInstallCallbackInfo> &callbackPtr)
+napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
+    std::unique_ptr<AsyncInstallCallbackInfo> &callbackPtr)
 {
     APP_LOGD("UninstallOrRecover by bundleName called");
     // obtain arguments of install interface
