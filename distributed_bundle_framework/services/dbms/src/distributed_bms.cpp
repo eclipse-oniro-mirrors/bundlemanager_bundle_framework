@@ -260,7 +260,8 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
     std::vector<AbilityInfo> abilityInfos;
     OHOS::AAFwk::Want want;
     want.SetElement(elementName);
-    ErrCode ret = iBundleMgr->QueryAbilityInfosV9(want, GET_ABILITY_INFO_WITH_APPLICATION_V9, userId, abilityInfos);
+    ErrCode ret = iBundleMgr->QueryAbilityInfosV9(want, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION), userId, abilityInfos);
     if (ret != ERR_OK) {
         APP_LOGE("DistributedBms QueryAbilityInfo failed");
         return ret;

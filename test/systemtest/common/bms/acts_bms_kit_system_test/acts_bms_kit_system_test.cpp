@@ -4258,7 +4258,8 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     name.SetBundleName(appName);
     want.SetElement(name);
     std::vector<AbilityInfo> AbilityInfo;
-    auto ret = bundleMgrProxy->QueryAbilityInfosV9(want, GET_ABILITY_INFO_DEFAULT_V9, USERID, AbilityInfo);
+    auto ret = bundleMgrProxy->QueryAbilityInfosV9(want, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), USERID, AbilityInfo);
     EXPECT_EQ(ret, ERR_OK);
 
     resvec.clear();
