@@ -60,6 +60,18 @@ std::string GetHapPath(const InnerBundleInfo &info)
 {
     return GetHapPath(info, info.GetModuleName(info.GetCurrentModulePackage()));
 }
+
+std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
+{
+    auto position = nativeLibraryPath.find(Constants::PATH_SEPARATOR);
+    if (position == std::string::npos) {
+        return nativeLibraryPath;
+    }
+
+    auto prefixPath = nativeLibraryPath.substr(0, position);
+    auto suffixPath = nativeLibraryPath.substr(position);
+    return prefixPath + Constants::TMP_SUFFIX + suffixPath;
+}
 }
 
 BaseBundleInstaller::BaseBundleInstaller()
@@ -1703,6 +1715,10 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
+        if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+            nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+            APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
+        }
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
             .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
             .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
