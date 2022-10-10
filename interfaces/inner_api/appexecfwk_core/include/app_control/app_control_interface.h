@@ -27,9 +27,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 enum class AppInstallControlRuleType {
-    DISALLOWED_UNINSTALL = 0,
+    UNSPECIFIED = 0,
+    DISALLOWED_UNINSTALL,
     ALLOWED_INSTALL,
-    UNSPECIFIED,
 };
 
 enum class AppRunControlRuleType {
@@ -44,8 +44,8 @@ public:
 
     virtual ErrCode AddAppInstallControlRule(const std::vector<std::string> &appIds,
         const AppInstallControlRuleType controlRuleType, int32_t userId) = 0;
-    virtual ErrCode DeleteAppInstallControlRule(const std::vector<std::string> &appIds,
-        int32_t userId) = 0;
+    virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
+        const std::vector<std::string> &appIds, int32_t userId) = 0;
     virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType, int32_t userId) = 0;
     virtual ErrCode GetAppInstallControlRule(
         const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds) = 0;

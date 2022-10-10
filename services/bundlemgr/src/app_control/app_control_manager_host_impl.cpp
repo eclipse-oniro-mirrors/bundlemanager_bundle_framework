@@ -59,15 +59,21 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
     return appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
 }
 
-ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const std::vector<std::string> &appIds, int32_t userId)
+ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
+    const std::vector<std::string> &appIds, int32_t userId)
 {
     APP_LOGD("DeleteAppInstallControlRule start");
+    std::string ruleType = GetControlRuleType(controlRuleType);
+    if (ruleType.empty()) {
+        APP_LOGE("controlRuleType is invalid");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         APP_LOGE("callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    return appControlManager_->DeleteAppInstallControlRule(callingName, appIds, userId);
+    return appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, appIds, userId);
 }
 
 ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,

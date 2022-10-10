@@ -56,6 +56,21 @@ constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON = "icon";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* APPLICATION_INFO = "applicationInfo";
+static std::unordered_map<int32_t, int32_t> ERR_MAP = {
+    { ERR_OK, SUCCESS },
+    { ERR_BUNDLE_MANAGER_INVALID_USER_ID, ERROR_INVALID_USER_ID },
+    { ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST, ERROR_BUNDLE_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST, ERROR_MODULE_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST, ERROR_ABILITY_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
+    { ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED, ERROR_PERMISSION_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST, ERROR_DEVICE_ID_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST, ERROR_PROFILE_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_PARAM_ERROR, ERROR_PARAM_CHECK_ERROR },
+    { ERR_BUNDLE_MANAGER_APPLICATION_DISABLED, ERROR_BUNDLE_IS_DISABLED },
+    { ERR_ZLIB_SRC_FILE_DISABLED, ERR_ZLIB_SRC_FILE_INVALID },
+    { ERR_ZLIB_DEST_FILE_DISABLED, ERR_ZLIB_DEST_FILE_INVALID }
+};
 }
 using Want = OHOS::AAFwk::Want;
 
@@ -454,32 +469,10 @@ void CommonFunc::ConvertElementName(napi_env env, napi_value elementInfo,
 
 ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
 {
-    switch (nativeErrCode) {
-        case ERR_OK:
-            return SUCCESS;
-        case ERR_BUNDLE_MANAGER_INVALID_USER_ID:
-            return ERROR_INVALID_USER_ID;
-        case ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST:
-            return ERROR_BUNDLE_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST:
-            return ERROR_MODULE_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST:
-            return ERROR_ABILITY_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_PERMISSION_DENIED:
-            return ERROR_PERMISSION_DENIED_ERROR;
-        case ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED:
-            return ERROR_PERMISSION_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST:
-            return ERROR_DEVICE_ID_NOT_EXIST;
-        case ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST:
-            return ERROR_PROFILE_NOT_EXIST;
-        case ERR_ZLIB_SRC_FILE_DISABLED:
-            return ERR_ZLIB_SRC_FILE_INVALID;
-        case ERR_ZLIB_DEST_FILE_DISABLED:
-            return ERR_ZLIB_DEST_FILE_INVALID;
-        default:
-            return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    if (ERR_MAP.find(nativeErrCode) != ERR_MAP.end()) {
+        return ERR_MAP.at(nativeErrCode);
     }
+    return ERROR_BUNDLE_SERVICE_EXCEPTION;
 }
 
 bool CommonFunc::ParseWant(napi_env env, napi_value args, Want &want)
@@ -1208,8 +1201,8 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "targetVersion", nTargetVersion));
 
     napi_value nAppInfo;
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_APPLICATION_V9)
-        == GET_BUNDLE_INFO_WITH_APPLICATION_V9) {
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nAppInfo));
         ConvertApplicationInfo(env, nAppInfo, bundleInfo.applicationInfo);
     } else {
@@ -1250,8 +1243,8 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
         nReqPermissionStates));
 
     napi_value nSignatureInfo;
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9)
-        == GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9) {
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSignatureInfo));
         ConvertSignatureInfo(env, bundleInfo.signatureInfo, nSignatureInfo);
     } else {

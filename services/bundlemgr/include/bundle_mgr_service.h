@@ -170,7 +170,7 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     // Thread pool used to start installation or quick fix in parallel.
-    ThreadPool bmsThreadPool_;
+    ThreadPool bmsThreadPool_ = ThreadPool(Constants::BMS_SERVICE_NAME);
     const int THREAD_NUMBER = std::thread::hardware_concurrency();
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

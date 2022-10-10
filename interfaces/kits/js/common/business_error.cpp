@@ -51,10 +51,12 @@ constexpr const char* ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT =
 constexpr const char* ERR_MSG_INSTALL_VERSION_DOWNGRADE =
     "Failed to install the hap since the version of the newly installed hap was too early.";
 constexpr const char* ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED = "The preinstalled app cannot be uninstalled.";
-constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR = "Parameter error. Too few parameters.";
 constexpr const char* ERR_ZLIB_SRC_FILE_INVALID_MSG = "Parameter error.Input source file is disabled.";
 constexpr const char* ERR_ZLIB_DEST_FILE_INVALID_MSG = "Parameter error.Input destination file is disabled.";
-constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "";
+constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR = "Parameter error. the number of parameters is incorrect.";
+constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted";
+constexpr const char* ERROR_MSG_BUNDLE_IS_DISABLED = "The specified bundle is disabled";
+constexpr const char* ERROR_MSG_PROFILE_NOT_EXIST = "No profile in the hap";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_PARAM_CHECK_ERROR, ERR_MSG_PARAM_TYPE_ERROR },
@@ -77,9 +79,11 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_UNINSTALL_PREINSTALL_APP_FAILED, ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED },
     { ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION },
     { ERR_ZLIB_SRC_FILE_INVALID, ERR_ZLIB_SRC_FILE_INVALID_MSG },
-    { ERR_ZLIB_DEST_FILE_INVALID, ERR_ZLIB_DEST_FILE_INVALID_MSG }
+    { ERR_ZLIB_DEST_FILE_INVALID, ERR_ZLIB_DEST_FILE_INVALID_MSG },
+    { ERROR_BUNDLE_IS_DISABLED, ERROR_MSG_BUNDLE_IS_DISABLED },
+    { ERROR_PROFILE_NOT_EXIST, ERROR_MSG_PROFILE_NOT_EXIST }
 };
-}
+} // namespace
 
 void BusinessError::ThrowError(napi_env env, int32_t err, const std::string &msg)
 {
@@ -132,5 +136,5 @@ napi_value BusinessError::CreateCommonError(
     }
     return CreateError(env, err, errMessage);
 }
-}
-}
+} // AppExecFwk
+} // OHOS

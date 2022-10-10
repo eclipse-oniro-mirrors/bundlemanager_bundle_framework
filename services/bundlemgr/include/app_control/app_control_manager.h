@@ -34,7 +34,7 @@ public:
     ErrCode AddAppInstallControlRule(const std::string &callingName,
         const std::vector<std::string> &appIds, const std::string &controlRuleType, int32_t userId);
 
-    ErrCode DeleteAppInstallControlRule(const std::string &callingName,
+    ErrCode DeleteAppInstallControlRule(const std::string &callingName, const std::string &controlRuleType,
         const std::vector<std::string> &appIds, int32_t userId);
 
     ErrCode DeleteAppInstallControlRule(const std::string &callingName,
