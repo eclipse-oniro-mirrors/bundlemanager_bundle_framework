@@ -1201,8 +1201,8 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "targetVersion", nTargetVersion));
 
     napi_value nAppInfo;
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_APPLICATION_V9)
-        == GET_BUNDLE_INFO_WITH_APPLICATION_V9) {
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nAppInfo));
         ConvertApplicationInfo(env, nAppInfo, bundleInfo.applicationInfo);
     } else {
@@ -1243,8 +1243,8 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
         nReqPermissionStates));
 
     napi_value nSignatureInfo;
-    if ((static_cast<uint32_t>(flags) & GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9)
-        == GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9) {
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSignatureInfo));
         ConvertSignatureInfo(env, bundleInfo.signatureInfo, nSignatureInfo);
     } else {
