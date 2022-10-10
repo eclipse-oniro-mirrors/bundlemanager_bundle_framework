@@ -51,6 +51,9 @@ constexpr const char* OUT_OF_MEMORY = "out of memory";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
+namespace {
+const std::string PARAMETER_BUNDLE_NAME = "bundleName";
+}
 
 static ErrCode InnerGetBundleArchiveInfo(std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
@@ -850,38 +853,38 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
 void CreateAbilityFlagObject(napi_env env, napi_value value)
 {
     napi_value nGetAbilityInfoDefault;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT_V9),
-        &nGetAbilityInfoDefault));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), &nGetAbilityInfoDefault));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_DEFAULT",
         nGetAbilityInfoDefault));
 
     napi_value nGetAbilityInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_PERMISSION_V9),
-        &nGetAbilityInfoWithPermission));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION), &nGetAbilityInfoWithPermission));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_PERMISSION",
         nGetAbilityInfoWithPermission));
 
     napi_value nGetAbilityInfoWithApplication;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_APPLICATION_V9),
-        &nGetAbilityInfoWithApplication));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION), &nGetAbilityInfoWithApplication));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_APPLICATION",
         nGetAbilityInfoWithApplication));
 
     napi_value nGetAbilityInfoWithMetadata;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_METADATA_V9),
-        &nGetAbilityInfoWithMetadata));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA), &nGetAbilityInfoWithMetadata));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_METADATA",
         nGetAbilityInfoWithMetadata));
 
     napi_value nGetAbilityInfoWithDisabled;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_WITH_DISABLE_V9),
-        &nGetAbilityInfoWithDisabled));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE), &nGetAbilityInfoWithDisabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_DISABLE",
         nGetAbilityInfoWithDisabled));
 
     napi_value nGetAbilityInfOnlySystemApp;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9),
-        &nGetAbilityInfOnlySystemApp));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP), &nGetAbilityInfOnlySystemApp));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_ONLY_SYSTEM_APP",
         nGetAbilityInfOnlySystemApp));
 }
@@ -1468,7 +1471,8 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            "CleanBundleCacheFiles", Constants::PERMISSION_REMOVECACHEFILE);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -1492,36 +1496,33 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
     CleanBundleCacheCallbackInfo *asyncCallbackInfo = new (std::nothrow) CleanBundleCacheCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("CleanBundleCacheFiles asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<CleanBundleCacheCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("CleanBundleCacheFiles napi func init failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     size_t maxArgc = args.GetMaxArgc();
-    for (size_t i = 0; i < maxArgc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("CleanBundleCacheFiles bundleName is not a string!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else {
-                APP_LOGD("CleanBundleCacheFiles extra arg ignored");
-            }
-        } else {
-            APP_LOGE("CleanBundleCacheFiles arg err!");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+    if (maxArgc >= ARGS_SIZE_ONE) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+            APP_LOGE("CleanBundleCacheFiles bundleName is not a string!");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETER_BUNDLE_NAME, TYPE_STRING);
             return nullptr;
         }
+        if (maxArgc >= ARGS_SIZE_TWO) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        }
+    } else {
+        APP_LOGE("param error.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<CleanBundleCacheCallbackInfo>(
         env, asyncCallbackInfo, "CleanBundleCacheFiles", CleanBundleCacheFilesExec, CleanBundleCacheFilesComplete);
@@ -1685,7 +1686,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
     if (info.type == ProfileType::ABILITY_PROFILE) {
         std::vector<AbilityInfo> abilityInfos;
         result = iBundleMgr->QueryAbilityInfosV9(
-            want, AbilityInfoFlagV9::GET_ABILITY_INFO_WITH_METADATA_V9,
+            want, static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA),
             Constants::UNSPECIFIED_USERID, abilityInfos);
         if (result != ERR_OK) {
             APP_LOGE("QueryExtensionAbilityInfosV9 failed");
@@ -1705,7 +1706,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
     if (info.type == ProfileType::EXTENSION_PROFILE) {
         std::vector<ExtensionAbilityInfo> extensionInfos;
         result = iBundleMgr->QueryExtensionAbilityInfosV9(want,
-            ExtensionAbilityInfoFlagV9::GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9,
+            static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA),
             Constants::UNSPECIFIED_USERID, extensionInfos);
         if (result != ERR_OK) {
             APP_LOGE("QueryExtensionAbilityInfosV9 failed");
@@ -1847,29 +1848,32 @@ napi_value GetProfileByExAbility(napi_env env, napi_callback_info info)
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value)
 {
     napi_value nGetExtensionAbilityInfoDefault;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_EXTENSION_ABILITY_INFO_DEFAULT_V9),
-        &nGetExtensionAbilityInfoDefault));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT), &nGetExtensionAbilityInfoDefault));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_EXTENSION_ABILITY_INFO_DEFAULT",
         nGetExtensionAbilityInfoDefault));
 
     napi_value nGetExtensionAbilityInfoWithPermission;
     NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9),
-        &nGetExtensionAbilityInfoWithPermission));
+        napi_create_int32(env, static_cast<int32_t>(
+            GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION),
+            &nGetExtensionAbilityInfoWithPermission));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION",
         nGetExtensionAbilityInfoWithPermission));
 
     napi_value nGetExtensionAbilityInfoWithApplication;
     NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9),
-        &nGetExtensionAbilityInfoWithApplication));
+        napi_create_int32(env, static_cast<int32_t>(
+            GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION),
+            &nGetExtensionAbilityInfoWithApplication));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION",
         nGetExtensionAbilityInfoWithApplication));
 
     napi_value nGetExtensionAbilityInfoWithMetadata;
     NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9),
-        &nGetExtensionAbilityInfoWithMetadata));
+        napi_create_int32(env, static_cast<int32_t>(
+            GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA),
+            &nGetExtensionAbilityInfoWithMetadata));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_EXTENSION_ABILITY_INFO_WITH_METADATA",
         nGetExtensionAbilityInfoWithMetadata));
 }
@@ -1953,32 +1957,32 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
 void CreateApplicationFlagObject(napi_env env, napi_value value)
 {
     napi_value nGetApplicationInfoDefault;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_APPLICATION_INFO_DEFAULT_V9),
-        &nGetApplicationInfoDefault));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), &nGetApplicationInfoDefault));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_APPLICATION_INFO_DEFAULT",
         nGetApplicationInfoDefault));
 
     napi_value nGetApplicationInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_APPLICATION_INFO_WITH_PERMISSION_V9),
-        &nGetApplicationInfoWithPermission));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION), &nGetApplicationInfoWithPermission));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_PERMISSION",
         nGetApplicationInfoWithPermission));
 
     napi_value nGetApplicationInfoWithMetadata;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_APPLICATION_INFO_WITH_METADATA_V9),
-        &nGetApplicationInfoWithMetadata));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA), &nGetApplicationInfoWithMetadata));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_METADATA",
         nGetApplicationInfoWithMetadata));
 
     napi_value nGetApplicationInfoWithDisable;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_APPLICATION_INFO_WITH_DISABLE_V9),
-        &nGetApplicationInfoWithDisable));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), &nGetApplicationInfoWithDisable));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_DISABLE",
         nGetApplicationInfoWithDisable));
 
     napi_value nGetAllApplicationInfo;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_ALL_APPLICATION_INFO_V9),
-        &nGetAllApplicationInfo));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetApplicationFlag::GET_ALL_APPLICATION_INFO), &nGetAllApplicationInfo));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ALL_APPLICATION_INFO",
         nGetAllApplicationInfo));
 }
@@ -2249,56 +2253,56 @@ static ErrCode InnerGetBundleInfos(int32_t flags,
 void CreateBundleFlagObject(napi_env env, napi_value value)
 {
     napi_value nBundleInfoDefault;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_DEFAULT_V9),
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT),
         &nBundleInfoDefault));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_DEFAULT",
         nBundleInfoDefault));
 
     napi_value nGetBundleInfoWithApplication;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_WITH_APPLICATION_V9),
-        &nGetBundleInfoWithApplication));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION), &nGetBundleInfoWithApplication));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_APPLICATION",
         nGetBundleInfoWithApplication));
 
     napi_value nGetBundleInfoWithHapModule;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_WITH_HAP_MODULE_V9),
-        &nGetBundleInfoWithHapModule));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), &nGetBundleInfoWithHapModule));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_HAP_MODULE",
         nGetBundleInfoWithHapModule));
 
     napi_value nGetBundleInfoWithAbility;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_WITH_ABILITY_V9),
-        &nGetBundleInfoWithAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY), &nGetBundleInfoWithAbility));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ABILITY",
         nGetBundleInfoWithAbility));
 
     napi_value nGetBundleInfoWithExtensionAbility;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY_V9),
-        &nGetBundleInfoWithExtensionAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY), &nGetBundleInfoWithExtensionAbility));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY",
         nGetBundleInfoWithExtensionAbility));
 
     napi_value nGetBundleInfoWithRequestedPermission;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
-        GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION_V9), &nGetBundleInfoWithRequestedPermission));
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION), &nGetBundleInfoWithRequestedPermission));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION",
         nGetBundleInfoWithRequestedPermission));
 
     napi_value nGetBundleInfoWithMetadata;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_WITH_METADATA_V9),
-        &nGetBundleInfoWithMetadata));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), &nGetBundleInfoWithMetadata));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_METADATA",
         nGetBundleInfoWithMetadata));
 
     napi_value nGetBundleInfoWithDisable;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_WITH_DISABLE_V9),
-        &nGetBundleInfoWithDisable));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), &nGetBundleInfoWithDisable));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_DISABLE",
         nGetBundleInfoWithDisable));
 
     napi_value nGetBundleInfoWithSignatureInfo;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(GET_BUNDLE_INFO_WITH_SIGNATURE_INFO_V9),
-        &nGetBundleInfoWithSignatureInfo));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO), &nGetBundleInfoWithSignatureInfo));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SIGNATURE_INFO",
         nGetBundleInfoWithSignatureInfo));
 }

@@ -642,8 +642,10 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_1500, Function | Sma
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
     EXPECT_EQ(result, ERR_OK);
 
-    int32_t flags = GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9 |
-        GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9 | GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9;
+    int32_t flags =
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION) |
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA);
     result = dataMgr->QueryExtensionAbilityInfosV9(want, flags, USERID, infos);
     EXPECT_EQ(result, ERR_OK);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
@@ -754,8 +756,10 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_2000, Function | Sma
     AAFwk::Want want;
     want.SetAction("action.hello");
     want.AddEntity("entity.hello");
-    int32_t flags = GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9 |
-        GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9 | GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9;
+    int32_t flags =
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION) |
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA);
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, flags, USERID, infos);
     EXPECT_EQ(result, ERR_OK);
@@ -847,8 +851,11 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0400, Function | MediumTest |
     ErrCode ret = dataMgr->QueryAbilityInfosV9(want, 0, USERID, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
 
-    int32_t flags = GET_ABILITY_INFO_WITH_PERMISSION_V9 | GET_ABILITY_INFO_WITH_APPLICATION_V9 |
-        GET_ABILITY_INFO_WITH_METADATA_V9 | GET_ABILITY_INFO_WITH_DISABLE_V9;
+    int32_t flags =
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
     ret = dataMgr->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
 
@@ -959,8 +966,11 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0900, Function | MediumTest |
     want.AddEntity("entity.hello");
 
     std::vector<AbilityInfo> abilityInfos;
-    int32_t flags = GET_ABILITY_INFO_WITH_PERMISSION_V9 | GET_ABILITY_INFO_WITH_APPLICATION_V9 |
-        GET_ABILITY_INFO_WITH_METADATA_V9 | GET_ABILITY_INFO_WITH_DISABLE_V9;
+    int32_t flags =
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
     ErrCode ret = dataMgr->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
 
@@ -1035,7 +1045,7 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationInfoV9_0100, Function | MediumTest 
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    
+
     AAFwk::Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");

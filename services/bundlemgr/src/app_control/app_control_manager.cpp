@@ -48,10 +48,10 @@ ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingNa
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
-    const std::vector<std::string> &appIds, int32_t userId)
+    const std::string &controlRuleType, const std::vector<std::string> &appIds, int32_t userId)
 {
     APP_LOGD("DeleteAppInstallControlRule");
-    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, appIds, userId);
+    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, appIds, userId);
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
@@ -119,7 +119,8 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleInfo bundleInfo;
-    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, BundleFlagV9::GET_BUNDLE_INFO_WITH_DISABLE_V9, bundleInfo, userId);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("DataMgr GetBundleInfoV9 failed");
         return ret;

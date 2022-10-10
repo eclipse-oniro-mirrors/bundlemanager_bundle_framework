@@ -43,6 +43,11 @@ int32_t DistributedBmsProxy::GetRemoteAbilityInfo(const OHOS::AppExecFwk::Elemen
                                                   RemoteAbilityInfo &remoteAbilityInfo)
 {
     APP_LOGD("DistributedBmsProxy GetRemoteAbilityInfoWithLocale");
+    int32_t checkRet = CheckElementName(elementName);
+    if (checkRet != ERR_OK) {
+        APP_LOGE("DistributedBmsProxy GetRemoteAbilityInfoWithLocale check elementName failed");
+        return checkRet;
+    }
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -78,6 +83,13 @@ int32_t DistributedBmsProxy::GetRemoteAbilityInfos(const std::vector<ElementName
                                                    std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
     APP_LOGD("DistributedBmsProxy GetRemoteAbilityInfosWithLocale");
+    for (const auto &elementName : elementNames) {
+        int32_t checkRet = CheckElementName(elementName);
+        if (checkRet != ERR_OK) {
+            APP_LOGE("DistributedBmsProxy GetRemoteAbilityInfosWithLocale check elementName failed");
+            return checkRet;
+        }
+    }
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -281,6 +293,23 @@ int32_t DistributedBmsProxy::SendRequest(IDistributedBms::Message code, MessageP
         APP_LOGE("fail to send %{public}d cmd to service due to transact error:%{public}d", code, result);
     }
     return result;
+}
+
+int32_t DistributedBmsProxy::CheckElementName(const ElementName &elementName)
+{
+    if (elementName.GetBundleName().empty()) {
+        APP_LOGE("fail to GetRemoteAbilityInfo due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (elementName.GetAbilityName().empty()) {
+        APP_LOGE("fail to GetRemoteAbilityInfo due to abilityName empty");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (elementName.GetDeviceID().empty()) {
+        APP_LOGE("fail to GetRemoteAbilityInfo due to devicedID empty");
+        return ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

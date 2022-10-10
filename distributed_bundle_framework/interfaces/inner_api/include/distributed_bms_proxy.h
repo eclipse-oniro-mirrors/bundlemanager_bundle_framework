@@ -114,6 +114,7 @@ private:
     int32_t GetParcelableInfo(IDistributedBms::Message code, MessageParcel &data, T &parcelableInfo);
     template <typename T>
     int32_t GetParcelableInfos(IDistributedBms::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+    int32_t CheckElementName(const ElementName &elementName);
     static inline BrokerDelegator<DistributedBmsProxy> delegator_;
 };
 }  // namespace AppExecFwk

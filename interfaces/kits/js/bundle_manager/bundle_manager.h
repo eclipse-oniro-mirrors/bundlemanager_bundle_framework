@@ -151,7 +151,7 @@ struct Query {
     int32_t flags_ = 0;
     int32_t userId_ = Constants::UNSPECIFIED_USERID;
     napi_env env_;
-    Query(const std::string &bundleName, const std::string &interfaceType,int32_t flags, int32_t userId, napi_env env)
+    Query(const std::string &bundleName, const std::string &interfaceType, int32_t flags, int32_t userId, napi_env env)
         : bundleName_(bundleName), interfaceType_(interfaceType), flags_(flags), userId_(userId), env_(env) {}
 
     bool operator==(const Query &query) const

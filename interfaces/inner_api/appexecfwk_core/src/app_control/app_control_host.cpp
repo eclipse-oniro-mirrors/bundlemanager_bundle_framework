@@ -99,6 +99,7 @@ ErrCode AppControlHost::HandleAddAppInstallControlRule(MessageParcel& data, Mess
 
 ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, MessageParcel& reply)
 {
+    AppInstallControlRuleType controlRuleType = static_cast<AppInstallControlRuleType>(data.ReadInt32());
     std::vector<std::string> appIds;
     int32_t appIdSize = data.ReadInt32();
     if (appIdSize > AppControlConstants::LIST_MAX_SIZE) {
@@ -109,7 +110,7 @@ ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, M
         appIds.emplace_back(data.ReadString());
     }
     int32_t userId = data.ReadInt32();
-    int32_t ret = DeleteAppInstallControlRule(appIds, userId);
+    int32_t ret = DeleteAppInstallControlRule(controlRuleType, appIds, userId);
     if (ret != ERR_OK) {
         APP_LOGE("HandleDeleteAppInstallControlRule failed");
     }

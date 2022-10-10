@@ -239,10 +239,12 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0200, Function | SmallTe
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     seteuid(1000);
     std::vector<std::string> appIds;
-    auto res1 = appControlProxy->DeleteAppInstallControlRule(appIds, USERID);
+    auto res1 = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
+        appIds, USERID);
     EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     appIds.emplace_back(APPID);
-    auto res2 = appControlProxy->DeleteAppInstallControlRule(appIds, USERID);
+    auto res2 = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
+        appIds, USERID);
     EXPECT_EQ(res2, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     seteuid(537);
     auto res3 = appControlProxy->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
