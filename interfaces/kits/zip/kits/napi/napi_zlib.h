@@ -16,6 +16,7 @@
 #define OHOS_APPEXECFWK_LIBZIP_ZLIB_H
 #include <string>
 
+#include "napi_arg.h"
 #include "napi/native_api.h"
 #include "napi_zlib_common.h"
 #include "zip_utils.h"
@@ -154,6 +155,11 @@ napi_value NAPI_ZipFile(napi_env env, napi_callback_info info);
  *       };
  */
 napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info);
+
+bool InitParam(CallZipUnzipParam &param, napi_env env, NapiArg &args, bool isZipFile);
+
+napi_value CompressFile(napi_env env, napi_callback_info info);
+napi_value DecompressFile(napi_env env, napi_callback_info info);
 
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

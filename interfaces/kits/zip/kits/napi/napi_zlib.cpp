@@ -20,8 +20,13 @@
 
 #include "app_log_wrapper.h"
 #include "file_path.h"
+#include "bundle_errors.h"
+#include "business_error.h"
+#include "common_func.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "napi_arg.h"
+#include "napi_constants.h"
 #include "napi_zlib_common.h"
 #include "zip.h"
 #include "zip_utils.h"
@@ -35,6 +40,8 @@ namespace LIBZIP {
 namespace {
 constexpr size_t ARGS_MAX_COUNT = 10;
 constexpr int32_t PARAM3 = 3;
+const char* WRONG_PARAM = "wrong param type";
+const char* OUT_OF_MEMORARY = "out of memorary";
 }
 
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
@@ -58,8 +65,8 @@ constexpr int32_t PARAM3 = 3;
         return ret;                                                                                               \
     }
 
-void ZipFileExecute(napi_env env, void *data);
-void UnzipFileExecute(napi_env env, void *data);
+void CompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo);
+void DecompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo);
 napi_value UnwrapZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc);
 napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc);
 napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackInfo *asyncZipCallbackInfo);
@@ -249,6 +256,8 @@ napi_value ZlibInit(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("zipFile", NAPI_ZipFile),
         DECLARE_NAPI_FUNCTION("unzipFile", NAPI_UnzipFile),
+        DECLARE_NAPI_FUNCTION("compressFile", CompressFile),
+        DECLARE_NAPI_FUNCTION("decompressFile", DecompressFile),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
@@ -493,17 +502,7 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
         NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
         asyncZipCallbackInfo->zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>(env, nullptr, deferred, false);
     }
-    napi_value resourceName = 0;
-    NAPI_CALL_BASE(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName), nullptr);
-    napi_create_async_work(env, nullptr, resourceName, ZipFileExecute,
-        [](napi_env env, napi_status status, void *data) {
-            AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-            std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-        },
-        (void *)asyncZipCallbackInfo,
-        &asyncZipCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
+    CompressExcute(env, asyncZipCallbackInfo);
     callbackPtr.release();
     return promise;
 }
@@ -554,67 +553,161 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
         asyncZipCallbackInfo->zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>(env, nullptr, deferred, false);
     }
-    napi_value resourceName = 0;
-    NAPI_CALL_BASE(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName), nullptr);
-    napi_create_async_work(env, nullptr, resourceName, UnzipFileExecute,
-        [](napi_env env, napi_status status, void *data) {
-            AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-            std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-        }, (void *)asyncZipCallbackInfo, &asyncZipCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncZipCallbackInfo->asyncWork);
+    DecompressExcute(env, asyncZipCallbackInfo);
     callbackPtr.release();
     return promise;
 }
 
-// ZipFile Promise
-void ZipFileExecute(napi_env env, void *data)
+// interface for v9
+bool InitParam(CallZipUnzipParam &param, napi_env env, NapiArg &args, bool isZipFile)
 {
-    APP_LOGD("NAPI_ZipFile_Promise_Execute, worker pool thread execute.");
-    AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("NAPI_ZipFile_Promise_Execute, input info parameters error.");
-        return;
+    if (args.GetMaxArgc() < PARAM3) {
+        return false;
     }
-
-    if (asyncCallbackInfo->zlibCallbackInfo == nullptr) {
-        APP_LOGE("NAPI_ZipFile_Promise_Execute, input callback parameters error.");
-        asyncCallbackInfo->executeResult = -1;
-        return;
+    for (size_t i = 0; i < PARAM3; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+            if (UnwrapStringParam(param.src, env, args[i]) == nullptr) {
+                return false;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
+            if (UnwrapStringParam(param.dest, env, args[i]) == nullptr) {
+                return false;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_object)) {
+            if (isZipFile && !UnwrapOptionsParams(param.options, env, args[i])) {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
-
-    auto zipCallBack = [](int result) {};
-    Zip(asyncCallbackInfo->param.src,
-        asyncCallbackInfo->param.dest,
-        zipCallBack,
-        false,
-        asyncCallbackInfo->zlibCallbackInfo);
-    APP_LOGD("NAPI_ZipFile_Promise_Execute, worker pool thread execute end.");
+    return true;
 }
 
-void UnzipFileExecute(napi_env env, void *data)
+void CompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
 {
-    APP_LOGD("NAPI_UnzipFile_Promise_Execute, worker pool thread execute.");
-    AsyncZipCallbackInfo *asyncCallbackInfo = static_cast<AsyncZipCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("NAPI_UnzipFile_Promise_Execute, input info parameters error.");
+    if (asyncZipCallbackInfo == nullptr) {
+        APP_LOGE("asyncZipCallbackInfo is nullptr");
+        return;
+    }
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
+    if (asyncZipCallbackInfo->zlibCallbackInfo == nullptr) {
+        APP_LOGE("zlibCallbackInfo is nullptr");
         return;
     }
 
-    if (asyncCallbackInfo->zlibCallbackInfo == nullptr) {
-        APP_LOGE("NAPI_UnzipFile_Promise_Execute, input callback parameters error.");
-        asyncCallbackInfo->executeResult = -1;
-        return;
-    }
-
-    auto unZipCallBack = [](int result) {};
-    Unzip(asyncCallbackInfo->param.src,
-        asyncCallbackInfo->param.dest,
-        asyncCallbackInfo->param.options,
-        unZipCallBack,
-        asyncCallbackInfo->zlibCallbackInfo);
-    APP_LOGD("NAPI_UnzipFile_Promise_Execute, worker pool thread execute end.");
+    Zip(asyncZipCallbackInfo->param.src, asyncZipCallbackInfo->param.dest,
+        false, asyncZipCallbackInfo->zlibCallbackInfo);
 }
+
+napi_value CompressFile(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi begin CompressFile");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        APP_LOGE("init args failed!");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);
+        return nullptr;
+    }
+    CallZipUnzipParam param;
+    if (!InitParam(param, env, args, true)) {
+        APP_LOGE("Init Param failed!");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);
+        return nullptr;
+    }
+    AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
+    if (asyncZipCallbackInfo == nullptr) {
+        APP_LOGE("asyncZipCallbackInfo nullptr!");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR, OUT_OF_MEMORARY);
+        return nullptr;
+    }
+    asyncZipCallbackInfo->param = param;
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
+    asyncZipCallbackInfo->zlibCallbackInfo =
+                std::make_shared<ZlibCallbackInfo>(env, nullptr, nullptr, false);
+    asyncZipCallbackInfo->zlibCallbackInfo->SetDeliverErrCode(true);
+    if (args.GetMaxArgc() > PARAM3) {
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL_BASE(env, napi_typeof(env, args[PARAM3], &valuetype), nullptr);
+        if (valuetype == napi_function) {
+            napi_ref callbackRef = nullptr;
+            NAPI_CALL(env, napi_create_reference(env, args[PARAM3], NAPI_RETURN_ONE, &callbackRef));
+            asyncZipCallbackInfo->zlibCallbackInfo->SetCallback(callbackRef);
+            asyncZipCallbackInfo->zlibCallbackInfo->SetIsCallback(true);
+        }
+    }
+    napi_value promise = nullptr;
+    if (!asyncZipCallbackInfo->zlibCallbackInfo->GetIsCallback()) {
+        napi_deferred deferred;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncZipCallbackInfo->zlibCallbackInfo->SetDeferred(deferred);
+    }
+    CompressExcute(env, asyncZipCallbackInfo);
+    callbackPtr.release();
+    return promise;
+}
+
+void DecompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
+{
+    if (asyncZipCallbackInfo == nullptr) {
+        APP_LOGE("asyncZipCallbackInfo is nullptr");
+        return;
+    }
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
+    if (asyncZipCallbackInfo->zlibCallbackInfo == nullptr) {
+        APP_LOGE("zlibCallbackInfo is nullptr");
+        return;
+    }
+    Unzip(asyncZipCallbackInfo->param.src, asyncZipCallbackInfo->param.dest,
+        asyncZipCallbackInfo->param.options, asyncZipCallbackInfo->zlibCallbackInfo);
+}
+
+napi_value DecompressFile(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi begin CompressFile");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);
+        return nullptr;
+    }
+    CallZipUnzipParam param;
+    if (!InitParam(param, env, args, true)) {
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);
+        return nullptr;
+    }
+    AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
+    if (asyncZipCallbackInfo == nullptr) {
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR, OUT_OF_MEMORARY);
+        return nullptr;
+    }
+    asyncZipCallbackInfo->param = param;
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
+    asyncZipCallbackInfo->zlibCallbackInfo =
+                std::make_shared<ZlibCallbackInfo>(env, nullptr, nullptr, false);
+    asyncZipCallbackInfo->zlibCallbackInfo->SetDeliverErrCode(true);
+    if (args.GetMaxArgc() > PARAM3) {
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL_BASE(env, napi_typeof(env, args[PARAM3], &valuetype), nullptr);
+        if (valuetype == napi_function) {
+            napi_ref callbackRef = nullptr;
+            NAPI_CALL(env, napi_create_reference(env, args[PARAM3], NAPI_RETURN_ONE, &callbackRef));
+            asyncZipCallbackInfo->zlibCallbackInfo->SetCallback(callbackRef);
+            asyncZipCallbackInfo->zlibCallbackInfo->SetIsCallback(true);
+        }
+    }
+    napi_value promise = nullptr;
+    if (!asyncZipCallbackInfo->zlibCallbackInfo->GetIsCallback()) {
+        napi_deferred deferred;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncZipCallbackInfo->zlibCallbackInfo->SetDeferred(deferred);
+    }
+    DecompressExcute(env, asyncZipCallbackInfo);
+    callbackPtr.release();
+    return promise;
+}
+
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS

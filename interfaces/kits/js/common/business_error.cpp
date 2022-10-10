@@ -52,6 +52,8 @@ constexpr const char* ERR_MSG_INSTALL_VERSION_DOWNGRADE =
     "Failed to install the hap since the version of the newly installed hap was too early.";
 constexpr const char* ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED = "The preinstalled app cannot be uninstalled.";
 constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR = "Parameter error. Too few parameters.";
+constexpr const char* ERR_ZLIB_SRC_FILE_INVALID_MSG = "Parameter error.Input source file is disabled.";
+constexpr const char* ERR_ZLIB_DEST_FILE_INVALID_MSG = "Parameter error.Input destination file is disabled.";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -73,7 +75,9 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_NO_DISK_SPACE_LEFT, ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT },
     { ERROR_INSTALL_VERSION_DOWNGRADE, ERR_MSG_INSTALL_VERSION_DOWNGRADE },
     { ERROR_UNINSTALL_PREINSTALL_APP_FAILED, ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED },
-    { ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION }
+    { ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION },
+    { ERR_ZLIB_SRC_FILE_INVALID, ERR_ZLIB_SRC_FILE_INVALID_MSG },
+    { ERR_ZLIB_DEST_FILE_INVALID, ERR_ZLIB_DEST_FILE_INVALID_MSG }
 };
 }
 

@@ -45,6 +45,9 @@ constexpr ErrCode ERROR_SYSTEM_IO_OPERATION = 17700103;
 constexpr ErrCode ERROR_OUT_OF_MEMORY_ERROR = 17700102;
 constexpr ErrCode ERROR_ENVORINMENT_INIT_FAILED = 17700104;
 constexpr ErrCode ERROR_PROFILE_NOT_EXIST = 17700024;
+// zlib errCode
+constexpr ErrCode ERR_ZLIB_SRC_FILE_INVALID = 90001;
+constexpr ErrCode ERR_ZLIB_DEST_FILE_INVALID = 90002;
 }
 }
 #endif
