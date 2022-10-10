@@ -58,8 +58,8 @@ static NativeValue* JsPackageInit(NativeEngine *engine, NativeValue *exports)
 static napi_value Init(napi_env env, napi_value exports)
 {
     HILOG_INFO("napi_moudule Init start ...");
-    return reinterpret_cast<napi_value>(JsPackageInit(reinterpret_cast<NativeEngine*>(env),
-        reinterpret_cast<NativeValue*>(exports)));
+    return reinterpret_cast<napi_value>(
+        JsPackageInit(reinterpret_cast<NativeEngine*>(env), reinterpret_cast<NativeValue*>(exports)));
 }
 EXTERN_C_END
 

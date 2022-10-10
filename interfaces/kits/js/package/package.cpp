@@ -153,7 +153,7 @@ void JsPackage::JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, Nat
 NativeValue* JsPackage::OnHasInstalled(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGI("%{public}s called.", __func__);
-    int32_t errCode = 0; 
+    int32_t errCode = 0;
     CheckPackageHasInstalledOptions *asyncCallbackInfo = new CheckPackageHasInstalledOptions();
 
     if (info.argc < ARGS_SIZE_ONE || info.argc > ARGS_SIZE_TWO) {
@@ -161,7 +161,7 @@ NativeValue* JsPackage::OnHasInstalled(NativeEngine &engine, NativeCallbackInfo 
         return engine.CreateUndefined();
     }
 
-    if (info.argv[PARAM0]->TypeOf() == NATIVE_OBJECT){
+    if (info.argv[PARAM0]->TypeOf() == NATIVE_OBJECT) {
         JsParseCheckPackageHasInstalledOptions(engine, info, asyncCallbackInfo);
     } else {
         errCode = INVALID_PARAM;

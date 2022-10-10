@@ -65,8 +65,7 @@ static NativeValue* JsDefaultAppInit(NativeEngine *engine, NativeValue *exports)
     object->SetNativePointer(jsDefaultAppUnsupported.release(), JsDefaultApp::JsFinalizer, nullptr);
 
     const char *moduleName = "JsDefaultApp";
-    BindNativeFunction(
-            *engine, *object, "isDefaultApplication", moduleName, JsDefaultApp::JsIsDefaultApplication);
+    BindNativeFunction(*engine, *object, "isDefaultApplication", moduleName, JsDefaultApp::JsIsDefaultApplication);
 
     return exports;
 }
