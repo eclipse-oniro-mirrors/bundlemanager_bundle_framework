@@ -34,6 +34,14 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 
+namespace {
+const std::string IS_DEFAULT_APPLICATION = "IsDefaultApplication";
+const std::string GET_DEFAULT_APPLICATION = "GetDefaultApplication";
+const std::string SET_DEFAULT_APPLICATION = "SetDefaultApplication";
+const std::string RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
+const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+}
+
 static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy()
 {
     auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -214,7 +222,8 @@ void IsDefaultApplicationComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isDefaultApp, &result[ARGS_POS_ONE]));
     } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            IS_DEFAULT_APPLICATION, "");
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -238,13 +247,12 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
     DefaultAppCallbackInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
@@ -253,7 +261,7 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -263,12 +271,12 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<DefaultAppCallbackInfo>(
-        env, asyncCallbackInfo, "IsDefaultApplication", IsDefaultApplicationExec, IsDefaultApplicationComplete);
+        env, asyncCallbackInfo, IS_DEFAULT_APPLICATION, IsDefaultApplicationExec, IsDefaultApplicationComplete);
     callbackPtr.release();
     APP_LOGD("call IsDefaultApplication done");
     return promise;
@@ -314,7 +322,8 @@ void GetDefaultApplicationComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
         ConvertBundleInfo(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfo);
     } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_DEFAULT_APPLICATION, Constants::PERMISSION_GET_DEFAULT_APPLICATION);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -338,14 +347,13 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
     DefaultAppCallbackInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
@@ -354,7 +362,7 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -365,7 +373,7 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -375,12 +383,12 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<DefaultAppCallbackInfo>(
-        env, asyncCallbackInfo, "GetDefaultApplication", GetDefaultApplicationExec, GetDefaultApplicationComplete);
+        env, asyncCallbackInfo, GET_DEFAULT_APPLICATION, GetDefaultApplicationExec, GetDefaultApplicationComplete);
     callbackPtr.release();
     APP_LOGD("call GetDefaultApplication done");
     return promise;
@@ -424,7 +432,8 @@ void SetDefaultApplicationComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
     } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            SET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -448,14 +457,13 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
     DefaultAppCallbackInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
         APP_LOGE("param count invalid");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
@@ -464,13 +472,13 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_object)) {
             if (!CommonFunc::ParseElementName(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid elementName");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -481,7 +489,7 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_THREE) {
@@ -491,12 +499,12 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<DefaultAppCallbackInfo>(
-        env, asyncCallbackInfo, "SetDefaultApplication", SetDefaultApplicationExec, SetDefaultApplicationComplete);
+        env, asyncCallbackInfo, SET_DEFAULT_APPLICATION, SetDefaultApplicationExec, SetDefaultApplicationComplete);
     callbackPtr.release();
     APP_LOGD("call SetDefaultApplication done");
     return promise;
@@ -540,7 +548,8 @@ void ResetDefaultApplicationComplete(napi_env env, napi_status status, void *dat
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
     } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            RESET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -564,14 +573,13 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
     DefaultAppCallbackInfo *asyncCallbackInfo = new (std::nothrow) DefaultAppCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
@@ -580,7 +588,7 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -591,7 +599,7 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -601,12 +609,12 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<DefaultAppCallbackInfo>(env,
-        asyncCallbackInfo, "ResetDefaultApplication", ResetDefaultApplicationExec, ResetDefaultApplicationComplete);
+        asyncCallbackInfo, RESET_DEFAULT_APPLICATION, ResetDefaultApplicationExec, ResetDefaultApplicationComplete);
     callbackPtr.release();
     APP_LOGD("call ResetDefaultApplication done");
     return promise;
