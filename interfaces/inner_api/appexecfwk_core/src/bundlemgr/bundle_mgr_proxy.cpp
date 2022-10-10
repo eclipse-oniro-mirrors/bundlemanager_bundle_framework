@@ -1385,7 +1385,7 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
     APP_LOGD("begin to GetLaunchWantForBundle of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetHapModuleInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;

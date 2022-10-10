@@ -16,6 +16,8 @@
 #include "zlib_callback_info.h"
 
 #include "app_log_wrapper.h"
+#include "common_func.h"
+#include "business_error.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -37,14 +39,23 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
             if (work == nullptr) {
                 return;
             }
-            // JS Thread
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
                 return;
             }
+            std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[ARGS_ONE] = {0};
-            NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env,
-                napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]));
+            if (asyncCallbackInfo->deliverErrcode) {
+                if (asyncCallbackInfo->callbackResult == ERR_OK) {
+                    NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_get_null(asyncCallbackInfo->env, &result[0]));
+                } else {
+                    result[0] = BusinessError::CreateCommonError(asyncCallbackInfo->env,
+                        asyncCallbackInfo->callbackResult, "");
+                }
+            } else {
+                NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env,
+                    napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]));
+            }
             if (asyncCallbackInfo->isCallBack) {
                 napi_value callback = 0;
                 napi_value placeHolder = nullptr;
@@ -56,17 +67,13 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
                     napi_delete_reference(asyncCallbackInfo->env, asyncCallbackInfo->callback);
                 }
             } else {
-                if (asyncCallbackInfo->callbackResult == 0) {
+                if (asyncCallbackInfo->callbackResult == ERR_OK) {
                     NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_resolve_deferred(asyncCallbackInfo->env,
                         asyncCallbackInfo->deferred, result[0]));
                 } else {
                     NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_reject_deferred(asyncCallbackInfo->env,
                         asyncCallbackInfo->deferred, result[0]));
                 }
-            }
-            if (asyncCallbackInfo != nullptr) {
-                delete asyncCallbackInfo;
-                asyncCallbackInfo = nullptr;
             }
             if (work != nullptr) {
                 delete work;
@@ -76,7 +83,7 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
     return ret;
 }
 
-void ZlibCallbackInfo::OnZipUnZipFinish(int32_t result)
+void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
 {
     // do callback or promise
     uv_loop_s* loop = nullptr;
@@ -90,13 +97,22 @@ void ZlibCallbackInfo::OnZipUnZipFinish(int32_t result)
         APP_LOGE("create work failed!");
         return;
     }
+    ErrCode err = ERR_OK;
+    if (!deliverErrcode_) {
+        err = result == ERR_OK ? ERR_OK : ERROR_CODE_ERRNO;
+    } else {
+        err = CommonFunc::ConvertErrCode(result);
+    }
+
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo {
         .env = env_,
         .callback = callback_,
         .deferred = deferred_,
         .isCallBack = isCallBack_,
-        .callbackResult = result,
+        .callbackResult = err,
+        .deliverErrcode = deliverErrcode_,
     };
+    std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
         delete work;
         return;
@@ -111,6 +127,32 @@ void ZlibCallbackInfo::OnZipUnZipFinish(int32_t result)
             delete work;
         }
     }
+    callbackPtr.release();
+}
+
+bool ZlibCallbackInfo::GetIsCallback() const
+{
+    return isCallBack_;
+}
+
+void ZlibCallbackInfo::SetIsCallback(bool isCallback)
+{
+    isCallBack_ = isCallback;
+}
+
+void ZlibCallbackInfo::SetCallback(napi_ref callback)
+{
+    callback_ = callback;
+}
+
+void ZlibCallbackInfo::SetDeferred(napi_deferred deferred)
+{
+    deferred_ = deferred;
+}
+
+void ZlibCallbackInfo::SetDeliverErrCode(bool isDeliverErrCode)
+{
+    deliverErrcode_ = isDeliverErrCode;
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

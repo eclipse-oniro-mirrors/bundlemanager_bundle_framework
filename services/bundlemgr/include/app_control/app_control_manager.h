@@ -42,7 +42,7 @@ public:
 
     ErrCode GetAppInstallControlRule(const std::string &callingName,
         const std::string &controlRuleType, int32_t userId, std::vector<std::string> &appIds);
-    
+
     ErrCode AddAppRunningControlRule(const std::string &callingName,
         const std::vector<AppRunningControlRule> &controlRules, int32_t userId);
     ErrCode DeleteAppRunningControlRule(const std::string &callingName,
@@ -52,11 +52,11 @@ public:
     ErrCode GetAppRunningControlRule(
         const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule);
 
-    ErrCode SetDisposedStatus(const std::string &appId, const Want& want);
+    ErrCode SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId);
 
-    ErrCode DeleteDisposedStatus(const std::string &appId);
+    ErrCode DeleteDisposedStatus(const std::string &appId, int32_t userId);
 
-    ErrCode GetDisposedStatus(const std::string &appId, Want& want);
+    ErrCode GetDisposedStatus(const std::string &appId, Want& want, int32_t userId);
 private:
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
 };

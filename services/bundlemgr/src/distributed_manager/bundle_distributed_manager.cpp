@@ -94,6 +94,7 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         return ErrorCode::GET_DEVICE_PROFILE_FAILED;
     }
     std::string jsonData = profile.GetCharacteristicProfileJson();
+    APP_LOGI("CharacteristicProfileJson:%{public}s", jsonData.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(jsonData, nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("jsonObject is_discarded");
@@ -228,6 +229,7 @@ void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
 void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
 {
     RpcIdResult rpcIdResult;
+    APP_LOGI("queryRpcIdResult:%{public}s", queryRpcIdResult.c_str());
     if (!ParseInfoFromJsonStr(queryRpcIdResult.c_str(), rpcIdResult)) {
         APP_LOGE("Parse info from json fail");
         return;

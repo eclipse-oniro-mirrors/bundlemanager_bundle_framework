@@ -22,6 +22,8 @@
 #include <vector>
 
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_errors.h"
 #include "directory_ex.h"
 #include "event_handler.h"
 #include "file_path.h"
@@ -44,20 +46,7 @@ const char HIDDEN_SEPARATOR = '.';
 const std::string ZIP = ".zip";
 const std::int32_t ZIP_SIZE = 4;
 
-#define CALLING_CALL_BACK(callback, result) \
-    if (callback != nullptr) {              \
-        callback(result);                   \
-    }
-
-#define ZIP_WRITER_IS_NULL(zipWriter, logContent, callback, error) \
-    if (!(zipWriter)) {                                            \
-        APP_LOGI( logContent );                                    \
-        CALLING_CALL_BACK(callback, error)                         \
-        return false;                                              \
-    }
-
 struct UnzipParam {
-    CALLBACK callback = nullptr;
     FilterCallback filterCB = nullptr;
     bool logSkippedFiles = false;
 };
@@ -139,7 +128,7 @@ FilePath FilePathEndIsSeparator(FilePath paramPath)
     return paramPath;
 }
 
-bool Zip(const ZipParams &params, const OPTIONS &options, CALLBACK callback)
+bool Zip(const ZipParams &params, const OPTIONS &options)
 {
     const std::vector<FilePath> *filesToAdd = &params.GetFilesTozip();
     std::vector<FilePath> allRelativeFiles;
@@ -175,56 +164,50 @@ bool Zip(const ZipParams &params, const OPTIONS &options, CALLBACK callback)
     }
     std::unique_ptr<ZipWriter> zipWriter = nullptr;
     if (params.DestFd() != kInvalidPlatformFile) {
-        zipWriter = ZipWriter::CreateWithFd(params.DestFd(), paramPath);
-        ZIP_WRITER_IS_NULL(zipWriter, "!!! ZipWriter::CreateWithFd ReturnValue is Null !!!",
-            callback, ERROR_CODE_ERRNO);
+        zipWriter = std::make_unique<ZipWriter>(ZipWriter::InitZipFileWithFd(params.DestFd()), paramPath);
+    } else {
+        zipWriter = std::make_unique<ZipWriter>(ZipWriter::InitZipFileWithFile(params.DestFile()), paramPath);
     }
-    if (!zipWriter) {
-        zipWriter = ZipWriter::Create(params.DestFile(), paramPath);
-        ZIP_WRITER_IS_NULL(zipWriter, "!!! ZipWriter::Create ReturnValue is Null !!!",
-            callback, ERROR_CODE_ERRNO);
+    if (zipWriter == nullptr) {
+        APP_LOGE("Init zipWriter failed!");
+        return false;
     }
-    return zipWriter->WriteEntries(*filesToAdd, options, callback);
+    return zipWriter->WriteEntries(*filesToAdd, options);
 }
 
-bool UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, WriterFactory writerFactory,
+ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, WriterFactory writerFactory,
     DirectoryCreator directoryCreator, UnzipParam &unzipParam)
 {
     APP_LOGI("%{public}s called, destDir=%{public}s", __func__, destDir.Value().c_str());
     ZipReader reader;
     if (!reader.OpenFromPlatformFile(srcFile)) {
-        CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
         APP_LOGI("%{public}s called, Failed to open srcFile.", __func__);
-        return false;
+        return ERR_ZLIB_SERVICE_DISABLED;
     }
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
-            CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
             APP_LOGI("%{public}s called, Failed to open the current file in zip.", __func__);
-            return false;
+            return ERR_ZLIB_SERVICE_DISABLED;
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
-            CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
             APP_LOGI("%{public}s called, Found an unsafe file in zip.", __func__);
-            return false;
+            return ERR_ZLIB_SERVICE_DISABLED;
         }
         // callback
         if (unzipParam.filterCB(entryPath)) {
             if (reader.CurrentEntryInfo()->IsDirectory()) {
                 if (!directoryCreator(destDir, entryPath)) {
                     APP_LOGI("!!!directory_creator(%{private}s) Failed!!!.", entryPath.Value().c_str());
-                    CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
-                    return false;
+                    return ERR_ZLIB_DEST_FILE_DISABLED;
                 }
 
             } else {
                 std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
                 if (!reader.ExtractCurrentEntry(writer.get(), std::numeric_limits<uint64_t>::max())) {
-                    CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
                     APP_LOGI("%{public}s called, Failed to extract.", __func__);
-                    return false;
+                    return ERR_ZLIB_SERVICE_DISABLED;
                 }
             }
         } else if (unzipParam.logSkippedFiles) {
@@ -232,28 +215,20 @@ bool UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, W
         }
 
         if (!reader.AdvanceToNextEntry()) {
-            CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
             APP_LOGI("%{public}s called, Failed to advance to the next file.", __func__);
-            return false;
+            return ERR_ZLIB_SERVICE_DISABLED;
         }
     }
-    CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_OK)
-    return true;
+    return ERR_OK;
 }
-bool UnzipWithFilterCallback(
-    const FilePath &srcFile, const FilePath &destDir, const OPTIONS &options, UnzipParam &unzipParam,
-    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
+
+ErrCode UnzipWithFilterCallback(
+    const FilePath &srcFile, const FilePath &destDir, const OPTIONS &options, UnzipParam &unzipParam)
 {
-    if (zlibCallbackInfo == nullptr) {
-        APP_LOGE("zlibCallbackInfo is nullptr!");
-        return false;
-    }
     FilePath src = srcFile;
     if (!FilePathCheckValid(src.Value())) {
         APP_LOGI("%{public}s called, FilePathCheckValid returnValue is false.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-        CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
-        return false;
+        return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
     FilePath dest = destDir;
@@ -265,34 +240,25 @@ bool UnzipWithFilterCallback(
 
     if (!FilePath::PathIsValid(srcFile)) {
         APP_LOGI("%{public}s called,PathIsValid return value is false.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-        CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
-        return false;
+        return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
     PlatformFile zipFd = open(src.Value().c_str(), S_IREAD);
     if (zipFd == kInvalidPlatformFile) {
         APP_LOGI("%{public}s called, Failed to open.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-        CALLING_CALL_BACK(unzipParam.callback, ERROR_CODE_ERRNO)
-        return false;
+        return ERR_ZLIB_SRC_FILE_DISABLED;
     }
-    bool ret = UnzipWithFilterAndWriters(zipFd,
+    ErrCode ret = UnzipWithFilterAndWriters(zipFd,
         dest,
         std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
         std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
         unzipParam);
-    if (ret) {
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_OK);
-    } else {
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-    }
     close(zipFd);
-
     return ret;
 }
+
 bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS options,
-    CALLBACK callback, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
         APP_LOGE("zlibCallbackInfo is nullptr!");
@@ -300,99 +266,88 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
     }
     FilePath srcFileDir(srcFile);
     FilePath destDir(destFile);
-    if (destDir.Value().size() == 0
-        || srcFileDir.Value().size() == 0 || srcFileDir.Value().size() <= ZIP_SIZE) {
+    if (destDir.Value().size() == 0) {
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
+        return false;
+    }
+    if (srcFileDir.Value().size() == 0 || srcFileDir.Value().size() <= ZIP_SIZE) {
         APP_LOGI("%{public}s called fail, srcFile isn't Exist.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
     if (srcFileDir.Value().substr(srcFileDir.Value().size()-ZIP_SIZE, ZIP_SIZE) == ZIP) {
         if (!FilePath::PathIsValid(srcFileDir)) {
             APP_LOGI("%{public}s called fail, srcFile isn't Exist.", __func__);
-            zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
+            zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
             return false;
         }
     } else {
         APP_LOGI("%{public}s called fail, The file format of srcFile is incorrect .", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-        CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
     if (FilePath::DirectoryExists(destDir)) {
         if (!FilePath::PathIsValid(destDir)) {
             APP_LOGI("%{public}s called, FilePath::PathIsValid(destDir) fail.", __func__);
-            zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
+            zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         }
     } else {
         APP_LOGI("%{public}s called fail, destDir isn't path.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
-    auto innerTask = [srcFileDir, destDir, options, callback, zlibCallbackInfo]() {
+    auto innerTask = [srcFileDir, destDir, options, zlibCallbackInfo]() {
         UnzipParam unzipParam {
-            .callback = callback,
             .filterCB = ExcludeNoFilesFilter,
             .logSkippedFiles = true
         };
-        UnzipWithFilterCallback(srcFileDir, destDir, options, unzipParam, zlibCallbackInfo);
+        ErrCode err = UnzipWithFilterCallback(srcFileDir, destDir, options, unzipParam);
+        if (zlibCallbackInfo != nullptr) {
+            zlibCallbackInfo->OnZipUnZipFinish(err);
+        }
     };
     PostTask(innerTask);
     return true;
 }
 
-bool ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile, const OPTIONS &options,
-    CALLBACK callback, FilterCallback filterCB, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
+ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
+    const OPTIONS &options, FilterCallback filterCB)
 {
-    if (zlibCallbackInfo == nullptr) {
-        APP_LOGE("zlibCallbackInfo is nullptr!");
-        return false;
-    }
     FilePath destPath = destFile;
     if (FilePath::DirectoryExists(destFile)) {
         if (!FilePath::PathIsValid(destFile)) {
             APP_LOGI("%{public}s called fail, destFile isn't Exist.", __func__);
-            zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-            CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
-            return false;
+            return ERR_ZLIB_DEST_FILE_DISABLED;
         }
     } else if (!FilePath::PathIsValid(destPath.DirName())) {
         APP_LOGI("%{public}s called fail, The path where destFile is located doesn't exist.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-        CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
-        return false;
+        return ERR_ZLIB_DEST_FILE_DISABLED;
     }
     
     if (FilePath::DirectoryExists(srcDir)) {
         if (!FilePath::PathIsValid(srcDir)) {
             APP_LOGI("%{public}s called fail, srcDir isn't Exist.", __func__);
-            zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-            CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
-            return false;
+            return ERR_ZLIB_SRC_FILE_DISABLED;
         }
     } else if (!FilePath::PathIsValid(srcDir)) {
         APP_LOGI("%{public}s called fail, The path where srcDir is located doesn't exist.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-        CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
-        return false;
+        return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
     ZipParams params(srcDir, FilePath(destPath.CheckDestDirTail()));
     params.SetFilterCallback(filterCB);
-    bool result = Zip(params, options, callback);
+    bool result = Zip(params, options);
     if (result) {
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_OK);
+        return ERR_OK;
     } else {
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
+        return ERR_ZLIB_SERVICE_DISABLED;
     }
-
-    return result;
 }
 
-bool Zip(const std::string &srcPath, const std::string &destPath, CALLBACK callback,
+bool Zip(const std::string &srcPath, const std::string &destPath,
     bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
-        APP_LOGE("zlibCallbackInfo is nullptr!");
         return false;
     }
     FilePath srcDir(srcPath);
@@ -400,19 +355,27 @@ bool Zip(const std::string &srcPath, const std::string &destPath, CALLBACK callb
     APP_LOGI("%{public}s called,  srcDir=%{public}s, destFile=%{public}s", __func__,
         srcDir.Value().c_str(), destFile.Value().c_str());
 
-    if (srcDir.Value().size() == 0 || destFile.Value().size() == 0) {
-        APP_LOGI("%{public}s called fail, the path is empty.", __func__);
-        zlibCallbackInfo->OnZipUnZipFinish(ERROR_CODE_ERRNO);
-        CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
+    if (srcDir.Value().size() == 0) {
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
+        return false;
+    }
+    if (destFile.Value().size() == 0) {
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
     
-    auto innerTask = [srcDir, destFile, includeHiddenFiles, callback, zlibCallbackInfo]() {
+    auto innerTask = [srcDir, destFile, includeHiddenFiles, zlibCallbackInfo]() {
         OPTIONS options;
         if (includeHiddenFiles) {
-            ZipWithFilterCallback(srcDir, destFile, options, callback, ExcludeNoFilesFilter, zlibCallbackInfo);
+            ErrCode err = ZipWithFilterCallback(srcDir, destFile, options, ExcludeNoFilesFilter);
+            if (zlibCallbackInfo != nullptr) {
+                zlibCallbackInfo->OnZipUnZipFinish(err);
+            }
         } else {
-            ZipWithFilterCallback(srcDir, destFile, options, callback, ExcludeHiddenFilesFilter, zlibCallbackInfo);
+            ErrCode err = ZipWithFilterCallback(srcDir, destFile, options, ExcludeHiddenFilesFilter);
+            if (zlibCallbackInfo != nullptr) {
+                zlibCallbackInfo->OnZipUnZipFinish(err);
+            }
         }
     };
 

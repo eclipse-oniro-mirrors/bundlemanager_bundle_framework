@@ -60,6 +60,18 @@ std::string GetHapPath(const InnerBundleInfo &info)
 {
     return GetHapPath(info, info.GetModuleName(info.GetCurrentModulePackage()));
 }
+
+std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
+{
+    auto position = nativeLibraryPath.find(Constants::PATH_SEPARATOR);
+    if (position == std::string::npos) {
+        return nativeLibraryPath;
+    }
+
+    auto prefixPath = nativeLibraryPath.substr(0, position);
+    auto suffixPath = nativeLibraryPath.substr(position);
+    return prefixPath + Constants::TMP_SUFFIX + suffixPath;
+}
 }
 
 BaseBundleInstaller::BaseBundleInstaller()
@@ -1703,6 +1715,10 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
+        if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+            nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+            APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
+        }
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
             .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
             .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
@@ -2303,20 +2319,13 @@ void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
-        if (moveFileMode) {
-            if (InstalldClient::GetInstance()->MoveFile(
-                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                APP_LOGE("Move hap to install path failed");
-                return;
-            }
-
-            continue;
-        }
-
         if (InstalldClient::GetInstance()->CopyFile(
             hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
             APP_LOGE("Copy hap to install path failed");
             return;
+        }
+        if (moveFileMode) {
+            InstalldClient::GetInstance()->RemoveDir(hapPathRecord.first);
         }
     }
 }

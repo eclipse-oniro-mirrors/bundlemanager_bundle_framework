@@ -1118,7 +1118,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2700, Function | MediumTest | Level1)
 
     EXPECT_EQ(abilityInfo.name, "bmsThirdBundle_A1");
     EXPECT_EQ(abilityInfo.bundleName, "com.third.hiworld.example1");
-    EXPECT_EQ(commonTool.VectorToStr(abilityInfo.deviceTypes), "tvcar");
+    EXPECT_EQ(commonTool.VectorToStr(abilityInfo.deviceTypes), "defaulttvcar");
     TearDownTestCase();
     std::cout << "END BMS_Search_2700" << std::endl;
 }

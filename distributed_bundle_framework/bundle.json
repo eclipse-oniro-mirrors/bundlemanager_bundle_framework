@@ -57,7 +57,9 @@
                     "name": "//foundation/bundlemanager/bundle_framework/distributed_bundle_framework/interfaces/inner_api:dbms_fwk"
                   }
             ],
-            "test": []
+            "test": [
+                "//foundation/bundlemanager/bundle_framework/distributed_bundle_framework:test_target"
+            ]
         }
     }
 }

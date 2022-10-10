@@ -35,9 +35,20 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string GET_APPLICATION_INFO = "getApplicationInfo";
-const std::string GET_BUNDLE_INFO = "getBundleInfo";
-}
+constexpr const char* GET_APPLICATION_INFO = "getApplicationInfo";
+constexpr const char* GET_BUNDLE_INFO = "getBundleInfo";
+constexpr const char* MODULE_NAME = "moduleName";
+constexpr const char* ABILITY_NAME = "abilityName";
+constexpr const char* METADATA_NAME = "metadataName";
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* USER_ID = "userId";
+constexpr const char* CALLBACL = "callback";
+constexpr const char* STRING_TYPE = "napi_string";
+constexpr const char* FUNCTION_TYPE = "napi_function";
+constexpr const char* NUMBER_TYPE = "napi_number";
+constexpr const char* WRONG_PARAM_TYPE = "wrong param type";
+constexpr const char* OUT_OF_MEMORY = "out of memory";
+} // namespace
 using namespace OHOS::AAFwk;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
 
@@ -457,6 +468,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                return nullptr;
             }
             if (args.GetArgc() == ARGS_SIZE_ONE) {
                 asyncCallbackInfo->userId = defaultUserId;
@@ -1562,7 +1574,7 @@ void GetLaunchWantForBundleComplete(napi_env env, napi_status status, void *data
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
     }
 
     if (asyncCallbackInfo->deferred) {
@@ -1587,14 +1599,14 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     LaunchWantCallbackInfo *asyncCallbackInfo = new (std::nothrow) LaunchWantCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("GetLaunchWantForBundle asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR, OUT_OF_MEMORY);
         return nullptr;
     }
 
     std::unique_ptr<LaunchWantCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("GetLaunchWantForBundle napi func init failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     size_t maxArgc = args.GetMaxArgc();
@@ -1604,28 +1616,33 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
                 APP_LOGE("GetLaunchWantForBundle bundleName is not a string!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, STRING_TYPE);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
+            if (valueType == napi_number && CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId) == nullptr) {
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
+                return nullptr;
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
             } else {
                 APP_LOGE("GetLaunchWantForBundle param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM_TYPE);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            } else {
+                APP_LOGE("GetLaunchWantForBundle param check error");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACL, FUNCTION_TYPE);
+                return nullptr;
             }
             break;
         } else {
             APP_LOGE("GetLaunchWantForBundle arg err!");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
     }
@@ -1650,6 +1667,16 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    if (info.abilityName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty abilityName");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+
+    if (info.moduleName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty moduleName");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+
     ErrCode result;
     Want want;
     ElementName elementName("", bundleName, info.abilityName, info.moduleName);
@@ -1664,17 +1691,14 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
             APP_LOGE("QueryExtensionAbilityInfosV9 failed");
             return result;
         }
-
         if (abilityInfos.empty()) {
             APP_LOGE("extensionInfos empty");
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
-
         if (!client.GetProfileFromAbility(abilityInfos[0], info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
-            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST;
         }
-
         return ERR_OK;
     }
 
@@ -1695,7 +1719,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
 
         if (!client.GetProfileFromExtension(extensionInfos[0], info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
-            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST;
         }
 
         return ERR_OK;
@@ -1732,7 +1756,7 @@ void GetProfileComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
         CommonFunc::ConvertStringArrays(env, asyncCallbackInfo->profileVec, result[1]);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
     }
 
     if (asyncCallbackInfo->deferred) {
@@ -1765,7 +1789,7 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
     std::unique_ptr<GetProfileCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_POS_TWO, ARGS_SIZE_FOUR)) {
         APP_LOGE("GetProfile napi func init failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     size_t maxArgc = args.GetMaxArgc();
@@ -1775,19 +1799,19 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
                 APP_LOGE("GetProfile moduleName is not a string!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, STRING_TYPE);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName)) {
                 APP_LOGE("GetProfile abilityName is not a string!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, STRING_TYPE);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->metadataName)) {
                 APP_LOGE("GetProfile metadataName is not a string!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, METADATA_NAME, STRING_TYPE);
                 return nullptr;
             }
         } else  if (i == ARGS_POS_THREE) {
@@ -1797,7 +1821,7 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
             break;
         } else {
             APP_LOGE("GetProfile arg err!");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
     }

@@ -31,11 +31,7 @@ namespace {
 // Numbers of pending entries that trigger writting them to the ZIP file.
 constexpr size_t g_MaxPendingEntriesCount = 50;
 const std::string SEPARATOR = "/";
-
-#define CALLING_CALL_BACK(callback, result) \
-    if (callback != nullptr) {              \
-        callback(result);                   \
-    }
+std::mutex g_mutex;;
 
 bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 {
@@ -125,9 +121,9 @@ bool AddDirectoryEntryToZip(zipFile zip_file, FilePath &path, struct tm *lastMod
 
 }  // namespace
 
-std::unique_ptr<ZipWriter> ZipWriter::CreateWithFd(PlatformFile zipFilefd, const FilePath &rootDir)
+zipFile ZipWriter::InitZipFileWithFd(PlatformFile zipFilefd)
 {
-    APP_LOGI("%{public}s called", __func__);
+    std::lock_guard<std::mutex> lock(g_mutex);
     if (zipFilefd == kInvalidPlatformFile) {
         return nullptr;
     }
@@ -137,12 +133,12 @@ std::unique_ptr<ZipWriter> ZipWriter::CreateWithFd(PlatformFile zipFilefd, const
         APP_LOGI("%{public}s called, Couldn't create ZIP file for FD", __func__);
         return nullptr;
     }
-    return std::unique_ptr<ZipWriter>(new (std::nothrow) ZipWriter(zip_file, rootDir));
+    return zip_file;
 }
 
-// static
-std::unique_ptr<ZipWriter> ZipWriter::Create(const FilePath &zip_file_path, const FilePath &rootDir)
+zipFile ZipWriter::InitZipFileWithFile(const FilePath &zip_file_path)
 {
+    std::lock_guard<std::mutex> lock(g_mutex);
     FilePath zipFilePath = zip_file_path;
     APP_LOGI("%{public}s called", __func__);
     if (zipFilePath.Value().empty()) {
@@ -155,7 +151,7 @@ std::unique_ptr<ZipWriter> ZipWriter::Create(const FilePath &zip_file_path, cons
         APP_LOGI("%{public}s called, Couldn't create ZIP file at path", __func__);
         return nullptr;
     }
-    return std::unique_ptr<ZipWriter>(new (std::nothrow) ZipWriter(zip_file, rootDir));
+    return zip_file;
 }
 
 ZipWriter::ZipWriter(zipFile zip_file, const FilePath &rootDir) : zipFile_(zip_file), rootDir_(rootDir)
@@ -166,29 +162,29 @@ ZipWriter::~ZipWriter()
     pendingEntries_.clear();
 }
 
-bool ZipWriter::WriteEntries(const std::vector<FilePath> &paths, const OPTIONS &options, CALLBACK callback)
+bool ZipWriter::WriteEntries(const std::vector<FilePath> &paths, const OPTIONS &options)
 {
     APP_LOGI("%{public}s called", __func__);
-    return AddEntries(paths, options, callback) && Close(options, callback);
+    return AddEntries(paths, options) && Close(options);
 }
 
-bool ZipWriter::AddEntries(const std::vector<FilePath> &paths, const OPTIONS &options, CALLBACK callback)
+bool ZipWriter::AddEntries(const std::vector<FilePath> &paths, const OPTIONS &options)
 {
     if (!zipFile_) {
         return false;
     }
     pendingEntries_.insert(pendingEntries_.end(), paths.begin(), paths.end());
-    return FlushEntriesIfNeeded(false, options, callback);
+    return FlushEntriesIfNeeded(false, options);
 }
 
-bool ZipWriter::Close(const OPTIONS &options, CALLBACK callback)
+bool ZipWriter::Close(const OPTIONS &options)
 {
-    bool success = FlushEntriesIfNeeded(true, options, callback) && zipClose(zipFile_, nullptr) == ZIP_OK;
+    bool success = FlushEntriesIfNeeded(true, options) && zipClose(zipFile_, nullptr) == ZIP_OK;
     zipFile_ = nullptr;
     return success;
 }
 
-bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options, CALLBACK callback)
+bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options)
 {
     if (pendingEntries_.size() < g_MaxPendingEntriesCount && !force) {
         return true;
@@ -220,7 +216,6 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options, CALLBAC
             bool isDir = FilePath::IsDir(absolutePath);
             if (isValid && !isDir) {
                 if (!AddFileEntryToZip(zipFile_, relativePath, absolutePath, options)) {
-                    CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
                     APP_LOGI("%{public}s called, Failed to write file", __func__);
                     return false;
                 }
@@ -228,14 +223,12 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options, CALLBAC
                 // Missing file or directory case.
                 struct tm *last_modified = GetCurrentSystemTime();
                 if (!AddDirectoryEntryToZip(zipFile_, relativePath, last_modified, options)) {
-                    CALLING_CALL_BACK(callback, ERROR_CODE_ERRNO)
                     APP_LOGI("%{public}s called, Failed to write directory", __func__);
                     return false;
                 }
             }
         }
     }
-    CALLING_CALL_BACK(callback, ERROR_CODE_OK)
     return true;
 }
 

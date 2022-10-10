@@ -24,12 +24,17 @@ namespace OHOS {
 namespace AppExecFwk {
 class BusinessError {
 public:
-static inline void ThrowError(napi_env env, int32_t err)
-{
-    napi_throw_error(env, std::to_string(err).c_str(), "");
-}
+static void ThrowError(napi_env env, int32_t err, const std::string &msg = "");
 
-static napi_value CreateError(napi_env env, int32_t err, const std::string& msg);
+static void ThrowParameterTypeError(napi_env env, int32_t err,
+    const std::string &msg, const std::string &type);
+
+static void ThrowTooFewParametersError(napi_env env, int32_t err);
+
+static napi_value CreateCommonError(napi_env env, int32_t err,
+    const std::string &functionName = "", const std::string &permissionName = "");
+
+static napi_value CreateError(napi_env env, int32_t err, const std::string &msg);
 };
 }
 }
