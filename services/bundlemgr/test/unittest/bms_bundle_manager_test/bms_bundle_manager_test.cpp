@@ -1083,7 +1083,560 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationInfosV9_0100, Function | MediumTest
     EXPECT_EQ(ret, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
-
 }
 
+/**
+ * @tc.number: OnRemoteRequest_0100
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_APPLICATION_INFO_WITH_INT_FLAGS
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0100, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0200
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0200, Function | SmallTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0300
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is DUMP_INFOS
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0300, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    std::vector<std::string> dumpInfos;
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    reply.WriteBool(true);
+    reply.ReadStringVector(&dumpInfos);
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::DUMP_INFOS, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0400
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_APPLICATION_INFOS_WITH_INT_FLAGS
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0400, Function | SmallTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    reply.WriteBool(true);
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0500
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0500, Function | SmallTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0600
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_BUNDLE_INFO_WITH_INT_FLAGS
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0600, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0700
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_BUNDLE_INFO_WITH_INT_FLAGS_V9
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0700, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0800
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_BUNDLE_PACK_INFO
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0800, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_PACK_INFO, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0900
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_0900, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1000
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_NAME_FOR_UID
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1000, Function | SmallTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteInt32(0);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_NAME_FOR_UID, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1100
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_BUNDLE_GIDS
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1100, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    std::vector<int> gids;
+
+    reply.WriteBool(true);
+    reply.ReadInt32Vector(&gids);
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_GIDS, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1200
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_BUNDLE_INFOS_BY_METADATA
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1200, Function | SmallTest | Level1)
+{
+    std::string metadata = "string";
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(metadata);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_INFOS_BY_METADATA, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1300
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is QUERY_ABILITY_INFO
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1300, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_BACKUP_NAME, EXTENSION_ABILITY_NAME, "");
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteParcelable(&want);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::QUERY_ABILITY_INFO, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1400
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is QUERY_ABILITY_INFOS
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1400, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_BACKUP_NAME, EXTENSION_ABILITY_NAME, "");
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteParcelable(&want);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::QUERY_ABILITY_INFOS, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1500
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is QUERY_ABILITY_INFOS_MUTI_PARAM
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1500, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_BACKUP_NAME, EXTENSION_ABILITY_NAME, "");
+
+    reply.WriteBool(true);
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteParcelable(&want);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1600
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is QUERY_ABILITY_INFOS_V9
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1600, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_BACKUP_NAME, EXTENSION_ABILITY_NAME, "");
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteParcelable(&want);
+    data.WriteInt32(0);
+    data.WriteInt32(USERID);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1700
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is QUERY_ABILITY_INFOS_V9
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1700, Function | SmallTest | Level1)
+{
+    std::string abilityUri = "invalid";
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(abilityUri);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::QUERY_ABILITY_INFOS_BY_URI, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1800
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_ABILITY_LABEL
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1800, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteString(EXTENSION_ABILITY_NAME);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_ABILITY_LABEL, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1900
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_ABILITY_LABEL_WITH_MODULE_NAME
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_1900, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(BUNDLE_BACKUP_NAME);
+    data.WriteString(EXTENSION_ABILITY_NAME);
+    data.WriteString(MODULE_NAME);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_ABILITY_LABEL_WITH_MODULE_NAME, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2000
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: 1.system run normally
+ *           2.test code is GET_BUNDLE_ARCHIVE_INFO
+ *           3.test code is GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS
+ *           4.test code is GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9
+ */
+HWTEST_F(BmsBundleManagerTest, OnRemoteRequest_2000, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
+    data.WriteString(bundlePath);
+    data.WriteInt32(0);
+
+    auto res = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO, data, reply, option);
+    auto res1 = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS, data, reply, option);
+    auto res2 = bundleMgrHost.OnRemoteRequest(
+        IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, reply, option);
+    EXPECT_EQ(res, NO_ERROR);
+    EXPECT_EQ(res1, NO_ERROR);
+    EXPECT_EQ(res2, NO_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
 } // OHOS
