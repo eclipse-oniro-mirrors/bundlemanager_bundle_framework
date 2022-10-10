@@ -18,6 +18,9 @@
 #include <chrono>
 #include <cinttypes>
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+#include "app_control_constants.h"
+#endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "installd_client.h"
 #include "os_account_info.h"
@@ -1185,6 +1188,9 @@ bool BundleDataMgr::GetApplicationInfo(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetApplicationInfo(flags, responseUserId, appInfo);
+    if (!CheckAppInstallControl(innerBundleInfo.GetAppId(), requestUserId)) {
+        appInfo.removable = false;
+    }
     return true;
 }
 
@@ -1210,7 +1216,15 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    return innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
+    ret = innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationInfoV9 failed");
+        return ret;
+    }
+    if (!CheckAppInstallControl(innerBundleInfo.GetAppId(), requestUserId)) {
+        appInfo.removable = false;
+    }
+    return ret;
 }
 
 bool BundleDataMgr::GetApplicationInfos(
@@ -4039,6 +4053,27 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     }
     APP_LOGE("to update info:%{public}s failed", bundleName.c_str());
     return false;
+}
+
+bool BundleDataMgr::CheckAppInstallControl(const std::string &appId, int32_t userId) const
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::vector<std::string> appIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
+        return true;
+    }
+    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
+        return true;
+    }
+    APP_LOGW("appId is not removable");
+    return false;
+#else
+    APP_LOGW("app control is disable");
+    return true;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

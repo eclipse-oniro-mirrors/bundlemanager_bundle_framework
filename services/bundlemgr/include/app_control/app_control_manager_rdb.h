@@ -29,8 +29,8 @@ public:
 
     virtual ErrCode AddAppInstallControlRule(const std::string &callingName, const std::vector<std::string> &appIds,
         const std::string &controlRuleType, int32_t userId) override;
-    virtual ErrCode DeleteAppInstallControlRule(const std::string &callingName, const std::vector<std::string> &appIds,
-        int32_t userId) override;
+    virtual ErrCode DeleteAppInstallControlRule(const std::string &callingName, const std::string &controlRuleType,
+        const std::vector<std::string> &appIds, int32_t userId) override;
     virtual ErrCode DeleteAppInstallControlRule(const std::string &callingName, const std::string &controlRuleType,
         int32_t userId) override;
     virtual ErrCode GetAppInstallControlRule(const std::string &callingName,

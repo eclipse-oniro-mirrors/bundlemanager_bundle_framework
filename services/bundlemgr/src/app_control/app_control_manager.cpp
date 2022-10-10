@@ -48,10 +48,10 @@ ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingNa
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
-    const std::vector<std::string> &appIds, int32_t userId)
+    const std::string &controlRuleType, const std::vector<std::string> &appIds, int32_t userId)
 {
     APP_LOGD("DeleteAppInstallControlRule");
-    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, appIds, userId);
+    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, appIds, userId);
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
