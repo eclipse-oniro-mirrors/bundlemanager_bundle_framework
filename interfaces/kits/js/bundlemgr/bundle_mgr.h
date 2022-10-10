@@ -431,7 +431,7 @@ public:
         std::string moduleName = "";
         bool hasModuleName = false;
         OHOS::AppExecFwk::AbilityInfo abilityInfo;
-        bool ret= false;
+        bool ret = false;
     };
 
     struct JsNameForUid {
@@ -481,7 +481,8 @@ private:
     NativeValue* CreateAbilityInfos(NativeEngine &engine,  const std::vector<AbilityInfo> &abilityInfos);
     NativeValue* CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos);
     NativeValue* CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo);
-    NativeValue* CreateRequestPermissions(NativeEngine &engine, const std::vector<RequestPermission> &requestPermissions);
+    NativeValue* CreateRequestPermissions(
+        NativeEngine &engine, const std::vector<RequestPermission> &requestPermissions);
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
     NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
@@ -496,9 +497,9 @@ private:
     NativeValue* OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
-    int32_t InitGetAbilityIcon (NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
+    int32_t InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
-    int32_t InitGetAbilityLabel (NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
+    int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
     int32_t GetQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info,
         std::shared_ptr<JsExtensionAbilityInfos> extensionAbilityInfos, NativeValue *&lastParam);

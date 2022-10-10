@@ -7561,7 +7561,7 @@ NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityI
     object->SetProperty("launchMode", CreateJsValue(engine, static_cast<int32_t>(abilityInfo.launchMode)));
 
     if (!abilityInfo.isModuleJson) {
-        object->SetProperty("backgroundModes",CreateJsValue(engine, abilityInfo.backgroundModes));
+        object->SetProperty("backgroundModes", CreateJsValue(engine, abilityInfo.backgroundModes));
     } else {
         object->SetProperty("backgroundModes", CreateJsValue(engine, 0));
     }
