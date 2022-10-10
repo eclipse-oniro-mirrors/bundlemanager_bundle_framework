@@ -96,7 +96,8 @@ AsyncGetBundleInstallerCallbackInfo::~AsyncGetBundleInstallerCallbackInfo()
 
 void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
 {
-    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
+    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
 
     napi_value m_classBundleInstaller = nullptr;
