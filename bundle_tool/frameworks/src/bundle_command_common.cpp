@@ -446,6 +446,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: singleton is incompatible with installed app.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_DISALLOWED,
+        "error: disallowed install.",
+    },
+    {
+        IStatusReceiver::ERR_UNINSTALL_DISALLOWED,
+        "error: disallowed uninstall.",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }
