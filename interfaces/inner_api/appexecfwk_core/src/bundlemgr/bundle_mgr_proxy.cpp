@@ -154,7 +154,7 @@ ErrCode BundleMgrProxy::GetApplicationInfoV9(
     APP_LOGD("begin to GetApplicationInfoV9 of %{public}s", appName.c_str());
     if (appName.empty()) {
         APP_LOGE("fail to GetApplicationInfoV9 due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -359,7 +359,7 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundleInfoV9 due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
