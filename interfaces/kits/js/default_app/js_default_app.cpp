@@ -38,10 +38,6 @@ namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 
 namespace {
-constexpr int32_t NO_ERROR = 0;
-constexpr int32_t PARAM_TYPE_ERROR = 1;
-constexpr size_t PARAM0 = 0;
-constexpr size_t PARAM1 = 1;
 const std::string IS_DEFAULT_APPLICATION = "IsDefaultApplication";
 const std::string GET_DEFAULT_APPLICATION = "GetDefaultApplication";
 const std::string SET_DEFAULT_APPLICATION = "SetDefaultApplication";
@@ -564,17 +560,17 @@ NativeValue* JsDefaultApp::OnIsDefaultApplication(NativeEngine &engine, NativeCa
     std::string strType("");
     if (info.argc < ARGS_SIZE_ONE || info.argc > ARGS_SIZE_TWO) {
         APP_LOGE("wrong number of arguments.");
-        errCode = PARAM_TYPE_ERROR;
+        errCode = ERROR_PARAM_CHECK_ERROR;
     }
     if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
         ConvertFromJsValue(engine, info.argv[PARAM0], strType);
     } else {
-        errCode = PARAM_TYPE_ERROR;
+        errCode = ERROR_PARAM_CHECK_ERROR;
     }
     AsyncTask::CompleteCallback complete = [errCode, strType](
             NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != NO_ERROR) {
-            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
+            task.Reject(engine, CreateJsError(engine, errCode, PARAM_TYPE_CHECK_ERROR));
             return;
         }
 
