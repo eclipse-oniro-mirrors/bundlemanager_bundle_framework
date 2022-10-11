@@ -399,4 +399,53 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0400, Function | SmallTe
     res = appControlProxy->GetAppRunningControlRule(USERID, appIds);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: DisposedStatus_0100
+ * @tc.name: test setting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.SetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    Want want;
+    want.SetAction("action.system.home");
+    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DisposedStatus_0200
+ * @tc.name: test deleting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.DeleteDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->DeleteDisposedStatus(APPID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DisposedStatus_0300
+ * @tc.name: test getting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.GetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    Want want;
+    want.SetAction("action.system.home");
+    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_OK);
+    res = appControlProxy->GetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(want.GetAction(), "action.system.home");
+}
 } // OHOS
