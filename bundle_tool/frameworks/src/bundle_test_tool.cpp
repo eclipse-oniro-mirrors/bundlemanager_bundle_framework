@@ -236,10 +236,9 @@ const std::string HELP_MSG_ADD_INSTALL_RULE =
 
 const std::string HELP_MSG_GET_INSTALL_RULE =
     "usage: bundle_test_tool <options>\n"
-    "eg:bundle_test_tool getAppInstallRule -a <app-id> -t <control-rule-type> -u <user-id> \n"
+    "eg:bundle_test_tool getAppInstallRule -t <control-rule-type> -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -a, --app-id <app-id>                  specify app id of the application\n"
     "  -e, --euid <eu-id>                     default euid value is 537\n"
     "  -t, --control-rule-type                specify control type of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
@@ -291,11 +290,10 @@ const std::string HELP_MSG_CLEAN_APP_RUNNING_RULE =
 
 const std::string HELP_MSG_GET_APP_RUNNING_RULE =
     "usage: bundle_test_tool <options>\n"
-    "eg:bundle_test_tool getAppRunningControlRule -u <user-id> -a <app-id> \n"
+    "eg:bundle_test_tool getAppRunningControlRule -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
     "  -e, --euid <eu-id>                     default euid value is 537\n"
-    "  -a, --app-id <app-id>                  specify app id of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
 const std::string HELP_MSG_GET_APP_RUNNING_RESULT_RULE =
@@ -1485,23 +1483,13 @@ ErrCode BundleTestTool::RunAsAddInstallRuleCommand()
 }
 
 ErrCode BundleTestTool::CheckGetInstallRuleCorrectOption(int option, const std::string &commandName,
-    int &controlRuleType, int &userId, std::vector<std::string> &appIds, int &euid)
+    int &controlRuleType, int &userId, int &euid)
 {
     bool ret = true;
     switch (option) {
         case 'h': {
             APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
             return OHOS::ERR_INVALID_VALUE;
-        }
-        case 'a': {
-            std::string arrayAppId = optarg;
-            std::stringstream array(arrayAppId);
-            std::string object;
-            while (getline(array, object, ',')) {
-                appIds.emplace_back(object);
-            }
-            APP_LOGD("bundle_test_tool %{public}s -a %{public}s", commandName.c_str(), argv_[optind - 1]);
-            break;
         }
         case 'e': {
             StringToInt(optarg, commandName, euid, ret);
@@ -1526,12 +1514,11 @@ ErrCode BundleTestTool::CheckGetInstallRuleCorrectOption(int option, const std::
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool getAppInstallRule -t 1 -a test1,test2 -u 101 -e 537
+// bundle_test_tool getAppInstallRule -t 1 -u 101 -e 537
 ErrCode BundleTestTool::RunAsGetInstallRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    std::vector<std::string> appIds;
     std::string commandName = "getAppInstallRule";
     int euid = 537;
     int userId = 100;
@@ -1550,7 +1537,7 @@ ErrCode BundleTestTool::RunAsGetInstallRuleCommand()
             }
             break;
         }
-        result = CheckGetInstallRuleCorrectOption(option, commandName, ruleType, userId, appIds, euid);
+        result = CheckGetInstallRuleCorrectOption(option, commandName, ruleType, userId, euid);
         if (result != OHOS::ERR_OK) {
             resultReceiver_.append(HELP_MSG_GET_INSTALL_RULE);
             return OHOS::ERR_INVALID_VALUE;
@@ -1562,18 +1549,18 @@ ErrCode BundleTestTool::RunAsGetInstallRuleCommand()
         APP_LOGE("fail to get app control proxy.");
         return OHOS::ERR_INVALID_VALUE;
     }
-    std::string appIdParam = "";
-    for (auto param : appIds) {
-        appIdParam = appIdParam.append(param) + "; ";
-    }
-    APP_LOGI("appIds: %{public}s, controlRuleType: %{public}d, userId: %{public}d",
-        appIdParam.c_str(), ruleType, userId);
+    APP_LOGI("controlRuleType: %{public}d, userId: %{public}d", ruleType, userId);
     auto rule = static_cast<AppInstallControlRuleType>(ruleType);
+    std::vector<std::string> appIds;
     int32_t res = appControlProxy->GetAppInstallControlRule(rule, userId, appIds);
     APP_LOGI("GetAppInstallControlRule return code: %{public}d", res);
     if (res != OHOS::ERR_OK) {
         resultReceiver_.append(STRING_GET_RULE_NG);
         return res;
+    }
+    std::string appIdParam = "";
+    for (auto param : appIds) {
+        appIdParam = appIdParam.append(param) + "; ";
     }
     resultReceiver_.append("appId : " + appIdParam + "\n");
     return result;
@@ -1768,17 +1755,16 @@ ErrCode BundleTestTool::CheckAppRunningRuleCorrectOption(int option, const std::
             std::string arrayJsonRule = optarg;
             std::stringstream array(arrayJsonRule);
             std::string object;
-            while (getline(array, object, '+')) {
+            while (getline(array, object, ';')) {
                 int notFind = -1;
                 int pos1 = object.find("appId");
                 int pos2 = object.find("controlMessage");
                 int pos3 = object.find(":", pos2);
-                int pos4 = object.find("]", pos2);
                 if ((pos1 == notFind) || (pos2 == notFind)) {
                     return OHOS::ERR_INVALID_VALUE;
                 }
                 std::string appId = object.substr(pos1+6, pos2-pos1-7);
-                std::string controlMessage = object.substr(pos3+1, pos4-pos3-1);
+                std::string controlMessage = object.substr(pos3+1);
                 AppRunningControlRule rule;
                 rule.appId = appId;
                 rule.controlMessage = controlMessage;
@@ -1805,7 +1791,7 @@ ErrCode BundleTestTool::CheckAppRunningRuleCorrectOption(int option, const std::
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool addAppRunningRule -c [appId:101,controlMessage:msg1]+[appId:102,controlMessage:msg2]
+// bundle_test_tool addAppRunningRule -c appId:id1,controlMessage:msg1;appId:id2,controlMessage:msg2
 // -u 101 -e 537
 ErrCode BundleTestTool::RunAsAddAppRunningRuleCommand()
 {
@@ -1857,7 +1843,7 @@ ErrCode BundleTestTool::RunAsAddAppRunningRuleCommand()
     return result;
 }
 
-// bundle_test_tool deleteAppRunningRule -c [appId:101,controlMessage:msg1] -u 101 -e 537
+// bundle_test_tool deleteAppRunningRule -c appId:101,controlMessage:msg1 -u 101 -e 537
 ErrCode BundleTestTool::RunAsDeleteAppRunningRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
@@ -1983,23 +1969,13 @@ ErrCode BundleTestTool::RunAsCleanAppRunningRuleCommand()
 }
 
 ErrCode BundleTestTool::CheckGetAppRunningRuleCorrectOption(int option, const std::string &commandName,
-    int32_t userId, std::vector<std::string> &appIds, int &euid)
+    int32_t &userId, int &euid)
 {
     bool ret = true;
     switch (option) {
         case 'h': {
             APP_LOGD("bundle_test_tool %{public}s %{public}s", commandName.c_str(), argv_[optind - 1]);
             return OHOS::ERR_INVALID_VALUE;
-        }
-        case 'a': {
-            std::string arrayAppId = optarg;
-            std::stringstream array(arrayAppId);
-            std::string object;
-            while (getline(array, object, ',')) {
-                appIds.emplace_back(object);
-            }
-            APP_LOGD("bundle_test_tool %{public}s -a %{public}s", commandName.c_str(), argv_[optind - 1]);
-            break;
         }
         case 'e': {
             StringToInt(optarg, commandName, euid, ret);
@@ -2020,7 +1996,7 @@ ErrCode BundleTestTool::CheckGetAppRunningRuleCorrectOption(int option, const st
     return OHOS::ERR_OK ;
 }
 
-// bundle_test_tool getAppRunningControlRule -u 101 -a test1 -e 537
+// bundle_test_tool getAppRunningControlRule -u 101 -e 537
 ErrCode BundleTestTool::RunAsGetAppRunningControlRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
@@ -2028,7 +2004,6 @@ ErrCode BundleTestTool::RunAsGetAppRunningControlRuleCommand()
     int euid = 537;
     std::string commandName = "addAppRunningRule";
     int userId = 100;
-    std::vector<std::string> appIds;
     APP_LOGD("RunAsGetAppRunningControlRuleCommand is start");
     while (true) {
         counter++;
@@ -2045,7 +2020,7 @@ ErrCode BundleTestTool::RunAsGetAppRunningControlRuleCommand()
             }
             break;
         }
-        result = CheckGetAppRunningRuleCorrectOption(option, commandName, userId, appIds, euid);
+        result = CheckGetAppRunningRuleCorrectOption(option, commandName, userId, euid);
         if (result != OHOS::ERR_OK) {
             resultReceiver_.append(HELP_MSG_GET_APP_RUNNING_RULE);
             return OHOS::ERR_INVALID_VALUE;
@@ -2057,22 +2032,23 @@ ErrCode BundleTestTool::RunAsGetAppRunningControlRuleCommand()
         APP_LOGE("fail to get app control proxy.");
         return OHOS::ERR_INVALID_VALUE;
     }
-    std::string appIdParam = "";
-    for (auto param : appIds) {
-        appIdParam = appIdParam.append(param) + "; ";
-    }
-    APP_LOGI("appIds: %{public}s, userId: %{public}d", appIdParam.c_str(), userId);
+    APP_LOGI("userId: %{public}d", userId);
+    std::vector<std::string> appIds;
     int32_t res = appControlProxy->GetAppRunningControlRule(userId, appIds);
     if (res != OHOS::ERR_OK) {
         resultReceiver_.append(STRING_GET_RULE_NG);
         return res;
+    }
+    std::string appIdParam = "";
+    for (auto param : appIds) {
+        appIdParam = appIdParam.append(param) + "; ";
     }
     resultReceiver_.append("appId : " + appIdParam + "\n");
     return result;
 }
 
 ErrCode BundleTestTool::CheckGetAppRunningRuleResultCorrectOption(int option, const std::string &commandName,
-    std::string &bundleName, int32_t userId, int &euid)
+    std::string &bundleName, int32_t &userId, int &euid)
 {
     bool ret = true;
     switch (option) {
@@ -2152,6 +2128,8 @@ ErrCode BundleTestTool::RunAsGetAppRunningControlRuleResultCommand()
     resultReceiver_.append("message:" + ruleResult.controlMessage + "\n");
     if (ruleResult.controlWant != nullptr) {
         resultReceiver_.append("controlWant:" + ruleResult.controlWant->ToString() + "\n");
+    } else {
+        resultReceiver_.append("controlWant: nullptr \n");
     }
     return result;
 }
