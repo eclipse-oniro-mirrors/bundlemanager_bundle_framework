@@ -277,6 +277,7 @@ int32_t DistributedBms::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elem
         return ERR_APPEXECFWK_FAILED_GET_ABILITY_INFO;
     }
     remoteAbilityInfo.label = label;
+    remoteAbilityInfo.elementName = elementName;
     return GetAbilityIconByContent(abilityInfos[0], userId, remoteAbilityInfo);
 }
 
