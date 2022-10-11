@@ -38,6 +38,8 @@ namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 
 namespace {
+constexpr size_t PARAM0 = 0;
+constexpr size_t PARAM1 = 1;
 const std::string IS_DEFAULT_APPLICATION = "IsDefaultApplication";
 const std::string GET_DEFAULT_APPLICATION = "GetDefaultApplication";
 const std::string SET_DEFAULT_APPLICATION = "SetDefaultApplication";
