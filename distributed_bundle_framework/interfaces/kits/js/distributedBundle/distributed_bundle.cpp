@@ -211,7 +211,7 @@ int32_t InnerGetRemoteAbilityInfo(const std::vector<ElementName> &elementNames, 
     auto iDistBundleMgr = GetDistributedBundleMgr();
     if (iDistBundleMgr == nullptr) {
         APP_LOGE("can not get iDistBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING;
     }
     int32_t result;
     if (isArray) {
