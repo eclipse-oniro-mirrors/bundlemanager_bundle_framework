@@ -2120,16 +2120,6 @@ static bool InnerGetBundleInfos(
     return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
 }
 
-static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
-{
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
-    }
-    return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
-}
-
 static void ProcessBundleInfos(
     napi_env env, napi_value result, const std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
 {
@@ -7782,71 +7772,6 @@ NativeValue* JsBundleMgr::CreateModuleInfo(NativeEngine &engine, const ModuleInf
     return objContext;
 }
 
-NativeValue* JsBundleMgr::CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos)
-{
-    NativeValue *arrayValue = engine.CreateArray(bundleInfos.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    uint32_t index = 0;
-    for (const auto &bundleInfo : bundleInfos) {
-        array->SetElement(index++, CreateBundleInfo(engine, bundleInfo));
-    }
-    return arrayValue;
-}
-
-NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo)
-{
-    APP_LOGI("called");
-    auto objContext = engine.CreateObject();
-    if (objContext == nullptr) {
-        APP_LOGE("CreateObject failed");
-        return engine.CreateUndefined();
-    }
-
-    auto object = ConvertNativeValueTo<NativeObject>(objContext);
-    if (object == nullptr) {
-        APP_LOGE("ConvertNativeValueTo object failed");
-        return engine.CreateUndefined();
-    }
-
-    object->SetProperty("name", CreateJsValue(engine, bundleInfo.name));
-    object->SetProperty("vendor", CreateJsValue(engine, bundleInfo.vendor));
-    object->SetProperty("versionCode", CreateJsValue(engine, bundleInfo.versionCode));
-    object->SetProperty("versionName", CreateJsValue(engine, bundleInfo.versionName));
-    object->SetProperty("cpuAbi", CreateJsValue(engine, bundleInfo.cpuAbi));
-    object->SetProperty("appId", CreateJsValue(engine, bundleInfo.appId));
-    object->SetProperty("entryModuleName", CreateJsValue(engine, bundleInfo.entryModuleName));
-    object->SetProperty("compatibleVersion", CreateJsValue(engine, bundleInfo.compatibleVersion));
-    object->SetProperty("targetVersion", CreateJsValue(engine, bundleInfo.targetVersion));
-    object->SetProperty("uid", CreateJsValue(engine, bundleInfo.uid));
-    object->SetProperty("installTime", CreateJsValue(engine, bundleInfo.installTime));
-    object->SetProperty("updateTime", CreateJsValue(engine, bundleInfo.updateTime));
-    object->SetProperty("appInfo", CreateAppInfo(engine, bundleInfo.applicationInfo));
-    object->SetProperty("abilityInfos", CreateAbilityInfos(engine, bundleInfo.abilityInfos));
-    object->SetProperty("hapModuleInfos", CreateHapModuleInfos(engine, bundleInfo.hapModuleInfos));
-    object->SetProperty("reqPermissions", CreateNativeArray(engine, bundleInfo.reqPermissions));
-    object->SetProperty("reqPermissionStates", CreateNativeArray(engine, bundleInfo.reqPermissionStates));
-    object->SetProperty("isCompressNativeLibs", CreateJsValue(engine, true));
-    object->SetProperty("isSilentInstallation", CreateJsValue(engine, std::string("")));
-    object->SetProperty("type", CreateJsValue(engine, std::string("")));
-    object->SetProperty("reqPermissionDetails", CreateRequestPermissions(engine, bundleInfo.reqPermissionDetails));
-    object->SetProperty("minCompatibleVersionCode", CreateJsValue(engine, bundleInfo.minCompatibleVersionCode));
-    object->SetProperty("entryInstallationFree", CreateJsValue(engine, bundleInfo.entryInstallationFree));
-    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, bundleInfo.extensionInfos));
-
-    return objContext;
-}
-
-NativeValue* JsBundleMgr::CreateAbilityInfos(NativeEngine &engine,  const std::vector<AbilityInfo> &abilityInfos)
-{
-    NativeValue *arrayValue = engine.CreateArray(abilityInfos.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    uint32_t index = 0;
-    for (const auto &abilityInfo : abilityInfos) {
-        array->SetElement(index++, CreateAbilityInfo(engine, abilityInfo));
-    }
-    return arrayValue;
-}
-
 NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
     NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData)
 {
@@ -7908,55 +7833,6 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine,
     object->SetProperty("enabled", CreateJsValue(engine, extensionInfos.enabled));
     object->SetProperty("readPermission", CreateJsValue(engine, extensionInfos.readPermission));
     object->SetProperty("writePermission", CreateJsValue(engine, extensionInfos.writePermission));
-
-    return objContext;
-}
-
-NativeValue* JsBundleMgr::CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos)
-{
-    NativeValue *arrayValue = engine.CreateArray(hapModuleInfos.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    uint32_t index = 0;
-    for (const auto &hapModuleInfo : hapModuleInfos) {
-        array->SetElement(index++, CreateHapModuleInfo(engine, hapModuleInfo));
-    }
-    return arrayValue;
-}
-
-NativeValue* JsBundleMgr::CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo)
-{
-    APP_LOGI("called");
-    auto objContext = engine.CreateObject();
-    if (objContext == nullptr) {
-        APP_LOGE("CreateObject failed");
-        return engine.CreateUndefined();
-    }
-
-    auto object = ConvertNativeValueTo<NativeObject>(objContext);
-    if (object == nullptr) {
-        APP_LOGE("ConvertNativeValueTo object failed");
-        return engine.CreateUndefined();
-    }
-
-    object->SetProperty("name", CreateJsValue(engine, hapModuleInfo.name));
-    object->SetProperty("moduleName", CreateJsValue(engine, hapModuleInfo.moduleName));
-    object->SetProperty("description", CreateJsValue(engine, hapModuleInfo.description));
-    object->SetProperty("descriptionId", CreateJsValue(engine, hapModuleInfo.descriptionId));
-    object->SetProperty("icon", CreateJsValue(engine, hapModuleInfo.iconPath));
-    object->SetProperty("label", CreateJsValue(engine, hapModuleInfo.label));
-    object->SetProperty("hashValue", CreateJsValue(engine, hapModuleInfo.hashValue));
-    object->SetProperty("labelId", CreateJsValue(engine, hapModuleInfo.labelId));
-    object->SetProperty("iconId", CreateJsValue(engine, hapModuleInfo.iconId));
-    object->SetProperty("backgroundImg", CreateJsValue(engine, hapModuleInfo.backgroundImg));
-    object->SetProperty("supportedModes", CreateJsValue(engine, hapModuleInfo.supportedModes));
-    object->SetProperty("reqCapabilities", CreateNativeArray(engine, hapModuleInfo.reqCapabilities));
-    object->SetProperty("deviceTypes", CreateNativeArray(engine, hapModuleInfo.deviceTypes));
-    object->SetProperty("abilityInfo", CreateAbilityInfos(engine, hapModuleInfo.abilityInfos));
-    object->SetProperty("mainAbilityName", CreateJsValue(engine, hapModuleInfo.mainAbility));
-    object->SetProperty("installationFree", CreateJsValue(engine, hapModuleInfo.installationFree));
-    object->SetProperty("mainElementName", CreateJsValue(engine, hapModuleInfo.mainElementName));
-    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, hapModuleInfo.extensionInfos));
-    object->SetProperty("metadata", CreateInnerMetaDatas(engine, hapModuleInfo.metadata));
 
     return objContext;
 }
@@ -8064,12 +7940,6 @@ void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
     std::unique_ptr<JsBundleMgr>(static_cast<JsBundleMgr*>(data));
 }
 
-NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetAllBundleInfo(*engine, *info) : nullptr;
-}
-
 NativeValue* JsBundleMgr::QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
@@ -8092,44 +7962,6 @@ NativeValue* JsBundleMgr::GetAbilityLabel(NativeEngine *engine, NativeCallbackIn
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
     return (me != nullptr) ? me->OnGetAbilityLabel(*engine, *info) : nullptr;
-}
-
-NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGI("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-
-    int32_t bundleFlags = 0;
-    if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleFlags)) {
-        APP_LOGE("conversion failed!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdThreeParams(engine, info, userId);
-    auto complete = [obj = this, bundleFlags, userId, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
-        if (errCode != ERR_OK) {
-            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
-            return;
-        }
-        std::vector<BundleInfo> bundleInfos;
-        auto ret = InnerGetBundleInfos(bundleFlags, userId, bundleInfos);
-        if (!ret) {
-            task.Reject(engine, CreateJsError(engine, 1, "GetAllBundleInfo falied"));
-            return;
-        }
-        task.Resolve(engine, obj->CreateBundleInfos(engine, bundleInfos));
-    };
-
-    NativeValue *result = nullptr;
-    auto callback = flagCall ? ((info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2]) : nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnGetAllBundleInfo",
-        engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
-    return result;
 }
 
 NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)

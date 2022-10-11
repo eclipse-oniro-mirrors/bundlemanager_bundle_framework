@@ -460,49 +460,20 @@ public:
     static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
-    NativeValue* OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetBundleArchiveInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnSetDisposedStatus(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetDisposedStatus(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* CreateAppInfos(NativeEngine &engine, const std::vector<ApplicationInfo> &appInfos);
-    NativeValue* CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos);
-    NativeValue* CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo);
-    NativeValue* CreateAbilityInfos(NativeEngine &engine,  const std::vector<AbilityInfo> &abilityInfos);
-    NativeValue* CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos);
-    NativeValue* CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo);
     NativeValue* CreateRequestPermissions(
         NativeEngine &engine, const std::vector<RequestPermission> &requestPermissions);
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
-    NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
-    NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
     bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options);
-    NativeValue* OnGetProfile(NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType);
-    NativeValue* OnGetApplicationInfoSync(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
-    int32_t InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
-        std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
     int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
-    int32_t GetQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info,
-        std::shared_ptr<JsExtensionAbilityInfos> extensionAbilityInfos, NativeValue *&lastParam);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
     NativeValue* CreateInnerMetaDatas(
@@ -514,10 +485,7 @@ private:
     NativeValue* CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos);
     NativeValue* CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo);
     NativeValue* CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo);
-    NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfo);
-    NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
+    NativeValue* CreateExtensionInfo(NativeEngine &engine, const std::vector<ExtensionAbilityInfo> &extensionInfo);
     NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);
     int32_t InitGetAbilityInfo (NativeEngine &engine, NativeCallbackInfo &info,
         NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
@@ -525,7 +493,6 @@ private:
     NativeValue* CreateMetaData(NativeEngine &engine, const MetaData &metaData);
     NativeValue* CreateSupportWindowMode(NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes);
     NativeValue* CreateUsedScene(NativeEngine &engine, const RequestPermissionUsedScene &usedScene);
-    NativeValue* OnGetBundleInfoSync(NativeEngine &engine, NativeCallbackInfo &info);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
