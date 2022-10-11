@@ -1467,8 +1467,7 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
     if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cleanCacheCallback != nullptr)) {
         // wait for OnCleanCacheFinished
         uv_sem_wait(&(asyncCallbackInfo->cleanCacheCallback->uvSem_));
-        asyncCallbackInfo->err =
-            asyncCallbackInfo->cleanCacheCallback->GetErr() ? NO_ERROR : ERROR_BUNDLE_SERVICE_EXCEPTION;
+        asyncCallbackInfo->err = asyncCallbackInfo->cleanCacheCallback->GetErr() ? NO_ERROR : ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     // implement callback or promise
     if (asyncCallbackInfo->err == NO_ERROR) {
