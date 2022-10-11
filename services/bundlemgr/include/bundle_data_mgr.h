@@ -247,6 +247,14 @@ public:
     bool GetBundleInfos(int32_t flags,
         std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
+     * @brief Obtains BundleInfo of all bundles available in the system.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfos is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) const;
+    /**
      * @brief Obtains the BundleInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
@@ -735,6 +743,8 @@ public:
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    ErrCode GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName, int32_t flags,
+        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
     void DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
@@ -828,6 +838,7 @@ private:
     int32_t GetUserIdByUid(int32_t uid) const;
     ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
+    ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     bool ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
@@ -871,6 +882,7 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     void ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+    bool CheckAppInstallControl(const std::string &appId, int32_t userId) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;

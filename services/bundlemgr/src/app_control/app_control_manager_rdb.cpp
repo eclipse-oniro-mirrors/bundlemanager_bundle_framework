@@ -24,7 +24,7 @@ namespace AppExecFwk {
 namespace {
     const std::string APP_CONTROL_RDB_TABLE_NAME = "app_control";
     const std::string RUNNING_CONTROL = "RunningControl";
-
+    const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
     const int32_t APP_ID_INDEX = 4;
     const int32_t CONTROL_MESSAGE_INDEX = 5;
     const int32_t DISPOSED_STATUS_INDEX = 6;
@@ -95,11 +95,12 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
 }
 
 ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &callingName,
-    const std::vector<std::string> &appIds, int32_t userId)
+    const std::string &controlRuleType, const std::vector<std::string> &appIds, int32_t userId)
 {
     for (const auto &appId : appIds) {
         NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
         absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+        absRdbPredicates.EqualTo(APP_CONTROL_LIST, controlRuleType);
         absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
         absRdbPredicates.EqualTo(APP_ID, appId);
         bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
@@ -150,7 +151,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
         APP_LOGI("GetAppInstallControlRule size 0");
         return ERR_OK;
     }
-    
+
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
@@ -304,8 +305,11 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     }
     ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, controlRuleResult.controlMessage);
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GetString appId failed, ret: %{public}d", ret);
+        APP_LOGE("GetString controlMessage failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (controlRuleResult.controlMessage.empty()) {
+        controlRuleResult.controlMessage = APP_CONTROL_EDM_DEFAULT_MESSAGE;
     }
     std::string wantString;
     ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, wantString);
@@ -318,10 +322,10 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
 }
 
 ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
-    const std::string &controlRuleType, const std::string &appId, const Want &want)
+    const std::string &controlRuleType, const std::string &appId, const Want &want, int32_t userId)
 {
     APP_LOGD("rdb begin to SetDisposedStatus");
-    ErrCode code = DeleteDisposedStatus(callingName, controlRuleType, appId);
+    ErrCode code = DeleteDisposedStatus(callingName, controlRuleType, appId, userId);
     if (code != ERR_OK) {
         APP_LOGE("DeleteDisposedStatus failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
@@ -334,6 +338,7 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     valuesBucket.PutString(DISPOSED_STATUS, want.ToString());
     valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::APP_MARKET));
     valuesBucket.PutInt(TIME_STAMP, timeStamp);
+    valuesBucket.PutString(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
         APP_LOGE("SetDisposedStatus callingName:%{public}s controlRuleType:%{public}s appId:%{public}s failed.",
@@ -344,13 +349,14 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
 }
 
 ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingName,
-    const std::string &controlRuleType, const std::string &appId)
+    const std::string &controlRuleType, const std::string &appId, int32_t userId)
 {
     APP_LOGD("rdb begin to DeleteDisposedStatus");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, controlRuleType);
     absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
         APP_LOGE("DeleteDisposedStatus callingName:%{public}s controlRuleType:%{public}s appId:%{public}s failed.",
@@ -361,20 +367,30 @@ ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingNam
 }
 
 ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
-    const std::string &controlRuleType, const std::string &appId, Want &want)
+    const std::string &controlRuleType, const std::string &appId, Want &want, int32_t userId)
 {
     APP_LOGD("rdb begin to GetDisposedStatus");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, controlRuleType);
     absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("GetAppInstallControlRule failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    
-    auto ret = absSharedResultSet->GoToFirstRow();
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (count == 0) {
+        APP_LOGI("GetAppRunningControlRule size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;

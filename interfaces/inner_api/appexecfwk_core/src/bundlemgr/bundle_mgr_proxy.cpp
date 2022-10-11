@@ -523,6 +523,42 @@ bool BundleMgrProxy::GetBundleInfos(
     return true;
 }
 
+ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get bundle infos");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInfosV9 due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, reply)) {
+        APP_LOGE("sendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host returns error, error code: %{public}d.", res);
+        return res;
+    }
+
+    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
+        APP_LOGE("failed to GetBundleInfosV9 from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     if (bundleName.empty()) {
@@ -1267,7 +1303,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
     APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
     if (hapFilePath.empty()) {
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
 
     MessageParcel data;
@@ -1349,7 +1385,7 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
     APP_LOGD("begin to GetLaunchWantForBundle of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetHapModuleInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -1500,7 +1536,11 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || !cleanCacheCallback) {
+    if (bundleName.empty()) {
+        APP_LOGE("fail to CleanBundleCacheFiles due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (cleanCacheCallback == nullptr) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }

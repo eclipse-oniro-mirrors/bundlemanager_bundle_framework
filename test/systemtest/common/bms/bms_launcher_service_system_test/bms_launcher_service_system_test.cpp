@@ -735,6 +735,188 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0600, Function | Mediu
 }
 
 /**
+ * @tc.number: GetAllLauncherAbilityInfos_0100
+ * @tc.name: test GetAllLauncherAbilityInfos by LauncherService
+ * @tc.desc: 1.test GetAllLauncherAbilityInfos success
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetAllLauncherAbilityInfos_0100, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START GetAllLauncherAbilityInfos_0100";
+ 
+    LauncherService launcherservice;
+    std::vector<LauncherAbilityInfo> launcherAbilityInfos;
+    bool result = launcherservice.GetAllLauncherAbilityInfos(USERID, launcherAbilityInfos);
+    EXPECT_TRUE(result) << "Get ability list failed";
+
+    GTEST_LOG_(INFO) << "END GetAllLauncherAbilityInfos_0100";
+}
+
+/**
+ * @tc.number: GetAllLauncherAbilityInfos_0200
+ * @tc.name: test GetAllLauncherAbilityInfos by LauncherService
+ * @tc.desc: 1.test GetAllLauncherAbilityInfos failed by wrong userId
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetAllLauncherAbilityInfos_0200, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START GetAllLauncherAbilityInfos_0200";
+ 
+    LauncherService launcherservice;
+    std::vector<LauncherAbilityInfo> launcherAbilityInfos;
+    bool result = launcherservice.GetAllLauncherAbilityInfos(1001, launcherAbilityInfos);
+    EXPECT_FALSE(result) << "Get ability list failed";
+
+    GTEST_LOG_(INFO) << "END GetAllLauncherAbilityInfos_0200";
+}
+
+/**
+ * @tc.number: GetAbilityInfo_0200
+ * @tc.name: test GetAbilityInfo by LauncherService
+ * @tc.desc: 1.install a normal hap
+ *           2.test GetAbilityInfo failed by empty bundleName
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetAbilityInfo_0200, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START GetAbilityInfo_0200";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
+    std::string message;
+    Install(bundleFilePath, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+ 
+    LauncherService launcherservice;
+    LauncherAbilityInfo launcherAbilityInfo;
+    Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName("");
+    want.SetElement(name);
+
+    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfo);
+    EXPECT_FALSE(result) << "Get ability list failed";
+
+    Uninstall(bundleName, message);
+    EXPECT_EQ(message, "Success") << "uninstall fail!";
+
+    GTEST_LOG_(INFO) << "END GetAbilityInfo_0200";
+}
+
+/**
+ * @tc.number: GetAbilityInfo_0300
+ * @tc.name: test GetAbilityInfo by LauncherService
+ * @tc.desc: 1.install a normal hap
+ *           2.test GetAbilityInfo failed by empty abilityName
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetAbilityInfo_0300, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START GetAbilityInfo_0300";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string abilityName = TEST_ABILITY_NAME;
+    std::string message;
+    Install(bundleFilePath, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+ 
+    LauncherService launcherservice;
+    LauncherAbilityInfo launcherAbilityInfo;
+    Want want;
+    ElementName name;
+    name.SetAbilityName("");
+    name.SetBundleName(bundleName);
+    want.SetElement(name);
+
+    bool result = launcherservice.GetAbilityInfo(want, USERID, launcherAbilityInfo);
+    EXPECT_FALSE(result) << "Get ability list failed";
+
+    Uninstall(bundleName, message);
+    EXPECT_EQ(message, "Success") << "uninstall fail!";
+
+    GTEST_LOG_(INFO) << "END GetAbilityInfo_0300";
+}
+
+/**
+ * @tc.number: IsBundleEnabled_0100
+ * @tc.name: test IsBundleEnabled by LauncherService
+ * @tc.desc: 1.install a normal hap
+ *           2.the hap is not bundle enabled
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, IsBundleEnabled_0100, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START IsBundleEnabled_0100";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string message;
+    Install(bundleFilePath, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+
+    LauncherService launcherservice;
+ 
+    bool result = launcherservice.IsBundleEnabled(bundleName);
+    EXPECT_FALSE(result) << "Get ability list failed";
+
+    Uninstall(bundleName, message);
+    EXPECT_EQ(message, "Success") << "uninstall fail!";
+
+    GTEST_LOG_(INFO) << "END IsBundleEnabled_0100";
+}
+
+/**
+ * @tc.number: IsBundleEnabled_0200
+ * @tc.name: test IsBundleEnabled by LauncherService
+ * @tc.desc: 1.install a normal hap
+ *           2.test IsBundleEnabled failed by empty bundleName
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, IsBundleEnabled_0200, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START IsBundleEnabled_0200";
+
+    LauncherService launcherservice;
+
+    bool result = launcherservice.IsBundleEnabled("");
+    EXPECT_FALSE(result) << "Get ability list failed";
+
+    GTEST_LOG_(INFO) << "END IsBundleEnabled_0200";
+}
+
+/**
+ * @tc.number: IsAbilityEnabled_0100
+ * @tc.name: test IsAbilityEnabled by LauncherService
+ * @tc.desc: 1.install a normal hap
+ *           2.the hap is not ability enabled
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, IsAbilityEnabled_0100, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START IsAbilityEnabled_0100";
+
+    LauncherService launcherservice;
+
+    AbilityInfo abilityInfo;
+    bool result = launcherservice.IsAbilityEnabled(abilityInfo);
+    EXPECT_FALSE(result) << "Get ability list failed";
+
+    GTEST_LOG_(INFO) << "END IsBundleEnabled_0100";
+}
+
+/**
+ * @tc.number: GetShortcutInfos_0200
+ * @tc.name: test GetShortcutInfos by LauncherService
+ * @tc.desc: 1.install a normal hap
+ *           2.get shortcut infos failed by empty bundleName
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetShortcutInfos_0200, Function | MediumTest | Level2)
+{
+    GTEST_LOG_(INFO) << "START GetShortcutInfos_0200";
+    
+    LauncherService launcherservice;
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool result = launcherservice.GetShortcutInfos("", shortcutInfos);
+    EXPECT_FALSE(result) << "Get ability list failed";
+
+    GTEST_LOG_(INFO) << "END GetShortcutInfos_0200";
+}
+
+/**
  * @tc.number: BMS_GetApplicationInfo_0100
  * @tc.name: test GetApplicationInfo by LauncherService
  * @tc.desc: get the application info of third app by bundleName

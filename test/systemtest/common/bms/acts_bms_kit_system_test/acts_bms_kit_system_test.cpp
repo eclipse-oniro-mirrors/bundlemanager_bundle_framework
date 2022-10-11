@@ -2046,7 +2046,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0100, Function | MediumTest | Le
         EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle1");
         EXPECT_EQ(hapModuleInfo.moduleName, "testability1");
         EXPECT_EQ(hapModuleInfo.description, "");
-        EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "tvcar");
+        EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "defaulttvcar");
 
         resvec.clear();
         Uninstall(appName, resvec);
@@ -2098,7 +2098,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0200, Function | MediumTest | Le
         EXPECT_TRUE(queryResult);
         EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle2");
         EXPECT_EQ(hapModuleInfo.moduleName, "testability");
-        EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "tvcar");
+        EXPECT_EQ(commonTool.VectorToStr(hapModuleInfo.deviceTypes), "defaulttvcar");
         bool isSubStrExist = false;
         for (int i = 1; i <= 2; i++) {
             std::string abilityName = "" + std::to_string(i);
@@ -4258,7 +4258,8 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     name.SetBundleName(appName);
     want.SetElement(name);
     std::vector<AbilityInfo> AbilityInfo;
-    auto ret = bundleMgrProxy->QueryAbilityInfosV9(want, GET_ABILITY_INFO_DEFAULT_V9, USERID, AbilityInfo);
+    auto ret = bundleMgrProxy->QueryAbilityInfosV9(want, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), USERID, AbilityInfo);
     EXPECT_EQ(ret, ERR_OK);
 
     resvec.clear();
