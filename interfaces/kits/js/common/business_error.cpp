@@ -57,10 +57,10 @@ constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR = "Parameter error. the number 
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted";
 constexpr const char* ERROR_MSG_BUNDLE_IS_DISABLED = "The specified bundle is disabled";
 constexpr const char* ERROR_MSG_PROFILE_NOT_EXIST = "No profile in the hap";
-constexpr const char* ERROR_INVALID_UID_MSG = "The uid is invalid.";
-constexpr const char* ERROR_INVALID_HAP_PATH_MSG = "The hapPath is invalid.";
-constexpr const char* ERROR_DEFAULT_APP_NOT_EXIST_MSG = "The default app does not exist.";
-constexpr const char* ERROR_INVALID_TYPE_MSG = "The type is invalid.";
+constexpr const char* ERROR_INVALID_UID_MSG = "The specified uid is invalid.";
+constexpr const char* ERROR_INVALID_HAP_PATH_MSG = "The input source file is invalid.";
+constexpr const char* ERROR_DEFAULT_APP_NOT_EXIST_MSG = "The specified default app does not exist.";
+constexpr const char* ERROR_INVALID_TYPE_MSG = "The specified type is invalid.";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_PARAM_CHECK_ERROR, ERR_MSG_PARAM_TYPE_ERROR },
