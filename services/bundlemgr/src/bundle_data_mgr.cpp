@@ -1687,11 +1687,11 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
         APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGE("sandboxAppHelper_ is nullptr");
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
             APP_LOGE("get innerBundleInfo by uid failed.");
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
     }
 

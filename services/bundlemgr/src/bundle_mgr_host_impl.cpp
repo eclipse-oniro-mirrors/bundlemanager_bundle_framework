@@ -600,14 +600,14 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     ErrCode ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfoV9 file path %{private}s invalid", hapFilePath.c_str());
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     InnerBundleInfo info;
     BundleParser bundleParser;
     ret = bundleParser.Parse(realPath, info);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     return ERR_OK;
