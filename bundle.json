@@ -11,7 +11,8 @@
         "subsystem": "bundlemanager",
         "syscap": [
             "SystemCapability.BundleManager.BundleFramework",
-            "SystemCapability.BundleManager.Zlib"
+            "SystemCapability.BundleManager.Zlib",
+            "SystemCapability.BundleManager.BundleFramework.AppControl"
         ],
         "features": [
             "bundle_framework_graphics",
