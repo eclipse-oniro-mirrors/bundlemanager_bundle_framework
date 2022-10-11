@@ -380,8 +380,17 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         APP_LOGE("GetAppInstallControlRule failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-
-    auto ret = absSharedResultSet->GoToFirstRow();
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (count == 0) {
+        APP_LOGI("GetAppRunningControlRule size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;

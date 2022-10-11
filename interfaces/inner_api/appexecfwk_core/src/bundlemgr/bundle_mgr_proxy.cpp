@@ -1303,7 +1303,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
     APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
     if (hapFilePath.empty()) {
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
 
     MessageParcel data;

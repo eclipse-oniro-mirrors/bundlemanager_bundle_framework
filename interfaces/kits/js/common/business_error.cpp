@@ -57,6 +57,10 @@ constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR = "Parameter error. the number 
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted";
 constexpr const char* ERROR_MSG_BUNDLE_IS_DISABLED = "The specified bundle is disabled";
 constexpr const char* ERROR_MSG_PROFILE_NOT_EXIST = "No profile in the hap";
+constexpr const char* ERROR_INVALID_UID_MSG = "The specified uid is invalid.";
+constexpr const char* ERROR_INVALID_HAP_PATH_MSG = "The input source file is invalid.";
+constexpr const char* ERROR_DEFAULT_APP_NOT_EXIST_MSG = "The specified default app does not exist.";
+constexpr const char* ERROR_INVALID_TYPE_MSG = "The specified type is invalid.";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_PARAM_CHECK_ERROR, ERR_MSG_PARAM_TYPE_ERROR },
@@ -81,9 +85,22 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERR_ZLIB_SRC_FILE_INVALID, ERR_ZLIB_SRC_FILE_INVALID_MSG },
     { ERR_ZLIB_DEST_FILE_INVALID, ERR_ZLIB_DEST_FILE_INVALID_MSG },
     { ERROR_BUNDLE_IS_DISABLED, ERROR_MSG_BUNDLE_IS_DISABLED },
-    { ERROR_PROFILE_NOT_EXIST, ERROR_MSG_PROFILE_NOT_EXIST }
+    { ERROR_PROFILE_NOT_EXIST, ERROR_MSG_PROFILE_NOT_EXIST },
+    { ERROR_INVALID_UID, ERROR_INVALID_UID_MSG },
+    { ERROR_INVALID_HAP_PATH, ERROR_INVALID_HAP_PATH_MSG },
+    { ERROR_DEFAULT_APP_NOT_EXIST, ERROR_DEFAULT_APP_NOT_EXIST_MSG },
+    { ERROR_INVALID_TYPE, ERROR_INVALID_TYPE_MSG }
 };
 } // namespace
+
+void BusinessError::ThrowSimpleError(napi_env env, int32_t err)
+{
+    std::string errMessage;
+    if (ERR_MSG_MAP.find(err) != ERR_MSG_MAP.end()) {
+        errMessage = ERR_MSG_MAP[err];
+    }
+    ThrowError(env, err, errMessage);
+}
 
 void BusinessError::ThrowError(napi_env env, int32_t err, const std::string &msg)
 {

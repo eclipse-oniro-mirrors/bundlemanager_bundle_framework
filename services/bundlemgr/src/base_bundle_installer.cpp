@@ -310,7 +310,7 @@ ErrCode BaseBundleInstaller::InstallAppControl(
     for (const auto &installAppId : installAppIds) {
         if (std::find(appIds.begin(), appIds.end(), installAppId) == appIds.end()) {
             APP_LOGE("appId:%{public}s is dis allow install", installAppId.c_str());
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_INSTALL;
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
         }
     }
     return ERR_OK;
@@ -793,7 +793,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_UNINSTALL;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -891,7 +891,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_UNINSTALL;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1577,7 +1577,7 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
         auto newHqfLibraryPath = hqfLibraryPath.substr(position);
         if (!BundleUtil::EndWith(nativeLibraryPath, newHqfLibraryPath)) {
             APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
-                        nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
+                    nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
             return false;
         }
     }

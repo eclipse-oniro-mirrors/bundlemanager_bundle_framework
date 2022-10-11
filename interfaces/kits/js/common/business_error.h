@@ -24,6 +24,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class BusinessError {
 public:
+static void ThrowSimpleError(napi_env env, int32_t err);
+
 static void ThrowError(napi_env env, int32_t err, const std::string &msg = "");
 
 static void ThrowParameterTypeError(napi_env env, int32_t err,
