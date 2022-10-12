@@ -27,9 +27,9 @@
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "js_runtime_utils.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
-#include "js_runtime_utils.h"
 #include "system_ability_definition.h"
 
 using namespace OHOS::AbilityRuntime;
@@ -188,7 +188,7 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
     APP_LOGD("ConvertBundleInfo done");
 }
 
-static bool InnerIsDefaultApplication(const std::string& type)
+static ErrCode InnerIsDefaultApplication(const std::string& type)
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
@@ -198,11 +198,7 @@ static bool InnerIsDefaultApplication(const std::string& type)
     bool isDefaultApp = false;
     ErrCode ret = defaultAppProxy->IsDefaultApplication(type, isDefaultApp);
     APP_LOGD("IsDefaultApplication ErrCode : %{public}d", ret);
-    if (ret == ERR_OK) {
-        return isDefaultApp;
-    }
-    return false;
-
+    return ret;
 }
 
 static ErrCode InnerGetDefaultApplication(DefaultAppCallbackInfo *info)
