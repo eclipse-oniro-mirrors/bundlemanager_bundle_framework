@@ -147,7 +147,7 @@ private:
 // srcDir = /ziptest/zipdata/zip1/zip1-1.cpp
 // destFile = /ziptest/hapresult/singlefile.zip
 // options is default value.
-bool Zip(const std::string &srcPath, const std::string &destPath, CALLBACK callback,
+bool Zip(const std::string &srcPath, const std::string &destPath,
     bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
 
 // Unzip the contents of zipFile into destDir.
@@ -158,7 +158,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath, CALLBACK callb
 // srcDir = /ziptest/hapresult/singlefile.zip
 // destFile = /ziptest/hapunzipdir/single
 // options is default value.
-bool Unzip(const std::string &srcFile, const std::string &destFile, const OPTIONS options, CALLBACK callback,
+bool Unzip(const std::string &srcFile, const std::string &destFile, const OPTIONS options,
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
 
 }  // namespace LIBZIP

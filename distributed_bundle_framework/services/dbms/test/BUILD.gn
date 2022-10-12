@@ -11,27 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-
-group("inner_api_target") {
-  deps = [ "interfaces/inner_api:dbms_fwk" ]
-}
-
-group("jsapi_target") {
-  deps = [
-    "interfaces/kits/js/distributebundlemgr:jsapi_target",
-    "interfaces/kits/js/distributedBundle:jsapi_target_v9",
-  ]
-}
-
-group("dbms_target") {
-  deps = [
-    "services/dbms:dbms_target",
-    "services/dbms/sa_profile:distributedbms",
-  ]
-}
-
-group("test_target") {
+group("unittest") {
   testonly = true
-  deps = [ "services/dbms/test:unittest" ]
+  deps = [ "unittest/dbms_services_kit_test:unittest" ]
 }

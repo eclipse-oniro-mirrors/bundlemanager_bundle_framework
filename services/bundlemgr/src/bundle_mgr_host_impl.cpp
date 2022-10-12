@@ -32,7 +32,6 @@
 #include "distributed_bms_proxy.h"
 #endif
 #include "element_name.h"
-#include "hitrace_meter.h"
 #include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -133,7 +132,6 @@ bool BundleMgrHostImpl::GetBundleInfo(
 bool BundleMgrHostImpl::GetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
     if (!VerifyQueryPermission(bundleName)) {
@@ -230,6 +228,22 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         return false;
     }
     return dataMgr->GetBundleInfos(flags, bundleInfos, userId);
+}
+
+ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    APP_LOGD("start GetBundleInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to GetBundleInfosV9");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
 }
 
 bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
@@ -586,14 +600,14 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     ErrCode ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfoV9 file path %{private}s invalid", hapFilePath.c_str());
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     InnerBundleInfo info;
     BundleParser bundleParser;
     ret = bundleParser.Parse(realPath, info);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     return ERR_OK;
@@ -967,7 +981,6 @@ bool BundleMgrHostImpl::UnregisterBundleStatusCallback()
 bool BundleMgrHostImpl::DumpInfos(
     const DumpFlag flag, const std::string &bundleName, int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -995,7 +1008,6 @@ bool BundleMgrHostImpl::DumpInfos(
 
 bool BundleMgrHostImpl::DumpAllBundleInfoNames(int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("DumpAllBundleInfoNames begin");
     if (userId != Constants::ALL_USERID) {
         return DumpAllBundleInfoNamesByUserId(userId, result);
@@ -1012,7 +1024,6 @@ bool BundleMgrHostImpl::DumpAllBundleInfoNames(int32_t userId, std::string &resu
 
 bool BundleMgrHostImpl::DumpAllBundleInfoNamesByUserId(int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("DumpAllBundleInfoNamesByUserId begin");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -1041,7 +1052,6 @@ bool BundleMgrHostImpl::DumpAllBundleInfoNamesByUserId(int32_t userId, std::stri
 bool BundleMgrHostImpl::DumpBundleInfo(
     const std::string &bundleName, int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("DumpBundleInfo begin");
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     if (userId == Constants::ALL_USERID) {
@@ -1082,7 +1092,6 @@ bool BundleMgrHostImpl::DumpBundleInfo(
 bool BundleMgrHostImpl::DumpShortcutInfo(
     const std::string &bundleName, int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("DumpShortcutInfo begin");
     std::vector<ShortcutInfo> shortcutInfos;
     if (userId == Constants::ALL_USERID) {

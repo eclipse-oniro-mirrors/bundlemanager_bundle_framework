@@ -203,8 +203,9 @@ const std::shared_ptr<BundleDataMgr> BmsBundleAppControlTest::GetBundleDataMgr()
 /**
  * @tc.number: AppInstallControlRule_0100
  * @tc.name: test can not add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.AddAppInstallControlRule
+ *           2.AddAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTest | Level1)
 {
@@ -228,8 +229,9 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTe
 /**
  * @tc.number: AppInstallControlRule_0200
  * @tc.name: test can not add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.DeleteAppInstallControlRule
+ *           2.DeleteAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0200, Function | SmallTest | Level1)
 {
@@ -237,23 +239,25 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0200, Function | SmallTe
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     seteuid(1000);
     std::vector<std::string> appIds;
-    auto res1 = appControlProxy->DeleteAppInstallControlRule(appIds, USERID);
+    auto res1 = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
+        appIds, USERID);
     EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     appIds.emplace_back(APPID);
-    auto res2 = appControlProxy->DeleteAppInstallControlRule(appIds, USERID);
+    auto res2 = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
+        appIds, USERID);
     EXPECT_EQ(res2, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     seteuid(537);
-    auto res3 = appControlProxy->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
+    auto res3 =
+        appControlProxy->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
     EXPECT_EQ(res3, ERR_OK);
 }
 
 /**
  * @tc.number: AppInstallControlRule_0300
  * @tc.name: test can  add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.AddAppInstallControlRule success
- *           3.DeleteAppInstallControlRule success
- *           4.GetAppInstallControlRule success
+ *           2.DeleteAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0300, Function | SmallTest | Level1)
 {
@@ -270,8 +274,9 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0300, Function | SmallTe
 /**
  * @tc.number: AppInstallControlRule_0400
  * @tc.name: test can not add app install control rule
+ * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
- *           2.GetAppInstallControlRule
+ *           2.GetAppInstallControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTest | Level1)
 {
@@ -295,7 +300,8 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0100
  * @tc.name: test running control rule
- * @tc.desc: 1.AddAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.AddAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0100, Function | SmallTest | Level1)
 {
@@ -319,7 +325,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0100, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0200
  * @tc.name: test running control rule
- * @tc.desc: 1.DeleteAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.DeleteAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0200, Function | SmallTest | Level1)
 {
@@ -345,7 +352,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0200, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0300
  * @tc.name: test running control rule
- * @tc.desc: 1.DeleteAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.DeleteAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0300, Function | SmallTest | Level1)
 {
@@ -369,7 +377,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0300, Function | SmallTe
 /**
  * @tc.number: AppRunningControlRule_0400
  * @tc.name: test running control rule
- * @tc.desc: 1.GetAppRunningControlRule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.GetAppRunningControlRule test
  */
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0400, Function | SmallTest | Level1)
 {
@@ -389,5 +398,54 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0400, Function | SmallTe
     EXPECT_EQ(res, ERR_OK);
     res = appControlProxy->GetAppRunningControlRule(USERID, appIds);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DisposedStatus_0100
+ * @tc.name: test setting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.SetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    Want want;
+    want.SetAction("action.system.home");
+    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DisposedStatus_0200
+ * @tc.name: test deleting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.DeleteDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->DeleteDisposedStatus(APPID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DisposedStatus_0300
+ * @tc.name: test getting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.GetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    Want want;
+    want.SetAction("action.system.home");
+    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_OK);
+    res = appControlProxy->GetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(want.GetAction(), "action.system.home");
 }
 } // OHOS

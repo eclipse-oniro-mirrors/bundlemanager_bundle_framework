@@ -41,7 +41,7 @@ ErrCode DefaultAppProxy::IsDefaultApplication(const std::string& type, bool& isD
 
     if (type.empty()) {
         APP_LOGE("type is empty.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     MessageParcel data;
@@ -73,7 +73,7 @@ ErrCode DefaultAppProxy::GetDefaultApplication(int32_t userId, const std::string
 
     if (type.empty()) {
         APP_LOGE("type is empty.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     MessageParcel data;
@@ -131,7 +131,7 @@ ErrCode DefaultAppProxy::ResetDefaultApplication(int32_t userId, const std::stri
 
     if (type.empty()) {
         APP_LOGE("type is empty.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     MessageParcel data;

@@ -86,8 +86,10 @@ void SetDisposedStatusExec(napi_env env, void *data)
         APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerSetDisposedStatus(env, asyncCallbackInfo->appId,
-        asyncCallbackInfo->want);
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerSetDisposedStatus(env, asyncCallbackInfo->appId,
+            asyncCallbackInfo->want);
+    }
 }
 
 void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
@@ -145,8 +147,9 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
+            asyncCallbackInfo->err = asyncCallbackInfo->appId.size() == 0 ? ERROR_INVALID_APPID : NO_ERROR;
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_object)) {
-            if (!CommonFunc::ParseElementName(env, args[i], asyncCallbackInfo->want)) {
+            if (!CommonFunc::ParseWantWithoutVerification(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("disposed want invalid!");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
@@ -177,7 +180,9 @@ void DeleteDisposedStatusExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerDeleteDisposedStatus(env, asyncCallbackInfo->appId);
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerDeleteDisposedStatus(env, asyncCallbackInfo->appId);
+    }
 }
 
 void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
@@ -235,6 +240,9 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
+            if (asyncCallbackInfo->appId.size() == 0) {
+                asyncCallbackInfo->err = ERROR_INVALID_APPID;
+            }
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -261,8 +269,10 @@ void GetDisposedStatusExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerGetDisposedStatus(env, asyncCallbackInfo->appId,
-        asyncCallbackInfo->want);
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerGetDisposedStatus(env, asyncCallbackInfo->appId,
+            asyncCallbackInfo->want);
+    }
 }
 
 void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
@@ -321,6 +331,9 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
                 APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->appId.c_str());
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
+            }
+            if (asyncCallbackInfo->appId.size() == 0) {
+                asyncCallbackInfo->err = ERROR_INVALID_APPID;
             }
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {

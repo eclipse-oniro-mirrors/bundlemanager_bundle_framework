@@ -61,6 +61,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getProfileByAbility", GetProfileByAbility),
         DECLARE_NAPI_FUNCTION("getProfileByExtensionAbility", GetProfileByExAbility),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
+        DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfo", GetBundleInfo),
         DECLARE_NAPI_PROPERTY("AbilityFlag", abilityFlag),
         DECLARE_NAPI_PROPERTY("ExtensionAbilityFlag", extensionFlag),

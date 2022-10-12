@@ -29,7 +29,7 @@ struct GetRemoteAbilityInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetRemoteAbilityInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::vector<ElementName> elementNames;
     std::vector<RemoteAbilityInfo> remoteAbilityInfos;
-    std::string local = "";
+    std::string locale = "";
     bool isArray = false;
 };
 

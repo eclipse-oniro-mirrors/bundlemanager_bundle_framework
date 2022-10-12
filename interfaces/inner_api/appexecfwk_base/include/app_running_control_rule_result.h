@@ -27,7 +27,6 @@ struct AppRunningControlRuleResult : public Parcelable {
     std::string controlMessage;
     std::shared_ptr<AAFwk::Want> controlWant = nullptr;
 
-    void ExecuteControlRule();
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static AppRunningControlRuleResult *Unmarshalling(Parcel &parcel);

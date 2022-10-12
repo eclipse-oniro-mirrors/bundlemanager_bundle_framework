@@ -61,7 +61,8 @@ ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string>
     return SendRequest(IAppControlMgr::Message::ADD_APP_INSTALL_CONTROL_RULE, data, reply);
 }
 
-ErrCode AppControlProxy::DeleteAppInstallControlRule(const std::vector<std::string> &appIds, int32_t userId)
+ErrCode AppControlProxy::DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
+    const std::vector<std::string> &appIds, int32_t userId)
 {
     APP_LOGD("begin to call DeleteAppInstallControlRule.");
     if (appIds.empty()) {
@@ -71,6 +72,10 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(const std::vector<std::stri
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(controlRuleType))) {
+        APP_LOGE("write controlRuleType failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!WriteStringVector(appIds, data)) {
