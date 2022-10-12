@@ -7799,7 +7799,7 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const Extens
         CreateJsValue(engine, static_cast<int32_t>(extensionInfos.type)));
     object->SetProperty("permissions", CreateNativeArray(engine, extensionInfos.permissions));
     object->SetProperty("applicationInfo", CreateAppInfo(engine, extensionInfos.applicationInfo));
-    object->SetProperty("metaData", CreateInnerMetaDatas(engine, extensionInfos.metadata));
+    object->SetProperty("metadata", CreateInnerMetaDatas(engine, extensionInfos.metadata));
     object->SetProperty("enabled", CreateJsValue(engine, extensionInfos.enabled));
     object->SetProperty("readPermission", CreateJsValue(engine, extensionInfos.readPermission));
     object->SetProperty("writePermission", CreateJsValue(engine, extensionInfos.writePermission));
