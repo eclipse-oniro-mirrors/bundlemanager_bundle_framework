@@ -8158,6 +8158,24 @@ bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInf
     return flagCall;
 }
 
+bool JsBundleMgr::UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
+{
+    bool flagCall = true;
+    if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FOUR && info.argv[PARAM3]->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FIVE) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+    }
+
+    return flagCall;
+}
 
 bool JsBundleMgr::UnwarpBundleOptionsParams(
     NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool &result)
@@ -8195,7 +8213,6 @@ NativeValue* JsBundleMgr::GetApplicationInfo(NativeEngine *engine, NativeCallbac
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
     return (me != nullptr) ? me->OnGetApplicationInfo(*engine, *info) : nullptr;
 }
-
 
 NativeValue* JsBundleMgr::GetBundleArchiveInfo(NativeEngine *engine, NativeCallbackInfo *info)
 {
