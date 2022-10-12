@@ -18,13 +18,9 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include "hilog_wrapper.h"
-#include "js_runtime_utils.h"
-#include "napi/native_node_api.h"
 #include "app_log_wrapper.h"
 #include "js_default_app.h"
 
-using namespace OHOS::AbilityRuntime;
 namespace OHOS {
 namespace AppExecFwk {
 static void SetNamedProperty(napi_env env, napi_value dstObj, const char *objName, const char *propName)
@@ -46,30 +42,6 @@ static void CreateApplicationType(napi_env env, napi_value value)
     SetNamedProperty(env, value, "PPT", "PPT");
 }
 
-static NativeValue* JsDefaultAppInit(NativeEngine *engine, NativeValue *exports)
-{
-    APP_LOGD("JsDefaultAppInit is called");
-    if (engine == nullptr || exports == nullptr) {
-        APP_LOGE("Invalid input parameters");
-        return nullptr;
-    }
-
-    NativeObject *object = ConvertNativeValueTo<NativeObject>(exports);
-    if (object == nullptr) {
-        APP_LOGE("object is nullptr");
-        return nullptr;
-    }
-
-    std::unique_ptr<JsDefaultApp> jsDefaultAppUnsupported = std::make_unique<JsDefaultApp>();
-
-    object->SetNativePointer(jsDefaultAppUnsupported.release(), JsDefaultApp::JsFinalizer, nullptr);
-
-    const char *moduleName = "JsDefaultApp";
-    BindNativeFunction(*engine, *object, "isDefaultApplication", moduleName, JsDefaultApp::JsIsDefaultApplication);
-
-    return exports;
-}
-
 static napi_value DefaultAppExport(napi_env env, napi_value exports)
 {
     napi_value applicationType = nullptr;
@@ -77,6 +49,7 @@ static napi_value DefaultAppExport(napi_env env, napi_value exports)
     CreateApplicationType(env, applicationType);
 
     napi_property_descriptor desc[] = {
+        DECLARE_NAPI_FUNCTION("isDefaultApplication", IsDefaultApplication),
         DECLARE_NAPI_FUNCTION("getDefaultApplication", GetDefaultApplication),
         DECLARE_NAPI_FUNCTION("setDefaultApplication", SetDefaultApplication),
         DECLARE_NAPI_FUNCTION("resetDefaultApplication", ResetDefaultApplication),
@@ -85,8 +58,7 @@ static napi_value DefaultAppExport(napi_env env, napi_value exports)
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     APP_LOGD("init js default app success.");
-    return reinterpret_cast<napi_value>(JsDefaultAppInit(reinterpret_cast<NativeEngine*>(env),
-        reinterpret_cast<NativeValue*>(exports)));
+    return exports;
 }
 
 static napi_module default_app_module = {

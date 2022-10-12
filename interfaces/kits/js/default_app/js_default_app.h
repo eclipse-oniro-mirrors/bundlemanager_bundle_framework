@@ -24,7 +24,6 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "foundation/arkui/napi/native_engine/native_value.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -44,17 +43,6 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info);
 napi_value GetDefaultApplication(napi_env env, napi_callback_info info);
 napi_value SetDefaultApplication(napi_env env, napi_callback_info info);
 napi_value ResetDefaultApplication(napi_env env, napi_callback_info info);
-
-class JsDefaultApp {
-public:
-    JsDefaultApp() = default;
-    ~JsDefaultApp() = default;
-
-    static void JsFinalizer(NativeEngine *engine, void *data, void *hint);
-    static NativeValue* JsIsDefaultApplication(NativeEngine *engine, NativeCallbackInfo *info);
-private:
-    NativeValue* OnIsDefaultApplication(NativeEngine &engine, NativeCallbackInfo &info);
-};
 }
 }
 #endif
