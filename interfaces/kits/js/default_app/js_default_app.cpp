@@ -198,7 +198,7 @@ static ErrCode InnerIsDefaultApplication(const std::string& type)
     bool isDefaultApp = false;
     ErrCode ret = defaultAppProxy->IsDefaultApplication(type, isDefaultApp);
     APP_LOGD("IsDefaultApplication ErrCode : %{public}d", ret);
-    return ret;
+    return CommonFunc::ConvertErrCode(ret);;
 }
 
 static ErrCode InnerGetDefaultApplication(DefaultAppCallbackInfo *info)
