@@ -25,6 +25,7 @@ namespace {
     const std::string APP_CONTROL_RDB_TABLE_NAME = "app_control";
     const std::string RUNNING_CONTROL = "RunningControl";
     const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
+    const std::string DEFAULT = "default";
     const int32_t APP_ID_INDEX = 4;
     const int32_t CONTROL_MESSAGE_INDEX = 5;
     const int32_t DISPOSED_STATUS_INDEX = 6;
@@ -185,7 +186,7 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
         valuesBucket.PutInt(USER_ID, static_cast<int>(userId));
         valuesBucket.PutString(APP_ID, controlRule.appId);
         valuesBucket.PutString(CONTROL_MESSAGE, controlRule.controlMessage);
-        valuesBucket.PutString(DISPOSED_STATUS, "default");
+        valuesBucket.PutString(DISPOSED_STATUS, DEFAULT);
         valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::EDM));
         valuesBucket.PutInt(TIME_STAMP, timeStamp);
         valuesBuckets.emplace_back(valuesBucket);
@@ -317,7 +318,9 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         APP_LOGE("GetString controlWant failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
+    if (wantString != DEFAULT) {
+        controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
+    }
     return ERR_OK;
 }
 
