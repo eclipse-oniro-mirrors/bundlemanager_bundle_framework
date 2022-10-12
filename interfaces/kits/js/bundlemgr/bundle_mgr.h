@@ -461,6 +461,9 @@ public:
     static NativeValue* GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -470,6 +473,11 @@ private:
     NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
+    int32_t InitGetAbilityIcon (NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
+        std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
+    static NativeValue* GetProfileByAbility(NativeEngine *engine, NativeCallbackInfo *info);
+    NativeValue* OnGetProfile(NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
         
