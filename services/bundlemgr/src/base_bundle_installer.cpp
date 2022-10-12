@@ -1715,7 +1715,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
-        if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+        bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
+        if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
             nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
             APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
         }
