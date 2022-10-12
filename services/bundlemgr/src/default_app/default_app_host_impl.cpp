@@ -70,7 +70,7 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
     bool ret = dataMgr->GetElement(userId, elementName, element);
     if (!ret) {
         APP_LOGE("GetElement failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
 }
