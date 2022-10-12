@@ -8137,8 +8137,7 @@ bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInf
 }
 
 
-bool JsBundleMgr::UnwarpBundleOptionsParams(
-    NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool &result)
+bool JsBundleMgr::UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options)
 {
     bool flagCall = true;
     auto env = reinterpret_cast<napi_env>(&engine);
@@ -8146,11 +8145,11 @@ bool JsBundleMgr::UnwarpBundleOptionsParams(
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_OBJECT) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        result = ParseBundleOptions(env, options, arg3);
+        ParseBundleOptions(env, options, arg3);
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_FOUR) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        result = ParseBundleOptions(env, options, arg3);
+        ParseBundleOptions(env, options, arg3);
     }
 
     return flagCall;
@@ -8696,7 +8695,7 @@ NativeValue* JsBundleMgr::OnGetProfile(
     }
 
     APP_LOGD("GetProfile finish to parse arguments with errCode %{public}d", callbackPtr->errCode);
-    auto complete = [asyncInfo = callbackPtr] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+    auto complete = [aobj = this, syncInfo = callbackPtr] (NativeEngine &engine, AsyncTask &task, int32_t status) {
         auto errCode = asyncInfo->errCode;
         if (errCode != 0) {
             task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
@@ -8708,7 +8707,7 @@ NativeValue* JsBundleMgr::OnGetProfile(
             task.Reject(engine, CreateJsError(engine, 1, "GetProfile failed"));
             return;
         }
-        task.Resolve(engine, CreateProfiles(engine, asyncInfo->profileVec));
+        task.Resolve(engine, obj->CreateProfiles(engine, asyncInfo->profileVec));
     };
     NativeValue* callback = nullptr;
     if (info.argv[info.argc - 1]->TypeOf() == NATIVE_FUNCTION) {
