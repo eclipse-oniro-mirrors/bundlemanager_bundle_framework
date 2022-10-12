@@ -464,6 +464,7 @@ public:
     static NativeValue* GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetProfileByAbility(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -476,7 +477,6 @@ private:
     NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
     int32_t InitGetAbilityIcon (NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
-    static NativeValue* GetProfileByAbility(NativeEngine *engine, NativeCallbackInfo *info);
     NativeValue* OnGetProfile(NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType);
     NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
@@ -518,7 +518,7 @@ private:
     bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpBundleOptionsParams(
-        NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool &result);
+        NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options);
 };
 
 }  // namespace AppExecFwk

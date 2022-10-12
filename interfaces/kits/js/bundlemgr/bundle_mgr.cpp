@@ -8695,7 +8695,7 @@ NativeValue* JsBundleMgr::OnGetProfile(
     }
 
     APP_LOGD("GetProfile finish to parse arguments with errCode %{public}d", callbackPtr->errCode);
-    auto complete = [aobj = this, syncInfo = callbackPtr] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+    auto complete = [obj = this, asyncInfo = callbackPtr] (NativeEngine &engine, AsyncTask &task, int32_t status) {
         auto errCode = asyncInfo->errCode;
         if (errCode != 0) {
             task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
