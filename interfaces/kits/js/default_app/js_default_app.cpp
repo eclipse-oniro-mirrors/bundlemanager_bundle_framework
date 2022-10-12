@@ -193,7 +193,7 @@ static ErrCode InnerIsDefaultApplication(const std::string& type)
     auto defaultAppProxy = GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null.");
-        return false;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     bool isDefaultApp = false;
     ErrCode ret = defaultAppProxy->IsDefaultApplication(type, isDefaultApp);
