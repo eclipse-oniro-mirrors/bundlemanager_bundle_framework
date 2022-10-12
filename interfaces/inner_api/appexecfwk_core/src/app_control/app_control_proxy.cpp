@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "ipc_types.h"
 
 namespace OHOS {
@@ -332,6 +333,7 @@ bool AppControlProxy::WriteStringVector(const std::vector<std::string> &stringVe
 template<typename T>
 bool AppControlProxy::WriteParcelableVector(const std::vector<T> &parcelableVector, MessageParcel &data)
 {
+    data.SetDataCapacity(Constants::CAPACITY_SIZE);
     if (!data.WriteInt32(parcelableVector.size())) {
         APP_LOGE("write ParcelableVector failed");
         return false;

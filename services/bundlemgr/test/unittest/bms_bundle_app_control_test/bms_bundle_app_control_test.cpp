@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ability_info.h"
+#include "app_control_constants.h"
 #include "app_control_manager_rdb.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
@@ -40,10 +41,7 @@ using OHOS::AAFwk::Want;
 
 namespace OHOS {
 namespace {
-const std::string BUNDLE_NAME = "com.third.hiworld.example1";
-const std::string ABILITY_NAME = "bmsThirdBundle_A1";
-const std::string MODULE_NAME = "testability1";
-const std::string HAP_FILE_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
+const std::string BUNDLE_NAME = "com.third.hiworld.example.h1";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string CONTROL_MESSAGE = "this is control message";
@@ -93,7 +91,8 @@ void BmsBundleAppControlTest::SetUp()
 }
 
 void BmsBundleAppControlTest::TearDown()
-{}
+{
+}
 
 sptr<BundleMgrProxy> BmsBundleAppControlTest::GetBundleMgrProxy()
 {
@@ -130,7 +129,7 @@ ErrCode BmsBundleAppControlTest::InstallBundle(const std::string &bundlePath) co
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     InstallParam installParam;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
@@ -224,8 +223,26 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTe
         AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     seteuid(537);
+    res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    res = appControlProxy->
+        AddAppInstallControlRule(appIds, AppInstallControlRuleType::UNSPECIFIED, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID);
     res = appControlProxy->
         AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    std::vector<std::string> resultAppIds;
+    res = appControlProxy->
+        GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, resultAppIds);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appIds.size(), resultAppIds.size());
+    for (size_t i = 0; i < AppControlConstants::LIST_MAX_SIZE; i++) {
+        appIds.emplace_back(APPID);
+    }
+    res = appControlProxy->
+        AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -242,17 +259,24 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0200, Function | SmallTe
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     seteuid(1000);
     std::vector<std::string> appIds;
-    auto res1 = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
+    auto res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
         appIds, USERID);
-    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     appIds.emplace_back(APPID);
-    auto res2 = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
+    res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL,
         appIds, USERID);
-    EXPECT_EQ(res2, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     seteuid(537);
-    auto res3 =
-        appControlProxy->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
-    EXPECT_EQ(res3, ERR_OK);
+    res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::UNSPECIFIED, appIds, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID);
+    res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    for (size_t i = 0; i < AppControlConstants::LIST_MAX_SIZE; i++) {
+        appIds.emplace_back(APPID);
+    }
+    res = appControlProxy->
+        DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 /**
@@ -270,6 +294,8 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0300, Function | SmallTe
     auto res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     seteuid(537);
+    res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::UNSPECIFIED, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID);
     res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
     EXPECT_EQ(res, ERR_OK);
 }
@@ -298,6 +324,8 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTe
     res = appControlProxy->
         GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
     EXPECT_EQ(res, ERR_OK);
+    res = appControlProxy->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -322,6 +350,13 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0100, Function | SmallTe
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     seteuid(537);
     res = appControlProxy->AddAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    for (size_t i = 0; i < AppControlConstants::LIST_MAX_SIZE; i++) {
+        controlRules.emplace_back(controlRule);
+    }
+    res = appControlProxy->AddAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    res = appControlProxy->DeleteAppRunningControlRule(USERID);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -350,6 +385,11 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0200, Function | SmallTe
     EXPECT_EQ(res2, ERR_OK);
     auto res3 = appControlProxy->DeleteAppRunningControlRule(controlRules, USERID);
     EXPECT_EQ(res3, ERR_OK);
+    for (size_t i = 0; i < AppControlConstants::LIST_MAX_SIZE; i++) {
+        controlRules.emplace_back(controlRule);
+    }
+    res = appControlProxy->DeleteAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 /**
@@ -401,6 +441,33 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0400, Function | SmallTe
     EXPECT_EQ(res, ERR_OK);
     res = appControlProxy->GetAppRunningControlRule(USERID, appIds);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppRunningControlRule_0500
+ * @tc.name: test running control rule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.GetAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0500, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    seteuid(537);
+    std::vector<AppRunningControlRule> controlRules;
+    AppRunningControlRule controlRule;
+    controlRule.appId = APPID;
+    controlRule.controlMessage = CONTROL_MESSAGE;
+    controlRules.emplace_back(controlRule);
+    auto res = appControlProxy->AddAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    AppRunningControlRuleResult controlRuleResult;
+    res = appControlProxy->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    seteuid(5523);
+    res = appControlProxy->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
