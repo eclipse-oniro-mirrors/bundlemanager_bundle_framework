@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ability_info.h"
+#include "app_control_manager_rdb.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -46,6 +47,7 @@ const std::string HAP_FILE_PATH = "/data/test/resource/bms/app_control/bmsThirdB
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string CONTROL_MESSAGE = "this is control message";
+const std::string CALLING_NAME = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
@@ -65,6 +67,7 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     void StartInstalldService() const;
     void StartBundleService();
+    std::shared_ptr<IAppControlManagerDb> appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
 
 private:
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
@@ -408,11 +411,9 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0400, Function | SmallTe
  */
 HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0100, Function | SmallTest | Level1)
 {
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     Want want;
     want.SetAction("action.system.home");
-    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    auto res = appControlManagerDb_->SetDisposedStatus(CALLING_NAME, APPID, want, 100);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -424,9 +425,7 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0100, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0200, Function | SmallTest | Level1)
 {
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-    auto res = appControlProxy->DeleteDisposedStatus(APPID);
+    auto res = appControlManagerDb_->DeleteDisposedStatus(CALLING_NAME, APPID, 100);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -438,13 +437,11 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0200, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0300, Function | SmallTest | Level1)
 {
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     Want want;
     want.SetAction("action.system.home");
-    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    auto res = appControlManagerDb_->SetDisposedStatus(CALLING_NAME, APPID, want, 100);
     EXPECT_EQ(res, ERR_OK);
-    res = appControlProxy->GetDisposedStatus(APPID, want);
+    res = appControlManagerDb_->GetDisposedStatus(CALLING_NAME, APPID, want, 100);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_EQ(want.GetAction(), "action.system.home");
 }

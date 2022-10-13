@@ -22,9 +22,11 @@ ohos_unittest("BmsBundleAppControlTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "//third_party/json/include",
+    "${services_path}/bundlemgr/include/app_control",
   ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
