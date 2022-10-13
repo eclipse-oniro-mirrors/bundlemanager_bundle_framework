@@ -2385,5 +2385,18 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
     APP_LOGD("call NAPI_GetBundleInfos done.");
     return promise;
 }
+
+void CreatePermissionGrantStateObject(napi_env env, napi_value value)
+{
+    napi_value nPermissionDenied;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, -1, &nPermissionDenied));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PERMISSION_DENIED",
+        nPermissionDenied));
+
+    napi_value nPermissionGranted;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 0, &nPermissionGranted));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PERMISSION_GRANTED",
+        nPermissionGranted));
+}
 }
 }
