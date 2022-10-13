@@ -867,8 +867,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0016, Function | MediumTest | Lev
 {
     std::cout << "START GetBundleInfoV9_0016" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -883,7 +883,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0016, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_GT(bundleInfo.hapModuleInfos.size(), 0);
     EXPECT_GT(bundleInfo.hapModuleInfos[0].extensionInfos.size(), 0);
     resvec.clear();
@@ -905,8 +905,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0017, Function | MediumTest | Lev
 {
     std::cout << "START GetBundleInfoV9_0017" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -920,10 +920,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0017, Function | MediumTest | Lev
     auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(appName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_GT(bundleInfo.reqPermissions.size(), 0);
-    EXPECT_GT(bundleInfo.defPermissions.size(), 0);
-    EXPECT_GT(bundleInfo.reqPermissionDetails.size(), 0);
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -943,8 +941,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0018, Function | MediumTest | Lev
 {
     std::cout << "START GetBundleInfoV9_0018" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -959,7 +957,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0018, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION) |
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_EQ(bundleInfo.applicationInfo.name, appName);
     EXPECT_GT(bundleInfo.applicationInfo.metadata.size(), 0);
     resvec.clear();
@@ -975,14 +973,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0018, Function | MediumTest | Lev
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
  *           2.install the hap
- *           3.get applicationInfo which contain metadata successfully
+ *           3.get hapModuleInfos which contain metadata successfully
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0019, Function | MediumTest | Level1)
 {
     std::cout << "START GetBundleInfoV9_0019" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -997,7 +995,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0019, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_GT(bundleInfo.hapModuleInfos[0].metadata.size(), 0);
     resvec.clear();
     Uninstall(appName, resvec);
@@ -1012,14 +1010,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0019, Function | MediumTest | Lev
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
  *           2.install the hap
- *           3.get applicationInfo which contain metadata successfully
+ *           3.get abilityInfo which contain metadata successfully
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0020, Function | MediumTest | Level1)
 {
     std::cout << "START GetBundleInfoV9_0020" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -1035,7 +1033,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0020, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_GT(bundleInfo.hapModuleInfos[0].abilityInfos[0].metadata.size(), 0);
     resvec.clear();
     Uninstall(appName, resvec);
@@ -1050,14 +1048,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0020, Function | MediumTest | Lev
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
  *           2.install the hap
- *           3.get applicationInfo which contain metadata successfully
+ *           3.get extensionInfos which contain metadata successfully
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0021, Function | MediumTest | Level1)
 {
     std::cout << "START GetBundleInfoV9_0021" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -1073,7 +1071,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0021, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY) |
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_GT(bundleInfo.hapModuleInfos[0].extensionInfos[0].metadata.size(), 0);
     resvec.clear();
     Uninstall(appName, resvec);
@@ -1088,14 +1086,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0021, Function | MediumTest | Lev
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
  *           2.install the hap
- *           3.get applicationInfo which contain metadata successfully
+ *           3.get disabled bundleInfo successfully
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0022, Function | MediumTest | Level1)
 {
     std::cout << "START GetBundleInfoV9_0022" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -1111,7 +1109,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0022, Function | MediumTest | Lev
     auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(appName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
+    auto resetResult = bundleMgrProxy->SetApplicationEnabled(appName, true, USERID);
+    EXPECT_EQ(resetResult, ERR_OK);
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1125,7 +1125,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0022, Function | MediumTest | Lev
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
  *           2.install the hap
- *           3.get applicationInfo which contain metadata successfully
+ *           3.get bundleInfo which contain signatureInfo successfully
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0023, Function | MediumTest | Level1)
 {
@@ -1143,12 +1143,10 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0023, Function | MediumTest | Lev
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     BundleInfo bundleInfo;
-    auto setResult = bundleMgrProxy->SetApplicationEnabled(appName, false, USERID);
-    EXPECT_EQ(setResult, ERR_OK);
     auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(appName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
-    CheckBaseBundleInfo(1, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_EQ(bundleInfo.signatureInfo.appId, APPID);
     resvec.clear();
     Uninstall(appName, resvec);
@@ -1816,8 +1814,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0400, Function | MediumTest 
     std::cout << "START GetApplicationInfoV9_0400" << std::endl;
 
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -1855,8 +1853,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0500, Function | MediumTest 
     std::cout << "START GetApplicationInfoV9_0500" << std::endl;
 
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -1894,8 +1892,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0600, Function | MediumTest 
     std::cout << "START GetApplicationInfoV9_0600" << std::endl;
 
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -2034,22 +2032,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfos_0200, Function | MediumTest |
 /**
  * @tc.number: GetApplicationInfosV9_0100
  * @tc.name: test query applicationinfos
- * @tc.desc: 1.under '/data/test/bms_bundle',there exist three bundles
- *           2.install these bundles
- *           3.fail to query all appinfos for wrong UserId
+ * @tc.desc: 1.fail to query all appinfos for wrong UserId
  */
 HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0100, Function | MediumTest | Level1)
 {
     std::cout << "START GetApplicationInfosV9_0100" << std::endl;
-    CommonTool commonTool;
-    std::string installResult;
-    for (int i = 6; i < 9; i++) {
-        std::vector<std::string> resvec;
-        std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
-        installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Success") << "install fail!";
-    }
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -2059,14 +2046,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0100, Function | MediumTest
     auto getInfoResult = bundleMgrProxy->GetApplicationInfosV9(
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), 101, appInfos);
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-
-    for (int i = 1; i <= 3; i++) {
-        std::string appName = BASE_BUNDLE_NAME + std::to_string(i);;
-        std::vector<std::string> resvec2;
-        Uninstall(appName, resvec2);
-        std::string uninstallResult = commonTool.VectorToStr(resvec2);
-        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    }
     std::cout << "END GetApplicationInfosV9_0100" << std::endl;
 }
 
