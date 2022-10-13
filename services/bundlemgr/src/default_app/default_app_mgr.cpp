@@ -166,7 +166,7 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
         ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
         if (!ret) {
             APP_LOGW("DeleteDefaultApplicationInfo failed.");
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
         }
         APP_LOGD("SetDefaultApplication success.");
         return ERR_OK;
@@ -174,12 +174,12 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
     ret = IsElementValid(userId, type, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("SetDefaultApplicationInfo failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     APP_LOGD("SetDefaultApplication success.");
     return ERR_OK;
