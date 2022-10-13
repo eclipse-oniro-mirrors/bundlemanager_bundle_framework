@@ -2376,7 +2376,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if (i == ARGS_POS_ZERO && valueType == napi_number) {
+        if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
@@ -2388,14 +2388,13 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
             }
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_);
             return nullptr;
         }
     }
-    int uid = IPCSkeleton::GetCallingUid();
-    asyncCallbackInfo->userId = uid / Constants::BASE_USER_RANGE;
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     auto iBundleMgr = CommonFunc::GetBundleMgr();
-    bool ret = iBundleMgr->GetBundleNameForUid(uid, asyncCallbackInfo->bundleName);
+    bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
     if (!ret) {
         APP_LOGE("GetBundleNameForUid failed");
         BusinessError::ThrowError(env, ERROR_BUNDLE_NOT_EXIST);
