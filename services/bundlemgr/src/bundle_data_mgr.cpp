@@ -18,6 +18,9 @@
 #include <chrono>
 #include <cinttypes>
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+#include "app_control_constants.h"
+#endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "installd_client.h"
 #include "os_account_info.h"
@@ -731,27 +734,32 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
     int32_t flags, int32_t userId, const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const
 {
     APP_LOGD("begin to QueryAbilityInfoWithFlagsV9.");
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9) == GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9 &&
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) ==
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP) &&
         !innerBundleInfo.IsSystemApp()) {
         APP_LOGE("target not system app");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)) {
+    if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
         if (!innerBundleInfo.IsAbilityEnabled((*option), userId)) {
             APP_LOGE("ability:%{public}s is disabled", option->name.c_str());
             return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
         }
     }
     info = (*option);
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION_V9) != GET_ABILITY_INFO_WITH_PERMISSION_V9) {
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) !=
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) {
         info.permissions.clear();
     }
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_METADATA_V9) != GET_ABILITY_INFO_WITH_METADATA_V9) {
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) !=
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) {
         info.metaData.customizeData.clear();
         info.metadata.clear();
     }
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION_V9) == GET_ABILITY_INFO_WITH_APPLICATION_V9) {
-        innerBundleInfo.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, userId, info.applicationInfo);
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) ==
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) {
+        innerBundleInfo.GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+            userId, info.applicationInfo);
     }
     return ERR_OK;
 }
@@ -947,7 +955,8 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
 void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
     const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
-    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9) == GET_ABILITY_INFO_ONLY_SYSTEM_APP_V9 &&
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) ==
+        static_cast<int32_t>((GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) &&
         !info.IsSystemApp()) {
         APP_LOGE("target not system app");
         return;
@@ -961,22 +970,27 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         for (const Skill &skill : skillsPair->second) {
             if (skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
-                if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)) {
+                if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(
+                    GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
                     if (!info.IsAbilityEnabled(abilityinfo, GetUserId(userId))) {
                         APP_LOGW("GetMatchAbilityInfos %{public}s is disabled", abilityinfo.name.c_str());
                         continue;
                     }
                 }
-                if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION_V9) ==
-                    GET_ABILITY_INFO_WITH_APPLICATION_V9) {
-                    info.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, userId, abilityinfo.applicationInfo);
+                if ((static_cast<uint32_t>(flags) &
+                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) ==
+                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) {
+                    info.GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+                        userId, abilityinfo.applicationInfo);
                 }
-                if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_PERMISSION_V9) !=
-                    GET_ABILITY_INFO_WITH_PERMISSION_V9) {
+                if ((static_cast<uint32_t>(flags) &
+                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) !=
+                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) {
                     abilityinfo.permissions.clear();
                 }
-                if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_METADATA_V9) !=
-                    GET_ABILITY_INFO_WITH_METADATA_V9) {
+                if ((static_cast<uint32_t>(flags) &
+                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) !=
+                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) {
                     abilityinfo.metaData.customizeData.clear();
                     abilityinfo.metadata.clear();
                 }
@@ -1174,6 +1188,9 @@ bool BundleDataMgr::GetApplicationInfo(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetApplicationInfo(flags, responseUserId, appInfo);
+    if (!CheckAppInstallControl(innerBundleInfo.GetAppId(), requestUserId)) {
+        appInfo.removable = false;
+    }
     return true;
 }
 
@@ -1187,14 +1204,27 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
 
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-    auto ret = GetInnerBundleInfoWithFlagsV9(appName, flags, innerBundleInfo, requestUserId);
+    int32_t flag = 0;
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
+        == static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)) {
+        flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    }
+    auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed");
         return ret;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    return innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
+    ret = innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationInfoV9 failed");
+        return ret;
+    }
+    if (!CheckAppInstallControl(innerBundleInfo.GetAppId(), requestUserId)) {
+        appInfo.removable = false;
+    }
+    return ret;
 }
 
 bool BundleDataMgr::GetApplicationInfos(
@@ -1254,7 +1284,7 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
         }
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
         if (!(static_cast<uint32_t>(flags) &
-            ApplicationFlagV9::GET_APPLICATION_INFO_WITH_DISABLE_V9)
+            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
             && !info.GetApplicationEnabled(responseUserId)) {
             APP_LOGD("bundleName: %{public}s is disabled", info.GetBundleName().c_str());
             continue;
@@ -1318,7 +1348,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
-    auto ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
+    auto ret = GetInnerBundleInfoWithBundleFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoV9 failed, error code: %{public}d", ret);
         return ret;
@@ -1657,11 +1687,11 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
         APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGE("sandboxAppHelper_ is nullptr");
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
             APP_LOGE("get innerBundleInfo by uid failed.");
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
     }
 
@@ -1976,7 +2006,41 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE_V9)
+    if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
+        && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
+        APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+    info = innerBundleInfo;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName,
+    const int32_t flags, InnerBundleInfo &info, int32_t userId) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    APP_LOGD("GetInnerBundleInfoWithFlagsV9: %{public}s", bundleName.c_str());
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("GetInnerBundleInfoWithFlagsV9: bundleName not find");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    if (innerBundleInfo.IsDisabled()) {
+        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
         && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
         APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
@@ -3053,20 +3117,23 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
         APP_LOGE("extensionAbility not found or disabled");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) !=
-        GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) {
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) !=
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) {
         extension->permissions.clear();
     }
-    if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9) !=
-        GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9) {
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) !=
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) {
         extension->metadata.clear();
     }
     extensionInfo = (*extension);
-    if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) ==
-        GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) {
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-        innerBundleInfo.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, responseUserId,
-            extensionInfo.applicationInfo);
+        innerBundleInfo.GetApplicationInfoV9(static_cast<int32_t>(
+            GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), responseUserId, extensionInfo.applicationInfo);
     }
     return ERR_OK;
 }
@@ -3354,16 +3421,20 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
                 break;
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
-            if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) ==
-                GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION_V9) {
-                info.GetApplicationInfoV9(GET_APPLICATION_INFO_DEFAULT_V9, userId, extensionInfo.applicationInfo);
+            if ((static_cast<uint32_t>(flags) &
+                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
+                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
+                info.GetApplicationInfoV9(static_cast<int32_t>(
+                    GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo);
             }
-            if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) !=
-                GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION_V9) {
+            if ((static_cast<uint32_t>(flags) &
+                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) !=
+                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) {
                 extensionInfo.permissions.clear();
             }
-            if ((static_cast<uint32_t>(flags) & GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9) !=
-                GET_EXTENSION_ABILITY_INFO_WITH_METADATA_V9) {
+            if ((static_cast<uint32_t>(flags) &
+                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) !=
+                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) {
                 extensionInfo.metadata.clear();
             }
             infos.emplace_back(extensionInfo);
@@ -3982,6 +4053,27 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     }
     APP_LOGE("to update info:%{public}s failed", bundleName.c_str());
     return false;
+}
+
+bool BundleDataMgr::CheckAppInstallControl(const std::string &appId, int32_t userId) const
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::vector<std::string> appIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
+        return true;
+    }
+    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
+        return true;
+    }
+    APP_LOGW("appId is not removable");
+    return false;
+#else
+    APP_LOGW("app control is disable");
+    return true;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

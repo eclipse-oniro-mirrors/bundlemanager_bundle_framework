@@ -23,6 +23,7 @@ constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr size_t ARGS_SIZE_FOUR = 4;
+constexpr size_t ARGS_SIZE_FIVE = 5;
 
 constexpr size_t ARGS_POS_ZERO = 0;
 constexpr size_t ARGS_POS_ONE = 1;
@@ -32,6 +33,11 @@ constexpr size_t ARGS_POS_FOUR = 4;
 
 constexpr size_t NAPI_RETURN_ONE = 1;
 constexpr size_t CALLBACK_PARAM_SIZE = 2;
+
+constexpr const char* TYPE_NUMBER = "number";
+constexpr const char* TYPE_STRING = "string";
+constexpr const char* TYPE_OBJECT = "object";
+constexpr const char* TYPE_BOOLEAN = "boolean";
 }
 }
 }

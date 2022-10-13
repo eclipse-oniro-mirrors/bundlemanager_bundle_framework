@@ -34,8 +34,6 @@ namespace {
     constexpr int32_t INDEX_ZERO = 0;
     constexpr int32_t INDEX_ONE = 1;
     const std::string SPLIT = "/";
-    const std::string PERMISSION_GET_DEFAULT_APPLICATION = "ohos.permission.GET_DEFAULT_APPLICATION";
-    const std::string PERMISSION_SET_DEFAULT_APPLICATION = "ohos.permission.SET_DEFAULT_APPLICATION";
     const std::string ACTION_VIEW_DATA = "ohos.want.action.viewData";
     const std::string ENTITY_BROWSER = "entity.system.browsable";
     const std::string HTTP = "http";
@@ -135,7 +133,7 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_GET_DEFAULT_APPLICATION)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.GET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -146,7 +144,7 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
         return GetBundleInfoByFileType(userId, type, bundleInfo);
     } else {
         APP_LOGW("invalid type, not app type or file type.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 }
 
@@ -157,7 +155,7 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -168,7 +166,7 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
         ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
         if (!ret) {
             APP_LOGW("DeleteDefaultApplicationInfo failed.");
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
         }
         APP_LOGD("SetDefaultApplication success.");
         return ERR_OK;
@@ -176,12 +174,12 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
     ret = IsElementValid(userId, type, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("SetDefaultApplicationInfo failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     APP_LOGD("SetDefaultApplication success.");
     return ERR_OK;
@@ -194,7 +192,7 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_SET_DEFAULT_APPLICATION)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -264,12 +262,12 @@ ErrCode DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string&
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfo failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST;
     }
     ret = GetBundleInfo(userId, type, element, bundleInfo);
     if (!ret) {
         APP_LOGW("GetBundleInfo failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST;
     }
     APP_LOGD("GetBundleInfoByAppType success.");
     return ERR_OK;
@@ -281,7 +279,7 @@ ErrCode DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfos failed.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST;
     }
     std::map<std::string, Element> defaultAppTypeInfos;
     std::map<std::string, Element> defaultFileTypeInfos;
@@ -308,7 +306,7 @@ ErrCode DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string
         }
     }
     APP_LOGW("GetBundleInfoByFileType failed.");
-    return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    return ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST;
 }
 
 bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const Element& element,
@@ -615,7 +613,7 @@ ErrCode DefaultAppMgr::VerifyUserIdAndType(int32_t userId, const std::string& ty
     ret = IsTypeValid(type);
     if (!ret) {
         APP_LOGW("invalid type %{public}s, not app type or file type.", type.c_str());
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
     return ERR_OK;
 }

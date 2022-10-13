@@ -154,7 +154,7 @@ ErrCode BundleMgrProxy::GetApplicationInfoV9(
     APP_LOGD("begin to GetApplicationInfoV9 of %{public}s", appName.c_str());
     if (appName.empty()) {
         APP_LOGE("fail to GetApplicationInfoV9 due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -359,7 +359,7 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundleInfoV9 due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -1303,7 +1303,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
     APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
     if (hapFilePath.empty()) {
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
 
     MessageParcel data;
@@ -1385,7 +1385,7 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
     APP_LOGD("begin to GetLaunchWantForBundle of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetHapModuleInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
@@ -1536,7 +1536,11 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || !cleanCacheCallback) {
+    if (bundleName.empty()) {
+        APP_LOGE("fail to CleanBundleCacheFiles due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (cleanCacheCallback == nullptr) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }

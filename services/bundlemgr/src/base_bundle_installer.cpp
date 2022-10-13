@@ -60,6 +60,18 @@ std::string GetHapPath(const InnerBundleInfo &info)
 {
     return GetHapPath(info, info.GetModuleName(info.GetCurrentModulePackage()));
 }
+
+std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
+{
+    auto position = nativeLibraryPath.find(Constants::PATH_SEPARATOR);
+    if (position == std::string::npos) {
+        return nativeLibraryPath;
+    }
+
+    auto prefixPath = nativeLibraryPath.substr(0, position);
+    auto suffixPath = nativeLibraryPath.substr(position);
+    return prefixPath + Constants::TMP_SUFFIX + suffixPath;
+}
 }
 
 BaseBundleInstaller::BaseBundleInstaller()
@@ -268,12 +280,12 @@ bool BaseBundleInstaller::UninstallAppControl(const std::string &appId, int32_t 
         AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
     if (ret != ERR_OK) {
         APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
-        return false;
+        return true;
     }
     if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
         return true;
     }
-    APP_LOGW("bundle info is not existed");
+    APP_LOGW("appId is not removable");
     return false;
 #else
     APP_LOGW("app control is disable");
@@ -298,7 +310,7 @@ ErrCode BaseBundleInstaller::InstallAppControl(
     for (const auto &installAppId : installAppIds) {
         if (std::find(appIds.begin(), appIds.end(), installAppId) == appIds.end()) {
             APP_LOGE("appId:%{public}s is dis allow install", installAppId.c_str());
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_INSTALL;
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
         }
     }
     return ERR_OK;
@@ -781,7 +793,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_UNINSTALL;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -879,7 +891,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DIS_ALLOWED_UNINSTALL;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1565,7 +1577,7 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
         auto newHqfLibraryPath = hqfLibraryPath.substr(position);
         if (!BundleUtil::EndWith(nativeLibraryPath, newHqfLibraryPath)) {
             APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
-                        nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
+                    nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
             return false;
         }
     }
@@ -1703,6 +1715,11 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
+        bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
+        if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+            nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+            APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
+        }
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
             .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
             .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
@@ -2303,20 +2320,13 @@ void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
-        if (moveFileMode) {
-            if (InstalldClient::GetInstance()->MoveFile(
-                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                APP_LOGE("Move hap to install path failed");
-                return;
-            }
-
-            continue;
-        }
-
         if (InstalldClient::GetInstance()->CopyFile(
             hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
             APP_LOGE("Copy hap to install path failed");
             return;
+        }
+        if (moveFileMode) {
+            InstalldClient::GetInstance()->RemoveDir(hapPathRecord.first);
         }
     }
 }

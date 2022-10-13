@@ -17,6 +17,7 @@
 
 #include <uv.h>
 
+#include "appexecfwk_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi/native_common.h"
@@ -31,7 +32,12 @@ public:
     ZlibCallbackInfo() = default;
     ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferred deferred, bool isCallback);
     virtual ~ZlibCallbackInfo();
-    void OnZipUnZipFinish(int32_t result);
+    void OnZipUnZipFinish(ErrCode result);
+    bool GetIsCallback() const;
+    void SetIsCallback(bool isCallback);
+    void SetCallback(napi_ref callback);
+    void SetDeferred(napi_deferred deferred);
+    void SetDeliverErrCode(bool isDeliverErrCode);
 private:
     int32_t ExcuteWork(uv_loop_s* loop, uv_work_t* work);
 private:
@@ -39,6 +45,7 @@ private:
     napi_ref callback_ = nullptr;
     napi_deferred deferred_ = nullptr;
     bool isCallBack_ = false;
+    bool deliverErrcode_ = false;
     DISALLOW_COPY_AND_MOVE(ZlibCallbackInfo);
 };
 
@@ -47,7 +54,8 @@ struct AsyncCallbackInfo {
     napi_ref callback;
     napi_deferred deferred;
     bool isCallBack;
-    int32_t callbackResult;
+    ErrCode callbackResult;
+    bool deliverErrcode;
 };
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

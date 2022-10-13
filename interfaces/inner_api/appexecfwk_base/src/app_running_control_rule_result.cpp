@@ -21,22 +21,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-    const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
-}
-void AppRunningControlRuleResult::ExecuteControlRule()
-{
-    if (controlWant != nullptr) {
-        APP_LOGI("ExecuteControlRule want:%{public}s", controlWant->ToString().c_str());
-        return;
-    }
-    if (controlMessage.empty()) {
-        APP_LOGI("ExecuteControlRule control message:%{public}s", APP_CONTROL_EDM_DEFAULT_MESSAGE.c_str());
-        return;
-    }
-    APP_LOGI("ExecuteControlRule control message:%{public}s", controlMessage.c_str());
-}
-
 bool AppRunningControlRuleResult::ReadFromParcel(Parcel &parcel)
 {
     controlMessage = Str16ToStr8(parcel.ReadString16());

@@ -22,6 +22,7 @@ config("zip_config") {
     "//third_party/libuv/include",
     "//third_party/node/src",
     "//third_party/zlib",
+    "${kits_path}/js/common",
   ]
 
   defines = [
@@ -53,10 +54,13 @@ ohos_shared_library("zlib") {
 
   deps = [
     "${common_path}:libappexecfwk_common",
+    "${kits_path}/js/common:bundle_napi_common",
     "//third_party/zlib:libz",
   ]
 
   external_deps = [
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog_native:libhilog_base",

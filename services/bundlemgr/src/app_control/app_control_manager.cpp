@@ -27,8 +27,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
-    constexpr const char* APP_DISALLOWED_RUN = "AppDisallowedRun";
+    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 }
 
 AppControlManager::AppControlManager()
@@ -48,10 +47,10 @@ ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingNa
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
-    const std::vector<std::string> &appIds, int32_t userId)
+    const std::string &controlRuleType, const std::vector<std::string> &appIds, int32_t userId)
 {
     APP_LOGD("DeleteAppInstallControlRule");
-    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, appIds, userId);
+    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, appIds, userId);
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
@@ -92,19 +91,22 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
 }
 
-ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want)
+ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId)
 {
-    return appControlManagerDb_->SetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
+    return appControlManagerDb_->SetDisposedStatus(
+        PERMISSION_DISPOSED_STATUS, appId, want, userId);
 }
 
-ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId)
+ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
-    return appControlManagerDb_->DeleteDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId);
+    return appControlManagerDb_->DeleteDisposedStatus(
+        PERMISSION_DISPOSED_STATUS, appId, userId);
 }
 
-ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want)
+ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want, int32_t userId)
 {
-    return appControlManagerDb_->GetDisposedStatus(PERMISSION_DISPOSED_STATUS, APP_DISALLOWED_RUN, appId, want);
+    return appControlManagerDb_->GetDisposedStatus(
+        PERMISSION_DISPOSED_STATUS, appId, want, userId);
 }
 
 ErrCode AppControlManager::GetAppRunningControlRule(
@@ -116,7 +118,8 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleInfo bundleInfo;
-    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, bundleInfo, userId);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("DataMgr GetBundleInfoV9 failed");
         return ret;

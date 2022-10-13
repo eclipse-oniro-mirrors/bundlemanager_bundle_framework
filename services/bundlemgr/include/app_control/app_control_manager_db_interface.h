@@ -33,7 +33,7 @@ public:
 
     virtual ErrCode AddAppInstallControlRule(const std::string &callingName,
         const std::vector<std::string> &appIds, const std::string &controlRuleType, int32_t userId) = 0;
-    virtual ErrCode DeleteAppInstallControlRule(const std::string &callingName,
+    virtual ErrCode DeleteAppInstallControlRule(const std::string &callingName, const std::string &controlRuleType,
         const std::vector<std::string> &appIds, int32_t userId) = 0;
     virtual ErrCode DeleteAppInstallControlRule(const std::string &callingName,
         const std::string &controlRuleType, int32_t userId) = 0;
@@ -50,11 +50,11 @@ public:
         int32_t userId, AppRunningControlRuleResult &controlRuleResult) = 0;
 
     virtual ErrCode SetDisposedStatus(const std::string &callingName,
-        const std::string &controlRuleType, const std::string &appId, const Want& want) = 0;
+        const std::string &appId, const Want& want, int32_t userId) = 0;
     virtual ErrCode DeleteDisposedStatus(const std::string &callingName,
-        const std::string &controlRuleType, const std::string &appId) = 0;
+        const std::string &appId, int32_t userId) = 0;
     virtual ErrCode GetDisposedStatus(const std::string &callingNmae,
-        const std::string &controlRuleType, const std::string &appId, Want& want) = 0;
+        const std::string &appId, Want& want, int32_t userId) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS
