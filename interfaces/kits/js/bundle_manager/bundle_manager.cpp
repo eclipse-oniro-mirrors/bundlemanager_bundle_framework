@@ -2249,8 +2249,10 @@ void GetBundleInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
+            asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+    }
 }
 
 napi_value GetBundleInfo(napi_env env, napi_callback_info info)
@@ -2385,7 +2387,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid.");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetArgc(); ++i) {
@@ -2393,8 +2395,8 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
-                APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                APP_LOGE("Flags invalid!");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -2403,7 +2405,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
             }
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
     }
@@ -2412,8 +2414,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
     if (!ret) {
         APP_LOGE("GetBundleNameForUid failed");
-        BusinessError::ThrowError(env, ERROR_BUNDLE_NOT_EXIST);
-        return nullptr;
+        asyncCallbackInfo->err = ERROR_BUNDLE_NOT_EXIST;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoExec, GetBundleInfoComplete);
