@@ -31,6 +31,7 @@ struct InstallResult {
 };
 
 enum class InstallOption {
+    INSTALL = 0,
     RECOVER = 1,
     UNINSTALL = 2,
     UNKNOWN = 3

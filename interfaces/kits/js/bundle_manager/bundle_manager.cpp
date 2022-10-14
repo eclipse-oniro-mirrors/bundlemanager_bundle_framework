@@ -45,8 +45,8 @@ constexpr const char* CALLBACK = "callback";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* NUMBER_TYPE = "napi_number";
-constexpr const char* WRONG_PARAM_TYPE = "wrong param type";
-constexpr const char* OUT_OF_MEMORY = "out of memory";
+constexpr const char* WRONG_PARAM_TYPE = "BusinessError 401: Wrong param type";
+constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -55,7 +55,7 @@ const std::string GET_BUNDLE_INFO = "GetBundleInfo";
 const std::string GET_BUNDLE_INFOS = "GetBundleInfos";
 const std::string GET_APPLICATION_INFO = "GetApplicationInfo";
 const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
-const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO || ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type) non-empty.";
@@ -1572,7 +1572,8 @@ void GetLaunchWantForBundleComplete(napi_env env, napi_status status, void *data
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     } else {
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_LAUNCH_WANT_FOR_BUNDLE,
+            BUNDLE_PERMISSIONS);
     }
 
     if (asyncCallbackInfo->deferred) {
@@ -1597,7 +1598,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     LaunchWantCallbackInfo *asyncCallbackInfo = new (std::nothrow) LaunchWantCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("GetLaunchWantForBundle asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR, OUT_OF_MEMORY);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
 
@@ -1779,7 +1780,7 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
     GetProfileCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetProfileCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("GetProfile asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
 
@@ -1812,10 +1813,12 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, METADATA_NAME, STRING_TYPE);
                 return nullptr;
             }
-        } else  if (i == ARGS_POS_THREE) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (i == ARGS_POS_THREE) {
+            if (valueType != napi_function) {
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
+                return nullptr;
             }
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             break;
         } else {
             APP_LOGE("GetProfile arg err!");
