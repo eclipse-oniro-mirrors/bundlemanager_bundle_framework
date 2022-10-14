@@ -1979,12 +1979,6 @@ void CreateApplicationFlagObject(napi_env env, napi_value value)
         GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), &nGetApplicationInfoWithDisable));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_DISABLE",
         nGetApplicationInfoWithDisable));
-
-    napi_value nGetAllApplicationInfo;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
-        GetApplicationFlag::GET_ALL_APPLICATION_INFO), &nGetAllApplicationInfo));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ALL_APPLICATION_INFO",
-        nGetAllApplicationInfo));
 }
 
 static ErrCode InnerGetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
