@@ -108,7 +108,7 @@ NativeValue* JsPackage::HasInstalled(NativeEngine *engine, NativeCallbackInfo *i
 }
 
 void JsPackage::JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, NativeCallbackInfo &info,
-    OHOS::AppExecFwk::CheckPackageHasInstalledOptions *hasInstalledOptions)
+    std::shared_ptr<CheckPackageHasInstalledOptions> hasInstalledOptions)
 {
     if (hasInstalledOptions == nullptr) {
         APP_LOGE("hasInstalledOptions is nullptr");
@@ -154,8 +154,9 @@ NativeValue* JsPackage::OnHasInstalled(NativeEngine &engine, NativeCallbackInfo 
 {
     APP_LOGI("%{public}s called.", __func__);
     int32_t errCode = 0;
-    CheckPackageHasInstalledOptions *asyncCallbackInfo = new CheckPackageHasInstalledOptions();
 
+    std::shared_ptr<CheckPackageHasInstalledOptions> asyncCallbackInfo =
+        std::make_shared<CheckPackageHasInstalledOptions>(CheckPackageHasInstalledOptions());
     if (info.argc < ARGS_SIZE_ONE || info.argc > ARGS_SIZE_TWO) {
         APP_LOGI("input params is not object!");
         return engine.CreateUndefined();
