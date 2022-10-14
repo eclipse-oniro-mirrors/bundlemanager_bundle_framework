@@ -1881,46 +1881,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0500, Function | MediumTest 
 }
 
 /**
- * @tc.number: GetApplicationInfoV9_0600
- * @tc.name: test query application information
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
- *           2.install the hap
- *           3.get complete ApplicationInfo(with permissions and metadata)
- */
-HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0600, Function | MediumTest | Level1)
-{
-    std::cout << "START GetApplicationInfoV9_0600" << std::endl;
-
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
-    std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    ApplicationInfo appInfo;
-    auto getInfoResult = bundleMgrProxy->GetApplicationInfoV9(
-        appName, static_cast<int32_t>(GetApplicationFlag::GET_ALL_APPLICATION_INFO), USERID, appInfo);
-    EXPECT_EQ(getInfoResult, ERR_OK);
-    EXPECT_EQ(appInfo.name, appName);
-    EXPECT_GT(appInfo.permissions.size(), 0);
-    EXPECT_GT(appInfo.metadata.size(), 0);
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-
-    std::cout << "END GetApplicationInfoV9_0600" << std::endl;
-}
-
-/**
  * @tc.number: GetApplicationInfos_0100
  * @tc.name: test query applicationinfos
  * @tc.desc: 1.under '/data/test/bms_bundle',there exist three bundles
