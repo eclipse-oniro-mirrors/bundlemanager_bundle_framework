@@ -2121,13 +2121,16 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
 
 void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const
 {
+    hapModuleInfo.abilityInfos.clear();
     if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY))
         != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY)) {
-        hapModuleInfo.abilityInfos.clear();
         return;
     }
     APP_LOGD("Get bundleInfo with abilities.");
     for (auto &ability : baseAbilityInfos_) {
+        if (ability.second.moduleName != hapModuleInfo.moduleName) {
+            continue;
+        }
         bool isEnabled = IsAbilityEnabled(ability.second, userId);
         if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
@@ -2148,15 +2151,15 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
 
 void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const
 {
+    hapModuleInfo.extensionInfos.clear();
     if ((static_cast<uint32_t>(flags) &
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY))
         != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY)) {
-        hapModuleInfo.extensionInfos.clear();
         return;
     }
     APP_LOGD("Get bundleInfo with extensionAbilities.");
     for (const auto &extensionInfo : baseExtensionInfos_) {
-        if (!extensionInfo.second.enabled) {
+        if (extensionInfo.second.moduleName != hapModuleInfo.moduleName || !extensionInfo.second.enabled) {
             continue;
         }
         ExtensionAbilityInfo info = extensionInfo.second;
