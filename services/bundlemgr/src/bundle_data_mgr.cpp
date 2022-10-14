@@ -1268,7 +1268,7 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -1533,7 +1533,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
 
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);

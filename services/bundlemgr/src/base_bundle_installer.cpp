@@ -598,6 +598,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 35%
 
+    auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
+    std::lock_guard lock {mtx};
+
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName_);
     UpdateInstallerState(InstallerState::INSTALL_REMOVE_SANDBOX_APP);              // ---- 50%
@@ -1715,7 +1718,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
-        if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+        bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
+        if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
             nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
             APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
         }
@@ -1951,8 +1955,6 @@ bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppE
             return false;
         }
     }
-    auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
-    std::lock_guard lock { mtx };
     isAppExist = dataMgr_->GetInnerBundleInfo(bundleName_, info);
     return true;
 }

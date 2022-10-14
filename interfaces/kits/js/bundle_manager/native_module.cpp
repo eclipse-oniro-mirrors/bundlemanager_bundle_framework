@@ -45,6 +45,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &bundleFlag));
     CreateBundleFlagObject(env, bundleFlag);
 
+    napi_value permissionGrantState = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &permissionGrantState));
+    CreatePermissionGrantStateObject(env, permissionGrantState);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
@@ -72,6 +76,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("BundleFlag", bundleFlag),
         DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
         DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
+        DECLARE_NAPI_PROPERTY("PermissionGrantState", permissionGrantState),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

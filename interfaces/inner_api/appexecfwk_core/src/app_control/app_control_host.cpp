@@ -22,9 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr int32_t ADD_CONTROL_RULE_MAX_SIZE = 500;
-}
 AppControlHost::AppControlHost()
 {
     APP_LOGD("create AppControlHost.");
@@ -148,9 +145,10 @@ ErrCode AppControlHost::HandleGetAppInstallControlRule(MessageParcel& data, Mess
 ErrCode AppControlHost::HandleAddAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
 {
     std::vector<AppRunningControlRule> controlRules;
-    if (!ReadParcelableVector(data, controlRules)) {
-        APP_LOGE("read controlRuleParam failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    auto ret = ReadParcelableVector(data, controlRules);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddAppRunningControlRule read controlRuleParam failed");
+        return ret;
     }
     int32_t userId = data.ReadInt32();
     return AddAppRunningControlRule(controlRules, userId);
@@ -159,9 +157,10 @@ ErrCode AppControlHost::HandleAddAppRunningControlRule(MessageParcel& data, Mess
 ErrCode AppControlHost::HandleDeleteAppRunningControlRule(MessageParcel& data, MessageParcel& reply)
 {
     std::vector<AppRunningControlRule> controlRules;
-    if (!ReadParcelableVector(data, controlRules)) {
-        APP_LOGE("read controlRuleParam failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    auto ret = ReadParcelableVector(data, controlRules);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteAppRunningControlRule read controlRuleParam failed");
+        return ret;
     }
     int32_t userId = data.ReadInt32();
     return DeleteAppRunningControlRule(controlRules, userId);
@@ -275,23 +274,23 @@ bool AppControlHost::WriteParcelableVector(const std::vector<std::string> &strin
 }
 
 template<typename T>
-bool AppControlHost::ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos)
+ErrCode AppControlHost::ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos)
 {
     int32_t infoSize = data.ReadInt32();
-    if (infoSize > ADD_CONTROL_RULE_MAX_SIZE) {
-        APP_LOGE("ReadParcelableVector elements num exceeds the limit %{public}d", ADD_CONTROL_RULE_MAX_SIZE);
-        return false;
+    if (infoSize > AppControlConstants::LIST_MAX_SIZE) {
+        APP_LOGE("ReadParcelableVector elements num exceeds the limit %{public}d", AppControlConstants::LIST_MAX_SIZE);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(data.ReadParcelable<T>());
         if (info == nullptr) {
             APP_LOGE("read parcelable infos failed");
-            return false;
+            return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         parcelableInfos.emplace_back(*info);
     }
     APP_LOGD("read parcelable infos success");
-    return true;
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

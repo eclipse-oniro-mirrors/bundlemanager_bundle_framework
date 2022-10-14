@@ -2040,8 +2040,8 @@ void InnerBundleInfo::ProcessBundleFlags(
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId);
     if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
         == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
-        bundleInfo.signatureInfo.appId = bundleInfo.appId;
-        bundleInfo.signatureInfo.fingerprint =baseApplicationInfo_->fingerprint;
+        bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
+        bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
     }
 }
 
