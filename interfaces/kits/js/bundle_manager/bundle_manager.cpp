@@ -2094,6 +2094,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
 static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Query &query, napi_value jsObject)
 {
     if (uid != callingUid) {
+        APP_LOGE("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
         return;
     }
     APP_LOGD("put applicationInfo to cache");
@@ -2142,7 +2143,9 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
         }
     }
     if (bundleName.size() == 0) {
-        BusinessError::ThrowSimpleError(env, ERROR_BUNDLE_NOT_EXIST);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
         return nullptr;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -2167,13 +2170,14 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
         iBundleMgr->GetApplicationInfoV9(bundleName, flags, userId, appInfo));
     if (ret != NO_ERROR) {
         APP_LOGE("GetApplicationInfo failed");
-        napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
         return nullptr;
     }
     NAPI_CALL(env, napi_create_object(env, &nApplicationInfo));
     CommonFunc::ConvertApplicationInfo(env, nApplicationInfo, appInfo);
-    Query query = Query(bundleName, GET_APPLICATION_INFO, flags, userId, env);
+    Query query(bundleName, GET_APPLICATION_INFO, flags, userId, env);
     CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, nApplicationInfo);
     return nApplicationInfo;
 }
@@ -2218,7 +2222,9 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
         }
     }
     if (bundleName.size() == 0) {
-        BusinessError::ThrowSimpleError(env, ERROR_BUNDLE_NOT_EXIST);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
         return nullptr;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -2242,13 +2248,14 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId));
     if (ret != NO_ERROR) {
         APP_LOGE("GetBundleInfo failed");
-        napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
         return nullptr;
     }
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
-    Query query = Query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
+    Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
     CheckToCache(env, bundleInfo.applicationInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     return nBundleInfo;
 }
@@ -2426,8 +2433,10 @@ void GetBundleInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
+            asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+    }
 }
 
 napi_value GetBundleInfo(napi_env env, napi_callback_info info)
@@ -2552,6 +2561,55 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, GET_BUNDLE_INFOS, GetBundleInfosExec, GetBundleInfosComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfos done.");
+    return promise;
+}
+
+napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetBundleInfoForSelf called");
+    NapiArg args(env, info);
+    BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Flags invalid!");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
+    if (!ret) {
+        APP_LOGE("GetBundleNameForUid failed");
+        asyncCallbackInfo->err = ERROR_BUNDLE_NOT_EXIST;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoExec, GetBundleInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetBundleInfoForSelf done.");
     return promise;
 }
 

@@ -98,15 +98,6 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
 };
 } // namespace
 
-void BusinessError::ThrowSimpleError(napi_env env, int32_t err)
-{
-    std::string errMessage;
-    if (ERR_MSG_MAP.find(err) != ERR_MSG_MAP.end()) {
-        errMessage = ERR_MSG_MAP[err];
-    }
-    ThrowError(env, err, errMessage);
-}
-
 void BusinessError::ThrowError(napi_env env, int32_t err, const std::string &msg)
 {
     napi_value error = CreateError(env, err, msg);

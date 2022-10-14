@@ -76,6 +76,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("BundleFlag", bundleFlag),
         DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
         DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
+        DECLARE_NAPI_FUNCTION("getBundleInfoForSelf", GetBundleInfoForSelf),
         DECLARE_NAPI_PROPERTY("PermissionGrantState", permissionGrantState),
     };
 
