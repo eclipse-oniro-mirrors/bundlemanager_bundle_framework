@@ -55,6 +55,7 @@ const std::string GET_BUNDLE_INFO = "GetBundleInfo";
 const std::string GET_BUNDLE_INFOS = "GetBundleInfos";
 const std::string GET_APPLICATION_INFO = "GetApplicationInfo";
 const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
+const std::string GET_PERMISSION_DEF = "GetPermissionDef";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string INVALID_WANT_ERROR =
@@ -1999,8 +2000,10 @@ void GetPermissionDefExec(napi_env env, void *data)
         APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerGetPermissionDef(asyncCallbackInfo->permissionName,
-        asyncCallbackInfo->permissionDef);
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerGetPermissionDef(asyncCallbackInfo->permissionName,
+            asyncCallbackInfo->permissionDef);
+    }
 }
 
 void GetPermissionDefComplete(napi_env env, napi_status status, void *data)
@@ -2017,7 +2020,8 @@ void GetPermissionDefComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertPermissionDef(env, result[ARGS_POS_ONE], asyncCallbackInfo->permissionDef);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, GET_PERMISSION_DEF, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -2050,16 +2054,16 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
     std::unique_ptr<AsyncPermissionDefineCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valuetype = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, args[i], &valuetype));
-        if ((i == ARGS_POS_ZERO) && (valuetype == napi_string)) {
+        if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->permissionName)) {
-                APP_LOGE("permissionName %{public}s invalid!", asyncCallbackInfo->permissionName.c_str());
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+                APP_LOGE("permissionName invalid!");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
