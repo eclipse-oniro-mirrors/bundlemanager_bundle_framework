@@ -28,9 +28,9 @@ constexpr const char* ERR_MSG_PERMISSION_DENIED_ERROR =
 constexpr const char* ERR_MSG_PARAM_TYPE_ERROR = "Parameter error. The type of $ must be $.";
 constexpr const char* ERR_MSG_ABILITY_NOT_SUPPORTED =
     "Capability not supported. Function $ can not work correctly due to limited device capabilities.";
-constexpr const char* ERR_MSG_BUNDLE_NOT_EXIST = "The specified bundle name is not found.";
-constexpr const char* ERR_MSG_MODULE_NOT_EXIST = "The specified module name is not found.";
-constexpr const char* ERR_MSG_ABILITY_NOT_EXIST = "The specified ability name is not found.";
+constexpr const char* ERR_MSG_BUNDLE_NOT_EXIST = "The specified bundle is not found.";
+constexpr const char* ERR_MSG_MODULE_NOT_EXIST = "The specified module is not found.";
+constexpr const char* ERR_MSG_ABILITY_NOT_EXIST = "The specified ability is not found.";
 constexpr const char* ERR_MSG_INVALID_USER_ID = "The specified user id is not found.";
 constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is not found.";
 constexpr const char* ERR_MSG_PERMISSION_NOT_EXIST = "The specified permission is not found.";
