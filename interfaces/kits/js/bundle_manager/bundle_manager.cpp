@@ -2260,8 +2260,10 @@ void GetBundleInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
+            asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+    }
 }
 
 napi_value GetBundleInfo(napi_env env, napi_callback_info info)
@@ -2386,6 +2388,55 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, GET_BUNDLE_INFOS, GetBundleInfosExec, GetBundleInfosComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfos done.");
+    return promise;
+}
+
+napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetBundleInfoForSelf called");
+    NapiArg args(env, info);
+    BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Flags invalid!");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
+    if (!ret) {
+        APP_LOGE("GetBundleNameForUid failed");
+        asyncCallbackInfo->err = ERROR_BUNDLE_NOT_EXIST;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoExec, GetBundleInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetBundleInfoForSelf done.");
     return promise;
 }
 

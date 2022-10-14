@@ -181,6 +181,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
