@@ -156,7 +156,7 @@ NativeValue* JsPackage::OnHasInstalled(NativeEngine &engine, NativeCallbackInfo 
     int32_t errCode = 0;
 
     std::shared_ptr<CheckPackageHasInstalledOptions> asyncCallbackInfo =
-        std::make_shared<CheckPackageHasInstalledOptions>(CheckPackageHasInstalledOptions());
+        std::make_shared<CheckPackageHasInstalledOptions>();
     if (info.argc < ARGS_SIZE_ONE || info.argc > ARGS_SIZE_TWO) {
         APP_LOGI("input params is not object!");
         return engine.CreateUndefined();
