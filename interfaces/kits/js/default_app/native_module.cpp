@@ -32,14 +32,14 @@ static void SetNamedProperty(napi_env env, napi_value dstObj, const char *objNam
 
 static void CreateApplicationType(napi_env env, napi_value value)
 {
-    SetNamedProperty(env, value, "BROWSER", "Web Browser");
-    SetNamedProperty(env, value, "IMAGE", "Image Gallery");
-    SetNamedProperty(env, value, "AUDIO", "Audio Player");
-    SetNamedProperty(env, value, "VIDEO", "Video Player");
-    SetNamedProperty(env, value, "PDF", "PDF Viewer");
-    SetNamedProperty(env, value, "WORD", "Word Viewer");
-    SetNamedProperty(env, value, "EXCEL", "Excel Viewer");
-    SetNamedProperty(env, value, "PPT", "PPT Viewer");
+    SetNamedProperty(env, value, "Web Browser", "BROWSER");
+    SetNamedProperty(env, value, "Image Gallery", "IMAGE");
+    SetNamedProperty(env, value, "Audio Player", "AUDIO");
+    SetNamedProperty(env, value, "Video Player", "VIDEO");
+    SetNamedProperty(env, value, "PDF Viewer", "PDF");
+    SetNamedProperty(env, value, "Word Viewer", "WORD");
+    SetNamedProperty(env, value, "Excel Viewer", "EXCEL");
+    SetNamedProperty(env, value, "PPT Viewer", "PPT");
 }
 
 static napi_value DefaultAppExport(napi_env env, napi_value exports)
