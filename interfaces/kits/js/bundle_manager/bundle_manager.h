@@ -187,6 +187,10 @@ void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
 void CreateBundleFlagObject(napi_env env, napi_value value);
 void CreatePermissionGrantStateObject(napi_env env, napi_value value);
+void CreateAbilityTypeObject(napi_env env, napi_value value);
+void CreateDisplayOrientationObject(napi_env env, napi_value value);
+void CreateLaunchTypeObject(napi_env env, napi_value value);
+void CreateSupportWindowModesObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H

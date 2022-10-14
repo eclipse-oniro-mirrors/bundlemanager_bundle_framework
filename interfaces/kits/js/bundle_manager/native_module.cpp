@@ -49,6 +49,22 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &permissionGrantState));
     CreatePermissionGrantStateObject(env, permissionGrantState);
 
+    napi_value nAbilityType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAbilityType));
+    CreateAbilityTypeObject(env, nAbilityType);
+
+    napi_value nDisplayOrientation = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nDisplayOrientation));
+    CreateDisplayOrientationObject(env, nDisplayOrientation);
+
+    napi_value nLaunchType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nLaunchType));
+    CreateLaunchTypeObject(env, nLaunchType);
+
+    napi_value nSupportWindowMode = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nSupportWindowMode));
+    CreateSupportWindowModesObject(env, nSupportWindowMode);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
@@ -75,6 +91,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ApplicationFlag", applicationFlag),
         DECLARE_NAPI_PROPERTY("BundleFlag", bundleFlag),
         DECLARE_NAPI_PROPERTY("PermissionGrantState", permissionGrantState),
+        DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),
+        DECLARE_NAPI_PROPERTY("DisplayOrientation", nDisplayOrientation),
+        DECLARE_NAPI_PROPERTY("LaunchType", nLaunchType),
+        DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
