@@ -1620,9 +1620,11 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_number && CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId) == nullptr) {
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
-                return nullptr;
+            if (valueType == napi_number) {
+                if (CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId) == nullptr) {
+                    BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
+                    return nullptr;
+                }
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
