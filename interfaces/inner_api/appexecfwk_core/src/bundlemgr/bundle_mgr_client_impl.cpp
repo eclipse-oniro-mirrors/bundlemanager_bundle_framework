@@ -118,6 +118,8 @@ bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, c
         APP_LOGE("no valid file can be obtained");
         return false;
     }
+    int32_t InfoSize = profileInfos.size();
+    APP_LOGD("The size of the profile info is : %{public}d", InfoSize);
     return true;
 }
 
@@ -134,6 +136,8 @@ bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extension
         APP_LOGE("no valid file can be obtained");
         return false;
     }
+    int32_t InfoSize = profileInfos.size();
+    APP_LOGD("The size of the profile info is : %{public}d", InfoSize);
     return true;
 }
 
@@ -150,6 +154,8 @@ bool BundleMgrClientImpl::GetResConfigFile(const AbilityInfo &abilityInfo, const
         APP_LOGE("no valid file can be obtained");
         return false;
     }
+    int32_t InfoSize = profileInfos.size();
+    APP_LOGD("The size of the profile info is : %{public}d", InfoSize);
     return true;
 }
 
