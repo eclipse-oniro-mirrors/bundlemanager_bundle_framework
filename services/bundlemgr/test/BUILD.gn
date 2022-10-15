@@ -74,6 +74,7 @@ group("unittest") {
       "unittest/bms_rdb_data_manager_test:unittest",
       "unittest/bms_service_bundle_scan_test:unittest",
       "unittest/bms_service_startup_test:unittest",
+      "unittest/bms_syscap_tool_test:unittest",
     ]
   }
 }
