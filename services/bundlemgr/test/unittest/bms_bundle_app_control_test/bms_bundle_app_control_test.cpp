@@ -329,6 +329,28 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTe
 }
 
 /**
+ * @tc.number: AppInstallControlRule_0400
+ * @tc.name: test can not add app install control rule
+ * @tc.require: issueI5MZ8Q
+ * @tc.desc: 1.system run normally
+ *           2.GetAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0500, Function | SmallTest | Level1)
+{
+    std::vector<std::string> appIds;
+    auto InstallRes = appControlManagerDb_->AddAppInstallControlRule(CALLING_NAME, appIds, APPID, 100);
+    auto InstallRes1 = appControlManagerDb_->GetAppInstallControlRule(CALLING_NAME, APPID, 100, appIds);
+    auto InstallRes2 = appControlManagerDb_->DeleteAppInstallControlRule(CALLING_NAME, APPID, appIds, 100);
+    appControlManagerDb_->AddAppInstallControlRule(CALLING_NAME, appIds, APPID, 100);
+    auto InstallRes3 = appControlManagerDb_->DeleteAppInstallControlRule(CALLING_NAME, APPID, 100);
+
+    EXPECT_EQ(InstallRes, ERR_OK);
+    EXPECT_EQ(InstallRes1, ERR_OK);
+    EXPECT_EQ(InstallRes2, ERR_OK);
+    EXPECT_EQ(InstallRes3, ERR_OK);
+}
+
+/**
  * @tc.number: AppRunningControlRule_0100
  * @tc.name: test running control rule
  * @tc.require: issueI5MZ8K
@@ -468,6 +490,32 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0500, Function | SmallTe
     seteuid(5523);
     res = appControlProxy->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AppRunningControlRule_0600
+ * @tc.name: test running control rule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.GetAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0600, Function | SmallTest | Level1)
+{
+    std::vector<std::string> appIds;
+    const std::vector<AppRunningControlRule> controlRules;
+
+    AppRunningControlRuleResult controlRuleResult;
+    auto RunningRes = appControlManagerDb_->AddAppRunningControlRule(CALLING_NAME, controlRules, 100);
+    auto RunningRes1 = appControlManagerDb_->GetAppRunningControlRule(CALLING_NAME, 100, appIds);
+    auto RunningRes2 = appControlManagerDb_->GetAppRunningControlRule(APPID, 100, controlRuleResult);
+    auto RunningRes3 = appControlManagerDb_->DeleteAppRunningControlRule(CALLING_NAME, controlRules, 100);
+    appControlManagerDb_->AddAppRunningControlRule(CALLING_NAME, controlRules, 100);
+    auto RunningRes4 = appControlManagerDb_->DeleteAppRunningControlRule(CALLING_NAME, 100);
+
+    EXPECT_EQ(RunningRes, ERR_OK);
+    EXPECT_EQ(RunningRes1, ERR_OK);
+    EXPECT_EQ(RunningRes2, ERR_OK);
+    EXPECT_EQ(RunningRes3, ERR_OK);
+    EXPECT_EQ(RunningRes4, ERR_OK);
 }
 
 /**
