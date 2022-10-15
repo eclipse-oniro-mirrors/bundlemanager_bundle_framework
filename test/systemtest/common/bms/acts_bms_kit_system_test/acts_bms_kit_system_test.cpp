@@ -2762,6 +2762,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0100, Function | MediumTest | Lev
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = "bmsThirdBundle_A1";
+        std::string label = "$string:MainAbility_label";
         Install(bundleFilePath, InstallFlag::NORMAL, resvec);
 
         CommonTool commonTool;
@@ -2773,7 +2774,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0100, Function | MediumTest | Lev
             EXPECT_EQ(bundleMgrProxy, nullptr);
         }
         std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
+        ErrCode abilityLabel1 = bundleMgrProxy->GetAbilityLabel(appName, abilityName, BASE_MODULE_NAME, label);
         EXPECT_NE(abilityLabel, "EMPTY_STRING");
+        EXPECT_NE(abilityLabel1, ERR_OK);
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -2809,6 +2812,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0300, Function | MediumTest | Lev
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = "bmsThirdBundle_A1";
+        std::string label = "$string:MainAbility_label";
         Install(bundleFilePath, InstallFlag::NORMAL, resvec);
 
         CommonTool commonTool;
@@ -2821,7 +2825,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0300, Function | MediumTest | Lev
         }
         std::string errAppName = BASE_BUNDLE_NAME + "e";
         std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(errAppName, abilityName);
+        ErrCode abilityLabel1 = bundleMgrProxy->GetAbilityLabel("", abilityName, BASE_MODULE_NAME, label);
         EXPECT_EQ(abilityLabel, Constants::EMPTY_STRING);
+        EXPECT_EQ(abilityLabel1, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -5935,6 +5941,38 @@ HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0100, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: IsModuleRemovable_0100
+ * @tc.name: test IsModuleRemovable proxy
+ * @tc.desc: 1.system run normally
+ *           2.return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string moduleName = "invalid";
+    bool isRemovable = false;
+    ErrCode ret = bundleMgrProxy->IsModuleRemovable("", moduleName, isRemovable);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: IsModuleRemovable_0100
+ * @tc.name: test IsModuleRemovable proxy
+ * @tc.desc: 1.system run normally
+ *           2.return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName = "invalid";
+    bool isRemovable = false;
+    ErrCode ret = bundleMgrProxy->IsModuleRemovable(bundleName, "", isRemovable);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
  * @tc.number: SetModuleRemovable_0100
  * @tc.name: test SetModuleRemovable proxy
  * @tc.desc: 1.system run normally
@@ -5947,6 +5985,36 @@ HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0100, Function | SmallTest | L
     std::string bundleName = "invalid";
     std::string moduleName = "invalid";
     bool ret = bundleMgrProxy->SetModuleRemovable(bundleName, moduleName, true);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetModuleRemovable_0200
+ * @tc.name: test SetModuleRemovable proxy
+ * @tc.desc: 1.system run normally
+ *           2.return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string moduleName = "invalid";
+    bool ret = bundleMgrProxy->SetModuleRemovable("", moduleName, true);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetModuleRemovable_0300
+ * @tc.name: test SetModuleRemovable proxy
+ * @tc.desc: 1.system run normally
+ *           2.return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName = "invalid";
+    bool ret = bundleMgrProxy->SetModuleRemovable(bundleName, "", true);
     EXPECT_FALSE(ret);
 }
 
@@ -6186,6 +6254,71 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0300, Function | Sma
     std::vector<ExtensionAbilityInfo> extensionInfos;
     ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoV9_0100
+ * @tc.name: test query archive information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.query archive information without an ability information
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleArchiveInfoV9_0100" << std::endl;
+    std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+
+    BundleInfo bundleInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode getInfoResult =
+        bundleMgrProxy->GetBundleArchiveInfoV9(hapFilePath, 0, bundleInfo);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    EXPECT_EQ(bundleInfo.name, appName);
+    std::cout << "END GetBundleArchiveInfoV9_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoV9_0200
+ * @tc.name: test query archive information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.query archive information without an ability information
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleArchiveInfo_0100" << std::endl;
+    BundleInfo bundleInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode getInfoResult =
+        bundleMgrProxy->GetBundleArchiveInfoV9("", 0, bundleInfo);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+    std::cout << "END GetBundleArchiveInfo_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetShortcutInfoV9_0200
+ * @tc.name: test query archive information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.query archive information without an ability information
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0200, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9("", shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
