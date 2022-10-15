@@ -2143,7 +2143,10 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool
     }
 
     InnerBundleInfo& newInfo = infoItem->second;
-    newInfo.SetApplicationEnabled(isEnable, requestUserId);
+    auto ret = newInfo.SetApplicationEnabled(isEnable, requestUserId);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!newInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo)) {
         APP_LOGE("can not find request userId %{public}d when get userInfo", requestUserId);
@@ -2222,7 +2225,6 @@ ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const st
     return newInfo.IsModuleRemovable(moduleName, userId, isRemovable);
 }
 
-
 ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) const
 {
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -2259,12 +2261,10 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
     }
 
     InnerBundleInfo& newInfo = infoItem->second;
-    if (!newInfo.SetAbilityEnabled(
-        abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.name, isEnabled, requestUserId)) {
-        APP_LOGE("SetAbilityEnabled %{public}s failed", abilityInfo.bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    ErrCode ret = newInfo.SetAbilityEnabled(abilityInfo, isEnabled, userId);
+    if (ret != ERR_OK) {
+        return ret;
     }
-
     InnerBundleUserInfo innerBundleUserInfo;
     if (!newInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo)) {
         APP_LOGE("can not find request userId %{public}d when get userInfo", requestUserId);
