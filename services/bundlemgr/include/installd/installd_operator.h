@@ -20,10 +20,11 @@
 #include <string>
 #include <vector>
 
-#include "nocopyable.h"
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
 #include "installd/installd_constants.h"
+#include "ipc/extract_param.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -73,8 +74,15 @@ public:
 
     static bool IsNativeSo(const std::string &entryName, const std::string &targetSoPath, const std::string &cpuAbi);
 
-    static void ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
-        const std::string &targetPath, const std::string &cpuAbi);
+    static bool ExtractFiles(const ExtractParam &extractParam);
+    static void ExtractTargetFile(
+        const BundleExtractor &extractor,
+        const std::string &entryName,
+        const std::string &targetPath,
+        const std::string &cpuAbi,
+        const ExtractFileType &extractFileType = ExtractFileType::SO);
+    static bool IsNativeFile(
+        const std::string &entryName, const ExtractParam &extractParam);
 
     /**
      * @brief Rename a directory from old path to new path.

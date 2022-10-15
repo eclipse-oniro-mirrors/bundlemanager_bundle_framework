@@ -58,6 +58,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::IS_DIR_EMPTY, &InstalldHost::HandleIsDirEmpty);
     funcMap_.emplace(IInstalld::Message::OBTAIN_QUICK_FIX_DIR, &InstalldHost::HandObtainQuickFixFileDir);
     funcMap_.emplace(IInstalld::Message::COPY_FILES, &InstalldHost::HandCopyFiles);
+    funcMap_.emplace(IInstalld::Message::EXTRACT_FILES, &InstalldHost::HandleExtractFiles);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -99,6 +100,19 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
     APP_LOGI("extract module %{private}s", targetPath.c_str());
     ErrCode result = ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+
+    ErrCode result = ExtractFiles(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

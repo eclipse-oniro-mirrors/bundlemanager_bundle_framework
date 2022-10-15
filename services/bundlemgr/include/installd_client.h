@@ -148,6 +148,8 @@ public:
 
     ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir);
 
+    ErrCode ExtractFiles(const ExtractParam &extractParam);
+
 private:
     /**
      * @brief Get the installd proxy object.

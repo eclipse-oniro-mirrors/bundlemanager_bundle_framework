@@ -48,6 +48,13 @@ private:
      */
     bool HandleExtractModuleFiles(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the HandleExtractFiles function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleExtractFiles(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the RenameModuleDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
