@@ -3510,6 +3510,7 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_AN_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE):
@@ -3561,6 +3562,7 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_AN_INCOMPATIBLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_TYPE_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE):

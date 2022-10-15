@@ -298,6 +298,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: install failed due to native so is incompatible"
     },
     {
+        IStatusReceiver::ERR_INSTALL_AN_INCOMPATIBLE,
+        "error: install failed due to ark native file is incompatible"
+    },
+    {
         IStatusReceiver::ERR_INSTALL_URI_DUPLICATE,
         "error: install failed due to uri prefix duplicate",
     },
@@ -344,6 +348,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     {
         IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED,
         "error: install parse native so failed.",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_PARSE_AN_FAILED,
+        "error: install parse ark native file failed.",
     },
     {
         IStatusReceiver::ERR_INSTALLD_PARAM_ERROR,

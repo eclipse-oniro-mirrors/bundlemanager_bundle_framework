@@ -66,6 +66,8 @@ protected:
                         "apiReleaseType": "",
                         "apiTargetVersion": 0,
                         "appPrivilegeLevel": "normal",
+                        "arkNativeFileAbi": "",
+                        "arkNativeFilePath": "",
                         "bundleName": "",
                         "cacheDir": "",
                         "codePath": "",
@@ -399,6 +401,8 @@ protected:
                         "versionName": ""
                     }
                 },
+                "arkNativeFileAbi": "",
+                "arkNativeFilePath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
@@ -508,6 +512,8 @@ protected:
                     "apiReleaseType": "",
                     "apiTargetVersion": 0,
                     "appPrivilegeLevel": "normal",
+                    "arkNativeFileAbi": "",
+                    "arkNativeFilePath": "",
                     "bundleName": "",
                     "cacheDir": "",
                     "codePath": "",

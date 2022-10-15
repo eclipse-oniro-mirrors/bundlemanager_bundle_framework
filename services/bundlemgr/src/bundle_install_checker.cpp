@@ -489,6 +489,51 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     return ret;
 }
 
+ErrCode BundleInstallChecker::CheckMultiNativeFile(
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    ErrCode result = CheckMultiNativeSo(infos);
+    if (result != ERR_OK) {
+        APP_LOGE("Check multi nativeSo failed, result: %{public}d", result);
+        return result;
+    }
+
+    result = CheckMultiArkNativeFile(infos);
+    if (result != ERR_OK) {
+        APP_LOGE("Check multi arkNativeFile failed, result: %{public}d", result);
+        return result;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckMultiArkNativeFile(
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::string arkNativeFileAbi = (infos.begin()->second).GetArkNativeFileAbi();
+    for (const auto &info : infos) {
+        if (info.second.GetArkNativeFileAbi().empty()) {
+            continue;
+        }
+        if (arkNativeFileAbi.empty()) {
+            arkNativeFileAbi = info.second.GetArkNativeFileAbi();
+            continue;
+        }
+        if (arkNativeFileAbi != info.second.GetArkNativeFileAbi()) {
+            return ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE;
+        }
+    }
+
+    // Ensure the an is consistent in multiple haps
+    if (!arkNativeFileAbi.empty()) {
+        for (auto &info : infos) {
+            info.second.SetArkNativeFileAbi(arkNativeFileAbi);
+        }
+    }
+
+    return ERR_OK;
+}
+
 ErrCode BundleInstallChecker::CheckMultiNativeSo(
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {

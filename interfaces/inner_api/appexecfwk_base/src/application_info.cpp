@@ -86,6 +86,8 @@ const std::string APPLICATION_FLAGS = "flags";
 const std::string APPLICATION_ENTRY_MODULE_NAME = "entryModuleName";
 const std::string APPLICATION_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string APPLICATION_CPU_ABI = "cpuAbi";
+const std::string APPLICATION_ARK_NATIVE_FILE_PATH = "arkNativeFilePath";
+const std::string APPLICATION_ARK_NATIVE_FILE_ABI = "arkNativeFileAbi";
 const std::string APPLICATION_IS_COMPRESS_NATIVE_LIBS = "isCompressNativeLibs";
 const std::string APPLICATION_SIGNATURE_KEY = "signatureKey";
 const std::string APPLICATION_TARGETBUNDLELIST = "targetBundleList";
@@ -289,6 +291,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     uid = parcel.ReadInt32();
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
+    arkNativeFilePath = Str16ToStr8(parcel.ReadString16());
+    arkNativeFileAbi = Str16ToStr8(parcel.ReadString16());
     
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
@@ -443,6 +447,8 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkNativeFilePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkNativeFileAbi));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
     for (auto &permission : permissions) {
@@ -620,6 +626,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ENTRY_MODULE_NAME, applicationInfo.entryModuleName},
         {APPLICATION_NATIVE_LIBRARY_PATH, applicationInfo.nativeLibraryPath},
         {APPLICATION_CPU_ABI, applicationInfo.cpuAbi},
+        {APPLICATION_ARK_NATIVE_FILE_PATH, applicationInfo.arkNativeFilePath},
+        {APPLICATION_ARK_NATIVE_FILE_ABI, applicationInfo.arkNativeFileAbi},
         {APPLICATION_IS_COMPRESS_NATIVE_LIBS, applicationInfo.isCompressNativeLibs},
         {APPLICATION_SIGNATURE_KEY, applicationInfo.signatureKey},
         {APPLICATION_TARGETBUNDLELIST, applicationInfo.targetBundleList},
@@ -1066,6 +1074,22 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_CPU_ABI,
         applicationInfo.cpuAbi,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ARK_NATIVE_FILE_PATH,
+        applicationInfo.arkNativeFilePath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ARK_NATIVE_FILE_ABI,
+        applicationInfo.arkNativeFileAbi,
         JsonType::STRING,
         false,
         parseResult,

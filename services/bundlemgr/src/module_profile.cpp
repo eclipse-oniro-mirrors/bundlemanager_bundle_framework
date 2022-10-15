@@ -1402,6 +1402,14 @@ bool ParserNativeSo(
     return false;
 }
 
+bool ParserArkNativeFilePath(
+    const Profile::ModuleJson &moduleJson,
+    const BundleExtractor &bundleExtractor,
+    InnerBundleInfo &innerBundleInfo)
+{
+    return true;
+}
+
 bool ToApplicationInfo(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
@@ -1908,6 +1916,10 @@ ErrCode ModuleProfile::TransformTo(
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {
         APP_LOGE("Parser native so failed.");
         return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+    }
+    if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
+        APP_LOGE("Parser native so failed.");
+        return ERR_APPEXECFWK_PARSE_AN_FAILED;
     }
     return ERR_OK;
 }
