@@ -1038,6 +1038,7 @@ void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
 {
     APP_LOGD("begin to GetAbilityIcon");
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
     NapiArg args(env, info);
     AbilityIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -1088,6 +1089,12 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call GetAbilityIcon done.");
     return promise;
+#else 
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityIcon");
+    napi_throw(env, error);
+    return nullptr;
+#endif
 }
 
 void SetApplicationEnabledExec(napi_env env, void *data)

@@ -20,10 +20,12 @@ ohos_shared_library("distributedbundle") {
     "APP_LOG_TAG = \"DistributedBundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-  sources = [
-    "distributed_bundle.cpp",
-    "native_module.cpp",
-  ]
+  sources = [ "native_module.cpp" ]
+  if (distributed_bundle_framework) {
+    sources += [ "distributed_bundle.cpp" ]
+  } else {
+    sources += [ "distributed_bundle_unsupported.cpp" ]
+  }
 
   configs = [ "${dbms_services_path}:distributed_bms_config" ]
 

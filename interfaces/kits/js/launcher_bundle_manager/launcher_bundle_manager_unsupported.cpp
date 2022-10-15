@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "js_default_app.h"
+#include "launcher_bundle_manager.h"
 
 #include <string>
 
@@ -24,39 +24,29 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-
-napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
+napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "isDefaultApplication");
+        "GetLauncherAbilityInfo");
     napi_throw(env, error);
     return nullptr;
 }
 
-napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
+napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "getDefaultApplication");
+        "GetAllLauncherAbilityInfo");
     napi_throw(env, error);
     return nullptr;
 }
 
-napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
+napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "setDefaultApplication");
-    napi_throw(env, error);
-    return nullptr;
-}
-
-napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
-{
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
-    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "resetDefaultApplication");
+        "GetShortcutInfo");
     napi_throw(env, error);
     return nullptr;
 }
