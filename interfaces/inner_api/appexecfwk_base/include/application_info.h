@@ -187,6 +187,8 @@ struct ApplicationInfo : public Parcelable {
     // native so
     std::string nativeLibraryPath;
     std::string cpuAbi;
+    std::string arkNativeFilePath;
+    std::string arkNativeFileAbi;
 
     // assign when calling the get interface
     std::vector<std::string> permissions;

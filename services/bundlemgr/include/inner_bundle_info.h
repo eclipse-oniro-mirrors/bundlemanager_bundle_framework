@@ -1563,6 +1563,26 @@ public:
         baseApplicationInfo_->nativeLibraryPath = nativeLibraryPath;
     }
 
+    const std::string &GetArkNativeFileAbi() const
+    {
+        return baseApplicationInfo_->arkNativeFileAbi;
+    }
+
+    void SetArkNativeFileAbi(const std::string &arkNativeFileAbi)
+    {
+        baseApplicationInfo_->arkNativeFileAbi = arkNativeFileAbi;
+    }
+
+    const std::string &GetArkNativeFilePath() const
+    {
+        return baseApplicationInfo_->arkNativeFilePath;
+    }
+
+    void SetArkNativeFilePath(const std::string &arkNativeFilePath)
+    {
+        baseApplicationInfo_->arkNativeFilePath = arkNativeFilePath;
+    }
+
     const std::string &GetCpuAbi() const
     {
         return baseApplicationInfo_->cpuAbi;
