@@ -42,6 +42,12 @@ public:
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi) override;
     /**
+     * @brief Extract the files.
+     * @param extractParam Indicates the extractParam.
+     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
+    /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
      * @param newPath Indicates the new path name.

@@ -64,6 +64,20 @@ ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, cons
     return TransactInstalldCmd(IInstalld::Message::EXTRACT_MODULE_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&extractParam)) {
+        APP_LOGE("WriteParcelable extractParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(IInstalld::Message::EXTRACT_FILES, data, reply, option);
+}
+
 ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     MessageParcel data;

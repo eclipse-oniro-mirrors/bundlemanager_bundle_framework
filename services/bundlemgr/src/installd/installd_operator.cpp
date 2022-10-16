@@ -161,6 +161,74 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
     return true;
 }
 
+bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
+{
+    APP_LOGD("InstalldOperator::ExtractFiles start");
+    BundleExtractor extractor(extractParam.srcPath);
+    if (!extractor.Init()) {
+        APP_LOGE("extractor init failed");
+        return false;
+    }
+
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames) || entryNames.empty()) {
+        APP_LOGE("get entryNames failed");
+        return false;
+    }
+
+    for (const auto &entryName : entryNames) {
+        if (strcmp(entryName.c_str(), ".") == 0 ||
+            strcmp(entryName.c_str(), "..") == 0) {
+            continue;
+        }
+        if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
+            continue;
+        }
+        // handle native file
+        if (IsNativeFile(entryName, extractParam)) {
+            ExtractTargetFile(extractor, entryName, extractParam.targetPath,
+                extractParam.cpuAbi, extractParam.extractFileType);
+            continue;
+        }
+    }
+
+    APP_LOGD("InstalldOperator::ExtractFiles end");
+    return true;
+}
+
+bool InstalldOperator::IsNativeFile(
+    const std::string &entryName, const ExtractParam &extractParam)
+{
+    APP_LOGD("IsNativeFile, entryName : %{public}s", entryName.c_str());
+    if (extractParam.targetPath.empty()) {
+        APP_LOGD("current hap not include so");
+        return false;
+    }
+    std::string prefix;
+    std::string suffix;
+    if (extractParam.extractFileType == ExtractFileType::SO) {
+        prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
+        suffix = Constants::SO_SUFFIX;
+    } else if (extractParam.extractFileType == ExtractFileType::AN) {
+        prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
+        suffix = Constants::AN_SUFFIX;
+    } else {
+        return false;
+    }
+
+    if (entryName.find(prefix) == std::string::npos) {
+        APP_LOGD("entryName not start with %{public}s", prefix.c_str());
+        return false;
+    }
+    if (entryName.find(suffix) == std::string::npos) {
+        APP_LOGD("file name not so format.");
+        return false;
+    }
+    APP_LOGD("find native file, prefix: %{public}s, entryName: %{public}s",
+        prefix.c_str(), entryName.c_str());
+    return true;
+}
+
 bool InstalldOperator::IsNativeSo(const std::string &entryName,
     const std::string &targetSoPath, const std::string &cpuAbi)
 {
@@ -204,7 +272,7 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
 }
 
 void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
-    const std::string &targetPath, const std::string &cpuAbi)
+    const std::string &targetPath, const std::string &cpuAbi, const ExtractFileType &extractFileType)
 {
     // create dir if not exist
     if (!IsExistDir(targetPath)) {
@@ -213,7 +281,15 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
             return;
         }
     }
-    std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+
+    std::string prefix;
+    if (extractFileType == ExtractFileType::SO) {
+        prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+    } else if (extractFileType == ExtractFileType::AN) {
+        prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
+    } else {
+        return;
+    }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = targetPath;
     if (path.back() != Constants::FILE_SEPARATOR_CHAR) {

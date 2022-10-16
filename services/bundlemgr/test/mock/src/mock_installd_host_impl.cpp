@@ -150,5 +150,10 @@ ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::str
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

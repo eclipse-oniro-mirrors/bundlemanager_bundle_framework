@@ -94,6 +94,27 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
+{
+    APP_LOGD("ExtractFiles extractParam %{public}s", extractParam.ToString().c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (extractParam.srcPath.empty() || extractParam.targetPath.empty()) {
+        APP_LOGE("Calling the function ExtractFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        APP_LOGE("extract failed");
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
+
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     APP_LOGD("rename %{private}s to %{private}s", oldPath.c_str(), newPath.c_str());
