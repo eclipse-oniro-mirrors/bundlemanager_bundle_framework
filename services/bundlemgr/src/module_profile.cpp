@@ -1407,7 +1407,58 @@ bool ParserArkNativeFilePath(
     const BundleExtractor &bundleExtractor,
     InnerBundleInfo &innerBundleInfo)
 {
-    return true;
+    std::string abis = GetAbiList();
+    std::vector<std::string> abiList;
+    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    if (abiList.empty()) {
+        APP_LOGD("Abi is empty");
+        return false;
+    }
+
+    bool isDefault =
+        std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
+    bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
+    APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
+    bool anExist = bundleExtractor.IsDirExist(Constants::AN);
+    if (!anExist) {
+        APP_LOGD("an not exist");
+        return true;
+    }
+
+    APP_LOGD("an exist");
+    if (isDefault) {
+        if (isSystemLib64Exist) {
+            if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM64_V8A)) {
+                innerBundleInfo.SetArkNativeFileAbi(Constants::ARM64_V8A);
+                return true;
+            }
+
+            return false;
+        }
+
+        if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM_EABI_V7A)) {
+            innerBundleInfo.SetArkNativeFileAbi(Constants::ARM_EABI_V7A);
+            return true;
+        }
+
+        if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM_EABI)) {
+            innerBundleInfo.SetArkNativeFileAbi(Constants::ARM_EABI);
+            return true;
+        }
+
+        return false;
+    }
+
+    for (const auto &abi : abiList) {
+        std::string libsPath;
+        libsPath.append(Constants::AN).append(abi).append(Constants::PATH_SEPARATOR);
+        if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && bundleExtractor.IsDirExist(libsPath)) {
+            innerBundleInfo.SetArkNativeFileAbi(abi);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool ToApplicationInfo(
@@ -1918,7 +1969,7 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
     }
     if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser native so failed.");
+        APP_LOGE("Parser ark native file failed.");
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
     }
     return ERR_OK;

@@ -259,6 +259,7 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
+        oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.AddModuleInfo(newInfo);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
@@ -384,6 +385,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
+        oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
