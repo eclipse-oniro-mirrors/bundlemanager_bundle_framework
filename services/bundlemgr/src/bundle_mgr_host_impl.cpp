@@ -2092,7 +2092,7 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
 {
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {

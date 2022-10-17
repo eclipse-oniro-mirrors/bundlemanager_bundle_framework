@@ -477,8 +477,8 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
-            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+            APP_LOGE("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
         return ERR_OK;
