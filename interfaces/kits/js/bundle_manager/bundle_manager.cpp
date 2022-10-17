@@ -615,12 +615,12 @@ static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::str
         return CommonFunc::ConvertErrCode(ret);
     }
     if (mediaDataPtr == nullptr || len == 0) {
-        return ERROR_SYSTEM_IO_OPERATION;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     auto pixelMapPtr = LoadImageFile(mediaDataPtr.get(), len);
     if (pixelMapPtr == nullptr) {
         APP_LOGE("loadImageFile failed");
-        return ERROR_SYSTEM_IO_OPERATION;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     pixelMap = std::move(pixelMapPtr);
     return SUCCESS;
@@ -942,7 +942,6 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
     AbilityLabelCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityLabelCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<AbilityLabelCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1048,7 +1047,6 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
     AbilityIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<AbilityIconCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1145,7 +1143,6 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
     ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1229,7 +1226,6 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
     AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1313,7 +1309,6 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
     ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1395,7 +1390,6 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
     AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1707,7 +1701,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         }
         if (!client.GetProfileFromAbility(abilityInfos[0], info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
-            return ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST;
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
         }
         return ERR_OK;
     }
@@ -1729,7 +1723,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
 
         if (!client.GetProfileFromExtension(extensionInfos[0], info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
-            return ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST;
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
         }
 
         return ERR_OK;
@@ -2058,7 +2052,6 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
     AsyncPermissionDefineCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncPermissionDefineCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<AsyncPermissionDefineCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -2575,7 +2568,6 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};

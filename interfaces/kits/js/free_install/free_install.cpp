@@ -222,7 +222,6 @@ napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
     SetHapModuleUpgradeFlagCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) SetHapModuleUpgradeFlagCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<SetHapModuleUpgradeFlagCallbackInfo> callbackPtr {asyncCallbackInfo};

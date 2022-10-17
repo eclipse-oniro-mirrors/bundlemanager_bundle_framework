@@ -45,7 +45,7 @@ static ErrCode InnerGetLauncherAbilityInfo(const std::string &bundleName, int32_
 {
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
-        return ERROR_ENVORINMENT_INIT_FAILED;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     return launcherService->GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos);
 }
@@ -143,7 +143,7 @@ static ErrCode InnerGetAllLauncherAbilityInfo(int32_t userId,
 {
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
-        return ERROR_ENVORINMENT_INIT_FAILED;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     return launcherService->GetAllLauncherAbility(userId, launcherAbilityInfos);
 }
@@ -237,7 +237,7 @@ static ErrCode InnerGetShortcutInfo(std::string &bundleName, std::vector<OHOS::A
 {
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
-        return ERROR_ENVORINMENT_INIT_FAILED;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     return launcherService->GetShortcutInfoV9(bundleName, shortcutInfos);
 }
