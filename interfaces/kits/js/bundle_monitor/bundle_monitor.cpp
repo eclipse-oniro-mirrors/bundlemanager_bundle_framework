@@ -74,7 +74,7 @@ napi_value Register(napi_env env, napi_callback_info info)
     }
     std::lock_guard<std::mutex> lock(g_monitorLock);
     if (g_bundleMonitor == nullptr) {
-        APP_LOGE("envorinment init failed!");
+        APP_LOGE("environment init failed!");
         return nullptr;
     }
     g_bundleMonitor->BundleMonitorOn(env, args[ARGS_POS_ONE], type);
@@ -115,7 +115,7 @@ napi_value Unregister(napi_env env, napi_callback_info info)
         }
         std::lock_guard<std::mutex> lock(g_monitorLock);
         if (g_bundleMonitor == nullptr) {
-            APP_LOGE("envorinment init failed!");
+            APP_LOGE("environment init failed!");
             return nullptr;
         }
         g_bundleMonitor->BundleMonitorOff(env, args[ARGS_POS_ONE], type);

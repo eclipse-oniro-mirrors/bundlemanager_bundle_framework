@@ -137,7 +137,6 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
@@ -231,7 +230,6 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
@@ -324,7 +322,6 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
