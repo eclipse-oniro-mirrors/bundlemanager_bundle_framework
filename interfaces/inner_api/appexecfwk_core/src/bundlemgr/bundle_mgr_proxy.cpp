@@ -2217,7 +2217,7 @@ ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName, std::ve
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetShortcutInfos due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
