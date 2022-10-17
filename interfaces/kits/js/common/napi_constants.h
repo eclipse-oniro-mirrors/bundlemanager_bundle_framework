@@ -38,6 +38,7 @@ constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
 constexpr const char* TYPE_OBJECT = "object";
 constexpr const char* TYPE_BOOLEAN = "boolean";
+constexpr const char* TYPE_FUNCTION = "function";
 }
 }
 }

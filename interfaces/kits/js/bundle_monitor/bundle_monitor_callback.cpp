@@ -63,6 +63,7 @@ void BundleMonitorCallback::EventListenerAdd(napi_env env, napi_value handler,
     }
     if (!hasListener) {
         std::shared_ptr<EventListener> listener = std::make_shared<EventListener>(env, type);
+        listener->Add(env, handler);
         eventListeners.push_back(listener);
     }
 }
