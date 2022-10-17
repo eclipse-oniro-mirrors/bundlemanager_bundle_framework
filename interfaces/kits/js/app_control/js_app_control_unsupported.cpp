@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "js_default_app.h"
+#include "js_app_control.h"
 
 #include <string>
 
@@ -24,39 +24,29 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-
-napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
+napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.AppControl not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "isDefaultApplication");
+        "getDisposedStatus");
     napi_throw(env, error);
     return nullptr;
 }
 
-napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
+napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.AppControl not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "getDefaultApplication");
+        "setDisposedStatus");
     napi_throw(env, error);
     return nullptr;
 }
 
-napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
+napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.AppControl not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "setDefaultApplication");
-    napi_throw(env, error);
-    return nullptr;
-}
-
-napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
-{
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultAppManager not supported.");
-    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "resetDefaultApplication");
+        "deleteDisposedStatus");
     napi_throw(env, error);
     return nullptr;
 }

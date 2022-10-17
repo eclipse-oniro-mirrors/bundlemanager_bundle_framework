@@ -23,10 +23,12 @@ ohos_shared_library("freeinstall") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-  sources = [
-    "free_install.cpp",
-    "native_module.cpp",
-  ]
+  sources = [ "native_module.cpp" ]
+  if (bundle_framework_free_install) {
+    sources += [ "free_install.cpp" ]
+  } else {
+    sources += [ "free_install_unsupported.cpp" ]
+  }
 
   deps = [
     "${common_path}:libappexecfwk_common",

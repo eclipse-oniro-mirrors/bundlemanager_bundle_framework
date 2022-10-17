@@ -1044,6 +1044,7 @@ void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
 {
     APP_LOGD("begin to GetAbilityIcon");
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
     NapiArg args(env, info);
     AbilityIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -1062,19 +1063,16 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("bundleName %{public}s invalid!", asyncCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
-                APP_LOGE("moduleName %{public}s invalid!", asyncCallbackInfo->moduleName.c_str());
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName)) {
-                APP_LOGE("abilityName %{public}s invalid!", asyncCallbackInfo->abilityName.c_str());
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
                 return nullptr;
             }
@@ -1094,6 +1092,12 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call GetAbilityIcon done.");
     return promise;
+#else
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityIcon");
+    napi_throw(env, error);
+    return nullptr;
+#endif
 }
 
 void SetApplicationEnabledExec(napi_env env, void *data)
