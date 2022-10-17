@@ -59,6 +59,7 @@ const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
 const std::string GET_PERMISSION_DEF = "GetPermissionDef";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 const std::string GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
 const std::string GET_APPLICATION_INFO_SYNC = "GetApplicationInfoSync";
 const std::string INVALID_WANT_ERROR =
@@ -159,7 +160,8 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -381,7 +383,8 @@ napi_value GetBundleNameByUid(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -705,7 +708,8 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_THREE) {
@@ -715,7 +719,8 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -830,7 +835,8 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_FOUR) {
@@ -840,7 +846,8 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }

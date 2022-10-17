@@ -41,6 +41,7 @@ const std::string GET_DEFAULT_APPLICATION = "GetDefaultApplication";
 const std::string SET_DEFAULT_APPLICATION = "SetDefaultApplication";
 const std::string RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 }
 
 static const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
@@ -308,7 +309,8 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -410,7 +412,8 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -420,7 +423,8 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -526,7 +530,8 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_THREE) {
@@ -536,7 +541,8 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -636,7 +642,8 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -646,7 +653,8 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
