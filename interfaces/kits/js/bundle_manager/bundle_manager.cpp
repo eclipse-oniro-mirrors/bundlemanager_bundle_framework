@@ -22,6 +22,7 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "business_error.h"
+#include "bundle_constants.h"
 #include "common_func.h"
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 #include "image_source.h"
@@ -58,10 +59,13 @@ const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
 const std::string GET_PERMISSION_DEF = "GetPermissionDef";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
+const std::string GET_APPLICATION_INFO_SYNC = "GetApplicationInfoSync";
 const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type) non-empty.";
 } // namespace
 using namespace OHOS::AAFwk;
+static std::unordered_map<Query, napi_ref, QueryHash> cache;
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 }
@@ -2089,6 +2093,175 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "GetPermissionDef", GetPermissionDefExec, GetPermissionDefComplete);
     callbackPtr.release();
     return promise;
+}
+
+static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Query &query, napi_value jsObject)
+{
+    if (uid != callingUid) {
+        APP_LOGE("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
+        return;
+    }
+    APP_LOGD("put applicationInfo to cache");
+    napi_ref cacheApplicationInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheApplicationInfo));
+    cache[query] = cacheApplicationInfo;
+}
+
+napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetApplicationInfoSync call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], flags)) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], userId)) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (bundleName.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    napi_value nApplicationInfo = nullptr;
+    auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId, env));
+    if (item != cache.end()) {
+        APP_LOGD("getApplicationInfo param from cache");
+        NAPI_CALL(env,
+            napi_get_reference_value(env, item->second, &nApplicationInfo));
+        return nApplicationInfo;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (!iBundleMgr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND);
+        return nullptr;
+    }
+    AppExecFwk::ApplicationInfo appInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetApplicationInfoV9(bundleName, flags, userId, appInfo));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetApplicationInfo failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    NAPI_CALL(env, napi_create_object(env, &nApplicationInfo));
+    CommonFunc::ConvertApplicationInfo(env, nApplicationInfo, appInfo);
+    Query query(bundleName, GET_APPLICATION_INFO, flags, userId, env);
+    CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, nApplicationInfo);
+    return nApplicationInfo;
+}
+
+napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetBundleInfoSync call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, args[i], &valueType));
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], flags)) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if ((valueType == napi_number) && (!CommonFunc::ParseInt(env, args[i], userId))) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (bundleName.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    napi_value nBundleInfo = nullptr;
+    auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, userId, env));
+    if (item != cache.end()) {
+        APP_LOGD("GetBundleInfo param from cache");
+        NAPI_CALL(env,
+            napi_get_reference_value(env, item->second, &nBundleInfo));
+        return nBundleInfo;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (!iBundleMgr) {
+        APP_LOGE("GetApplicationInfo failed");
+        BusinessError::ThrowError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND);
+        return nullptr;
+    }
+    BundleInfo bundleInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetBundleInfo failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
+    CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
+    Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
+    CheckToCache(env, bundleInfo.applicationInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    return nBundleInfo;
 }
 
 static ErrCode InnerGetBundleInfos(int32_t flags,
