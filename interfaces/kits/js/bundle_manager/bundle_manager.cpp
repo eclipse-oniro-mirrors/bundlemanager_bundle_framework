@@ -1619,12 +1619,13 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < maxArgc; ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+        if (i == ARGS_POS_ZERO) {
+            if (valueType != napi_string) {
                 APP_LOGE("GetLaunchWantForBundle bundleName is not a string!");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, STRING_TYPE);
                 return nullptr;
             }
+            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName);
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_number) {
                 if (CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId) == nullptr) {
@@ -1633,7 +1634,6 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                 }
             } else if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-                break;
             } else {
                 APP_LOGE("GetLaunchWantForBundle param check error");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM_TYPE);
@@ -1647,7 +1647,6 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
                 return nullptr;
             }
-            break;
         } else {
             APP_LOGE("GetLaunchWantForBundle arg err!");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -1804,24 +1803,27 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
     for (size_t i = 0; i < maxArgc; ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
+        if (i == ARGS_POS_ZERO) {
+            if (valueType != napi_string) {
                 APP_LOGE("GetProfile moduleName is not a string!");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, STRING_TYPE);
                 return nullptr;
             }
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName)) {
-                APP_LOGE("GetProfile abilityName is not a string!");
+            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName);
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType != napi_string) {
+                APP_LOGE("GetProfile moduleName is not a string!");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, STRING_TYPE);
                 return nullptr;
             }
+            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName);
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->metadataName)) {
-                APP_LOGE("GetProfile metadataName is not a string!");
+            if (valueType != napi_string) {
+                APP_LOGE("GetProfile moduleName is not a string!");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, METADATA_NAME, STRING_TYPE);
                 return nullptr;
             }
+            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->metadataName);
         } else if (i == ARGS_POS_THREE) {
             if (valueType != napi_function) {
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
