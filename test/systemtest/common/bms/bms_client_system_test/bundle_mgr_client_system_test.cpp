@@ -1627,6 +1627,36 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_045, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetResourceConfigFile_046
+ * @tc.name: GetResConfigFile
+ * @tc.desc: Test the interface of GetResConfigFile
+ *           1. metadataName is not empty
+ * @tc.require: AR000GNT9D
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_046, TestSize.Level1)
+{
+    auto name = std::string("GetResourceConfigFile_046");
+    GTEST_LOG_(INFO) << name << " start";
+
+    AbilityInfo info;
+    std::vector<Metadata> &metadata = info.metadata;
+    Metadata data;
+    data.name = "ohos.extension.forms";
+    data.resource = "$profile:form_config";
+    metadata.emplace_back(data);
+    info.resourcePath = RESOURCE_PATH;
+
+    std::string metadataName = "";
+    std::vector<std::string> profileInfo;
+    auto ret = GetResConfigFile(info, metadataName, profileInfo);
+    EXPECT_FALSE(ret);
+    std::cout << profileInfo[0] << std::endl;
+
+    std::cout << "END GetResourceConfigFile_046" << std::endl;
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
  * @tc.number: GetProfileFromAbility_001
  * @tc.name: GetProfileFromAbility
  * @tc.desc: Test the interface of GetProfileFromAbility
