@@ -57,6 +57,7 @@ const std::string GET_BUNDLE_INFOS = "GetBundleInfos";
 const std::string GET_APPLICATION_INFO = "GetApplicationInfo";
 const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
 const std::string GET_PERMISSION_DEF = "GetPermissionDef";
+const std::string PERMISSION_NAME = "permissionName";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
@@ -2077,7 +2078,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->permissionName)) {
                 APP_LOGE("permissionName invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PERMISSION_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -2129,19 +2130,19 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], bundleName)) {
                 APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], flags)) {
                 APP_LOGE("parseInt failed");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_FLAGS, TYPE_NUMBER);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], userId)) {
                 APP_LOGE("parseInt failed");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
                 return nullptr;
             }
         } else {
@@ -2208,19 +2209,19 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], bundleName)) {
                 APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], flags)) {
                 APP_LOGE("parseInt failed");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
             if ((valueType == napi_number) && (!CommonFunc::ParseInt(env, args[i], userId))) {
                 APP_LOGE("parseInt failed");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
                 return nullptr;
             }
         } else {
@@ -2594,7 +2595,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_NUMBER);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {

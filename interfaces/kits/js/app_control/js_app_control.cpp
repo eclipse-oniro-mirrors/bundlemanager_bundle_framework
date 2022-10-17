@@ -37,6 +37,8 @@ const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_
 const std::string SET_DISPOSED_STATUS = "SetDisposedStatus";
 const std::string GET_DISPOSED_STATUS = "GetDisposedStatus";
 const std::string DELETE_DISPOSED_STATUS = "DeleteDisposedStatus";
+const std::string APP_ID = "appId";
+const std::string DISPOSED_WANT = "disposedWant";
 }
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
@@ -152,14 +154,14 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
                 APP_LOGE("appId invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
             asyncCallbackInfo->err = asyncCallbackInfo->appId.size() == 0 ? ERROR_INVALID_APPID : NO_ERROR;
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseWantWithoutVerification(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("disposed want invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_WANT);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_WANT, TYPE_WANT);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -246,7 +248,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
                 APP_LOGE("appId invalid!");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
             if (asyncCallbackInfo->appId.size() == 0) {
@@ -339,7 +341,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
                 APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->appId.c_str());
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, TYPE_STRING);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
             if (asyncCallbackInfo->appId.size() == 0) {
