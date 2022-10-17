@@ -1752,15 +1752,30 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
 #ifdef GLOBAL_RESMGR_ENABLE
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-    ErrCode ret = GetInnerBundleInfoWithFlagsV9(
-        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId());
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId());
     if (ret != ERR_OK) {
         return ret;
     }
-
+    if (!moduleName.empty()) {
+        std::map<std::string, InnerModuleInfo> InnerModuleInfos = innerBundleInfo.GetInnerModuleInfos();
+        auto moduleItem = InnerModuleInfos.find(moduleName);
+        if (moduleItem == InnerModuleInfos.end()) {
+            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
+    }
     auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    bool isEnable = false;
+    ret = innerBundleInfo.IsAbilityEnabledV9(*ability, GetUserId(), isEnable);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!isEnable) {
+        APP_LOGE("%{public}s ability disabled: %{public}s", bundleName.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
     }
     if ((*ability).labelId == 0) {
         label = (*ability).label;
@@ -1772,9 +1787,8 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
         APP_LOGE("InitResourceManager failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    OHOS::Global::Resource::RState errval =
-        resourceManager->GetStringById(static_cast<uint32_t>((*ability).labelId), label);
-    if (errval != OHOS::Global::Resource::RState::SUCCESS) {
+    auto state = resourceManager->GetStringById(static_cast<uint32_t>((*ability).labelId), label);
+    if (state != OHOS::Global::Resource::RState::SUCCESS) {
         APP_LOGE("ResourceManager GetStringById failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -2006,10 +2020,15 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    bool isEnabled;
+    auto ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
-        && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
+        && !isEnabled) {
         APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     info = innerBundleInfo;
     return ERR_OK;
@@ -2040,8 +2059,13 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    bool isEnabled;
+    auto ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
-        && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
+        && !isEnabled) {
         APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
@@ -2118,24 +2142,18 @@ ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, bool 
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationEnabled failed: %{public}s", bundleName.c_str());
     }
-    return ERR_OK;
+    return ret;
 }
 
 ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     APP_LOGD("SetApplicationEnabled %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
-    }
-
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("Request userId is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
@@ -2149,8 +2167,8 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool
     }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!newInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo)) {
-        APP_LOGE("can not find request userId %{public}d when get userInfo", requestUserId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     if (innerBundleUserInfo.bundleUserInfo.IsInitialState()) {
@@ -2234,13 +2252,13 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &is
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo innerBundleInfo = infoItem->second;
-    int32_t responseUserId = innerBundleInfo.GetResponseUserId(GetUserId());
     auto ability = innerBundleInfo.FindAbilityInfoV9(
         abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.name);
     if (!ability) {
         APP_LOGE("ability not found");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(GetUserId());
     return innerBundleInfo.IsAbilityEnabledV9((*ability), responseUserId, isEnable);
 }
 
@@ -2253,13 +2271,11 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
         APP_LOGE("Request userId is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-
     auto infoItem = bundleInfos_.find(abilityInfo.bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-
     InnerBundleInfo& newInfo = infoItem->second;
     ErrCode ret = newInfo.SetAbilityEnabled(abilityInfo, isEnabled, userId);
     if (ret != ERR_OK) {
@@ -2267,8 +2283,8 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
     }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!newInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo)) {
-        APP_LOGE("can not find request userId %{public}d when get userInfo", requestUserId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     if (innerBundleUserInfo.bundleUserInfo.IsInitialState()) {
@@ -3990,21 +4006,36 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
     const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const
 {
     APP_LOGI("begin to GetMediaData.");
+#ifdef GLOBAL_RESMGR_ENABLE
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGW("bundleInfos_ data is empty");
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    InnerBundleInfo innerBundleInfo;
+    ErrCode errCode = GetInnerBundleInfoWithFlagsV9(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId(userId));
+    if (errCode != ERR_OK) {
+        return errCode;
     }
-    APP_LOGD("GetMediaData %{public}s", bundleName.c_str());
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    std::map<std::string, InnerModuleInfo> InnerModuleInfos = innerBundleInfo.GetInnerModuleInfos();
+    if (!moduleName.empty()) {
+        auto moduleItem = InnerModuleInfos.find(moduleName);
+        if (moduleItem == InnerModuleInfos.end()) {
+            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
     }
-    auto ability = infoItem->second.FindAbilityInfo(bundleName, moduleName, abilityName, GetUserId(userId));
+
+    auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
         APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    bool isEnable;
+    errCode = innerBundleInfo.IsAbilityEnabledV9(*ability, GetUserId(userId), isEnable);
+    if (errCode != ERR_OK) {
+        return errCode;
+    }
+    if (!isEnable) {
+        APP_LOGE("%{public}s ability disabled: %{public}s", bundleName.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, moduleName, GetUserId(userId));
@@ -4019,6 +4050,10 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
+#else
+    APP_LOGW("GLOBAL_RES_MGR_ENABLE is false");
+    return ERR_BUNDLE_MANAGER_GLOBAL_RES_MGR_ENABLE_DISABLED;
+#endif
 }
 
 std::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()

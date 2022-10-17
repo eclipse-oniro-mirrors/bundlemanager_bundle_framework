@@ -57,6 +57,7 @@ constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR =
     "BusinessError 401: Parameter error. The number of parameters is incorrect.";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* ERROR_MSG_BUNDLE_IS_DISABLED = "The specified bundle is disabled.";
+constexpr const char* ERROR_MSG_ABILITY_IS_DISABLED = "The specified ability is disabled.";
 constexpr const char* ERROR_MSG_PROFILE_NOT_EXIST = "No profile in the hap.";
 constexpr const char* ERROR_INVALID_UID_MSG = "The specified uid is invalid.";
 constexpr const char* ERROR_INVALID_HAP_PATH_MSG = "The input source file is invalid.";
@@ -88,6 +89,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERR_ZLIB_SRC_FILE_INVALID, ERR_ZLIB_SRC_FILE_INVALID_MSG },
     { ERR_ZLIB_DEST_FILE_INVALID, ERR_ZLIB_DEST_FILE_INVALID_MSG },
     { ERROR_BUNDLE_IS_DISABLED, ERROR_MSG_BUNDLE_IS_DISABLED },
+    { ERROR_ABILITY_IS_DISABLED, ERROR_MSG_ABILITY_IS_DISABLED },
     { ERROR_PROFILE_NOT_EXIST, ERROR_MSG_PROFILE_NOT_EXIST },
     { ERROR_INVALID_UID, ERROR_INVALID_UID_MSG },
     { ERROR_INVALID_HAP_PATH, ERROR_INVALID_HAP_PATH_MSG },

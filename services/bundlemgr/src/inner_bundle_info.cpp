@@ -2476,7 +2476,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int3
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
         APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name) != disabledAbilities.end()) {
@@ -2537,8 +2537,8 @@ ErrCode InnerBundleInfo::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool 
     auto &key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetAbilityEnabled find innerBundleUserInfo failed");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        APP_LOGE("SetAbilityEnabled can not find bundleUserInfo in userId: %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto iter = std::find(infoItem->second.bundleUserInfo.disabledAbilities.begin(),
                           infoItem->second.bundleUserInfo.disabledAbilities.end(),
@@ -2613,9 +2613,9 @@ ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("bundleName:%{public}s, SetApplicationEnabled find userId:%{public}d userInfo failed:",
+        APP_LOGE("SetApplicationEnabled can not find:%{public}s bundleUserInfo in userId: %{public}d",
             GetBundleName().c_str(), userId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     infoItem->second.bundleUserInfo.enabled = enabled;
