@@ -230,6 +230,21 @@ bool CommonFunc::ParsePropertyFromObject(napi_env env, napi_value args, const Pr
     return true;
 }
 
+bool CommonFunc::ParseBool(napi_env env, napi_value value, bool& result)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, value, &valueType);
+    if (valueType != napi_boolean) {
+        APP_LOGE("ParseBool type mismatch!");
+        return false;
+    }
+    if (napi_get_value_bool(env, value, &result) != napi_ok) {
+        APP_LOGE("napi_get_value_bool error");
+        return false;
+    }
+    return true;
+}
+
 bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result)
 {
     napi_valuetype valueType = napi_undefined;

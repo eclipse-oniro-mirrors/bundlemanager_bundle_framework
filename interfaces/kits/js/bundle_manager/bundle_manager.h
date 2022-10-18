@@ -25,7 +25,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+#ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
 #include "want.h"
@@ -75,7 +75,7 @@ struct AbilityIconCallbackInfo : public BaseCallbackInfo {
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+#ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
     std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
 #endif
 };
