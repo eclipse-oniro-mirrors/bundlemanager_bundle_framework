@@ -1106,19 +1106,10 @@ public:
      * @param abilityName Indicates the abilityName.
      * @param isEnabled Indicates the ability enabled.
      * @param userId Indicates the user id.
-     * @return Return whether the application is enabled.
-     */
-    bool SetAbilityEnabled(
-        const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
-        bool isEnabled, int32_t userId);
-    /**
-     * @brief Set ability enabled.
-     * @param AbilityInfo Indicates the AbilityInfo.
-     * @param isEnabled Indicates the ability enabled.
-     * @param userId Indicates the user id.
      * @return Returns ERR_OK if the setAbilityEnabled is successfully; returns error code otherwise.
      */
-    ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId);
+    ErrCode SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, bool isEnabled, int32_t userId);
     /**
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.

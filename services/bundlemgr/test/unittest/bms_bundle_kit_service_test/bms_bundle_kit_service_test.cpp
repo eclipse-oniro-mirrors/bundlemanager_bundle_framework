@@ -2740,7 +2740,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0100, Function | Small
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_TRUE(isEnable);
-
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -2754,7 +2753,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0200, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
@@ -2774,14 +2773,14 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0300, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, false);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, false, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_FALSE(isEnable);
 
-    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true);
+    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
     ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
     EXPECT_EQ(0, ret);
@@ -2813,7 +2812,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0500, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", true);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", true, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
@@ -2833,7 +2832,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0600, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsApplicationEnabled("", isEnable);
@@ -2857,7 +2856,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0700, Function | Small
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    int32_t testRet = bundleMgrProxy->SetApplicationEnabled("", true);
+    int32_t testRet = bundleMgrProxy->SetApplicationEnabled("", true, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = bundleMgrProxy->IsApplicationEnabled("", isEnable);
@@ -3556,7 +3555,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0200, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_TRUE(testRet == 0);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
@@ -3576,18 +3575,17 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0300, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_FALSE(isEnable);
-    int32_t testRet2 = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet2 = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
     int32_t testRet3 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
     EXPECT_EQ(0, testRet3);
     EXPECT_TRUE(isEnable);
-
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -3616,7 +3614,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0500, Function | SmallTest
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     AbilityInfo abilityInfoEmpty;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfoEmpty, false);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfoEmpty, false, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     bool isEnable = false;
@@ -3636,7 +3634,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0600, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     AbilityInfo abilityInfoEmpty;
     bool isEnable = false;
@@ -3659,7 +3657,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0700, Function | SmallTest
     AbilityInfo abilityInfo;
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
@@ -3683,7 +3681,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0800, Function | SmallTest
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
@@ -3707,7 +3705,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0900, Function | SmallTest
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST_1;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_FALSE(testRet == 0);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
