@@ -2277,7 +2277,8 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo& newInfo = infoItem->second;
-    ErrCode ret = newInfo.SetAbilityEnabled(abilityInfo, isEnabled, userId);
+    ErrCode ret = newInfo.SetAbilityEnabled(abilityInfo.bundleName, abilityInfo.moduleName,
+        abilityInfo.name, isEnabled, userId);
     if (ret != ERR_OK) {
         return ret;
     }
