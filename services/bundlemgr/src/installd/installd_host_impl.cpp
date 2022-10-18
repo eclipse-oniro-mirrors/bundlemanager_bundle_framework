@@ -347,7 +347,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
 
     // index 3 : database size
     std::vector<std::string> dataBasePath;
-    for (auto &el : Constants::BUNDLE_EL) {
+    for (const auto &el : Constants::BUNDLE_EL) {
         std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
             std::to_string(userId) + Constants::DATABASE + bundleName;
         dataBasePath.push_back(filePath);

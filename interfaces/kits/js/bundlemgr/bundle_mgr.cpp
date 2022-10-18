@@ -1449,7 +1449,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -1770,7 +1770,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -1934,8 +1934,9 @@ napi_value GetAbilityInfo(napi_env env, napi_callback_info info)
     }
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, StartGetAbilityInfoExecuteCB,
-                       StartGetAbilityInfoCompletedCB, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+              StartGetAbilityInfoExecuteCB, StartGetAbilityInfoCompletedCB,
+              reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2102,7 +2103,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2231,7 +2232,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2629,7 +2630,7 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2787,7 +2788,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2895,7 +2896,7 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2998,7 +2999,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -3101,7 +3102,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[PARAM0]), result, &placeHolder));
             }
         },
-        (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -3233,7 +3234,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3264,7 +3265,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
                 napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3741,7 +3742,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3787,7 +3788,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3875,7 +3876,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3920,7 +3921,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4039,7 +4040,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4083,7 +4084,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4177,7 +4178,7 @@ napi_value GetAllFormsInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4213,7 +4214,7 @@ napi_value GetAllFormsInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4290,7 +4291,7 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4327,7 +4328,7 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4400,7 +4401,7 @@ napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4436,7 +4437,7 @@ napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4578,7 +4579,7 @@ napi_value GetBundleGidsAsync(
     }
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetBundleGidsExecute, GetBundleGidsAsyncComplete,
-                       (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+                       reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -4600,8 +4601,9 @@ napi_value GetBundleGidsPromise(napi_env env, AsyncGetBundleGidsCallbackInfo *as
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetBundleGidsExecute,
-                       GetBundleGidsPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                GetBundleGidsExecute, GetBundleGidsPromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -4798,7 +4800,7 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
                 }
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -4905,7 +4907,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "JSSetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, SetDisposedStatusExecute,
-        SetDisposedStatusComplete, static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        SetDisposedStatusComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5002,7 +5004,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "JSGetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, GetDisposedStatusExecute,
-        GetDisposedStatusComplete, static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        GetDisposedStatusComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5092,7 +5094,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
                 }
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5199,8 +5201,9 @@ napi_value IsAbilityEnabledAsync(
         return nullptr;
     }
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsAbilityEnabledExecute,
-                       IsAbilityEnabledAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsAbilityEnabledExecute, IsAbilityEnabledAsyncComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5222,8 +5225,9 @@ napi_value IsAbilityEnabledPromise(napi_env env, EnabledInfo *asyncCallbackInfo)
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsAbilityEnabledExecute,
-                       IsAbilityEnabledPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsAbilityEnabledExecute, IsAbilityEnabledPromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -5391,8 +5395,9 @@ napi_value IsApplicationEnabledAsync(
         return nullptr;
     }
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsApplicationEnabledExecute,
-                       IsApplicationEnabledAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsApplicationEnabledExecute, IsApplicationEnabledAsyncComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5414,8 +5419,9 @@ napi_value IsApplicationEnabledPromise(napi_env env, EnabledInfo *asyncCallbackI
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsApplicationEnabledExecute,
-                       IsApplicationEnabledPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsApplicationEnabledExecute, IsApplicationEnabledPromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -5576,8 +5582,9 @@ napi_value IsModuleRemovableAsync(
         return nullptr;
     }
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsModuleRemovableExecute,
-                       IsModuleRemovableAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsModuleRemovableExecute, IsModuleRemovableAsyncComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5599,8 +5606,9 @@ napi_value IsModuleRemovablePromise(napi_env env, AsyncModuleRemovableCallbackIn
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsModuleRemovableExecute,
-                       IsModuleRemovablePromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsModuleRemovableExecute, IsModuleRemovablePromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -5799,7 +5807,7 @@ napi_value SetModuleUpgradeFlagAsync(
     }
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, SetModuleUpgradeFlagExecute,
-                       SetModuleUpgradeFlagAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        SetModuleUpgradeFlagAsyncComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5822,7 +5830,9 @@ napi_value SetModuleUpgradeFlagPromise(napi_env env, AsyncModuleUpgradeFlagCallb
     asyncCallbackInfo->deferred = deferred;
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, SetModuleUpgradeFlagExecute,
-                       SetModuleUpgradeFlagPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+                                          SetModuleUpgradeFlagPromiseComplete,
+                                          reinterpret_cast<void*>(asyncCallbackInfo),
+                                          &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -6002,7 +6012,7 @@ napi_value GetAbilityLabelAsync(
     NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName));
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetAbilityLabelExecute,
-                       GetAbilityLabelAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+            GetAbilityLabelAsyncComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -6025,7 +6035,9 @@ napi_value GetAbilityLabelPromise(napi_env env, AsyncAbilityLabelCallbackInfo *a
     asyncCallbackInfo->deferred = deferred;
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetAbilityLabelExecute,
-                       GetAbilityLabelPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+                                          GetAbilityLabelPromiseComplete,
+                                          reinterpret_cast<void*>(asyncCallbackInfo),
+                                          &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -6267,7 +6279,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
                 }
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -6404,7 +6416,7 @@ napi_value GetNameForUid(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[PARAM0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -6500,7 +6512,7 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -7300,7 +7312,7 @@ napi_value GetDispatcherVersionWrap(
                                                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
                 }
             },
-            (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+            reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;

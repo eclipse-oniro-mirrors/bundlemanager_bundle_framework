@@ -555,7 +555,7 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork);
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
 
     return promise;
@@ -655,7 +655,7 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "JSLauncherServiceOn", NAPI_AUTO_LENGTH, &resource);
     napi_create_async_work(
         env, nullptr, resource, [](napi_env env, void* data) {}, LauncherServiceOffComplete,
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork);
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
     return promise;
 }
@@ -757,7 +757,7 @@ static napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info 
           delete asyncCallbackInfo;
           asyncCallbackInfo = nullptr;
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork);
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
 
     return promise;
@@ -823,7 +823,7 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext* asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
             if (!asyncCallbackInfo->err) {
               asyncCallbackInfo->ret = InnerJSGetLauncherAbilityInfos(asyncCallbackInfo->env,
                                                                       asyncCallbackInfo->bundleName,
@@ -832,7 +832,7 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
             }
         },
         [](napi_env env, napi_status status, void* data) {
-            AsyncHandleBundleContext* asyncCallbackInfo = (AsyncHandleBundleContext*)data;
+            AsyncHandleBundleContext* asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
             napi_value result[INDEX_TWO] = { 0 };
             // wrap result
             if (asyncCallbackInfo->err) {
@@ -867,7 +867,7 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork);
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
     return promise;
 }
@@ -969,7 +969,7 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork);
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
 
     return promise;
