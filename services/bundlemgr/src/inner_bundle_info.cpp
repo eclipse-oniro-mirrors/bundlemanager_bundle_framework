@@ -1699,6 +1699,12 @@ void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInf
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
 
+void InnerBundleInfo::UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo)
+{
+    baseApplicationInfo_->arkNativeFileAbi = applicationInfo.arkNativeFileAbi;
+    baseApplicationInfo_->arkNativeFilePath = applicationInfo.arkNativeFilePath;
+}
+
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
     SetKeepAlive(applicationInfo.keepAlive);
