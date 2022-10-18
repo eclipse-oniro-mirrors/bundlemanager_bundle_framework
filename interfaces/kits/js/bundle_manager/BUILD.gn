@@ -44,12 +44,16 @@ ohos_shared_library("bundlemanager") {
     "napi:ace_napi",
   ]
 
-  if (bundle_framework_graphics) {
-    defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+  if (global_resmgr_enable && bundle_framework_graphics) {
+    defines += [ "BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED" ]
     external_deps += [
       "multimedia_image_framework:image",
       "multimedia_image_framework:image_native",
     ]
+  }
+
+  if (global_resmgr_enable) {
+    defines += [ "GLOBAL_RESMGR_ENABLE" ]
   }
 
   relative_install_dir = "module/bundle"
