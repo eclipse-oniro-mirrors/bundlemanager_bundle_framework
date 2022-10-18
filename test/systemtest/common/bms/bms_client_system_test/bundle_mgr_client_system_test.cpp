@@ -1639,11 +1639,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_046, TestSize.Level1)
     GTEST_LOG_(INFO) << name << " start";
 
     AbilityInfo info;
-    std::vector<Metadata> &metadata = info.metadata;
-    Metadata data;
-    data.name = "ohos.extension.forms";
-    data.resource = "$profile:form_config";
-    metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
 
     std::string metadataName = "";
