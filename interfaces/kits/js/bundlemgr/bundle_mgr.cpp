@@ -1449,7 +1449,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -1770,7 +1770,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2102,7 +2102,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2231,7 +2231,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2629,7 +2629,7 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2787,7 +2787,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2895,7 +2895,7 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2998,7 +2998,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -4622,7 +4622,7 @@ napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBund
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -4798,7 +4798,7 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -4905,7 +4905,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "JSSetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, SetDisposedStatusExecute,
-        SetDisposedStatusComplete, (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        SetDisposedStatusComplete, static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5002,7 +5002,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "JSGetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, GetDisposedStatusExecute,
-        GetDisposedStatusComplete, (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        GetDisposedStatusComplete, static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5092,7 +5092,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5244,7 +5244,7 @@ napi_value IsAbilityEnabledWrap(napi_env env, napi_callback_info info, EnabledIn
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -5436,7 +5436,7 @@ napi_value IsApplicationEnabledWrap(napi_env env, napi_callback_info info, Enabl
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -5622,7 +5622,7 @@ napi_value GetModuleRemovableWrap(
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -5691,10 +5691,8 @@ napi_value IsModuleRemovable(napi_env env, napi_callback_info info)
 
     if (ret == nullptr) {
         APP_LOGE("%{public}s ret is nullptr", __func__);
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        }
+        delete asyncCallbackInfo;
+        asyncCallbackInfo = nullptr;
         ret = WrapVoidToJS(env);
     }
     APP_LOGI("%{public}s end.", __func__);
@@ -5841,7 +5839,7 @@ napi_value SetModuleUpgradeFlagWrap(
     const size_t argCountWithAsync = argcPromise + ARGS_ASYNC_COUNT;
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         return nullptr;
     }
     napi_valuetype valueType = napi_undefined;
@@ -5909,10 +5907,8 @@ napi_value SetModuleUpgradeFlag(napi_env env, napi_callback_info info)
 
     if (ret == nullptr) {
         APP_LOGE("%{public}s ret is nullptr", __func__);
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        }
+        delete asyncCallbackInfo;
+        asyncCallbackInfo = nullptr;
         ret = WrapVoidToJS(env);
     }
     APP_LOGI("%{public}s end.", __func__);
@@ -6050,7 +6046,7 @@ napi_value GetAbilityLabelWrap(napi_env env, napi_callback_info info, AsyncAbili
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -6271,7 +6267,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -6408,7 +6404,7 @@ napi_value GetNameForUid(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[PARAM0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -6504,7 +6500,7 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        static_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -7377,10 +7373,6 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
     APP_LOGD("the count of input arguments is [%{public}zu]", argc);
 
     std::unique_ptr<AsyncGetProfileInfo> callbackPtr = std::make_unique<AsyncGetProfileInfo>(env);
-    if (callbackPtr == nullptr) {
-        APP_LOGE("GetProfile failed due to null callbackPtr");
-        return nullptr;
-    }
     callbackPtr->type = profileType;
 
     if (argc < ARGS_SIZE_TWO || argc > ARGS_SIZE_FOUR) {
@@ -7565,7 +7557,7 @@ NativeValue* JsBundleMgr::CreateModuleInfos(NativeEngine &engine, const std::vec
 }
 
 NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
-    NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData)
+    NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData)
 {
     APP_LOGD("CreateCustomizeMetaDatas is called.");
     NativeValue *objValue = engine.CreateObject();
@@ -7582,7 +7574,7 @@ NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
 }
 
 NativeValue* JsBundleMgr::CreateInnerMetaDatas(
-    NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> metaData)
+    NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData)
 {
     APP_LOGD("CreateInnerMetaDatas is called.");
     NativeValue *objValue = engine.CreateObject();
@@ -7598,7 +7590,7 @@ NativeValue* JsBundleMgr::CreateInnerMetaDatas(
     return objValue;
 }
 
-NativeValue* JsBundleMgr::CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> metaData)
+NativeValue* JsBundleMgr::CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData)
 {
     APP_LOGD("CreateInnerMetaDatas is called.");
     NativeValue *arrayValue = engine.CreateArray(metaData.size());
@@ -7753,7 +7745,7 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(
     return arrayValue;
 }
 
-NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfos)
+NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo)
 {
     APP_LOGD("CreateExtensionInfo is called.");
     auto objContext = engine.CreateObject();
@@ -7768,21 +7760,21 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const Extens
         return engine.CreateUndefined();
     }
 
-    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfos.bundleName));
-    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfos.moduleName));
-    object->SetProperty("name", CreateJsValue(engine, extensionInfos.name));
-    object->SetProperty("labelId", CreateJsValue(engine, extensionInfos.labelId));
-    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfos.descriptionId));
-    object->SetProperty("iconId", CreateJsValue(engine, extensionInfos.iconId));
-    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfos.visible));
+    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfo.bundleName));
+    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfo.moduleName));
+    object->SetProperty("name", CreateJsValue(engine, extensionInfo.name));
+    object->SetProperty("labelId", CreateJsValue(engine, extensionInfo.labelId));
+    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfo.descriptionId));
+    object->SetProperty("iconId", CreateJsValue(engine, extensionInfo.iconId));
+    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfo.visible));
     object->SetProperty("extensionAbilityType",
-        CreateJsValue(engine, static_cast<int32_t>(extensionInfos.type)));
-    object->SetProperty("permissions", CreateNativeArray(engine, extensionInfos.permissions));
-    object->SetProperty("applicationInfo", CreateAppInfo(engine, extensionInfos.applicationInfo));
-    object->SetProperty("metaData", CreateInnerMetaDatas(engine, extensionInfos.metadata));
-    object->SetProperty("enabled", CreateJsValue(engine, extensionInfos.enabled));
-    object->SetProperty("readPermission", CreateJsValue(engine, extensionInfos.readPermission));
-    object->SetProperty("writePermission", CreateJsValue(engine, extensionInfos.writePermission));
+        CreateJsValue(engine, static_cast<int32_t>(extensionInfo.type)));
+    object->SetProperty("permissions", CreateNativeArray(engine, extensionInfo.permissions));
+    object->SetProperty("applicationInfo", CreateAppInfo(engine, extensionInfo.applicationInfo));
+    object->SetProperty("metaData", CreateInnerMetaDatas(engine, extensionInfo.metadata));
+    object->SetProperty("enabled", CreateJsValue(engine, extensionInfo.enabled));
+    object->SetProperty("readPermission", CreateJsValue(engine, extensionInfo.readPermission));
+    object->SetProperty("writePermission", CreateJsValue(engine, extensionInfo.writePermission));
 
     return objContext;
 }
@@ -7974,8 +7966,8 @@ NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInf
     auto typeValue = CreateJsValue(engine, "");
     if (typeValue->TypeOf() == NativeValueType::NATIVE_UNDEFINED) {
         APP_LOGE("ConvertNativeValueTo typeValue->TypeOf is UNDEFINE");
-        auto typeValue =  CreateJsValue(engine, std::string(""));
-        if (typeValue->TypeOf() == NativeValueType::NATIVE_UNDEFINED) {
+        auto jsValue =  CreateJsValue(engine, std::string(""));
+        if (jsValue->TypeOf() == NativeValueType::NATIVE_UNDEFINED) {
             APP_LOGE("ConvertNativeValueTo typeValueStr->TypeOf is UNDEFINE");
         }
     }
@@ -8217,7 +8209,7 @@ NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCa
     }
 
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdThreeParams(engine, info, userId);
+    bool flagCall = JsBundleMgr::UnwarpUserIdThreeParams(engine, info, userId);
     auto complete = [obj = this, bundleFlags, userId, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
@@ -8269,7 +8261,7 @@ NativeValue* JsBundleMgr::OnGetApplicationInfo(NativeEngine &engine, NativeCallb
     }
 
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdFourParams(engine, info, userId);
+    bool flagCall = JsBundleMgr::UnwarpUserIdFourParams(engine, info, userId);
     auto complete = [obj = this, bundleName, bundleFlags, userId, errCode](
                         NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
