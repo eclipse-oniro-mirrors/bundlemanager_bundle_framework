@@ -24,8 +24,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <netinet/in.h>
-
 #include "bundle_info.h"
 #include "rpcid_decode/syscap_tool.h"
 #include "bundle_data_storage_database.h"
@@ -105,7 +103,7 @@ HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0200, Function | SmallTest
 {
     RPCIDHead headPtr;
     headPtr.apiVersionType = 1;
-    char *contextBuffer = static_cast(char *)&headPtr;
+    char *contextBuffer = static_cast<char *>(&headPtr);
     char *syscapSetBuf;
     uint32_t syscapSetLength = 0;
     uint32_t bufferLen =  2;
@@ -138,7 +136,7 @@ HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0400, Function | SmallTest
 {
     RPCIDHead headPtr;
     headPtr.apiVersionType = 1;
-    char *contextBuffer = static_cast(char *)&headPtr;
+    char *contextBuffer = static_cast<char *>(&headPtr);
     char *syscapSetBuf;
     uint32_t syscapSetLength = 0;
     uint32_t bufferLen =  32;
