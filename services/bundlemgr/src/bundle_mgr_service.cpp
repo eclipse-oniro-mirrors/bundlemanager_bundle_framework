@@ -31,6 +31,7 @@
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "want.h"
+#include "xcollie/watchdog.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -179,6 +180,10 @@ bool BundleMgrService::InitBundleEventHandler()
 
     if (handler_ == nullptr) {
         handler_ = std::make_shared<BMSEventHandler>(runner_);
+        int32_t timeout = 10 * 60 * 1000; // 10min
+        if (HiviewDFX::Watchdog::GetInstance().AddThread(Constants::BMS_SERVICE_NAME, handler_, timeout) != 0) {
+            APP_LOGE("watchdog addThread failed");
+        }
     }
 
     handler_->SendEvent(BMSEventHandler::BMS_START);
