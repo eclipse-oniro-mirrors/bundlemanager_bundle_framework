@@ -94,7 +94,7 @@ int BundleAgingMgr::AgingQueryFormStatistics(std::vector<DeviceUsageStats::Bundl
     const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    int ret = DeviceUsageStats::BundleActiveClient::GetInstance().QueryFormStatistics(
+    int ret = DeviceUsageStats::BundleActiveClient::GetInstance().QueryModuleUsageRecords(
         AgingConstants::COUNT_MODULE_RECODES_GET, results, userId);
     APP_LOGD("activeModuleRecord size %{public}zu, ret:%{public}d", results.size(), ret);
     return ret;
