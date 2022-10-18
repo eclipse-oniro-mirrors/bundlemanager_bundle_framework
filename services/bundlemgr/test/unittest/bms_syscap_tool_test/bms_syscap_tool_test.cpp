@@ -103,7 +103,7 @@ HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0200, Function | SmallTest
 {
     RPCIDHead headPtr;
     headPtr.apiVersionType = 1;
-    char *contextBuffer = (char *)headPtr;
+    char *contextBuffer = (char *)&headPtr;
     char *syscapSetBuf;
     uint32_t syscapSetLength = 0;
     uint32_t bufferLen =  2;
@@ -136,7 +136,7 @@ HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0400, Function | SmallTest
 {
     RPCIDHead headPtr;
     headPtr.apiVersionType = 1;
-    char *contextBuffer = (char *)headPtr;
+    char *contextBuffer = (char *)&headPtr;
     char *syscapSetBuf;
     uint32_t syscapSetLength = 0;
     uint32_t bufferLen =  32;
