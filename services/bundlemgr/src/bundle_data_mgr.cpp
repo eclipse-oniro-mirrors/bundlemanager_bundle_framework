@@ -743,7 +743,7 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
     if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
         if (!innerBundleInfo.IsAbilityEnabled((*option), userId)) {
             APP_LOGE("ability:%{public}s is disabled", option->name.c_str());
-            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+            return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
         }
     }
     info = (*option);
