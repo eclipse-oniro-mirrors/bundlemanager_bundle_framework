@@ -127,6 +127,10 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_DATA_FILES, &BundleMgrHost::HandleCleanBundleDataFiles);
     funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_STATUS_CALLBACK,
         &BundleMgrHost::HandleRegisterBundleStatusCallback);
+    funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK,
+        &BundleMgrHost::HandleRegisterBundleEventCallback);
+    funcMap_.emplace(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK,
+        &BundleMgrHost::HandleUnregisterBundleEventCallback);
     funcMap_.emplace(IBundleMgr::Message::CLEAR_BUNDLE_STATUS_CALLBACK,
         &BundleMgrHost::HandleClearBundleStatusCallback);
     funcMap_.emplace(IBundleMgr::Message::UNREGISTER_BUNDLE_STATUS_CALLBACK,
@@ -1199,6 +1203,18 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    // to do
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    // to do
     return ERR_OK;
 }
 
