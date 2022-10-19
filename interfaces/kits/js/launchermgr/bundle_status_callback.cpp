@@ -38,7 +38,7 @@ BundleStatusCallback::~BundleStatusCallback()
     if (work == nullptr || delRefCallbackInfo == nullptr) {
         return;
     }
-    work->data = (void*)delRefCallbackInfo;
+    work->data = reinterpret_cast<void*>(delRefCallbackInfo);
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
@@ -83,7 +83,7 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
     if (work == nullptr || asyncCallbackInfo == nullptr) {
         return;
     }
-    work->data = (void*)asyncCallbackInfo;
+    work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
@@ -134,7 +134,7 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
     if (work == nullptr || asyncCallbackInfo == nullptr) {
         return;
     }
-    work->data = (void*)asyncCallbackInfo;
+    work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
@@ -185,7 +185,7 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
     if (work == nullptr || asyncCallbackInfo == nullptr) {
         return;
     }
-    work->data = (void*)asyncCallbackInfo;
+    work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {

@@ -304,7 +304,7 @@ static void ConvertLauncherAbilityInfo(napi_env env, napi_value objAbilityInfo,
 
 static bool ParseLauncherAbilityInfo(
     napi_env env, napi_value result,
-    std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> &launcherAbilityInfos)
+    const std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> &launcherAbilityInfos)
 {
     if (launcherAbilityInfos.empty()) {
         return false;
@@ -498,10 +498,8 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     if (command != REGISTERCALLBACK) {
         APP_LOGE("Input wrong command");
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        }
+        delete asyncCallbackInfo;
+        asyncCallbackInfo = nullptr;
         return promise;
     }
 
@@ -640,10 +638,8 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     if (command != UNREGISTERCALLBACK) {
         APP_LOGE("Input wrong command");
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        }
+        delete asyncCallbackInfo;
+        asyncCallbackInfo = nullptr;
         return promise;
     }
     if (asyncCallbackInfo->callbackRef == nullptr) {

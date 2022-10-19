@@ -315,7 +315,7 @@ ErrCode BaseBundleInstaller::InstallAppControl(
     }
     return ERR_OK;
 #else
-    APP_LOGW("app control is disable"); 
+    APP_LOGW("app control is disable");
     return ERR_OK;
 #endif
 }
@@ -2452,10 +2452,6 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
 ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    if (commonEventMgr == nullptr) {
-        APP_LOGE("commonEventMgr is nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
 }

@@ -379,7 +379,7 @@ static void ConvertDistro(napi_env env, napi_value &modulesObject, const Package
 }
 
 static void ConvertFormsInfo(napi_env env, napi_value &abilityObject,
-    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> forms)
+    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms)
 {
     napi_value formsArray;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &formsArray));
@@ -672,7 +672,7 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::string version, std::string dispatchAPI)
+static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::string version, const std::string &dispatchAPI)
 {
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &value));
     napi_value napiVersion;
