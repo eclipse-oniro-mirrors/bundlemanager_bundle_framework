@@ -1644,7 +1644,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_046, TestSize.Level1)
     data.resource = "$profile:form_config";
     metadata.emplace_back(data);
     info.resourcePath = RESOURCE_PATH;
-
     std::string metadataName = "";
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
