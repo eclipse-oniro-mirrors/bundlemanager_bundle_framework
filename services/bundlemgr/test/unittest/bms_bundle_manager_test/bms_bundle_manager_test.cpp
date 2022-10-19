@@ -333,7 +333,7 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0200, Function | Sma
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
@@ -431,7 +431,7 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0600, Function | Sma
     want.SetElementName("", BUNDLE_PREVIEW_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
@@ -529,7 +529,7 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_1000, Function | Sma
     want.SetElementName("", BUNDLE_THUMBNAIL_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 
     UnInstallBundle(BUNDLE_THUMBNAIL_NAME);
 }
