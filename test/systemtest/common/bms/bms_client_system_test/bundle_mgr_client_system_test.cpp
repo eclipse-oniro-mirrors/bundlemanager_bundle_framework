@@ -1637,15 +1637,12 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_046, TestSize.Level1)
 {
     auto name = std::string("GetResourceConfigFile_046");
     GTEST_LOG_(INFO) << name << " start";
-
     AbilityInfo info;
     info.resourcePath = RESOURCE_PATH;
     std::string metadataName = "";
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_FALSE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
     std::cout << "END GetResourceConfigFile_046" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
