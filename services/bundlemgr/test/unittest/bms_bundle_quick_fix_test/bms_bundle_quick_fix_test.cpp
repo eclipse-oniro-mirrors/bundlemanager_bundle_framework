@@ -1701,4 +1701,122 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0055, Function | SmallTest
 
     UninstallBundleInfo(BUNDLE_NAME);
 }
+
+/**
+ * @tc.number: BmsBundleSwitchQuickFix_0001
+ * Function: SwitchQuickFix
+ * @tc.name: test SwitchQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: SwitchQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleSwitchQuickFix_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    ErrCode ret = quickFixProxy->SwitchQuickFix(BUNDLE_NAME, true, callback);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleSwitchQuickFix_0002
+ * Function: SwitchQuickFix
+ * @tc.name: test SwitchQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: SwitchQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleSwitchQuickFix_0002, Function | SmallTest | Level0)
+{
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    ErrCode ret = quickFixProxy->SwitchQuickFix("", true, callback);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDeleteQuickFix_0001
+ * Function: DeleteQuickFix
+ * @tc.name: test DeleteQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: DeleteQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleDeleteQuickFix_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    ErrCode ret = quickFixProxy->DeleteQuickFix(BUNDLE_NAME, callback);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDeleteQuickFix_0002
+ * Function: DeleteQuickFix
+ * @tc.name: test DeleteQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: DeleteQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleDeleteQuickFix_0002, Function | SmallTest | Level0)
+{
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    ErrCode ret = quickFixProxy->DeleteQuickFix("", callback);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleCopyFiles_0001
+ * Function: CopyFiles
+ * @tc.name: test CopyFiles
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CopyFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleCopyFiles_0001, Function | SmallTest | Level0)
+{
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    const std::vector<std::string> sourceFiles {FILE1_PATH, FILE2_PATH};
+    CreateFiles(sourceFiles);
+    std::vector<std::string> destFiles;
+    ErrCode ret = quickFixProxy->CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_OK);
+    DeleteFiles(sourceFiles);
+    DeleteFiles(destFiles);
+}
+
+/**
+ * @tc.number: BmsBundleCopyFiles_0002
+ * Function: CopyFiles
+ * @tc.name: test CopyFiles
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CopyFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleCopyFiles_0002, Function | SmallTest | Level0)
+{
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    const std::vector<std::string> sourceFiles {"", ""};
+    std::vector<std::string> destFiles;
+    ErrCode ret = quickFixProxy->CopyFiles(sourceFiles, destFiles);
+    EXPECT_NE(ret, ERR_OK);
+}
+
 } // OHOS
