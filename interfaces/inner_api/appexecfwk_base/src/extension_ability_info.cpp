@@ -48,6 +48,7 @@ const std::string APPLICATION_INFO = "applicationInfo";
 const std::string RESOURCE_PATH = "resourcePath";
 const std::string ENABLED = "enabled";
 const std::string PROCESS = "process";
+const size_t ABILITY_CAPACITY = 10240; // 10K
 }; // namespace
 
 bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -112,6 +113,7 @@ ExtensionAbilityInfo *ExtensionAbilityInfo::Unmarshalling(Parcel &parcel)
 
 bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
 {
+    CHECK_PARCEL_CAPACITY(parcel, ABILITY_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
