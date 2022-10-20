@@ -808,6 +808,17 @@ private:
     ErrCode GetParcelableInfosWithErrCode(IBundleMgr::Message code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
 
+    template<typename T>
+    bool GetVectorFromParcelIntelligent(
+        IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+
+    template<typename T>
+    ErrCode GetVectorFromParcelIntelligentWithErrCode(
+        IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+
+    template<typename T>
+    ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
+
     template <typename T>
     bool GetParcelableInfosFromAshmem(MessageParcel &reply, std::vector<T> &parcelableInfos);
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
