@@ -6359,6 +6359,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0200, Function | MediumTest | L
  */
 HWTEST_F(ActsBmsKitSystemTest, event_callback_0100, Function | MediumTest | Level1)
 {
+    std::cout << "begin to test event_callback_0100" << std::endl;
     int32_t originUid = geteuid();
     seteuid(Constants::FOUNDATION_UID);
 
@@ -6385,6 +6386,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0100, Function | MediumTest | Leve
     EXPECT_TRUE(re);
 
     seteuid(originUid);
+    std::cout << "test event_callback_0100 done" << std::endl;
 }
 
 /**
@@ -6395,6 +6397,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0100, Function | MediumTest | Leve
  */
 HWTEST_F(ActsBmsKitSystemTest, event_callback_0200, Function | MediumTest | Level1)
 {
+    std::cout << "begin to test event_callback_0200" << std::endl;
     sptr<BundleEventCallbackImpl> callback = (new (std::nothrow) BundleEventCallbackImpl());
     EXPECT_NE(callback, nullptr);
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -6405,8 +6408,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0200, Function | MediumTest | Leve
 
     re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
     EXPECT_FALSE(re);
-
-    seteuid(originUid);
+    std::cout << "test event_callback_0200 done" << std::endl;
 }
 
 /**
@@ -6417,6 +6419,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0200, Function | MediumTest | Leve
  */
 HWTEST_F(ActsBmsKitSystemTest, event_callback_0300, Function | MediumTest | Level1)
 {
+    std::cout << "begin to test event_callback_0300" << std::endl;
     sptr<BundleEventCallbackImpl> callback = nullptr;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
@@ -6426,8 +6429,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0300, Function | MediumTest | Leve
 
     re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
     EXPECT_FALSE(re);
-
-    seteuid(originUid);
+    std::cout << "test event_callback_0300 done" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
