@@ -465,6 +465,7 @@ public:
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetProfileByAbility(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -479,6 +480,7 @@ private:
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
     NativeValue* OnGetProfile(NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType);
     NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
         

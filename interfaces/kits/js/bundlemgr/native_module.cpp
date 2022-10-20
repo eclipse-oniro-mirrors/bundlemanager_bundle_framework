@@ -58,6 +58,7 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "getAbilityIcon", moduleName, JsBundleMgr::GetAbilityIcon);
     BindNativeFunction(*engine, *object, "getProfileByAbility", moduleName, JsBundleMgr::GetProfileByAbility);
     BindNativeFunction(*engine, *object, "getProfileByExtensionAbility", moduleName, JsBundleMgr::GetProfileByExtensionAbility);
+    BindNativeFunction(*engine, *object, "queryAbilityByWant", moduleName, JsBundleMgr::QueryAbilityInfos);
     return exports;
 }
 
@@ -142,7 +143,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_FUNCTION("getDispatcherVersion", GetDispatcherVersion),
-        DECLARE_NAPI_FUNCTION("queryAbilityByWant", QueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
         DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
