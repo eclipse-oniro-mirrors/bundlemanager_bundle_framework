@@ -34,7 +34,18 @@ BundleEventCallbackDeathRecipient::~BundleEventCallbackDeathRecipient()
 
 void BundleEventCallbackDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
-    // to do
+    APP_LOGD("bundle event service died, remove the proxy object");
+    sptr<IBundleEventCallback> callback = iface_cast<IBundleEventCallback>(remote.promote());
+    if (callback == nullptr) {
+        APP_LOGE("callback is nullptr");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    dataMgr->UnregisterBundleEventCallback(callback);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
