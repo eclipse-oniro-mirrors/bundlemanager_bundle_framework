@@ -8243,6 +8243,12 @@ NativeValue* JsBundleMgr::QueryAbilityInfos(NativeEngine *engine, NativeCallback
     return (me != nullptr) ? me->OnQueryAbilityInfos(*engine, *info) : nullptr;
 }
 
+NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetAllBundleInfo(*engine, *info) : nullptr;
+}
+
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGD("%{public}s is called", __FUNCTION__);
@@ -8831,5 +8837,54 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
+
+static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
+}
+
+NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGI("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_ONE) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    int32_t bundleFlags = 0;
+    if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleFlags)) {
+        APP_LOGE("conversion failed!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    bool flagCall = UnwarpUserIdThreeParams(engine, info, userId);
+    auto complete = [obj = this, bundleFlags, userId, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
+        if (errCode != ERR_OK) {
+            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
+            return;
+        }
+        std::vector<BundleInfo> bundleInfos;
+        auto ret = InnerGetBundleInfos(bundleFlags, userId, bundleInfos);
+        if (!ret) {
+            task.Reject(engine, CreateJsError(engine, 1, "GetAllBundleInfo falied"));
+            return;
+        }
+        task.Resolve(engine, obj->CreateBundleInfos(engine, bundleInfos));
+    };
+
+    NativeValue *result = nullptr;
+    auto callback = flagCall ? ((info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2]) : nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnGetAllBundleInfo",
+        engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
+    return result;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
