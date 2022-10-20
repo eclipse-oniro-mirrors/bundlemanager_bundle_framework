@@ -941,6 +941,18 @@ bool BundleMgrHostImpl::RegisterBundleStatusCallback(const sptr<IBundleStatusCal
     return dataMgr->RegisterBundleStatusCallback(bundleStatusCallback);
 }
 
+bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    // to do
+    return false;
+}
+
+bool BundleMgrHostImpl::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    // to do
+    return false;
+}
+
 bool BundleMgrHostImpl::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("start ClearBundleStatusCallback");
