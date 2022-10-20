@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_event_callback_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_host.h"
 #include "bundle_pack_info.h"
@@ -63,6 +64,35 @@ constexpr int32_t DISPOSED_STATUS = 10;
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleEventCallbackImpl : public BundleEventCallbackHost {
+public:
+    BundleEventCallbackImpl();
+    virtual ~BundleEventCallbackImpl() override;
+    virtual void OnReceiveEvent(const EventFwk::CommonEventData eventData) override;
+
+private:
+    DISALLOW_COPY_AND_MOVE(BundleEventCallbackImpl);
+};
+
+BundleEventCallbackImpl::BundleEventCallbackImpl()
+{
+    APP_LOGI("create bundle event instance");
+}
+
+BundleEventCallbackImpl::~BundleEventCallbackImpl()
+{
+    APP_LOGI("destroy bundle event instance");
+}
+
+void BundleEventCallbackImpl::OnReceiveEvent(const EventFwk::CommonEventData eventData)
+{
+    const Want &want = eventData.GetWant();
+    std::string action = want.GetAction();
+    std::string bundleName = want.GetElement().GetBundleName();
+    std::cout << "action : " << action << std::endl;
+    std::cout << "bundleName : " << bundleName << std::endl;
+}
+
 class BundleStatusCallbackImpl : public BundleStatusCallbackHost {
 public:
     BundleStatusCallbackImpl();
@@ -6381,6 +6411,87 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0200, Function | MediumTest | L
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9("", shortcutInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: event_callback_0100
+ * @tc.name: 1.test RegisterBundleEventCallback interface
+ *           2.test UnregisterBundleEventCallback interface
+ * @tc.desc: 1. success condition
+ */
+HWTEST_F(ActsBmsKitSystemTest, event_callback_0100, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test event_callback_0100" << std::endl;
+    int32_t originUid = geteuid();
+    seteuid(Constants::FOUNDATION_UID);
+
+    sptr<BundleEventCallbackImpl> callback = (new (std::nothrow) BundleEventCallbackImpl());
+    EXPECT_NE(callback, nullptr);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
+    EXPECT_TRUE(re);
+
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    CommonTool commonTool;
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
+    EXPECT_TRUE(re);
+
+    seteuid(originUid);
+    std::cout << "test event_callback_0100 done" << std::endl;
+}
+
+/**
+ * @tc.number: event_callback_0200
+ * @tc.name: 1.test RegisterBundleEventCallback interface
+ *           2.test UnregisterBundleEventCallback interface
+ * @tc.desc: 1. failed condition, uid verify failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, event_callback_0200, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test event_callback_0200" << std::endl;
+    sptr<BundleEventCallbackImpl> callback = (new (std::nothrow) BundleEventCallbackImpl());
+    EXPECT_NE(callback, nullptr);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+
+    re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+    std::cout << "test event_callback_0200 done" << std::endl;
+}
+
+/**
+ * @tc.number: event_callback_0300
+ * @tc.name: 1.test RegisterBundleEventCallback interface
+ *           2.test UnregisterBundleEventCallback interface
+ * @tc.desc: 1. failed condition, invalid param
+ */
+HWTEST_F(ActsBmsKitSystemTest, event_callback_0300, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test event_callback_0300" << std::endl;
+    sptr<BundleEventCallbackImpl> callback = nullptr;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+
+    re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+    std::cout << "test event_callback_0300 done" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
