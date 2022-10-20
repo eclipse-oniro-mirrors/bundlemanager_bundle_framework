@@ -33,7 +33,27 @@ BundleEventCallbackHost::~BundleEventCallbackHost()
 int BundleEventCallbackHost::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    // to do
+    APP_LOGD("BundleEventCallbackHost OnRemoteRequest, code : %{public}u", code);
+    std::u16string descriptor = BundleEventCallbackHost::GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    if (descriptor != remoteDescriptor) {
+        APP_LOGE("verify descriptor failed");
+        return OBJECT_NULL;
+    }
+
+    switch (code) {
+        case static_cast<uint32_t>(IBundleEventCallback::Message::ON_RECEIVE_EVENT): {
+            std::unique_ptr<EventFwk::CommonEventData> dataPtr(data.ReadParcelable<EventFwk::CommonEventData>());
+            if (dataPtr == nullptr) {
+                APP_LOGE("get CommonEventData failed");
+                return OBJECT_NULL;
+            }
+            OnReceiveEvent(*(dataPtr.get()));
+            break;
+        }
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
     return NO_ERROR;
 }
 }  // namespace AppExecFwk

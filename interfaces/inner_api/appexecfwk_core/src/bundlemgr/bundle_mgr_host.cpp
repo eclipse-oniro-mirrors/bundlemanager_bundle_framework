@@ -1208,13 +1208,40 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 
 ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
-    // to do
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> bundleEventCallback = iface_cast<IBundleEventCallback>(object);
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("Get bundleEventCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    bool ret = RegisterBundleEventCallback(bundleEventCallback);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
-    // to do
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> bundleEventCallback = iface_cast<IBundleEventCallback>(object);
+
+    bool ret = UnregisterBundleEventCallback(bundleEventCallback);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 
