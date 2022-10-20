@@ -50,6 +50,8 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
+const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
+
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
     return info.GetAppCodePath() + Constants::PATH_SEPARATOR
@@ -1785,17 +1787,16 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
         return ERR_OK;
     }
 
-    std::string nativeLibraryPath;
     if (Constants::ABI_MAP.find(cpuAbi) == Constants::ABI_MAP.end()) {
         APP_LOGE("No support %{public}s abi", cpuAbi.c_str());
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
     }
 
-    nativeLibraryPath = Constants::AN + Constants::ABI_MAP.at(cpuAbi);
+    std::string arkNativeFilePath;
+    arkNativeFilePath.append(Constants::ABI_MAP.at(cpuAbi)).append(Constants::PATH_SEPARATOR);
     std::string targetPath;
-    targetPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
-        .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
+    targetPath.append(ARK_CACHE_PATH).append(info.GetBundleName())
+        .append(Constants::PATH_SEPARATOR).append(arkNativeFilePath);
     APP_LOGD("Begin to extract an file, modulePath : %{private}s, targetPath : %{private}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
     ExtractParam extractParam;
@@ -1809,7 +1810,7 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
         return result;
     }
 
-    info.SetArkNativeFilePath(targetPath);
+    info.SetArkNativeFilePath(arkNativeFilePath);
     return ERR_OK;
 }
 
@@ -1821,7 +1822,9 @@ ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldIn
         return ERR_OK;
     }
 
-    auto result = InstalldClient::GetInstance()->RemoveDir(arkNativeFilePath);
+    std::string targetPath;
+    targetPath.append(ARK_CACHE_PATH).append(oldInfo.GetBundleName());
+    auto result = InstalldClient::GetInstance()->RemoveDir(targetPath);
     if (result != ERR_OK) {
         APP_LOGE("fail to remove arkNativeFilePath %{public}s, error is %{public}d",
             arkNativeFilePath.c_str(), result);
