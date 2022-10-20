@@ -50,22 +50,14 @@ BundleStatusCallback::~BundleStatusCallback()
             napi_delete_reference(delRefCallbackInfo->env_, delRefCallbackInfo->addedCallback_);
             napi_delete_reference(delRefCallbackInfo->env_, delRefCallbackInfo->updatedCallback_);
             napi_delete_reference(delRefCallbackInfo->env_, delRefCallbackInfo->removeCallback_);
-            if (delRefCallbackInfo != nullptr) {
-                delete delRefCallbackInfo;
-                delRefCallbackInfo = nullptr;
-            }
-            if (work != nullptr) {
-                delete work;
-                work = nullptr;
-            }
+            delete delRefCallbackInfo;
+            delRefCallbackInfo = nullptr;
+            delete work;
+            work = nullptr;
         });
     if (ret != 0) {
-        if (delRefCallbackInfo != nullptr) {
-            delete delRefCallbackInfo;
-        }
-        if (work != nullptr) {
-            delete work;
-        }
+        delete delRefCallbackInfo;
+        delete work;
     }
 }
 
@@ -101,22 +93,14 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            if (asyncCallbackInfo != nullptr) {
-                delete asyncCallbackInfo;
-                asyncCallbackInfo = nullptr;
-            }
-            if (work != nullptr) {
-                delete work;
-                work = nullptr;
-            }
+            delete asyncCallbackInfo;
+            asyncCallbackInfo = nullptr;
+            delete work;
+            work = nullptr;
         });
     if (ret != 0) {
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-        }
-        if (work != nullptr) {
-            delete work;
-        }
+        delete asyncCallbackInfo;
+        delete work;
     }
 }
 
@@ -152,14 +136,10 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            if (asyncCallbackInfo != nullptr) {
-                delete asyncCallbackInfo;
-                asyncCallbackInfo = nullptr;
-            }
-            if (work != nullptr) {
-                delete work;
-                work = nullptr;
-            }
+            delete asyncCallbackInfo;
+            asyncCallbackInfo = nullptr;
+            delete work;
+            work = nullptr;
         });
     if (ret != 0) {
         if (asyncCallbackInfo != nullptr) {
@@ -203,21 +183,13 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            if (asyncCallbackInfo != nullptr) {
-                delete asyncCallbackInfo;
-                asyncCallbackInfo = nullptr;
-            }
-            if (work != nullptr) {
-                delete work;
-                work = nullptr;
-            }
+            delete asyncCallbackInfo;
+            asyncCallbackInfo = nullptr;
+            delete work;
+            work = nullptr;
         });
     if (ret != 0) {
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-        }
-        if (work != nullptr) {
-            delete work;
-        }
+        delete asyncCallbackInfo;
+        delete work;
     }
 }

@@ -53,19 +53,15 @@ void BundleMonitorCallback::BundleMonitorOn(napi_env env, napi_value handler, co
 void BundleMonitorCallback::EventListenerAdd(napi_env env, napi_value handler,
     std::vector<std::shared_ptr<EventListener>> &eventListeners, const std::string &type)
 {
-    bool hasListener = false;
     for (uint32_t i = 0; i < eventListeners.size(); ++i) {
         if (eventListeners[i]->HasSameEnv(env)) {
-            hasListener = true;
             eventListeners[i]->Add(env, handler);
             return;
         }
     }
-    if (!hasListener) {
-        std::shared_ptr<EventListener> listener = std::make_shared<EventListener>(env, type);
-        listener->Add(env, handler);
-        eventListeners.push_back(listener);
-    }
+    std::shared_ptr<EventListener> listener = std::make_shared<EventListener>(env, type);
+    listener->Add(env, handler);
+    eventListeners.push_back(listener);
 }
 
 void BundleMonitorCallback::BundleMonitorOff(napi_env env, napi_value handler, const std::string &type)
@@ -101,7 +97,7 @@ void BundleMonitorCallback::BundleMonitorOff(napi_env env, const std::string &ty
 }
 
 void BundleMonitorCallback::EventListenerDelete(napi_env env, napi_value handler,
-    std::vector<std::shared_ptr<EventListener>> &eventListeners)
+    const std::vector<std::shared_ptr<EventListener>> &eventListeners)
 {
     APP_LOGD("EventListenerDelete Enter");
     for (auto listener : eventListeners) {
@@ -113,7 +109,7 @@ void BundleMonitorCallback::EventListenerDelete(napi_env env, napi_value handler
 }
 
 void BundleMonitorCallback::EventListenerDeleteAll(napi_env env,
-    std::vector<std::shared_ptr<EventListener>> &eventListeners)
+    const std::vector<std::shared_ptr<EventListener>> &eventListeners)
 {
     APP_LOGD("EventListenerDeleteAll Enter");
     for (auto listener : eventListeners) {
@@ -141,7 +137,7 @@ void BundleMonitorCallback::BundleMonitorEmit(const std::string &type, std::stri
 }
 
 void BundleMonitorCallback::EventListenerEmit(std::string &bundleName, int32_t userId,
-    std::vector<std::shared_ptr<EventListener>> &eventListeners)
+    const std::vector<std::shared_ptr<EventListener>> &eventListeners)
 {
     for (auto listener : eventListeners) {
         listener->Emit(bundleName, userId);
