@@ -6318,7 +6318,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0200, Function | MediumTest | L
 
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9("", shortcutInfos);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
