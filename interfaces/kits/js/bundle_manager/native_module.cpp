@@ -39,7 +39,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
 
     napi_value applicationFlag = nullptr;
     NAPI_CALL(env, napi_create_object(env, &applicationFlag));
-    CreateApplicationFlagObject(env, abilityFlag);
+    CreateApplicationFlagObject(env, applicationFlag);
 
     napi_value bundleFlag = nullptr;
     NAPI_CALL(env, napi_create_object(env, &bundleFlag));
