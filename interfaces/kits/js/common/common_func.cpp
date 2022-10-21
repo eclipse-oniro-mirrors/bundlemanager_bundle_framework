@@ -989,16 +989,6 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.process.c_str(), NAPI_AUTO_LENGTH, &nProcess));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "process", nProcess));
 
-    napi_value nModuleSourceDirs;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nModuleSourceDirs));
-    for (size_t idx = 0; idx < appInfo.moduleSourceDirs.size(); idx++) {
-        napi_value nModuleSourceDir;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, appInfo.moduleSourceDirs[idx].c_str(), NAPI_AUTO_LENGTH, &nModuleSourceDir));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nModuleSourceDirs, idx, nModuleSourceDir));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "moduleSourceDirs", nModuleSourceDirs));
-
     napi_value nPermissions;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nPermissions));
     for (size_t idx = 0; idx < appInfo.permissions.size(); idx++) {
@@ -1008,16 +998,6 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, idx, nPermission));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, PERMISSIONS, nPermissions));
-
-    napi_value nModuleInfos;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nModuleInfos));
-    for (size_t idx = 0; idx < appInfo.moduleInfos.size(); idx++) {
-        napi_value objModuleInfos;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objModuleInfos));
-        ConvertModuleInfo(env, appInfo.moduleInfos[idx], objModuleInfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nModuleInfos, idx, objModuleInfos));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "modulesInfo", nModuleInfos));
 
     napi_value nEntryDir;
     NAPI_CALL_RETURN_VOID(
