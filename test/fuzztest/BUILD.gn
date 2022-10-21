@@ -31,8 +31,12 @@ group("fuzztest") {
     "getaccessibleappcodepaths_fuzzer:GetAccessibleAppCodePathsFuzzTest",
     "getapplicationinfos_fuzzer:GetApplicationInfosFuzzTest",
     "getbundleinfos_fuzzer:GetBundleInfosFuzzTest",
+    "getdefaultapplication_fuzzer:GetDefaultApplicationFuzzTest",
     "installparamunmarshalling_fuzzer:InstallParamUnmarshallingFuzzTest",
+    "isdefaultapplication_fuzzer:IsDefaultApplicationFuzzTest",
     "parsesyscap_fuzzer:ParseSysCapFuzzTest",
+    "resetdefaultapplication_fuzzer:ResetDefaultApplicationFuzzTest",
+    "setdefaultapplication_fuzzer:SetDefaultApplicationFuzzTest",
     "shortcutinfo_fuzzer:ShortcutInfoFuzzTest",
     "verifycallingpermission_fuzzer:VerifyCallingPermissionFuzzTest",
   ]
