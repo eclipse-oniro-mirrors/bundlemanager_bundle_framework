@@ -1206,7 +1206,7 @@ ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std
     APP_LOGI("begin to GetAbilityLabel of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetAbilityLabel due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -1635,14 +1635,56 @@ bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallba
 
 bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
 {
-    // to do
-    return false;
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to RegisterBundleEventCallback");
+    if (!bundleEventCallback) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to RegisterBundleEventCallback due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+        APP_LOGE("write BundleEventCallback failed");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+        APP_LOGE("fail to RegisterBundleEventCallback from server");
+        return false;
+    }
+    return reply.ReadBool();
 }
 
 bool BundleMgrProxy::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
 {
-    // to do
-    return false;
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to UnregisterBundleEventCallback");
+    if (!bundleEventCallback) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to UnregisterBundleEventCallback due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+        APP_LOGE("fail to UnregisterBundleEventCallback, for write parcel failed");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+        APP_LOGE("fail to UnregisterBundleEventCallback from server");
+        return false;
+    }
+    return reply.ReadBool();
 }
 
 bool BundleMgrProxy::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
@@ -3153,7 +3195,7 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
     APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetMediaData due to params empty");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;

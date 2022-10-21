@@ -36,7 +36,28 @@ BundleEventCallbackProxy::~BundleEventCallbackProxy()
 
 void BundleEventCallbackProxy::OnReceiveEvent(const EventFwk::CommonEventData eventData)
 {
-    // to do
+    APP_LOGD("begin of OnReceiveEvent");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(BundleEventCallbackProxy::GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteParcelable(&eventData)) {
+        APP_LOGE("write CommonEventData failed");
+        return;
+    }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("remote is null");
+        return;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<int32_t>(IBundleEventCallback::Message::ON_RECEIVE_EVENT), data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGW("failed to SendRequest, errorCode : %{public}d", ret);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
