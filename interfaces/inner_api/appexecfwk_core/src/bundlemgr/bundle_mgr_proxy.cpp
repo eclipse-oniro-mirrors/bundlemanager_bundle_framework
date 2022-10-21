@@ -1206,7 +1206,7 @@ ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std
     APP_LOGI("begin to GetAbilityLabel of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetAbilityLabel due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3195,7 +3195,7 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
     APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetMediaData due to params empty");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;

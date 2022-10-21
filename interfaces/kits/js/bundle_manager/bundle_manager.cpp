@@ -617,6 +617,10 @@ static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::str
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        APP_LOGE("GetAbilityIcon check param failed.");
+        return ERROR_PARAM_CHECK_ERROR;
+    }
     std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
     size_t len = 0;
     ErrCode ret = bundleMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
