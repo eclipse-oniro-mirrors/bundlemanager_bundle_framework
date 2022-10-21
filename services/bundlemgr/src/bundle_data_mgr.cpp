@@ -1756,17 +1756,15 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
     if (ret != ERR_OK) {
         return ret;
     }
-    if (!moduleName.empty()) {
-        std::map<std::string, InnerModuleInfo> InnerModuleInfos = innerBundleInfo.GetInnerModuleInfos();
-        auto moduleItem = InnerModuleInfos.find(moduleName);
-        if (moduleItem == InnerModuleInfos.end()) {
-            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
-            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
-        }
-    }
     auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (!moduleName.empty()) {
+        if ((*ability).moduleName != moduleName) {
+            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
     }
     bool isEnable = false;
     ret = innerBundleInfo.IsAbilityEnabledV9(*ability, GetUserId(), isEnable);
@@ -4015,19 +4013,17 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
     if (errCode != ERR_OK) {
         return errCode;
     }
-    std::map<std::string, InnerModuleInfo> InnerModuleInfos = innerBundleInfo.GetInnerModuleInfos();
-    if (!moduleName.empty()) {
-        auto moduleItem = InnerModuleInfos.find(moduleName);
-        if (moduleItem == InnerModuleInfos.end()) {
-            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
-            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
-        }
-    }
 
     auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     if (!ability) {
         APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (!moduleName.empty()) {
+        if ((*ability).moduleName != moduleName) {
+            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
     }
     bool isEnable;
     errCode = innerBundleInfo.IsAbilityEnabledV9(*ability, GetUserId(userId), isEnable);
