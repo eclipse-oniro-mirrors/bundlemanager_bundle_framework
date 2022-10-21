@@ -299,7 +299,7 @@ ErrCode BaseBundleInstaller::InstallAppControl(
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::vector<std::string> appIds;
     ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_ALLOWED_INSTALL, userId, appIds);
     if (ret != ERR_OK) {
         APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
         return ret;
