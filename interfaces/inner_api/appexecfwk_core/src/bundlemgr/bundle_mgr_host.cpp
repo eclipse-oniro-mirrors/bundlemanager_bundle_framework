@@ -331,7 +331,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -351,7 +351,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &da
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -488,7 +488,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -510,7 +510,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -531,7 +531,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        if (!WriteParcelableVectorIntoAshmem(infos, __func__, reply)) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -747,7 +747,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosMutiparam(MessageParcel &data, Mes
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
+        if (!WriteVectorToParcelIntelligent(abilityInfos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -772,8 +772,8 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
-            APP_LOGE("writeParcelableVectorIntoAshmem failed");
+        if (!WriteVectorToParcelIntelligent(abilityInfos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -796,7 +796,7 @@ ErrCode BundleMgrHost::HandleQueryAllAbilityInfos(MessageParcel &data, MessagePa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVectorIntoAshmem(abilityInfos, __func__, reply)) {
+        if (!WriteVectorToParcelIntelligent(abilityInfos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -2226,6 +2226,37 @@ bool BundleMgrHost::WriteParcelableVector(std::vector<T> &parcelableVector, Mess
             return false;
         }
     }
+    return true;
+}
+
+template<typename T>
+bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply)
+{
+    Parcel tempParcel;
+    if (!tempParcel.WriteInt32(parcelableVector.size())) {
+        APP_LOGE("write ParcelableVector failed");
+        return false;
+    }
+
+    for (auto &parcelable : parcelableVector) {
+        if (!tempParcel.WriteParcelable(&parcelable)) {
+            APP_LOGE("write ParcelableVector failed");
+            return false;
+        }
+    }
+
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteInt32(static_cast<int32_t>(dataSize))) {
+        APP_LOGE("write WriteInt32 failed");
+        return false;
+    }
+
+    if (!reply.WriteRawData(
+        reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        APP_LOGE("Failed to write data");
+        return false;
+    }
+
     return true;
 }
 

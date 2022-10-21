@@ -633,6 +633,9 @@ private:
      */
     template<typename T>
     bool WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply);
+
+    template<typename T>
+    bool WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply);
     /**
      * @brief Write a parcelabe vector objects to ashmem.
      * @param parcelableVector Indicates the objects to be write.
