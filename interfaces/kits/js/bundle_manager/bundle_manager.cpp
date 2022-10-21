@@ -421,13 +421,13 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetMaxArgc(); i++) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+        if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
                 APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
-        } else if ((i == ARGS_SIZE_ONE) && (valueType == napi_number)) {
+        } else if (i == ARGS_SIZE_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_FLAGS, TYPE_NUMBER);
@@ -436,7 +436,9 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         } else if (i == ARGS_SIZE_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else if ((valueType == napi_number) && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                break;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
                 return nullptr;
@@ -482,7 +484,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
+        if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_FLAGS, TYPE_NUMBER);
@@ -491,7 +493,9 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else if ((valueType == napi_number) && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                break;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
                 return nullptr;
@@ -2473,13 +2477,13 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetMaxArgc(); i++) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+        if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
                 APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
-        } else if (i == ARGS_POS_ONE && (valueType == napi_number)) {
+        } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
@@ -2488,7 +2492,9 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else if ((valueType == napi_number) && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                break;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
                 return nullptr;
@@ -2545,7 +2551,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
+        if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid!", asyncCallbackInfo->flags);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
@@ -2554,7 +2560,9 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                break;
+            }
+            if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
                 return nullptr;
