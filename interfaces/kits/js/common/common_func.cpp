@@ -936,19 +936,6 @@ void CommonFunc::ConvertResource(napi_env env, const Resource &resource, napi_va
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "id", nId));
 }
 
-void CommonFunc::ConvertModuleInfo(napi_env env, const ModuleInfo &moduleInfo, napi_value objMoudleInfo)
-{
-    napi_value nModuleName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, moduleInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objMoudleInfo, MODULE_NAME, nModuleName));
-
-    napi_value nModuleSourceDir;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, moduleInfo.moduleSourceDir.c_str(), NAPI_AUTO_LENGTH, &nModuleSourceDir));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objMoudleInfo, "moduleSourceDir", nModuleSourceDir));
-}
-
 void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo)
 {
     napi_value nName;

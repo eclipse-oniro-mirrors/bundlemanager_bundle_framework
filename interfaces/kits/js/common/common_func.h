@@ -95,8 +95,6 @@ static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &exten
 
 static void ConvertResource(napi_env env, const Resource &resource, napi_value objResource);
 
-static void ConvertModuleInfo(napi_env env, const ModuleInfo &moduleInfo, napi_value objMoudleInfo);
-
 static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo);
 
 static void ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef);
