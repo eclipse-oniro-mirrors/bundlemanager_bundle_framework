@@ -831,17 +831,22 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
     std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
 {
     APP_LOGD("begin to ImplicitQueryAllAbilityInfos.");
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userId");
+        return;
+    }
+
     // query from bundleInfos_
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
-            InnerBundleInfo innerBundleInfo;
-            if (!GetInnerBundleInfoWithFlags(
-                item.first, flags, innerBundleInfo, userId)) {
+            const InnerBundleInfo &innerBundleInfo = item.second;
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
                 APP_LOGW("ImplicitQueryAllAbilityInfos failed");
                 continue;
             }
 
-            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
             GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos);
         }
     } else {
@@ -1455,9 +1460,10 @@ bool BundleDataMgr::GetBundleList(
 
     bool find = false;
     for (const auto &infoItem : bundleInfos_) {
-        InnerBundleInfo innerBundleInfo;
-        if (!GetInnerBundleInfoWithFlags(infoItem.first, BundleFlag::GET_BUNDLE_DEFAULT,
-            innerBundleInfo, requestUserId)) {
+        const InnerBundleInfo &innerBundleInfo = infoItem.second;
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        if (CheckInnerBundleInfoWithFlags(
+            innerBundleInfo, BundleFlag::GET_BUNDLE_DEFAULT, responseUserId) != ERR_OK) {
             continue;
         }
 
@@ -1488,22 +1494,44 @@ bool BundleDataMgr::GetBundleInfos(
 
     bool find = false;
     for (const auto &item : bundleInfos_) {
-        InnerBundleInfo innerBundleInfo;
-        if (!GetInnerBundleInfoWithFlags(
-            item.first, flags, innerBundleInfo, requestUserId)) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
             continue;
         }
 
         BundleInfo bundleInfo;
-        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (!innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId)) {
             continue;
         }
+
         bundleInfos.emplace_back(bundleInfo);
         find = true;
     }
     APP_LOGD("get bundleInfos result(%{public}d) in user(%{public}d).", find, userId);
     return find;
+}
+
+ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
+    const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const
+{
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (innerBundleInfo.IsDisabled()) {
+        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
+        && !innerBundleInfo.GetApplicationEnabled(userId)) {
+        APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+
+    return ERR_OK;
 }
 
 bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const
@@ -1549,16 +1577,17 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
     }
 
     for (const auto &item : bundleInfos_) {
-        InnerBundleInfo innerBundleInfo;
-        if (GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, requestUserId) != ERR_OK) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
             continue;
         }
 
         BundleInfo bundleInfo;
-        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
+
         bundleInfos.emplace_back(bundleInfo);
     }
     return ERR_OK;
@@ -3360,15 +3389,20 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
     std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
     APP_LOGD("begin to ImplicitQueryAllExtensionInfos");
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userId");
+        return;
+    }
+
     // query from bundleInfos_
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
-            InnerBundleInfo innerBundleInfo;
-            if (!GetInnerBundleInfoWithFlags(item.first, flags, innerBundleInfo, userId)) {
-                APP_LOGE("ImplicitQueryExtensionAbilityInfos failed");
+            const InnerBundleInfo &innerBundleInfo = item.second;
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
                 continue;
             }
-            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
             GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos);
         }
     } else {
@@ -3522,13 +3556,12 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
-        InnerBundleInfo innerBundleInfo;
-        if (!GetInnerBundleInfoWithFlags(item.first, 0, innerBundleInfo, requestUserId)) {
-            APP_LOGE("QueryExtensionAbilityInfos failed");
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, 0, responseUserId) != ERR_OK) {
             continue;
         }
         auto innerExtensionInfos = innerBundleInfo.GetInnerExtensionInfos();
-        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         for (const auto &info : innerExtensionInfos) {
             if (info.second.type == extensionType) {
                 ExtensionAbilityInfo extensionAbilityInfo = info.second;
