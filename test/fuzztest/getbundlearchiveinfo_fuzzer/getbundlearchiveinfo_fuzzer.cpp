@@ -16,23 +16,24 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "app_control_proxy.h"
+#include "bundle_mgr_proxy.h"
 
-#include "getapprunningcontrolrule_fuzzer.h"
+#include "getbundlearchiveinfo_fuzzer.h"
+
+using Want = OHOS::AAFwk::Want;
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         sptr<IRemoteObject> object;
-        AppControlProxy appControl(object);
-        AppRunningControlRuleResult controlRuleResult;
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
-        std::vector<std::string> appIds;
-        std::string appId (reinterpret_cast<const char*>(data), size);
-        appIds.push_back(appId);
-        appControl.GetAppRunningControlRule(reinterpret_cast<uintptr_t>(data), appIds);
-        appControl.GetAppRunningControlRule(bundleName, reinterpret_cast<uintptr_t>(data), controlRuleResult);
+        BundleMgrProxy bundleMgrProxy(object);
+        std::string hapFilePath (reinterpret_cast<const char*>(data), size);
+        BundleFlag flag = BundleFlag::GET_BUNDLE_DEFAULT;
+        BundleInfo bundleInfo;
+        bundleMgrProxy.GetBundleArchiveInfo(hapFilePath, flag, bundleInfo);
+        bundleMgrProxy.GetBundleArchiveInfo(hapFilePath, reinterpret_cast<uintptr_t>(data), bundleInfo);
+        bundleMgrProxy.GetBundleArchiveInfoV9(hapFilePath, reinterpret_cast<uintptr_t>(data), bundleInfo);
         return true;
     }
 }

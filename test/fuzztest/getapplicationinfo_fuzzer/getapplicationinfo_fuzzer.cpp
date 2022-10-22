@@ -16,23 +16,24 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "app_control_proxy.h"
+#include "bundle_mgr_proxy.h"
 
-#include "getapprunningcontrolrule_fuzzer.h"
+#include "getapplicationinfo_fuzzer.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         sptr<IRemoteObject> object;
-        AppControlProxy appControl(object);
-        AppRunningControlRuleResult controlRuleResult;
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
-        std::vector<std::string> appIds;
-        std::string appId (reinterpret_cast<const char*>(data), size);
-        appIds.push_back(appId);
-        appControl.GetAppRunningControlRule(reinterpret_cast<uintptr_t>(data), appIds);
-        appControl.GetAppRunningControlRule(bundleName, reinterpret_cast<uintptr_t>(data), controlRuleResult);
+        BundleMgrProxy bundleMgrProxy(object);
+        std::string appName (reinterpret_cast<const char*>(data), size);
+        ApplicationFlag flag = ApplicationFlag::GET_BASIC_APPLICATION_INFO;
+        ApplicationInfo appInfo;
+        bundleMgrProxy.GetApplicationInfo(appName, flag, reinterpret_cast<uintptr_t>(data), appInfo);
+        bundleMgrProxy.GetApplicationInfo(appName, reinterpret_cast<uintptr_t>(data),
+            reinterpret_cast<uintptr_t>(data), appInfo);
+        bundleMgrProxy.GetApplicationInfoV9(appName, reinterpret_cast<uintptr_t>(data),
+            reinterpret_cast<uintptr_t>(data), appInfo);
         return true;
     }
 }

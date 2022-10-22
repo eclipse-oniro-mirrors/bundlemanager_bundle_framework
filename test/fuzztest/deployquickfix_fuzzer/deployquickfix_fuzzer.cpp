@@ -16,23 +16,21 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "app_control_proxy.h"
+#include "quick_fix_manager_proxy.h"
 
-#include "getapprunningcontrolrule_fuzzer.h"
+#include "deployquickfix_fuzzer.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         sptr<IRemoteObject> object;
-        AppControlProxy appControl(object);
-        AppRunningControlRuleResult controlRuleResult;
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
-        std::vector<std::string> appIds;
-        std::string appId (reinterpret_cast<const char*>(data), size);
-        appIds.push_back(appId);
-        appControl.GetAppRunningControlRule(reinterpret_cast<uintptr_t>(data), appIds);
-        appControl.GetAppRunningControlRule(bundleName, reinterpret_cast<uintptr_t>(data), controlRuleResult);
+        QuickFixManagerProxy quickFix(object);
+        std::vector<std::string> bundleFilePaths;
+        std::string bundleFilePath (reinterpret_cast<const char*>(data), size);
+        bundleFilePaths.push_back(bundleFilePath);
+        sptr<IQuickFixStatusCallback> statusCallback;
+        quickFix.DeployQuickFix(bundleFilePaths, statusCallback);
         return true;
     }
 }
