@@ -554,7 +554,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(info.minCompatibleVersionCode, 1);
     EXPECT_EQ(info.apiCompatibleVersion, 8);
     EXPECT_EQ(info.apiTargetVersion, 8);
-    EXPECT_EQ(info.apiReleaseType, "Beta2");
+    EXPECT_EQ(info.apiReleaseType, "Beta3.2");
     EXPECT_EQ(info.keepAlive, true);
     EXPECT_EQ(info.removable, false);
     EXPECT_EQ(info.userDataClearable, false);
