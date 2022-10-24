@@ -53,12 +53,15 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "getLaunchWantForBundle", moduleName, JsBundleMgr::GetLaunchWantForBundle);
     BindNativeFunction(*engine, *object, "isAbilityEnabled", moduleName, JsBundleMgr::IsAbilityEnabled);
     BindNativeFunction(*engine, *object, "isApplicationEnabled", moduleName, JsBundleMgr::IsApplicationEnabled);
-    BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
-    BindNativeFunction(*engine, *object, "getBundleInfo", moduleName, JsBundleMgr::GetBundleInfo);
+    BindNativeFunction(*engine, *object, "queryAbilityByWant", moduleName, JsBundleMgr::QueryAbilityInfos);
     BindNativeFunction(*engine, *object, "getAbilityIcon", moduleName, JsBundleMgr::GetAbilityIcon);
     BindNativeFunction(*engine, *object, "getProfileByAbility", moduleName, JsBundleMgr::GetProfileByAbility);
-    BindNativeFunction(*engine, *object, "getProfileByExtensionAbility", moduleName, JsBundleMgr::GetProfileByExtensionAbility);
-    BindNativeFunction(*engine, *object, "queryAbilityByWant", moduleName, JsBundleMgr::QueryAbilityInfos);
+    BindNativeFunction(*engine, *object, "getProfileByExtensionAbility", moduleName,
+        JsBundleMgr::GetProfileByExtensionAbility);
+    BindNativeFunction(*engine, *object, "getBundleInfo", moduleName, JsBundleMgr::GetBundleInfo);
+    BindNativeFunction(*engine, *object, "getNameForUid", moduleName, JsBundleMgr::GetNameForUid);
+    BindNativeFunction(*engine, *object, "getAbilityInfo", moduleName, JsBundleMgr::GetAbilityInfo);
+    BindNativeFunction(*engine, *object, "getAbilityLabel", moduleName, JsBundleMgr::GetAbilityLabel);
     return exports;
 }
 
@@ -137,6 +140,7 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
         DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
+        DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
         DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
@@ -149,9 +153,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isModuleRemovable", IsModuleRemovable),
         DECLARE_NAPI_FUNCTION("setModuleUpgradeFlag", SetModuleUpgradeFlag),
         DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfos", QueryExtensionInfoByWant),
-        DECLARE_NAPI_FUNCTION("getNameForUid", GetNameForUid),
-        DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfo),
-        DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
         DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
         DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),

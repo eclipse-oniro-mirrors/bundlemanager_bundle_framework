@@ -59,6 +59,7 @@ constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM2 = 2;
 constexpr int32_t PARAM3 = 3;
+constexpr int32_t PARAM4 = 4;
 constexpr int32_t NAPI_RETURN_FAILED = -1;
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
@@ -8138,7 +8139,6 @@ bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInf
     return flagCall;
 }
 
-
 bool JsBundleMgr::UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options)
 {
     bool flagCall = true;
@@ -8157,6 +8157,25 @@ bool JsBundleMgr::UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallback
     return flagCall;
 }
 
+bool JsBundleMgr::UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
+{
+    bool flagCall = true;
+    if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FOUR && info.argv[PARAM3]->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FIVE) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+    }
+
+    return flagCall;
+}
+
 static bool InnerGetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleOptions bundleOptions, BundleInfo &bundleInfo)
 {
@@ -8170,6 +8189,50 @@ static bool InnerGetBundleInfo(
         APP_LOGI("bundleInfo is not find");
     }
     return ret;
+}
+
+static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
+}
+
+static void OnHandleAbilityInfoCache(napi_env env, const Query &query,
+    const AAFwk::Want &want, const std::vector<AbilityInfo> &abilityInfos, napi_value jsObject)
+{
+    APP_LOGI("%{public}s called.", __FUNCTION__);
+    ElementName element = want.GetElement();
+    if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
+        return;
+    }
+    uint32_t explicitQueryResultLen = 1;
+    if (abilityInfos.size() != explicitQueryResultLen || abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
+        APP_LOGE("OnHandleAbilityInfoCache return");
+        return;
+    }
+    napi_ref cacheAbilityInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
+    abilityInfoCache.clear();
+    abilityInfoCache[query] = cacheAbilityInfo;
+}
+
+NativeValue* JsBundleMgr::UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info)
+{
+    if (info.argc == ARGS_SIZE_THREE) {
+        if (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION) {
+            return info.argv[PARAM2];
+        } else {
+            return nullptr;
+        }
+    }
+    if (info.argc == ARGS_SIZE_FOUR) {
+        return info.argv[PARAM3];
+    }
+    return nullptr;
 }
 
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
@@ -8215,6 +8278,12 @@ NativeValue* JsBundleMgr::IsApplicationEnabled(NativeEngine *engine, NativeCallb
     return (me != nullptr) ? me->OnIsApplicationEnabled(*engine, *info) : nullptr;
 }
 
+NativeValue* JsBundleMgr::QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnQueryAbilityInfos(*engine, *info) : nullptr;
+}
+
 NativeValue* JsBundleMgr::GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
@@ -8239,16 +8308,22 @@ NativeValue* JsBundleMgr::GetProfileByExtensionAbility(NativeEngine *engine, Nat
     return (me != nullptr) ? me->OnGetProfile(*engine, *info, ProfileType::EXTENSION_PROFILE) : nullptr;
 }
 
-NativeValue* JsBundleMgr::QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
+NativeValue* JsBundleMgr::GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnQueryAbilityInfos(*engine, *info) : nullptr;
+    return (me != nullptr) ? me->OnGetNameForUid(*engine, *info) : nullptr;
 }
 
-NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
+NativeValue* JsBundleMgr::GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetAllBundleInfo(*engine, *info) : nullptr;
+    return (me != nullptr) ? me->OnGetAbilityInfo(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetAbilityLabel(*engine, *info) : nullptr;
 }
 
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
@@ -8497,6 +8572,85 @@ NativeValue* JsBundleMgr::OnIsApplicationEnabled(NativeEngine &engine, NativeCal
     return result;
 }
 
+NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGE("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    int32_t bundleFlags = -1;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    AAFwk::Want want;
+    auto env = reinterpret_cast<napi_env>(&engine);
+    auto inputWant = reinterpret_cast<napi_value>(info.argv[PARAM0]);
+    if (info.argc > ARGS_SIZE_FOUR || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    ParseWant(env, want, inputWant);
+    if (info.argv[PARAM1]->TypeOf() != NATIVE_NUMBER) {
+        APP_LOGE("input params is not number!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    ConvertFromJsValue(engine, info.argv[PARAM1], bundleFlags);
+    if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+        ConvertFromJsValue(engine, info.argv[PARAM2], userId);
+    } else if (info.argv[PARAM2]->TypeOf() != NATIVE_FUNCTION) {
+        APP_LOGE("input params is not function!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+        if (item != abilityInfoCache.end()) {
+            APP_LOGD("has cache,no need to query from host");
+            errCode = ERR_OK;
+        }
+    }
+    Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
+    AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info, query, env]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            std::string queryAbilityInfosErrData;
+            if (errCode != ERR_OK) {
+                queryAbilityInfosErrData = "type mismatch";
+                task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+                    CreateJsValue(engine, queryAbilityInfosErrData));
+                return;
+            }
+            auto iBundleMgr = GetBundleMgr();
+            std::vector<AbilityInfo> abilityInfos;
+
+            auto ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, abilityInfos);
+            if (!ret) {
+                queryAbilityInfosErrData = "QueryAbilityInfos failed";
+                task.RejectWithMessage(engine, CreateJsValue(engine, 1),
+                    CreateJsValue(engine, queryAbilityInfosErrData));
+                return;
+            }
+            napi_value result[2] = { 0 };
+            NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
+            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+            {
+                std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+                Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
+                auto item = abilityInfoCache.find(query);
+                if (item != abilityInfoCache.end()) {
+                    APP_LOGD("get abilityInfo from cache");
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
+                } else {
+                    ProcessAbilityInfos(env, result[1], abilityInfos);
+                    OnHandleAbilityInfoCache(env, query, want, abilityInfos, result[1]);
+                }
+            }
+            auto outAbilityInfos = reinterpret_cast<NativeValue*>(result[1]);
+            task.ResolveWithErr(engine, outAbilityInfos);
+    };
+
+    NativeValue* lastParam = UnwarpQueryAbilityInfolastParams(info);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnQueryAbilityInfos",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGD("%{public}s is called", __FUNCTION__);
@@ -8530,18 +8684,21 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
     bool flagCall = UnwarpBundleOptionsParams(engine, info, options);
     auto complete = [obj = this, bundleName, bundleFlags, options, errCode](
                         NativeEngine &engine, AsyncTask &task, int32_t status) {
+        std::string getBundleInfoErrData;
         if (errCode != ERR_OK) {
-            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
+            getBundleInfoErrData = "type mismatch";
+            task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+                CreateJsValue(engine, getBundleInfoErrData));
             return;
         }
         BundleInfo bundleInfo;
         std::string name(bundleName);
         auto ret = InnerGetBundleInfo(name, bundleFlags, options, bundleInfo);
         if (!ret) {
-            task.Reject(engine, CreateJsError(engine, 1, "GetBundleInfo falied"));
+            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        task.Resolve(engine, obj->CreateBundleInfo(engine, bundleInfo));
+        task.ResolveWithErr(engine, obj->CreateBundleInfo(engine, bundleInfo));
     };
 
     NativeValue *result = nullptr;
@@ -8624,14 +8781,16 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
         if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
             obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
             *value = (info == nullptr) ? INVALID_PARAM : *value;
-            task.Reject(engine, CreateJsError(engine, *value, obj->errMessage_));
+            task.RejectWithMessage(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
             return;
         }
         std::shared_ptr<Media::PixelMap> pixelMap;
         pixelMap = ExecuteGetAbilityIcon(engine, info->bundleName,
             info->moduleName, info->abilityName, info->hasModuleName);
         if (!pixelMap) {
-            task.Reject(engine, CreateJsError(engine, OPERATION_FAILED, "get pixelMap failed."));
+            obj->errMessage_ = "get pixelMap failed.";
+            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+                CreateJsValue(engine, obj->errMessage_));
             return;
         }
         napi_value exports = nullptr;
@@ -8639,7 +8798,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
         Media::PixelMapNapi::Init(env, exports);
         NativeValue *ret = reinterpret_cast<NativeValue*>(
             Media::PixelMapNapi::CreatePixelMap(env, pixelMap));
-        task.Resolve(engine, ret);
+        task.ResolveWithErr(engine, ret);
     };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityIcon",
@@ -8659,8 +8818,8 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
     }
     auto complete = []
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            task.Reject(engine, CreateJsError(
-                engine, UNSUPPORTED_FEATURE_ERRCODE, UNSUPPORTED_FEATURE_MESSAGE.c_str()));
+            task.RejectWithMessage(engine, CreateJsError(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
+                CreateJsValue(engine, UNSUPPORTED_FEATURE_MESSAGE.c_str())));
         };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityIcon",
@@ -8711,17 +8870,20 @@ NativeValue* JsBundleMgr::OnGetProfile(
     APP_LOGD("GetProfile finish to parse arguments with errCode %{public}d", callbackPtr->errCode);
     auto complete = [obj = this, asyncInfo = callbackPtr] (NativeEngine &engine, AsyncTask &task, int32_t status) {
         auto errCode = asyncInfo->errCode;
+        std::string GetProfileErrData;
         if (errCode != 0) {
-            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
+            GetProfileErrData = "type mismatch";
+            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, GetProfileErrData));
             return;
         }
         napi_env env = nullptr;
         auto ret = InnerGetProfile(env, *asyncInfo);
         if (!ret) {
-            task.Reject(engine, CreateJsError(engine, 1, "GetProfile failed"));
+            GetProfileErrData = "GetProfile failed";
+            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine,GetProfileErrData));
             return;
         }
-        task.Resolve(engine, obj->CreateProfiles(engine, asyncInfo->profileVec));
+        task.ResolveWithErr(engine, obj->CreateProfiles(engine, asyncInfo->profileVec));
     };
     NativeValue* callback = nullptr;
     if (info.argv[info.argc - 1]->TypeOf() == NATIVE_FUNCTION) {
@@ -8732,161 +8894,222 @@ NativeValue* JsBundleMgr::OnGetProfile(
         engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
     return result;
 }
-static void OnHandleAbilityInfoCache(napi_env env, const Query &query,
-    const AAFwk::Want &want, const std::vector<AbilityInfo> &abilityInfos, napi_value jsObject)
-{
-    APP_LOGI("%{public}s called.", __FUNCTION__);
-    ElementName element = want.GetElement();
-    if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
-        return;
-    }
-    uint32_t explicitQueryResultLen = 1;
-    if (abilityInfos.size() != explicitQueryResultLen || abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
-        APP_LOGE("OnHandleAbilityInfoCache return");
-        return;
-    }
-    napi_ref cacheAbilityInfo = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
-    abilityInfoCache.clear();
-    abilityInfoCache[query] = cacheAbilityInfo;
-}
 
-NativeValue* JsBundleMgr::UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    if (info.argc == ARGS_SIZE_THREE) {
-        if (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION) {
-            return info.argv[PARAM2];
-        } else {
-            return nullptr;
-        }
-    }
-    if (info.argc == ARGS_SIZE_FOUR) {
-        return info.argv[PARAM3];
-    }
-    return nullptr;
-}
-
-NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGE("%{public}s is called", __FUNCTION__);
+    APP_LOGI("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
-    int32_t bundleFlags = -1;
-    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    AAFwk::Want want;
-    auto env = reinterpret_cast<napi_env>(&engine);
-    auto inputWant = reinterpret_cast<napi_value>(info.argv[PARAM0]);
-    if (info.argc > ARGS_SIZE_FOUR || info.argc < ARGS_SIZE_TWO) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = PARAM_TYPE_ERROR;
+    if (info.argc < ARGS_SIZE_ONE || info.argc > ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments.");
+        return engine.CreateUndefined();
     }
-    ParseWant(env, want, inputWant);
-    if (info.argv[PARAM1]->TypeOf() != NATIVE_NUMBER) {
-        APP_LOGE("input params is not number!");
-        errCode = PARAM_TYPE_ERROR;
+
+    if (info.argv[PARAM0]->TypeOf() != NATIVE_NUMBER) {
+        errCode = INVALID_PARAM;
     }
-    ConvertFromJsValue(engine, info.argv[PARAM1], bundleFlags);
-    if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
-        ConvertFromJsValue(engine, info.argv[PARAM2], userId);
-    } else if (info.argv[PARAM2]->TypeOf() != NATIVE_FUNCTION) {
-        APP_LOGE("input params is not function!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-    {
-        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-        auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
-        if (item != abilityInfoCache.end()) {
-            APP_LOGD("has cache,no need to query from host");
-            errCode = ERR_OK;
+
+    int32_t uid = 0;
+    ConvertFromJsValue(engine, info.argv[PARAM0], uid);
+
+    auto complete = [obj = this, uid, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
+        std::string errMessage;
+        if (errCode != ERR_OK) {
+            errMessage = "type mismatch";
+            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+            return;
         }
-    }
-    Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
-    AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info, query, env]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (errCode != ERR_OK) {
-                task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
-                return;
-            }
-            auto iBundleMgr = GetBundleMgr();
-            std::vector<AbilityInfo> abilityInfos;
-
-            auto ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, abilityInfos);
-            if (!ret) {
-                task.Reject(engine, CreateJsError(engine, 1, "QueryAbilityInfos failed"));
-                return;
-            }
-            napi_value result[2] = { 0 };
-            NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-            {
-                std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-                Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
-                auto item = abilityInfoCache.find(query);
-                if (item != abilityInfoCache.end()) {
-                    APP_LOGD("get abilityInfo from cache");
-                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
-                } else {
-                    ProcessAbilityInfos(env, result[1], abilityInfos);
-                    OnHandleAbilityInfoCache(env, query, want, abilityInfos, result[1]);
-                }
-            }
-            auto outAbilityInfos = reinterpret_cast<NativeValue*>(result[1]);
-            task.Resolve(engine, outAbilityInfos);
+        std::string bundleName("");
+        auto ret = InnerGetNameForUid(uid, bundleName);
+        if (!ret) {
+            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            return;
+        }
+        task.ResolveWithErr(engine, CreateJsValue(engine, bundleName));
     };
-
-    NativeValue* lastParam = UnwarpQueryAbilityInfolastParams(info);
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnQueryAbilityInfos",
+    auto lastParam = (info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : nullptr;
+    NativeValue *result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnGetNameForUid",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
-static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
+int32_t JsBundleMgr::InitGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
+    std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo)
 {
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
+    int32_t errorCode = NAPI_ERR_NO_ERROR;
+    if (abilityInfo == nullptr) {
+        errMessage = "Get an empty pointer.";
+        return INVALID_PARAM;
     }
-    return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
+    abilityInfo->hasModuleName = false;
+    if (info.argv[info.argc-1]->TypeOf() == NATIVE_FUNCTION) {
+        abilityInfo->hasModuleName = (info.argc == ARGS_SIZE_FOUR) ? true : false;
+    } else {
+        abilityInfo->hasModuleName = (info.argc == ARGS_SIZE_THREE) ? true : false;
+    }
+    for (size_t i = 0; i < info.argc; ++i) {
+        if ((i == PARAM0) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+            ConvertFromJsValue(engine, info.argv[i], abilityInfo->bundleName);
+        } else if ((i == PARAM1) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+            if (abilityInfo->hasModuleName) {
+                ConvertFromJsValue(engine, info.argv[i], abilityInfo->moduleName);
+            } else {
+                ConvertFromJsValue(engine, info.argv[i], abilityInfo->abilityName);
+            }
+        } else if ((i == PARAM2) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+            ConvertFromJsValue(engine, info.argv[i], abilityInfo->abilityName);
+        } else if (((i == PARAM2) || (i == PARAM3)) && (info.argv[i]->TypeOf() == NATIVE_FUNCTION)) {
+            lastParam = info.argv[i];
+        } else {
+            errMessage = "type misMatch";
+            errorCode = INVALID_PARAM;
+        }
+    }
+    return errorCode;
 }
 
-NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGI("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = PARAM_TYPE_ERROR;
+    auto errorVal = std::make_shared<int32_t>(NAPI_ERR_NO_ERROR);
+    std::shared_ptr<JsAbilityInfo> abilityInfo = std::make_shared<JsAbilityInfo>();
+    if (info.argc < ARGS_SIZE_TWO || info.argc > ARGS_SIZE_FOUR) {
+        APP_LOGE("wrong number of arguments.");
+        return engine.CreateUndefined();
     }
-
-    int32_t bundleFlags = 0;
-    if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleFlags)) {
-        APP_LOGE("conversion failed!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdThreeParams(engine, info, userId);
-    auto complete = [obj = this, bundleFlags, userId, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
-        if (errCode != ERR_OK) {
-            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
+    NativeValue *lastParam = nullptr;
+    *errorVal = InitGetAbilityInfo(engine, info, lastParam, errMessage_, abilityInfo);
+    auto execute = [obj = this, info = abilityInfo, value = errorVal] () {
+        if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
+            obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
+            *value = (info == nullptr) ? INVALID_PARAM : *value;
             return;
         }
-        std::vector<BundleInfo> bundleInfos;
-        auto ret = InnerGetBundleInfos(bundleFlags, userId, bundleInfos);
-        if (!ret) {
-            task.Reject(engine, CreateJsError(engine, 1, "GetAllBundleInfo falied"));
+        auto iBundleMgr = GetBundleMgr();
+        if (iBundleMgr == nullptr) {
+            APP_LOGE("can not get iBundleMgr");
+            info->ret = false;
             return;
         }
-        task.Resolve(engine, obj->CreateBundleInfos(engine, bundleInfos));
+        if (info->hasModuleName) {
+            info->ret = iBundleMgr->GetAbilityInfo(
+                info->bundleName, info->moduleName, info->abilityName, info->abilityInfo);
+            return;
+        }
+        info->ret = iBundleMgr->GetAbilityInfo(info->bundleName, info->abilityName, info->abilityInfo);
     };
-
+    auto complete = [obj = this, value = errorVal, info = abilityInfo]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+        if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
+            obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
+            *value = (info == nullptr) ? INVALID_PARAM : *value;
+            task.RejectWithMessage(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
+            return;
+        }
+        if (!info->ret) {
+            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+                CreateJsValue(engine, engine.CreateUndefined()));
+            return;
+        }
+        task.ResolveWithErr(engine, obj->CreateAbilityInfo(engine, info->abilityInfo));
+    };
     NativeValue *result = nullptr;
-    auto callback = flagCall ? ((info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2]) : nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnGetAllBundleInfo",
-        engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
+    AsyncTask::Schedule("JsBundleMgr::OnGetAbilityInfo",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
 
+int32_t JsBundleMgr::InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
+    std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel)
+{
+    int32_t errorCode = NAPI_ERR_NO_ERROR;
+    if (abilityLabel == nullptr) {
+        errMessage = "Get an empty pointer.";
+        return INVALID_PARAM;
+    }
+    abilityLabel->hasModuleName = false;
+    if (info.argv[info.argc - 1]->TypeOf() == NATIVE_FUNCTION) {
+        abilityLabel->hasModuleName = (info.argc == ARGS_SIZE_FOUR) ? true : false;
+    } else {
+        abilityLabel->hasModuleName = (info.argc == ARGS_SIZE_THREE) ? true : false;
+    }
+    for (size_t i = 0; i < info.argc; ++i) {
+        if ((i == PARAM0) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+            ConvertFromJsValue(engine, info.argv[i], abilityLabel->bundleName);
+        } else if ((i == PARAM1) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+            if (abilityLabel->hasModuleName) {
+                ConvertFromJsValue(engine, info.argv[i], abilityLabel->moduleName);
+            } else {
+                ConvertFromJsValue(engine, info.argv[i], abilityLabel->className);
+            }
+        } else if ((i == PARAM2) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+            ConvertFromJsValue(engine, info.argv[i], abilityLabel->className);
+        } else if (((i == PARAM2) || (i == PARAM3)) && (info.argv[i]->TypeOf() == NATIVE_FUNCTION)) {
+            lastParam = info.argv[i];
+        } else {
+            errMessage = "type misMatch";
+            errorCode = INVALID_PARAM;
+        }
+    }
+    return errorCode;
+}
+
+NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGI("%{public}s is called", __FUNCTION__);
+    auto errorVal = std::make_shared<int32_t>(NAPI_ERR_NO_ERROR);
+    std::shared_ptr<JsAbilityLabel> abilityLabel = std::make_shared<JsAbilityLabel>();
+    if (info.argc < ARGS_SIZE_TWO || info.argc > ARGS_SIZE_FOUR) {
+        APP_LOGE("wrong number of arguments.");
+        return engine.CreateUndefined();
+    }
+    NativeValue *lastParam = nullptr;
+    *errorVal = InitGetAbilityLabel(engine, info, lastParam, errMessage_, abilityLabel);
+    auto execute = [obj = this, info = abilityLabel, value = errorVal] () {
+        if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
+            obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
+            *value = (info == nullptr) ? INVALID_PARAM : *value;
+            return;
+        }
+        auto iBundleMgr = GetBundleMgr();
+        if (iBundleMgr == nullptr) {
+            APP_LOGE("can not get iBundleMgr");
+            info->abilityLabel = Constants::EMPTY_STRING;
+            return;
+        }
+        std::string label;
+        if (!info->hasModuleName) {
+            info->abilityLabel = iBundleMgr->GetAbilityLabel(info->bundleName, info->className);
+            return;
+        }
+        ErrCode ret = iBundleMgr->GetAbilityLabel(
+            info->bundleName, info->moduleName, info->className, label);
+        if (ret != ERR_OK) {
+            info->abilityLabel = Constants::EMPTY_STRING;
+            return;
+        }
+        info->abilityLabel = label;
+    };
+    auto complete = [obj = this, value = errorVal, info = abilityLabel]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+        if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
+            obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
+            *value = (info == nullptr) ? INVALID_PARAM : *value;
+            task.RejectWithMessage(engine, CreateJsValue(engine, *value),
+                CreateJsValue(engine, engine.CreateUndefined()));
+            return;
+        }
+        if (info->abilityLabel == "") {
+            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+                CreateJsValue(engine, engine.CreateUndefined()));
+            return;
+        }
+        task.ResolveWithNoError(engine, CreateJsValue(engine, info->abilityLabel));
+    };
+    NativeValue *result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnGetAbilityLabel",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
