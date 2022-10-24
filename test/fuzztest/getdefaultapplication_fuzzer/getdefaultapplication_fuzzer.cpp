@@ -28,7 +28,7 @@ namespace OHOS {
         sptr<IRemoteObject> object;
         DefaultAppProxy defaultApp(object);
         BundleInfo bundleInfo;
-        defaultApp.GetDefaultApplication(reinterpret_cast<int32_t>(data), type, bundleInfo);
+        defaultApp.GetDefaultApplication(reinterpret_cast<uintptr_t>(data), type, bundleInfo);
         return true;
     }
 }
