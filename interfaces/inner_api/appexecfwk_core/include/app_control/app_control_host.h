@@ -32,7 +32,7 @@ public:
 
 private:
     template<typename T>
-    bool ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos);
+    ErrCode ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos);
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &reply);
     ErrCode HandleAddAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteAppInstallControlRule(MessageParcel& data, MessageParcel& reply);

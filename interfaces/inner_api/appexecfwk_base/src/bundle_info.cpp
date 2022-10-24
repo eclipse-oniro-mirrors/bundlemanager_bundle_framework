@@ -74,6 +74,7 @@ const std::string SIGNATUREINFO_APPID = "appId";
 const std::string SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
+const size_t BUNDLE_CAPACITY = 10240; // 10K
 }
 
 bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)
@@ -312,6 +313,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
 
 bool BundleInfo::Marshalling(Parcel &parcel) const
 {
+    CHECK_PARCEL_CAPACITY(parcel, BUNDLE_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));

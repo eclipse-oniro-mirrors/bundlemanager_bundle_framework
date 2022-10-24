@@ -101,6 +101,8 @@ public:
     void TearDown();
     static void Install(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
+    static void StreamInstall(
+        const std::vector<std::string> &bundleFilePaths, const InstallFlag installFlag, std::vector<std::string> &resvec);
     static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec);
     static void UninstallWithoutResvec(const std::string &bundleName);
     static void HapUninstall(
@@ -284,6 +286,24 @@ void BmsUninstallSystemTest::Install(
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     installerProxy->Install(bundleFilePath, installParam, statusReceiver);
+    resvec.push_back(statusReceiver->GetResultMsg());
+}
+
+void BmsUninstallSystemTest::StreamInstall(
+    const std::vector<std::string> &bundleFilePaths, const InstallFlag installFlag, std::vector<std::string> &resvec)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer failed.");
+        resvec.push_back(ERROR_INSTALL_FAILED);
+        return;
+    }
+    InstallParam installParam;
+    installParam.installFlag = installFlag;
+    installParam.userId = userId;
+    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver, nullptr);
+    installerProxy->StreamInstall(bundleFilePaths, installParam, statusReceiver);
     resvec.push_back(statusReceiver->GetResultMsg());
 }
 
@@ -1320,5 +1340,67 @@ HWTEST_F(BmsUninstallSystemTest, BMS_DFX_0500, Function | MediumTest | Level2)
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!";
     std::cout << "END BMS_DFX_0500" << std::endl;
 }
+
+/**
+ * @tc.number: BMS_StreamInstall_0100
+ * @tc.name: test uninstall bundle
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exists an app
+ *           2.install the app
+ *           3.uninstall the app
+ *           4.check directory
+ */
+HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0100, Function | MediumTest | Level1)
+{
+    std::cout << "BMS_StreamInstall_0100 start" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleName = BASE_BUNDLE_NAME + "1";
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(bundleFilePath);
+
+    StreamInstall(bundleFilePaths, InstallFlag::NORMAL, resvec);
+
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    bool res = installerProxy->DestoryBundleStreamInstaller(0);
+    EXPECT_EQ(res, true);
+
+    resvec.clear();
+    Uninstall(bundleName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "BMS_StreamInstall_0100 end" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Recover_0100
+ * @tc.name: test uninstall bundle
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exists an app
+ *           2.install the app
+ *           3.uninstall the app
+ *           4.check directory
+ */
+HWTEST_F(BmsUninstallSystemTest, BMS_Recover_0100, Function | MediumTest | Level1)
+{
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string bundleName = BASE_BUNDLE_NAME + "1";
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(bundleFilePath);
+
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.userId = userId;
+    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
+
+    bool res = installerProxy->Install(bundleFilePaths, installParam, statusReceiver);
+    bool res1 = installerProxy->Recover(bundleFilePath, installParam, statusReceiver);
+    EXPECT_EQ(res, true);
+    EXPECT_EQ(res1, true);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -66,6 +66,7 @@ const std::string HAP_MODULE_INFO_IS_LIB_ISOLATED = "isLibIsolated";
 const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string HAP_MODULE_INFO_CPU_ABI = "cpuAbi";
 const std::string HAP_MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
+const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
@@ -188,6 +189,7 @@ HapModuleInfo *HapModuleInfo::Unmarshalling(Parcel &parcel)
 
 bool HapModuleInfo::Marshalling(Parcel &parcel) const
 {
+    CHECK_PARCEL_CAPACITY(parcel, MODULE_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(package));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));

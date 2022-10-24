@@ -23,11 +23,16 @@ ohos_shared_library("launcherbundlemanager") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-  sources = [
-    "js_launcher_service.cpp",
-    "launcher_bundle_manager.cpp",
-    "native_module.cpp",
-  ]
+  sources = [ "native_module.cpp" ]
+
+  if (bundle_framework_launcher) {
+    sources += [
+      "js_launcher_service.cpp",
+      "launcher_bundle_manager.cpp",
+    ]
+  } else {
+    sources += [ "launcher_bundle_manager_unsupported.cpp" ]
+  }
 
   deps = [
     "${common_path}:libappexecfwk_common",

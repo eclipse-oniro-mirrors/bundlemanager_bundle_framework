@@ -41,7 +41,6 @@ namespace {
 constexpr size_t ARGS_MAX_COUNT = 10;
 constexpr int32_t PARAM3 = 3;
 const char* WRONG_PARAM = "wrong param type";
-const char* OUT_OF_MEMORARY = "out of memorary";
 }
 
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
@@ -620,7 +619,6 @@ napi_value CompressFile(napi_env env, napi_callback_info info)
     AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
     if (asyncZipCallbackInfo == nullptr) {
         APP_LOGE("asyncZipCallbackInfo nullptr!");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR, OUT_OF_MEMORARY);
         return nullptr;
     }
     asyncZipCallbackInfo->param = param;
@@ -679,7 +677,6 @@ napi_value DecompressFile(napi_env env, napi_callback_info info)
     }
     AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
     if (asyncZipCallbackInfo == nullptr) {
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR, OUT_OF_MEMORARY);
         return nullptr;
     }
     asyncZipCallbackInfo->param = param;

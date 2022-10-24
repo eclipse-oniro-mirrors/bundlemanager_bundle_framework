@@ -1699,6 +1699,12 @@ void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInf
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
 
+void InnerBundleInfo::UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo)
+{
+    baseApplicationInfo_->arkNativeFileAbi = applicationInfo.arkNativeFileAbi;
+    baseApplicationInfo_->arkNativeFilePath = applicationInfo.arkNativeFilePath;
+}
+
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
     SetKeepAlive(applicationInfo.keepAlive);
@@ -1889,23 +1895,17 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         if (info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
-        if (((static_cast<uint32_t>(flags) &
+        if ((static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ||
-            ((static_cast<uint32_t>(flags) &
-            static_cast<int32_t>(GetApplicationFlag::GET_ALL_APPLICATION_INFO)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_ALL_APPLICATION_INFO))) {
+            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
             std::transform(info.second.requestPermissions.begin(),
                 info.second.requestPermissions.end(),
                 std::back_inserter(appInfo.permissions),
                 [](const auto &p) { return p.name; });
         }
-        if (((static_cast<uint32_t>(flags) &
+        if ((static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ||
-            ((static_cast<uint32_t>(flags) &
-            static_cast<int32_t>(GetApplicationFlag::GET_ALL_APPLICATION_INFO)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_ALL_APPLICATION_INFO))) {
+            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) {
             bool isModuleJson = info.second.isModuleJson;
             if (!isModuleJson && info.second.metaData.customizeData.size() > 0) {
                 appInfo.metaData[info.second.moduleName] = info.second.metaData.customizeData;
@@ -2040,8 +2040,8 @@ void InnerBundleInfo::ProcessBundleFlags(
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId);
     if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
         == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
-        bundleInfo.signatureInfo.appId = bundleInfo.appId;
-        bundleInfo.signatureInfo.fingerprint =baseApplicationInfo_->fingerprint;
+        bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
+        bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
     }
 }
 
@@ -2121,13 +2121,16 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
 
 void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const
 {
+    hapModuleInfo.abilityInfos.clear();
     if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY))
         != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY)) {
-        hapModuleInfo.abilityInfos.clear();
         return;
     }
     APP_LOGD("Get bundleInfo with abilities.");
     for (auto &ability : baseAbilityInfos_) {
+        if (ability.second.moduleName != hapModuleInfo.moduleName) {
+            continue;
+        }
         bool isEnabled = IsAbilityEnabled(ability.second, userId);
         if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
@@ -2148,15 +2151,15 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
 
 void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const
 {
+    hapModuleInfo.extensionInfos.clear();
     if ((static_cast<uint32_t>(flags) &
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY))
         != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY)) {
-        hapModuleInfo.extensionInfos.clear();
         return;
     }
     APP_LOGD("Get bundleInfo with extensionAbilities.");
     for (const auto &extensionInfo : baseExtensionInfos_) {
-        if (!extensionInfo.second.enabled) {
+        if (extensionInfo.second.moduleName != hapModuleInfo.moduleName || !extensionInfo.second.enabled) {
             continue;
         }
         ExtensionAbilityInfo info = extensionInfo.second;
@@ -2479,7 +2482,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int3
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
         APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name) != disabledAbilities.end()) {
@@ -2490,11 +2493,8 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int3
     return ERR_OK;
 }
 
-bool InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName,
-                                        const std::string &moduleName,
-                                        const std::string &abilityName,
-                                        bool isEnabled,
-                                        int32_t userId)
+ErrCode InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, bool isEnabled, int32_t userId)
 {
     APP_LOGD("SetAbilityEnabled :%{public}s, %{public}s, %{public}s, %{public}d",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
@@ -2505,7 +2505,7 @@ bool InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName,
             auto infoItem = innerBundleUserInfos_.find(key);
             if (infoItem == innerBundleUserInfos_.end()) {
                 APP_LOGE("SetAbilityEnabled find innerBundleUserInfo failed");
-                return false;
+                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
             }
             auto iter = std::find(infoItem->second.bundleUserInfo.disabledAbilities.begin(),
                                   infoItem->second.bundleUserInfo.disabledAbilities.end(),
@@ -2519,10 +2519,11 @@ bool InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName,
                     infoItem->second.bundleUserInfo.disabledAbilities.push_back(abilityName);
                 }
             }
-            return true;
+            return ERR_OK;
         }
     }
-    return false;
+    APP_LOGE("SetAbilityEnabled find abilityInfo failed");
+    return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
 }
 
 void InnerBundleInfo::RemoveDuplicateName(std::vector<std::string> &name) const
@@ -2578,15 +2579,18 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
     return requestPermissions;
 }
 
-void InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
+ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        return;
+        APP_LOGE("SetApplicationEnabled can not find:%{public}s bundleUserInfo in userId: %{public}d",
+            GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     infoItem->second.bundleUserInfo.enabled = enabled;
+    return ERR_OK;
 }
 
 const std::string &InnerBundleInfo::GetCurModuleName() const

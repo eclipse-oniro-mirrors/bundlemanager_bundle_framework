@@ -22,6 +22,7 @@
 #include "iremote_broker.h"
 
 #include "appexecfwk_errors.h"
+#include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
 #include "installd/installd_constants.h"
 
@@ -46,6 +47,12 @@ public:
      */
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi) = 0;
+    /**
+     * @brief Extract the files.
+     * @param extractParam Indicates the extractParam.
+     * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractFiles(const ExtractParam &extractParam) = 0;
     /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
@@ -201,7 +208,8 @@ protected:
         IS_EXIST_DIR,
         IS_DIR_EMPTY,
         OBTAIN_QUICK_FIX_DIR,
-        COPY_FILES
+        COPY_FILES,
+        EXTRACT_FILES
     };
 };
 
