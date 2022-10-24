@@ -99,6 +99,7 @@ const std::string JOSN_KEY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 const std::string JOSN_KEY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 const std::string JOSN_KEY_UID = "uid";
 const std::string JOSN_KEY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -256,6 +257,7 @@ AbilityInfo *AbilityInfo::Unmarshalling(Parcel &parcel)
 
 bool AbilityInfo::Marshalling(Parcel &parcel) const
 {
+    CHECK_PARCEL_CAPACITY(parcel, ABILITY_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));

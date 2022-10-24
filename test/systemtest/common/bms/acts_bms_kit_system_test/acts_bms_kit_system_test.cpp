@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_event_callback_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_host.h"
 #include "bundle_pack_info.h"
@@ -63,6 +64,35 @@ constexpr int32_t DISPOSED_STATUS = 10;
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleEventCallbackImpl : public BundleEventCallbackHost {
+public:
+    BundleEventCallbackImpl();
+    virtual ~BundleEventCallbackImpl() override;
+    virtual void OnReceiveEvent(const EventFwk::CommonEventData eventData) override;
+
+private:
+    DISALLOW_COPY_AND_MOVE(BundleEventCallbackImpl);
+};
+
+BundleEventCallbackImpl::BundleEventCallbackImpl()
+{
+    APP_LOGI("create bundle event instance");
+}
+
+BundleEventCallbackImpl::~BundleEventCallbackImpl()
+{
+    APP_LOGI("destroy bundle event instance");
+}
+
+void BundleEventCallbackImpl::OnReceiveEvent(const EventFwk::CommonEventData eventData)
+{
+    const Want &want = eventData.GetWant();
+    std::string action = want.GetAction();
+    std::string bundleName = want.GetElement().GetBundleName();
+    std::cout << "action : " << action << std::endl;
+    std::cout << "bundleName : " << bundleName << std::endl;
+}
+
 class BundleStatusCallbackImpl : public BundleStatusCallbackHost {
 public:
     BundleStatusCallbackImpl();
@@ -2121,6 +2151,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0100, Function | MediumTest 
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
+        int32_t flag = 0;
 
         BundleInfo bundleInfo;
         sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -2129,7 +2160,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0100, Function | MediumTest 
             EXPECT_EQ(bundleMgrProxy, nullptr);
         }
         bool getInfoResult =
-            bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, 0, bundleInfo);
+            bundleMgrProxy->GetBundleArchiveInfo(hapFilePath, flag, bundleInfo);
         EXPECT_TRUE(getInfoResult);
         EXPECT_EQ(bundleInfo.name, appName);
         std::string version = "1.0";
@@ -2234,6 +2265,30 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0300, Function | MediumTest 
     }
     EXPECT_TRUE(result);
     std::cout << "END GetBundleArchiveInfo_0300" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfo_0400
+ * @tc.name: test query archive information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.query archive information failed without empty path
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfo_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleArchiveInfo_0400" << std::endl;
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    int32_t flag = 0;
+
+    BundleInfo bundleInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool getInfoResult =
+        bundleMgrProxy->GetBundleArchiveInfo("", flag, bundleInfo);
+    EXPECT_FALSE(getInfoResult);
+    std::cout << "END GetBundleArchiveInfo_0400" << std::endl;
 }
 
 /**
@@ -5862,6 +5917,62 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0200, Function | Sma
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfosV9_0300
+ * @tc.name: test QueryExtensionAbilityInfosV9 proxy
+ * @tc.desc: 1.system run normally
+ *           2.return ERR_OK
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    Want want;
+    want.SetAction("action.system.home");
+    int32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0400
+ * @tc.name: test QueryExtensionAbilityInfosV9 proxy
+ * @tc.desc: 1.system run normally
+ *           2.return ERR_OK
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0400, Function | SmallTest | Level1)
+{
+    auto name = std::string("QueryExtensionAbilityInfos_0001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = "/data/test/bms_bundle/bundleClient1.hap";
+    std::vector<std::string> resvec;
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    std::vector<ExtensionAbilityInfo> infos;
+    OHOS::AAFwk::Want want;
+    ElementName element;
+    element.SetBundleName("com.example.ohosproject.hmservice");
+    element.SetModuleName("entry_phone");
+    element.SetAbilityName("Form");
+    want.SetElement(element);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, ExtensionAbilityType::FORM,
+        ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT, USERID, infos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(1, infos.size());
+
+    resvec.clear();
+    Uninstall("com.example.ohosproject.hmservice", resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetUdidByNetworkId_0100" << std::endl;
+}
+
+/**
  * @tc.number: UpgradeAtomicService_0100
  * @tc.name: test UpgradeAtomicService proxy
  * @tc.desc: 1.system run normally
@@ -6238,25 +6349,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0100, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfosV9_0300
- * @tc.name: test QueryExtensionAbilityInfosV9 proxy
- * @tc.desc: 1.system run normally
- *           2.return ERR_OK
- */
-HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    Want want;
-    want.SetAction("action.system.home");
-    int32_t flags = 0;
-    int32_t userId = 100;
-    std::vector<ExtensionAbilityInfo> extensionInfos;
-    ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: GetBundleArchiveInfoV9_0100
  * @tc.name: test query archive information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -6289,7 +6381,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0100, Function | MediumTes
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0200, Function | MediumTest | Level1)
 {
-    std::cout << "START GetBundleArchiveInfo_0100" << std::endl;
+    std::cout << "START GetBundleArchiveInfoV9_0200" << std::endl;
     BundleInfo bundleInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -6299,7 +6391,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0200, Function | MediumTes
     ErrCode getInfoResult =
         bundleMgrProxy->GetBundleArchiveInfoV9("", 0, bundleInfo);
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
-    std::cout << "END GetBundleArchiveInfo_0100" << std::endl;
+    std::cout << "END GetBundleArchiveInfoV9_0200" << std::endl;
 }
 
 /**
@@ -6318,7 +6410,88 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0200, Function | MediumTest | L
 
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9("", shortcutInfos);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: event_callback_0100
+ * @tc.name: 1.test RegisterBundleEventCallback interface
+ *           2.test UnregisterBundleEventCallback interface
+ * @tc.desc: 1. success condition
+ */
+HWTEST_F(ActsBmsKitSystemTest, event_callback_0100, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test event_callback_0100" << std::endl;
+    int32_t originUid = geteuid();
+    seteuid(Constants::FOUNDATION_UID);
+
+    sptr<BundleEventCallbackImpl> callback = (new (std::nothrow) BundleEventCallbackImpl());
+    EXPECT_NE(callback, nullptr);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
+    EXPECT_TRUE(re);
+
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    CommonTool commonTool;
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
+    EXPECT_TRUE(re);
+
+    seteuid(originUid);
+    std::cout << "test event_callback_0100 done" << std::endl;
+}
+
+/**
+ * @tc.number: event_callback_0200
+ * @tc.name: 1.test RegisterBundleEventCallback interface
+ *           2.test UnregisterBundleEventCallback interface
+ * @tc.desc: 1. failed condition, uid verify failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, event_callback_0200, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test event_callback_0200" << std::endl;
+    sptr<BundleEventCallbackImpl> callback = (new (std::nothrow) BundleEventCallbackImpl());
+    EXPECT_NE(callback, nullptr);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+
+    re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+    std::cout << "test event_callback_0200 done" << std::endl;
+}
+
+/**
+ * @tc.number: event_callback_0300
+ * @tc.name: 1.test RegisterBundleEventCallback interface
+ *           2.test UnregisterBundleEventCallback interface
+ * @tc.desc: 1. failed condition, invalid param
+ */
+HWTEST_F(ActsBmsKitSystemTest, event_callback_0300, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test event_callback_0300" << std::endl;
+    sptr<BundleEventCallbackImpl> callback = nullptr;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+
+    re = bundleMgrProxy->UnregisterBundleEventCallback(callback);
+    EXPECT_FALSE(re);
+    std::cout << "test event_callback_0300 done" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -23,10 +23,12 @@ ohos_shared_library("appcontrol") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-  sources = [
-    "js_app_control.cpp",
-    "native_module.cpp",
-  ]
+  sources = [ "native_module.cpp" ]
+  if (bundle_framework_app_control) {
+    sources += [ "js_app_control.cpp" ]
+  } else {
+    sources += [ "js_app_control_unsupported.cpp" ]
+  }
 
   deps = [
     "${common_path}:libappexecfwk_common",

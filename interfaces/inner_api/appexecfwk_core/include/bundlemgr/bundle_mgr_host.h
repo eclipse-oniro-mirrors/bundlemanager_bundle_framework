@@ -381,6 +381,10 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleRegisterBundleStatusCallback(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleUnregisterBundleEventCallback(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the ClearBundleStatusCallback function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -629,6 +633,9 @@ private:
      */
     template<typename T>
     bool WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply);
+
+    template<typename T>
+    bool WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply);
     /**
      * @brief Write a parcelabe vector objects to ashmem.
      * @param parcelableVector Indicates the objects to be write.

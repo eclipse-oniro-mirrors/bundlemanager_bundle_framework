@@ -66,6 +66,33 @@ bool ParseStr(const char *buf, const int itemLen, int index, std::string &result
     result = str;
     return true;
 }
+
+bool SendData(void *&buffer, size_t size, const void *data)
+{
+    if (data == nullptr) {
+        APP_LOGE("data is nullptr");
+        return false;
+    }
+
+    if (size <= 0) {
+        APP_LOGE("size is invalid");
+        return false;
+    }
+
+    buffer = malloc(size);
+    if (buffer == nullptr) {
+        APP_LOGE("buffer malloc failed");
+        return false;
+    }
+
+    if (memcpy_s(buffer, size, data, size) != EOK) {
+        free(buffer);
+        APP_LOGE("memcpy_s failed");
+        return false;
+    }
+
+    return true;
+}
 }
 BundleMgrProxy::BundleMgrProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IBundleMgr>(impl)
 {
@@ -228,17 +255,8 @@ bool BundleMgrProxy::GetApplicationInfos(
         APP_LOGE("fail to GetApplicationInfos due to write userId error");
         return false;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return false;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("host returns error");
-        return false;
-    }
-    if (!GetParcelableInfosFromAshmem<ApplicationInfo>(reply, appInfos)) {
+    if (!GetVectorFromParcelIntelligent<ApplicationInfo>(
+        IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS, data, appInfos)) {
         APP_LOGE("failed to GetApplicationInfos from server");
         return false;
     }
@@ -263,23 +281,8 @@ ErrCode BundleMgrProxy::GetApplicationInfosV9(
         APP_LOGE("fail to GetApplicationInfosV9 due to write userId error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    auto res = reply.ReadInt32();
-    if (res != ERR_OK) {
-        APP_LOGE("host returns error, error code: %{public}d.", res);
-        return res;
-    }
-
-    if (!GetParcelableInfosFromAshmem<ApplicationInfo>(reply, appInfos)) {
-        APP_LOGE("failed to GetApplicationInfosV9 from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return GetVectorFromParcelIntelligentWithErrCode<ApplicationInfo>(
+        IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, appInfos);
 }
 
 bool BundleMgrProxy::GetBundleInfo(
@@ -471,17 +474,8 @@ bool BundleMgrProxy::GetBundleInfos(
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
         return false;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return false;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("host returns error");
-        return false;
-    }
-    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
+    if (!GetVectorFromParcelIntelligent<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_INFOS, data, bundleInfos)) {
         APP_LOGE("fail to GetBundleInfos from server");
         return false;
     }
@@ -506,17 +500,8 @@ bool BundleMgrProxy::GetBundleInfos(
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
         return false;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return false;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("host returns error");
-        return false;
-    }
-    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
+    if (!GetVectorFromParcelIntelligent<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS, data, bundleInfos)) {
         APP_LOGE("fail to GetBundleInfos from server");
         return false;
     }
@@ -540,23 +525,8 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
         APP_LOGE("fail to GetBundleInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    auto res = reply.ReadInt32();
-    if (res != ERR_OK) {
-        APP_LOGE("host returns error, error code: %{public}d.", res);
-        return res;
-    }
-
-    if (!GetParcelableInfosFromAshmem<BundleInfo>(reply, bundleInfos)) {
-        APP_LOGE("failed to GetBundleInfosV9 from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, bundleInfos);
 }
 
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
@@ -996,17 +966,8 @@ bool BundleMgrProxy::QueryAbilityInfos(
         APP_LOGE("fail to QueryAbilityInfos mutiparam due to write userId error");
         return false;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return false;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("host returns error");
-        return false;
-    }
-    if (!GetParcelableInfosFromAshmem<AbilityInfo>(reply, abilityInfos)) {
+    if (!GetVectorFromParcelIntelligent<AbilityInfo>(
+        IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM, data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos mutiparam from server");
         return false;
     }
@@ -1034,22 +995,8 @@ ErrCode BundleMgrProxy::QueryAbilityInfosV9(
         APP_LOGE("write userId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    ErrCode ret = reply.ReadInt32();
-    if (ret != ERR_OK) {
-        APP_LOGE("host reply errCode : %{public}d", ret);
-        return ret;
-    }
-    if (!GetParcelableInfosFromAshmem<AbilityInfo>(reply, abilityInfos)) {
-        APP_LOGE("getParcelableInfosFromAshmem failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
+    return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
+        IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, data, abilityInfos);
 }
 
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
@@ -1068,17 +1015,8 @@ bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std:
         APP_LOGE("fail to QueryAbilityInfo due to write want fail");
         return false;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, data, reply)) {
-        APP_LOGE("sendTransactCmd failed");
-        return false;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("host returns error");
-        return false;
-    }
-    if (!GetParcelableInfosFromAshmem<AbilityInfo>(reply, abilityInfos)) {
+    if (!GetVectorFromParcelIntelligent<AbilityInfo>(
+        IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos from server");
         return false;
     }
@@ -1206,7 +1144,7 @@ ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std
     APP_LOGI("begin to GetAbilityLabel of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetAbilityLabel due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -1628,6 +1566,60 @@ bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallba
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::REGISTER_BUNDLE_STATUS_CALLBACK, data, reply)) {
         APP_LOGE("fail to RegisterBundleStatusCallback from server");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to RegisterBundleEventCallback");
+    if (!bundleEventCallback) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to RegisterBundleEventCallback due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+        APP_LOGE("write BundleEventCallback failed");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+        APP_LOGE("fail to RegisterBundleEventCallback from server");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+bool BundleMgrProxy::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to UnregisterBundleEventCallback");
+    if (!bundleEventCallback) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to UnregisterBundleEventCallback due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+        APP_LOGE("fail to UnregisterBundleEventCallback, for write parcel failed");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+        APP_LOGE("fail to UnregisterBundleEventCallback from server");
         return false;
     }
     return reply.ReadBool();
@@ -3141,7 +3133,7 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
     APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetMediaData due to params empty");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
@@ -3354,6 +3346,83 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
     }
     APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
     return res;
+}
+
+template<typename T>
+bool BundleMgrProxy::GetVectorFromParcelIntelligent(
+    IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos)
+{
+    APP_LOGD("GetParcelableInfos start");
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        return false;
+    }
+
+    if (!reply.ReadBool()) {
+        APP_LOGE("readParcelableInfo failed");
+        return false;
+    }
+
+    if (InnerGetVectorFromParcelIntelligent<T>(reply, parcelableInfos) != ERR_OK) {
+        APP_LOGE("InnerGetVectorFromParcelIntelligent failed");
+        return false;
+    }
+
+    return true;
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::GetVectorFromParcelIntelligentWithErrCode(
+    IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+        return res;
+    }
+
+    return InnerGetVectorFromParcelIntelligent<T>(reply, parcelableInfos);
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
+    MessageParcel &reply, std::vector<T> &parcelableInfos)
+{
+    size_t dataSize = static_cast<size_t>(reply.ReadInt32());
+    if (dataSize == 0) {
+        APP_LOGW("Parcel no data");
+        return ERR_OK;
+    }
+
+    void *buffer = nullptr;
+    if (!SendData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        APP_LOGE("Fail to read raw data, length = %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("Fail to ParseFrom");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t infoSize = tempParcel.ReadInt32();
+    for (int32_t i = 0; i < infoSize; i++) {
+        std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("Read Parcelable infos failed");
+            return false;
+        }
+        parcelableInfos.emplace_back(*info);
+    }
+
+    return ERR_OK;
 }
 
 template <typename T>

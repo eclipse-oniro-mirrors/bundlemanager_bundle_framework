@@ -58,6 +58,8 @@ static bool ParseStringPropertyFromObject(napi_env env, napi_value args, const s
 static bool ParsePropertyFromObject(napi_env env, napi_value args, const PropertyInfo &propertyInfo,
     napi_value &property);
 
+static bool ParseBool(napi_env env, napi_value value, bool& result);
+
 static bool ParseString(napi_env env, napi_value value, std::string& result);
 
 static napi_value ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args);

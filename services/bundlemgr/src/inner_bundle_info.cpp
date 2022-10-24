@@ -1699,6 +1699,12 @@ void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInf
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
 
+void InnerBundleInfo::UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo)
+{
+    baseApplicationInfo_->arkNativeFileAbi = applicationInfo.arkNativeFileAbi;
+    baseApplicationInfo_->arkNativeFilePath = applicationInfo.arkNativeFilePath;
+}
+
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
     SetKeepAlive(applicationInfo.keepAlive);
@@ -2473,7 +2479,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int3
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
         APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name) != disabledAbilities.end()) {
@@ -2484,11 +2490,8 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int3
     return ERR_OK;
 }
 
-bool InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName,
-                                        const std::string &moduleName,
-                                        const std::string &abilityName,
-                                        bool isEnabled,
-                                        int32_t userId)
+ErrCode InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, bool isEnabled, int32_t userId)
 {
     APP_LOGD("SetAbilityEnabled :%{public}s, %{public}s, %{public}s, %{public}d",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
@@ -2499,7 +2502,7 @@ bool InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName,
             auto infoItem = innerBundleUserInfos_.find(key);
             if (infoItem == innerBundleUserInfos_.end()) {
                 APP_LOGE("SetAbilityEnabled find innerBundleUserInfo failed");
-                return false;
+                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
             }
             auto iter = std::find(infoItem->second.bundleUserInfo.disabledAbilities.begin(),
                                   infoItem->second.bundleUserInfo.disabledAbilities.end(),
@@ -2513,43 +2516,11 @@ bool InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName,
                     infoItem->second.bundleUserInfo.disabledAbilities.push_back(abilityName);
                 }
             }
-            return true;
+            return ERR_OK;
         }
     }
-    return false;
-}
-
-ErrCode InnerBundleInfo::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
-{
-    APP_LOGD("SetAbilityEnabled :%{public}s, %{public}s, %{public}s, %{public}d",
-        abilityInfo.bundleName.c_str(), abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), userId);
-    std::string keyName;
-    keyName.append(abilityInfo.bundleName).append(".")
-        .append(abilityInfo.moduleName).append(".").append(abilityInfo.name);
-    auto it = baseAbilityInfos_.find(keyName);
-    if (it == baseAbilityInfos_.end()) {
-        APP_LOGE("SetAbilityEnabled find abilityInfos failed");
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-    auto &key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
-    auto infoItem = innerBundleUserInfos_.find(key);
-    if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetAbilityEnabled find innerBundleUserInfo failed");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-    auto iter = std::find(infoItem->second.bundleUserInfo.disabledAbilities.begin(),
-                          infoItem->second.bundleUserInfo.disabledAbilities.end(),
-                          abilityInfo.name);
-    if (iter != infoItem->second.bundleUserInfo.disabledAbilities.end()) {
-        if (isEnabled) {
-            infoItem->second.bundleUserInfo.disabledAbilities.erase(iter);
-        }
-    } else {
-        if (!isEnabled) {
-            infoItem->second.bundleUserInfo.disabledAbilities.push_back(abilityInfo.name);
-        }
-    }
-    return ERR_OK;
+    APP_LOGE("SetAbilityEnabled find abilityInfo failed");
+    return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
 }
 
 void InnerBundleInfo::RemoveDuplicateName(std::vector<std::string> &name) const
@@ -2610,9 +2581,9 @@ ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("bundleName:%{public}s, SetApplicationEnabled find userId:%{public}d userInfo failed:",
+        APP_LOGE("SetApplicationEnabled can not find:%{public}s bundleUserInfo in userId: %{public}d",
             GetBundleName().c_str(), userId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     infoItem->second.bundleUserInfo.enabled = enabled;

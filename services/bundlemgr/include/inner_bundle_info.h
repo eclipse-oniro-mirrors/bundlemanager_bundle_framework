@@ -477,8 +477,8 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
-            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+            APP_LOGE("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
         return ERR_OK;
@@ -1106,19 +1106,10 @@ public:
      * @param abilityName Indicates the abilityName.
      * @param isEnabled Indicates the ability enabled.
      * @param userId Indicates the user id.
-     * @return Return whether the application is enabled.
-     */
-    bool SetAbilityEnabled(
-        const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
-        bool isEnabled, int32_t userId);
-    /**
-     * @brief Set ability enabled.
-     * @param AbilityInfo Indicates the AbilityInfo.
-     * @param isEnabled Indicates the ability enabled.
-     * @param userId Indicates the user id.
      * @return Returns ERR_OK if the setAbilityEnabled is successfully; returns error code otherwise.
      */
-    ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId);
+    ErrCode SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, bool isEnabled, int32_t userId);
     /**
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.
@@ -1678,6 +1669,7 @@ public:
     bool FetchNativeSoAttrs(
         const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
+    void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
 
 private:

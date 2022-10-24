@@ -100,6 +100,7 @@ const std::string APPLICATION_MULTI_PROJECTS = "multiProjects";
 const std::string APPLICATION_CROWDTEST_DEADLINE = "crowdtestDeadline";
 const std::string APPLICATION_APP_QUICK_FIX = "appQuickFix";
 const std::string RESOURCE_ID = "id";
+const size_t APPLICATION_CAPACITY = 10240; // 10K
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -383,6 +384,7 @@ ApplicationInfo *ApplicationInfo::Unmarshalling(Parcel &parcel)
 bool ApplicationInfo::Marshalling(Parcel &parcel) const
 {
     APP_LOGD("ApplicationInfo::Marshalling called");
+    CHECK_PARCEL_CAPACITY(parcel, APPLICATION_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);

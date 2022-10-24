@@ -521,6 +521,7 @@ private:
     bool CheckHapLibsWithPatchLibs(
         const std::string &nativeLibraryPath, const std::string &hqfLibraryPath) const;
     ErrCode ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath);
+    ErrCode DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

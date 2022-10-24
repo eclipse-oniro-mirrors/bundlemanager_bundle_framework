@@ -45,6 +45,13 @@ namespace AppExecFwk {
             return;                                                       \
         }                                                                 \
     } while (0)
+
+#define CHECK_PARCEL_CAPACITY(parcel, capacity)                               \
+    while ((parcel).GetMaxCapacity() - (parcel).GetDataSize() < (capacity)) { \
+        size_t newMaxCapacity = (parcel).GetMaxCapacity() * 2;                \
+        APP_LOGD("parcel capacity expansion %{public}zu", newMaxCapacity);    \
+        (parcel).SetMaxCapacity(newMaxCapacity);                              \
+    }
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_PARCEL_MACRO_H

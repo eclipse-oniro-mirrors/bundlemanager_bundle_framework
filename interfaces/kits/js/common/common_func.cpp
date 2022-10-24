@@ -74,6 +74,8 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST, ERROR_PROFILE_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_APPLICATION_DISABLED, ERROR_BUNDLE_IS_DISABLED },
     { ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING, ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING },
+    { ERR_BUNDLE_MANAGER_ABILITY_DISABLED, ERROR_ABILITY_IS_DISABLED },
+    { ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA, ERROR_CLEAR_CACHE_FILES_UNSUPPORTED },
     { ERR_ZLIB_SRC_FILE_DISABLED, ERR_ZLIB_SRC_FILE_INVALID },
     { ERR_ZLIB_DEST_FILE_DISABLED, ERR_ZLIB_DEST_FILE_INVALID }
 };
@@ -223,6 +225,21 @@ bool CommonFunc::ParsePropertyFromObject(napi_env env, napi_value args, const Pr
     }
     if (property == nullptr) {
         APP_LOGE("property is nullptr");
+        return false;
+    }
+    return true;
+}
+
+bool CommonFunc::ParseBool(napi_env env, napi_value value, bool& result)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, value, &valueType);
+    if (valueType != napi_boolean) {
+        APP_LOGE("ParseBool type mismatch!");
+        return false;
+    }
+    if (napi_get_value_bool(env, value, &result) != napi_ok) {
+        APP_LOGE("napi_get_value_bool error");
         return false;
     }
     return true;

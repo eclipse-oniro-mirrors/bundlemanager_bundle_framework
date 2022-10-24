@@ -57,6 +57,7 @@ constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR =
     "BusinessError 401: Parameter error. The number of parameters is incorrect.";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* ERROR_MSG_BUNDLE_IS_DISABLED = "The specified bundle is disabled.";
+constexpr const char* ERROR_MSG_ABILITY_IS_DISABLED = "The specified ability is disabled.";
 constexpr const char* ERROR_MSG_PROFILE_NOT_EXIST = "No profile in the hap.";
 constexpr const char* ERROR_INVALID_UID_MSG = "The specified uid is invalid.";
 constexpr const char* ERROR_INVALID_HAP_PATH_MSG = "The input source file is invalid.";
@@ -64,6 +65,7 @@ constexpr const char* ERROR_DEFAULT_APP_NOT_EXIST_MSG = "The specified default a
 constexpr const char* ERROR_INVALID_TYPE_MSG = "The specified type is invalid.";
 constexpr const char* ERROR_MSG_DISTRIBUTED_SERVICE_NOT_RUNNING = "The distributed service is not running.";
 constexpr const char* ERROR_ABILITY_AND_TYPE_MISMATCH_MSG = "The specified ability and type do not match.";
+constexpr const char* ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED = "The specified bundle does not support clearing cache files.";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_PARAM_CHECK_ERROR, ERR_MSG_PARAM_TYPE_ERROR },
@@ -88,13 +90,15 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERR_ZLIB_SRC_FILE_INVALID, ERR_ZLIB_SRC_FILE_INVALID_MSG },
     { ERR_ZLIB_DEST_FILE_INVALID, ERR_ZLIB_DEST_FILE_INVALID_MSG },
     { ERROR_BUNDLE_IS_DISABLED, ERROR_MSG_BUNDLE_IS_DISABLED },
+    { ERROR_ABILITY_IS_DISABLED, ERROR_MSG_ABILITY_IS_DISABLED },
     { ERROR_PROFILE_NOT_EXIST, ERROR_MSG_PROFILE_NOT_EXIST },
     { ERROR_INVALID_UID, ERROR_INVALID_UID_MSG },
     { ERROR_INVALID_HAP_PATH, ERROR_INVALID_HAP_PATH_MSG },
     { ERROR_DEFAULT_APP_NOT_EXIST, ERROR_DEFAULT_APP_NOT_EXIST_MSG },
     { ERROR_INVALID_TYPE, ERROR_INVALID_TYPE_MSG },
     { ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING, ERROR_MSG_DISTRIBUTED_SERVICE_NOT_RUNNING },
-    { ERROR_ABILITY_AND_TYPE_MISMATCH, ERROR_ABILITY_AND_TYPE_MISMATCH_MSG }
+    { ERROR_ABILITY_AND_TYPE_MISMATCH, ERROR_ABILITY_AND_TYPE_MISMATCH_MSG },
+    { ERROR_CLEAR_CACHE_FILES_UNSUPPORTED, ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED }
 };
 } // namespace
 
