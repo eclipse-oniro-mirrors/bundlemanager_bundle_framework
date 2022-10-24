@@ -41,9 +41,6 @@ const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
 const std::string EMPTY_STRING = "";
 // install message
-constexpr const char* MSG_INSTALL_SUCCESSFULLY = "Install Successfully";
-constexpr const char* MSG_UNINSTALL_SUCCESSFULLY = "Uninstall Successfully";
-constexpr const char* MSG_RECOVER_SUCCESSFULLY = "Recover Successfully";
 constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
@@ -492,18 +489,6 @@ static std::string GetFunctionName(const InstallOption &option)
     return EMPTY_STRING;
 }
 
-static std::string GetOperationMsg(const InstallOption &option)
-{
-    if (option == InstallOption::INSTALL) {
-        return MSG_INSTALL_SUCCESSFULLY;
-    } else if (option == InstallOption::RECOVER) {
-        return MSG_RECOVER_SUCCESSFULLY;
-    } else if (option == InstallOption::UNINSTALL) {
-        return MSG_UNINSTALL_SUCCESSFULLY;
-    }
-    return EMPTY_STRING;
-}
-
 void OperationCompleted(napi_env env, napi_status status, void *data)
 {
     AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
@@ -511,13 +496,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[SECOND_PARAM]));
     ConvertInstallResult(callbackPtr->installResult);
-    napi_value nResultMsg;
-    if (callbackPtr->installResult.resultCode == SUCCESS) {
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, GetOperationMsg(callbackPtr->option).c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-        NAPI_CALL_RETURN_VOID(env,
-            napi_set_named_property(env, result[SECOND_PARAM], "Message", nResultMsg));
-    } else {
+    if (callbackPtr->installResult.resultCode != SUCCESS) {
         result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
             GetFunctionName(callbackPtr->option), INSTALL_PERMISSION);
     }
