@@ -75,6 +75,11 @@ public:
     ErrCode GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo);
     ErrCode InstallBundles(const std::vector<std::string> &filePaths, bool &&flag) const;
     ErrCode UninstallBundle(const std::string &bundleName) const;
+    ErrCode GetSandboxAppInfo(
+        const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info);
+    int32_t GenerateSandboxAppIndex(const std::string &bundleName);
+    void SaveSandboxAppInfo(const InnerBundleInfo &info, const int32_t &appIndex);
+    void DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex);
     void CheckPathAreExisted(const std::string &bundleName, int32_t appIndex);
     void CheckPathAreNonExisted(const std::string &bundleName, int32_t appIndex);
 
@@ -86,6 +91,8 @@ private:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_ = nullptr;
+    std::shared_ptr<BundleSandboxAppHelper> bundleSandboxAppHelper_ =
+        DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
 };
 
 BmsSandboxAppTest::BmsSandboxAppTest()
@@ -166,6 +173,12 @@ ErrCode BmsSandboxAppTest::GetInnerBundleInfoByUid(const int32_t &uid, InnerBund
     return sandboxDataMgr_->GetInnerBundleInfoByUid(uid, innerBundleInfo);
 }
 
+ErrCode BmsSandboxAppTest::GetSandboxAppInfo(
+    const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info)
+{
+    return bundleSandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, info);
+}
+
 bool BmsSandboxAppTest::GetSandboxDataMgr()
 {
     if (!sandboxDataMgr_) {
@@ -237,6 +250,21 @@ ErrCode BmsSandboxAppTest::UninstallBundle(const std::string &bundleName) const
     bool result = installer->Uninstall(bundleName, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
+}
+
+int32_t BmsSandboxAppTest::GenerateSandboxAppIndex(const std::string &bundleName)
+{
+    return bundleSandboxAppHelper_->GenerateSandboxAppIndex(bundleName);
+}
+
+void BmsSandboxAppTest::SaveSandboxAppInfo(const InnerBundleInfo &info, const int32_t &appIndex)
+{
+    return bundleSandboxAppHelper_->SaveSandboxAppInfo(info, appIndex);
+}
+
+void BmsSandboxAppTest::DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex)
+{
+    return bundleSandboxAppHelper_->DeleteSandboxAppInfo(bundleName, appIndex);
 }
 
 void BmsSandboxAppTest::CheckPathAreExisted(const std::string &bundleName, int32_t appIndex)
@@ -1638,4 +1666,60 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest |
     EXPECT_NE(testRet, ERR_OK);
 
     UninstallBundle(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GenerateSandboxAppIndex_0100
+ * @tc.name: test original bundle has been installed at other userId
+ * @tc.desc: 1. the original bundle has been installed at current userId
+ *           2.the sandbox app install successfully
+ * @tc.require: AR000H02C4
+ */
+HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    const std::shared_ptr<IBundleDataStorage> dataStorage;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t ret1 = GenerateSandboxAppIndex(BUNDLE_NAME);
+    EXPECT_NE(ret1, Constants::INITIAL_APP_INDEX);
+
+    UninstallBundle(BUNDLE_NAME);
+    CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
+}
+
+/**
+ * @tc.number: GetSandboxAppInfo_0100
+ * @tc.name: test original bundle has been installed at other userId
+ * @tc.desc: 1. the original bundle has been installed at current userId
+ *           2.the sandbox app install successfully
+ * @tc.require: AR000H02C4
+ */
+HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    const std::shared_ptr<IBundleDataStorage> dataStorage;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = 0;
+    int32_t RightUserId = 100;
+    InnerBundleInfo info;
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+
+    SaveSandboxAppInfo(info, 0);
+
+    ErrCode ret1 = GetSandboxAppInfo(
+        BUNDLE_NAME, appIndex, RightUserId, info);
+    EXPECT_EQ(ret1, ERR_OK);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME, 0);
+    UninstallBundle(BUNDLE_NAME);
+    CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
 }
