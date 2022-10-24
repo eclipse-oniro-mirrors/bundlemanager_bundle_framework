@@ -27,7 +27,7 @@ namespace OHOS {
         std::string type (reinterpret_cast<const char*>(data), size);
         sptr<IRemoteObject> object;
         DefaultAppProxy defaultApp(object);
-        defaultApp.ResetDefaultApplication(reinterpret_cast<int32_t>(data), type);
+        defaultApp.ResetDefaultApplication(reinterpret_cast<uintptr_t>(data), type);
         return true;
     }
 }
