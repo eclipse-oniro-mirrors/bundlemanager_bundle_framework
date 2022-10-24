@@ -32,7 +32,7 @@ namespace OHOS {
         Want want;
         std::string bundleName (reinterpret_cast<const char*>(data), size);
         want.SetAction(bundleName);
-        defaultApp.SetDefaultApplication(reinterpret_cast<int32_t>(data), type, want);
+        defaultApp.SetDefaultApplication(reinterpret_cast<uintptr_t>(data), type, want);
         return true;
     }
 }
