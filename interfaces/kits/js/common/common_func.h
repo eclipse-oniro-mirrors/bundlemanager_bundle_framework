@@ -160,7 +160,7 @@ private:
 
 #define PARSE_PROPERTY(env, property, funcType, value)                                        \
     do {                                                                                      \
-        NAPI_CALL_BASE(env, napi_get_value_##funcType(env, property, &value)), false);         \
+        NAPI_CALL_BASE(env, napi_get_value_##funcType(env, property, (&value)), false);         \
     } while (0)
 } // AppExecFwk
 } // OHOS
