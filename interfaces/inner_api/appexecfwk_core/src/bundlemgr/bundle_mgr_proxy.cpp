@@ -3394,7 +3394,7 @@ template<typename T>
 ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
     MessageParcel &reply, std::vector<T> &parcelableInfos)
 {
-     size_t dataSize = static_cast<size_t>(reply.ReadInt32());
+    size_t dataSize = static_cast<size_t>(reply.ReadInt32());
     if (dataSize == 0) {
         APP_LOGW("Parcel no data");
         return ERR_OK;
