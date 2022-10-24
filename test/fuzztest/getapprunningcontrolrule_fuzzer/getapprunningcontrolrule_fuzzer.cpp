@@ -31,8 +31,8 @@ namespace OHOS {
         std::vector<std::string> appIds;
         std::string appId (reinterpret_cast<const char*>(data), size);
         appIds.push_back(appId);
-        appControl.GetAppRunningControlRule(reinterpret_cast<int32_t>(data), appIds);
-        appControl.GetAppRunningControlRule(bundleName, reinterpret_cast<int32_t>(data), controlRuleResult);
+        appControl.GetAppRunningControlRule(reinterpret_cast<uintptr_t>(data), appIds);
+        appControl.GetAppRunningControlRule(bundleName, reinterpret_cast<uintptr_t>(data), controlRuleResult);
         return true;
     }
 }

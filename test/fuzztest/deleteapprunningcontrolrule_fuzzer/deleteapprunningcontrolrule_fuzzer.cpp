@@ -27,8 +27,8 @@ namespace OHOS {
         sptr<IRemoteObject> object;
         AppControlProxy appControl(object);
         std::vector<AppRunningControlRule> controlRule;
-        appControl.DeleteAppRunningControlRule(controlRule, reinterpret_cast<int32_t>(data));
-        appControl.DeleteAppRunningControlRule(reinterpret_cast<int32_t>(data));
+        appControl.DeleteAppRunningControlRule(controlRule, reinterpret_cast<uintptr_t>(data));
+        appControl.DeleteAppRunningControlRule(reinterpret_cast<uintptr_t>(data));
         return true;
     }
 }
