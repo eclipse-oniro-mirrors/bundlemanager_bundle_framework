@@ -161,6 +161,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   sources = [
     "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   ]
 
   sources += [ "bms_install_daemon_operator_test.cpp" ]
