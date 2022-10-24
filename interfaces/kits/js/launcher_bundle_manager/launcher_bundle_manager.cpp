@@ -100,7 +100,7 @@ napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
     APP_LOGE("napi begin to GetLauncherAbilityInfo");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     GetLauncherAbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetLauncherAbilityCallbackInfo(env);
