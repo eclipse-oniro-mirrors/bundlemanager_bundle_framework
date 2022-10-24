@@ -30,7 +30,7 @@ namespace OHOS {
         std::vector<std::string> appIds;
         std::string appId (reinterpret_cast<const char*>(data), size);
         appIds.push_back(appId);
-        appControl.GetAppInstallControlRule(controlRuleType, reinterpret_cast<int32_t>(data), appIds);
+        appControl.GetAppInstallControlRule(controlRuleType, reinterpret_cast<uintptr_t>(data), appIds);
         return true;
     }
 }
