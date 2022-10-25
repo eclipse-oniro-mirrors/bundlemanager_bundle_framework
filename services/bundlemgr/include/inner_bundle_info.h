@@ -233,6 +233,15 @@ public:
     std::optional<AbilityInfo> FindAbilityInfoV9(const std::string &bundleName,
         const std::string &moduleName, const std::string &abilityName) const;
     /**
+     * @brief Find abilityInfo by bundle name module name and ability name.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name
+     * @param abilityName Indicates the ability name.
+     * @return Returns ERR_OK if abilityInfo find successfully obtained; returns other ErrCode otherwise.
+     */
+    ErrCode FindAbilityInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, AbilityInfo &info) const;
+    /**
      * @brief Find abilityInfo of list by bundle name.
      * @param bundleName Indicates the bundle name.
      * @param userId Indicates the user ID.
