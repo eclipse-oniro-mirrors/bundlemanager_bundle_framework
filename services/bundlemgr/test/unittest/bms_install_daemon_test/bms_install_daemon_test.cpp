@@ -40,6 +40,10 @@ const std::string BUNDLE_EL2_BASE_DIR = "/data/app/el2/101/base/com.example.l4js
 const std::string BUNDLE_EL3_BASE_DIR = "/data/app/el3/101/base/com.example.l4jsdemo/temp";
 const std::string BUNDLE_EL4_BASE_DIR = "/data/app/el4/101/base/com.example.l4jsdemo/temp";
 const std::string BUNDLE_NAME = "com.example.l4jsdemo";
+const std::string TEST_CPU_ABI = "arm64";
+const std::string HAP_FILE_PATH =
+    "/data/app/el1/bundle/public/com.example.test/entry.hap";
+const std::string TEST_PATH = "/data/app/el1/bundle/public/com.example.test/";
 const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
@@ -64,6 +68,7 @@ public:
     int CleanBundleDataDir(const std::string &bundleDataDir) const;
     int ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi) const;
+    int ExtractFiles(const ExtractParam &extractParam) const;
     int RenameModuleDir(const std::string &oldPath, const std::string &newPath) const;
     bool CheckBundleDirExist() const;
     bool CheckBundleDataDirExist() const;
@@ -149,6 +154,14 @@ int BmsInstallDaemonTest::ExtractModuleFiles(const std::string &srcModulePath, c
         service_->Start();
     }
     return InstalldClient::GetInstance()->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+}
+
+int BmsInstallDaemonTest::ExtractFiles(const ExtractParam &extractParam) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->ExtractFiles(extractParam);
 }
 
 int BmsInstallDaemonTest::RenameModuleDir(const std::string &oldPath, const std::string &newPath) const
@@ -640,4 +653,51 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level
     OHOS::ForceRemoveDirectory(BUNDLE_EL3_BASE_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_EL4_BASE_DIR);
 }
+
+/**
+ * @tc.number: ExtractFiles_0100
+ * @tc.name: test the ExtractFiles
+ * @tc.desc: 1. extract files success
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0100, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    ErrCode ret = ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.srcPath = HAP_FILE_PATH;
+    ret = ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::AN;
+    ret = ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+
+/**
+ * @tc.number: Marshalling_0100
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.read from parcel success
+ */
+HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    Parcel parcel;
+    extractParam.srcPath = HAP_FILE_PATH;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::AN;
+    bool res = extractParam.Marshalling(parcel);
+    EXPECT_TRUE(res);
+    std::string value = extractParam.ToString();
+    EXPECT_EQ("[ srcPath :" +  HAP_FILE_PATH
+            + ", targetPath = " + TEST_PATH
+            + ", cpuAbi = " + TEST_CPU_ABI
+            + ", extractFileType = An]", value);
+    extractParam.Unmarshalling(parcel);
+} // OHOS
 } // OHOS
