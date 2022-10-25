@@ -157,7 +157,7 @@ ErrCode BmsSandboxAppTest::GetSandboxAppBundleInfo(const std::string &bundleName
 }
 
 ErrCode BmsSandboxAppTest::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
-        HapModuleInfo &hapModuleInfo)
+    HapModuleInfo &hapModuleInfo)
 {
     bool ret = GetSandboxDataMgr();
     EXPECT_TRUE(ret);

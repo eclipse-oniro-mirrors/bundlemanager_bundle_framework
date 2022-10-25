@@ -1600,7 +1600,7 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
         auto newHqfLibraryPath = hqfLibraryPath.substr(position);
         if (!BundleUtil::EndWith(nativeLibraryPath, newHqfLibraryPath)) {
             APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
-                    nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
+                nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
             return false;
         }
     }
