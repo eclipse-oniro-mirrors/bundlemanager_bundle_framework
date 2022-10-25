@@ -66,7 +66,7 @@ public:
     static Security::AccessToken::AccessTokenID CreateAccessTokenId(
         const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId,
         const int32_t dlpType, const Security::AccessToken::HapPolicyParams &hapPolicy);
-    
+
     static bool UpdateDefineAndRequestPermissions(const Security::AccessToken::AccessTokenID tokenId,
         const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, std::vector<std::string> &newRequestPermName);
 
@@ -82,7 +82,7 @@ public:
         const std::vector<std::string> &requestPermName,
         const Security::AccessToken::AccessTokenID tokenId);
 
-    static bool GetRequestPermissionStates(BundleInfo &bundleInfo);
+    static bool GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId, const std::string deviceId);
 
     static int32_t ClearUserGrantedPermissionState(const Security::AccessToken::AccessTokenID tokenId);
 

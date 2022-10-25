@@ -1974,7 +1974,8 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         if (!bundleInfo.defPermissions.empty()) {
             RemoveDuplicateName(bundleInfo.defPermissions);
         }
-        if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo)) {
+        if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo,
+            bundleInfo.applicationInfo.accessTokenId, bundleInfo.applicationInfo.deviceId)) {
             APP_LOGE("get request permission state failed");
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
@@ -2036,7 +2037,7 @@ void InnerBundleInfo::ProcessBundleFlags(
                 bundleInfo.applicationInfo);
         }
     }
-    GetBundleWithReqPermissionsV9(flags, bundleInfo);
+    GetBundleWithReqPermissionsV9(flags, userId, bundleInfo);
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId);
     if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
         == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
@@ -2045,7 +2046,7 @@ void InnerBundleInfo::ProcessBundleFlags(
     }
 }
 
-void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, BundleInfo &bundleInfo) const
+void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const
 {
     if ((static_cast<uint32_t>(flags) &
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
@@ -2068,7 +2069,14 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, BundleInfo &b
     if (!bundleInfo.defPermissions.empty()) {
         RemoveDuplicateName(bundleInfo.defPermissions);
     }
-    if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo)) {
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        return;
+    }
+    uint32_t tokenId = innerBundleUserInfo.accessTokenId;
+    std::string deviceId = baseApplicationInfo_->deviceId;
+    if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo, tokenId, deviceId)) {
         APP_LOGE("get request permission state failed");
     }
     bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
