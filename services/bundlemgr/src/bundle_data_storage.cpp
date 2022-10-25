@@ -110,7 +110,7 @@ bool BundleDataStorage::DeleteStorageBundleInfo(const InnerBundleInfo &innerBund
             i >> jParse;
             if (jParse.find(appName) != jParse.end()) {
                 jParse.erase(appName);
-                isEmpty = (jParse.size() == 0) ? true : false;
+                isEmpty = (jParse.size() == 0);
                 ret = true;
             } else {
                 APP_LOGE("not find appName = %{public}s", appName.c_str());

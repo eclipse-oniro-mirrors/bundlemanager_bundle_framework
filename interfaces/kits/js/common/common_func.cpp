@@ -307,20 +307,22 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
 {
     if (bundleMgr_ == nullptr) {
         std::lock_guard<std::mutex> lock(bundleMgrMutex_);
-        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (systemAbilityManager == nullptr) {
-            APP_LOGE("systemAbilityManager is null.");
-            return nullptr;
-        }
-        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        if (bundleMgrSa == nullptr) {
-            APP_LOGE("bundleMgrSa is null.");
-            return nullptr;
-        }
-        bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
         if (bundleMgr_ == nullptr) {
-            APP_LOGE("iface_cast failed.");
-            return nullptr;
+            auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+            if (systemAbilityManager == nullptr) {
+                APP_LOGE("systemAbilityManager is null.");
+                return nullptr;
+            }
+            auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+            if (bundleMgrSa == nullptr) {
+                APP_LOGE("bundleMgrSa is null.");
+                return nullptr;
+            }
+            bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+            if (bundleMgr_ == nullptr) {
+                APP_LOGE("iface_cast failed.");
+                return nullptr;
+            }
         }
     }
     return bundleMgr_;
@@ -1452,7 +1454,7 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isEnabled", isEnabled));
 }
 
-void CommonFunc::ConvertShortCutInfos(napi_env env, std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
+void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
 {
     if (shortcutInfos.empty()) {
         return;
