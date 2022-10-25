@@ -1669,6 +1669,7 @@ public:
     bool FetchNativeSoAttrs(
         const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
+    void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
 
 private:
