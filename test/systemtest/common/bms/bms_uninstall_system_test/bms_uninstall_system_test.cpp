@@ -1364,6 +1364,10 @@ HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0100, Function | MediumTest |
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
 
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    bool res = installerProxy->DestoryBundleStreamInstaller(0);
+    EXPECT_EQ(res, true);
+
     resvec.clear();
     Uninstall(bundleName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);

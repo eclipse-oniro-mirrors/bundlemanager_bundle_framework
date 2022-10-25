@@ -23,6 +23,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
+#include "bundle_verify_mgr.h"
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
@@ -38,6 +39,9 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 
 namespace OHOS {
+namespace {
+const std::string INSTALL_PATH = "/data/test/resource/bms/install_bundle/first_right.hap";
+} // namespace
 class BmsBundleHapVerifyTest : public testing::Test {
 public:
     BmsBundleHapVerifyTest();
@@ -147,5 +151,42 @@ HWTEST_F(BmsBundleHapVerifyTest, BmsCopyPartialBuffer_0100, Function | SmallTest
     int target2;
     EXPECT_TRUE(hapByteBuffer2.GetInt32(target2));
     EXPECT_EQ(target2, TEST_HAPBYTEBUFFER_INT32_DATA_2);
+}
+
+/**
+ * @tc.number: EnableDebug_0100
+ * Function: enableDebug
+ * @tc.name: test enableDebug
+ * @tc.desc: enableDebug
+ */
+HWTEST_F(BmsBundleHapVerifyTest, EnableDebug_0100, Function | SmallTest | Level0)
+{
+    BundleVerifyMgr::EnableDebug();
+    EXPECT_TRUE(BundleVerifyMgr::isDebug_);
+}
+
+/**
+ * @tc.number: DisableDebug_0100
+ * Function: DisableDebug
+ * @tc.name: test DisableDebug
+ * @tc.desc: DisableDebug
+ */
+HWTEST_F(BmsBundleHapVerifyTest, DisableDebug_0100, Function | SmallTest | Level0)
+{
+    BundleVerifyMgr::DisableDebug();
+    EXPECT_FALSE(BundleVerifyMgr::isDebug_);
+}
+
+/**
+ * @tc.number: ParseHapProfile_0100
+ * Function: ParseHapProfile
+ * @tc.name: test ParseHapProfile
+ * @tc.desc: ParseHapProfile
+ */
+HWTEST_F(BmsBundleHapVerifyTest, ParseHapProfile_0100, Function | SmallTest | Level0)
+{
+    Security::Verify::HapVerifyResult result;
+    auto res = BundleVerifyMgr::ParseHapProfile(INSTALL_PATH, result);
+    EXPECT_EQ(res, ERR_OK);
 }
 } // OHOS

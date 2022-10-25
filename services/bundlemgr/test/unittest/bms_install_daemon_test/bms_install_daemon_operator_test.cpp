@@ -35,7 +35,10 @@ const std::string TEST_LIB_STRING = "libs/arm64/test.so";
 const std::string TEST_ERROR_LIB_STRING = "libs/arm64/test.txt";
 const std::string TEST_DIFF_LIB_STRING = "libs/arm64/test.diff";
 const std::string TEST_CPU_ABI = "arm64";
+const std::string TEST_CPU_ARM = "arm";
 const std::string TEST_PATH = "/test/test/";
+const std::string TEST_LIB_SO = "libs/arm64/test.so";
+const std::string TEST_LIB_AN = "an/arm64/test.an";
 const std::string TEST_QUICK_FIX_FILE_PATH_FIRST = "/data/app/el1/bundle/public/com.example.test/patch_1000001";
 const std::string TEST_QUICK_FIX_FILE_PATH_SECOND = "/data/app/el1/bundle/public/com.example.test/patch_1000002";
 const std::string HAP_FILE_PATH = "/data/app/el1/bundle/public/com.example.test/patch_1000001/entry.hqf";
@@ -434,6 +437,58 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2500, Function | Sma
 {
     std::string path;
     auto ret = InstalldOperator::MkRecursiveDir(path, true);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_2600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsNativeFile of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2600, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    auto ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.srcPath = TEST_PATH;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::SO;
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
+    EXPECT_TRUE(ret);
+
+    extractParam.extractFileType = ExtractFileType::PATCH;
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.extractFileType = ExtractFileType::AN;
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.extractFileType = ExtractFileType::AN;
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_AN, extractParam);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_2700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractFiles of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2700, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    auto ret = InstalldOperator::ExtractFiles(extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.srcPath = HAP_FILE_PATH;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::SO;
+    ret = InstalldOperator::ExtractFiles(extractParam);
     EXPECT_FALSE(ret);
 }
 } // OHOS
