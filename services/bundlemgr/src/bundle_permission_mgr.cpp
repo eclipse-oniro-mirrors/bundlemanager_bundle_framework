@@ -510,19 +510,18 @@ bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessToken::AccessTokenI
     return true;
 }
 
-bool BundlePermissionMgr::GetRequestPermissionStates(BundleInfo &bundleInfo)
+bool BundlePermissionMgr::GetRequestPermissionStates(
+    BundleInfo &bundleInfo, uint32_t tokenId, const std::string deviceId)
 {
     std::vector<std::string> requestPermission = bundleInfo.reqPermissions;
     if (requestPermission.empty()) {
         APP_LOGD("GetRequestPermissionStates requestPermission empty");
         return true;
     }
-    uint32_t tokenId = bundleInfo.applicationInfo.accessTokenId;
     std::vector<Security::AccessToken::PermissionStateFull> allPermissionState;
     if (!GetAllReqPermissionStateFull(tokenId, allPermissionState)) {
         APP_LOGW("BundlePermissionMgr::GetRequestPermissionStates failed");
     }
-    std::string deviceId = bundleInfo.applicationInfo.deviceId;
     for (auto &req : requestPermission) {
         auto iter = std::find_if(allPermissionState.begin(), allPermissionState.end(),
             [&req](const auto &perm) {
