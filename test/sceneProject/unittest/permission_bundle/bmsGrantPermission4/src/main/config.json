@@ -48,6 +48,7 @@
             }
         ],
         "deviceType": [
+            "tablet",
             "default"
         ],
         "mainAbility": ".MainAbility",

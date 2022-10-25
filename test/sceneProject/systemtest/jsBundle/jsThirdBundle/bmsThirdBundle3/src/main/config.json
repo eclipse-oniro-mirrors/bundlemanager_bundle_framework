@@ -106,6 +106,7 @@
             }
         ],
         "deviceType": [
+            "tablet",
             "default"
         ],
         "distro": {

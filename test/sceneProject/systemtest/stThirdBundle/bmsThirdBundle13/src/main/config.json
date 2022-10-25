@@ -19,6 +19,7 @@
         "package":"com.third.hiworld.example.h1",
         "name":"bmsThirdBundle13",
         "deviceType": [
+            "tablet",
             "default"
         ],
         "distro": {

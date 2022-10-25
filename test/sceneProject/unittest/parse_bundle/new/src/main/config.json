@@ -28,6 +28,7 @@
             "moduleName": "hap-car"
         },
         "deviceType": [
+            "tablet",
             "default"
         ],
         "abilities": [
