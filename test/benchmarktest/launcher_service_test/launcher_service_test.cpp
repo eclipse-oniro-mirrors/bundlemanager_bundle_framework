@@ -22,7 +22,7 @@ namespace AppExecFwk {
         class TestBundleStatusCallback : public IBundleStatusCallback {
         public:
             TestBundleStatusCallback() = default;
-            explicit TestBundleStatusCallback(std::string code) : testCode_(code)
+            explicit TestBundleStatusCallback(const std::string& code) : testCode_(code)
             {}
             ~TestBundleStatusCallback() = default;
             virtual void OnBundleStateChanged(const uint8_t installType, const int32_t resultCode,
