@@ -136,7 +136,7 @@ FilePath FilePath::DirName()
         // path_ is in "//" (possibly with a drive letter); leave the double
         // separator intact indicating alternate root.
         newPath.path_.resize(two);
-    } else if (lastSeparator != 0) {
+    } else {
         // path_ is somewhere else, trim the basename.
         newPath.path_.resize(lastSeparator);
     }

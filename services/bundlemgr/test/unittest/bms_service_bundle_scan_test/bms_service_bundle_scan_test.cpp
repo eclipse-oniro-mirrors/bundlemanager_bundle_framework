@@ -67,7 +67,7 @@ public:
 
     // return scan result list number
     long TriggerScan();
-    bool IsScanResultContain(const std::string name) const;
+    bool IsScanResultContain(const std::string& name) const;
 
 private:
     std::list<std::string> bundleList_{};
@@ -148,7 +148,7 @@ long BmsServiceBundleScanTest::TriggerScan()
     return bundleList_.size();
 }
 
-bool BmsServiceBundleScanTest::IsScanResultContain(const std::string name) const
+bool BmsServiceBundleScanTest::IsScanResultContain(const std::string& name) const
 {
     auto it = std::find(bundleList_.begin(), bundleList_.end(), name);
     if (it == bundleList_.end()) {
@@ -276,10 +276,6 @@ HWTEST_F(BmsServiceBundleScanTest, BundleScan_0500, Function | SmallTest | Level
 HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0100, Function | SmallTest | Level0)
 {
     auto scanner = std::make_unique<BundleScanner>();
-    if (!scanner) {
-        APP_LOGE("make scanner failed");
-        return;
-    }
     std::string scanDir = Constants::SYSTEM_APP_SCAN_PATH;
     std::list<std::string> bundleList = scanner->Scan(scanDir);
     auto result = false;
@@ -298,10 +294,6 @@ HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0100, Function | SmallTest |
 HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0200, Function | SmallTest | Level1)
 {
     auto scanner = std::make_unique<BundleScanner>();
-    if (!scanner) {
-        APP_LOGE("make scanner failed");
-        return;
-    }
     std::string scanDir = TEST_ERROR_DIR;
     std::list<std::string> bundleList = scanner->Scan(scanDir);
     auto result = false;
