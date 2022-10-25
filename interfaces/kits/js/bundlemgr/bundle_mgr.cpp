@@ -8590,14 +8590,6 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
         APP_LOGE("input params is not function!");
         errCode = PARAM_TYPE_ERROR;
     }
-    {
-        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-        auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
-        if (item != abilityInfoCache.end()) {
-            APP_LOGD("has cache,no need to query from host");
-            errCode = ERR_OK;
-        }
-    }
     Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
     AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info, query, env]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
@@ -8610,6 +8602,14 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
             }
             auto iBundleMgr = GetBundleMgr();
             std::vector<AbilityInfo> abilityInfos;
+            auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+            NativeValue *cacheAbilityInfos = nullptr;
+            if (item != abilityInfoCache.end()) {
+                APP_LOGD("has cache,no need to query from host");
+                cacheAbilityInfos = reinterpret_cast<NativeValue*>(item->second);
+                task.ResolveWithErr(engine, cacheAbilityInfos);
+                return;
+            }
 
             auto ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, abilityInfos);
             if (!ret) {
@@ -8618,24 +8618,13 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                     CreateJsValue(engine, queryAbilityInfosErrData));
                 return;
             }
-            napi_value result[2] = { 0 };
-            NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-            {
-                std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-                Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
-                auto item = abilityInfoCache.find(query);
-                if (item != abilityInfoCache.end()) {
-                    APP_LOGD("get abilityInfo from cache");
-                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
-                } else {
-                    ProcessAbilityInfos(env, result[1], abilityInfos);
-                    OnHandleAbilityInfoCache(env, query, want, abilityInfos, result[1]);
-                }
+            NativeValue *cacheAbilityInfoValue = obj->CreateAbilityInfos(engine, abilityInfos);
+            if (item == abilityInfoCache.end()) {
+                auto cacheAbilityInfo = reinterpret_cast<napi_value>(cacheAbilityInfoValue);
+                OnHandleAbilityInfoCache(env, query, want, abilityInfos, cacheAbilityInfo);
             }
-            auto outAbilityInfos = reinterpret_cast<NativeValue*>(result[1]);
-            task.ResolveWithErr(engine, outAbilityInfos);
-    };
+            task.ResolveWithErr(engine, cacheAbilityInfoValue);
+        };
 
     NativeValue* lastParam = UnwarpQueryAbilityInfolastParams(info);
     NativeValue* result = nullptr;
@@ -8840,17 +8829,14 @@ NativeValue* JsBundleMgr::OnGetProfile(
         if ((i == 0) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
             if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->moduleName)) {
                 APP_LOGE("ConvertFromJsValue failed.");
-                return engine.CreateUndefined();
             }
         } else if ((i == 1) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
             if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->abilityName)) {
                 APP_LOGE("ConvertFromJsValue failed.");
-                return engine.CreateUndefined();
             }
         } else if ((i == 2) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
             if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->metadataName)) {
                 APP_LOGE("ConvertFromJsValue failed.");
-                return engine.CreateUndefined();
             }
         } else if ((i == 3) && (info.argv[i]->TypeOf() == NATIVE_FUNCTION)) {
             APP_LOGD("Last param is function.");
