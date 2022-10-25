@@ -15,6 +15,7 @@
 
 #include "app_control_manager_rdb.h"
 
+#include "app_control_constants.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_util.h"
@@ -26,7 +27,7 @@ namespace {
     const std::string RUNNING_CONTROL = "RunningControl";
     const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
     const std::string DEFAULT = "default";
-    const int32_t CALLING_NAME_INDEX = 2;
+    const int32_t CALLING_NAME_INDEX = 1;
     const int32_t APP_ID_INDEX = 4;
     const int32_t CONTROL_MESSAGE_INDEX = 5;
     const int32_t DISPOSED_STATUS_INDEX = 6;
@@ -39,7 +40,6 @@ namespace {
     const std::string DISPOSED_STATUS = "DISPOSED_STATUS";
     const std::string PRIORITY = "PRIORITY";
     const std::string TIME_STAMP = "TIME_STAMP";
-    const std::string EDM_CALLING = "EDM";
 
     enum class PRIORITY {
         EDM = 100,
@@ -297,7 +297,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        APP_LOGI("GetAppRunningControlRule failed");
+        APP_LOGE("GetAppRunningControlRuleResult size 0");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
     }
     ret = absSharedResultSet->GoToFirstRow();
@@ -313,7 +313,8 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, controlRuleResult.controlMessage);
     if (ret != NativeRdb::E_OK) {
         APP_LOGW("GetString controlMessage failed, ret: %{public}d", ret);
-        if (callingName == EDM_CALLING) {
+        if (callingName == AppControlConstants::EDM_CALLING) {
+            APP_LOGD("GetString controlMessage default");
             controlRuleResult.controlMessage = APP_CONTROL_EDM_DEFAULT_MESSAGE;
         }
     }
