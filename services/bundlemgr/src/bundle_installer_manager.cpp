@@ -156,10 +156,6 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 {
     int64_t installerId = GetMicroTickCount();
     auto installer = std::make_shared<BundleInstaller>(installerId, shared_from_this(), statusReceiver);
-    if (installer == nullptr) {
-        APP_LOGE("create bundle installer failed");
-        return nullptr;
-    }
     bool isSuccess = false;
     {
         std::lock_guard<std::mutex> lock(mutex_);

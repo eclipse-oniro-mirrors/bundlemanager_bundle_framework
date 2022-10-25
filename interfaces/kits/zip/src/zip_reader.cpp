@@ -206,7 +206,7 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesT
         } else if (numBytesRead < 0) {
             // If numBytesRead < 0, then it's a specific UNZ_* error code.
             break;
-        } else if (numBytesRead > 0) {
+        } else {
             uint64_t numBytesToWrite = std::min<uint64_t>(remainingCapacity, checked_cast<uint64_t>(numBytesRead));
             if (!delegate->WriteBytes(buf.get(), numBytesToWrite)) {
                 break;

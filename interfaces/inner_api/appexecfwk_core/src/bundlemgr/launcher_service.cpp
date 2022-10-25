@@ -154,12 +154,12 @@ bool LauncherService::GetAbilityList(
         info.applicationInfo = ability.applicationInfo;
         info.labelId = ability.labelId;
         info.iconId = ability.iconId;
-        ElementName elementName;
-        elementName.SetBundleName(ability.bundleName);
-        elementName.SetModuleName(ability.moduleName);
-        elementName.SetAbilityName(ability.name);
-        elementName.SetDeviceID(ability.deviceId);
-        info.elementName = elementName;
+        ElementName abilityElementName;
+        abilityElementName.SetBundleName(ability.bundleName);
+        abilityElementName.SetModuleName(ability.moduleName);
+        abilityElementName.SetAbilityName(ability.name);
+        abilityElementName.SetDeviceID(ability.deviceId);
+        info.elementName = abilityElementName;
         info.userId = userId;
         info.installTime = bundleInfo.installTime;
         launcherAbilityInfos.emplace_back(info);
@@ -261,8 +261,7 @@ bool LauncherService::GetAbilityInfo(const Want &want, const int userId, Launche
     iconId = appInfo.iconId;
 
     int64_t installTime = 0;
-    BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
-    flags = BundleFlag::GET_BUNDLE_WITH_ABILITIES;
+    BundleFlag flags = BundleFlag::GET_BUNDLE_WITH_ABILITIES;
     BundleInfo bundleInfo;
     if (!iBundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId)) {
         APP_LOGE("Get bundle info failed");
