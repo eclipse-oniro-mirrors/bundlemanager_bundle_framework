@@ -107,7 +107,7 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
     }
     std::string capabilities = jsonObject[Constants::CHARACTER_PRIVATE_SYSCAP];
     if (capabilities.empty()) {
-        pcId = pcId.substr(0, pcId.length() - 1);
+        pcId.resize(pcId.length() - 1);
     } else {
         pcId = pcId + capabilities;
     }

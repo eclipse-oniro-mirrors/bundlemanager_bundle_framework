@@ -490,11 +490,11 @@ private:
     int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
     NativeValue* CreateCustomizeMetaDatas(
-        NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
-        
+        NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
+
     NativeValue* CreateInnerMetaDatas(
-        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> metaData);
-    NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> metaData);
+        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData);
+    NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData);
     NativeValue* CreateCustomizeMetaData(NativeEngine &engine, const CustomizeData &customizeData);
     NativeValue* CreateInnerMetaData(NativeEngine &engine, const Metadata &metadata);
     NativeValue* CreateResource(NativeEngine &engine, const Resource &resource);
@@ -502,7 +502,7 @@ private:
     NativeValue* CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo);
     NativeValue* CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo);
     NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfo);
+        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfos);
     NativeValue* CreateExtensionInfo(
         NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
     NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);

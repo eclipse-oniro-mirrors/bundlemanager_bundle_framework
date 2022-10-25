@@ -307,20 +307,22 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
 {
     if (bundleMgr_ == nullptr) {
         std::lock_guard<std::mutex> lock(bundleMgrMutex_);
-        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (systemAbilityManager == nullptr) {
-            APP_LOGE("systemAbilityManager is null.");
-            return nullptr;
-        }
-        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        if (bundleMgrSa == nullptr) {
-            APP_LOGE("bundleMgrSa is null.");
-            return nullptr;
-        }
-        bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
         if (bundleMgr_ == nullptr) {
-            APP_LOGE("iface_cast failed.");
-            return nullptr;
+            auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+            if (systemAbilityManager == nullptr) {
+                APP_LOGE("systemAbilityManager is null.");
+                return nullptr;
+            }
+            auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+            if (bundleMgrSa == nullptr) {
+                APP_LOGE("bundleMgrSa is null.");
+                return nullptr;
+            }
+            bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+            if (bundleMgr_ == nullptr) {
+                APP_LOGE("iface_cast failed.");
+                return nullptr;
+            }
         }
     }
     return bundleMgr_;
@@ -936,19 +938,6 @@ void CommonFunc::ConvertResource(napi_env env, const Resource &resource, napi_va
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "id", nId));
 }
 
-void CommonFunc::ConvertModuleInfo(napi_env env, const ModuleInfo &moduleInfo, napi_value objMoudleInfo)
-{
-    napi_value nModuleName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, moduleInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objMoudleInfo, MODULE_NAME, nModuleName));
-
-    napi_value nModuleSourceDir;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, moduleInfo.moduleSourceDir.c_str(), NAPI_AUTO_LENGTH, &nModuleSourceDir));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objMoudleInfo, "moduleSourceDir", nModuleSourceDir));
-}
-
 void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo)
 {
     napi_value nName;
@@ -989,16 +978,6 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.process.c_str(), NAPI_AUTO_LENGTH, &nProcess));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "process", nProcess));
 
-    napi_value nModuleSourceDirs;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nModuleSourceDirs));
-    for (size_t idx = 0; idx < appInfo.moduleSourceDirs.size(); idx++) {
-        napi_value nModuleSourceDir;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, appInfo.moduleSourceDirs[idx].c_str(), NAPI_AUTO_LENGTH, &nModuleSourceDir));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nModuleSourceDirs, idx, nModuleSourceDir));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "moduleSourceDirs", nModuleSourceDirs));
-
     napi_value nPermissions;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nPermissions));
     for (size_t idx = 0; idx < appInfo.permissions.size(); idx++) {
@@ -1008,16 +987,6 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, idx, nPermission));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, PERMISSIONS, nPermissions));
-
-    napi_value nModuleInfos;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nModuleInfos));
-    for (size_t idx = 0; idx < appInfo.moduleInfos.size(); idx++) {
-        napi_value objModuleInfos;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objModuleInfos));
-        ConvertModuleInfo(env, appInfo.moduleInfos[idx], objModuleInfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nModuleInfos, idx, objModuleInfos));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "modulesInfo", nModuleInfos));
 
     napi_value nEntryDir;
     NAPI_CALL_RETURN_VOID(
@@ -1485,7 +1454,7 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isEnabled", isEnabled));
 }
 
-void CommonFunc::ConvertShortCutInfos(napi_env env, std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
+void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
 {
     if (shortcutInfos.empty()) {
         return;

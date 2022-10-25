@@ -60,7 +60,10 @@ ohos_unittest("BmsBundleHapVerifyTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+  ]
   if (bundle_framework_graphics) {
     include_dirs += [
       "//foundation/multimedia/image_framework/interfaces/innerkits/include",
