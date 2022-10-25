@@ -1540,6 +1540,23 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
     return std::nullopt;
 }
 
+ErrCode InnerBundleInfo::FindAbilityInfo(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, AbilityInfo &info) const
+{
+    for (const auto &ability : baseAbilityInfos_) {
+        auto abilityInfo = ability.second;
+        if ((abilityInfo.bundleName == bundleName) && (abilityInfo.moduleName == moduleName)) {
+            if (abilityInfo.name == abilityName) {
+                info = abilityInfo;
+                return ERR_OK;
+            } else {
+                return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+            }
+        }
+    }
+    return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+}
+
 std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(
     const std::string &bundleName, int32_t userId) const
 {
