@@ -3856,6 +3856,64 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0300, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: QueryAbilityInfo_0400
+ * @tc.name: test QueryAbilityInfo interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.call QueryAbilityInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START QueryAbilityInfo_0400" << std::endl;
+    bool result = false;
+    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
+        std::vector<std::string> resvec;
+        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+        std::string appName = BASE_BUNDLE_NAME + "1";
+        std::string abilityName = "bmsThirdBundle_A1";
+        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+
+        CommonTool commonTool;
+        std::string installResult = commonTool.VectorToStr(resvec);
+        EXPECT_EQ(installResult, "Success") << "install fail!";
+
+        Want want;
+        ElementName name;
+        name.SetAbilityName(abilityName);
+        name.SetBundleName(appName);
+        want.SetElement(name);
+
+        AbilityInfo abilityInfo;
+        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+        if (!bundleMgrProxy) {
+            APP_LOGE("bundle mgr proxy is nullptr.");
+            EXPECT_EQ(bundleMgrProxy, nullptr);
+        }
+        bool queryResult =
+            bundleMgrProxy->QueryAbilityInfo(
+                want, GET_ABILITY_INFO_WITH_APPLICATION, USERID, abilityInfo, nullptr);
+        EXPECT_FALSE(queryResult);
+
+        resvec.clear();
+        Uninstall(appName, resvec);
+        std::string uninstallResult = commonTool.VectorToStr(resvec);
+        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+        if (!queryResult) {
+            APP_LOGI("QueryAbilityInfo_0100 failed - cycle count: %{public}d", i);
+            break;
+        }
+        result = true;
+    }
+
+    if (result && stLevel_.BMSLevel > 1) {
+        APP_LOGI("QueryAbilityInfo_0400 succecc - cycle count: %{public}d", stLevel_.BMSLevel);
+    }
+    EXPECT_FALSE(result);
+    std::cout << "END QueryAbilityInfo_0400" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleInfosByMetaData_0100
  * @tc.name: test GetBundleInfosByMetaData interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
