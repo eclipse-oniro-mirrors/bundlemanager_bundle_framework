@@ -18,6 +18,7 @@
         "package": "com.third.hiworld.example.h2",
         "name": "bmsThirdBundle5",
         "deviceType": [
+            "tablet",
             "default",
             "tv",
             "car"

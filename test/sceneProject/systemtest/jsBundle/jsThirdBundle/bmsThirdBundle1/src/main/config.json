@@ -107,6 +107,7 @@
         ],
         "colorMode": "light",
         "deviceType": [
+            "tablet",
             "default"
         ],
         "distro": {

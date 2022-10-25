@@ -19,6 +19,7 @@
       "package":"com.example.third6.h1",
       "name":"bmsThirdBundle6",
       "deviceType":[
+            "tablet",
           "default"
       ],
       "distro":{
