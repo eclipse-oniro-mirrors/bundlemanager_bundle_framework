@@ -1669,6 +1669,7 @@ public:
     bool FetchNativeSoAttrs(
         const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
+    void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
 
 private:
@@ -1678,7 +1679,7 @@ private:
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void BuildDefaultUserInfo();
     void RemoveDuplicateName(std::vector<std::string> &name) const;
-    void GetBundleWithReqPermissionsV9(int32_t flags, BundleInfo &bundleInfo) const;
+    void GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const;
     void ProcessBundleFlags(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const;
     void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;

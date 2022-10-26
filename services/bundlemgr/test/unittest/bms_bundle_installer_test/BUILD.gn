@@ -613,6 +613,7 @@ group("unittest") {
   if (ability_runtime_enable) {
     deps = [
       ":BmsBundleInstallCheckerTest",
+      ":BmsBundleInstallIpcTest",
       ":BmsBundleInstallerTest",
       ":BmsMultipleBundleInstallerTest",
     ]
