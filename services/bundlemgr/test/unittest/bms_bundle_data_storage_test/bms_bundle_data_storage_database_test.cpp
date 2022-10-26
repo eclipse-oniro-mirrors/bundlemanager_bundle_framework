@@ -1062,7 +1062,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Functi
     typeErrorProps["versionName"] = NOT_STRING_TYPE;
     typeErrorProps["versionCode"] = NOT_NUMBER_TYPE;
     typeErrorProps["minSdkVersion"] = NOT_NUMBER_TYPE;
-    typeErrorProps["minSdkVersion"] = NOT_NUMBER_TYPE;
 
     for (nlohmann::json::iterator iter = typeErrorProps.begin(); iter != typeErrorProps.end(); iter++) {
         for (auto valueIter = iter.value().begin(); valueIter != iter.value().end(); valueIter++) {

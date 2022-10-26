@@ -1258,6 +1258,7 @@ ErrCode BundleManagerShellCommand::RunAsQuickFixCommand()
             }
 
             std::string argKey = argv_[++index];
+            index++;
             if (argKey == "-f" || argKey == "--file-path") {
                 std::vector<std::string> quickFixFiles;
                 // collect value of multi file-path.

@@ -25,7 +25,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
     bool fuzzelShortcutInfo(const uint8_t* data, size_t size)
     {
-        if (size <= 0) {
+        if (size == 0) {
             return false;
         }
         Parcel dataMessageParcel;
