@@ -16,8 +16,8 @@
       ]
     },
     {
-      "icon": "icon002",
-      "label": "label002",
+      "icon": "$media:icon",
+      "label": "$string:entry_label",
       "shortcutId": "id002",
       "wants": [
         {

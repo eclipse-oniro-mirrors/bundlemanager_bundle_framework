@@ -2784,7 +2784,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName,
         BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
-        APP_LOGE("ExplicitQueryExtensionInfoV9 failed");
+        APP_LOGE("GetInnerBundleInfoWithFlagsV9 failed");
         return ret;
     }
 
