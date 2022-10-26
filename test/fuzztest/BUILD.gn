@@ -26,6 +26,7 @@ group("fuzztest") {
     "applicationinfofromjson_fuzzer:ApplicationInfoFromJsonFuzzTest",
     "bundleinfo_fuzzer:BundleInfoFuzzTest",
     "bundleinfofromjson_fuzzer:BundleInfoFromJsonFuzzTest",
+    "bundlemgrproxy_fuzzer:BundleMgrProxyFuzzTest",
     "bundlesyscap_fuzzer:BundleSysCapFuzzTest",
     "checkissystemappbyuid_fuzzer:CheckIsSystemAppByUidFuzzTest",
     "checkpublickeys_fuzzer:CheckPublicKeysFuzzTest",
