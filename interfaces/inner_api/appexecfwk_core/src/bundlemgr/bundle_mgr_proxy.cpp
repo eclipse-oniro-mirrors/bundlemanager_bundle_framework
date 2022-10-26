@@ -2204,7 +2204,8 @@ bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector
     return true;
 }
 
-ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
+    std::vector<ShortcutInfo> &shortcutInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {

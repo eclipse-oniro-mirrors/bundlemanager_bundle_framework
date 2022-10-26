@@ -1935,7 +1935,7 @@ bool ConvertFormInfo(FormInfo &formInfo, const ProfileReader::Forms &form)
     formInfo.scheduledUpdateTime = form.scheduledUpdateTime;
     formInfo.updateDuration = form.updateDuration;
     formInfo.jsComponentName = form.jsComponentName;
-    for (auto &data : form.metaData.customizeData) {
+    for (const auto &data : form.metaData.customizeData) {
         FormCustomizeData customizeData;
         customizeData.name = data.name;
         customizeData.value = data.value;

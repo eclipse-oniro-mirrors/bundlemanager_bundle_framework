@@ -82,7 +82,7 @@ void EventListener::Emit(std::string &bundleName, int32_t userId)
 {
     APP_LOGD("EventListener Emit Init callback size is %{publuic}d",
         static_cast<int32_t>(callbackRefs_.size()));
-    for (auto &callbackRef : callbackRefs_) {
+    for (const auto &callbackRef : callbackRefs_) {
         EmitOnUV(bundleName, userId, callbackRef);
     }
 }
@@ -105,7 +105,7 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
         delete work;
         return;
     }
-    work->data = (void*)asyncCallbackInfo;
+    work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
@@ -123,10 +123,8 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
                 asyncCallbackInfo->userId, result[0]);
             napi_call_function(asyncCallbackInfo->env, nullptr,
                 callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            if (work != nullptr) {
-                delete work;
-                work = nullptr;
-            }
+            delete work;
+            work = nullptr;
         });
     if (ret != 0) {
         delete asyncCallbackInfo;

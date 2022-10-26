@@ -2162,10 +2162,6 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
 void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    if (commonEventMgr == nullptr) {
-        APP_LOGE("commonEventMgr is nullptr");
-        return;
-    }
     commonEventMgr->NotifyBundleStatus(installRes, nullptr);
 }
 

@@ -169,7 +169,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
 FormInfo *FormInfo::Unmarshalling(Parcel &parcel)
 {
     std::unique_ptr<FormInfo> info = std::make_unique<FormInfo>();
-    if (info && !info->ReadFromParcel(parcel)) {
+    if (!info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         info = nullptr;
     }

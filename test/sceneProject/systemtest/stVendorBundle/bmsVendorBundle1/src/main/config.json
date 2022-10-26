@@ -19,6 +19,7 @@
         "package":"com.vendor.hiworld.example.h1",
         "name":"bmsVendorBundle1",
         "deviceType": [
+            "tablet",
             "default"
         ],
         "distro": {

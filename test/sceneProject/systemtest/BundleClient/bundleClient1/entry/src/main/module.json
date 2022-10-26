@@ -7,6 +7,7 @@
         "description":"$string:phone_entry_dsc",
         "descriptionId":16777220,
         "deviceTypes":[
+            "tablet",
             "default",
             "phone"
         ],
@@ -78,10 +79,12 @@
                 "type":"wallpaper"
             }
         ],
-        "requestPermissions": [{
-            "name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
-            "reason": "$string:entry_desc",
-            "usedScene": {"abilities": ["MainAbility"]}
-          }]
+        "requestPermissions": [
+            {
+                "name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
+                "reason": "$string:entry_desc",
+                "usedScene": {"abilities": ["MainAbility"]}
+            }
+        ]
     }
 }
