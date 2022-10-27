@@ -37,6 +37,7 @@ ohos_fuzztest("LauncherServiceFuzzTest") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "common_event_service:cesfwk_innerkits",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
