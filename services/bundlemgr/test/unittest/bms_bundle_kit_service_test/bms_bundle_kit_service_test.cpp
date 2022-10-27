@@ -207,12 +207,16 @@ public:
     void MockInstallBundle(
         const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
+    void MockInstallExtension(
+        const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const;
     void MockInstallBundle(
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
     AbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
+    ExtensionAbilityInfo MockExtensionInfo(
+        const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
     InnerModuleInfo MockModuleInfo(const std::string &moduleName) const;
     FormInfo MockFormInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
@@ -394,6 +398,26 @@ void BmsBundleKitServiceTest::MockInstallBundle(
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(keyName, skills);
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
+}
+
+void BmsBundleKitServiceTest::MockInstallExtension(const std::string &bundleName,
+    const std::string &moduleName, const std::string &extensionName) const
+{
+    InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
+    std::string keyName = bundleName + "." + moduleName + "." + extensionName;
+    std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
+    ExtensionAbilityInfo extensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    ExtensionAbilityInfo extensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertExtensionSkillInfo(keyName, skills);
+    innerBundleInfo.InsertExtensionSkillInfo(keyName02, skills);
+    SaveToDatabase(bundleName, innerBundleInfo, false, false);
 }
 
 InnerModuleInfo BmsBundleKitServiceTest::MockModuleInfo(const std::string &moduleName) const
@@ -605,6 +629,16 @@ AbilityInfo BmsBundleKitServiceTest::MockAbilityInfo(
     abilityInfo.metaData = metaData;
     abilityInfo.permissions = {"abilityPerm001", "abilityPerm002"};
     return abilityInfo;
+}
+
+ExtensionAbilityInfo BmsBundleKitServiceTest::MockExtensionInfo(
+    const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const
+{
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.name = extensionName;
+    extensionInfo.bundleName = bundleName;
+    extensionInfo.moduleName = moduleName;
+    return extensionInfo;
 }
 
 void BmsBundleKitServiceTest::MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -5596,5 +5630,271 @@ HWTEST_F(BmsBundleKitServiceTest, DynamicSystemProcess_0100, Function | SmallTes
 
     ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), STOP, &extraArgv, 1);
     EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0100
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0100");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0100 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0200
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.when disable ability, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0200");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(abilityInfos.size() == 1);
+    ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfos[0], false, 0);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_DISABLED);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0200 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0300
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.implicit query cur bundle, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0300");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.not.extist");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0300 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0400
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.implicit query cur bundle, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0400, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0400");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.not.extist");
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0400 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0500
+ * @tc.name: test can get the ability info by want with implicit query
+ * @tc.desc: 1.implicit query cur bundle only system, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0500, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0500");
+    std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
+
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0500 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0600
+ * @tc.name: test can get the ability info by want with implicit query
+ * @tc.desc: 1.implicit query cur bundle when disable
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0600, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0600");
+    std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    for (const auto &abilityInfo : abilityInfos) {
+        ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, 0);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    abilityInfos.clear();
+    ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0600 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0100
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.explicit query extension info failed, bundle not exist, appIndex = 0
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0100");
+    Want want;
+    want.SetElementName("invlaidBundleName", ABILITY_NAME_TEST);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0100 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0200
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.explicit query extension info failed, bundle not exist, appIndex = 1
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0200");
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    int32_t appIndex = 1;
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0200 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0300
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.implicit query extension info failed, scope in cur bundle, appIndex = 0, action not exist
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0300");
+    Want want;
+    want.SetAction("action.not.exist");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0300 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0400
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.implicit query extension info failed, scope in cur bundle, appIndex = 1
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0400, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0400");
+    Want want;
+    want.SetAction("action.not.exist");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    int32_t appIndex = 1;
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0400 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0500
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.implicit query extension info failed, scope in all bundle, appIndex = 1
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0500, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0500");
+    Want want;
+    want.SetAction("action.not.exist");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    int32_t appIndex = 1;
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0500 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0600
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.explicit query extension info success, get more than one extension
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0600, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0600");
+    std::string moduleName = "m1";
+    std::string extension = "test-extension";
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(extensionInfos.size(), 2);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0600 finish");
 }
 }
