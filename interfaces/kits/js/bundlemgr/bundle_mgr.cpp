@@ -8826,19 +8826,19 @@ NativeValue* JsBundleMgr::OnGetProfile(
         callbackPtr->errCode = PARAM_TYPE_ERROR;
     }
     for (size_t i = 0; i < info.argc; ++i) {
-        if ((i == 0) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+        if ((i == PARAM0) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
             if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->moduleName)) {
                 APP_LOGE("ConvertFromJsValue failed.");
             }
-        } else if ((i == 1) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+        } else if ((i == PARAM1) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
             if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->abilityName)) {
                 APP_LOGE("ConvertFromJsValue failed.");
             }
-        } else if ((i == 2) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
+        } else if ((i == PARAM2) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
             if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->metadataName)) {
                 APP_LOGE("ConvertFromJsValue failed.");
             }
-        } else if ((i == 3) && (info.argv[i]->TypeOf() == NATIVE_FUNCTION)) {
+        } else if ((i == PARAM3) && (info.argv[i]->TypeOf() == NATIVE_FUNCTION)) {
             APP_LOGD("Last param is function.");
         } else {
             APP_LOGE("Convert param is error. %{public}d", i);
@@ -8849,17 +8849,17 @@ NativeValue* JsBundleMgr::OnGetProfile(
     APP_LOGD("GetProfile finish to parse arguments with errCode %{public}d", callbackPtr->errCode);
     auto complete = [obj = this, asyncInfo = callbackPtr] (NativeEngine &engine, AsyncTask &task, int32_t status) {
         auto errCode = asyncInfo->errCode;
-        std::string GetProfileErrData;
+        std::string getProfileErrData;
         if (errCode != 0) {
-            GetProfileErrData = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, GetProfileErrData));
+            getProfileErrData = "type mismatch";
+            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, getProfileErrData));
             return;
         }
         napi_env env = nullptr;
         auto ret = InnerGetProfile(env, *asyncInfo);
         if (!ret) {
-            GetProfileErrData = "GetProfile failed";
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine,GetProfileErrData));
+            getProfileErrData = "GetProfile failed";
+            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine, getProfileErrData));
             return;
         }
         task.ResolveWithErr(engine, obj->CreateProfiles(engine, asyncInfo->profileVec));
