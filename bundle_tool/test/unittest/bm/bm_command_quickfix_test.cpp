@@ -64,14 +64,14 @@ void BmCommandQuickFixTest::TearDown()
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_0100, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
     BundleManagerShellCommand cmd(argc, argv);
-
+    
     EXPECT_EQ(cmd.ExecCommand(), "error: parameter is not enough.\n" + HELP_MSG_QUICK_FIX);
 }
 
@@ -84,10 +84,10 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_0100, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_0200, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--invalid",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--invalid"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -105,10 +105,10 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_0200, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Help_0100, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-h",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-h"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -126,10 +126,10 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Help_0100, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Help_0200, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--help",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--help"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -147,10 +147,10 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Help_0200, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0100, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-a",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-a"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -168,10 +168,10 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0100, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0200, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--apply",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--apply"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -189,11 +189,11 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0200, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0300, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--apply",
-        (char *)"--invalidKey",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--apply"),
+        const_cast<char*>("--invalidKey"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -211,12 +211,12 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0300, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0400, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--apply",
-        (char *)"--invalidKey",
-        (char *)"invalidValue",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--apply"),
+        const_cast<char*>("--invalidKey"),
+        const_cast<char*>("invalidValue"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -234,12 +234,12 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0400, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0500, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--apply",
-        (char *)"-f",
-        (char *)"/data/storage/el1/aa.hqf",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--apply"),
+        const_cast<char*>("-f"),
+        const_cast<char*>("/data/storage/el1/aa.hqf"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -257,13 +257,13 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0500, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0600, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--apply",
-        (char *)"--file-path",
-        (char *)"/data/storage/el1/aa.hqf",
-        (char *)"/data/storage/el2/bb.hqf",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--apply"),
+        const_cast<char*>("--file-path"),
+        const_cast<char*>("/data/storage/el1/aa.hqf"),
+        const_cast<char*>("/data/storage/el2/bb.hqf"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -281,12 +281,12 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0600, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0700, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--apply",
-        (char *)"--file-path",
-        (char *)"/data/storage/el1",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--apply"),
+        const_cast<char*>("--file-path"),
+        const_cast<char*>("/data/storage/el1"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -304,10 +304,10 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Apply_0700, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0100, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-q",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-q"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -325,10 +325,10 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0100, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0200, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--query",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--query"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -346,11 +346,11 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0200, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0300, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-q",
-        (char *)"--invalidKey",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-q"),
+        const_cast<char*>("--invalidKey"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -368,12 +368,12 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0300, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0400, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--query",
-        (char *)"--invalidKey",
-        (char *)"invalidValue",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--query"),
+        const_cast<char*>("--invalidKey"),
+        const_cast<char*>("invalidValue"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -391,12 +391,12 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0400, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0500, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--query",
-        (char *)"-b",
-        (char *)"bundleName1",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--query"),
+        const_cast<char*>("-b"),
+        const_cast<char*>("bundleName1"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -414,12 +414,12 @@ HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0500, TestSize.Level1)
 HWTEST_F(BmCommandQuickFixTest, Bm_Command_QuickFix_Query_0600, TestSize.Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--query",
-        (char *)"--bundle-name",
-        (char *)"bundleName1",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--query"),
+        const_cast<char*>("--bundle-name"),
+        const_cast<char*>("bundleName1"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 

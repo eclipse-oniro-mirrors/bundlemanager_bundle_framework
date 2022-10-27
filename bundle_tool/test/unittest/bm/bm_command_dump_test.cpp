@@ -93,9 +93,9 @@ void BmCommandDumpTest::SetMockObjects(BundleManagerShellCommand &cmd) const
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0100, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -115,10 +115,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0100, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0200, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -138,10 +138,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0200, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0300, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-x",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-x"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -161,10 +161,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0300, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0400, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -184,10 +184,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0400, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0500, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--x",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--x"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -207,10 +207,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0500, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0600, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -230,10 +230,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0600, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0700, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-h",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-h"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -253,10 +253,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0700, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0800, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--help",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--help"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -276,10 +276,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0800, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0900, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-a",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-a"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -299,10 +299,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_0900, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1000, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--all",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--all"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -322,10 +322,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1000, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1100, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -345,11 +345,11 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1100, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1200, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -370,10 +370,10 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1200, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1300, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-s",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-s"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
     BundleManagerShellCommand cmd(argc, argv);
@@ -391,12 +391,12 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1300, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1400, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-s",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-s"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
     BundleManagerShellCommand cmd(argc, argv);
@@ -413,12 +413,12 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1400, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1500, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-u",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-u"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
     BundleManagerShellCommand cmd(argc, argv);
@@ -435,13 +435,13 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1500, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1600, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-u",
-        (char *)DEFAULT_USER_ID.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-u"),
+        const_cast<char*>(DEFAULT_USER_ID.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
     BundleManagerShellCommand cmd(argc, argv);
@@ -458,12 +458,12 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1600, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1700, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-d",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-d"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
     BundleManagerShellCommand cmd(argc, argv);
@@ -480,13 +480,13 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1700, Function | MediumTest | Level1
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1800, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-d",
-        (char *)DEFAULT_DEVICE_TIME.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-d"),
+        const_cast<char*>(DEFAULT_DEVICE_TIME.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
     BundleManagerShellCommand cmd(argc, argv);
