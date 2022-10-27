@@ -30,7 +30,9 @@ namespace OHOS {
         std::string bundlename (reinterpret_cast<const char*>(data), size);
         applicationInfo.bundleName = bundlename;
         auto application = ApplicationInfo::Unmarshalling(dataMessageParcel);
-        return application != nullptr;
+        if (application == nullptr) {
+            return false;
+        }
         ApplicationInfo oldApplicationInfo;
         if (!oldApplicationInfo.Marshalling(dataMessageParcel)) {
             return false;
