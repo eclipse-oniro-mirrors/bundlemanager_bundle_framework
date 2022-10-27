@@ -93,9 +93,9 @@ void BmCommandInstallTest::SetMockObjects(BundleManagerShellCommand &cmd) const
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0100, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -115,10 +115,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0100, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0200, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -138,10 +138,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0200, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0300, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-x",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-x"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -161,10 +161,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0300, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0400, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -184,10 +184,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0400, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0500, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--x",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--x"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -207,10 +207,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0500, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0600, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -230,10 +230,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0600, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0700, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-h",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-h"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -253,10 +253,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0700, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0800, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--help",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--help"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -276,10 +276,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0800, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0900, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -299,10 +299,10 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_0900, Function | MediumTest | 
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1000, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-r",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-r"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -324,11 +324,11 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1100, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -349,12 +349,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1200, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)"-r",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-r"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -375,12 +375,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1300, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-r",
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-r"),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -402,12 +402,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1600, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -429,12 +429,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1700, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_INSTALL_PATH1.c_str(),
-        (char *)STRING_BUNDLE_INSTALL_PATH2.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_INSTALL_PATH1.c_str()),
+        const_cast<char*>(STRING_BUNDLE_INSTALL_PATH2.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -456,12 +456,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1800, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_BUNDLE_INSTALL_PATH2.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_BUNDLE_INSTALL_PATH2.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -483,12 +483,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1900, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--bundle-path",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--bundle-path"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -510,12 +510,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2000, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--bundle-path",
-        (char *)STRING_BUNDLE_INSTALL_PATH1.c_str(),
-        (char *)STRING_BUNDLE_INSTALL_PATH2.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--bundle-path"),
+        const_cast<char*>(STRING_BUNDLE_INSTALL_PATH1.c_str()),
+        const_cast<char*>(STRING_BUNDLE_INSTALL_PATH2.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -537,12 +537,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2100, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--bundle-path",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_BUNDLE_INSTALL_PATH2.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--bundle-path"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_BUNDLE_INSTALL_PATH2.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -564,13 +564,13 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2300, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"-r",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-r"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -592,13 +592,13 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2400, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-r",
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-r"),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -620,13 +620,13 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2600, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)"-r",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>("-r"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -648,14 +648,14 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2700, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"-u",
-        (char *)"xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-u"),
+        const_cast<char*>("xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -677,13 +677,13 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2800, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"-u",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-u"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -705,14 +705,14 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2900, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)STRING_OTHER_BUNDLE_PATH.c_str(),
-        (char *)"-u",
-        (char *)DEFAULT_USER_ID.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(STRING_OTHER_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-u"),
+        const_cast<char*>(DEFAULT_USER_ID.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -733,12 +733,12 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_3000, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)"-w",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-w"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -759,13 +759,13 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_3100, Function | MediumTest | 
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-p",
-        (char *)STRING_BUNDLE_PATH.c_str(),
-        (char *)"-w",
-        (char *)DEFAULT_WAIT_TIME.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-w"),
+        const_cast<char*>(DEFAULT_WAIT_TIME.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
