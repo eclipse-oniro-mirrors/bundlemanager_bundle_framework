@@ -58,6 +58,7 @@ const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
 const int32_t RESID = 16777218;
+const int32_t HUNDRED_USERID = 20010037;
 constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
 
@@ -6420,6 +6421,41 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0200, Function | MediumTes
         bundleMgrProxy->GetBundleArchiveInfoV9("", 0, bundleInfo);
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
     std::cout << "END GetBundleArchiveInfoV9_0200" << std::endl;
+}
+
+/**
+ * @tc.number: GetShortcutInfoV9_0100
+ * @tc.name: test query archive information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.query archive information without an ability information
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0100, Function | MediumTest | Level1)
+{
+    APP_LOGD("START GetShortcutInfoV9_010");
+    int32_t originUid = geteuid();
+    seteuid(HUNDRED_USERID);
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9(appName, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    seteuid(originUid);
+    APP_LOGD("END GetShortcutInfoV9_010");
 }
 
 /**
