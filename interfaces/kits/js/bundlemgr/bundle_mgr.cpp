@@ -8726,9 +8726,8 @@ int32_t JsBundleMgr::InitGetAbilityIcon (NativeEngine &engine, NativeCallbackInf
     return errorCode;
 }
 
-static std::shared_ptr<Media::PixelMap> ExecuteGetAbilityIcon(
-    NativeEngine &engine, const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, bool hasModuleName)
+static std::shared_ptr<Media::PixelMap> ExecuteGetAbilityIcon(NativeEngine &engine, const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName, bool hasModuleName)
 {
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGE("bundleName or abilityName is invalid param");
