@@ -83,8 +83,8 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
     if (bundlePaths.size() == 1) {
         struct stat s;
         std::string bundlePath = bundlePaths.front();
-        std::string realPath = "";
         if (stat(bundlePath.c_str(), &s) == 0) {
+            std::string realPath = "";
             // it is a direction
             if ((s.st_mode & S_IFDIR) && !GetHapFilesFromBundlePath(bundlePath, realPaths)) {
                 APP_LOGE("GetHapFilesFromBundlePath failed with bundlePath:%{private}s", bundlePaths.front().c_str());
@@ -514,7 +514,7 @@ bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::str
         APP_LOGE("input sandboxPath or bundleName invalid");
         return false;
     }
-    
+
     realPath = sandBoxPath;
     std::string relaDataPath = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR
         + std::to_string(BundleUtil::GetUserIdByCallingUid()) + Constants::BASE + bundleName;

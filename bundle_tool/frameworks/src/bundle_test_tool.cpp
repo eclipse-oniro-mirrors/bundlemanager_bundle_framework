@@ -1084,7 +1084,7 @@ ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
         }
-         
+
         if (option == -1 || option == '?') {
             result = !CheckSandboxErrorOption(option, counter, commandName) ? OHOS::ERR_INVALID_VALUE : result;
             break;
@@ -1103,7 +1103,7 @@ ErrCode BundleTestTool::RunAsUninstallSandboxCommand()
     } else {
         APP_LOGD("uninstallSandbox app bundleName is %{private}s", bundleName.c_str());
     }
-    
+
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_UNINSTALL_SANDBOX);
         return result;
@@ -1165,7 +1165,7 @@ ErrCode BundleTestTool::RunAsDumpSandboxCommand()
     } else {
         APP_LOGD("dumpSandbox app bundleName is %{public}s", bundleName.c_str());
     }
-    
+
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_DUMP_SANDBOX);
         return result;
@@ -1756,11 +1756,10 @@ ErrCode BundleTestTool::CheckAppRunningRuleCorrectOption(int option, const std::
             std::stringstream array(arrayJsonRule);
             std::string object;
             while (getline(array, object, ';')) {
-                int notFind = -1;
-                int pos1 = object.find("appId");
-                int pos2 = object.find("controlMessage");
-                int pos3 = object.find(":", pos2);
-                if ((pos1 == notFind) || (pos2 == notFind)) {
+                size_t pos1 = object.find("appId");
+                size_t pos2 = object.find("controlMessage");
+                size_t pos3 = object.find(":", pos2);
+                if ((pos1 == std::string::npos) || (pos2 == std::string::npos)) {
                     return OHOS::ERR_INVALID_VALUE;
                 }
                 std::string appId = object.substr(pos1+6, pos2-pos1-7);

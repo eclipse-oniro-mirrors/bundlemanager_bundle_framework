@@ -298,7 +298,7 @@ DistributedBundleInfo DistributedDataStorage::ConvertToDistributedBundleInfo(con
             moduleAbilityInfos[abilityInfo.moduleName].emplace_back(distributedAbilityInfo);
         }
     }
-    for (auto& moduleAbilityInfo : moduleAbilityInfos) {
+    for (const auto& moduleAbilityInfo : moduleAbilityInfos) {
         DistributedModuleInfo distributedModuleInfo;
         distributedModuleInfo.moduleName = moduleAbilityInfo.first;
         distributedModuleInfo.abilities = moduleAbilityInfo.second;

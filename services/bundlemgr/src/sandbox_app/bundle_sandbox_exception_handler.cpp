@@ -56,9 +56,6 @@ void BundleSandboxExceptionHandler::RemoveSandboxDataDirAndTokenId(const std::st
     const std::vector<SandboxAppPersistentInfo> &sandboxPersistentInfo, const InnerBundleInfo &info)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    if (commonEventMgr == nullptr) {
-        APP_LOGW("commonEventMgr is nullptr");
-    }
 
     for (const auto& sandboxInfo : sandboxPersistentInfo) {
         APP_LOGD("start to remove sandbox dir of %{public}s_%{public}d", bundleName.c_str(), sandboxInfo.appIndex);

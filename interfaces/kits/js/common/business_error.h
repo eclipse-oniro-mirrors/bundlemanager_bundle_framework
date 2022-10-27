@@ -27,7 +27,7 @@ public:
 static void ThrowError(napi_env env, int32_t err, const std::string &msg = "");
 
 static void ThrowParameterTypeError(napi_env env, int32_t err,
-    const std::string &msg, const std::string &type);
+    const std::string &parameter, const std::string &type);
 
 static void ThrowTooFewParametersError(napi_env env, int32_t err);
 
