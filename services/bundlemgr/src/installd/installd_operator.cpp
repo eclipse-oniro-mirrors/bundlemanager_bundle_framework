@@ -205,13 +205,14 @@ bool InstalldOperator::IsNativeFile(
         return false;
     }
     std::string prefix;
-    std::string suffix;
+    std::vector<std::string> suffixs;
     if (extractParam.extractFileType == ExtractFileType::SO) {
         prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-        suffix = Constants::SO_SUFFIX;
+        suffixs.emplace_back(Constants::SO_SUFFIX);
     } else if (extractParam.extractFileType == ExtractFileType::AN) {
         prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-        suffix = Constants::AN_SUFFIX;
+        suffixs.emplace_back(Constants::AN_SUFFIX);
+        suffixs.emplace_back(Constants::AI_SUFFIX);
     } else {
         return false;
     }
@@ -220,10 +221,20 @@ bool InstalldOperator::IsNativeFile(
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
-    if (entryName.find(suffix) == std::string::npos) {
-        APP_LOGD("file name not so format.");
+
+    bool checkSuffix = false;
+    for (const auto &suffix : suffixs) {
+        if (entryName.find(suffix) != std::string::npos) {
+            checkSuffix = true;
+            break;
+        }
+    }
+
+    if (!checkSuffix) {
+        APP_LOGD("file type error.");
         return false;
     }
+
     APP_LOGD("find native file, prefix: %{public}s, entryName: %{public}s",
         prefix.c_str(), entryName.c_str());
     return true;
