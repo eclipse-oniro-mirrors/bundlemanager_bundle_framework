@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "base_bundle_installer.h"
 #include "bundle_install_checker.h"
 #include "directory_ex.h"
 
@@ -37,6 +40,8 @@ const std::string ARM_AN_PATH = "/an/arm/arm.so";
 const std::string X86 = "x86";
 const std::string X86_SO_PATH = "/lib/x86/x86.so";
 const std::string X86_AN_PATH = "/an/x86/x86.so";
+const std::string MODULE_PACKAGE = "com.example.test";
+const std::string MODULE_PATH = "test_tmp";
 }  // namespace
 
 class BmsBundleInstallCheckerTest : public testing::Test {
@@ -114,6 +119,30 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMultiNativeFile_0100, Function | Smal
     innerBundleInfo5.SetNativeLibraryPath(X86_SO_PATH);
     infos.emplace(HAP_FIVE, innerBundleInfo5);
     ret = bundleInstallChecker.CheckMultiNativeFile(infos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractModule_0100
+ * @tc.name: test the start function of ExtractModule
+ * @tc.desc: 1. BaseBundleInstaller
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, ExtractModule_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = MODULE_PACKAGE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isLibIsolated = true;
+    innerModuleInfo.cpuAbi = X86;
+    innerModuleInfo.nativeLibraryPath = X86;
+    innerModuleInfo.moduleName = MODULE_PACKAGE;
+    innerModuleInfo.modulePackage = MODULE_PACKAGE;
+    innerModuleInfo.name = MODULE_PACKAGE;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_PACKAGE, innerModuleInfo);
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.modulePackage_ = MODULE_PACKAGE;
+    ErrCode ret = baseBundleInstaller.ExtractModule(innerBundleInfo, MODULE_PATH);
     EXPECT_NE(ret, ERR_OK);
 }
 } // OHOS
