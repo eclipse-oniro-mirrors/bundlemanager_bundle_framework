@@ -26,6 +26,7 @@ group("fuzztest") {
     "applicationinfofromjson_fuzzer:ApplicationInfoFromJsonFuzzTest",
     "apprunningcontrolrule_fuzzer:AppRunningControlRuleFuzzTest",
     "apprunningcontrolruleresult_fuzzer:AppRunningControlRuleResultFuzzTest",
+    "bundlefileutil_fuzzer:BundleFileUtilFuzzTest",
     "bundleinfo_fuzzer:BundleInfoFuzzTest",
     "bundleinfofromjson_fuzzer:BundleInfoFromJsonFuzzTest",
     "bundleinstallerproxy_fuzzer:BundleInstallerProxyFuzzTest",
