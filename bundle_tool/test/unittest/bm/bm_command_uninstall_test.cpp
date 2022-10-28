@@ -92,9 +92,9 @@ void BmCommandUninstallTest::SetMockObjects(BundleManagerShellCommand &cmd) cons
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0100, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -114,10 +114,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0100, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0200, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -137,10 +137,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0200, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0300, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-x",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-x"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -160,10 +160,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0300, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0400, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -183,10 +183,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0400, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0500, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--x",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--x"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -206,10 +206,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0500, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0600, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--xxx",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--xxx"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -229,10 +229,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0600, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0700, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-h",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-h"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -252,10 +252,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0700, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0800, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--help",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("--help"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -275,10 +275,10 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0800, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0900, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -298,11 +298,11 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_0900, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1000, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -322,12 +322,12 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1000, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1100, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-m",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-m"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -347,11 +347,11 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1100, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1200, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-m",
-        (char *)STRING_MODULE_NAME.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-m"),
+        const_cast<char*>(STRING_MODULE_NAME.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -371,13 +371,13 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1200, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1300, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-m",
-        (char *)STRING_MODULE_NAME.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-m"),
+        const_cast<char*>(STRING_MODULE_NAME.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -397,12 +397,12 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1300, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1400, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-u",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-u"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -422,13 +422,13 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1400, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1500, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-u",
-        (char *)DEFAULT_USER_ID.c_str(),
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-u"),
+        const_cast<char*>(DEFAULT_USER_ID.c_str()),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -448,12 +448,12 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1500, Function | MediumTes
 HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_1600, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-k",
-        (char *)"",
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-k"),
+        const_cast<char*>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 

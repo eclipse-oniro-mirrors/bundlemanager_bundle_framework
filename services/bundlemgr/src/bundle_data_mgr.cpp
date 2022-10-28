@@ -1758,18 +1758,22 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
     if (ret != ERR_OK) {
         return ret;
     }
-    auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
-    if (!ability) {
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-    if (!moduleName.empty()) {
-        if ((*ability).moduleName != moduleName) {
-            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
+    AbilityInfo abilityInfo;
+    if (moduleName.empty()) {
+        auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
+        if (!ability) {
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+        abilityInfo = *ability;
+    } else {
+        ret = innerBundleInfo.FindAbilityInfo(bundleName, moduleName, abilityName, abilityInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", bundleName.c_str(), ret);
+            return ret;
         }
     }
     bool isEnable = false;
-    ret = innerBundleInfo.IsAbilityEnabledV9(*ability, GetUserId(), isEnable);
+    ret = innerBundleInfo.IsAbilityEnabledV9(abilityInfo, GetUserId(), isEnable);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -1777,17 +1781,17 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
         APP_LOGE("%{public}s ability disabled: %{public}s", bundleName.c_str(), abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
     }
-    if ((*ability).labelId == 0) {
-        label = (*ability).label;
+    if (abilityInfo.labelId == 0) {
+        label = abilityInfo.label;
         return ERR_OK;
     }
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, (*ability).moduleName, GetUserId());
+        GetResourceManager(bundleName, abilityInfo.moduleName, GetUserId());
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto state = resourceManager->GetStringById(static_cast<uint32_t>((*ability).labelId), label);
+    auto state = resourceManager->GetStringById(static_cast<uint32_t>(abilityInfo.labelId), label);
     if (state != OHOS::Global::Resource::RState::SUCCESS) {
         APP_LOGE("ResourceManager GetStringById failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -2152,7 +2156,7 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("Request userId is invalid");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
@@ -2269,7 +2273,7 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("Request userId is invalid");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto infoItem = bundleInfos_.find(abilityInfo.bundleName);
     if (infoItem == bundleInfos_.end()) {
@@ -2702,7 +2706,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName,
         BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
-        APP_LOGE("ExplicitQueryExtensionInfoV9 failed");
+        APP_LOGE("GetInnerBundleInfoWithFlagsV9 failed");
         return ret;
     }
 
@@ -4015,20 +4019,22 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
     if (errCode != ERR_OK) {
         return errCode;
     }
-
-    auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
-    if (!ability) {
-        APP_LOGE("abilityName:%{public}s not find", abilityName.c_str());
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-    if (!moduleName.empty()) {
-        if ((*ability).moduleName != moduleName) {
-            APP_LOGE("%{public}s can not find module: %{public}s", bundleName.c_str(), moduleName.c_str());
+    AbilityInfo abilityInfo;
+    if (moduleName.empty()) {
+        auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
+        if (!ability) {
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+        abilityInfo = *ability;
+    } else {
+        errCode = innerBundleInfo.FindAbilityInfo(bundleName, moduleName, abilityName, abilityInfo);
+        if (errCode != ERR_OK) {
+            APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", bundleName.c_str(), errCode);
+            return errCode;
         }
     }
     bool isEnable;
-    errCode = innerBundleInfo.IsAbilityEnabledV9(*ability, GetUserId(userId), isEnable);
+    errCode = innerBundleInfo.IsAbilityEnabledV9(abilityInfo, GetUserId(userId), isEnable);
     if (errCode != ERR_OK) {
         return errCode;
     }
@@ -4037,13 +4043,13 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, moduleName, GetUserId(userId));
+        GetResourceManager(bundleName, abilityInfo.moduleName, GetUserId(userId));
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     OHOS::Global::Resource::RState ret =
-        resourceManager->GetMediaDataById(static_cast<uint32_t>((*ability).iconId), len, mediaDataPtr);
+        resourceManager->GetMediaDataById(static_cast<uint32_t>(abilityInfo.iconId), len, mediaDataPtr);
     if (ret != OHOS::Global::Resource::RState::SUCCESS || mediaDataPtr == nullptr || len == 0) {
         APP_LOGE("GetMediaDataById failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;

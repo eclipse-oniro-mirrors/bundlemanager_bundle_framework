@@ -117,7 +117,7 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
         delete work;
         return;
     }
-    work->data = (void*)asyncCallbackInfo;
+    work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     int32_t ret = ExcuteWork(loop, work);
     if (ret != 0) {
         if (asyncCallbackInfo != nullptr) {

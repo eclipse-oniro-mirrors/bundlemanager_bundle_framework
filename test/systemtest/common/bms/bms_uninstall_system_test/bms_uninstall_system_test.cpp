@@ -101,8 +101,8 @@ public:
     void TearDown();
     static void Install(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
-    static void StreamInstall(
-        const std::vector<std::string> &bundleFilePaths, const InstallFlag installFlag, std::vector<std::string> &resvec);
+    static void StreamInstall(const std::vector<std::string> &bundleFilePaths,
+        const InstallFlag installFlag, std::vector<std::string> &resvec);
     static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec);
     static void UninstallWithoutResvec(const std::string &bundleName);
     static void HapUninstall(

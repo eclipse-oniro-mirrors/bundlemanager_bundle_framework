@@ -119,6 +119,7 @@ const std::map<std::string, std::string> ABI_MAP = {
 };
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
+constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";

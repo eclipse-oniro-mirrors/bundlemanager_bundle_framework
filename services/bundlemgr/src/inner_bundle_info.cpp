@@ -1540,6 +1540,23 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
     return std::nullopt;
 }
 
+ErrCode InnerBundleInfo::FindAbilityInfo(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, AbilityInfo &info) const
+{
+    for (const auto &ability : baseAbilityInfos_) {
+        auto abilityInfo = ability.second;
+        if ((abilityInfo.bundleName == bundleName) && (abilityInfo.moduleName == moduleName)) {
+            if (abilityInfo.name == abilityName) {
+                info = abilityInfo;
+                return ERR_OK;
+            } else {
+                return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+            }
+        }
+    }
+    return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+}
+
 std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(
     const std::string &bundleName, int32_t userId) const
 {
@@ -2007,10 +2024,6 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);
         auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId);
         if (hapmoduleinfo) {
-            auto it = innerModuleInfos_.find(info.second.modulePackage);
-            if (it == innerModuleInfos_.end()) {
-                APP_LOGE("can not find module %{public}s", info.second.modulePackage.c_str());
-            }
             bundleInfo.moduleNames.emplace_back(info.second.moduleName);
             bundleInfo.moduleDirs.emplace_back(info.second.modulePath);
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
@@ -2108,12 +2121,13 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
     for (const auto &info : innerModuleInfos_) {
         auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId);
         if (hapmoduleinfo) {
+            HapModuleInfo hapModuleInfo = *hapmoduleinfo;
             auto it = innerModuleInfos_.find(info.second.modulePackage);
             if (it == innerModuleInfos_.end()) {
                 APP_LOGE("can not find module %{public}s", info.second.modulePackage.c_str());
+            } else {
+                hapModuleInfo.hashValue = it->second.hashValue;
             }
-            HapModuleInfo hapModuleInfo = *hapmoduleinfo;
-            hapModuleInfo.hashValue = it->second.hashValue;
             hapModuleInfo.moduleSourceDir = info.second.modulePath;
             if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
                 != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
@@ -2506,7 +2520,7 @@ ErrCode InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName, const 
 {
     APP_LOGD("SetAbilityEnabled :%{public}s, %{public}s, %{public}s, %{public}d",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
-    for (auto &ability : baseAbilityInfos_) {
+    for (const auto &ability : baseAbilityInfos_) {
         if ((ability.second.bundleName == bundleName) && (ability.second.name == abilityName) &&
             (moduleName.empty() || (ability.second.moduleName == moduleName))) {
             auto &key = NameAndUserIdToKey(bundleName, userId);

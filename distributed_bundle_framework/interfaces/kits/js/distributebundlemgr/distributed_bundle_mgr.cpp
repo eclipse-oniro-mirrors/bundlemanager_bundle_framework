@@ -395,7 +395,7 @@ napi_value GetRemoteAbilityInfo(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -482,7 +482,7 @@ napi_value GetRemoteAbilityInfos(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
