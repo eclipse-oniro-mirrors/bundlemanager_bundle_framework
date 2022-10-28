@@ -30,6 +30,7 @@
         "description": "$string:entry_desc",
         "descriptionId": 16777220,
         "deviceTypes": [
+            "tablet",
             "default"
         ],
         "installationFree": false,

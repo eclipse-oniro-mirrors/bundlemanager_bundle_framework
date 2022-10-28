@@ -43,6 +43,7 @@
             }
         ],
         "deviceType":[
+            "tablet",
             "default",
             "tablet"
         ],

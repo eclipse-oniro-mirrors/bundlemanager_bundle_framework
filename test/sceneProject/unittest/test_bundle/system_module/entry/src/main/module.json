@@ -8,6 +8,7 @@
         "process":"bba",
         "mainElement":"MainAbility",
         "deviceTypes":[
+            "tablet",
             "default",
             "car",
             "liteWearable",
