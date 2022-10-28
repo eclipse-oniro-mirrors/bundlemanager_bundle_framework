@@ -1754,7 +1754,8 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
 #ifdef GLOBAL_RESMGR_ENABLE
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
-    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId());
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId());
     if (ret != ERR_OK) {
         return ret;
     }
