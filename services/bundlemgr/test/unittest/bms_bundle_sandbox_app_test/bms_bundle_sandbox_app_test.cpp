@@ -1596,35 +1596,6 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetInnerBundleInfoByUid_0100
- * @tc.name: get sandbox app bundleInfo information
- * @tc.desc: 1. install a hap successfully
- *           2. the sandbox app install successfully
- *           3. get sandbox app bundleInfo information success by uid
- * @tc.require: AR000H02C4
- */
-HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0100, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    filePaths.emplace_back(bundleFile);
-    auto installRes = InstallBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_OK);
-
-    int32_t appIndex = 0;
-    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(appIndex, APP_INDEX_1);
-    CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
-
-    InnerBundleInfo info;
-    ErrCode testRet = GetInnerBundleInfoByUid(20010039, info);
-    EXPECT_EQ(testRet, ERR_OK);
-
-    UninstallBundle(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: GetInnerBundleInfoByUid_0200
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
