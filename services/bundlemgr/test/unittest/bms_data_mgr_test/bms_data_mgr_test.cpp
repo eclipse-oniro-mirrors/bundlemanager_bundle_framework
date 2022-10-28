@@ -587,8 +587,11 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0300, Function | SmallTest | Level0)
     auto dataMgr = GetDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     InnerBundleInfo info;
+    InnerBundleInfo info1;
     bool ret = dataMgr->AddInnerBundleInfo("", info);
+    bool ret1 = dataMgr->GetInnerBundleInfo("", info1);
     EXPECT_FALSE(ret);
+    EXPECT_FALSE(ret1);
 }
 
 /**
@@ -787,6 +790,27 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0300, Function | SmallTest | Level0)
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
     EXPECT_TRUE(ret3);
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_0400
+ * @tc.name: GenerateUidAndGid
+ * @tc.desc: 1. app type is third party app
+ *           2. test GenerateUidAndGid failed by empty params
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0400, Function | SmallTest | Level0)
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = "";
+
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+
+    bool ret = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_FALSE(ret);
+
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 
