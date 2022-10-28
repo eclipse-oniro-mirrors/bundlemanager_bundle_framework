@@ -54,6 +54,7 @@ int32_t APP_INDEX_1 = 1;
 int32_t APP_INDEX_2 = 2;
 const int32_t USERID = 100;
 const int32_t INVALID_USERID = 300;
+const int32_t TEST_UID = 20010039;
 const int32_t WAIT_TIME = 5; // init mocked bms
 } // namespace
 
@@ -1593,6 +1594,37 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest |
 
     ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, -1, info);
     EXPECT_NE(testRet, ERR_OK);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoByUid_0100
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information success by uid
+ * @tc.require: AR000H02C4
+ */
+HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0100, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+
+    SaveSandboxAppInfo(info, APP_INDEX_1);
+
+    InnerBundleInfo newInfo;
+    ErrCode testRet = GetInnerBundleInfoByUid(TEST_UID, newInfo);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(newInfo.GetBundleName(), BUNDLE_NAME);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME, APP_INDEX_1);
 }
 
 /**
