@@ -625,4 +625,49 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0300, Function | SmallTest | Le
     EXPECT_EQ(res, ERR_OK);
     EXPECT_EQ(want.GetAction(), "action.system.home");
 }
+
+/**
+ * @tc.number: DisposedStatus_0400
+ * @tc.name: test setting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.SetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0400, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    Want want;
+    want.SetAction("action.system.home");
+    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: DisposedStatus_0500
+ * @tc.name: test deleting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.DeleteDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0500, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->DeleteDisposedStatus(APPID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: DisposedStatus_0600
+ * @tc.name: test getting disposed status
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: 1.GetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0600, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    Want want;
+    auto res = appControlProxy->GetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS
