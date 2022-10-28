@@ -1444,11 +1444,6 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetPermissionDef of %{public}s", permissionName.c_str());
-    if (permissionName.empty()) {
-        APP_LOGE("fail to GetPermissionDef due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
-    }
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetPermissionDef due to write InterfaceToken fail");

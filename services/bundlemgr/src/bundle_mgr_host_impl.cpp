@@ -724,8 +724,8 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (permissionName.empty()) {
-        APP_LOGE("fail to GetPermissionDef due to params empty");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        APP_LOGW("fail to GetPermissionDef due to params empty");
+        return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED;
     }
     return BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
 }
