@@ -1298,5 +1298,20 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3200, Function | MediumTest | Level1)
     }
     std::cout << "END BMS_Search_3200" << std::endl;
 }
+
+/**
+ * @tc.number: BMS_Search_3300
+ * @tc.name: test HasSystemCapability interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
+ *           2.install the app
+ *           3.call HasSystemCapability failed by empty name
+ */
+HWTEST_F(BmsSearchSystemTest, BMS_Search_3300, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+
+    bool result = bundleMgrProxy->HasSystemCapability("");
+    EXPECT_FALSE(result);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
