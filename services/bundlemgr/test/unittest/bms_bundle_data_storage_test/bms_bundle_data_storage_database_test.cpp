@@ -1368,3 +1368,341 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | Smal
     auto it = info.FindHapModuleInfo("modulePackage", 100);
     EXPECT_EQ(it->hqfInfo.moduleName, "modulePackage");
 }
+
+/**
+ * @tc.number: InnerBundleInfo_0600
+ * @tc.name: Test FindAbilityInfos
+ * @tc.desc: 1.Test the FindAbilityInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "";
+    int32_t userId = Constants::ALL_USERID;
+    auto ret = info.FindAbilityInfos(bundleName, userId);
+    EXPECT_EQ(ret, std::nullopt);
+
+    AbilityInfo abilityInfo;
+    bundleName = "com.ohos.test";
+    abilityInfo.bundleName = bundleName;
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    ret = info.FindAbilityInfos(bundleName, userId);
+    EXPECT_EQ((*ret)[0].bundleName, "com.ohos.test");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0700
+ * @tc.name: Test RemoveModuleInfo
+ * @tc.desc: 1.Test the RemoveModuleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    ShortcutInfo shortcutInfo1;
+    ShortcutInfo shortcutInfo2;
+    CommonEventInfo commonEvent1;
+    CommonEventInfo commonEvent2;
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.name = "key";
+    std::vector<Skill> skill;
+    innerModuleInfo.extensionKeys.emplace_back("key1");
+    innerModuleInfo.extensionSkillKeys.emplace_back("key2");
+    info.InsertExtensionInfo("key1", extensionInfo);
+    info.InsertExtensionSkillInfo("key2", skill);
+    info.InsertInnerModuleInfo(".modulePackage.", innerModuleInfo);
+    info.InsertShortcutInfos(".wrong.", shortcutInfo1);
+    info.InsertShortcutInfos(".modulePackage.", shortcutInfo2);
+    info.InsertCommonEvents(".wrong.", commonEvent1);
+    info.InsertCommonEvents(".modulePackage.", commonEvent2);
+    info.RemoveModuleInfo(".modulePackage.");
+    auto ret1 = info.GetInnerExtensionInfos();
+    auto ret2 = info.GetExtensionSkillInfos();
+    EXPECT_EQ(ret1["key1"].name, "");
+    EXPECT_EQ(ret2["key2"].empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0800
+ * @tc.name: Test GetApplicationInfo
+ * @tc.desc: 1.Test the GetApplicationInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = ".modulePackage.";
+    innerModuleInfo.isModuleJson = true;
+    std::vector<Metadata> data;
+    Metadata data1;
+    data1.name = "data1";
+    data.emplace_back(data1);
+    innerModuleInfo.metadata = data;
+    info.InsertInnerModuleInfo(".modulePackage.", innerModuleInfo);
+    ApplicationInfo appInfo1;
+    appInfo1.bundleName = "com.ohos.test";
+    info.SetBaseApplicationInfo(appInfo1);
+    const int32_t failedId = -5;
+    const int32_t flags = 0;
+    ApplicationInfo appInfo2;
+    info.GetApplicationInfo(flags, failedId, appInfo2);
+    EXPECT_EQ(appInfo2.metadata[".modulePackage."].empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0900
+ * @tc.name: Test GetModuleWithHashValue
+ * @tc.desc: 1.Test the GetModuleWithHashValue of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.name = "infoName";
+    const int32_t flags = 0;
+    info.GetModuleWithHashValue(flags, "", hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.name, "infoName");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1000
+ * @tc.name: Test GetInnerModuleInfoByModuleName
+ * @tc.desc: 1.Test the GetInnerModuleInfoByModuleName of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    auto ret = info.GetInnerModuleInfoByModuleName("");
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1100
+ * @tc.name: Test GetModuleNames
+ * @tc.desc: 1.Test the GetModuleNames of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    info.InsertInnerModuleInfo("key", innerModuleInfo);
+    std::vector<std::string> moduleNames;
+    info.GetModuleNames(moduleNames);
+    EXPECT_EQ(moduleNames[0], "entry");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1200
+ * @tc.name: Test GetInnerBundleUserInfos
+ * @tc.desc: 1.Test the GetInnerBundleUserInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo1;
+    appInfo1.bundleName = "com.ohos.test";
+    info.SetBaseApplicationInfo(appInfo1);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    innerBundleUserInfo.bundleUserInfo.enabled = false;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    const int32_t userId1 = -1;
+    const int32_t userId2 = 100;
+    info.ResetBundleState(userId1);
+    auto ret = info.GetInnerBundleUserInfos();
+    EXPECT_EQ(ret["com.ohos.test_100"].bundleUserInfo.enabled, false);
+    info.ResetBundleState(userId2);
+    ret = info.GetInnerBundleUserInfos();
+    EXPECT_EQ(ret["com.ohos.test_100"].bundleUserInfo.enabled, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1300
+ * @tc.name: Test RemoveInnerBundleUserInfo
+ * @tc.desc: 1.Test the RemoveInnerBundleUserInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo1;
+    appInfo1.bundleName = "com.ohos.test";
+    info.SetBaseApplicationInfo(appInfo1);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.isRemovable["100"] = true;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    info.InsertInnerModuleInfo("name_100", innerModuleInfo);
+    const int32_t userId1 = -1;
+    const int32_t userId2 = 100;
+    info.RemoveInnerBundleUserInfo(userId1);
+    auto ret = info.GetInnerModuleInfos();
+    EXPECT_EQ(ret["name_100"].isRemovable["100"], true);
+    info.RemoveInnerBundleUserInfo(userId2);
+    ret = info.GetInnerModuleInfos();
+    EXPECT_EQ(ret["name_100"].isRemovable["100"], false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1400
+ * @tc.name: Test GetInnerBundleUserInfo
+ * @tc.desc: 1.Test the GetInnerBundleUserInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    int32_t userId = Constants::NOT_EXIST_USERID;
+    auto ret = info.GetInnerBundleUserInfo(userId, userInfo);
+    EXPECT_EQ(ret, true);
+    userId = 100;
+    ret = info.GetInnerBundleUserInfo(userId, userInfo);
+    EXPECT_EQ(ret, false);
+    userId = Constants::ALL_USERID;
+    ret = info.GetInnerBundleUserInfo(userId, userInfo);
+    EXPECT_EQ(ret, false);
+    ApplicationInfo appInfo;
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(userInfo);
+    ret = info.GetInnerBundleUserInfo(userId, userInfo);
+    EXPECT_EQ(ret, true);
+    userId = 100;
+    ret = info.GetInnerBundleUserInfo(userId, userInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1500
+ * @tc.name: Test IsAbilityEnabled
+ * @tc.desc: 1.Test the IsAbilityEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    int32_t userId = Constants::ALL_USERID;
+    bool ret = info.HasInnerBundleUserInfo(userId);
+    EXPECT_EQ(ret, false);
+    const int64_t time = 1;
+    uint32_t accessToken = 1;
+    info.SetBundleInstallTime(time, userId);
+    info.SetAccessTokenId(accessToken, userId);
+    info.SetBundleUpdateTime(time, userId);
+    userId = Constants::NOT_EXIST_USERID;
+    AbilityInfo abilityInfo;
+    ret = info.IsAbilityEnabled(abilityInfo, userId);
+    EXPECT_EQ(ret, true);
+    userId = Constants::ALL_USERID;
+    ret = info.IsAbilityEnabled(abilityInfo, userId);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1600
+ * @tc.name: Test FindAbilityInfos
+ * @tc.desc: 1.Test the FindAbilityInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "com.ohos.launcher";
+    const int userId = 100;
+    auto ret = info.FindAbilityInfos("", userId);
+    EXPECT_EQ(ret, std::nullopt);
+
+    ret = info.FindAbilityInfos(bundleName, userId);
+    EXPECT_EQ(ret, std::nullopt);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = bundleName;
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    ret = info.FindAbilityInfos(bundleName, userId);
+    EXPECT_EQ((*ret)[0].bundleName, bundleName);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1700
+ * @tc.name: Test IsBundleRemovable
+ * @tc.desc: 1.Test the IsBundleRemovable of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    bool isEnabled = true;
+    int32_t userId = Constants::ALL_USERID;
+    auto ret = info.SetAbilityEnabled("", "", "", isEnabled, userId);
+    EXPECT_NE(ret, OHOS::ERR_OK);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1800
+ * @tc.name: Test FindExtensionInfo
+ * @tc.desc: 1.Test the FindExtensionInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "";
+    std::string moduleName = "";
+    std::string extensionName = "";
+    auto ret = info.FindExtensionInfo(bundleName, moduleName, extensionName);
+    EXPECT_EQ(ret, std::nullopt);
+
+    ExtensionAbilityInfo extensionInfo;
+    bundleName = "com.ohos.test";
+    moduleName = "entry";
+    extensionName = "extension";
+    extensionInfo.bundleName = bundleName;
+    extensionInfo.moduleName = moduleName;
+    extensionInfo.name = "extension";
+    info.InsertExtensionInfo("key", extensionInfo);
+    ret = info.FindExtensionInfo(bundleName, moduleName, extensionName);
+    EXPECT_EQ((*ret).bundleName, "com.ohos.test");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_1900
+ * @tc.name: Test FindExtensionInfo
+ * @tc.desc: 1.Test the FindExtensionInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "";
+    auto ret = info.FindExtensionInfos(bundleName);
+    EXPECT_EQ(ret, std::nullopt);
+
+    bundleName = "com.ohos.nullextension";
+    ret = info.FindExtensionInfos(bundleName);
+    EXPECT_EQ(ret, std::nullopt);
+
+    ExtensionAbilityInfo extensionInfo;
+    bundleName = "com.ohos.test";
+    extensionInfo.bundleName = bundleName;
+    info.InsertExtensionInfo("key", extensionInfo);
+    ret = info.FindExtensionInfos(bundleName);
+    EXPECT_EQ((*ret)[0].bundleName, "com.ohos.test");
+}
+
+/**
+ * @tc.number: Test_0500
+ * @tc.name: Test Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of Parcel
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, Parcel_0100, Function | SmallTest | Level1)
+{
+    uint32_t b = 0;
+    int32_t maxInt = (b - 1) / 2;
+    OHOS::Parcel parcel;
+    bool ret = parcel.WriteInt32(maxInt - 10);
+    EXPECT_EQ(ret, true);
+    for (int i = 0; i < 10; i++) {
+        ret = parcel.WriteString(NORMAL_BUNDLE_NAME);
+        EXPECT_EQ(ret, true);
+    }
+
+    RequestPermissionUsedScene *requestPermissionUsedScene = RequestPermissionUsedScene::Unmarshalling(parcel);
+    EXPECT_EQ(requestPermissionUsedScene, nullptr);
+}
