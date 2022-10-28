@@ -2562,7 +2562,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
             }
-            if (valueType == napi_number && !CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
                 return nullptr;
