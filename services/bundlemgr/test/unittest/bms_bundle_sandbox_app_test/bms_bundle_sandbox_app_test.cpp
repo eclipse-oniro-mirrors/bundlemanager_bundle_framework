@@ -1602,7 +1602,7 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information success by uid
- * @tc.require: AR000H02C4
+ * @tc.require: issueI5Y75O
  */
 HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0100, Function | SmallTest | Level1)
 {
