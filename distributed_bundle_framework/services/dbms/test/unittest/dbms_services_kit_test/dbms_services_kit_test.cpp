@@ -160,7 +160,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0004, Function | SmallTest | L
         std::vector<ElementName> name;
         std::vector<RemoteAbilityInfo> info;
         auto ret = distributedBms->GetRemoteAbilityInfos(name, info);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 
@@ -179,7 +179,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0005, Function | SmallTest | L
         std::vector<ElementName> name;
         std::vector<RemoteAbilityInfo> info;
         auto ret = distributedBms->GetRemoteAbilityInfos(name, "", info);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 
