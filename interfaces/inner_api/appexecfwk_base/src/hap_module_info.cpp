@@ -89,28 +89,28 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t reqCapabilitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilitiesSize);
-    VECTOR_SECURITY_VERIFY(parcel, reqCapabilitiesSize, &reqCapabilities);
+    CONTAINER_SECURITY_VERIFY(parcel, reqCapabilitiesSize, &reqCapabilities);
     for (auto i = 0; i < reqCapabilitiesSize; i++) {
         reqCapabilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t deviceTypesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypesSize);
-    VECTOR_SECURITY_VERIFY(parcel, deviceTypesSize, &deviceTypes);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceTypesSize, &deviceTypes);
     for (auto i = 0; i < deviceTypesSize; i++) {
         deviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t dependenciesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependenciesSize);
-    VECTOR_SECURITY_VERIFY(parcel, dependenciesSize, &dependencies);
+    CONTAINER_SECURITY_VERIFY(parcel, dependenciesSize, &dependencies);
     for (auto i = 0; i < dependenciesSize; i++) {
         dependencies.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t abilityInfosSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfosSize);
-    VECTOR_SECURITY_VERIFY(parcel, abilityInfosSize, &abilityInfos);
+    CONTAINER_SECURITY_VERIFY(parcel, abilityInfosSize, &abilityInfos);
     for (auto i = 0; i < abilityInfosSize; i++) {
         std::unique_ptr<AbilityInfo> abilityInfo(parcel.ReadParcelable<AbilityInfo>());
         if (!abilityInfo) {
@@ -136,6 +136,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t isRemovableSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, isRemovableSize);
+    CONTAINER_SECURITY_VERIFY(parcel, isRemovableSize, &isRemovable);
     for (auto i = 0; i < isRemovableSize; i++) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         bool isRemove = parcel.ReadBool();
@@ -145,7 +146,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t extensionInfosSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfosSize);
-    VECTOR_SECURITY_VERIFY(parcel, extensionInfosSize, &extensionInfos);
+    CONTAINER_SECURITY_VERIFY(parcel, extensionInfosSize, &extensionInfos);
     for (auto i = 0; i < extensionInfosSize; i++) {
         std::unique_ptr<ExtensionAbilityInfo> extensionAbilityInfo(parcel.ReadParcelable<ExtensionAbilityInfo>());
         if (!extensionAbilityInfo) {
@@ -157,7 +158,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t metadataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
-    VECTOR_SECURITY_VERIFY(parcel, metadataSize, &metadata);
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
     for (int32_t i = 0; i < metadataSize; ++i) {
         std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
         if (!meta) {

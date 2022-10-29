@@ -197,6 +197,7 @@ Resource *Resource::Unmarshalling(Parcel &parcel)
 bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
 {
     int32_t metaDataSize = parcel.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(parcel, metaDataSize, &metaData);
     for (int32_t i = 0; i < metaDataSize; i++) {
         std::string mouduleName = Str16ToStr8(parcel.ReadString16());
         int32_t customizeDataSize = parcel.ReadInt32();
@@ -266,7 +267,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     formVisibleNotify = parcel.ReadBool();
     int32_t allowCommonEventSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, allowCommonEventSize);
-    VECTOR_SECURITY_VERIFY(parcel, allowCommonEventSize, &allowCommonEvent);
+    CONTAINER_SECURITY_VERIFY(parcel, allowCommonEventSize, &allowCommonEvent);
     for (auto i = 0; i < allowCommonEventSize; i++) {
         allowCommonEvent.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -298,21 +299,21 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
-    VECTOR_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
+    CONTAINER_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
     for (auto i = 0; i < permissionsSize; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t moduleSourceDirsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleSourceDirsSize);
-    VECTOR_SECURITY_VERIFY(parcel, moduleSourceDirsSize, &moduleSourceDirs);
+    CONTAINER_SECURITY_VERIFY(parcel, moduleSourceDirsSize, &moduleSourceDirs);
     for (auto i = 0; i < moduleSourceDirsSize; i++) {
         moduleSourceDirs.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t moduleInfosSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleInfosSize);
-    VECTOR_SECURITY_VERIFY(parcel, moduleInfosSize, &moduleInfos);
+    CONTAINER_SECURITY_VERIFY(parcel, moduleInfosSize, &moduleInfos);
     for (auto i = 0; i < moduleInfosSize; i++) {
         std::unique_ptr<ModuleInfo> moduleInfo(parcel.ReadParcelable<ModuleInfo>());
         if (!moduleInfo) {
@@ -324,6 +325,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t metaDataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaDataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, metaDataSize, &metaData);
     for (int32_t i = 0; i < metaDataSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         int32_t customizeDataSize = parcel.ReadInt32();
@@ -339,6 +341,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t metadataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
     for (int32_t i = 0; i < metadataSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         int32_t metaSize = parcel.ReadInt32();
@@ -354,7 +357,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t targetBundleListSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetBundleListSize);
-    VECTOR_SECURITY_VERIFY(parcel, targetBundleListSize, &targetBundleList);
+    CONTAINER_SECURITY_VERIFY(parcel, targetBundleListSize, &targetBundleList);
     for (auto i = 0; i < targetBundleListSize; i++) {
         targetBundleList.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }

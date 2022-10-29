@@ -53,24 +53,19 @@ namespace AppExecFwk {
         (parcel).SetMaxCapacity(newMaxCapacity);                              \
     }
 
-#define VECTOR_SECURITY_VERIFY(parcel, readVectorSize, val)                                           \
-    do {                                                                                              \
-        if ((val) == nullptr) {                                                                       \
-            APP_LOGE("Failed to read vector due to val is nullptr");                                  \
-            return false;                                                                             \
-        }                                                                                             \
-        size_t readAbleDataSize = (parcel).GetReadableBytes();                                        \
-        size_t readSize = static_cast<size_t>(readVectorSize);                                        \
-        if ((readSize > readAbleDataSize) || ((val)->max_size() < readSize)) {                        \
-            APP_LOGE("Failed to read vector, readSize = %{public}zu, readAbleDataSize = %{public}zu", \
-                readSize, readAbleDataSize);                                                          \
-            return false;                                                                             \
-        }                                                                                             \
-        (val)->resize(readSize);                                                                      \
-        if ((val)->size() < readSize) {                                                               \
-            APP_LOGE("Failed to read vector due to resize failed");                                   \
-            return false;                                                                             \
-        }                                                                                             \
+#define CONTAINER_SECURITY_VERIFY(parcel, readContainerSize, val)                                         \
+    do {                                                                                                  \
+        if ((val) == nullptr) {                                                                           \
+            APP_LOGE("Failed to read container due to val is nullptr");                                   \
+            return false;                                                                                 \
+        }                                                                                                 \
+        size_t readAbleDataSize = (parcel).GetReadableBytes();                                            \
+        size_t readSize = static_cast<size_t>(readContainerSize);                                         \
+        if ((readSize > readAbleDataSize) || ((val)->max_size() < readSize)) {                            \
+            APP_LOGE("Failed to read container, readSize = %{public}zu, readAbleDataSize = %{public}zu",  \
+                readSize, readAbleDataSize);                                                              \
+            return false;                                                                                 \
+        }                                                                                                 \
     } while (0)
 }  // namespace AppExecFwk
 }  // namespace OHOS

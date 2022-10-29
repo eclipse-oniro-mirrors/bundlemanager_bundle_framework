@@ -66,7 +66,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     priority = parcel.ReadInt32();
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
-    VECTOR_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
+    CONTAINER_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
     for (auto i = 0; i < permissionsSize; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -78,7 +78,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t metadataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
-    VECTOR_SECURITY_VERIFY(parcel, metadataSize, &metadata);
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
     for (auto i = 0; i < metadataSize; i++) {
         std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
         if (!meta) {

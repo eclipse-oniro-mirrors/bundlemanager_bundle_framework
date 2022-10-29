@@ -123,7 +123,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
-    VECTOR_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
+    CONTAINER_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
     for (auto i = 0; i < permissionsSize; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -132,14 +132,14 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t deviceTypesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypesSize);
-    VECTOR_SECURITY_VERIFY(parcel, deviceTypesSize, &deviceTypes);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceTypesSize, &deviceTypes);
     for (auto i = 0; i < deviceTypesSize; i++) {
         deviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t deviceCapabilitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceCapabilitiesSize);
-    VECTOR_SECURITY_VERIFY(parcel, deviceCapabilitiesSize, &deviceCapabilities);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceCapabilitiesSize, &deviceCapabilities);
     for (auto i = 0; i < deviceCapabilitiesSize; i++) {
         deviceCapabilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -164,7 +164,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     writePermission = Str16ToStr8(parcel.ReadString16());
     int32_t configChangesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, configChangesSize);
-    VECTOR_SECURITY_VERIFY(parcel, configChangesSize, &configChanges);
+    CONTAINER_SECURITY_VERIFY(parcel, configChangesSize, &configChanges);
     for (auto i = 0; i < configChangesSize; i++) {
         configChanges.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -175,7 +175,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     defaultFormWidth = parcel.ReadInt32();
     int32_t metaDataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaDataSize);
-    VECTOR_SECURITY_VERIFY(parcel, metaDataSize, &metaData.customizeData);
+    CONTAINER_SECURITY_VERIFY(parcel, metaDataSize, &metaData.customizeData);
     for (auto i = 0; i < metaDataSize; i++) {
         std::unique_ptr<CustomizeData> customizeDataPtr(parcel.ReadParcelable<CustomizeData>());
         if (!customizeDataPtr) {
@@ -198,7 +198,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     srcEntrance = Str16ToStr8(parcel.ReadString16());
     int32_t metadataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
-    VECTOR_SECURITY_VERIFY(parcel, metadataSize, &metadata);
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
     for (auto i = 0; i < metadataSize; i++) {
         std::unique_ptr<Metadata> metadataPtr(parcel.ReadParcelable<Metadata>());
         if (!metadataPtr) {
@@ -237,7 +237,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
 
     int32_t windowModeSize = parcel.ReadInt32();
-    VECTOR_SECURITY_VERIFY(parcel, windowModeSize, &windowModes);
+    CONTAINER_SECURITY_VERIFY(parcel, windowModeSize, &windowModes);
     for (auto index = 0; index < windowModeSize; ++index) {
         windowModes.emplace_back(static_cast<SupportWindowMode>(parcel.ReadInt32()));
     }
