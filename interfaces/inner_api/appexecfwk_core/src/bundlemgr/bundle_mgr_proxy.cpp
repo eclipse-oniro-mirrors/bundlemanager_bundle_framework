@@ -1866,7 +1866,7 @@ ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool
     APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to IsApplicationEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
@@ -1896,7 +1896,7 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
     APP_LOGD("begin to SetApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to SetApplicationEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
@@ -1927,11 +1927,10 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to IsAbilityEnabled of %{public}s", abilityInfo.name.c_str());
-    if (abilityInfo.name.empty()) {
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
         APP_LOGE("fail to IsAbilityEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to IsAbilityEnabled due to write InterfaceToken fail");
@@ -1957,11 +1956,10 @@ ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetAbilityEnabled of %{public}s", abilityInfo.name.c_str());
-    if (abilityInfo.name.empty()) {
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
         APP_LOGE("fail to SetAbilityEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetAbilityEnabled due to write InterfaceToken fail");
