@@ -8143,24 +8143,22 @@ bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInf
 }
 
 bool JsBundleMgr::UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
-    BundleOptions &options, bool flagCall)
+    BundleOptions &options, bool result)
 {
-    bool ret = true;
+    bool flagCall = true;
     auto env = reinterpret_cast<napi_env>(&engine);
     if (info.argc == ARGS_SIZE_TWO) {
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_OBJECT) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        ret = ParseBundleOptions(env, options, arg3);
+        result = ParseBundleOptions(env, options, arg3);
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_FOUR) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        ret = ParseBundleOptions(env, options, arg3);
-    } else {
-        ret = false;
+        result = ParseBundleOptions(env, options, arg3);
     }
 
-    return ret;
+    return flagCall;
 }
 
 bool JsBundleMgr::UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
@@ -8670,8 +8668,10 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
     }
 
     BundleOptions options;
-    bool flagCall = true; 
-    if(!UnwarpBundleOptionsParams(engine, info, options, flagCall)) {
+    bool unwarpBundleOptionsParamsResult = true; 
+    bool flagCall = UnwarpBundleOptionsParams(engine, info, options, unwarpBundleOptionsParamsResult);
+    if (!unwarpBundleOptionsParamsResult) {
+        APP_LOGE("UnwarpBundleOptionsParams failed!");
         errCode = PARAM_TYPE_ERROR;
     }
     auto complete = [obj = this, bundleName, bundleFlags, options, errCode](
