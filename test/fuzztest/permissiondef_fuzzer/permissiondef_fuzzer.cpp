@@ -33,7 +33,9 @@ namespace OHOS {
             return false;
         }
         auto permissionPtr = PermissionDef::Unmarshalling(dataMessageParcel);
-        return permissionPtr != nullptr;
+        if (permissionPtr == nullptr) {
+            return false;
+        }
         PermissionDef *permissionDef =
             new (std::nothrow) PermissionDef();
         if (permissionDef == nullptr) {

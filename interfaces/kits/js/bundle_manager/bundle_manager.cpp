@@ -2175,9 +2175,8 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
         return nApplicationInfo;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (!iBundleMgr) {
+    if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        BusinessError::ThrowError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND);
         return nullptr;
     }
     AppExecFwk::ApplicationInfo appInfo;
@@ -2254,9 +2253,8 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
         return nBundleInfo;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (!iBundleMgr) {
-        APP_LOGE("GetApplicationInfo failed");
-        BusinessError::ThrowError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND);
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("BundleMgr is null");
         return nullptr;
     }
     BundleInfo bundleInfo;
@@ -2619,6 +2617,10 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     }
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return nullptr;
+    }
     bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
     if (!ret) {
         APP_LOGE("GetBundleNameForUid failed");
