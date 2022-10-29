@@ -1261,7 +1261,7 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
     std::string bundleName = data.ReadString();
     if (bundleName.empty()) {
         APP_LOGE("fail to IsApplicationEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     bool isEnable = false;
     ErrCode ret = IsApplicationEnabled(bundleName, isEnable);
@@ -1280,7 +1280,7 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
     std::string bundleName = data.ReadString();
     if (bundleName.empty()) {
         APP_LOGE("fail to SetApplicationEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     bool isEnable = data.ReadBool();
     int32_t userId = data.ReadInt32();
@@ -1298,10 +1298,6 @@ ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel
     if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (abilityInfo->bundleName.empty() || abilityInfo->name.empty()) {
-        APP_LOGE("fail to IsAbilityEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     bool isEnable = false;
     ErrCode ret = IsAbilityEnabled(*abilityInfo, isEnable);
