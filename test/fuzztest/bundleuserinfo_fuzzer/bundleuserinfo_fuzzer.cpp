@@ -30,7 +30,9 @@ namespace OHOS {
         info.IsInitialState();
         info.Marshalling(dataMessageParcel);
         auto infoPtr = BundleUserInfo::Unmarshalling(dataMessageParcel);
-        return infoPtr != nullptr;
+        if (infoPtr == nullptr) {
+            return false;
+        }
         BundleUserInfo *bundleUserInfo = new (std::nothrow) BundleUserInfo();
         if (bundleUserInfo == nullptr) {
             return false;

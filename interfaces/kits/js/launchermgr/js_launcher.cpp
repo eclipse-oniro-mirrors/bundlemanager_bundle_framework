@@ -48,7 +48,6 @@ struct AsyncHandleBundleContext {
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
     std::string bundleName;
-    std::string className;
     int32_t userId = 0;
     bool ret = false;
     uint32_t err = 0;
