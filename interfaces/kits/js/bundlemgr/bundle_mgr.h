@@ -527,7 +527,8 @@ private:
     bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options);
+    bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
+        BundleOptions &options, bool flagCall);
 };
 
 }  // namespace AppExecFwk
