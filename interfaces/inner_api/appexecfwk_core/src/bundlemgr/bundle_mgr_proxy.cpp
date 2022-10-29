@@ -1919,6 +1919,10 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to IsAbilityEnabled of %{public}s", abilityInfo.name.c_str());
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
+        APP_LOGE("fail to IsAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to IsAbilityEnabled due to write InterfaceToken fail");
@@ -1944,6 +1948,10 @@ ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to SetAbilityEnabled of %{public}s", abilityInfo.name.c_str());
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
+        APP_LOGE("fail to SetAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to SetAbilityEnabled due to write InterfaceToken fail");
