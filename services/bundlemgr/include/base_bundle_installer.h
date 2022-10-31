@@ -150,7 +150,7 @@ protected:
     /**
      * @brief Save hap to install path when install.
      * @param moveFileMode Indicates the moveFileMode.
-     * @return
+     * @return Returns true if copy success; returns false otherwise.
      */
     void SaveHapToInstallPath(bool moveFileMode);
 
