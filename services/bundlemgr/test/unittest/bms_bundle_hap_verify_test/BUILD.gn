@@ -27,6 +27,7 @@ ohos_unittest("BmsBundleHapVerifyTest") {
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
+    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
@@ -59,7 +60,10 @@ ohos_unittest("BmsBundleHapVerifyTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [
+    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+  ]
   if (bundle_framework_graphics) {
     include_dirs += [
       "//foundation/multimedia/image_framework/interfaces/innerkits/include",

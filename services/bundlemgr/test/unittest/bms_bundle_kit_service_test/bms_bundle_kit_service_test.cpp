@@ -207,12 +207,16 @@ public:
     void MockInstallBundle(
         const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
+    void MockInstallExtension(
+        const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const;
     void MockInstallBundle(
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
     AbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
+    ExtensionAbilityInfo MockExtensionInfo(
+        const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
     InnerModuleInfo MockModuleInfo(const std::string &moduleName) const;
     FormInfo MockFormInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
@@ -394,6 +398,26 @@ void BmsBundleKitServiceTest::MockInstallBundle(
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(keyName, skills);
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
+}
+
+void BmsBundleKitServiceTest::MockInstallExtension(const std::string &bundleName,
+    const std::string &moduleName, const std::string &extensionName) const
+{
+    InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
+    std::string keyName = bundleName + "." + moduleName + "." + extensionName;
+    std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
+    ExtensionAbilityInfo extensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    ExtensionAbilityInfo extensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertExtensionSkillInfo(keyName, skills);
+    innerBundleInfo.InsertExtensionSkillInfo(keyName02, skills);
+    SaveToDatabase(bundleName, innerBundleInfo, false, false);
 }
 
 InnerModuleInfo BmsBundleKitServiceTest::MockModuleInfo(const std::string &moduleName) const
@@ -605,6 +629,16 @@ AbilityInfo BmsBundleKitServiceTest::MockAbilityInfo(
     abilityInfo.metaData = metaData;
     abilityInfo.permissions = {"abilityPerm001", "abilityPerm002"};
     return abilityInfo;
+}
+
+ExtensionAbilityInfo BmsBundleKitServiceTest::MockExtensionInfo(
+    const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const
+{
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.name = extensionName;
+    extensionInfo.bundleName = bundleName;
+    extensionInfo.moduleName = moduleName;
+    return extensionInfo;
 }
 
 void BmsBundleKitServiceTest::MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -2558,6 +2592,22 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUri_0100, Function 
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfoByUri_0100
+ * @tc.name: test can get the extensio ability info by uri
+ * @tc.desc: 1.system run normally
+ *           2.query info failed by empty uri
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUri_0200, Function | SmallTest | Level1)
+{
+    AbilityInfo result;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->QueryExtensionAbilityInfoByUri(
+        "", DEFAULT_USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+}
+
+/**
  * @tc.number: QueryKeepAliveBundleInfos_0100
  * @tc.name: test can get the keep alive bundle infos
  * @tc.desc: 1.system run normally
@@ -2740,7 +2790,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0100, Function | Small
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_TRUE(isEnable);
-
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -2754,7 +2803,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0200, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
@@ -2774,14 +2823,14 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0300, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, false);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, false, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_FALSE(isEnable);
 
-    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true);
+    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
     ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
     EXPECT_EQ(0, ret);
@@ -2813,7 +2862,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0500, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", true);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", true, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
@@ -2833,7 +2882,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0600, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsApplicationEnabled("", isEnable);
@@ -2857,7 +2906,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0700, Function | Small
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    int32_t testRet = bundleMgrProxy->SetApplicationEnabled("", true);
+    int32_t testRet = bundleMgrProxy->SetApplicationEnabled("", true, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = bundleMgrProxy->IsApplicationEnabled("", isEnable);
@@ -3100,6 +3149,24 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0800, Function | SmallTes
 }
 
 /**
+ * @tc.number: CleanBundleDataFiles_0900
+ * @tc.name: test can clean the bundle data files by bundle name
+ * @tc.desc: 1.system run normally
+ *           2.clean the bundle data files failed by empty bundle name
+ * @tc.require: AR000GJUJ8
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool testRet = bundleMgrProxy->CleanBundleDataFiles("", DEFAULT_USERID);
+    EXPECT_FALSE(testRet);
+}
+
+/**
  * @tc.number: CleanCache_0200
  * @tc.name: test can clean the cache files by empty bundle name
  * @tc.desc: 1.system run normally
@@ -3253,6 +3320,51 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1
     }
     auto result = bundleMgrProxy->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
     EXPECT_FALSE(result == ERR_OK);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanCache_0900
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2.userDataClearable is false, isSystemApp is false
+ *           3.clean the cache files failed by empty name
+ * @tc.require: SR000H00TH
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0900, Function | SmallTest | Level1)
+{
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode result = bundleMgrProxy->CleanBundleCacheFiles("", cleanCache);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CleanCache_1000
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2. userDataClearable is false, isSystemApp is false
+ *           3.clean the cache files failed by nullptr cleaCache
+ * @tc.require: SR000H00TH
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_1000, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, true);
+    CreateFileDir();
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode result = bundleMgrProxy->CleanBundleCacheFiles(BUNDLE_NAME_TEST, nullptr);
+    EXPECT_NE(result, ERR_OK);
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3556,7 +3668,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0200, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_TRUE(testRet == 0);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
@@ -3576,18 +3688,17 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0300, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_FALSE(isEnable);
-    int32_t testRet2 = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet2 = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
     int32_t testRet3 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
     EXPECT_EQ(0, testRet3);
     EXPECT_TRUE(isEnable);
-
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -3616,7 +3727,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0500, Function | SmallTest
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     AbilityInfo abilityInfoEmpty;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfoEmpty, false);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfoEmpty, false, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     bool isEnable = false;
@@ -3636,7 +3747,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0600, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     AbilityInfo abilityInfoEmpty;
     bool isEnable = false;
@@ -3659,7 +3770,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0700, Function | SmallTest
     AbilityInfo abilityInfo;
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
@@ -3683,7 +3794,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0800, Function | SmallTest
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
@@ -3707,7 +3818,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0900, Function | SmallTest
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST_1;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
     EXPECT_FALSE(testRet == 0);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -3855,7 +3966,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByModule_0400, Function | SmallTest
 HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByModule_0500, Function | SmallTest | Level1)
 {
     std::vector<FormInfo> formInfos;
-    GetBundleDataMgr()->GetFormsInfoByModule(BUNDLE_NAME_TEST, EMPTY_STRING, formInfos);
+    GetBundleDataMgr()->GetFormsInfoByModule("", EMPTY_STRING, formInfos);
     EXPECT_TRUE(formInfos.empty());
 }
 
@@ -3958,7 +4069,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByApp_0400, Function | SmallTest | 
 HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByApp_0500, Function | SmallTest | Level1)
 {
     std::vector<FormInfo> formInfo1;
-    GetBundleDataMgr()->GetFormsInfoByApp(BUNDLE_NAME_DEMO, formInfo1);
+    GetBundleDataMgr()->GetFormsInfoByApp("", formInfo1);
     EXPECT_TRUE(formInfo1.empty());
 }
 
@@ -4145,7 +4256,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfos_0500, Function | SmallTest | 
 }
 
 /**
- * @tc.number: GetShortcutInfos_0100
+ * @tc.number: GetShortcutInfos_0600
  * @tc.name: test can get shortcutInfo by bundleName
  * @tc.desc: 1.can get shortcutInfo
  */
@@ -4163,6 +4274,24 @@ HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfos_0600, Function | SmallTest | 
     EXPECT_TRUE(shortcutInfos.empty());
     CheckShortcutInfoTest(shortcutInfos);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_0700
+ * @tc.name: test can get shortcutInfo by bundleName
+ * @tc.desc: 1.can not get shortcutInfo by empty bundle name
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfos_0700, Function | SmallTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bundleMgrProxy->GetShortcutInfos(
+        "", shortcutInfos);
+    EXPECT_TRUE(shortcutInfos.empty());
 }
 
 /**
@@ -4348,7 +4477,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllCommonEventInfo_0500, Function | SmallTe
 }
 
 /**
- * @tc.number: GetAllCommonEventInfo_0100
+ * @tc.number: GetAllCommonEventInfo_0600
  * @tc.name: test can get CommonEventInfo by event key
  * @tc.desc: 1.can get CommonEventInfo
  */
@@ -4365,6 +4494,23 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllCommonEventInfo_0600, Function | SmallTe
     EXPECT_TRUE(commonEventInfos.empty());
     CheckCommonEventInfoTest(commonEventInfos);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAllCommonEventInfo_0700
+ * @tc.name: test can get CommonEventInfo by event key
+ * @tc.desc: 1.can not get CommonEventInfo by empty key
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllCommonEventInfo_0700, Function | SmallTest | Level1)
+{
+    std::vector<CommonEventInfo> commonEventInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool res = bundleMgrProxy->GetAllCommonEventInfo("", commonEventInfos);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -5598,5 +5744,360 @@ HWTEST_F(BmsBundleKitServiceTest, DynamicSystemProcess_0100, Function | SmallTes
 
     ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), STOP, &extraArgv, 1);
     EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0100
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0100");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0100 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0200
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.when disable ability, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0200");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(abilityInfos.size() == 1);
+    ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfos[0], false, 0);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_DISABLED);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0200 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0300
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.implicit query cur bundle, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0300");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.not.extist");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0300 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0400
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.implicit query cur bundle, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0400, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0400");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.not.extist");
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0400 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0500
+ * @tc.name: test can get the ability info by want with implicit query
+ * @tc.desc: 1.implicit query cur bundle only system, get ability info failed
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0500, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0500");
+    std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
+
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0500 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0600
+ * @tc.name: test can get the ability info by want with implicit query
+ * @tc.desc: 1.implicit query cur bundle when disable
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0600, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0600");
+    std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    for (const auto &abilityInfo : abilityInfos) {
+        ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, 0);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    abilityInfos.clear();
+    ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_0600 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0100
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.explicit query extension info failed, bundle not exist, appIndex = 0
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0100");
+    Want want;
+    want.SetElementName("invlaidBundleName", ABILITY_NAME_TEST);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0100 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0200
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.explicit query extension info failed, bundle not exist, appIndex = 1
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0200");
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    int32_t appIndex = 1;
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0200 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0300
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.implicit query extension info failed, scope in cur bundle, appIndex = 0, action not exist
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0300");
+    Want want;
+    want.SetAction("action.not.exist");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0300 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0400
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.implicit query extension info failed, scope in cur bundle, appIndex = 1
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0400, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0400");
+    Want want;
+    want.SetAction("action.not.exist");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    int32_t appIndex = 1;
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0400 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0500
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.implicit query extension info failed, scope in all bundle, appIndex = 1
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0500, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0500");
+    Want want;
+    want.SetAction("action.not.exist");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    int32_t appIndex = 1;
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0500 finish");
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0600
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.explicit query extension info success, get more than one extension
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0600, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryExtensionAbilityInfosV9_0600");
+    std::string moduleName = "m1";
+    std::string extension = "test-extension";
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(extensionInfos.size(), 2);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0600 finish");
+}
+
+/**
+ * @tc.number: TestAbleBundle_001
+ * @tc.name: TestAbleBundle
+ * @tc.desc: 1.Test the TestAbleBundle
+ */
+HWTEST_F(BmsBundleKitServiceTest, TestAbleBundle_001, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    bool testRet = GetBundleDataMgr()->DisableBundle(BUNDLE_NAME_TEST);
+    EXPECT_EQ(testRet, true);
+    bool testRet1 = GetBundleDataMgr()->EnableBundle(BUNDLE_NAME_TEST);
+    EXPECT_EQ(testRet1, true);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: TestAbleBundle_002
+ * @tc.name: TestAbleBundle
+ * @tc.desc: 1.Test the TestAbleBundle
+ *           2.query failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, TestAbleBundle_002, Function | SmallTest | Level1)
+{
+    bool testRet = GetBundleDataMgr()->DisableBundle("");
+    EXPECT_EQ(testRet, false);
+    bool testRet1 = GetBundleDataMgr()->EnableBundle("");
+    EXPECT_EQ(testRet1, false);
+}
+
+/**
+ * @tc.number: GetProvisionId_001
+ * @tc.name: GetProvisionId
+ * @tc.desc: 1.Test the GetProvisionId success
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetProvisionId_001, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::string provisionId;
+
+    bool testRet = GetBundleDataMgr()->GetProvisionId(BUNDLE_NAME_TEST, provisionId);
+    EXPECT_EQ(testRet, true);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetProvisionId_002
+ * @tc.name: GetProvisionId
+ * @tc.desc: 1.Test the GetProvisionId failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetProvisionId_002, Function | SmallTest | Level1)
+{
+    std::string provisionId;
+
+    bool testRet = GetBundleDataMgr()->GetProvisionId("", provisionId);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetAppFeature_001
+ * @tc.name: GetAppFeature
+ * @tc.desc: 1.Test the GetAppFeature success
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppFeature_001, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::string appFeature;
+
+    bool testRet = GetBundleDataMgr()->GetAppFeature(BUNDLE_NAME_TEST, appFeature);
+    EXPECT_EQ(testRet, true);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAppFeature_002
+ * @tc.name: GetAppFeature
+ * @tc.desc: 1.Test the GetAppFeature failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppFeature_002, Function | SmallTest | Level1)
+{
+    std::string appFeature;
+
+    bool testRet = GetBundleDataMgr()->GetAppFeature("", appFeature);
+    EXPECT_EQ(testRet, false);
 }
 }

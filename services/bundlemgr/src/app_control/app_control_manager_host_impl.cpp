@@ -54,7 +54,7 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
     return appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
 }
@@ -66,7 +66,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     std::string ruleType = GetControlRuleType(controlRuleType);
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
@@ -88,7 +88,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
     return appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, userId);
 }
@@ -105,7 +105,7 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
     }
     if (ruleType.empty()) {
         APP_LOGE("controlRuleType is invalid");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
 }

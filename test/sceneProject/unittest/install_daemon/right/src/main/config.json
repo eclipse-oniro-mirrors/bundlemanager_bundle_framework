@@ -20,6 +20,7 @@
     "module": {
         "name": ".MyApplication",
         "deviceType": [
+            "tablet",
             "default",
             "phone"
         ],

@@ -34,10 +34,14 @@
 #include "image_packer.h"
 #include "image_source.h"
 #include "system_ability_definition.h"
+#include "xcollie/xcollie.h"
+#include "xcollie/xcollie_define.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+    const unsigned int LOCAL_TIME_OUT_SECONDS = 5;
+    const unsigned int REMOTE_TIME_OUT_SECONDS = 10;
     const uint8_t DECODE_VALUE_ONE = 1;
     const uint8_t DECODE_VALUE_TWO = 2;
     const uint8_t DECODE_VALUE_THREE = 3;
@@ -200,7 +204,10 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+        int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfo", REMOTE_TIME_OUT_SECONDS,
+            nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
         resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
+        HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
     }
 
     EventReport::SendSystemEvent(
@@ -219,7 +226,7 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
 {
     if (elementNames.empty()) {
         APP_LOGE("GetDistributedBundle failed due to elementNames empty");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     auto iDistBundleMgr = GetDistributedBundleMgr(elementNames[0].GetDeviceID());
     int32_t resultCode;
@@ -228,7 +235,10 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+        int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfos", REMOTE_TIME_OUT_SECONDS,
+            nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
         resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
+        HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
     }
 
     EventReport::SendSystemEvent(
@@ -367,8 +377,12 @@ bool DistributedBms::GetMediaBase64(std::unique_ptr<uint8_t[]> &data, int64_t fi
 bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
     DistributedBundleInfo &distributedBundleInfo)
 {
-    return DistributedDataStorage::GetInstance()->GetStorageDistributeInfo(
+    int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetDistributedBundleInfo", LOCAL_TIME_OUT_SECONDS,
+        nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
+    bool ret = DistributedDataStorage::GetInstance()->GetStorageDistributeInfo(
         networkId, bundleName, distributedBundleInfo);
+    HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
+    return ret;
 }
 
 std::unique_ptr<char[]> DistributedBms::EncodeBase64(std::unique_ptr<uint8_t[]> &data, int srcLen)

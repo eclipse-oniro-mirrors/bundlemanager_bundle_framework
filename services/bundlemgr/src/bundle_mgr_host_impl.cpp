@@ -724,8 +724,8 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (permissionName.empty()) {
-        APP_LOGE("fail to GetPermissionDef due to params empty");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        APP_LOGW("fail to GetPermissionDef due to params empty");
+        return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED;
     }
     return BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
 }
@@ -780,11 +780,12 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    if (!dataMgr->GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO,
-        userId, applicationInfo)) {
+    auto ret = dataMgr->GetApplicationInfoV9(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
+    if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ret;
     }
 
     if (applicationInfo.isSystemApp && !applicationInfo.userDataClearable) {
@@ -863,7 +864,8 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         return false;
     }
     ApplicationInfo applicationInfo;
-    if (!GetApplicationInfo(bundleName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, applicationInfo)) {
+    if (GetApplicationInfoV9(bundleName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
+        userId, applicationInfo) != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;
@@ -937,6 +939,44 @@ bool BundleMgrHostImpl::RegisterBundleStatusCallback(const sptr<IBundleStatusCal
         return false;
     }
     return dataMgr->RegisterBundleStatusCallback(bundleStatusCallback);
+}
+
+bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    APP_LOGD("begin to RegisterBundleEventCallback");
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed");
+        return false;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->RegisterBundleEventCallback(bundleEventCallback);
+}
+
+bool BundleMgrHostImpl::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    APP_LOGD("begin to UnregisterBundleEventCallback");
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed");
+        return false;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->UnregisterBundleEventCallback(bundleEventCallback);
 }
 
 bool BundleMgrHostImpl::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
@@ -1223,7 +1263,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     NotifyBundleEvents installRes = {
@@ -1284,7 +1324,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     NotifyBundleEvents installRes = {
@@ -1387,7 +1427,7 @@ bool BundleMgrHostImpl::GetShortcutInfos(
 
 ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!VerifyPrivilegedPermission(bundleName)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -1634,6 +1674,23 @@ bool BundleMgrHostImpl::VerifyQueryPermission(const std::string &queryBundleName
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify query permission failed");
+        return false;
+    }
+    APP_LOGD("verify query permission successfully");
+    return true;
+}
+
+bool BundleMgrHostImpl::VerifyPrivilegedPermission(const std::string &queryBundleName)
+{
+    std::string callingBundleName;
+    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
+    if (ret && (queryBundleName == callingBundleName)) {
+        APP_LOGD("query own info, verify success");
+        return true;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return false;
     }
@@ -2092,7 +2149,7 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
 {
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -2105,10 +2162,6 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
 void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    if (commonEventMgr == nullptr) {
-        APP_LOGE("commonEventMgr is nullptr");
-        return;
-    }
     commonEventMgr->NotifyBundleStatus(installRes, nullptr);
 }
 

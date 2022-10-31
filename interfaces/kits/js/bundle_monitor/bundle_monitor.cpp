@@ -36,41 +36,45 @@ namespace OHOS {
 namespace AppExecFwk {
 std::mutex g_monitorLock;
 std::shared_ptr<BundleMonitorCallback> g_bundleMonitor = nullptr;
+constexpr const char* PERMISSION_ON_DENIED =
+    "Permission denied. An attempt was made to on forbidden by permission: ohos.permission.LISTEN_BUNDLE_CHANGE.";
+constexpr const char* PERMISSION_OFF_DENIED =
+    "Permission denied. An attempt was made to off forbidden by permission: ohos.permission.LISTEN_BUNDLE_CHANGE.";
+constexpr const char* BUNDLE_CHANGED_EVENT = "BundleChangedEvent";
+constexpr const char* CALLBACK = "callback";
 
 napi_value Register(napi_env env, napi_callback_info info)
 {
     APP_LOGD("napi begin to BundleMonitorOn");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     std::string type;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], type)) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_CHANGED_EVENT, TYPE_STRING);
         return nullptr;
     }
     napi_valuetype callbackType = napi_undefined;
     napi_typeof(env, args[ARGS_POS_ONE], &callbackType);
     if (callbackType != napi_function) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, TYPE_FUNCTION);
         return nullptr;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
-        BusinessError::ThrowError(env, ERROR_PERMISSION_DENIED_ERROR);
+        BusinessError::ThrowError(env, ERROR_PERMISSION_DENIED_ERROR, PERMISSION_ON_DENIED);
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(g_monitorLock);
     if (g_bundleMonitor == nullptr) {
-        APP_LOGE("envorinment init failed!");
-        BusinessError::ThrowError(env, ERROR_ENVORINMENT_INIT_FAILED);
+        APP_LOGE("environment init failed!");
         return nullptr;
     }
     g_bundleMonitor->BundleMonitorOn(env, args[ARGS_POS_ONE], type);
@@ -82,12 +86,12 @@ napi_value Unregister(napi_env env, napi_callback_info info)
     APP_LOGD("napi begin to BundleMonitorOff");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     std::string type;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], type)) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_CHANGED_EVENT, TYPE_STRING);
         return nullptr;
     }
 
@@ -98,7 +102,7 @@ napi_value Unregister(napi_env env, napi_callback_info info)
     }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
-        BusinessError::ThrowError(env, ERROR_PERMISSION_DENIED_ERROR);
+        BusinessError::ThrowError(env, ERROR_PERMISSION_DENIED_ERROR, PERMISSION_OFF_DENIED);
         return nullptr;
     }
     // parse callback
@@ -106,13 +110,12 @@ napi_value Unregister(napi_env env, napi_callback_info info)
         napi_valuetype callbackType = napi_undefined;
         napi_typeof(env, args[ARGS_POS_ONE], &callbackType);
         if (callbackType != napi_function) {
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, TYPE_FUNCTION);
             return nullptr;
         }
         std::lock_guard<std::mutex> lock(g_monitorLock);
         if (g_bundleMonitor == nullptr) {
-            APP_LOGE("envorinment init failed!");
-            BusinessError::ThrowError(env, ERROR_ENVORINMENT_INIT_FAILED);
+            APP_LOGE("environment init failed!");
             return nullptr;
         }
         g_bundleMonitor->BundleMonitorOff(env, args[ARGS_POS_ONE], type);

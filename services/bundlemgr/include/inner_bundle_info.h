@@ -233,6 +233,15 @@ public:
     std::optional<AbilityInfo> FindAbilityInfoV9(const std::string &bundleName,
         const std::string &moduleName, const std::string &abilityName) const;
     /**
+     * @brief Find abilityInfo by bundle name module name and ability name.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name
+     * @param abilityName Indicates the ability name.
+     * @return Returns ERR_OK if abilityInfo find successfully obtained; returns other ErrCode otherwise.
+     */
+    ErrCode FindAbilityInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, AbilityInfo &info) const;
+    /**
      * @brief Find abilityInfo of list by bundle name.
      * @param bundleName Indicates the bundle name.
      * @param userId Indicates the user ID.
@@ -477,8 +486,8 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
-            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+            APP_LOGE("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
         return ERR_OK;
@@ -486,9 +495,9 @@ public:
     /**
      * @brief Set application enabled.
      * @param userId Indicates the user ID.
-     * @return Return whether the application is enabled.
+     * @return Returns ERR_OK if the SetApplicationEnabled is successfully; returns error code otherwise.
      */
-    void SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Get application code path.
      * @return Return the string object.
@@ -1106,11 +1115,10 @@ public:
      * @param abilityName Indicates the abilityName.
      * @param isEnabled Indicates the ability enabled.
      * @param userId Indicates the user id.
-     * @return Return whether the application is enabled.
+     * @return Returns ERR_OK if the setAbilityEnabled is successfully; returns error code otherwise.
      */
-    bool SetAbilityEnabled(
-        const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
-        bool isEnabled, int32_t userId);
+    ErrCode SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, bool isEnabled, int32_t userId);
     /**
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.
@@ -1555,6 +1563,26 @@ public:
         baseApplicationInfo_->nativeLibraryPath = nativeLibraryPath;
     }
 
+    const std::string &GetArkNativeFileAbi() const
+    {
+        return baseApplicationInfo_->arkNativeFileAbi;
+    }
+
+    void SetArkNativeFileAbi(const std::string &arkNativeFileAbi)
+    {
+        baseApplicationInfo_->arkNativeFileAbi = arkNativeFileAbi;
+    }
+
+    const std::string &GetArkNativeFilePath() const
+    {
+        return baseApplicationInfo_->arkNativeFilePath;
+    }
+
+    void SetArkNativeFilePath(const std::string &arkNativeFilePath)
+    {
+        baseApplicationInfo_->arkNativeFilePath = arkNativeFilePath;
+    }
+
     const std::string &GetCpuAbi() const
     {
         return baseApplicationInfo_->cpuAbi;
@@ -1650,6 +1678,7 @@ public:
     bool FetchNativeSoAttrs(
         const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
+    void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
 
 private:
@@ -1659,7 +1688,7 @@ private:
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void BuildDefaultUserInfo();
     void RemoveDuplicateName(std::vector<std::string> &name) const;
-    void GetBundleWithReqPermissionsV9(int32_t flags, BundleInfo &bundleInfo) const;
+    void GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const;
     void ProcessBundleFlags(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const;
     void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;

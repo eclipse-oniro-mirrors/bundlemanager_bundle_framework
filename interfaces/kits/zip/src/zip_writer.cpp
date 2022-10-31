@@ -84,7 +84,7 @@ bool OpenNewFileEntry(
     if (isDirectory) {
         strPath += SEPARATOR;
     }
-    
+
     return ZipOpenNewFileInZip(zip_file, strPath, options, lastModified);
 }
 
@@ -188,10 +188,6 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options)
 {
     if (pendingEntries_.size() < g_MaxPendingEntriesCount && !force) {
         return true;
-    }
-    std::string rootDir = rootDir_.Value();
-    if (EndsWith(rootDir_.Value(), SEPARATOR)) {
-        rootDir = rootDir.substr(0, rootDir.size() - 1);
     }
     while (pendingEntries_.size() >= g_MaxPendingEntriesCount || (force && !pendingEntries_.empty())) {
 

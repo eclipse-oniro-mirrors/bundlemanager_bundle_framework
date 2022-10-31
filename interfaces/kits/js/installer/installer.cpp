@@ -37,23 +37,15 @@ namespace {
 // resource name
 const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
-const std::string RESOURCE_NAME = "Recover or uninstall";
+const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
+const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
+const std::string EMPTY_STRING = "";
 // install message
-const std::string MSG_OPERATE_SUCCESSFULLY = "Operate Successfully";
-const std::string MSG_ERROR_BUNDLE_SERVICE_EXCEPTION = "error bundle service exception";
-const std::string MSG_ERROR_INSTALL_PARSE_FAILED = "error install parse failed";
-const std::string MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED = "error install verify signature failed";
-const std::string MSG_ERROR_INSTALL_HAP_FILEPATH_INVALID = "error install hap file path invalid";
-const std::string MSG_ERROR_INSTALL_HAP_SIZE_TOO_LARGE = "error install hap size too large";
-const std::string MSG_ERROR_INSTALL_INCORRECT_SUFFIX = "error install incorrect suffix";
-const std::string MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT = "error install multiple hap info inconsistent";
-const std::string MSG_ERROR_INSTALL_NO_DISK_SPACE_LEFT = "error install no disk space left";
-const std::string MSG_ERROR_INSTALL_VERSION_DOWNGRADE = "error install version downgrade";
-const std::string MSG_ERROR_UNINSTALL_PREINSTALL_APP_FAILED = "error uninstall pre-install app failed";
-const std::string MSG_ERROR_SYSTEM_IO_OPERATION = "error system io operation";
-const std::string MSG_ERROR_PERMISSION_DENIED_ERROR = "error bundle permission deny";
-const std::string MSG_ERROR_PARAM_CHECK_ERROR = "error input parameter invalid";
-const std::string MSG_ERROR_INVALID_USER_ID = "error user id not found";
+constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
+constexpr const char* PARAMETERS = "parameters";
+constexpr const char* CORRESPONDING_TYPE = "corresponding type";
+constexpr const char* FUNCTION_TYPE = "napi_function";
+constexpr const char* CALLBACK = "callback";
 // property name
 const std::string USER_ID = "userId";
 const std::string INSTALL_FLAG = "installFlag";
@@ -128,7 +120,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     if (!args.Init(FIRST_PARAM, SECOND_PARAM)) {
         APP_LOGE("GetBundleInstaller args init failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr =
@@ -141,14 +133,14 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
         napi_value arg = args.GetArgv(argc - SECOND_PARAM);
         if (arg == nullptr) {
             APP_LOGE("the param is nullptr");
-            BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
         napi_valuetype valuetype = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, arg, &valuetype));
         if (valuetype != napi_function) {
             APP_LOGE("the param type is invalid");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
             return nullptr;
         }
         NAPI_CALL(env, napi_create_reference(env, arg, NAPI_RETURN_ONE, &callbackPtr->callback));
@@ -165,203 +157,111 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static void CreateErrCodeMap(std::unordered_map<int32_t, struct InstallResult> &errCodeMap)
+static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
 {
     errCodeMap = {
-        { IStatusReceiver::SUCCESS,
-            { SUCCESS, MSG_OPERATE_SUCCESSFULLY }},
-        { IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION }},
-        { IStatusReceiver::ERR_INSTALL_HOST_INSTALLER_FAILED,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_INSTALLD_PARAM_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_INSTALLD_GET_PROXY_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_INSTALL_INSTALLD_SERVICE_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_FAILED_SERVICE_DIED,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_FAILED_GET_INSTALLER_PROXY,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_USER_CREATE_FAILED,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_USER_REMOVE_FAILED,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_INSTALL_GENERATE_UID_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_INSTALL_STATE_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_RECOVER_NOT_ALLOWED,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_RECOVER_GET_BUNDLEPATH_ERROR,
-            { ERROR_BUNDLE_SERVICE_EXCEPTION, MSG_ERROR_BUNDLE_SERVICE_EXCEPTION}},
-        { IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR,
-            { ERROR_UNINSTALL_PREINSTALL_APP_FAILED, MSG_ERROR_UNINSTALL_PREINSTALL_APP_FAILED}},
-        { IStatusReceiver::ERR_INSTALL_PARSE_FAILED,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_UNEXPECTED,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_MISSING_BUNDLE,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_NO_PROFILE,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_BAD_PROFILE,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_MISSING_PROP,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARSE_MISSING_ABILITY,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_PROFILE_PARSE_FAIL,
-            { ERROR_INSTALL_PARSE_FAILED, MSG_ERROR_INSTALL_PARSE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_VERIFICATION_FAILED,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_APP_PKCS7_FAIL,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_DIGEST,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
+        { IStatusReceiver::SUCCESS, SUCCESS},
+        { IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALL_HOST_INSTALLER_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_PARAM_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_GET_PROXY_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALL_INSTALLD_SERVICE_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_FAILED_SERVICE_DIED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_FAILED_GET_INSTALLER_PROXY, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_USER_CREATE_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_USER_REMOVE_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALL_GENERATE_UID_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALL_STATE_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_RECOVER_NOT_ALLOWED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_RECOVER_GET_BUNDLEPATH_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR, ERROR_UNINSTALL_PREINSTALL_APP_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_FAILED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_UNEXPECTED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_MISSING_BUNDLE, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_NO_PROFILE, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_BAD_PROFILE, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_MISSING_PROP, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_AN_FAILED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_MISSING_ABILITY, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_PROFILE_PARSE_FAIL, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_VERIFICATION_FAILED, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_APP_PKCS7_FAIL, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_DIGEST, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_INTEGRITY_VERIFICATION_FAILURE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_PUBLICKEY,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
+            ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_PUBLICKEY, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE,
-            { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, MSG_ERROR_INSTALL_VERIFY_SIGNATURE_FAILED }},
-        { IStatusReceiver::ERR_INSTALL_PARAM_ERROR,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_UNINSTALL_PARAM_ERROR,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_UNINSTALL_INVALID_NAME,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_INSTALL_INVALID_BUNDLE_FILE,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_EMPTY,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_DUPLICATE,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_BUNDLE,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_USER_NOT_INSTALL_HAP,
-            { ERROR_PARAM_CHECK_ERROR, MSG_ERROR_PARAM_CHECK_ERROR }},
-        { IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID,
-            { ERROR_INSTALL_HAP_FILEPATH_INVALID, MSG_ERROR_INSTALL_HAP_FILEPATH_INVALID }},
-        { IStatusReceiver::ERR_INSTALL_INVALID_HAP_SIZE,
-            { ERROR_INSTALL_HAP_SIZE_TOO_LARGE, MSG_ERROR_INSTALL_HAP_SIZE_TOO_LARGE }},
-        { IStatusReceiver::ERR_INSTALL_FAILED_FILE_SIZE_TOO_LARGE,
-            { ERROR_INSTALL_HAP_SIZE_TOO_LARGE, MSG_ERROR_INSTALL_HAP_SIZE_TOO_LARGE }},
-        { IStatusReceiver::ERR_INSTALL_INVALID_HAP_NAME,
-            { ERROR_INSTALL_INCORRECT_SUFFIX, MSG_ERROR_INSTALL_INCORRECT_SUFFIX }},
-        { IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED,
-            { ERROR_PERMISSION_DENIED_ERROR, MSG_ERROR_PERMISSION_DENIED_ERROR }},
-        { IStatusReceiver::ERR_UNINSTALL_PERMISSION_DENIED,
-            { ERROR_PERMISSION_DENIED_ERROR, MSG_ERROR_PERMISSION_DENIED_ERROR }},
-        { IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED,
-            { ERROR_PERMISSION_DENIED_ERROR, MSG_ERROR_PERMISSION_DENIED_ERROR }},
-        { IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED,
-            { ERROR_PERMISSION_DENIED_ERROR, MSG_ERROR_PERMISSION_DENIED_ERROR }},
-        { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_FAILED,
-            { ERROR_SYSTEM_IO_OPERATION, MSG_ERROR_SYSTEM_IO_OPERATION }},
-        { IStatusReceiver::ERR_INSTALLD_CHOWN_FAILED,
-            { ERROR_SYSTEM_IO_OPERATION, MSG_ERROR_SYSTEM_IO_OPERATION }},
-        { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_EXIST,
-            { ERROR_SYSTEM_IO_OPERATION, MSG_ERROR_SYSTEM_IO_OPERATION }},
-        { IStatusReceiver::ERR_INSTALLD_REMOVE_DIR_FAILED,
-            { ERROR_SYSTEM_IO_OPERATION, MSG_ERROR_SYSTEM_IO_OPERATION }},
-        { IStatusReceiver::ERR_INSTALLD_EXTRACT_FILES_FAILED,
-            { ERROR_SYSTEM_IO_OPERATION, MSG_ERROR_SYSTEM_IO_OPERATION }},
-        { IStatusReceiver::ERR_INSTALLD_RNAME_DIR_FAILED,
-            { ERROR_SYSTEM_IO_OPERATION, MSG_ERROR_SYSTEM_IO_OPERATION }},
-        { IStatusReceiver::ERR_INSTALLD_CLEAN_DIR_FAILED,
-            { ERROR_SYSTEM_IO_OPERATION, MSG_ERROR_SYSTEM_IO_OPERATION }},
-        { IStatusReceiver::ERR_INSTALL_ENTRY_ALREADY_EXIST,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_ALREADY_EXIST,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_BUNDLENAME_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_VERSIONCODE_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_VERSIONNAME_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
+            ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
+        { IStatusReceiver::ERR_UNINSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
+        { IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
+        { IStatusReceiver::ERR_UNINSTALL_INVALID_NAME, ERROR_BUNDLE_NOT_EXIST },
+        { IStatusReceiver::ERR_INSTALL_INVALID_BUNDLE_FILE, ERROR_INSTALL_HAP_FILEPATH_INVALID },
+        { IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_EMPTY, ERROR_MODULE_NOT_EXIST },
+        { IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_DUPLICATE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_BUNDLE, ERROR_BUNDLE_NOT_EXIST },
+        { IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE, ERROR_MODULE_NOT_EXIST },
+        { IStatusReceiver::ERR_USER_NOT_INSTALL_HAP, ERROR_BUNDLE_NOT_EXIST },
+        { IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID, ERROR_INSTALL_HAP_FILEPATH_INVALID },
+        { IStatusReceiver::ERR_INSTALL_INVALID_HAP_SIZE, ERROR_INSTALL_HAP_SIZE_TOO_LARGE },
+        { IStatusReceiver::ERR_INSTALL_FAILED_FILE_SIZE_TOO_LARGE, ERROR_INSTALL_HAP_SIZE_TOO_LARGE },
+        { IStatusReceiver::ERR_INSTALL_INVALID_HAP_NAME, ERROR_INSTALL_INCORRECT_SUFFIX },
+        { IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
+        { IStatusReceiver::ERR_UNINSTALL_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
+        { IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED, ERROR_PERMISSION_DENIED_ERROR },
+        { IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED, ERROR_PERMISSION_DENIED_ERROR },
+        { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_CHOWN_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_EXIST, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_REMOVE_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_EXTRACT_FILES_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_RNAME_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALLD_CLEAN_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_INSTALL_ENTRY_ALREADY_EXIST, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_ALREADY_EXIST, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_BUNDLENAME_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_VERSIONCODE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_VERSIONNAME_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_VENDOR_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_RELEASETYPE_TARGET_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_SINGLETON_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_ZERO_USER_WITH_NO_SINGLETON,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_APPTYPE_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_URI_DUPLICATE,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_VERSION_NOT_COMPATIBLE,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_TYPE_ERROR,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_TYPE_ERROR,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP,
-            { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, MSG_ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT }},
-        { IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT,
-            { ERROR_INSTALL_NO_DISK_SPACE_LEFT, MSG_ERROR_INSTALL_NO_DISK_SPACE_LEFT }},
-        { IStatusReceiver::ERR_USER_NOT_EXIST,
-            { ERROR_INVALID_USER_ID, MSG_ERROR_INVALID_USER_ID }},
-        { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE,
-            { ERROR_INSTALL_VERSION_DOWNGRADE, MSG_ERROR_INSTALL_VERSION_DOWNGRADE }}
+            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_VENDOR_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_RELEASETYPE_TARGET_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_SINGLETON_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_ZERO_USER_WITH_NO_SINGLETON, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_APPTYPE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_URI_DUPLICATE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_VERSION_NOT_COMPATIBLE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_AN_INCOMPATIBLE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_TYPE_ERROR, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_TYPE_ERROR, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT, ERROR_INSTALL_NO_DISK_SPACE_LEFT },
+        { IStatusReceiver::ERR_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
+        { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE, ERROR_INSTALL_VERSION_DOWNGRADE }
     };
 }
 
@@ -369,16 +269,14 @@ static void ConvertInstallResult(InstallResult &installResult)
 {
     APP_LOGD("ConvertInstallResult msg %{public}s, errCode is %{public}d.", installResult.resultMsg.c_str(),
         installResult.resultCode);
-    std::unordered_map<int32_t, struct InstallResult> errCodeMap;
+    std::unordered_map<int32_t, int32_t> errCodeMap;
     CreateErrCodeMap(errCodeMap);
     auto iter = errCodeMap.find(installResult.resultCode);
     if (iter != errCodeMap.end()) {
-        installResult.resultCode = iter->second.resultCode;
-        installResult.resultMsg = iter->second.resultMsg;
+        installResult.resultCode = iter->second;
         return;
     }
     installResult.resultCode = ERROR_BUNDLE_SERVICE_EXCEPTION;
-    installResult.resultMsg = MSG_ERROR_BUNDLE_SERVICE_EXCEPTION;
 }
 
 static bool ParseHashParam(napi_env env, napi_value args, std::string &key, std::string &value)
@@ -579,6 +477,18 @@ void InstallExecuter(napi_env env, void *data)
     }
 }
 
+static std::string GetFunctionName(const InstallOption &option)
+{
+    if (option == InstallOption::INSTALL) {
+        return RESOURCE_NAME_OF_INSTALL;
+    } else if (option == InstallOption::RECOVER) {
+        return RESOURCE_NAME_OF_RECOVER;
+    } else if (option == InstallOption::UNINSTALL) {
+        return RESOURCE_NAME_OF_UNINSTALL;
+    }
+    return EMPTY_STRING;
+}
+
 void OperationCompleted(napi_env env, napi_status status, void *data)
 {
     AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
@@ -586,15 +496,9 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[SECOND_PARAM]));
     ConvertInstallResult(callbackPtr->installResult);
-    napi_value nResultMsg;
-    if (callbackPtr->installResult.resultCode == SUCCESS) {
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, MSG_OPERATE_SUCCESSFULLY.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-        NAPI_CALL_RETURN_VOID(env,
-            napi_set_named_property(env, result[SECOND_PARAM], "resultMessage", nResultMsg));
-    } else {
-        result[FIRST_PARAM] = BusinessError::CreateError(env, callbackPtr->installResult.resultCode,
-            callbackPtr->installResult.resultMsg);
+    if (callbackPtr->installResult.resultCode != SUCCESS) {
+        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+            GetFunctionName(callbackPtr->option), INSTALL_PERMISSION);
     }
 
     if (callbackPtr->deferred) {
@@ -626,24 +530,24 @@ napi_value Install(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     if (!args.Init(INSTALLER_PARAMS_NUMBER, INSTALLER_PARAMS_NUMBER)) {
         APP_LOGE("init param failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
     if (argc < INSTALLER_PARAMS_NUMBER) {
         APP_LOGE("the params number is incorrect");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
-
+    callbackPtr->option = InstallOption::INSTALL;
     napi_value firstArg = args.GetArgv(FIRST_PARAM);
     napi_value secondArg = args.GetArgv(SECOND_PARAM);
     napi_value thirdArg = args.GetArgv(THIRD_PARAM);
     if (firstArg == nullptr || secondArg == nullptr || thirdArg == nullptr) {
         APP_LOGE("the params is nullptr");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return nullptr;
     }
 
@@ -652,7 +556,7 @@ napi_value Install(napi_env env, napi_callback_info info)
     if ((CommonFunc::ParseStringArray(env, bundleFilePaths, firstArg) == nullptr) ||
         (!ParseInstallParam(env, secondArg, installParam))) {
         APP_LOGE("the param parse failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return nullptr;
     }
     callbackPtr->hapFiles = bundleFilePaths;
@@ -663,7 +567,7 @@ napi_value Install(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_typeof(env, thirdArg, &valuetype));
         if (valuetype != napi_function) {
             APP_LOGE("Wrong argument type. Function expected.");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
             return nullptr;
         }
         NAPI_CALL(env, napi_create_reference(env, thirdArg, NAPI_RETURN_ONE, &callbackPtr->callback));
@@ -726,14 +630,14 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
     NapiArg args(env, info);
     if (!args.Init(INSTALLER_PARAMS_NUMBER, INSTALLER_PARAMS_NUMBER)) {
         APP_LOGE("init param failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
     if (argc < INSTALLER_PARAMS_NUMBER) {
         APP_LOGE("the params number is incorrect");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
 
@@ -742,7 +646,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
     napi_value thirdArg = args.GetArgv(THIRD_PARAM);
     if (firstArg == nullptr || secondArg == nullptr || thirdArg == nullptr) {
         APP_LOGE("the params is nullptr");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return nullptr;
     }
 
@@ -750,7 +654,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
     InstallParam installParam;
     if ((!CommonFunc::ParseString(env, firstArg, bundleName)) || (!ParseInstallParam(env, secondArg, installParam))) {
         APP_LOGE("the param parse failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return nullptr;
     }
     callbackPtr->bundleName = bundleName;
@@ -761,13 +665,13 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
         NAPI_CALL(env, napi_typeof(env, thirdArg, &valuetype));
         if (valuetype != napi_function) {
             APP_LOGE("Wrong argument type. Function expected.");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
             return nullptr;
         }
         NAPI_CALL(env, napi_create_reference(env, thirdArg, NAPI_RETURN_ONE, &callbackPtr->callback));
     }
 
-    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME,
+    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), GetFunctionName(callbackPtr->option),
         UninstallOrRecoverExecuter, OperationCompleted);
     callbackPtr.release();
     return promise;

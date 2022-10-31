@@ -168,10 +168,6 @@ void BundleSandboxAppHelper::RemoveSandboxApp(
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGI("enter RemoveSandboxApp");
     auto sandboxHandler = std::make_shared<BundleSandboxExceptionHandler>(dataStorage);
-    if (sandboxHandler == nullptr) {
-        APP_LOGE("sandboxHandler is nullptr");
-        return;
-    }
     sandboxHandler->RemoveSandboxApp(info);
 #else
     APP_LOGI("sandbox app not supported");
@@ -184,10 +180,6 @@ ErrCode BundleSandboxAppHelper::InstallSandboxApp(const std::string &bundleName,
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGI("enter InstallSandboxApp");
     std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
-    if (installer == nullptr) {
-        APP_LOGE("installer is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
-    }
     return installer->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
 #else
     APP_LOGI("sandbox app not supported");
@@ -201,10 +193,6 @@ ErrCode BundleSandboxAppHelper::UninstallSandboxApp(
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGI("enter UninstallSandboxApp");
     std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
-    if (installer == nullptr) {
-        APP_LOGE("installer is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
-    }
     return installer->UninstallSandboxApp(bundleName, appIndex, userId);
 #else
     APP_LOGI("sandbox app not supported");
@@ -217,10 +205,6 @@ ErrCode BundleSandboxAppHelper::UninstallAllSandboxApps(const std::string &bundl
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGI("enter UninstallAllSandboxApps");
     std::shared_ptr<BundleSandboxInstaller> installer = std::make_shared<BundleSandboxInstaller>();
-    if (installer == nullptr) {
-        APP_LOGE("installer is nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
     return installer->UninstallAllSandboxApps(bundleName, userId);
 #else
     APP_LOGI("sandbox app not supported");

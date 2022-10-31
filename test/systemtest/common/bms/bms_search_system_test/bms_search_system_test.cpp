@@ -1102,7 +1102,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2700, Function | MediumTest | Level1)
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = "bmsThirdBundle_A1";
 
-    CommonTool commonTool;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     Want want;
@@ -1118,7 +1117,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2700, Function | MediumTest | Level1)
 
     EXPECT_EQ(abilityInfo.name, "bmsThirdBundle_A1");
     EXPECT_EQ(abilityInfo.bundleName, "com.third.hiworld.example1");
-    EXPECT_EQ(commonTool.VectorToStr(abilityInfo.deviceTypes), "defaulttvcar");
     TearDownTestCase();
     std::cout << "END BMS_Search_2700" << std::endl;
 }
@@ -1299,6 +1297,21 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3200, Function | MediumTest | Level1)
         APP_LOGI("BmsInstallSystemTest TearDown--uninstall result is %{public}s", installResult.c_str());
     }
     std::cout << "END BMS_Search_3200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Search_3300
+ * @tc.name: test HasSystemCapability interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
+ *           2.install the app
+ *           3.call HasSystemCapability failed by empty name
+ */
+HWTEST_F(BmsSearchSystemTest, BMS_Search_3300, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+
+    bool result = bundleMgrProxy->HasSystemCapability("");
+    EXPECT_FALSE(result);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

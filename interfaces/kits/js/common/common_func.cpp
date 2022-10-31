@@ -58,21 +58,26 @@ constexpr const char* ICON_ID = "iconId";
 constexpr const char* APPLICATION_INFO = "applicationInfo";
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
-    { ERR_BUNDLE_MANAGER_INVALID_USER_ID, ERROR_INVALID_USER_ID },
+    { ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
+    { ERR_BUNDLE_MANAGER_PARAM_ERROR, ERROR_PARAM_CHECK_ERROR },
     { ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST, ERROR_BUNDLE_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST, ERROR_MODULE_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST, ERROR_ABILITY_NOT_EXIST },
-    { ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
+    { ERR_BUNDLE_MANAGER_INVALID_USER_ID, ERROR_INVALID_USER_ID },
     { ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED, ERROR_PERMISSION_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST, ERROR_DEVICE_ID_NOT_EXIST },
-    { ERR_BUNDLE_MANAGER__PROFILE_NOT_EXIST, ERROR_PROFILE_NOT_EXIST },
-    { ERR_BUNDLE_MANAGER_PARAM_ERROR, ERROR_PARAM_CHECK_ERROR },
-    { ERR_BUNDLE_MANAGER_APPLICATION_DISABLED, ERROR_BUNDLE_IS_DISABLED },
-    { ERR_ZLIB_SRC_FILE_DISABLED, ERR_ZLIB_SRC_FILE_INVALID },
     { ERR_BUNDLE_MANAGER_INVALID_UID, ERROR_INVALID_UID },
     { ERR_BUNDLE_MANAGER_INVALID_HAP_PATH, ERROR_INVALID_HAP_PATH },
     { ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST, ERROR_DEFAULT_APP_NOT_EXIST },
-    { ERR_BUNDLE_MANAGER_INVALID_TYPE, ERROR_INVALID_TYPE }
+    { ERR_BUNDLE_MANAGER_INVALID_TYPE, ERROR_INVALID_TYPE },
+    { ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH, ERROR_ABILITY_AND_TYPE_MISMATCH },
+    { ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST, ERROR_PROFILE_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_APPLICATION_DISABLED, ERROR_BUNDLE_IS_DISABLED },
+    { ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING, ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING },
+    { ERR_BUNDLE_MANAGER_ABILITY_DISABLED, ERROR_ABILITY_IS_DISABLED },
+    { ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA, ERROR_CLEAR_CACHE_FILES_UNSUPPORTED },
+    { ERR_ZLIB_SRC_FILE_DISABLED, ERR_ZLIB_SRC_FILE_INVALID },
+    { ERR_ZLIB_DEST_FILE_DISABLED, ERR_ZLIB_DEST_FILE_INVALID }
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -225,6 +230,21 @@ bool CommonFunc::ParsePropertyFromObject(napi_env env, napi_value args, const Pr
     return true;
 }
 
+bool CommonFunc::ParseBool(napi_env env, napi_value value, bool& result)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, value, &valueType);
+    if (valueType != napi_boolean) {
+        APP_LOGE("ParseBool type mismatch!");
+        return false;
+    }
+    if (napi_get_value_bool(env, value, &result) != napi_ok) {
+        APP_LOGE("napi_get_value_bool error");
+        return false;
+    }
+    return true;
+}
+
 bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result)
 {
     napi_valuetype valueType = napi_undefined;
@@ -287,20 +307,22 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
 {
     if (bundleMgr_ == nullptr) {
         std::lock_guard<std::mutex> lock(bundleMgrMutex_);
-        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (systemAbilityManager == nullptr) {
-            APP_LOGE("systemAbilityManager is null.");
-            return nullptr;
-        }
-        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        if (bundleMgrSa == nullptr) {
-            APP_LOGE("bundleMgrSa is null.");
-            return nullptr;
-        }
-        bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
         if (bundleMgr_ == nullptr) {
-            APP_LOGE("iface_cast failed.");
-            return nullptr;
+            auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+            if (systemAbilityManager == nullptr) {
+                APP_LOGE("systemAbilityManager is null.");
+                return nullptr;
+            }
+            auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+            if (bundleMgrSa == nullptr) {
+                APP_LOGE("bundleMgrSa is null.");
+                return nullptr;
+            }
+            bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+            if (bundleMgr_ == nullptr) {
+                APP_LOGE("iface_cast failed.");
+                return nullptr;
+            }
         }
     }
     return bundleMgr_;
@@ -916,19 +938,6 @@ void CommonFunc::ConvertResource(napi_env env, const Resource &resource, napi_va
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "id", nId));
 }
 
-void CommonFunc::ConvertModuleInfo(napi_env env, const ModuleInfo &moduleInfo, napi_value objMoudleInfo)
-{
-    napi_value nModuleName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, moduleInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objMoudleInfo, MODULE_NAME, nModuleName));
-
-    napi_value nModuleSourceDir;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, moduleInfo.moduleSourceDir.c_str(), NAPI_AUTO_LENGTH, &nModuleSourceDir));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objMoudleInfo, "moduleSourceDir", nModuleSourceDir));
-}
-
 void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo)
 {
     napi_value nName;
@@ -969,16 +978,6 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.process.c_str(), NAPI_AUTO_LENGTH, &nProcess));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "process", nProcess));
 
-    napi_value nModuleSourceDirs;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nModuleSourceDirs));
-    for (size_t idx = 0; idx < appInfo.moduleSourceDirs.size(); idx++) {
-        napi_value nModuleSourceDir;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, appInfo.moduleSourceDirs[idx].c_str(), NAPI_AUTO_LENGTH, &nModuleSourceDir));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nModuleSourceDirs, idx, nModuleSourceDir));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "moduleSourceDirs", nModuleSourceDirs));
-
     napi_value nPermissions;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nPermissions));
     for (size_t idx = 0; idx < appInfo.permissions.size(); idx++) {
@@ -988,16 +987,6 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, idx, nPermission));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, PERMISSIONS, nPermissions));
-
-    napi_value nModuleInfos;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nModuleInfos));
-    for (size_t idx = 0; idx < appInfo.moduleInfos.size(); idx++) {
-        napi_value objModuleInfos;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objModuleInfos));
-        ConvertModuleInfo(env, appInfo.moduleInfos[idx], objModuleInfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nModuleInfos, idx, objModuleInfos));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "modulesInfo", nModuleInfos));
 
     napi_value nEntryDir;
     NAPI_CALL_RETURN_VOID(
@@ -1465,7 +1454,7 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isEnabled", isEnabled));
 }
 
-void CommonFunc::ConvertShortCutInfos(napi_env env, std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
+void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
 {
     if (shortcutInfos.empty()) {
         return;

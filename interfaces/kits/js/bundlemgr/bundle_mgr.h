@@ -482,8 +482,8 @@ private:
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
     NativeValue* CreateInnerMetaDatas(
-        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> metaData);
-    NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> metaData);
+        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData);
+    NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData);
     NativeValue* CreateCustomizeMetaData(NativeEngine &engine, const CustomizeData &customizeData);
     NativeValue* CreateInnerMetaData(NativeEngine &engine, const Metadata &metadata);
     NativeValue* CreateResource(NativeEngine &engine, const Resource &resource);
@@ -491,9 +491,9 @@ private:
     NativeValue* CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo);
     NativeValue* CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo);
     NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfo);
+        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfos);
     NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
+        NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
     NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);
     int32_t InitGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info,
         NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
@@ -515,10 +515,10 @@ private:
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
     NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
     NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
-    bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpBundleOptionsParams(
+    static bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    static bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    static bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    static bool UnwarpBundleOptionsParams(
         NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool &result);
 };
 }  // namespace AppExecFwk

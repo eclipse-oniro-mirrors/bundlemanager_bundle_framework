@@ -7,6 +7,7 @@
         "description":"$string:phone_entry_dsc",
         "descriptionId":16777220,
         "deviceTypes":[
+            "tablet",
             "default",
             "phone"
         ],
@@ -14,6 +15,12 @@
         "installationFree":false,
         "pages":"@profile:main_pages",
         "uiSyntax":"ets",
+        "metadata": [
+            {
+              "name": "meta_info",
+              "resource": "$profile:main_pages"
+            }
+          ],
         "abilities":[
             {
                 "name":"MainAbility",
@@ -46,6 +53,7 @@
         ],
         "extensionAbilities":[
             {
+
                 "description":"$string:form_description",
                 "descriptionId":16777219,
                 "icon":"$media:icon",
@@ -69,6 +77,13 @@
                 "name":"WeatherFormAbility",
                 "srcEntrance":"./ets/Weather/WeatherFormAbility.ts",
                 "type":"wallpaper"
+            }
+        ],
+        "requestPermissions": [
+            {
+                "name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
+                "reason": "$string:entry_desc",
+                "usedScene": {"abilities": ["MainAbility"]}
             }
         ]
     }

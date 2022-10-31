@@ -22,10 +22,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
     using namespace OHOS::AppExecFwk;
     std::unique_ptr<InstalldService> service = std::make_unique<InstalldService>();
-    if (service == nullptr) {
-        APP_LOGE("fail to create the installd service");
-        std::exit(EXIT_FAILURE);
-    }
     service->Start();
     if (!service->IsServiceReady()) {
         APP_LOGW("can't start the installd service, try again");

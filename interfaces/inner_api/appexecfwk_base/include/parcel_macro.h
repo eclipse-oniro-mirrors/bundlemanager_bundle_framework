@@ -45,6 +45,28 @@ namespace AppExecFwk {
             return;                                                       \
         }                                                                 \
     } while (0)
+
+#define CHECK_PARCEL_CAPACITY(parcel, capacity)                               \
+    while ((parcel).GetMaxCapacity() - (parcel).GetDataSize() < (capacity)) { \
+        size_t newMaxCapacity = (parcel).GetMaxCapacity() * 2;                \
+        APP_LOGD("parcel capacity expansion %{public}zu", newMaxCapacity);    \
+        (parcel).SetMaxCapacity(newMaxCapacity);                              \
+    }
+
+#define CONTAINER_SECURITY_VERIFY(parcel, readContainerSize, val)                                         \
+    do {                                                                                                  \
+        if ((val) == nullptr) {                                                                           \
+            APP_LOGE("Failed to read container due to val is nullptr");                                   \
+            return false;                                                                                 \
+        }                                                                                                 \
+        size_t readAbleDataSize = (parcel).GetReadableBytes();                                            \
+        size_t readSize = static_cast<size_t>(readContainerSize);                                         \
+        if ((readSize > readAbleDataSize) || ((val)->max_size() < readSize)) {                            \
+            APP_LOGE("Failed to read container, readSize = %{public}zu, readAbleDataSize = %{public}zu",  \
+                readSize, readAbleDataSize);                                                              \
+            return false;                                                                                 \
+        }                                                                                                 \
+    } while (0)
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_PARCEL_MACRO_H

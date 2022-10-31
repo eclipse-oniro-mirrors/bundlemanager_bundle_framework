@@ -44,7 +44,6 @@ enum class GetApplicationFlag {
     GET_APPLICATION_INFO_WITH_PERMISSION = 0x00000001,
     GET_APPLICATION_INFO_WITH_METADATA = 0x00000002,
     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004,
-    GET_ALL_APPLICATION_INFO = 0xFFFF0000,
 };
 
 struct Metadata : public Parcelable {
@@ -188,6 +187,8 @@ struct ApplicationInfo : public Parcelable {
     // native so
     std::string nativeLibraryPath;
     std::string cpuAbi;
+    std::string arkNativeFilePath;
+    std::string arkNativeFileAbi;
 
     // assign when calling the get interface
     std::vector<std::string> permissions;

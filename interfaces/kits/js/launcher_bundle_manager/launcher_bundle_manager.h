@@ -33,13 +33,13 @@ namespace AppExecFwk {
 struct GetLauncherAbilityCallbackInfo : public BaseCallbackInfo {
     explicit GetLauncherAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
-    int32_t userId;
+    int32_t userId = 0;
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
 };
 
 struct GetAllLauncherAbilityCallbackInfo : public BaseCallbackInfo {
     explicit GetAllLauncherAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    int32_t userId;
+    int32_t userId = 0;
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
 };
 

@@ -37,7 +37,8 @@ const std::string ALLOW_COMMON_EVENT = "allowCommonEvent";
 const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
 const std::string APP_SIGNATURE = "app_signature";
 const std::string ASSOCIATED_WAKE_UP = "associatedWakeUp";
-const std::string RESOURCES_PATH = "/app/ohos.global.systemres";
+const std::string RESOURCES_PATH_1 = "/app/ohos.global.systemres";
+const std::string RESOURCES_PATH_2 = "/app/SystemResources";
 const std::string ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
 const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
@@ -94,7 +95,8 @@ ErrCode PreBundleProfile::TransformTo(
             parseResult,
             ArrayType::NOT_ARRAY);
         bool isResourcesPath =
-            (preScanInfo.bundleDir.find(RESOURCES_PATH) != preScanInfo.bundleDir.npos);
+            (preScanInfo.bundleDir.find(RESOURCES_PATH_1) != preScanInfo.bundleDir.npos) ||
+            (preScanInfo.bundleDir.find(RESOURCES_PATH_2) != preScanInfo.bundleDir.npos);
         preScanInfo.priority = isResourcesPath ? HIGH_PRIORITY : COMMON_PRIORITY;
         if (parseResult == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
             APP_LOGE("bundleDir must exist, and it is empty here");

@@ -99,6 +99,7 @@ const std::string JOSN_KEY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 const std::string JOSN_KEY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 const std::string JOSN_KEY_UID = "uid";
 const std::string JOSN_KEY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -122,6 +123,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
     for (auto i = 0; i < permissionsSize; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -130,12 +132,14 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t deviceTypesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceTypesSize, &deviceTypes);
     for (auto i = 0; i < deviceTypesSize; i++) {
         deviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t deviceCapabilitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceCapabilitiesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceCapabilitiesSize, &deviceCapabilities);
     for (auto i = 0; i < deviceCapabilitiesSize; i++) {
         deviceCapabilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -160,6 +164,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     writePermission = Str16ToStr8(parcel.ReadString16());
     int32_t configChangesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, configChangesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, configChangesSize, &configChanges);
     for (auto i = 0; i < configChangesSize; i++) {
         configChanges.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -170,6 +175,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     defaultFormWidth = parcel.ReadInt32();
     int32_t metaDataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaDataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, metaDataSize, &metaData.customizeData);
     for (auto i = 0; i < metaDataSize; i++) {
         std::unique_ptr<CustomizeData> customizeDataPtr(parcel.ReadParcelable<CustomizeData>());
         if (!customizeDataPtr) {
@@ -192,6 +198,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     srcEntrance = Str16ToStr8(parcel.ReadString16());
     int32_t metadataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
     for (auto i = 0; i < metadataSize; i++) {
         std::unique_ptr<Metadata> metadataPtr(parcel.ReadParcelable<Metadata>());
         if (!metadataPtr) {
@@ -230,6 +237,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
 
     int32_t windowModeSize = parcel.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(parcel, windowModeSize, &windowModes);
     for (auto index = 0; index < windowModeSize; ++index) {
         windowModes.emplace_back(static_cast<SupportWindowMode>(parcel.ReadInt32()));
     }
@@ -256,6 +264,7 @@ AbilityInfo *AbilityInfo::Unmarshalling(Parcel &parcel)
 
 bool AbilityInfo::Marshalling(Parcel &parcel) const
 {
+    CHECK_PARCEL_CAPACITY(parcel, ABILITY_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));

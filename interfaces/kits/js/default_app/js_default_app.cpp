@@ -35,11 +35,49 @@ namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 
 namespace {
+constexpr int32_t NAPI_RETURN_ZERO = 0;
 const std::string IS_DEFAULT_APPLICATION = "IsDefaultApplication";
 const std::string GET_DEFAULT_APPLICATION = "GetDefaultApplication";
 const std::string SET_DEFAULT_APPLICATION = "SetDefaultApplication";
 const std::string RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
+}
+
+static const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
+    {"Web Browser", "BROWSER"},
+    {"Image Gallery", "IMAGE"},
+    {"Audio Player", "AUDIO"},
+    {"Video Player", "VIDEO"},
+    {"PDF Viewer", "PDF"},
+    {"Word Viewer", "WORD"},
+    {"Excel Viewer", "EXCEL"},
+    {"PPT Viewer", "PPT"}
+};
+
+static bool ParseType(napi_env env, napi_value value, std::string& result)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, value, &valueType);
+    if (valueType != napi_string) {
+        APP_LOGE("type not string");
+        return false;
+    }
+    size_t size = 0;
+    if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
+        APP_LOGE("napi_get_value_string_utf8 error.");
+        return false;
+    }
+    result.reserve(size + 1);
+    result.resize(size);
+    if (napi_get_value_string_utf8(env, value, result.data(), (size + 1), &size) != napi_ok) {
+        APP_LOGE("napi_get_value_string_utf8 error");
+        return false;
+    }
+    if (TYPE_MAPPING.find(result) != TYPE_MAPPING.end()) {
+        result = TYPE_MAPPING.at(result);
+    }
+    return true;
 }
 
 static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy()
@@ -259,7 +297,7 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
+            if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
@@ -271,7 +309,8 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -360,7 +399,7 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
+            if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
@@ -373,7 +412,8 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -383,7 +423,8 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -470,7 +511,7 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
+            if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
@@ -489,7 +530,8 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_THREE) {
@@ -499,7 +541,8 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }
@@ -586,7 +629,7 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->type)) {
+            if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
                 APP_LOGE("type invalid!");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
@@ -599,7 +642,8 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             } else {
                 APP_LOGE("param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -609,7 +653,8 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
             break;
         } else {
             APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
             return nullptr;
         }
     }

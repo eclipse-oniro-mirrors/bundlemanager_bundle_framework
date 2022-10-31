@@ -107,6 +107,7 @@ constexpr const char* ARM64_V8A = "arm64-v8a";
 constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
 const std::string LIBS = "libs/";
+const std::string AN = "an/";
 constexpr const char* LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
 constexpr const char* ARM = "arm";
 const std::map<std::string, std::string> ABI_MAP = {
@@ -117,6 +118,8 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86_64, "x86_64"},
 };
 constexpr const char* SO_SUFFIX = ".so";
+constexpr const char* AN_SUFFIX = ".an";
+constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";

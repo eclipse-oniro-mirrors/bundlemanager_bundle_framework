@@ -48,6 +48,7 @@ const std::string APPLICATION_INFO = "applicationInfo";
 const std::string RESOURCE_PATH = "resourcePath";
 const std::string ENABLED = "enabled";
 const std::string PROCESS = "process";
+const size_t ABILITY_CAPACITY = 10240; // 10K
 }; // namespace
 
 bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -65,6 +66,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     priority = parcel.ReadInt32();
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
     for (auto i = 0; i < permissionsSize; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -76,6 +78,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t metadataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
     for (auto i = 0; i < metadataSize; i++) {
         std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
         if (!meta) {
@@ -112,6 +115,7 @@ ExtensionAbilityInfo *ExtensionAbilityInfo::Unmarshalling(Parcel &parcel)
 
 bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
 {
+    CHECK_PARCEL_CAPACITY(parcel, ABILITY_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));

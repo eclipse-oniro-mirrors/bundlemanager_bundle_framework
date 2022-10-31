@@ -37,11 +37,13 @@ namespace OHOS {
         auto pFile = fopen("rpcid.sc", "wb");
         if (pFile == nullptr) {
             std::cout<< "fopen hap error!";
+            return false;
         }
 
         std::string info (reinterpret_cast<const char*>(data), size);
         retCode = fputs(info.c_str(), pFile);
         if (retCode != FILE_RETURN_SUCCESS) {
+            fclose(pFile);
             return false;
         }
         retCode = fclose(pFile);

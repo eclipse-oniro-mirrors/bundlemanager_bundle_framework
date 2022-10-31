@@ -33,21 +33,19 @@ ohos_shared_library("defaultappmanager") {
   ]
 
   external_deps = [
+    "ability_base:want",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
   ]
 
   if (bundle_framework_default_app) {
     sources += [ "js_default_app.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
-    external_deps += [
-      "ability_base:want",
-      "bundle_framework:appexecfwk_base",
-      "bundle_framework:appexecfwk_core",
-      "samgr:samgr_proxy",
-    ]
   } else {
     sources += [ "js_default_app_unsupported.cpp" ]
   }

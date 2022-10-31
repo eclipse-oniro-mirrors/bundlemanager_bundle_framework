@@ -12,7 +12,12 @@
         "syscap": [
             "SystemCapability.BundleManager.BundleFramework",
             "SystemCapability.BundleManager.Zlib",
-            "SystemCapability.BundleManager.BundleFramework.AppControl"
+            "SystemCapability.BundleManager.BundleFramework.AppControl",
+            "SystemCapability.BundleManager.BundleFramework.Core",
+            "SystemCapability.BundleManager.BundleFramework.FreeInstall",
+            "SystemCapability.BundleManager.BundleFramework.Launcher",
+            "SystemCapability.BundleManager.BundleFramework.DefaultAppManager",
+            "SystemCapability.BundleManager.BundleFramework.Resource"
         ],
         "features": [
             "bundle_framework_graphics",

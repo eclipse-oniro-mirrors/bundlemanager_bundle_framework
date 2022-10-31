@@ -1450,7 +1450,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -1771,7 +1771,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -1935,8 +1935,9 @@ napi_value GetAbilityInfo(napi_env env, napi_callback_info info)
     }
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, StartGetAbilityInfoExecuteCB,
-                       StartGetAbilityInfoCompletedCB, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+              StartGetAbilityInfoExecuteCB, StartGetAbilityInfoCompletedCB,
+              reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2103,7 +2104,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2232,7 +2233,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2630,7 +2631,7 @@ napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePa
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2788,7 +2789,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2896,7 +2897,7 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -2999,7 +3000,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -3102,7 +3103,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[PARAM0]), result, &placeHolder));
             }
         },
-        (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -3234,7 +3235,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3265,7 +3266,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
                 napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3511,6 +3512,7 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_AN_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE):
@@ -3562,6 +3564,7 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_AN_INCOMPATIBLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_TYPE_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE):
@@ -3740,7 +3743,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3786,7 +3789,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3874,7 +3877,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -3919,7 +3922,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4038,7 +4041,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4082,7 +4085,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4176,7 +4179,7 @@ napi_value GetAllFormsInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4212,7 +4215,7 @@ napi_value GetAllFormsInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4289,7 +4292,7 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4326,7 +4329,7 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4399,7 +4402,7 @@ napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
                     &result[PARAM0], &callResult));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4435,7 +4438,7 @@ napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info)
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
                     result));
             },
-            (void *)asyncCallbackInfo,
+            reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
         NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
@@ -4577,7 +4580,7 @@ napi_value GetBundleGidsAsync(
     }
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetBundleGidsExecute, GetBundleGidsAsyncComplete,
-                       (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+                       reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -4599,8 +4602,9 @@ napi_value GetBundleGidsPromise(napi_env env, AsyncGetBundleGidsCallbackInfo *as
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetBundleGidsExecute,
-                       GetBundleGidsPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                GetBundleGidsExecute, GetBundleGidsPromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -4621,7 +4625,7 @@ napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBund
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -4797,7 +4801,7 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -4904,7 +4908,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "JSSetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, SetDisposedStatusExecute,
-        SetDisposedStatusComplete, (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        SetDisposedStatusComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5001,7 +5005,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, "JSGetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, GetDisposedStatusExecute,
-        GetDisposedStatusComplete, (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        GetDisposedStatusComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5091,7 +5095,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -5198,8 +5202,9 @@ napi_value IsAbilityEnabledAsync(
         return nullptr;
     }
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsAbilityEnabledExecute,
-                       IsAbilityEnabledAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsAbilityEnabledExecute, IsAbilityEnabledAsyncComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5221,8 +5226,9 @@ napi_value IsAbilityEnabledPromise(napi_env env, EnabledInfo *asyncCallbackInfo)
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsAbilityEnabledExecute,
-                       IsAbilityEnabledPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsAbilityEnabledExecute, IsAbilityEnabledPromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -5243,7 +5249,7 @@ napi_value IsAbilityEnabledWrap(napi_env env, napi_callback_info info, EnabledIn
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -5390,8 +5396,9 @@ napi_value IsApplicationEnabledAsync(
         return nullptr;
     }
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsApplicationEnabledExecute,
-                       IsApplicationEnabledAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsApplicationEnabledExecute, IsApplicationEnabledAsyncComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5413,8 +5420,9 @@ napi_value IsApplicationEnabledPromise(napi_env env, EnabledInfo *asyncCallbackI
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsApplicationEnabledExecute,
-                       IsApplicationEnabledPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsApplicationEnabledExecute, IsApplicationEnabledPromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -5435,7 +5443,7 @@ napi_value IsApplicationEnabledWrap(napi_env env, napi_callback_info info, Enabl
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -5575,8 +5583,9 @@ napi_value IsModuleRemovableAsync(
         return nullptr;
     }
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsModuleRemovableExecute,
-                       IsModuleRemovableAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsModuleRemovableExecute, IsModuleRemovableAsyncComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5598,8 +5607,9 @@ napi_value IsModuleRemovablePromise(napi_env env, AsyncModuleRemovableCallbackIn
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
     asyncCallbackInfo->deferred = deferred;
 
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, IsModuleRemovableExecute,
-                       IsModuleRemovablePromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName,
+                IsModuleRemovableExecute, IsModuleRemovablePromiseComplete,
+                reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -5621,7 +5631,7 @@ napi_value GetModuleRemovableWrap(
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -5690,10 +5700,8 @@ napi_value IsModuleRemovable(napi_env env, napi_callback_info info)
 
     if (ret == nullptr) {
         APP_LOGE("%{public}s ret is nullptr", __func__);
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        }
+        delete asyncCallbackInfo;
+        asyncCallbackInfo = nullptr;
         ret = WrapVoidToJS(env);
     }
     APP_LOGI("%{public}s end.", __func__);
@@ -5800,7 +5808,7 @@ napi_value SetModuleUpgradeFlagAsync(
     }
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, SetModuleUpgradeFlagExecute,
-                       SetModuleUpgradeFlagAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        SetModuleUpgradeFlagAsyncComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -5823,7 +5831,9 @@ napi_value SetModuleUpgradeFlagPromise(napi_env env, AsyncModuleUpgradeFlagCallb
     asyncCallbackInfo->deferred = deferred;
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, SetModuleUpgradeFlagExecute,
-                       SetModuleUpgradeFlagPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+                                          SetModuleUpgradeFlagPromiseComplete,
+                                          reinterpret_cast<void*>(asyncCallbackInfo),
+                                          &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -5840,7 +5850,7 @@ napi_value SetModuleUpgradeFlagWrap(
     const size_t argCountWithAsync = argcPromise + ARGS_ASYNC_COUNT;
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         return nullptr;
     }
     napi_valuetype valueType = napi_undefined;
@@ -5908,10 +5918,8 @@ napi_value SetModuleUpgradeFlag(napi_env env, napi_callback_info info)
 
     if (ret == nullptr) {
         APP_LOGE("%{public}s ret is nullptr", __func__);
-        if (asyncCallbackInfo != nullptr) {
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        }
+        delete asyncCallbackInfo;
+        asyncCallbackInfo = nullptr;
         ret = WrapVoidToJS(env);
     }
     APP_LOGI("%{public}s end.", __func__);
@@ -6005,7 +6013,7 @@ napi_value GetAbilityLabelAsync(
     NAPI_CALL(env, napi_create_string_latin1(env, __func__, NAPI_AUTO_LENGTH, &resourceName));
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetAbilityLabelExecute,
-                       GetAbilityLabelAsyncComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+            GetAbilityLabelAsyncComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
@@ -6028,7 +6036,9 @@ napi_value GetAbilityLabelPromise(napi_env env, AsyncAbilityLabelCallbackInfo *a
     asyncCallbackInfo->deferred = deferred;
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, GetAbilityLabelExecute,
-                       GetAbilityLabelPromiseComplete, (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+                                          GetAbilityLabelPromiseComplete,
+                                          reinterpret_cast<void*>(asyncCallbackInfo),
+                                          &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     APP_LOGI("%{public}s, promise end.", __func__);
     return promise;
@@ -6049,7 +6059,7 @@ napi_value GetAbilityLabelWrap(napi_env env, napi_callback_info info, AsyncAbili
     napi_value ret = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
-    if (argcAsync > argCountWithAsync || argcAsync > ARGS_MAX_COUNT) {
+    if (argcAsync > argCountWithAsync) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
@@ -6270,7 +6280,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
                 }
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -6407,7 +6417,7 @@ napi_value GetNameForUid(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[PARAM0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -6503,7 +6513,7 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -7144,7 +7154,7 @@ napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)callBackInfo, &callBackInfo->asyncWork));
+        reinterpret_cast<void*>(callBackInfo), &callBackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, callBackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -7231,7 +7241,8 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
 }
 
-static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::string version, std::string dispatchAPI)
+static void ConvertDispatcherVersion(
+    napi_env env, napi_value &value, const std::string& version, const std::string& dispatchAPI)
 {
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &value));
     napi_value napiVersion;
@@ -7324,7 +7335,7 @@ napi_value GetDispatcherVersionWrap(
                                                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
                 }
             },
-            (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+            reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -7397,10 +7408,6 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
     APP_LOGD("the count of input arguments is [%{public}zu]", argc);
 
     std::unique_ptr<AsyncGetProfileInfo> callbackPtr = std::make_unique<AsyncGetProfileInfo>(env);
-    if (callbackPtr == nullptr) {
-        APP_LOGE("GetProfile failed due to null callbackPtr");
-        return nullptr;
-    }
     callbackPtr->type = profileType;
 
     if (argc < ARGS_SIZE_TWO || argc > ARGS_SIZE_FOUR) {
@@ -7487,7 +7494,7 @@ napi_value GetProfileAsync(napi_env env, napi_value value, std::unique_ptr<Async
             NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
                 sizeof(result) / sizeof(result[0]), result, &placeHolder));
         }
-    }, (void*)callbackPtr.get(), &callbackPtr->asyncWork));
+    }, reinterpret_cast<void*>(callbackPtr.get()), &callbackPtr->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, callbackPtr->asyncWork));
     return value;
 }
@@ -7585,7 +7592,7 @@ NativeValue* JsBundleMgr::CreateModuleInfos(NativeEngine &engine, const std::vec
 }
 
 NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
-    NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData)
+    NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData)
 {
     APP_LOGD("CreateCustomizeMetaDatas is called.");
     NativeValue *objValue = engine.CreateObject();
@@ -7602,7 +7609,7 @@ NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
 }
 
 NativeValue* JsBundleMgr::CreateInnerMetaDatas(
-    NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> metaData)
+    NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData)
 {
     APP_LOGD("CreateInnerMetaDatas is called.");
     NativeValue *objValue = engine.CreateObject();
@@ -7618,7 +7625,7 @@ NativeValue* JsBundleMgr::CreateInnerMetaDatas(
     return objValue;
 }
 
-NativeValue* JsBundleMgr::CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> metaData)
+NativeValue* JsBundleMgr::CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData)
 {
     APP_LOGD("CreateInnerMetaDatas is called.");
     NativeValue *arrayValue = engine.CreateArray(metaData.size());
@@ -7773,7 +7780,7 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(
     return arrayValue;
 }
 
-NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfos)
+NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo)
 {
     APP_LOGD("CreateExtensionInfo is called.");
     auto objContext = engine.CreateObject();
@@ -7788,13 +7795,13 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const Extens
         return engine.CreateUndefined();
     }
 
-    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfos.bundleName));
-    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfos.moduleName));
-    object->SetProperty("name", CreateJsValue(engine, extensionInfos.name));
-    object->SetProperty("labelId", CreateJsValue(engine, extensionInfos.labelId));
-    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfos.descriptionId));
-    object->SetProperty("iconId", CreateJsValue(engine, extensionInfos.iconId));
-    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfos.visible));
+    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfo.bundleName));
+    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfo.moduleName));
+    object->SetProperty("name", CreateJsValue(engine, extensionInfo.name));
+    object->SetProperty("labelId", CreateJsValue(engine, extensionInfo.labelId));
+    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfo.descriptionId));
+    object->SetProperty("iconId", CreateJsValue(engine, extensionInfo.iconId));
+    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfo.visible));
     object->SetProperty("extensionAbilityType",
         CreateJsValue(engine, static_cast<int32_t>(extensionInfos.type)));
     object->SetProperty("permissions", CreateNativeArray(engine, extensionInfos.permissions));
@@ -7994,8 +8001,8 @@ NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInf
     auto typeValue = CreateJsValue(engine, "");
     if (typeValue->TypeOf() == NativeValueType::NATIVE_UNDEFINED) {
         APP_LOGE("ConvertNativeValueTo typeValue->TypeOf is UNDEFINE");
-        auto typeValue =  CreateJsValue(engine, std::string(""));
-        if (typeValue->TypeOf() == NativeValueType::NATIVE_UNDEFINED) {
+        auto jsValue =  CreateJsValue(engine, std::string(""));
+        if (jsValue->TypeOf() == NativeValueType::NATIVE_UNDEFINED) {
             APP_LOGE("ConvertNativeValueTo typeValueStr->TypeOf is UNDEFINE");
         }
     }
@@ -8278,7 +8285,7 @@ NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCa
     }
 
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdThreeParams(engine, info, userId);
+    bool flagCall = JsBundleMgr::UnwarpUserIdThreeParams(engine, info, userId);
     auto complete = [obj = this, bundleFlags, userId, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
@@ -8330,7 +8337,7 @@ NativeValue* JsBundleMgr::OnGetApplicationInfo(NativeEngine &engine, NativeCallb
     }
 
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdFourParams(engine, info, userId);
+    bool flagCall = JsBundleMgr::UnwarpUserIdFourParams(engine, info, userId);
     auto complete = [obj = this, bundleName, bundleFlags, userId, errCode](
                         NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {

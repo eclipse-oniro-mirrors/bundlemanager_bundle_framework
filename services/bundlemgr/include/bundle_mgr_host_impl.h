@@ -477,6 +477,10 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback) override;
+
+    virtual bool RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback) override;
+
+    virtual bool UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback) override;
     /**
      * @brief Clear the specific bundle status callback.
      * @param bundleStatusCallback Indicates the callback to be cleared.
@@ -784,6 +788,7 @@ private:
     bool DumpShortcutInfo(const std::string &bundleName, int32_t userId, std::string &result);
     std::set<int32_t> GetExistsCommonUserIs();
     bool VerifyQueryPermission(const std::string &queryBundleName);
+    bool VerifyPrivilegedPermission(const std::string &queryBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);

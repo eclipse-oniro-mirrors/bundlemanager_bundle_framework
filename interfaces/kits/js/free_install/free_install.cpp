@@ -222,7 +222,6 @@ napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
     SetHapModuleUpgradeFlagCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) SetHapModuleUpgradeFlagCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<SetHapModuleUpgradeFlagCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -380,7 +379,7 @@ static void ConvertDistro(napi_env env, napi_value &modulesObject, const Package
 }
 
 static void ConvertFormsInfo(napi_env env, napi_value &abilityObject,
-    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> forms)
+    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms)
 {
     napi_value formsArray;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &formsArray));
@@ -673,15 +672,17 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::string version, std::string dispatchAPI)
+static void ConvertDispatcherVersion(
+    napi_env env, napi_value &value, const std::string &version, const std::string &dispatchAPI)
 {
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &value));
     napi_value napiVersion;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, version.c_str(), NAPI_AUTO_LENGTH, &napiVersion));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "version", napiVersion));
-    napi_value napiDispatchAPI;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, dispatchAPI.c_str(), NAPI_AUTO_LENGTH, &napiDispatchAPI));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "dispatchAPI", napiDispatchAPI));
+    napi_value napiDispatchAPIVersion;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, dispatchAPI.c_str(), NAPI_AUTO_LENGTH,
+        &napiDispatchAPIVersion));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "dispatchAPIVersion", napiDispatchAPIVersion));
 }
 
 static ErrCode InnerGetDispatchInfo(std::string &version, std::string &dispatchAPI)

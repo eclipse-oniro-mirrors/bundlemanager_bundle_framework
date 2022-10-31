@@ -245,7 +245,7 @@ ErrCode HidumpHelper::GetAllAbilityNameList(std::string &result)
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
-    for (auto &bundleInfo : bundleInfos) {
+    for (const auto &bundleInfo : bundleInfos) {
         for (auto abilityInfo :  bundleInfo.abilityInfos) {
             result.append(abilityInfo.name);
             result.append("\n");
@@ -274,7 +274,7 @@ ErrCode HidumpHelper::GetAbilityInfoByName(const std::string &name, std::string 
     }
 
     nlohmann::json jsonObject;
-    for (auto &bundleInfo : bundleInfos) {
+    for (const auto &bundleInfo : bundleInfos) {
         for (auto abilityInfo :  bundleInfo.abilityInfos) {
             if (abilityInfo.name == name) {
                 jsonObject[abilityInfo.bundleName][abilityInfo.moduleName] = abilityInfo;

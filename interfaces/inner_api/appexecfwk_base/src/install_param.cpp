@@ -38,6 +38,7 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
 
     int32_t hashParamSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hashParamSize);
+    CONTAINER_SECURITY_VERIFY(parcel, hashParamSize, &hashParams);
     for (int32_t i = 0; i < hashParamSize; ++i) {
         std::string moduleName = Str16ToStr8(parcel.ReadString16());
         std::string hashValue = Str16ToStr8(parcel.ReadString16());

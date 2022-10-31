@@ -58,6 +58,8 @@ static bool ParseStringPropertyFromObject(napi_env env, napi_value args, const s
 static bool ParsePropertyFromObject(napi_env env, napi_value args, const PropertyInfo &propertyInfo,
     napi_value &property);
 
+static bool ParseBool(napi_env env, napi_value value, bool& result);
+
 static bool ParseString(napi_env env, napi_value value, std::string& result);
 
 static napi_value ParseStringArray(napi_env env, std::vector<std::string> &stringArray, napi_value args);
@@ -93,8 +95,6 @@ static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &exten
 
 static void ConvertResource(napi_env env, const Resource &resource, napi_value objResource);
 
-static void ConvertModuleInfo(napi_env env, const ModuleInfo &moduleInfo, napi_value objMoudleInfo);
-
 static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo);
 
 static void ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef);
@@ -123,12 +123,12 @@ static void ConvertShortcutIntent(napi_env env,
 
 static void ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value);
 
-static void ConvertShortCutInfos(napi_env env, std::vector<ShortcutInfo> &shortcutInfos, napi_value value);
+static void ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value);
 
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,
-                                 std::string methodName,
+                                 const std::string &methodName,
                                  void (*execFunc)(napi_env, void *),
                                  void (*completeFunc)(napi_env, napi_status, void *))
 {
@@ -146,7 +146,7 @@ static napi_value AsyncCallNativeMethod(napi_env env,
     NAPI_CALL(env, napi_create_string_utf8(env, methodName.c_str(), NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource, execFunc, completeFunc,
-        (void*)asyncCallbackInfo, &asyncCallbackInfo->asyncWork));
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     return promise;
 }
@@ -158,7 +158,7 @@ private:
 
 #define PARSE_PROPERTY(env, property, funcType, value)                                        \
     do {                                                                                      \
-        NAPI_CALL_BASE(env, napi_get_value_##funcType(env, property, &value), false);         \
+        NAPI_CALL_BASE(env, napi_get_value_##funcType(env, property, (&(value))), false);         \
     } while (0)
 } // AppExecFwk
 } // OHOS

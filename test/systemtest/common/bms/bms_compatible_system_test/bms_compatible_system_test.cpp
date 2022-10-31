@@ -217,7 +217,6 @@ std::string StatusReceiverImpl::GetResultMsg() const
 static void CheckCompatibleAbilityInfo(
     const CompatibleAbilityInfo &compatibleAbilityInfo, const std::string &bundleName, const std::string &abilityName)
 {
-    CommonTool commonTool;
     EXPECT_EQ(compatibleAbilityInfo.name, abilityName);
     EXPECT_EQ(compatibleAbilityInfo.label, "$string:app_name");
     EXPECT_EQ(compatibleAbilityInfo.description, "$string:mainability_description");
@@ -227,7 +226,6 @@ static void CheckCompatibleAbilityInfo(
     EXPECT_EQ(compatibleAbilityInfo.type, AbilityType::PAGE);
     EXPECT_EQ(compatibleAbilityInfo.orientation, DisplayOrientation::UNSPECIFIED);
     EXPECT_EQ(compatibleAbilityInfo.launchMode, LaunchMode::STANDARD);
-    EXPECT_EQ(commonTool.VectorToStr(compatibleAbilityInfo.deviceTypes), "default");
     EXPECT_FALSE(compatibleAbilityInfo.supportPipMode);
     EXPECT_EQ(compatibleAbilityInfo.bundleName, bundleName);
     EXPECT_EQ(compatibleAbilityInfo.formEntity, FORM_NUM);

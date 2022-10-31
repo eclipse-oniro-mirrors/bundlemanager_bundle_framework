@@ -26,6 +26,10 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace {
 std::string TEST_STRING = "test.string";
+const std::string TEST_CPU_ABI = "arm64";
+const std::string HAP_FILE_PATH =
+    "/data/app/el1/bundle/public/com.example.test/entry.hap";
+const std::string TEST_PATH = "/data/app/el1/bundle/public/com.example.test/";
 }; // namespace
 class BmsInstallDaemonHostImplTest : public testing::Test {
 public:
@@ -220,7 +224,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1000, Function | Sma
     EXPECT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING);
+#ifdef WITH_SELINUX
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
 }
 
 /**
@@ -439,5 +447,31 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2400, Function | Sma
     std::vector<std::string> vec;
     auto ret = installdProxy->ObtainQuickFixFileDir(TEST_STRING, vec);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_2500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractFiles of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2500, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    ExtractParam extractParam;
+    ErrCode ret = installdProxy->ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.srcPath = HAP_FILE_PATH;
+    ret = installdProxy->ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::AN;
+    ret = installdProxy->ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
 }
 } // OHOS

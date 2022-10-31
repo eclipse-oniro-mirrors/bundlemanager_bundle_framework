@@ -361,11 +361,11 @@ private:
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
-     * @brief To check native so in all haps.
+     * @brief To check native file in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
      * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
      */
-    ErrCode CheckMultiNativeSo(
+    ErrCode CheckMultiNativeFile(
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To roll back when the installation is failed.
@@ -501,6 +501,12 @@ private:
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
+    ErrCode CheckNativeFileWithOldInfo(
+        const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    bool HasAllOldModuleUpdate(
+        const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    ErrCode CheckArkNativeFileWithOldInfo(
+        const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
@@ -514,6 +520,8 @@ private:
         const std::string &cpuAbi, const std::string &nativeLibraryPath, AppqfInfo &appQfInfo) const;
     bool CheckHapLibsWithPatchLibs(
         const std::string &nativeLibraryPath, const std::string &hqfLibraryPath) const;
+    ErrCode ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath);
+    ErrCode DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

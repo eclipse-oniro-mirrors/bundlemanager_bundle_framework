@@ -28,7 +28,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-
+namespace {
+    constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
+    constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
+    constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
+    constexpr const char* BUNDLE_NAME = "bundleName";
+    constexpr const char* USER_ID = "userId";
+}
 static OHOS::sptr<OHOS::AppExecFwk::LauncherService> GetLauncherService()
 {
     return OHOS::AppExecFwk::JSLauncherService::GetLauncherService();
@@ -39,7 +45,7 @@ static ErrCode InnerGetLauncherAbilityInfo(const std::string &bundleName, int32_
 {
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
-        return ERROR_ENVORINMENT_INIT_FAILED;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     return launcherService->GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos);
 }
@@ -70,7 +76,8 @@ void GetLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertLauncherAbilityInfos(env, asyncCallbackInfo->launcherAbilityInfos, result[ARGS_POS_ONE]);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_LAUNCHER_ABILITY_INFO,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
     if (asyncCallbackInfo->deferred) {
@@ -90,40 +97,39 @@ void GetLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data
 
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("napi begin to GetLauncherAbilityInfo");
+    APP_LOGE("napi begin to GetLauncherAbilityInfo");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     GetLauncherAbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetLauncherAbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<GetLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
-    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)
-                || asyncCallbackInfo->bundleName.empty()) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                return nullptr;
-            }
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
-            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
-        } else if (i == ARGS_POS_TWO) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            }
-            break;
-        } else {
-            APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
             return nullptr;
         }
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->userId)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+            return nullptr;
+        }
+        if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, args[ARGS_POS_TWO], &valueType);
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_TWO],
+                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        }
+    } else {
+        APP_LOGE("parameters error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete);
@@ -137,7 +143,7 @@ static ErrCode InnerGetAllLauncherAbilityInfo(int32_t userId,
 {
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
-        return ERROR_ENVORINMENT_INIT_FAILED;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     return launcherService->GetAllLauncherAbility(userId, launcherAbilityInfos);
 }
@@ -168,7 +174,8 @@ void GetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void *d
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertLauncherAbilityInfos(env, asyncCallbackInfo->launcherAbilityInfos, result[ARGS_POS_ONE]);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_ALL_LAUNCHER_ABILITY_INFO,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
     if (asyncCallbackInfo->deferred) {
@@ -191,31 +198,32 @@ napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
     APP_LOGD("napi begin to GetAllLauncherAbilityInfo");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     GetAllLauncherAbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetAllLauncherAbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<GetAllLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
-    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_number)) {
-            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
-        } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            }
-            break;
-        } else {
-            APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], asyncCallbackInfo->userId)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
             return nullptr;
         }
+        if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        }
+    } else {
+        APP_LOGE("parameters error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetAllLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
@@ -229,7 +237,7 @@ static ErrCode InnerGetShortcutInfo(std::string &bundleName, std::vector<OHOS::A
 {
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
-        return ERROR_ENVORINMENT_INIT_FAILED;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     return launcherService->GetShortcutInfoV9(bundleName, shortcutInfos);
 }
@@ -259,7 +267,8 @@ void GetShortcutInfoComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertShortCutInfos(env, asyncCallbackInfo->shortcutInfos, result[ARGS_POS_ONE]);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_SHORTCUT_INFO,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
     if (asyncCallbackInfo->deferred) {
@@ -282,35 +291,32 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
     APP_LOGD("napi begin GetShortcutInfo");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     GetShortcutInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetShortcutInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        BusinessError::ThrowError(env, ERROR_OUT_OF_MEMORY_ERROR);
         return nullptr;
     }
     std::unique_ptr<GetShortcutInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)
-                || asyncCallbackInfo->bundleName.empty()) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
-                return nullptr;
-            }
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            }
-            break;
-        } else {
-            APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR);
+    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
             return nullptr;
         }
+        if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        }
+    } else {
+        APP_LOGE("parameters error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetShortcutInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete);

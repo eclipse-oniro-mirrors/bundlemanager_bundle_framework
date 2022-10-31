@@ -44,6 +44,14 @@ ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, con
     return CallService(&IInstalld::ExtractModuleFiles, srcModulePath, targetPath, targetSoPath, cpuAbi);
 }
 
+ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
+{
+    if (extractParam.srcPath.empty() || extractParam.targetPath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractFiles, extractParam);
+}
+
 ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     if (oldPath.empty() || newPath.empty()) {

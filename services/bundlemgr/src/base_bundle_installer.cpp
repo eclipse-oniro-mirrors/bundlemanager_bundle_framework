@@ -50,6 +50,8 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
+const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
+
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
     return info.GetAppCodePath() + Constants::PATH_SEPARATOR
@@ -299,7 +301,7 @@ ErrCode BaseBundleInstaller::InstallAppControl(
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::vector<std::string> appIds;
     ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_ALLOWED_INSTALL, userId, appIds);
     if (ret != ERR_OK) {
         APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
         return ret;
@@ -315,7 +317,7 @@ ErrCode BaseBundleInstaller::InstallAppControl(
     }
     return ERR_OK;
 #else
-    APP_LOGW("app control is disable"); 
+    APP_LOGW("app control is disable");
     return ERR_OK;
 #endif
 }
@@ -424,8 +426,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         // to guarantee that the hap version can be compatible.
         result = CheckVersionCompatibility(oldInfo);
         CHECK_RESULT(result, "The app has been installed and update lower version bundle %{public}d");
-        // to check native so between oldInfo and newInfos.
-        result = CheckNativeSoWithOldInfo(oldInfo, newInfos);
+        // to check native file between oldInfo and newInfos.
+        result = CheckNativeFileWithOldInfo(oldInfo, newInfos);
         CHECK_RESULT(result, "Check native so between oldInfo and newInfos failed %{public}d");
 
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
@@ -593,10 +595,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 30%
 
-    // check native so
-    result = CheckMultiNativeSo(newInfos);
+    // check native file
+    result = CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 35%
+
+    auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
+    std::lock_guard lock {mtx};
 
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName_);
@@ -844,6 +849,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return result;
     }
 
+    result = DeleteOldArkNativeFile(oldInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("delete old arkNativeFile failed");
+        return result;
+    }
+
     enableGuard.Dismiss();
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
@@ -939,18 +950,30 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     bool onlyInstallInUser = oldInfo.GetInnerBundleUserInfos().size() == 1;
+    ErrCode result = ERR_OK;
     // if it is the only module in the bundle
     if (oldInfo.IsOnlyModule(modulePackage)) {
         APP_LOGI("%{public}s is only module", modulePackage.c_str());
         enableGuard.Dismiss();
         stateGuard.Dismiss();
         if (onlyInstallInUser) {
-            return RemoveBundle(oldInfo, installParam.isKeepData);
+            result = RemoveBundle(oldInfo, installParam.isKeepData);
+            if (result != ERR_OK) {
+                APP_LOGE("remove bundle failed");
+                return result;
+            }
+
+            result = DeleteOldArkNativeFile(oldInfo);
+            if (result != ERR_OK) {
+                APP_LOGE("delete old arkNativeFile failed");
+                return result;
+            }
+
+            return ERR_OK;
         }
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
     }
 
-    ErrCode result = ERR_OK;
     if (onlyInstallInUser) {
         APP_LOGI("%{public}s is only install at the userId %{public}d", bundleName.c_str(), userId_);
         result = RemoveModuleAndDataDir(oldInfo, modulePackage, userId_, installParam.isKeepData);
@@ -1577,7 +1600,7 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
         auto newHqfLibraryPath = hqfLibraryPath.substr(position);
         if (!BundleUtil::EndWith(nativeLibraryPath, newHqfLibraryPath)) {
             APP_LOGE("error: nativeLibraryPath not same, newInfo: %{public}s, hqf: %{public}s",
-                    nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
+                nativeLibraryPath.c_str(), newHqfLibraryPath.c_str());
             return false;
         }
     }
@@ -1715,7 +1738,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
-        if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+        bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
+        if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
             nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
             APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
         }
@@ -1732,6 +1756,12 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         return result;
     }
 
+    result = ExtractArkNativeFile(info, modulePath);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to extractArkNativeFile, error is %{public}d", result);
+        return result;
+    }
+
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
@@ -1742,6 +1772,65 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     info.AddModuleSrcDir(moduleDir);
     info.AddModuleResPath(moduleDir);
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath)
+{
+    if (!info.GetArkNativeFilePath().empty()) {
+        APP_LOGD("Module %{public}s no need to extract an", modulePackage_.c_str());
+        return ERR_OK;
+    }
+
+    std::string cpuAbi = info.GetArkNativeFileAbi();
+    if (cpuAbi.empty()) {
+        APP_LOGD("Module %{public}s no native file", modulePackage_.c_str());
+        return ERR_OK;
+    }
+
+    if (Constants::ABI_MAP.find(cpuAbi) == Constants::ABI_MAP.end()) {
+        APP_LOGE("No support %{public}s abi", cpuAbi.c_str());
+        return ERR_APPEXECFWK_PARSE_AN_FAILED;
+    }
+
+    std::string arkNativeFilePath;
+    arkNativeFilePath.append(Constants::ABI_MAP.at(cpuAbi)).append(Constants::PATH_SEPARATOR);
+    std::string targetPath;
+    targetPath.append(ARK_CACHE_PATH).append(info.GetBundleName())
+        .append(Constants::PATH_SEPARATOR).append(arkNativeFilePath);
+    APP_LOGD("Begin to extract an file, modulePath : %{private}s, targetPath : %{private}s, cpuAbi : %{public}s",
+        modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
+    ExtractParam extractParam;
+    extractParam.srcPath = modulePath_;
+    extractParam.targetPath = targetPath;
+    extractParam.cpuAbi = cpuAbi;
+    extractParam.extractFileType = ExtractFileType::AN;
+    auto result = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    if (result != ERR_OK) {
+        APP_LOGE("extract files failed, error is %{public}d", result);
+        return result;
+    }
+
+    info.SetArkNativeFilePath(arkNativeFilePath);
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo)
+{
+    std::string arkNativeFilePath = oldInfo.GetArkNativeFilePath();
+    if (arkNativeFilePath.empty()) {
+        APP_LOGD("OldInfo(%{public}s) no arkNativeFilePath", oldInfo.GetBundleName().c_str());
+        return ERR_OK;
+    }
+
+    std::string targetPath;
+    targetPath.append(ARK_CACHE_PATH).append(oldInfo.GetBundleName());
+    auto result = InstalldClient::GetInstance()->RemoveDir(targetPath);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to remove arkNativeFilePath %{public}s, error is %{public}d",
+            arkNativeFilePath.c_str(), result);
+    }
+
+    return result;
 }
 
 ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData) const
@@ -1936,10 +2025,10 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::CheckMultiNativeSo(
+ErrCode BaseBundleInstaller::CheckMultiNativeFile(
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    return bundleInstallChecker_->CheckMultiNativeSo(infos);
+    return bundleInstallChecker_->CheckMultiNativeFile(infos);
 }
 
 bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
@@ -1951,8 +2040,6 @@ bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppE
             return false;
         }
     }
-    auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
-    std::lock_guard lock { mtx };
     isAppExist = dataMgr_->GetInnerBundleInfo(bundleName_, info);
     return true;
 }
@@ -2122,18 +2209,43 @@ ErrCode BaseBundleInstaller::UninstallAllSandboxApps(const std::string &bundleNa
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::CheckNativeSoWithOldInfo(
+ErrCode BaseBundleInstaller::CheckNativeFileWithOldInfo(
     const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
-    APP_LOGD("CheckNativeSoWithOldInfo begin");
-    const auto &newInfo = newInfos.begin()->second;
-    if (newInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+    APP_LOGD("CheckNativeFileWithOldInfo begin");
+    if (HasAllOldModuleUpdate(oldInfo, newInfos)) {
         APP_LOGD("All installed haps will be updated");
         return ERR_OK;
     }
 
-    std::vector<std::string> installedModules = oldInfo.GetModuleNameVec();
+    ErrCode result = CheckNativeSoWithOldInfo(oldInfo, newInfos);
+    if (result != ERR_OK) {
+        APP_LOGE("Check nativeSo with oldInfo failed, result: %{public}d", result);
+        return result;
+    }
+
+    result = CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
+    if (result != ERR_OK) {
+        APP_LOGE("Check arkNativeFile with oldInfo failed, result: %{public}d", result);
+        return result;
+    }
+
+    APP_LOGD("CheckNativeFileWithOldInfo end");
+    return ERR_OK;
+}
+
+bool BaseBundleInstaller::HasAllOldModuleUpdate(
+    const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    const auto &newInfo = newInfos.begin()->second;
     bool allOldModuleUpdate = true;
+    if (newInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+        APP_LOGD("All installed haps will be updated");
+        DeleteOldArkNativeFile(oldInfo);
+        return allOldModuleUpdate;
+    }
+
+    std::vector<std::string> installedModules = oldInfo.GetModuleNameVec();
     for (const auto &installedModule : installedModules) {
         auto updateModule = std::find_if(std::begin(newInfos), std::end(newInfos),
             [ &installedModule ] (const auto &item) { return item.second.FindModule(installedModule); });
@@ -2143,22 +2255,60 @@ ErrCode BaseBundleInstaller::CheckNativeSoWithOldInfo(
             break;
         }
     }
+    return allOldModuleUpdate;
+}
 
-    bool oldInfoHasSo = !oldInfo.GetNativeLibraryPath().empty();
-    bool newInfoHasSo = !newInfo.GetNativeLibraryPath().empty();
-    if (!allOldModuleUpdate) {
-        if ((oldInfoHasSo && newInfoHasSo) &&
-            (oldInfo.GetNativeLibraryPath() != newInfo.GetNativeLibraryPath()
-            || oldInfo.GetCpuAbi() != newInfo.GetCpuAbi())) {
-            APP_LOGE("Install failed due to so incompatible in oldInfo and newInfo");
-            return ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE;
+ErrCode BaseBundleInstaller::CheckArkNativeFileWithOldInfo(
+    const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    APP_LOGD("CheckArkNativeFileWithOldInfo begin");
+    std::string oldArkNativeFileAbi = oldInfo.GetArkNativeFileAbi();
+    if (oldArkNativeFileAbi.empty()) {
+        APP_LOGD("OldInfo no arkNativeFile");
+        return ERR_OK;
+    }
+
+    std::string arkNativeFileAbi = newInfos.begin()->second.GetArkNativeFileAbi();
+    if (arkNativeFileAbi.empty()) {
+        APP_LOGD("NewInfos no arkNativeFile");
+        for (auto& item : newInfos) {
+            item.second.SetArkNativeFileAbi(oldInfo.GetArkNativeFileAbi());
+            item.second.SetArkNativeFilePath(oldInfo.GetArkNativeFilePath());
         }
+        return ERR_OK;
+    } else {
+        if (arkNativeFileAbi != oldArkNativeFileAbi) {
+            APP_LOGE("An incompatible in oldInfo and newInfo");
+            return ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE;
+        }
+    }
 
-        if (oldInfoHasSo && !newInfoHasSo) {
-            for (auto& item : newInfos) {
-                item.second.SetNativeLibraryPath(oldInfo.GetNativeLibraryPath());
-                item.second.SetCpuAbi(oldInfo.GetCpuAbi());
-            }
+    APP_LOGD("CheckArkNativeFileWithOldInfo end");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckNativeSoWithOldInfo(
+    const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    APP_LOGD("CheckNativeSoWithOldInfo begin");
+    bool oldInfoHasSo = !oldInfo.GetNativeLibraryPath().empty();
+    if (!oldInfoHasSo) {
+        APP_LOGD("OldInfo does not has so");
+        return ERR_OK;
+    }
+
+    const auto &newInfo = newInfos.begin()->second;
+    bool newInfoHasSo = !newInfo.GetNativeLibraryPath().empty();
+    if (newInfoHasSo && (oldInfo.GetNativeLibraryPath() != newInfo.GetNativeLibraryPath()
+        || oldInfo.GetCpuAbi() != newInfo.GetCpuAbi())) {
+        APP_LOGE("Install failed due to so incompatible in oldInfo and newInfo");
+        return ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE;
+    }
+
+    if (!newInfoHasSo) {
+        for (auto& item : newInfos) {
+            item.second.SetNativeLibraryPath(oldInfo.GetNativeLibraryPath());
+            item.second.SetCpuAbi(oldInfo.GetCpuAbi());
         }
     }
 
@@ -2400,10 +2550,6 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
 ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    if (commonEventMgr == nullptr) {
-        APP_LOGE("commonEventMgr is nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
 }

@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "bundle_constants.h"
+#include "bundle_event_callback_interface.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_installer_interface.h"
@@ -636,6 +637,16 @@ public:
     {
         return false;
     }
+
+    virtual bool RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+    {
+        return false;
+    }
+
+    virtual bool UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+    {
+        return false;
+    }
     /**
      * @brief Clear the specific bundle status callback.
      * @param bundleStatusCallback Indicates the callback to be cleared.
@@ -1194,6 +1205,8 @@ public:
         GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
         GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9,
         GET_SHORTCUT_INFO_V9,
+        REGISTER_BUNDLE_EVENT_CALLBACK,
+        UNREGISTER_BUNDLE_EVENT_CALLBACK,
     };
 };
 }  // namespace AppExecFwk
