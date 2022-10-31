@@ -1745,13 +1745,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0058, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0058
+ * @tc.number: BmsBundleQuickFixTest_0059
  * Function: GetAppDistributionType
  * @tc.name: test GetAppDistributionType
  * @tc.require: issueI5N7AD
  * @tc.desc: GetAppDistributionType none
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0058, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0059, Function | SmallTest | Level0)
 {
     QuickFixChecker checker;
     std::string type = checker.GetAppDistributionType(static_cast<Security::Verify::AppDistType>(7));
@@ -1759,13 +1759,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0058, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0059
+ * @tc.number: BmsBundleQuickFixTest_0060
  * Function: CheckMultiNativeSo
  * @tc.name: test CheckMultiNativeSo
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckMultiNativeSo empty
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0059, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0060, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     QuickFixChecker checker;
@@ -1774,13 +1774,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0059, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0060
+ * @tc.number: BmsBundleQuickFixTest_0061
  * Function: CheckMultiNativeSo
  * @tc.name: test CheckMultiNativeSo
  * @tc.require: issueI5N7AD
  * @tc.desc: nativeLibraryPath empty
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0060, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0061, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -1792,13 +1792,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0060, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0061
+ * @tc.number: BmsBundleQuickFixTest_0062
  * Function: CheckMultiNativeSo
  * @tc.name: test CheckMultiNativeSo
  * @tc.require: issueI5N7AD
  * @tc.desc: nativeLibraryPath
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0061, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0062, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -1814,34 +1814,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0061, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0061
+ * @tc.number: BmsBundleQuickFixTest_0063
  * Function: CheckMultiNativeSo
  * @tc.name: test CheckMultiNativeSo
  * @tc.require: issueI5N7AD
  * @tc.desc: nativeLibraryPath
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0061, Function | SmallTest | Level0)
-{
-    std::unordered_map<std::string, AppQuickFix> infos;
-    AppQuickFix appQuickFix = CreateAppQuickFix();
-    appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-    infos.emplace("appQuickFix_1", appQuickFix);
-    appQuickFix.deployingAppqfInfo.nativeLibraryPath = "wrong"
-    infos.emplace("appQuickFix_2", appQuickFix);
-
-    QuickFixChecker checker;
-    auto ret = checker.CheckMultiNativeSo(infos);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0062
- * Function: CheckMultiNativeSo
- * @tc.name: test CheckMultiNativeSo
- * @tc.require: issueI5N7AD
- * @tc.desc: nativeLibraryPath
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0062, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0063, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -1856,13 +1835,34 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0062, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0063
+ * @tc.number: BmsBundleQuickFixTest_0064
  * Function: CheckMultiNativeSo
  * @tc.name: test CheckMultiNativeSo
  * @tc.require: issueI5N7AD
  * @tc.desc: nativeLibraryPath
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0063, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0064, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    infos.emplace("appQuickFix_1", appQuickFix);
+    appQuickFix.deployingAppqfInfo.nativeLibraryPath = "wrong";
+    infos.emplace("appQuickFix_2", appQuickFix);
+
+    QuickFixChecker checker;
+    auto ret = checker.CheckMultiNativeSo(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0065
+ * Function: CheckMultiNativeSo
+ * @tc.name: test CheckMultiNativeSo
+ * @tc.require: issueI5N7AD
+ * @tc.desc: nativeLibraryPath
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0065, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -1877,41 +1877,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0063, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0064
- * Function: CheckSignatureInfo
- * @tc.name: test CheckSignatureInfo
- * @tc.require: issueI5N7AD
- * @tc.desc: CheckSignatureInfo
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0064, Function | SmallTest | Level0)
-{
-    BundleInfo bundleInfo;
-    Security::Verify::ProvisionInfo provisionInfo;
-    QuickFixChecker checker;
-    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0065
- * Function: CheckSignatureInfo
- * @tc.name: test CheckSignatureInfo
- * @tc.require: issueI5N7AD
- * @tc.desc: CheckSignatureInfo
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0065, Function | SmallTest | Level0)
-{
-    BundleInfo bundleInfo;
-    bundleInfo.appId = "_";
-    bundleInfo.applicationInfo.appPrivilegeLevel = "normal";
-    Security::Verify::ProvisionInfo provisionInfo;
-    provisionInfo.bundleInfo.apl = "system_basic";
-    QuickFixChecker checker;
-    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
-}
-
-/**
  * @tc.number: BmsBundleQuickFixTest_0066
  * Function: CheckSignatureInfo
  * @tc.name: test CheckSignatureInfo
@@ -1921,6 +1886,40 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0065, Function | SmallTest
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0066, Function | SmallTest | Level0)
 {
     BundleInfo bundleInfo;
+    Security::Verify::ProvisionInfo provisionInfo;
+    QuickFixChecker checker;
+    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0067
+ * Function: CheckSignatureInfo
+ * @tc.name: test CheckSignatureInfo
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CheckSignatureInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0067, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.name = "bundleName";
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.appId = "1";
+    QuickFixChecker checker;
+    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0068
+ * Function: CheckSignatureInfo
+ * @tc.name: test CheckSignatureInfo
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CheckSignatureInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0068, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
     bundleInfo.appId = "_";
     bundleInfo.applicationInfo.appPrivilegeLevel = "normal";
     Security::Verify::ProvisionInfo provisionInfo;
@@ -1931,13 +1930,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0066, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0067
+ * @tc.number: BmsBundleQuickFixTest_0069
  * Function: CheckModuleNameExist
  * @tc.name: test CheckModuleNameExist
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckModuleNameExist
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0067, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0069, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix;
@@ -1950,13 +1949,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0067, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0068
+ * @tc.number: BmsBundleQuickFixTest_0070
  * Function: CheckModuleNameExist
  * @tc.name: test CheckModuleNameExist
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckModuleNameExist
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0068, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0070, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -1969,13 +1968,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0068, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0069
+ * @tc.number: BmsBundleQuickFixTest_0071
  * Function: CheckModuleNameExist
  * @tc.name: test CheckModuleNameExist
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckModuleNameExist
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0069, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0071, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -1989,45 +1988,45 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0069, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0070
- * Function: CheckCommonWithInstalledBundle
- * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
- * @tc.desc: CheckCommonWithInstalledBundle
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0070, Function | SmallTest | Level0)
-{
-    AppQuickFix appQuickFix = CreateAppQuickFix();
-    BundleInfo bundleInfo;
-    QuickFixChecker checker;
-    auto ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0071
- * Function: CheckCommonWithInstalledBundle
- * @tc.name: test CheckCommonWithInstalledBundle
- * @tc.require: issueI5N7AD
- * @tc.desc: CheckCommonWithInstalledBundle
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0071, Function | SmallTest | Level0)
-{
-    AppQuickFix appQuickFix = CreateAppQuickFix();
-    BundleInfo bundleInfo;
-    QuickFixChecker checker;
-    auto ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
-}
-
-/**
  * @tc.number: BmsBundleQuickFixTest_0072
+ * Function: CheckCommonWithInstalledBundle
+ * @tc.name: test CheckCommonWithInstalledBundle
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CheckCommonWithInstalledBundle
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0072, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    BundleInfo bundleInfo;
+    QuickFixChecker checker;
+    auto ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0073
+ * Function: CheckCommonWithInstalledBundle
+ * @tc.name: test CheckCommonWithInstalledBundle
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CheckCommonWithInstalledBundle
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0073, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    BundleInfo bundleInfo;
+    QuickFixChecker checker;
+    auto ret = checker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0074
  * Function: CheckHotReloadWithInstalledBundle
  * @tc.name: test CheckHotReloadWithInstalledBundle
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckHotReloadWithInstalledBundle
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0072, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0074, Function | SmallTest | Level0)
 {
     AppQuickFix appQuickFix = CreateAppQuickFix();
     BundleInfo bundleInfo;
@@ -2037,13 +2036,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0072, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0073
+ * @tc.number: BmsBundleQuickFixTest_0075
  * Function: CheckPatchWithInstalledBundle
  * @tc.name: test CheckPatchWithInstalledBundle
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckPatchWithInstalledBundle
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0073, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0075, Function | SmallTest | Level0)
 {
     AppQuickFix appQuickFix = CreateAppQuickFix();
     BundleInfo bundleInfo;
@@ -2054,13 +2053,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0073, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0074
+ * @tc.number: BmsBundleQuickFixTest_0076
  * Function: CheckPatchWithInstalledBundle
  * @tc.name: test CheckPatchWithInstalledBundle
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckPatchWithInstalledBundle
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0074, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0076, Function | SmallTest | Level0)
 {
     AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_DEBUG);
 
@@ -2083,13 +2082,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0074, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0075
+ * @tc.number: BmsBundleQuickFixTest_0077
  * Function: CheckAppQuickFixInfos
  * @tc.name: test CheckAppQuickFixInfos
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckAppQuickFixInfos
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0075, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0077, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
 
@@ -2099,13 +2098,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0075, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0076
+ * @tc.number: BmsBundleQuickFixTest_0078
  * Function: CheckAppQuickFixInfos
  * @tc.name: test CheckAppQuickFixInfos
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckAppQuickFixInfos
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0076, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0078, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, AppQuickFix> infos;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -2119,15 +2118,15 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0076, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0077
+ * @tc.number: BmsBundleQuickFixTest_0079
  * Function: CheckMultipleHqfsSignInfo
  * @tc.name: test CheckMultipleHqfsSignInfo
  * @tc.require: issueI5N7AD
  * @tc.desc: CheckMultipleHqfsSignInfo
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0077, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0079, Function | SmallTest | Level0)
 {
-    std::vector<std::string> bundlePaths,
+    std::vector<std::string> bundlePaths;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     QuickFixChecker checker;
     ErrCode ret = checker.CheckMultipleHqfsSignInfo(bundlePaths, hapVerifyRes);
@@ -2135,13 +2134,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0077, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0078
+ * @tc.number: BmsBundleQuickFixTest_0080
  * Function: ParseAndCheckAppQuickFixInfos
  * @tc.name: test ParseAndCheckAppQuickFixInfos
  * @tc.require: issueI5N7AD
  * @tc.desc: ParseAndCheckAppQuickFixInfos
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0078, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0080, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
@@ -2154,13 +2153,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0078, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0079
+ * @tc.number: BmsBundleQuickFixTest_0081
  * Function: AddHqfInfo
  * @tc.name: test AddHqfInfo
  * @tc.require: issueI5N7AD
  * @tc.desc: AddHqfInfo
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0079, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0081, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
     AppQuickFix appQuickFix;
@@ -2169,13 +2168,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0079, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0080
+ * @tc.number: BmsBundleQuickFixTest_0082
  * Function: AddHqfInfo
  * @tc.name: test AddHqfInfo
  * @tc.require: issueI5N7AD
  * @tc.desc: AddHqfInfo
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0080, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0082, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -2186,13 +2185,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0080, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0080
+ * @tc.number: BmsBundleQuickFixTest_0083
  * Function: AddHqfInfo
  * @tc.name: test AddHqfInfo
  * @tc.require: issueI5N7AD
  * @tc.desc: AddHqfInfo
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0080, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0083, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
     AppQuickFix appQuickFix = CreateAppQuickFix();
@@ -2201,13 +2200,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0080, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0081
+ * @tc.number: BmsBundleQuickFixTest_0084
  * Function: ProcessPatchDeployStart
  * @tc.name: test ProcessPatchDeployStart
  * @tc.require: issueI5MZ5D
  * @tc.desc: ProcessPatchDeployStart
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0081, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0084, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
@@ -2221,13 +2220,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0081, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0082
+ * @tc.number: BmsBundleQuickFixTest_0085
  * Function: ProcessPatchDeployStart
  * @tc.name: test ProcessPatchDeployStart
  * @tc.require: issueI5MZ5D
  * @tc.desc: ProcessPatchDeployStart
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0082, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0085, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
@@ -2243,13 +2242,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0082, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0083
+ * @tc.number: BmsBundleQuickFixTest_0086
  * Function: ProcessPatchDeployStart
  * @tc.name: test ProcessPatchDeployStart
  * @tc.require: issueI5MZ5D
  * @tc.desc: ProcessPatchDeployStart
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0083, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0086, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
@@ -2261,20 +2260,20 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0083, Function | SmallTest
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
         infos.emplace("appQuickFix_1", appQuickFix);
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = "wrong";
-        infos.emplace("appQuickFix_1", appQuickFix);
+        infos.emplace("appQuickFix_2", appQuickFix);
         ErrCode ret = deployer->ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE);
     }
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0084
+ * @tc.number: BmsBundleQuickFixTest_0087
  * Function: ProcessPatchDeployStart
  * @tc.name: test ProcessPatchDeployStart
  * @tc.require: issueI5MZ5D
  * @tc.desc: ProcessPatchDeployStart
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0084, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0087, Function | SmallTest | Level0)
 {
     AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_DEBUG, QuickFixType::HOT_RELOAD);
     auto deployer = GetQuickFixDeployer();
@@ -2287,8 +2286,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0084, Function | SmallTest
         BundleInfo bundleInfo;
         ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
-        QuickFixChecker checker;
-        ret = deployer->ProcessHotReloadDeployStart(appQuickFix, bundleInfo);
+        ret = deployer->ProcessHotReloadDeployStart(bundleInfo, appQuickFix);
         EXPECT_EQ(ret, ERR_OK);
     }
 
@@ -2296,41 +2294,42 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0084, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0085
+ * @tc.number: BmsBundleQuickFixTest_0088
  * Function: ProcessPatchDeployStart
  * @tc.name: test ProcessPatchDeployStart
  * @tc.require: issueI5MZ5D
  * @tc.desc: ProcessPatchDeployStart
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0085, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0088, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
         AppQuickFix appQuickFix = CreateAppQuickFix();
         BundleInfo bundleInfo;
-        auto ret = deployer->ProcessHotReloadDeployStart(appQuickFix, bundleInfo);
+        auto ret = deployer->ProcessHotReloadDeployStart(bundleInfo, appQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
     }
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0086
+ * @tc.number: BmsBundleQuickFixTest_0089
  * Function: ProcessPatchDeployStart
  * @tc.name: test ProcessPatchDeployStart
  * @tc.require: issueI5MZ5D
  * @tc.desc: ProcessPatchDeployStart
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0086, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0089, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
         AppQuickFix appQuickFix = CreateAppQuickFix();
         BundleInfo bundleInfo;
-        auto ret = deployer->ProcessHotReloadDeployStart(appQuickFix, bundleInfo);
+        auto ret = deployer->ProcessHotReloadDeployStart(bundleInfo, appQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
-        deployer->ResetNativeSoAttrs();
+        std::unordered_map<std::string, AppQuickFix> infos;
+        deployer->ResetNativeSoAttrs(infos);
         std::vector<HqfInfo> hqfInfo;
         appQuickFix.deployingAppqfInfo.hqfInfos = hqfInfo;
         deployer->ResetNativeSoAttrs(appQuickFix);
@@ -2340,13 +2339,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0086, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0087
+ * @tc.number: BmsBundleQuickFixTest_0090
  * Function: FetchPatchNativeSoAttrs
  * @tc.name: test FetchPatchNativeSoAttrs
  * @tc.require: issueI5MZ5D
  * @tc.desc: FetchPatchNativeSoAttrs
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0087, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0090, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
@@ -2367,7 +2366,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0087, Function | SmallTest
 
         AppQuickFix appQuickFix;
         ret = deployer->HasNativeSoInBundle(appQuickFix);
-        EXPECT_TRUE(ret);
+        EXPECT_FALSE(ret);
 
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
         hqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
@@ -2378,13 +2377,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0087, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0088
+ * @tc.number: BmsBundleQuickFixTest_0091
  * Function: ToInnerAppQuickFix
  * @tc.name: test ToInnerAppQuickFix
  * @tc.require: issueI5MZ5D
  * @tc.desc: ToInnerAppQuickFix
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0088, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0091, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
@@ -2395,26 +2394,27 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0088, Function | SmallTest
         auto ret = deployer->ToInnerAppQuickFix(infos, oldInnerAppQuickFix, newInnerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
 
-        infos.emplace("aaaa", AppQuickFix());
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        infos.emplace("aaaa", appQuickFix);
         ret = deployer->ToInnerAppQuickFix(infos, oldInnerAppQuickFix, newInnerAppQuickFix);
         EXPECT_EQ(ret, ERR_OK);
     }
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0089
+ * @tc.number: BmsBundleQuickFixTest_0092
  * Function: CheckPatchVersionCode
  * @tc.name: test CheckPatchVersionCode
  * @tc.require: issueI5MZ5D
  * @tc.desc: CheckPatchVersionCode
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0089, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0092, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
-        const AppQuickFix newAppQuickFix;
-        const AppQuickFix oldAppQuickFix;
+        AppQuickFix newAppQuickFix;
+        AppQuickFix oldAppQuickFix;
         auto ret = deployer->CheckPatchVersionCode(newAppQuickFix, oldAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR);
 
@@ -2438,13 +2438,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0089, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0090
+ * @tc.number: BmsBundleQuickFixTest_0093
  * Function: MoveHqfFiles
  * @tc.name: test MoveHqfFiles
  * @tc.require: issueI5MZ5D
  * @tc.desc: MoveHqfFiles
  */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0090, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0093, Function | SmallTest | Level0)
 {
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
