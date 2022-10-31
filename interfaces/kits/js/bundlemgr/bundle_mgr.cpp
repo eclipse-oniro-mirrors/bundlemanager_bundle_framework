@@ -8100,7 +8100,7 @@ NativeValue* JsBundleMgr::CreateBundleInfos(NativeEngine &engine, const std::vec
     return arrayValue;
 }
 
-bool JsBundleMgr::UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
+bool JsBundleMgr::UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId)
 {
     bool flagCall = true;
     if (info.argc == ARGS_SIZE_ONE) {
@@ -8122,7 +8122,7 @@ bool JsBundleMgr::UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackIn
     return flagCall;
 }
 
-bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
+bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId)
 {
     bool flagCall = true;
     if (info.argc == ARGS_SIZE_TWO) {
@@ -8145,7 +8145,7 @@ bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInf
 }
 
 bool JsBundleMgr::UnwarpBundleOptionsParams(
-    NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool &result)
+    NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool result)
 {
     bool flagCall = true;
     auto env = reinterpret_cast<napi_env>(&engine);
