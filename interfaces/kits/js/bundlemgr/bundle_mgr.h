@@ -462,10 +462,6 @@ public:
     static NativeValue* GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -475,12 +471,8 @@ private:
     NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
-        NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> metaData);
+        NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
     NativeValue* CreateInnerMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData);
     NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData);
@@ -497,8 +489,6 @@ private:
     NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);
     int32_t InitGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info,
         NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
-    int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
-        std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
     NativeValue* CreateAbilityInfo(NativeEngine &engine,  const AbilityInfo &abilityInfo);
     NativeValue* CreateMetaData(NativeEngine &engine, const MetaData &metaData);
     NativeValue* CreateSupportWindowMode(NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes);
@@ -521,6 +511,7 @@ private:
     static bool UnwarpBundleOptionsParams(
         NativeEngine &engine, NativeCallbackInfo &info, BundleOptions &options, bool &result);
 };
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* BUNDLE_MGR_H */
