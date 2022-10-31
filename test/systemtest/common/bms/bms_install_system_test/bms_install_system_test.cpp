@@ -137,6 +137,8 @@ public:
     static int32_t ExcuteMaintainCmd(const std::string &cmd, std::vector<std::string> &cmdRes);
     static void InstallBundle(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg);
+    static void InstallByBundleName(
+        const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg);
     static void InstallErrUid(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg);
     static void InstallMultiBundle(const std::string bundleFilePath, bool installFlag);
@@ -204,6 +206,26 @@ void BmsInstallSystemTest::InstallBundle(
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     bool installResult = installerProxy->Install(bundleFilePath, installParam, statusReceiver);
+    EXPECT_TRUE(installResult);
+    installMsg = statusReceiver->GetResultMsg();
+}
+
+void BmsInstallSystemTest::InstallByBundleName(
+    const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMsg)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        installMsg = "Failure";
+        return;
+    }
+
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = installFlag;
+    sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver, nullptr);
+    bool installResult = installerProxy->InstallByBundleName(bundleFilePath, installParam, statusReceiver);
     EXPECT_TRUE(installResult);
     installMsg = statusReceiver->GetResultMsg();
 }
@@ -510,6 +532,34 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0500, Function | MediumTest | Level1)
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_0500" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_0600
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle
+ *           2.install the bundle
+ *           3.check the bundle info
+ * @tc.require: AR000GHLL7
+ */
+HWTEST_F(BmsInstallSystemTest, BMS_Install_0600, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_0600" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    std::string modulePackage = THIRD_BASE_BUNDLE_NAME + ".h1";
+    std::vector<std::string> abilityNames = {"bmsThirdBundle_A1"};
+    std::string version = "1.0";
+    CheckBundleInfo(version, bundleName);
+
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    std::cout << "END BMS_Install_0600" << std::endl;
 }
 
 /**

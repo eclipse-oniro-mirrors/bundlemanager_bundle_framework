@@ -1882,6 +1882,34 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0700, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: QueryAbilityInfo_0800
+ * @tc.name: test can get the ability info by want
+ * @tc.desc: 1.system run normally
+ *           2.get ability info successfully
+ * @tc.require: SR000GM5QO
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    AbilityInfo result;
+
+    int32_t flags = GET_ABILITY_INFO_DEFAULT;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool testRet = hostImpl->QueryAbilityInfo(want, flags, 0, result);
+    EXPECT_EQ(true, testRet);
+    CheckAbilityInfo(BUNDLE_NAME_TEST, ABILITY_NAME_TEST, flags, result);
+
+    flags = GET_ABILITY_INFO_WITH_APPLICATION;
+    testRet = hostImpl->QueryAbilityInfo(want, flags, 0, result);
+    EXPECT_EQ(true, testRet);
+    CheckAbilityInfo(BUNDLE_NAME_TEST, ABILITY_NAME_TEST, flags, result);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: QueryAbilityInfos_0100
  * @tc.name: test can get the ability info of list by want
  * @tc.desc: 1.system run normally
@@ -2384,6 +2412,9 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0200, Function | SmallTest | Level0)
     bool emptyRet = hostImpl->DumpInfos(
         DumpFlag::DUMP_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, emptyResult);
     EXPECT_FALSE(emptyRet);
+    emptyRet = hostImpl->DumpInfos(
+        DumpFlag::DUMP_BUNDLE_INFO, BUNDLE_NAME_TEST, DEFAULT_USERID, emptyResult);
+    EXPECT_TRUE(emptyRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -3167,6 +3198,28 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTes
 }
 
 /**
+ * @tc.number: CleanBundleDataFiles_1000
+ * @tc.name: test can clean the bundle data files by bundle name
+ * @tc.desc: 1.system run normally
+ *           2.userDataClearable is false, userId is false
+ *           3.clean the cache files failed
+ * @tc.require: SR000H00TH
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_1000, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
+    CreateFileDir();
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool testRet = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, 10001);
+    EXPECT_FALSE(testRet);
+
+    CleanFileDir();
+    CheckFileNonExist();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: CleanCache_0200
  * @tc.name: test can clean the cache files by empty bundle name
  * @tc.desc: 1.system run normally
@@ -3202,7 +3255,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    auto result = hostImpl->CleanBundleCacheFiles("", cleanCache);
+    auto result = hostImpl->CleanBundleCacheFiles("wrong", cleanCache);
     EXPECT_FALSE(result == ERR_OK);
     CheckCacheExist();
 
