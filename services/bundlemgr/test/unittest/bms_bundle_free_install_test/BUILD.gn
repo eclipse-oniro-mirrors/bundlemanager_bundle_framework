@@ -50,6 +50,12 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
+  sources += [
+    "${inner_api_path}/appexecfwk_base/src/free_install/dispatch_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/free_install/install_result.cpp",
+    "${inner_api_path}/appexecfwk_base/src/free_install/target_ability_info.cpp",
+  ]
+
   sources += bundle_install_sources
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
@@ -102,6 +108,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     sources += free_install
     sources += distributed_manager
     sources += [ "bms_bundle_free_install_test.cpp" ]
+    sources += [ "bms_bundle_free_install_base_test.cpp" ]
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
