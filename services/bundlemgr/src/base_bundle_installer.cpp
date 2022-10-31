@@ -2088,20 +2088,13 @@ void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
-        if (moveFileMode) {
-            if (InstalldClient::GetInstance()->MoveFile(
-                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                APP_LOGE("Move hap to install path failed");
-                return;
-            }
-
-            continue;
-        }
-
         if (InstalldClient::GetInstance()->CopyFile(
             hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
             APP_LOGE("Copy hap to install path failed");
             return;
+        }
+        if (moveFileMode) {
+            InstalldClient::GetInstance()->RemoveDir(hapPathRecord.first);
         }
     }
 }
