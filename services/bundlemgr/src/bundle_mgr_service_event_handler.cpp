@@ -817,6 +817,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.needSendEvent = false;
     installParam.removable = preScanInfo.removable;
     installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
     SystemBundleInstaller installer;
     if (!installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType)) {
         APP_LOGW("Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
@@ -834,6 +835,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.needSendEvent = false;
     installParam.removable = false;
     installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
     SystemBundleInstaller installer;
     if (!installer.InstallSystemBundle(bundleDir, installParam, appType)) {
         APP_LOGW("Install System app:%{public}s error", bundleDir.c_str());
@@ -1176,6 +1178,7 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
     SystemBundleInstaller installer;
     return installer.OTAInstallSystemBundle(filePaths, installParam, appType);
 }

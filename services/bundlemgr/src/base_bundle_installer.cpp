@@ -635,6 +635,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
     RemoveEmptyDirs(newInfos);
+    if (installParam.copyHapToInstallPath) {
+        APP_LOGD("begin to copy hap to install path");
+        if (!SaveHapToInstallPath(installParam.streamInstallMode)) {
+            APP_LOGE("copy hap to install path failed.");
+            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+        }
+        APP_LOGD("copy hap to install path success");
+    }
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     APP_LOGD("finish ProcessBundleInstall bundlePath install touch off aging");
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -1103,6 +1111,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     auto innerInstallParam = installParam;
     innerInstallParam.isPreInstallApp = true;
     innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
+    innerInstallParam.copyHapToInstallPath = false;
     return ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
 }
 
@@ -2464,7 +2473,7 @@ void BaseBundleInstaller::SaveHapPathToRecords(
     }
 }
 
-void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
+bool BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
 {
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
@@ -2472,12 +2481,13 @@ void BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
         if (InstalldClient::GetInstance()->CopyFile(
             hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
             APP_LOGE("Copy hap to install path failed");
-            return;
+            return false;
         }
         if (moveFileMode) {
             InstalldClient::GetInstance()->RemoveDir(hapPathRecord.first);
         }
     }
+    return true;
 }
 
 void BaseBundleInstaller::ResetInstallProperties()
