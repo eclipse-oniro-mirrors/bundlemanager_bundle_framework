@@ -54,6 +54,8 @@ struct InstallParam : public Parcelable {
     bool needSendEvent = true;
     bool streamInstallMode = false;
     std::map<std::string, std::string> hashParams;
+    // whether need copy hap to install path
+    bool copyHapToInstallPath = true;
 
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);

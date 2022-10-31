@@ -111,6 +111,7 @@ bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) cons
     installParam.noSkipsKill = false;
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
     return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
 }
 

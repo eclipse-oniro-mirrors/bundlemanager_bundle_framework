@@ -152,7 +152,7 @@ protected:
      * @param moveFileMode Indicates the moveFileMode.
      * @return
      */
-    void SaveHapToInstallPath(bool moveFileMode);
+    bool SaveHapToInstallPath(bool moveFileMode);
 
 private:
     /**
