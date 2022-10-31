@@ -33,7 +33,9 @@ namespace OHOS {
             return false;
         }
         auto infoPtr = CompatibleAbilityInfo::Unmarshalling(dataMessageParcel);
-        return infoPtr != nullptr;
+        if (infoPtr == nullptr) {
+            return false;
+        }
         CompatibleAbilityInfo *readInfo =
             new (std::nothrow) CompatibleAbilityInfo();
         if (readInfo == nullptr) {

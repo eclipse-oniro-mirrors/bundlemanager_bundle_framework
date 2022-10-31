@@ -7132,7 +7132,7 @@ napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info)
                     sizeof(result) / sizeof(result[0]), result, &placeHolder));
             }
         },
-        (void*)callBackInfo, &callBackInfo->asyncWork));
+        reinterpret_cast<void*>(callBackInfo), &callBackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, callBackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -7219,7 +7219,8 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
 }
 
-static void ConvertDispatcherVersion(napi_env env, napi_value &value, std::string version, std::string dispatchAPI)
+static void ConvertDispatcherVersion(
+    napi_env env, napi_value &value, const std::string& version, const std::string& dispatchAPI)
 {
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &value));
     napi_value napiVersion;
@@ -7471,7 +7472,7 @@ napi_value GetProfileAsync(napi_env env, napi_value value, std::unique_ptr<Async
             NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
                 sizeof(result) / sizeof(result[0]), result, &placeHolder));
         }
-    }, (void*)callbackPtr.get(), &callbackPtr->asyncWork));
+    }, reinterpret_cast<void*>(callbackPtr.get()), &callbackPtr->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, callbackPtr->asyncWork));
     return value;
 }

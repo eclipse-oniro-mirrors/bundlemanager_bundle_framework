@@ -78,10 +78,6 @@ int32_t QuickFixCommand::ApplyQuickFix(const std::vector<std::string> &quickFixF
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_QUICK_FIX_APPLY_RESULT);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     auto applyMonitor = std::make_shared<ApplyQuickFixMonitor>(subscribeInfo, statusReceiver);
-    if (applyMonitor == nullptr) {
-        resultInfo.append("Create common event subscriber failed.\n");
-        return ERR_INVALID_VALUE;
-    }
     EventFwk::CommonEventManager::SubscribeCommonEvent(applyMonitor);
 
     auto result = DelayedSingleton<AAFwk::QuickFixManagerClient>::GetInstance()->ApplyQuickFix(quickFixFiles);

@@ -93,11 +93,11 @@ void BmCommandUninstallModuleTest::SetMockObjects(BundleManagerShellCommand &cmd
 HWTEST_F(BmCommandUninstallModuleTest, Bm_Command_Uninstall_ModuleTest_0100, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"",
+        const_cast<char *>(TOOL_NAME.c_str()),
+        const_cast<char *>(cmd_.c_str()),
+        const_cast<char *>("-n"),
+        const_cast<char *>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char *>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -117,13 +117,13 @@ HWTEST_F(BmCommandUninstallModuleTest, Bm_Command_Uninstall_ModuleTest_0100, Fun
 HWTEST_F(BmCommandUninstallModuleTest, Bm_Command_Uninstall_ModuleTest_0200, Function | MediumTest | Level1)
 {
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-n",
-        (char *)STRING_BUNDLE_NAME.c_str(),
-        (char *)"-m",
-        (char *)STRING_MODULE_NAME.c_str(),
-        (char *)"",
+        const_cast<char *>(TOOL_NAME.c_str()),
+        const_cast<char *>(cmd_.c_str()),
+        const_cast<char *>("-n"),
+        const_cast<char *>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char *>("-m"),
+        const_cast<char *>(STRING_MODULE_NAME.c_str()),
+        const_cast<char *>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 

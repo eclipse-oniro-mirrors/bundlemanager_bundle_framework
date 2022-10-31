@@ -1353,7 +1353,7 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0300, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
- *           3. get sandbox app bundleInfo information failed 
+ *           3. get sandbox app bundleInfo information failed
  * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0400, Function | SmallTest | Level1)
@@ -1382,7 +1382,7 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0400, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
- *           3. get sandboxApp bundleInfo information failed 
+ *           3. get sandboxApp bundleInfo information failed
  * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0500, Function | SmallTest | Level1)
@@ -1411,7 +1411,7 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0500, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
- *           3. get sandbox app bundleInfo information failed 
+ *           3. get sandbox app bundleInfo information failed
  * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0600, Function | SmallTest | Level1)
@@ -1682,7 +1682,6 @@ HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest |
 {
     std::vector<std::string> filePaths;
     auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    const std::shared_ptr<IBundleDataStorage> dataStorage;
     filePaths.emplace_back(bundleFile);
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
@@ -1709,7 +1708,6 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0100, Function | SmallTest | Level
 {
     std::vector<std::string> filePaths;
     auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    const std::shared_ptr<IBundleDataStorage> dataStorage;
     filePaths.emplace_back(bundleFile);
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
