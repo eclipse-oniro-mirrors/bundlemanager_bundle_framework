@@ -8195,6 +8195,25 @@ static bool InnerQueryExtensionInfo(const OHOS::AppExecFwk::Want want, const int
     }
 }
 
+bool JsBundleMgr::UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId)
+{
+    bool flagCall = true;
+    if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FOUR && info.argv[PARAM3]->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+        flagCall = false;
+    } else if (info.argc == ARGS_SIZE_FIVE) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM3], userId)) {
+            APP_LOGE("input params string error");
+        }
+    }
+
+    return flagCall;
+}
+
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
 {
     APP_LOGD("JsBundleMgr::Finalizer is called");
