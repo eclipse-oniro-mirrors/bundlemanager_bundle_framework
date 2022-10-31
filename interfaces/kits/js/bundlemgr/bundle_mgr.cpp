@@ -7759,7 +7759,7 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(
     return arrayValue;
 }
 
-NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo)
+NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfos)
 {
     APP_LOGD("CreateExtensionInfo is called.");
     auto objContext = engine.CreateObject();
@@ -7774,13 +7774,13 @@ NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const Extens
         return engine.CreateUndefined();
     }
 
-    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfo.bundleName));
-    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfo.moduleName));
-    object->SetProperty("name", CreateJsValue(engine, extensionInfo.name));
-    object->SetProperty("labelId", CreateJsValue(engine, extensionInfo.labelId));
-    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfo.descriptionId));
-    object->SetProperty("iconId", CreateJsValue(engine, extensionInfo.iconId));
-    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfo.visible));
+    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfos.bundleName));
+    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfos.moduleName));
+    object->SetProperty("name", CreateJsValue(engine, extensionInfos.name));
+    object->SetProperty("labelId", CreateJsValue(engine, extensionInfos.labelId));
+    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfos.descriptionId));
+    object->SetProperty("iconId", CreateJsValue(engine, extensionInfos.iconId));
+    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfos.visible));
     object->SetProperty("extensionAbilityType",
         CreateJsValue(engine, static_cast<int32_t>(extensionInfos.type)));
     object->SetProperty("permissions", CreateNativeArray(engine, extensionInfos.permissions));
@@ -8161,6 +8161,38 @@ bool JsBundleMgr::UnwarpBundleOptionsParams(
     }
 
     return flagCall;
+}
+
+static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
+}
+
+static bool InnerQueryExtensionInfo(const OHOS::AppExecFwk::Want want, const int32_t extensionType,
+    const int32_t flags, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    APP_LOGI("%{public}s is called", __FUNCTION__);
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    APP_LOGD("action:%{public}s, uri:%{private}s, type:%{public}s, flags:%{public}d",
+        want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(), flags);
+
+    if (extensionType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
+        APP_LOGD("query extensionAbilityInfo without type");
+        return iBundleMgr->QueryExtensionAbilityInfos(want, flags, userId, extensionInfos);
+    } else {
+        auto type = static_cast<ExtensionAbilityType>(extensionType);
+        APP_LOGD("query extensionAbilityInfo with type");
+        return iBundleMgr->QueryExtensionAbilityInfos(want, type, flags, userId, extensionInfos);
+    }
 }
 
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
