@@ -39,6 +39,7 @@ bool BundleUserInfo::ReadFromParcel(Parcel &parcel)
     enabled = parcel.ReadBool();
     int32_t disabledAbilitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, disabledAbilitiesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, disabledAbilitiesSize, &disabledAbilities);
     for (int32_t i = 0; i < disabledAbilitiesSize; i++) {
         disabledAbilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }

@@ -54,6 +54,7 @@ int32_t APP_INDEX_1 = 1;
 int32_t APP_INDEX_2 = 2;
 const int32_t USERID = 100;
 const int32_t INVALID_USERID = 300;
+const int32_t TEST_UID = 20010039;
 const int32_t WAIT_TIME = 5; // init mocked bms
 } // namespace
 
@@ -1601,27 +1602,29 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information success by uid
- * @tc.require: AR000H02C4
+ * @tc.require: issueI5Y75O
  */
 HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0100, Function | SmallTest | Level1)
 {
-    std::vector<std::string> filePaths;
-    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    filePaths.emplace_back(bundleFile);
-    auto installRes = InstallBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_OK);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
 
-    int32_t appIndex = 0;
-    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(appIndex, APP_INDEX_1);
-    CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
 
     InnerBundleInfo info;
-    ErrCode testRet = GetInnerBundleInfoByUid(20010039, info);
-    EXPECT_EQ(testRet, ERR_OK);
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
 
-    UninstallBundle(BUNDLE_NAME);
+    SaveSandboxAppInfo(info, APP_INDEX_1);
+
+    InnerBundleInfo newInfo;
+    ErrCode testRet = GetInnerBundleInfoByUid(TEST_UID, newInfo);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(newInfo.GetBundleName(), BUNDLE_NAME);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME, APP_INDEX_1);
 }
 
 /**

@@ -714,6 +714,41 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, GetSandboxBundleInfoTest001, TestSize.Le
 }
 
 /**
+ * @tc.number: GetSandboxBundleInfoTest002
+ * @tc.name: InstallSandboxApp
+ * @tc.desc: Test the interface of UninstallSandboxApp
+ *           1. Install application 
+ *           2. GetSandboxBundleInfo failed by empty
+ * @tc.require: AR000GNT9D
+ */
+HWTEST_F(BundleMgrSandboxAppSystemTest, GetSandboxBundleInfoTest002, TestSize.Level1)
+{
+    auto name = std::string("GetSandboxBundleInfoTest001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    int32_t appIndex = 0;
+    auto ret = bundleMgrClient.InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, DEFAULT_USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(1, appIndex);
+    CheckPathAreExisted(BUNDLE_NAME, 1);
+
+    BundleInfo info;
+    auto res = bundleMgrClient.GetSandboxBundleInfo("", 1, DEFAULT_USERID, info);
+    EXPECT_NE(res, ERR_OK);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
  * @tc.number: GetSandboxAbilityInfoTest001
  * @tc.name: GetSandboxAbilityInfo
  * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo

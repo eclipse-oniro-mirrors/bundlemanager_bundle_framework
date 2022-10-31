@@ -66,6 +66,7 @@ bool TargetExtSetting::ReadFromParcel(Parcel &parcel)
 {
     int32_t extValueSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extValueSize);
+    CONTAINER_SECURITY_VERIFY(parcel, extValueSize, &extValues);
     for (int32_t i = 0; i < extValueSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         std::string value = Str16ToStr8(parcel.ReadString16());
