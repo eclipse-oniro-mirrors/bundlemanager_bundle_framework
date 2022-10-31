@@ -8205,6 +8205,18 @@ NativeValue* JsBundleMgr::IsApplicationEnabled(NativeEngine *engine, NativeCallb
     return (me != nullptr) ? me->OnIsApplicationEnabled(*engine, *info) : nullptr;
 }
 
+NativeValue* JsBundleMgr::QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnQueryExtensionAbilityInfos(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetAllBundleInfo(*engine, *info) : nullptr;
+}
+
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGD("%{public}s is called", __FUNCTION__);
@@ -8448,6 +8460,116 @@ NativeValue* JsBundleMgr::OnIsApplicationEnabled(NativeEngine &engine, NativeCal
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnIsApplicationEnabled",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGI("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_ONE) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    int32_t bundleFlags = 0;
+    if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleFlags)) {
+        APP_LOGE("conversion failed!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    bool flagCall = UnwarpUserIdThreeParams(engine, info, userId);
+    auto complete = [obj = this, bundleFlags, userId, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
+        std::string getAllBundleInfoErrData;
+        if (errCode != ERR_OK) {
+            getAllBundleInfoErrData = "type mismatch";
+            task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+                CreateJsValue(engine, getAllBundleInfoErrData));
+            return;
+        }
+        std::vector<BundleInfo> bundleInfos;
+        auto ret = InnerGetBundleInfos(bundleFlags, userId, bundleInfos);
+        if (!ret) {
+            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            return;
+        }
+        task.ResolveWithErr(engine, obj->CreateBundleInfos(engine, bundleInfos));
+    };
+
+    NativeValue *result = nullptr;
+    auto callback = flagCall ? ((info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2]) : nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnGetAllBundleInfo",
+        engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGI("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    if (info.argc < ARGS_SIZE_TWO || info.argc > ARGS_SIZE_FIVE) {
+        APP_LOGE("wrong number of arguments.");
+        return engine.CreateUndefined();
+    }
+
+    if (info.argv[PARAM0]->TypeOf() != NATIVE_OBJECT) {
+        APP_LOGE("input params is error!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    Want want;
+    auto env = reinterpret_cast<napi_env>(&engine);
+    auto argv1 = reinterpret_cast<napi_value>(info.argv[PARAM0]);
+    if (!ParseWant(env, want, argv1)) {
+        APP_LOGE("conversion failed!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (info.argv[PARAM1]->TypeOf() != NATIVE_NUMBER) {
+        APP_LOGE("input params is error!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    int32_t extensionType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
+    if (!ConvertFromJsValue(engine, info.argv[PARAM1], extensionType)) {
+        APP_LOGE("conversion failed!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (info.argv[PARAM2]->TypeOf() != NATIVE_NUMBER) {
+        APP_LOGE("input params is error!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    int32_t extensionFlags = 0;
+    if (!ConvertFromJsValue(engine, info.argv[PARAM2], extensionFlags)) {
+        APP_LOGE("conversion failed!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    bool flagCall = UnwarpUserIdFiveParams(engine, info, userId);
+    auto complete = [obj = this, want, extensionType, extensionFlags, userId, errCode](
+                        NativeEngine &engine, AsyncTask &task, int32_t status) {
+        std::string errMessage;
+        if (errCode != ERR_OK) {
+            errMessage = "type mismatch";
+            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+            return;
+        }
+        std::vector<ExtensionAbilityInfo> extensionInfos;
+
+        auto ret = InnerQueryExtensionInfo(want, extensionType, extensionFlags, userId, extensionInfos);
+
+        if (!ret) {
+            errMessage = "QueryExtensionInfoByWant failed";
+            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine, errMessage));
+            return;
+        }
+        task.ResolveWithErr(engine, obj->CreateExtensionInfo(engine, extensionInfos));
+    };
+
+    NativeValue *result = nullptr;
+    auto callback = flagCall ? ((info.argc == ARGS_SIZE_FOUR) ? info.argv[PARAM3] : info.argv[PARAM4]) : nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnQueryExtensionAbilityInfos",
+        engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
     return result;
 }
 }  // namespace AppExecFwk

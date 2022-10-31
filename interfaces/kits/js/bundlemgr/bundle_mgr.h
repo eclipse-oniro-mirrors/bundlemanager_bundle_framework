@@ -462,6 +462,8 @@ public:
     static NativeValue* GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -471,6 +473,8 @@ private:
     NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
     NativeValue* CreateInnerMetaDatas(
