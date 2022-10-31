@@ -673,7 +673,7 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
 }
 
 static void ConvertDispatcherVersion(
-    napi_env env, napi_value &value, std::string version, const std::string &dispatchAPI)
+    napi_env env, napi_value &value, const std::string &version, const std::string &dispatchAPI)
 {
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &value));
     napi_value napiVersion;

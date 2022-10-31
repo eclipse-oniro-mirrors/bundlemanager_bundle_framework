@@ -33,7 +33,9 @@ namespace OHOS {
             return false;
         }
         auto infoPtr = RemoteAbilityInfo::Unmarshalling(dataMessageParcel);
-        return infoPtr != nullptr;
+        if (infoPtr == nullptr) {
+            return false;
+        }
         RemoteAbilityInfo *remoteAbilityInfo =
             new (std::nothrow) RemoteAbilityInfo();
         if (remoteAbilityInfo == nullptr) {

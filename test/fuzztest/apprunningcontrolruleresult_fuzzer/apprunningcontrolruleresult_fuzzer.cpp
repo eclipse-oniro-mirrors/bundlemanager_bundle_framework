@@ -33,7 +33,9 @@ namespace OHOS {
             return false;
         }
         auto rulePtr = AppRunningControlRuleResult::Unmarshalling(dataMessageParcel);
-        return rulePtr != nullptr;
+        if (rulePtr == nullptr) {
+            return false;
+        }
         AppRunningControlRuleResult *readRule =
             new (std::nothrow) AppRunningControlRuleResult();
         if (readRule == nullptr) {

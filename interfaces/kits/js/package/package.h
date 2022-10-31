@@ -49,7 +49,7 @@ private:
     NativeValue* OnHasInstalled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateHasInstalled(NativeEngine &engine, const OHOS::AppExecFwk::CheckPackageHasInstalledOptions &
         hasInstalledOptions);
-    void JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, NativeCallbackInfo &info,
+    void JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, const NativeCallbackInfo &info,
         std::shared_ptr<CheckPackageHasInstalledOptions> hasInstalledOptions);
 };
 }  // namespace AppExecFwk

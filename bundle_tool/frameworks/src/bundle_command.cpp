@@ -518,7 +518,6 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
 {
     int result = OHOS::ERR_OK;
     int counter = 0;
-    std::string dumpResults = "";
     std::string bundleName = "";
     bool bundleDumpAll = false;
     bool bundleDumpInfo = false;
@@ -657,6 +656,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_DUMP);
     } else {
+        std::string dumpResults = "";
         APP_LOGD("dumpResults: %{public}s", dumpResults.c_str());
         if (bundleDumpShortcut) {
             dumpResults = DumpShortcutInfos(bundleName, userId);
@@ -680,7 +680,6 @@ ErrCode BundleManagerShellCommand::RunAsDumpDependenciesCommand()
 {
     int32_t result = OHOS::ERR_OK;
     int32_t counter = 0;
-    std::string dumpResults;
     std::string bundleName;
     std::string moduleName;
     while (true) {
@@ -717,7 +716,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpDependenciesCommand()
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_DUMP_DEPENDENCIES);
     } else {
-        dumpResults = DumpDependentModuleNames(bundleName, moduleName);
+        std::string dumpResults = DumpDependentModuleNames(bundleName, moduleName);
         if (dumpResults.empty() || (dumpResults == "")) {
             dumpResults = HELP_MSG_DUMP_FAILED + "\n";
         }

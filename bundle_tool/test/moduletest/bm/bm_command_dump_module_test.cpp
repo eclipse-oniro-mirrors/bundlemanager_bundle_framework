@@ -94,10 +94,10 @@ HWTEST_F(BmCommandDumpModuleTest, Bm_Command_Dump_ModuleTest_0100, Function | Me
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"-a",
-        (char *)"",
+        const_cast<char *>(TOOL_NAME.c_str()),
+        const_cast<char *>(cmd_.c_str()),
+        const_cast<char *>("-a"),
+        const_cast<char *>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 
@@ -118,10 +118,10 @@ HWTEST_F(BmCommandDumpModuleTest, Bm_Command_Dump_ModuleTest_0200, Function | Me
 {
     // install a bundle
     char *argv[] = {
-        (char *)TOOL_NAME.c_str(),
-        (char *)cmd_.c_str(),
-        (char *)"--all",
-        (char *)"",
+        const_cast<char *>(TOOL_NAME.c_str()),
+        const_cast<char *>(cmd_.c_str()),
+        const_cast<char *>("--all"),
+        const_cast<char *>(""),
     };
     int argc = sizeof(argv) / sizeof(argv[0]) - 1;
 

@@ -107,7 +107,7 @@ NativeValue* JsPackage::HasInstalled(NativeEngine *engine, NativeCallbackInfo *i
     return (me != nullptr) ? me->OnHasInstalled(*engine, *info) : nullptr;
 }
 
-void JsPackage::JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, NativeCallbackInfo &info,
+void JsPackage::JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, const NativeCallbackInfo &info,
     std::shared_ptr<CheckPackageHasInstalledOptions> hasInstalledOptions)
 {
     if (hasInstalledOptions == nullptr) {
