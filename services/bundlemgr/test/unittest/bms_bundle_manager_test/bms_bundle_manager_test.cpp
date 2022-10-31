@@ -1096,4 +1096,26 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationInfosV9_0100, Function | MediumTest
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
+/**
+ * @tc.number: FindAbilityInfoV9_0100
+ * @tc.name: test FindAbilityInfoV9 proxy
+ * @tc.desc: 1.find ability info success
+ */
+HWTEST_F(BmsBundleManagerTest, FindAbilityInfoV9_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    AbilityInfo abilityInfo;
+    std::string bundleName = "com.example.test";
+    std::string moduleName = "module";
+    std::string abilityName = "mainAbility";
+    abilityInfo.bundleName = bundleName;
+    abilityInfo.moduleName = moduleName;
+    abilityInfo.name = abilityName;
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    auto ret = info.FindAbilityInfoV9(bundleName, "", "");
+    EXPECT_EQ(ret, std::nullopt);
+
+    ret = info.FindAbilityInfoV9(bundleName, moduleName, abilityName);
+    EXPECT_EQ((*ret).bundleName, "com.example.test");
+}
 } // OHOS
