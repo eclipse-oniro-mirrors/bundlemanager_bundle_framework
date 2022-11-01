@@ -181,6 +181,10 @@ static bool ParseElementNames(napi_env env, napi_value args, bool &isArray, std:
     uint32_t arrayLength = 0;
     NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
     APP_LOGD("arrayLength:%{public}d", arrayLength);
+    if (arrayLength == 0) {
+        APP_LOGE("error: ElementNames is empty");
+        return false;
+    }
     for (uint32_t i = 0; i < arrayLength; i++) {
         napi_value value = nullptr;
         NAPI_CALL_BASE(env, napi_get_element(env, args, i, &value), false);
