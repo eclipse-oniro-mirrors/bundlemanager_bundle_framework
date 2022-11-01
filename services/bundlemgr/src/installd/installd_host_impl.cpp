@@ -137,7 +137,12 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     for (const auto &el : Constants::BUNDLE_EL) {
-        std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + bundleName;
+        std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE;
+        if (access(bundleDataDir.c_str(), F_OK) != 0) {
+            APP_LOGW("CreateBundleDataDir base directory does not existed.");
+            return ERR_OK;
+        }
+        bundleDataDir += bundleName;
         if (!InstalldOperator::MkOwnerDir(bundleDataDir, S_IRWXU, uid, gid)) {
             APP_LOGE("CreateBundledatadir MkOwnerDir failed");
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
