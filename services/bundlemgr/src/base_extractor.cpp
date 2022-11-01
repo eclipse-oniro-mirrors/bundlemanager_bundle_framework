@@ -109,10 +109,12 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
 bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames)
 {
     auto &entryMap = zipFile_.GetAllEntries();
-    std::transform(entryMap.begin(),
-        entryMap.end(),
-        std::back_inserter(fileNames),
-        [](const auto &entry) { return entry.first; });
+    auto entryFilter = [&fileNames](const auto &entry) {
+        if (entry.first.compare(0, strlen(Constants::RELATIVE_PATH), Constants::RELATIVE_PATH) != 0) {
+            fileNames.emplace_back(entry.first);
+        }
+    };
+    for_each(entryMap.begin(), entryMap.end(), entryFilter);
     return true;
 }
 
