@@ -38,9 +38,6 @@ namespace OHOS {
         }
         CompatibleAbilityInfo *readInfo =
             new (std::nothrow) CompatibleAbilityInfo();
-        if (readInfo == nullptr) {
-            return false;
-        }
         bool ret = readInfo->ReadFromParcel(dataMessageParcel);
         delete readInfo;
         readInfo = nullptr;
