@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <chrono>
 #include <fstream>
 #include <thread>
@@ -6100,4 +6102,285 @@ HWTEST_F(BmsBundleKitServiceTest, GetAppFeature_002, Function | SmallTest | Leve
     bool testRet = GetBundleDataMgr()->GetAppFeature("", appFeature);
     EXPECT_EQ(testRet, false);
 }
+
+/**
+ * @tc.number: QueryAbilityInfoWithFlagsV9_0100
+ * @tc.name: test QueryAbilityInfoWithFlagsV9
+ * @tc.desc: 1.explicit query Ability info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlagsV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfoWithFlagsV9_0100");
+    std::optional<AbilityInfo> option;
+    AbilityInfo info;
+    InnerBundleInfo innerBundleInfo;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoWithFlagsV9(option, flags, 100, innerBundleInfo, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    APP_LOGI("QueryAbilityInfoWithFlagsV9_0100 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfoWithFlagsV9_0200
+ * @tc.name: test QueryAbilityInfoWithFlagsV9
+ * @tc.desc: 1.explicit query Ability info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlagsV9_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfoWithFlagsV9_0200");
+    std::optional<AbilityInfo> option;
+    AbilityInfo info;
+    InnerBundleInfo innerBundleInfo;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoWithFlagsV9(option, flags, 100, innerBundleInfo, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_DISABLED);
+    APP_LOGI("QueryAbilityInfoWithFlagsV9_0200 finish");
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityInfosV9_0100
+ * @tc.name: test ImplicitQueryCurAbilityInfosV9
+ * @tc.desc: 1.explicit query CurAbility info ok
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ImplicitQueryCurAbilityInfosV9_0100");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ImplicitQueryCurAbilityInfosV9_0100 finish");
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityInfosV9_0200
+ * @tc.name: test ImplicitQueryCurAbilityInfosV9
+ * @tc.desc: 1.explicit query CurAbility info ok
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ImplicitQueryCurAbilityInfosV9_0200");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ImplicitQueryCurAbilityInfosV9_0200 finish");
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityInfosV9_0300
+ * @tc.name: test ImplicitQueryCurAbilityInfosV9
+ * @tc.desc: 1.explicit query CurAbility info ok
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ImplicitQueryCurAbilityInfosV9_0300");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ImplicitQueryCurAbilityInfosV9_0300 finish");
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityInfosV9_0400
+ * @tc.name: test ImplicitQueryCurAbilityInfosV9
+ * @tc.desc: 1.explicit query CurAbility info ok
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0400, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ImplicitQueryCurAbilityInfosV9_0400");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ImplicitQueryCurAbilityInfosV9_0400 finish");
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityInfosV9_0500
+ * @tc.name: test ImplicitQueryCurAbilityInfosV9
+ * @tc.desc: 1.explicit query CurAbility info ok
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0500, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ImplicitQueryCurAbilityInfosV9_0500");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetAction("action.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ImplicitQueryCurAbilityInfosV9_0500 finish");
+}
+
+/**
+ * @tc.number: ExplicitQueryExtensionInfoV9_0100
+ * @tc.name: test ExplicitQueryExtensionInfoV9
+ * @tc.desc: 1.explicit query extension info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ExplicitQueryExtensionInfoV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ExplicitQueryExtensionInfoV9_0100");
+    std::string moduleName = "m1";
+    std::string extension = "test-extension";
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    ExtensionAbilityInfo extensionInfo;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ExplicitQueryExtensionInfoV9(want, flags, 0, extensionInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ExplicitQueryExtensionInfoV9_0100 finish");
+}
+
+/**
+ * @tc.number: ImplicitQueryCurExtensionInfosV9_0100
+ * @tc.name: test ImplicitQueryCurExtensionInfosV9
+ * @tc.desc: 1.explicit query curextension info success
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurExtensionInfosV9_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ImplicitQueryCurExtensionInfosV9_0100");
+    std::string moduleName = "m1";
+    std::string extension = "test-extension";
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(want, flags, 0, infos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ImplicitQueryCurExtensionInfosV9_0100 finish");
+}
+
+/**
+ * @tc.number: ImplicitQueryCurExtensionInfosV9_0200
+ * @tc.name: test ImplicitQueryCurExtensionInfosV9
+ * @tc.desc: 1.explicit query curextension info success
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurExtensionInfosV9_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of ImplicitQueryCurExtensionInfosV9_0200");
+    std::string moduleName = "m1";
+    std::string extension = "test-extension";
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    int32_t appIndex = -1;
+    ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(want, flags, 0, infos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("ImplicitQueryCurExtensionInfosV9_0200 finish");
+}
+
+/**
+ * @tc.number: GetMediaData_0100
+ * @tc.name: test GetMediaData
+ * @tc.desc: 1.explicit get mediadata failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of GetMediaData_0100");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::unique_ptr<uint8_t[]> mediaDataPtr;
+    size_t len = 0;
+    ErrCode ret = GetBundleDataMgr()->GetMediaData(BUNDLE_NAME_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST,
+        mediaDataPtr, len, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("GetMediaData_0100 finish");
+}
+
+/**
+ * @tc.number: GetMediaData_0200
+ * @tc.name: test GetMediaData
+ * @tc.desc: 1.explicit get mediadata failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of GetMediaData_0200");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::unique_ptr<uint8_t[]> mediaDataPtr;
+    size_t len = 0;
+    ErrCode ret = GetBundleDataMgr()->GetMediaData(BUNDLE_NAME_TEST, "", ABILITY_NAME_TEST,
+        mediaDataPtr, len, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("GetMediaData_0200 finish");
+}
+
+/**
+ * @tc.number: GetMediaData_0200
+ * @tc.name: test GetMediaData
+ * @tc.desc: 1.explicit get mediadata failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of GetMediaData_0300");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::unique_ptr<uint8_t[]> mediaDataPtr;
+    size_t len = 0;
+    ErrCode ret = GetBundleDataMgr()->GetMediaData(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST1,
+        mediaDataPtr, len, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("GetMediaData_0300 finish");
+}
+
+/**
+ * @tc.number: CheckAppInstallControl_0100
+ * @tc.name: test CheckAppInstallControl
+ * @tc.desc: 1.explicit check app install control success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of CheckAppInstallControl_0100");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ErrCode ret = GetBundleDataMgr()->CheckAppInstallControl("", 0);
+    EXPECT_EQ(ret, 1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("CheckAppInstallControl_0100 finish");
+}
+
 }
