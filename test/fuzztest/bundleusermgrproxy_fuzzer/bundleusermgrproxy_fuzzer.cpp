@@ -26,7 +26,6 @@ namespace OHOS {
     {
         sptr<IRemoteObject> object;
         BundleUserMgrProxy userMgrProxy(object);
-        std::string hapName (reinterpret_cast<const char*>(data), size);
         userMgrProxy.CreateNewUser(reinterpret_cast<uintptr_t>(data));
         userMgrProxy.RemoveUser(reinterpret_cast<uintptr_t>(data));
         return true;
