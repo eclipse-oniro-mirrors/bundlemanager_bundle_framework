@@ -8245,7 +8245,7 @@ static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS:
 static bool InnerQueryExtensionInfo(const OHOS::AppExecFwk::Want want, const int32_t extensionType,
     const int32_t flags, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
@@ -9152,7 +9152,7 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
 
 NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_ONE) {
         APP_LOGE("wrong number of arguments!");
@@ -9193,7 +9193,7 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
 
 NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
+    APP_LOGD("%{public}s is called", __FUNCTION__);
     int32_t errCode = ERR_OK;
     if (info.argc < ARGS_SIZE_TWO || info.argc > ARGS_SIZE_FIVE) {
         APP_LOGE("wrong number of arguments.");
