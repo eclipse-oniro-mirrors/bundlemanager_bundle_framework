@@ -41,6 +41,7 @@ enum class BMSEventType {
     PRE_BUNDLE_RECOVER,
     BUNDLE_STATE_CHANGE,
     BUNDLE_CLEAN_CACHE,
+    BMS_USER_EVENT
 };
 
 enum class BundleEventType {
@@ -64,6 +65,14 @@ enum HiSysEventType {
     STATISTIC = 2,    // system statistic event
     SECURITY  = 3,    // system security event
     BEHAVIOR  = 4     // system behavior event
+};
+
+enum class UserEventType {
+    UNKNOW = 0,
+    CREATE_START,
+    CREATE_END,
+    REMOVE_START,
+    REMOVE_END,
 };
 
 struct EventInfo {
@@ -90,6 +99,9 @@ struct EventInfo {
     // olny used in fault event
     ErrCode errCode = ERR_OK;
 
+    // olny used in user event
+    UserEventType userEventType = UserEventType::UNKNOW;
+
     void Reset()
     {
         userId = Constants::INVALID_USERID;
@@ -104,6 +116,7 @@ struct EventInfo {
         isFreeInstallMode = false;
         isEnable = false;
         errCode = ERR_OK;
+        userEventType = UserEventType::UNKNOW;
     }
 };
 
@@ -145,6 +158,12 @@ public:
      * @param eventInfo Indicates the eventInfo.
      */
     static void SendSystemEvent(BMSEventType eventType, const EventInfo& eventInfo);
+    /**
+     * @brief Send user system events.
+     * @param userEventType Indicates the userEventType.
+     * @param userId Indicates the userId.
+     */
+    static void SendUserSysEvent(UserEventType userEventType, int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

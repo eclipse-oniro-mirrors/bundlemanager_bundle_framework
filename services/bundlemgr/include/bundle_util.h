@@ -84,6 +84,11 @@ public:
      */
     static int64_t GetCurrentTime();
     /**
+     * @brief to obtain the current time in ms.
+     * @return Returns current time.
+     */
+    static int64_t GetCurrentTimeMs();
+    /**
      * @brief key combination of deviceId and bundleName.
      * @param deviceId Indicates the deviceId.
      * @param bundleName Indicates the bundle name.
