@@ -1545,18 +1545,46 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
     }
 
     for (const auto &item : bundleInfos_) {
-        InnerBundleInfo innerBundleInfo;
-        if (GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, requestUserId) != ERR_OK) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        auto flag = GET_BASIC_APPLICATION_INFO;
+        if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
+            == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) {
+            flag = GET_APPLICATION_INFO_WITH_DISABLE;
+        }
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
             continue;
         }
 
         BundleInfo bundleInfo;
-        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
+
         bundleInfos.emplace_back(bundleInfo);
     }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
+    const InnerBundleInfo &innerBundleInfo, int32_t flags, int32_t userId) const
+{
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (innerBundleInfo.IsDisabled()) {
+        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
+        && !innerBundleInfo.GetApplicationEnabled(userId)) {
+        APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+
     return ERR_OK;
 }
 
