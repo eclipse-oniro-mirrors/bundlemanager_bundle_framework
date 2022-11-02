@@ -131,3 +131,9 @@ GET_REMOTE_ABILITY_INFOS:
   LOCALE_INFO: {type: STRING, desc: localeInfo}
   ABILITY_NAME: {type: STRING, desc: abilityName}
   RESULT_CODE: {type: INT32, desc: result code}
+
+BMS_USER_EVENT:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: user event}
+  TYPE: {type: STRING, desc: user event type}
+  USERID: {type: INT32, desc: userId}
+  TIME: {type: INT64, desc: time stamp}

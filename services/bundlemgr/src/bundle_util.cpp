@@ -214,7 +214,16 @@ int64_t BundleUtil::GetCurrentTime()
     int64_t time =
         std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
         .count();
-    APP_LOGD("the current time is %{public}" PRId64, time);
+    APP_LOGD("the current time in seconds is %{public}" PRId64, time);
+    return time;
+}
+
+int64_t BundleUtil::GetCurrentTimeMs()
+{
+    int64_t time =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+        .count();
+    APP_LOGD("the current time in milliseconds is %{public}" PRId64, time);
     return time;
 }
 

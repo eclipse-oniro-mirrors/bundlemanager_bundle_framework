@@ -49,6 +49,7 @@ private:
     static void InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo);
     static void InnerSendBundleStateChangeEvent(const EventInfo& eventInfo);
     static void InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo);
+    static void InnerSendUserEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,
