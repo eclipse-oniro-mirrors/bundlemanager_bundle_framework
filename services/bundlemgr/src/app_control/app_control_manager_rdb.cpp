@@ -313,15 +313,17 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, controlRuleResult.controlMessage);
     if (ret != NativeRdb::E_OK) {
         APP_LOGW("GetString controlMessage failed, ret: %{public}d", ret);
-        if (callingName == AppControlConstants::EDM_CALLING) {
-            APP_LOGD("GetString controlMessage default");
-            controlRuleResult.controlMessage = APP_CONTROL_EDM_DEFAULT_MESSAGE;
-        }
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (controlRuleResult.controlMessage.empty() && callingName == AppControlConstants::EDM_CALLING) {
+        APP_LOGD("GetString controlMessage default");
+        controlRuleResult.controlMessage = APP_CONTROL_EDM_DEFAULT_MESSAGE;
     }
     std::string wantString;
     if (absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, wantString) != NativeRdb::E_OK) {
-        APP_LOGW("GetString controlWant failed, ret: %{public}d", ret);
-    } else {
+        APP_LOGE("GetString controlWant failed, ret: %{public}d", ret);
+    }
+    if (!wantString.empty()) {
         controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
     }
     return ERR_OK;
