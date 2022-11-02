@@ -8851,7 +8851,7 @@ NativeValue* JsBundleMgr::OnGetProfile(
         } else if ((i == PARAM3) && (info.argv[i]->TypeOf() == NATIVE_FUNCTION)) {
             APP_LOGD("Last param is function.");
         } else {
-            APP_LOGE("Convert param is error. %{public}d", i);
+            APP_LOGE("Convert param is error.");
             callbackPtr->errCode = PARAM_TYPE_ERROR;
         }
     }
