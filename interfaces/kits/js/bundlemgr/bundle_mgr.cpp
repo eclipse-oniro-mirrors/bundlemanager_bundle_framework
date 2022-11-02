@@ -8608,7 +8608,6 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
         std::vector<ExtensionAbilityInfo> extensionInfos;
 
         auto ret = InnerQueryExtensionInfo(want, extensionType, extensionFlags, userId, extensionInfos);
-
         if (!ret) {
             errMessage = "QueryExtensionInfoByWant failed";
             task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine, errMessage));
