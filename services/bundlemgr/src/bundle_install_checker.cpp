@@ -680,7 +680,7 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     PreBundleConfigInfo configInfo;
     configInfo.bundleName = bundleName;
     if (!BMSEventHandler::GetPreInstallCapability(configInfo)) {
-        APP_LOGW("bundleName: %{public}s is not exist in pre install capability list", bundleName.c_str());
+        APP_LOGD("bundleName: %{public}s is not exist in pre install capability list", bundleName.c_str());
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {

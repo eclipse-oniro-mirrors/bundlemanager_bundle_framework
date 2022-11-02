@@ -1305,7 +1305,7 @@ bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConf
 
     auto iter = installListCapabilities_.find(preBundleConfigInfo);
     if (iter == installListCapabilities_.end()) {
-        APP_LOGE("BundleName(%{public}s) no has preinstall capability.",
+        APP_LOGD("BundleName(%{public}s) no has preinstall capability.",
             preBundleConfigInfo.bundleName.c_str());
         return false;
     }
