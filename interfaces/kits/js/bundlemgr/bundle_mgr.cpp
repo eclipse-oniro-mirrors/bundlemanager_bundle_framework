@@ -4680,7 +4680,7 @@ static bool InnerSetApplicationEnabled(napi_env env, const std::string &bundleNa
     return true;
 }
 
-static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::AbilityInfo &abilityInfo, bool isEnable)
+static bool InnerSetAbilityEnabled(const OHOS::AppExecFwk::AbilityInfo &abilityInfo, bool isEnable)
 {
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -5005,96 +5005,6 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_string_utf8(env, "JSGetDisposedStatus", NAPI_AUTO_LENGTH, &resource));
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, GetDisposedStatusExecute,
         GetDisposedStatusComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    callbackPtr.release();
-    return promise;
-}
-
-napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
-{
-    {
-        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-        abilityInfoCache.clear();
-    }
-    size_t requireArgc = ARGS_SIZE_TWO;
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = { 0 };
-    napi_value thisArg = nullptr;
-    void* data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 2 parameter");
-
-    EnabledInfo* asyncCallbackInfo = new (std::nothrow) EnabledInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        return nullptr;
-    }
-    std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
-    asyncCallbackInfo->env = env;
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
-        if ((i == PARAM0) && (valueType == napi_object)) {
-            if (!UnwrapAbilityInfo(env, argv[i], asyncCallbackInfo->abilityInfo)) {
-                asyncCallbackInfo->errCode = INVALID_PARAM;
-                asyncCallbackInfo->errMssage = "type misMatch";
-            }
-        } else if ((i == PARAM1) && (valueType == napi_boolean)) {
-            bool isEnable = false;
-            NAPI_CALL(env, napi_get_value_bool(env, argv[i], &isEnable));
-            asyncCallbackInfo->isEnable = isEnable;
-        } else if ((i == PARAM2) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            break;
-        } else {
-            asyncCallbackInfo->errCode = INVALID_PARAM;
-            asyncCallbackInfo->errMssage = "type misMatch";
-        }
-    }
-    napi_value promise = nullptr;
-
-    if (asyncCallbackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env, &promise));
-    }
-    napi_value resource = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, "JSSetApplicationEnabled", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
-            EnabledInfo* asyncCallbackInfo =
-                reinterpret_cast<EnabledInfo*>(data);
-            if (!asyncCallbackInfo->errCode) {
-                asyncCallbackInfo->result = InnerSetAbilityEnabled(asyncCallbackInfo->env,
-                                                                   asyncCallbackInfo->abilityInfo,
-                                                                   asyncCallbackInfo->isEnable);
-                if (!asyncCallbackInfo->result) {
-                    asyncCallbackInfo->errCode = OPERATION_FAILED;
-                }
-            }
-        },
-        [](napi_env env, napi_status status, void* data) {
-            EnabledInfo* asyncCallbackInfo =
-                reinterpret_cast<EnabledInfo*>(data);
-            std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[1] = { 0 };
-            NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
-            if (asyncCallbackInfo->callback) {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            } else {
-                if (asyncCallbackInfo->errCode) {
-                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-                }
-            }
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     callbackPtr.release();
     return promise;
@@ -8322,6 +8232,12 @@ NativeValue* JsBundleMgr::GetAbilityLabel(NativeEngine *engine, NativeCallbackIn
     return (me != nullptr) ? me->OnGetAbilityLabel(*engine, *info) : nullptr;
 }
 
+NativeValue* JsBundleMgr::SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnSetAbilityEnabled(*engine, *info) : nullptr;
+}
+
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGD("%{public}s is called", __FUNCTION__);
@@ -9102,6 +9018,60 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityLabel",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    bool isEnable = false;
+    OHOS::AppExecFwk::AbilityInfo abilityInfo;
+    auto env = reinterpret_cast<napi_env>(&engine);
+    auto inputAbilityInfo = reinterpret_cast<napi_value>(info.argv[PARAM0]);
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = INVALID_PARAM;
+    }
+    for (size_t i = 0; i < info.argc; ++i) {
+        if ((i == PARAM0) && (info.argv[PARAM0]->TypeOf() == NATIVE_OBJECT)) {
+            if (!UnwrapAbilityInfo(env, inputAbilityInfo, abilityInfo)) {
+                APP_LOGE("conversion failed!");
+                errCode= INVALID_PARAM;
+            }
+        } else if ((i == PARAM1) && (info.argv[PARAM1]->TypeOf() == NATIVE_BOOLEAN)) {
+            if (!ConvertFromJsValue(engine, info.argv[PARAM1], isEnable)) {
+                APP_LOGE("conversion failed!");
+                errCode= INVALID_PARAM;
+            }
+        } else if ((i == PARAM2) && (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION)) {
+            break;
+        } else {
+            errCode = INVALID_PARAM;
+        }
+    }
+
+    AsyncTask::CompleteCallback complete = [abilityInfo, isEnable, errCode]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (errCode != ERR_OK) {
+                task.Reject(engine, CreateJsValue(engine, errCode));
+                return;
+            }
+            auto ret = InnerSetAbilityEnabled(abilityInfo, isEnable);
+            if (!ret) {
+                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
+                return;
+            }
+            task.ResolveWithUndefined(engine, CreateJsValue(engine, errCode));
+    };
+    NativeValue *result = nullptr;
+    NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
+    AsyncTask::Schedule("JsBundleMgr::OnSetAbilityEnabled",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 }  // namespace AppExecFwk
