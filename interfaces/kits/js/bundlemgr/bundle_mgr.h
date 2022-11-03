@@ -461,7 +461,6 @@ public:
     static NativeValue* GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info);
@@ -478,7 +477,6 @@ private:
     NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetProfile(NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType);
