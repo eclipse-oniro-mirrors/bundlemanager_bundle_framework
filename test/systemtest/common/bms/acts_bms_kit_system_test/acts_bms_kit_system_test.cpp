@@ -6953,6 +6953,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0100, Function | MediumTest | L
     ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9(appName, shortcutInfos);
     EXPECT_EQ(testRet, ERR_OK);
 
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    int uid = bundleInfo.uid;
+    std::string callingBundleName;
+    bundleMgrProxy->GetBundleNameForUid(uid, callingBundleName);
+    testRet = bundleMgrProxy->GetShortcutInfoV9(callingBundleName, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_OK);
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -6978,6 +6986,35 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0200, Function | MediumTest | L
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9("", shortcutInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoV9_0300
+ * @tc.name: test GetShortcutInfoV9 proxy
+ * @tc.desc: 1.system run normally
+ *           2.get udid info failed by wrong hap
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0300, Function | SmallTest | Level1)
+{
+    std::cout << "START GetShortcutInfoV9_0300" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9(appName, shortcutInfos);
+    EXPECT_NE(testRet, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetShortcutInfoV9_0300" << std::endl;
 }
 
 /**

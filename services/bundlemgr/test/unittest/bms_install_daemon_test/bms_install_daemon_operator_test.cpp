@@ -491,4 +491,18 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2700, Function | Sma
     ret = InstalldOperator::ExtractFiles(extractParam);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_2800
+ * @tc.name: test function of ExtractDiffFiles
+ * @tc.desc: 1. calling ExtractDiffFiles
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2800, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ExtractDiffFiles(TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_PATH, TEST_CPU_ABI);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::ExtractDiffFiles("", TEST_PATH, TEST_CPU_ABI);
+    EXPECT_FALSE(ret);
+}
 } // OHOS
