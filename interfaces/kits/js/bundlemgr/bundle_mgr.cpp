@@ -9065,7 +9065,7 @@ NativeValue* JsBundleMgr::OnSetApplicationEnabled(NativeEngine &engine, NativeCa
                 task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
                 return;
             }
-            task.ResolveWithErrObject(engine, CreateJsValue(engine, errCode), engine.CreateUndefined());
+            task.ResolveWithUndefined(engine, engine.CreateUndefined());
     };
     NativeValue *result = nullptr;
     NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
