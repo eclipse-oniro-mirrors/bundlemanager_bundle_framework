@@ -6301,7 +6301,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0100, Function | SmallTest | L
     sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
     bool isDefaultApp = false;
     ErrCode res = getDefaultAppProxy->IsDefaultApplication("", isDefaultApp);
-    EXPECT_NE(res, ERR_OK);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
 }
 
 /**
