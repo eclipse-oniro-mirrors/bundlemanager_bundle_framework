@@ -109,8 +109,6 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0002, Functi
     Parcel parcel;
     auto ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
-    ret = info.ReadFromParcel(parcel);
-    EXPECT_TRUE(ret);
     auto result = DispatcherInfo::Unmarshalling(parcel);
     EXPECT_EQ(result->version, VERSION);
 }
