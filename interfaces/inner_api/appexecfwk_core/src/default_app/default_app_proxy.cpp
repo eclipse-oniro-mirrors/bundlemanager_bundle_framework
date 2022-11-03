@@ -39,11 +39,6 @@ ErrCode DefaultAppProxy::IsDefaultApplication(const std::string& type, bool& isD
     APP_LOGD("begin to call IsDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (type.empty()) {
-        APP_LOGE("type is empty.");
-        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
-    }
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
