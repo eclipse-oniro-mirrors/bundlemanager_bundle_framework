@@ -9,7 +9,7 @@
             "isDefault": true,
             "name": "Form_Js",
             "scheduledUpdateTime": "10:30",
-            "src": "pages/index/index",
+            "src": "",
             "supportDimensions": [
                 "2*2"
             ],
