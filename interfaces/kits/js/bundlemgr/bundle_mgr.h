@@ -469,6 +469,8 @@ public:
     static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
+
     std::string errMessage_;
 
 private:
@@ -485,6 +487,7 @@ private:
     NativeValue* OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnSetApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     int32_t InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
     int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
