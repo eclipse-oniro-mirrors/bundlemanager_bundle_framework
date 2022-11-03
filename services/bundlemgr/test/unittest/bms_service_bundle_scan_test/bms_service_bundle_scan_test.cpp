@@ -304,20 +304,6 @@ HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0200, Function | SmallTest |
 }
 
 /**
- * @tc.number: RebootBundleScan_0300
- * @tc.name: Get bundleinfo of HAP by path
- * @tc.desc: Pass a HAP of SYSTEM_APP path. Can find information
- */
-HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0300, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler_;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    const std::string PATH = SYSTEM_APP_SCAN_PATH + "/" + PHOTOS_HAP;
-    auto result = handler_->CheckAndParseHapFiles(PATH, true, infos);
-    EXPECT_TRUE(result);
-}
-
-/**
  * @tc.number: RebootBundleScan_0400
  * @tc.name: Get bundleinfo of HAP by path
  * @tc.desc: Pass a HAP of SYSTEM_APP path. Can't find information
