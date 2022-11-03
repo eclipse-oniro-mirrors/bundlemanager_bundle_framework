@@ -1119,4 +1119,37 @@ HWTEST_F(BmsBundleManagerTest, FindAbilityInfoV9_0100, Function | MediumTest | L
     ret = info.FindAbilityInfoV9(bundleName, moduleName, abilityName);
     EXPECT_EQ((*ret).bundleName, "com.example.test");
 }
+
+/**
+ * @tc.number: GetApplicationInfosV9_0200
+ * @tc.name: Test GetApplicationInfoV9
+ * @tc.desc: 1.Test the GetApplicationInfoV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationInfosV9_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    auto permissionFlag =
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION);
+    int32_t allUserId = Constants::ALL_USERID;
+    auto ret = info.GetApplicationInfoV9(permissionFlag, allUserId, appInfo);
+    EXPECT_NE(ret, ERR_OK);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.modulePath = "/data/app/el1/bundle/public/com.ohos.test";
+    innerModuleInfo.isModuleJson = true;
+    std::vector<Metadata> data;
+    Metadata data1;
+    data1.name = "ohos.extension.forms";
+    data.emplace_back(data1);
+    innerModuleInfo.metadata = data;
+    info.InsertInnerModuleInfo("module", innerModuleInfo);
+    int32_t notExistUserId = Constants::NOT_EXIST_USERID;
+    ret = info.GetApplicationInfoV9(permissionFlag, notExistUserId, appInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    auto metaDataFlag =
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA);
+    ret = info.GetApplicationInfoV9(metaDataFlag, notExistUserId, appInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

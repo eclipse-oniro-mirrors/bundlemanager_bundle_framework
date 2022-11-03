@@ -123,6 +123,95 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMultiNativeFile_0100, Function | Smal
 }
 
 /**
+ * @tc.number: CheckMultiNativeFile_0200
+ * @tc.name: Test CheckMultiNativeFile
+ * @tc.desc: 1.Test the CheckMultiNativeFile of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultiNativeFile_0200, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.SetCpuAbi(ARM);
+    innerBundleInfo1.SetNativeLibraryPath(ARM_SO_PATH);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(HAP_ONE, innerBundleInfo1);
+    BundleInstallChecker installChecker;
+    ErrCode ret = installChecker.CheckMultiNativeFile(infos);
+    EXPECT_EQ(ret, ERR_OK);
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetCpuAbi(X86);
+    innerBundleInfo2.SetNativeLibraryPath(X86_SO_PATH);
+    infos.emplace(HAP_TWO, innerBundleInfo2);
+    ret = installChecker.CheckMultiNativeFile(infos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckMultiNativeFile_0300
+ * @tc.name: Test CheckMultiNativeFile
+ * @tc.desc: 1.Test the CheckMultiNativeFile of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultiNativeFile_0300, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.SetArkNativeFileAbi(ARM);
+    innerBundleInfo1.SetArkNativeFilePath(ARM_AN_PATH);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(HAP_ONE, innerBundleInfo1);
+
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetArkNativeFileAbi(X86);
+    innerBundleInfo2.SetArkNativeFilePath(X86_AN_PATH);
+    infos.emplace(HAP_TWO, innerBundleInfo2);
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckMultiNativeFile(infos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckMultiArkNativeFile_0100
+ * @tc.name: Test CheckMultiArkNativeFile
+ * @tc.desc: 1.Test the CheckMultiArkNativeFile of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultiArkNativeFile_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo1;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(HAP_ONE, innerBundleInfo1);
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckMultiArkNativeFile(infos);
+    EXPECT_EQ(ret, ERR_OK);
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetArkNativeFileAbi(ARM);
+    infos.emplace(HAP_TWO, innerBundleInfo1);
+    ret = installChecker.CheckMultiArkNativeFile(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckMultiArkNativeFile_0200
+ * @tc.name: Test CheckMultiArkNativeFile
+ * @tc.desc: 1.Test the CheckMultiArkNativeFile of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultiArkNativeFile_0200, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.SetArkNativeFileAbi(ARM);
+    innerBundleInfo1.SetArkNativeFilePath(ARM_AN_PATH);
+    innerBundleInfo1.SetCpuAbi(ARM);
+    innerBundleInfo1.SetNativeLibraryPath(ARM_SO_PATH);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(HAP_ONE, innerBundleInfo1);
+
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetArkNativeFileAbi(X86);
+    innerBundleInfo2.SetArkNativeFilePath(X86_AN_PATH);
+    infos.emplace(HAP_TWO, innerBundleInfo2);
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckMultiArkNativeFile(infos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: ExtractModule_0100
  * @tc.name: test the start function of ExtractModule
  * @tc.desc: 1. BaseBundleInstaller
