@@ -19,10 +19,14 @@
 #include <string>
 
 #include "appexecfwk_errors.h"
+#include "distributed_ability_info.h"
 #include "distributed_bms.h"
 #include "distributed_bms_interface.h"
 #include "distributed_bms_proxy.h"
+#include "distributed_bundle_info.h"
+#include "distributed_module_info.h"
 #include "element_name.h"
+#include "json_util.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -463,5 +467,207 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0018, Function | SmallTest | L
         auto ret = distributedBmsProxy->GetRemoteAbilityInfos(names, infos);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0019
+ * @tc.name: test DistributedAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test to_json and from_json
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0019, Function | SmallTest | Level0)
+{
+    DistributedAbilityInfo distributedAbilityInfo;
+    distributedAbilityInfo.abilityName = "abilityName";
+    nlohmann::json jsonObject;
+    to_json(jsonObject, distributedAbilityInfo);
+    DistributedAbilityInfo result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.abilityName, "abilityName");
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0020
+ * @tc.name: test DistributedAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test Dump
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0020, Function | SmallTest | Level0)
+{
+    DistributedAbilityInfo distributedAbilityInfo;
+    std::string path = "/data/test/abilityInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = open(path.c_str(), O_WRONLY | O_CLOEXEC);
+    EXPECT_NE(fd, -1) << "open file error";
+    std::string prefix = "[ability]";
+    distributedAbilityInfo.Dump(prefix, fd);
+    long length = lseek(fd, 0, SEEK_END);
+    EXPECT_GT(length, 0);
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0021
+ * @tc.name: test DistributedBundleInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test FromJsonString and ToString
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0021, Function | SmallTest | Level0)
+{
+    DistributedBundleInfo distributedBundleInfo;
+    std::string value = distributedBundleInfo.ToString();
+    std::string jsonString;
+    auto res = distributedBundleInfo.FromJsonString(value);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0022
+ * @tc.name: test DistributedBundleInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test Marshalling and Unmarshalling
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0022, Function | SmallTest | Level0)
+{
+    DistributedBundleInfo distributedBundleInfo;
+    distributedBundleInfo.version = 2;
+    distributedBundleInfo.bundleName = "bundleName";
+    distributedBundleInfo.versionCode = 1;
+    distributedBundleInfo.versionName = "versionName";
+    distributedBundleInfo.minCompatibleVersion = 1;
+    distributedBundleInfo.targetVersionCode = 1;
+    distributedBundleInfo.compatibleVersionCode = 1;
+    distributedBundleInfo.appId = "appId";
+    distributedBundleInfo.enabled = false;
+
+    Parcel parcel;
+    bool ret = distributedBundleInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto unmarshalledResult = DistributedBundleInfo::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->version, 2);
+    EXPECT_EQ(unmarshalledResult->bundleName, "bundleName");
+    EXPECT_EQ(unmarshalledResult->versionCode, 1);
+    EXPECT_EQ(unmarshalledResult->versionName, "versionName");
+    EXPECT_EQ(unmarshalledResult->minCompatibleVersion, 1);
+    EXPECT_EQ(unmarshalledResult->targetVersionCode, 1);
+    EXPECT_EQ(unmarshalledResult->compatibleVersionCode, 1);
+    EXPECT_EQ(unmarshalledResult->appId, "appId");
+    EXPECT_EQ(unmarshalledResult->enabled, false);
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0023
+ * @tc.name: test DistributedModuleInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test to_json and from_json
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0023, Function | SmallTest | Level0)
+{
+    DistributedModuleInfo distributedModuleInfo;
+    distributedModuleInfo.moduleName = "moduleName";
+    nlohmann::json jsonObject;
+    to_json(jsonObject, distributedModuleInfo);
+    DistributedModuleInfo result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.moduleName, "moduleName");
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0024
+ * @tc.name: test DistributedModuleInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test Dump
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0024, Function | SmallTest | Level0)
+{
+    DistributedModuleInfo distributedModuleInfo;
+    std::string path = "/data/test/abilityInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = open(path.c_str(), O_WRONLY | O_CLOEXEC);
+    EXPECT_NE(fd, -1) << "open file error";
+    std::string prefix = "[ability]";
+    distributedModuleInfo.Dump(prefix, fd);
+    long length = lseek(fd, 0, SEEK_END);
+    EXPECT_GT(length, 0);
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0025
+ * @tc.name: test SummaryAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test Marshalling and Unmarshalling
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0025, Function | SmallTest | Level0)
+{
+    SummaryAbilityInfo summaryAbilityInfo;
+    summaryAbilityInfo.bundleName = "bundleName";
+    summaryAbilityInfo.moduleName = "moduleName";
+    summaryAbilityInfo.abilityName = "abilityName";
+    summaryAbilityInfo.logoUrl = "logoUrl";
+    summaryAbilityInfo.label = "label";
+    summaryAbilityInfo.deviceType.push_back("deviceType");
+    summaryAbilityInfo.rpcId.push_back("rpcId");
+
+    Parcel parcel;
+    bool ret = summaryAbilityInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto unmarshalledResult = SummaryAbilityInfo::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->bundleName, "bundleName");
+    EXPECT_EQ(unmarshalledResult->moduleName, "moduleName");
+    EXPECT_EQ(unmarshalledResult->abilityName, "abilityName");
+    EXPECT_EQ(unmarshalledResult->logoUrl, "logoUrl");
+    EXPECT_EQ(unmarshalledResult->label, "label");
+    EXPECT_EQ(unmarshalledResult->deviceType.size(), 1);
+    EXPECT_EQ(unmarshalledResult->rpcId.size(), 1);
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0026
+ * @tc.name: test SummaryAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test to_json and from_json
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0026, Function | SmallTest | Level0)
+{
+    SummaryAbilityInfo summaryAbilityInfo;
+    summaryAbilityInfo.abilityName = "abilityName";
+    nlohmann::json jsonObject;
+    to_json(jsonObject, summaryAbilityInfo);
+    SummaryAbilityInfo result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.abilityName, "abilityName");
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0027
+ * @tc.name: test RpcIdResult
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test to_json and from_json
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0027, Function | SmallTest | Level0)
+{
+    RpcIdResult rpcIdResult;
+    rpcIdResult.version = "version";
+    rpcIdResult.transactId = "transactId";
+    rpcIdResult.retCode = 1;
+    rpcIdResult.resultMsg = "resultMsg";
+    nlohmann::json jsonObject;
+    to_json(jsonObject, rpcIdResult);
+    RpcIdResult result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.version, "version");
+    EXPECT_EQ(result.transactId, "transactId");
+    EXPECT_EQ(result.retCode, 1);
+    EXPECT_EQ(result.resultMsg, "resultMsg");
 }
 } // OHOS
