@@ -2662,6 +2662,27 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0400, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GetUidByBundleName_0500
+ * @tc.name: test query UID
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.query UID by empty bundleName
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0500, Function | MediumTest | Level1)
+{
+    std::cout << "START GetUidByBundleName_0500" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string bundleName = "";
+    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID);
+    EXPECT_EQ(uid, Constants::INVALID_UID);
+    std::cout << "END GetUidByBundleName_0500" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleNameForUid_0100
  * @tc.name: test query bundlenames
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -3474,6 +3495,29 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0600, Function | MediumTest | Le
     }
     EXPECT_TRUE(result);
     std::cout << "END GetHapModuleInfo_0600" << std::endl;
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_0700
+ * @tc.name: test GetHapModuleInfo interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.use empty package to get moduleInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0700, Function | MediumTest | Level1)
+{
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
+    abilityInfo.package = "";
+    HapModuleInfo hapModuleInfo;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
+    EXPECT_FALSE(queryResult);
 }
 
 /**
