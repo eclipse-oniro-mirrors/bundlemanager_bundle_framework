@@ -136,6 +136,7 @@ struct PermissionsKey {
 static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::unordered_map<Query, napi_ref, QueryHash> abilityInfoCache;
+static std::unordered_map<Query, NativeReference*, QueryHash> nativeAbilityInfoCache;
 static std::mutex abilityInfoCacheMutex_;
 static std::mutex bundleMgrMutex_;
 static sptr<BundleMgrDeathRecipient> bundleMgrDeathRecipient(new (std::nothrow) BundleMgrDeathRecipient());
@@ -9064,7 +9065,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
     }
 
     std::shared_ptr<JsQueryAbilityInfo> queryAbilityInfo = std::make_shared<JsQueryAbilityInfo>();
-    auto execute = [want, bundleFlags, userId, info = queryASUB_BMS_APPINFO_EXTENSION_0001bilityInfo, &engine] () {
+    auto execute = [want, bundleFlags, userId, info = queryAbilityInfo, &engine] () {
         auto env = reinterpret_cast<napi_env>(&engine);
         auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
         if (item != abilityInfoCache.end()) {

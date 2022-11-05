@@ -454,6 +454,13 @@ public:
         std::string moduleName = "";
         bool hasModuleName = false;
     };
+
+    struct JsQueryAbilityInfo {
+        std::vector<AbilityInfo> abilityInfos;
+        NativeValue *cacheAbilityInfos;
+        bool ret = false;
+        bool getCache = false;
+    };
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
