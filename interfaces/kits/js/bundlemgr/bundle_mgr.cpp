@@ -8211,6 +8211,26 @@ NativeValue* JsBundleMgr::UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &i
     return nullptr;
 }
 
+static void OnHandleAbilityInfoCache(NativeEngine &engine, const Query &query,
+    const AAFwk::Want &want, const std::vector<AbilityInfo> &abilityInfos, NativeValue *jsObject)
+{
+    APP_LOGD("%{public}s called.", __FUNCTION__);
+    ElementName element = want.GetElement();
+    if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
+        APP_LOGE("OnHandleAbilityInfoCache return");
+        return;
+    }
+    uint32_t explicitQueryResultLen = 1;
+    if (abilityInfos.size() != explicitQueryResultLen || abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
+        APP_LOGE("OnHandleAbilityInfoCache return");
+        return;
+    }
+
+    auto cacheAbilityInfo = engine.CreateReference(jsObject, NAPI_RETURN_ONE);
+    nativeAbilityInfoCache.clear();
+    nativeAbilityInfoCache[query] = cacheAbilityInfo;
+}
+
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
 {
     APP_LOGD("JsBundleMgr::Finalizer is called");
@@ -8294,6 +8314,12 @@ NativeValue* JsBundleMgr::GetAbilityLabel(NativeEngine *engine, NativeCallbackIn
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
     return (me != nullptr) ? me->OnGetAbilityLabel(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnQueryAbilityInfos(*engine, *info) : nullptr;
 }
 
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
@@ -9004,6 +9030,89 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
     };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityLabel",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    int32_t bundleFlags = -1;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    AAFwk::Want want;
+    auto env = reinterpret_cast<napi_env>(&engine);
+    auto inputWant = reinterpret_cast<napi_value>(info.argv[PARAM0]);
+    if (info.argc > ARGS_SIZE_FOUR || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    if (!ParseWant(env, want, inputWant)) {
+        APP_LOGE("parse want faile.");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM1]->TypeOf() != NATIVE_NUMBER) {
+        APP_LOGE("input params is not number!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    ConvertFromJsValue(engine, info.argv[PARAM1], bundleFlags);
+    if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+        ConvertFromJsValue(engine, info.argv[PARAM2], userId);
+    } else if (info.argv[PARAM2]->TypeOf() != NATIVE_FUNCTION) {
+        APP_LOGE("input params is not function!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    std::shared_ptr<JsQueryAbilityInfo> queryAbilityInfo = std::make_shared<JsQueryAbilityInfo>();
+    auto execute = [want, bundleFlags, userId, info = queryASUB_BMS_APPINFO_EXTENSION_0001bilityInfo, &engine] () {
+        auto env = reinterpret_cast<napi_env>(&engine);
+        auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+        if (item != abilityInfoCache.end()) {
+            APP_LOGD("has cache,no need to query from host");
+            auto reference = reinterpret_cast<NativeReference*>(item->second);
+            info->cacheAbilityInfos = reference->Get();
+            info->getCache = true;
+            return;
+        } else {
+            auto iBundleMgr = GetBundleMgr();
+            info->ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, info->abilityInfos);
+        }
+    };
+
+    AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info = queryAbilityInfo]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            std::string queryAbilityInfosErrData;
+            if (info->getCache) {
+                APP_LOGD("has cache,no need to query from host");
+                task.ResolveWithErr(engine, info->cacheAbilityInfos);
+                return;
+            }
+            if (errCode != ERR_OK) {
+                queryAbilityInfosErrData = "type mismatch";
+                task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+                    CreateJsValue(engine, queryAbilityInfosErrData));
+                return;
+            }
+            auto env = reinterpret_cast<napi_env>(&engine);
+            if (!info->ret) {
+                queryAbilityInfosErrData = "QueryAbilityInfos failed";
+                task.RejectWithMessage(engine, CreateJsValue(engine, 1),
+                    CreateJsValue(engine, queryAbilityInfosErrData));
+                return;
+            }
+            NativeValue *cacheAbilityInfoValue = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+                Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
+                cacheAbilityInfoValue = obj->CreateAbilityInfos(engine, info->abilityInfos);
+                OnHandleAbilityInfoCache(engine, query, want, info->abilityInfos, cacheAbilityInfoValue);
+            }
+            task.ResolveWithErr(engine, cacheAbilityInfoValue);
+        };
+
+    NativeValue* lastParam = UnwarpQueryAbilityInfolastParams(info);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnQueryAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
