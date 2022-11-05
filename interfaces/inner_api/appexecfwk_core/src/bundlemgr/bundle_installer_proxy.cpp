@@ -338,9 +338,11 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     for (const auto &path : realPaths) {
-        if ((result = WriteFileToStream(streamInstaller, path)) != ERR_OK) {
+        ErrCode res = WriteFileToStream(streamInstaller, path);
+        if (res != ERR_OK) {
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            return result;
+            APP_LOGE("WriteFileToStream failed due to %{public}d", res);
+            return res;
         }
     }
 
@@ -395,6 +397,7 @@ ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &st
         if (write(outputFd, buffer, offset) < 0) {
             close(inputFd);
             close(outputFd);
+            APP_LOGE("write file to the temp dir failed");
             return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
         }
     }

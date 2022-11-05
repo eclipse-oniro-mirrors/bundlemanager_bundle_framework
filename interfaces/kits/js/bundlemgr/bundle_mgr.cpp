@@ -3148,6 +3148,10 @@ static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFil
         APP_LOGE("install invalid path");
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID;
         installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
+    } else if (res == ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT) {
+        APP_LOGE("install invalid path");
+        installResult.resultCode = IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT;
+        installResult.resultMsg = "STATUS_FAILED_NO_SPACE_LEFT";
     } else {
         installResult.resultCode = callback->GetResultCode();
         APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);
