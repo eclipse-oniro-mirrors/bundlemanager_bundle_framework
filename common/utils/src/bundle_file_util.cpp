@@ -15,6 +15,7 @@
 
 #include "bundle_file_util.h"
 
+#include <cerrno>
 #include <cinttypes>
 #include <dirent.h>
 #include <fcntl.h>
