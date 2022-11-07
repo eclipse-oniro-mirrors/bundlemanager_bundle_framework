@@ -335,7 +335,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver);
     if (streamInstaller == nullptr) {
         APP_LOGE("stream install failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_OK;
     }
     for (const auto &path : realPaths) {
         if ((result = WriteFileToStream(streamInstaller, path)) != ERR_OK) {
