@@ -27,22 +27,18 @@ namespace OHOS {
     {
         Parcel dataMessageParcel;
         DistributedBundleInfo info;
+        bool ret = false;
         if (dataMessageParcel.WriteBuffer(data, size)) {
             info.Marshalling(dataMessageParcel);
             auto infoPtr = DistributedBundleInfo::Unmarshalling(dataMessageParcel);
-            return infoPtr != nullptr;
-        }
-        DistributedBundleInfo *distributedBundleInfo =
-            new (std::nothrow) DistributedBundleInfo();
-        if (distributedBundleInfo == nullptr) {
-            return false;
+            ret = (infoPtr != nullptr);
+            if (ret) {
+                delete infoPtr;
+            }
         }
         std::string jsonString (reinterpret_cast<const char*>(data), size);
         info.FromJsonString(jsonString);
         info.ToString();
-        bool ret = distributedBundleInfo->ReadFromParcel(dataMessageParcel);
-        delete distributedBundleInfo;
-        distributedBundleInfo = nullptr;
         return ret;
     }
 }
