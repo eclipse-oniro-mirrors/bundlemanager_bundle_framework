@@ -326,8 +326,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     std::vector<std::string> realPaths;
-    bool result = BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths);
-    if (!result) {
+    if (!BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths)) {
         APP_LOGE("stream install failed due to check file failed");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
@@ -347,15 +346,14 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     // start install haps
-    bool ret = streamInstaller->Install();
-    if (!ret) {
+    if (!streamInstaller->Install()) {
         APP_LOGE("stream install failed");
         DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     APP_LOGD("stream install end");
-    return result;
+    return ERR_OK;
 }
 
 ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path)
