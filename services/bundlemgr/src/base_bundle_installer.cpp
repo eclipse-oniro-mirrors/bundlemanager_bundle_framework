@@ -2211,7 +2211,7 @@ ErrCode BaseBundleInstaller::UninstallAllSandboxApps(const std::string &bundleNa
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     if (helper->UninstallAllSandboxApps(bundleName, userId) != ERR_OK) {
-        APP_LOGE("UninstallAllSandboxApps failed");
+        APP_LOGW("UninstallAllSandboxApps failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     APP_LOGD("UninstallAllSandboxApps finish");
