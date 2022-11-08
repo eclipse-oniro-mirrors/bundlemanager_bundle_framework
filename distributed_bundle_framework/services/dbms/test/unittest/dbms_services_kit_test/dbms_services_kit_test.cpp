@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
@@ -26,6 +28,7 @@
 #include "distributed_bundle_info.h"
 #include "distributed_module_info.h"
 #include "element_name.h"
+#include "image_compress.h"
 #include "json_util.h"
 
 using namespace testing::ext;
@@ -40,6 +43,10 @@ const std::string BUNDLE_NAME = "com.ohos.launcher";
 const std::string MODULE_NAME = "launcher_settings";
 const std::string ABILITY_NAME = "com.ohos.launcher.settings.MainAbility";
 const std::string DEVICE_ID = "1111";
+const std::string INVALID_NAME = "invalid";
+const std::string HAP_FILE_PATH =
+    "/data/app/el1/bundle/public/com.example.test/entry.hap";
+int32_t USERID = 100;
 }  // namespace
 
 class DbmsServicesKitTest : public testing::Test {
@@ -52,11 +59,13 @@ public:
     void TearDown();
     std::shared_ptr<DistributedBms> GetDistributedBms();
     std::shared_ptr<DistributedBmsProxy> GetDistributedBmsProxy();
+    std::shared_ptr<DistributedDataStorage> GetDistributedDataStorage();
     void StartInstalldService() const;
     void StartBundleService();
 private:
     std::shared_ptr<DistributedBms> distributedBms_ = nullptr;
     std::shared_ptr<DistributedBmsProxy> distributedBmsProxy_ = nullptr;
+    std::shared_ptr<DistributedDataStorage> distributedDataStorage_ = nullptr;
 };
 
 DbmsServicesKitTest::DbmsServicesKitTest()
@@ -91,6 +100,15 @@ std::shared_ptr<DistributedBmsProxy> DbmsServicesKitTest::GetDistributedBmsProxy
         distributedBmsProxy_ = std::make_shared<DistributedBmsProxy>(nullptr);
     }
     return distributedBmsProxy_;
+}
+
+std::shared_ptr<DistributedDataStorage> DbmsServicesKitTest::GetDistributedDataStorage()
+{
+    if (distributedDataStorage_ == nullptr) {
+        distributedDataStorage_ =
+            DelayedSingleton<DistributedDataStorage>::GetInstance();
+    }
+    return distributedDataStorage_;
 }
 /**
  * @tc.number: DbmsServicesKitTest
@@ -669,5 +687,142 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0027, Function | SmallTest | L
     EXPECT_EQ(result.transactId, "transactId");
     EXPECT_EQ(result.retCode, 1);
     EXPECT_EQ(result.resultMsg, "resultMsg");
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test OnStart
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test distributedSub_ not empty
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0028, Function | SmallTest | Level0)
+{
+    auto distributedBms = GetDistributedBms();
+    EXPECT_NE(distributedBms, nullptr);
+    if (distributedBms != nullptr) {
+        distributedBms->OnStart();
+        EXPECT_NE(nullptr, distributedBms->distributedSub_);
+        distributedBms->OnStop();
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test SaveStorageDistributeInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test GetStorageDistributeInfo failed by invalid bundle name
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0029, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        DistributedBundleInfo info;
+        distributedDataStorage->SaveStorageDistributeInfo(INVALID_NAME, USERID);
+        bool res = distributedDataStorage->GetStorageDistributeInfo("123", INVALID_NAME, info);
+        EXPECT_EQ(res, false);
+        distributedDataStorage->UpdateDistributedData(USERID);
+        distributedDataStorage->DeleteStorageDistributeInfo(INVALID_NAME, USERID);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test GetStorageDistributeInfo failed by invalid user id
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0030, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        DistributedBundleInfo info;
+        distributedDataStorage->SaveStorageDistributeInfo(BUNDLE_NAME, Constants::INVALID_USERID);
+        bool res = distributedDataStorage->GetStorageDistributeInfo("123", BUNDLE_NAME, info);
+        EXPECT_EQ(res, false);
+        distributedDataStorage->UpdateDistributedData(Constants::INVALID_USERID);
+        distributedDataStorage->DeleteStorageDistributeInfo(BUNDLE_NAME, Constants::INVALID_USERID);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test IsPathValid
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test path is not valid
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0031, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        bool res = imageCompress->IsPathValid(HAP_FILE_PATH);
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetImageType
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test get image type
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0032, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        std::unique_ptr<uint8_t[]> fileData;
+        constexpr size_t fileLength = 7;
+        ImageType res = imageCompress->GetImageType(fileData, fileLength);
+        EXPECT_EQ(res, ImageType::WORNG_TYPE);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetImageTypeString
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. get image type failed
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0033, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        std::unique_ptr<uint8_t[]> fileData;
+        constexpr size_t fileLength = 7;
+        std::string imageType;
+        bool res = imageCompress->GetImageTypeString(fileData, fileLength, imageType);
+        EXPECT_FALSE(res);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetImageFileInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test get image file info failed
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0034, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        std::unique_ptr<uint8_t[]> fileContent;
+        int64_t fileLength;
+        bool res = imageCompress->
+            GetImageFileInfo(
+                HAP_FILE_PATH, fileContent, fileLength);
+        EXPECT_EQ(res, false);
+    }
 }
 } // OHOS

@@ -6480,4 +6480,57 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Lev
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+ * @tc.number: AgingTest_0001
+ * @tc.name: test Aging Start
+ * @tc.desc: running is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.Start(
+        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
+    EXPECT_FALSE(bundleAgingMgr.running);
+}
+
+/**
+ * @tc.number: AgingTest_0002
+ * @tc.name: test Aging Start
+ * @tc.desc: running is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.Start(
+        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
+    EXPECT_FALSE(bundleAgingMgr.running);
+}
+
+/**
+ * @tc.number: AgingTest_0003
+ * @tc.name: test Aging Start
+ * @tc.desc: running is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.Start(
+        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
+    EXPECT_FALSE(bundleAgingMgr.running);
+}
+
+/**
+ * @tc.number: AginTest_0004
+ * @tc.name: test InitAgingtTimer
+ * @tc.desc: agingTimerInterval is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.InitAgingtTimer();
+    bundleAgingMgr.InitAgingRunner();
+    EXPECT_EQ(bundleAgingMgr.agingTimerInterval,
+        AgingConstants::DEFAULT_AGING_TIMER_INTERVAL);
+}
 }
