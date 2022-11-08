@@ -9194,9 +9194,7 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
             callback = (info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2];
         }
     }
-    if(info.argc >= ARGS_SIZE_ONE && info.argc <= ARGS_SIZE_THREE) {
-        callback = flagCall ? ((info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2]) : nullptr;
-    }
+
     AsyncTask::Schedule("JsBundleMgr::OnGetAllBundleInfo",
         engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
     return result;
