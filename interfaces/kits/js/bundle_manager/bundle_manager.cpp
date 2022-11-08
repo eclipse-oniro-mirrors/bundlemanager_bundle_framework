@@ -641,6 +641,29 @@ static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::str
 }
 #endif
 
+static void CheckAbilityInfoCache(
+    napi_env env, const Query &query, const AbilityCallbackInfo *info, napi_value jsObject)
+{
+    if (info == nullptr) {
+        return;
+    }
+
+    ElementName element = info->want.GetElement();
+    if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
+        return;
+    }
+
+    uint32_t explicitQueryResultLen = 1;
+    if (info->abilityInfos.size() != explicitQueryResultLen ||
+        info->abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
+        return;
+    }
+
+    napi_ref cacheAbilityInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
+    cache[query] = cacheAbilityInfo;
+}
+
 void QueryAbilityInfosExec(napi_env env, void *data)
 {
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
@@ -648,6 +671,15 @@ void QueryAbilityInfosExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
+
+    auto item = cache.find(Query(asyncCallbackInfo->want.ToString(),
+        QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+    if (item != cache.end()) {
+        asyncCallbackInfo->isSavedInCache = true;
+        APP_LOGD("has cache, no need to query from host.");
+        return;
+    }
+
     asyncCallbackInfo->err = InnerQueryAbilityInfos(asyncCallbackInfo->want, asyncCallbackInfo->flags,
         asyncCallbackInfo->userId, asyncCallbackInfo->abilityInfos);
 }
@@ -663,8 +695,21 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
     napi_value result[2] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-        CommonFunc::ConvertAbilityInfos(env, asyncCallbackInfo->abilityInfos, result[1]);
+        if (asyncCallbackInfo->isSavedInCache) {
+            auto item = cache.find(Query(asyncCallbackInfo->want.ToString(),
+                QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+            if (item == cache.end()) {
+                APP_LOGE("cannot find result in cache in %{public}s", __func__);
+                return;
+            }
+            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+            CommonFunc::ConvertAbilityInfos(env, asyncCallbackInfo->abilityInfos, result[1]);
+            Query query(asyncCallbackInfo->want.ToString(),
+                QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
+            CheckAbilityInfoCache(env, query, asyncCallbackInfo, result[1]);
+        }
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
