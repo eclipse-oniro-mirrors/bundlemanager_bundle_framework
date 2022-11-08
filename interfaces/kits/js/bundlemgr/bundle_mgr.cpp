@@ -9189,6 +9189,11 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
 
     NativeValue *result = nullptr;
     NativeValue *callback = nullptr;
+    if (flagCall) {
+        if (info.argc == ARGS_SIZE_TWO || info.argc == ARGS_SIZE_THREE) {
+            callback = (info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2];
+        }
+    }
     if(info.argc >= ARGS_SIZE_ONE && info.argc <= ARGS_SIZE_THREE) {
         callback = flagCall ? ((info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2]) : nullptr;
     }
@@ -9264,8 +9269,10 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
 
     NativeValue *result = nullptr;
     NativeValue *callback = nullptr;
-    if(info.argc >= ARGS_SIZE_TWO && info.argc <= ARGS_SIZE_FIVE) {
-        callback = flagCall ? ((info.argc == ARGS_SIZE_FOUR) ? info.argv[PARAM3] : info.argv[PARAM4]) : nullptr;
+    if (flagCall) {
+        if(info.argc == ARGS_SIZE_FOUR || info.argc == ARGS_SIZE_FIVE) {
+            callback = (info.argc == ARGS_SIZE_FIVE) ? info.argv[PARAM4] : info.argv[PARAM3];
+        }
     }
     AsyncTask::Schedule("JsBundleMgr::OnQueryExtensionAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
