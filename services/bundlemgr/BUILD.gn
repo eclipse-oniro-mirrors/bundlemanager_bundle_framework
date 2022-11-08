@@ -167,6 +167,7 @@ ohos_shared_library("libbms") {
 
   sources = [
     "src/account_helper.cpp",
+    "src/bms_param.cpp",
     "src/bundle_common_event_mgr.cpp",
     "src/bundle_data_mgr.cpp",
     "src/bundle_data_storage.cpp",
