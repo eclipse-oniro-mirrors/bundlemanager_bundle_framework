@@ -9263,8 +9263,9 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
     };
 
     NativeValue *result = nullptr;
+    NativeValue *callback = nullptr;
     if(info.argc >= ARGS_SIZE_TWO && info.argc <= ARGS_SIZE_FIVE) {
-        auto callback = flagCall ? ((info.argc == ARGS_SIZE_FOUR) ? info.argv[PARAM3] : info.argv[PARAM4]) : nullptr;
+        callback = flagCall ? ((info.argc == ARGS_SIZE_FOUR) ? info.argv[PARAM3] : info.argv[PARAM4]) : nullptr;
     }
     AsyncTask::Schedule("JsBundleMgr::OnQueryExtensionAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
