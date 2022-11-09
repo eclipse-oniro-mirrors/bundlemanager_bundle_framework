@@ -518,8 +518,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0020, Function | SmallTest | L
     std::string path = "/data/test/abilityInfo.txt";
     std::ofstream file(path);
     file.close();
-    int fd = open(path.c_str(), O_WRONLY | O_CLOEXEC);
-    EXPECT_NE(fd, -1) << "open file error";
+    int fd = 8;
     std::string prefix = "[ability]";
     distributedAbilityInfo.Dump(prefix, fd);
     long length = lseek(fd, 0, SEEK_END);
@@ -608,8 +607,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0024, Function | SmallTest | L
     std::string path = "/data/test/abilityInfo.txt";
     std::ofstream file(path);
     file.close();
-    int fd = open(path.c_str(), O_WRONLY | O_CLOEXEC);
-    EXPECT_NE(fd, -1) << "open file error";
+    int fd = 8;
     std::string prefix = "[ability]";
     distributedModuleInfo.Dump(prefix, fd);
     long length = lseek(fd, 0, SEEK_END);
