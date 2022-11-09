@@ -3924,6 +3924,20 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0900, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: Callback_1000
+ * @tc.name: Test SetBundleName
+ * @tc.desc: 1.Test the SetBundleName of IBundleStatusCallback
+ */
+HWTEST_F(ActsBmsKitSystemTest, Callback_1000, Function | MediumTest | Level1)
+{
+    sptr<IBundleStatusCallback> callBack = (new (std::nothrow) BundleStatusCallbackImpl());
+    EXPECT_NE(callBack, nullptr);
+    callBack->SetBundleName(BASE_BUNDLE_NAME);
+    std::string ret = callBack->GetBundleName();
+    EXPECT_EQ(ret, BASE_BUNDLE_NAME);
+}
+
+/**
  * @tc.number: QueryAbilityInfo_0100
  * @tc.name: test QueryAbilityInfo interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
