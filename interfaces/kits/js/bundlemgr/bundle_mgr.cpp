@@ -9022,7 +9022,7 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
     return result;
 }
 
-NativeValue* JsBundleMgr::OnSetApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info)
 {
     {
         std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
@@ -9053,24 +9053,29 @@ NativeValue* JsBundleMgr::OnSetApplicationEnabled(NativeEngine &engine, NativeCa
             errCode = INVALID_PARAM;
         }
     }
-
-    AsyncTask::CompleteCallback complete = [bundleName, isEnable, errCode]
+    auto ret = std::make_shared<bool>(false);
+    auto execute = [result = ret, bundleName, isEnable, errCode] () {
+        if (errCode == ERR_OK) {
+            *result = InnerSetApplicationEnabled(bundleName, isEnable);
+            return;
+        }
+    };
+    auto complete = [result = ret, isEnable, errCode]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
             if (errCode != ERR_OK) {
                 task.Reject(engine, CreateJsValue(engine, errCode));
                 return;
             }
-            auto ret = InnerSetApplicationEnabled(bundleName, isEnable);
-            if (!ret) {
+            if (!(*result)) {
                 task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
                 return;
             }
-            task.ResolveWithUndefined(engine, engine.CreateUndefined());
+            task.ResolveWithCustomize(engine, engine.CreateUndefined(), engine.CreateUndefined());
     };
     NativeValue *result = nullptr;
     NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
     AsyncTask::Schedule("JsBundleMgr::OnSetApplicationEnabled",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
 }  // namespace AppExecFwk
