@@ -9073,24 +9073,27 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
 
     std::shared_ptr<JsQueryAbilityInfo> queryAbilityInfo = std::make_shared<JsQueryAbilityInfo>();
     auto execute = [want, bundleFlags, userId, info = queryAbilityInfo, &engine] () {
-        auto env = reinterpret_cast<napi_env>(&engine);
-        APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast ENV 1------------");
-        auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
-        APP_LOGE("--------OnQueryAbilityInfos find Query------------");
-        if (item != abilityInfoCache.end()) {
-            APP_LOGD("has cache,no need to query from host");
-            auto reference = reinterpret_cast<NativeReference*>(item->second);
-            APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast item->second------------");
-            info->cacheAbilityInfos = reference->Get();
-            APP_LOGE("--------get cacheAbilityInfos------------");
-            info->getCache = true;
-            return;
-        } else {
+        {
+            APP_LOGE("----------execute before lock======");
+            std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+            auto env = reinterpret_cast<napi_env>(&engine);
+            APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast ENV 1------------");
+            auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+            APP_LOGE("--------OnQueryAbilityInfos find Query------------");
+            if (item != abilityInfoCache.end()) {
+                APP_LOGD("has cache,no need to query from host");
+                auto reference = reinterpret_cast<NativeReference*>(item->second);
+                APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast item->second------------");
+                info->cacheAbilityInfos = reference->Get();
+                APP_LOGE("--------get cacheAbilityInfos------------");
+                info->getCache = true;
+                return;
+            }
+        }
             auto iBundleMgr = GetBundleMgr();
             APP_LOGE("--------GetBundleMgr-------1-----");
             info->ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, info->abilityInfos);
             APP_LOGE("--------QueryAbilityInfos-2-----------");
-        }
     };
 
     AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info = queryAbilityInfo]
