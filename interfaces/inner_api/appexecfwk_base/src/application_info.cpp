@@ -73,6 +73,7 @@ const std::string APPLICATION_VENDOR = "vendor";
 const std::string APPLICATION_ACCESSIBLE = "accessible";
 const std::string APPLICATION_PRIVILEGE_LEVEL = "appPrivilegeLevel";
 const std::string APPLICATION_ACCESSTOKEN_ID = "accessTokenId";
+const std::string APPLICATION_ACCESSTOKEN_ID_EX = "accessTokenIdEx";
 const std::string APPLICATION_ENABLED = "enabled";
 const std::string APPLICATION_UID = "uid";
 const std::string APPLICATION_PERMISSIONS = "permissions";
@@ -290,6 +291,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appDistributionType = Str16ToStr8(parcel.ReadString16());
     appProvisionType = Str16ToStr8(parcel.ReadString16());
     accessTokenId = parcel.ReadUint32();
+    accessTokenIdEx = parcel.ReadUint64();
     enabled = parcel.ReadBool();
     uid = parcel.ReadInt32();
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
@@ -452,6 +454,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appProvisionType));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, accessTokenId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint64, parcel, accessTokenIdEx);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
 
@@ -623,6 +626,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_VENDOR, applicationInfo.vendor},
         {APPLICATION_PRIVILEGE_LEVEL, applicationInfo.appPrivilegeLevel},
         {APPLICATION_ACCESSTOKEN_ID, applicationInfo.accessTokenId},
+        {APPLICATION_ACCESSTOKEN_ID_EX, applicationInfo.accessTokenIdEx},
         {APPLICATION_ENABLED, applicationInfo.enabled},
         {APPLICATION_UID, applicationInfo.uid},
         {APPLICATION_PERMISSIONS, applicationInfo.permissions},
@@ -980,6 +984,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_ACCESSTOKEN_ID,
         applicationInfo.accessTokenId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint64_t>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ACCESSTOKEN_ID_EX,
+        applicationInfo.accessTokenIdEx,
         JsonType::NUMBER,
         false,
         parseResult,
