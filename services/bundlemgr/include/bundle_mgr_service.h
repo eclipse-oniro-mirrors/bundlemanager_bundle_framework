@@ -28,11 +28,13 @@
 #ifdef DEVICE_MANAGER_ENABLE
 #include "bms_device_manager.h"
 #endif
-#include "bms_param.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #include "bundle_connect_ability_mgr.h"
 #include "bundle_distributed_manager.h"
+#endif
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_host_impl.h"
 #endif
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
@@ -40,9 +42,6 @@
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_user_mgr_host_impl.h"
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-#include "default_app_host_impl.h"
-#endif
 #include "hidump_helper.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
@@ -130,8 +129,6 @@ public:
 
     ThreadPool &GetThreadPool();
 
-    const std::shared_ptr<BmsParam> GetBmsParam() const;
-
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -141,7 +138,6 @@ private:
     void SelfClean();
 
     void InitThreadPool();
-    void InitBmsParam();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
     void InitBundleDataMgr();
@@ -173,7 +169,6 @@ private:
     sptr<BundleMgrHostImpl> host_;
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
-    std::shared_ptr<BmsParam> bmsParam_;
     // Thread pool used to start installation or quick fix in parallel.
     ThreadPool bmsThreadPool_ = ThreadPool(Constants::BMS_SERVICE_NAME);
     const int THREAD_NUMBER = std::thread::hardware_concurrency();
