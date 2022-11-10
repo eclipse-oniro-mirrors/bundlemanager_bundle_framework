@@ -9021,7 +9021,7 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
     return result;
 }
 
-NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info)
 {
     {
         std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
