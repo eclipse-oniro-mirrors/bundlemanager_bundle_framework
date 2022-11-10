@@ -9054,24 +9054,29 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, NativeCallba
             errCode = INVALID_PARAM;
         }
     }
-
-    AsyncTask::CompleteCallback complete = [abilityInfo, isEnable, errCode]
+    auto ret = std::make_shared<bool>(false);
+    auto execute = [result = ret, abilityInfo, isEnable, errCode] () {
+        if (errCode == ERR_OK) {
+            *result = InnerSetAbilityEnabled(abilityInfo, isEnable);
+            return;
+        }
+    };
+    auto complete = [result = ret, errCode]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
             if (errCode != ERR_OK) {
                 task.Reject(engine, CreateJsValue(engine, errCode));
                 return;
             }
-            auto ret = InnerSetAbilityEnabled(abilityInfo, isEnable);
-            if (!ret) {
+            if (!*result) {
                 task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
                 return;
             }
-            task.ResolveWithUndefined(engine, CreateJsValue(engine, errCode));
+            task.ResolveWithCustomize(engine, CreateJsValue(engine, errCode), engine.CreateUndefined());
     };
     NativeValue *result = nullptr;
     NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
     AsyncTask::Schedule("JsBundleMgr::OnSetAbilityEnabled",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
 }  // namespace AppExecFwk
