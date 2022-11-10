@@ -9175,7 +9175,7 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
     NativeValue *result = nullptr;
     NativeValue *callback = nullptr;
     if (flagCall) {
-        if(info.argc == ARGS_SIZE_FOUR || info.argc == ARGS_SIZE_FIVE) {
+        if (info.argc == ARGS_SIZE_FOUR || info.argc == ARGS_SIZE_FIVE) {
             callback = (info.argc == ARGS_SIZE_FIVE) ? info.argv[PARAM4] : info.argv[PARAM3];
         }
     }
