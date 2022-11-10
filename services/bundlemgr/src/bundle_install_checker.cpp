@@ -787,5 +787,30 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     }
     return ERR_OK;
 }
+
+ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    std::string deviceType = GetDeviceType();
+    APP_LOGE("deviceType is %{public}s", deviceType.c_str());
+    for (const auto &info : infos) {
+        std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
+        if (devVec.empty()) {
+            APP_LOGW("deviceTypes is empty");
+            continue;
+        }
+
+        if ((deviceType == Constants::DEVICE_TYPE_OF_PHONE) &&
+            (find(devVec.begin(), devVec.end(), Constants::DEVICE_TYPE_OF_DEFAULT) != devVec.end())) {
+            APP_LOGW("current deviceType is phone");
+            continue;
+        }
+
+        if (find(devVec.begin(), devVec.end(), deviceType) == devVec.end()) {
+            APP_LOGE("%{public}s is not supported", deviceType.c_str());
+            return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
+        }
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
