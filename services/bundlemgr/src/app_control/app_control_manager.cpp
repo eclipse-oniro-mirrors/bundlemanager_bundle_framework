@@ -27,7 +27,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+    const std::string APP_MARKET_CALLING = "app market";
 }
 
 AppControlManager::AppControlManager()
@@ -94,19 +94,19 @@ ErrCode AppControlManager::GetAppRunningControlRule(
 ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId)
 {
     return appControlManagerDb_->SetDisposedStatus(
-        PERMISSION_DISPOSED_STATUS, appId, want, userId);
+        APP_MARKET_CALLING, appId, want, userId);
 }
 
 ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
     return appControlManagerDb_->DeleteDisposedStatus(
-        PERMISSION_DISPOSED_STATUS, appId, userId);
+        APP_MARKET_CALLING, appId, userId);
 }
 
 ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want, int32_t userId)
 {
     return appControlManagerDb_->GetDisposedStatus(
-        PERMISSION_DISPOSED_STATUS, appId, want, userId);
+        APP_MARKET_CALLING, appId, want, userId);
 }
 
 ErrCode AppControlManager::GetAppRunningControlRule(

@@ -37,6 +37,7 @@ const std::string BUNDLE_UPDATE = "BUNDLE_UPDATE";
 const std::string PRE_BUNDLE_RECOVER = "PRE_BUNDLE_RECOVER";
 const std::string BUNDLE_STATE_CHANGE = "BUNDLE_STATE_CHANGE";
 const std::string BUNDLE_CLEAN_CACHE = "BUNDLE_CLEAN_CACHE";
+const std::string BMS_USER_EVENT = "BMS_USER_EVENT";
 
 // event params
 const std::string EVENT_PARAM_USERID = "USERID";
@@ -66,6 +67,11 @@ const std::string DISABLE = "disable";
 const std::string APPLICATION = "application";
 const std::string ABILITY = "ability";
 const std::string TYPE = "TYPE";
+const std::string UNKNOW = "Unknow";
+const std::string CREATE_START = "CreateUserStart";
+const std::string CREATE_END = "CreateUserEnd";
+const std::string REMOVE_START = "RemoveUserStart";
+const std::string REMOVE_END = "RemoveUserEnd";
 
 const std::unordered_map<InstallScene, std::string> INSTALL_SCENE_STR_MAP = {
     { InstallScene::NORMAL, NORMAL_SCENE },
@@ -73,6 +79,13 @@ const std::unordered_map<InstallScene, std::string> INSTALL_SCENE_STR_MAP = {
     { InstallScene::REBOOT, REBOOT_SCENE },
     { InstallScene::CREATE_USER, CREATE_USER_SCENE },
     { InstallScene::REMOVE_USER, REMOVE_USER_SCENE },
+};
+
+const std::unordered_map<UserEventType, std::string> USER_TYPE_STR_MAP = {
+    { UserEventType::CREATE_START, CREATE_START },
+    { UserEventType::CREATE_END, CREATE_END },
+    { UserEventType::REMOVE_START, REMOVE_START },
+    { UserEventType::REMOVE_END, REMOVE_END },
 };
 
 std::string GetInstallType(const EventInfo& eventInfo)
@@ -96,6 +109,17 @@ std::string GetInstallScene(const EventInfo& eventInfo)
     }
 
     return installScene;
+}
+
+std::string GetUserEventType(const EventInfo& eventInfo)
+{
+    std::string type = UNKNOW;
+    auto iter = USER_TYPE_STR_MAP.find(eventInfo.userEventType);
+    if (iter != USER_TYPE_STR_MAP.end()) {
+        type = iter->second;
+    }
+
+    return type;
 }
 }
 
@@ -156,6 +180,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::BUNDLE_CLEAN_CACHE,
             [](const EventInfo& eventInfo) {
                 InnerSendBundleCleanCacheEvent(eventInfo);
+            } },
+        { BMSEventType::BMS_USER_EVENT,
+            [](const EventInfo& eventInfo) {
+                InnerSendUserEvent(eventInfo);
             } },
     };
 
@@ -325,6 +353,16 @@ void InnerEventReport::InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_CLEAN_TYPE, cleanType);
+}
+
+void InnerEventReport::InnerSendUserEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        BMS_USER_EVENT,
+        HiSysEventType::BEHAVIOR,
+        TYPE, GetUserEventType(eventInfo),
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_TIME, eventInfo.timeStamp);
 }
 
 template<typename... Types>

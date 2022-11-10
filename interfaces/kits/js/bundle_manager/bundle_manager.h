@@ -51,6 +51,7 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
     OHOS::AAFwk::Want want;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    bool isSavedInCache = false;
     std::vector<AbilityInfo> abilityInfos;
 };
 

@@ -37,7 +37,9 @@ namespace OHOS {
         applicationInfo.name = applicationName;
         info.ConvertToApplicationInfo(applicationInfo);
         auto infoPtr = CompatibleApplicationInfo::Unmarshalling(dataMessageParcel);
-        return infoPtr != nullptr;
+        if (infoPtr == nullptr) {
+            return false;
+        }
         CompatibleApplicationInfo *compatibleApplicationInfo =
             new (std::nothrow) CompatibleApplicationInfo();
         if (compatibleApplicationInfo == nullptr) {

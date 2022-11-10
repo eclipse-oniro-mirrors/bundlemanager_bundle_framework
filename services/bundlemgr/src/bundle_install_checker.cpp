@@ -208,7 +208,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         newInfo.SetAppType(checkParam.appType);
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP ||
-            provisionInfo.bundleInfo.appFeature == Constants::OHOS_SYSTEM_APP);
+            provisionInfo.bundleInfo.appFeature == Constants::OHOS_SYSTEM_APP) ||
+            (bundlePaths[i].find(Constants::SYSTEM_APP_SCAN_PATH) == 0);
         if (isSystemApp) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
         }
@@ -680,7 +681,7 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     PreBundleConfigInfo configInfo;
     configInfo.bundleName = bundleName;
     if (!BMSEventHandler::GetPreInstallCapability(configInfo)) {
-        APP_LOGW("bundleName: %{public}s is not exist in pre install capability list", bundleName.c_str());
+        APP_LOGD("bundleName: %{public}s is not exist in pre install capability list", bundleName.c_str());
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {

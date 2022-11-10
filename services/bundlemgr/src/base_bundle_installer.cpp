@@ -637,7 +637,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     RemoveEmptyDirs(newInfos);
     if (installParam.copyHapToInstallPath) {
         APP_LOGD("begin to copy hap to install path");
-        if (!SaveHapToInstallPath(installParam.streamInstallMode)) {
+        if (!SaveHapToInstallPath()) {
             APP_LOGE("copy hap to install path failed.");
             return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
         }
@@ -2211,7 +2211,7 @@ ErrCode BaseBundleInstaller::UninstallAllSandboxApps(const std::string &bundleNa
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     if (helper->UninstallAllSandboxApps(bundleName, userId) != ERR_OK) {
-        APP_LOGE("UninstallAllSandboxApps failed");
+        APP_LOGW("UninstallAllSandboxApps failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     APP_LOGD("UninstallAllSandboxApps finish");
@@ -2473,7 +2473,7 @@ void BaseBundleInstaller::SaveHapPathToRecords(
     }
 }
 
-bool BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
+bool BaseBundleInstaller::SaveHapToInstallPath()
 {
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
@@ -2482,9 +2482,6 @@ bool BaseBundleInstaller::SaveHapToInstallPath(bool moveFileMode)
             hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
             APP_LOGE("Copy hap to install path failed");
             return false;
-        }
-        if (moveFileMode) {
-            InstalldClient::GetInstance()->RemoveDir(hapPathRecord.first);
         }
     }
     return true;

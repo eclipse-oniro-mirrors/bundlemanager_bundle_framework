@@ -22,6 +22,7 @@
 
 #include "ability_manager_client.h"
 #include "ability_info.h"
+#include "bms_device_manager.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -29,6 +30,7 @@
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_proxy.h"
+#include "bundle_stream_installer_host_impl.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
 #include "install_param.h"
@@ -266,6 +268,7 @@ public:
     std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
     std::shared_ptr<LauncherService> launcherService_ = std::make_shared<LauncherService>();
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
+    std::shared_ptr<BundleUserMgrHostImpl> bundleUserMgrHostImpl_ = std::make_shared<BundleUserMgrHostImpl>();
     NotifyBundleEvents installRes_;
 };
 
@@ -1884,6 +1887,34 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0700, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: QueryAbilityInfo_0800
+ * @tc.name: test can get the ability info by want
+ * @tc.desc: 1.system run normally
+ *           2.get ability info successfully
+ * @tc.require: SR000GM5QO
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    AbilityInfo result;
+
+    int32_t flags = GET_ABILITY_INFO_DEFAULT;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool testRet = hostImpl->QueryAbilityInfo(want, flags, 0, result);
+    EXPECT_EQ(true, testRet);
+    CheckAbilityInfo(BUNDLE_NAME_TEST, ABILITY_NAME_TEST, flags, result);
+
+    flags = GET_ABILITY_INFO_WITH_APPLICATION;
+    testRet = hostImpl->QueryAbilityInfo(want, flags, 0, result);
+    EXPECT_EQ(true, testRet);
+    CheckAbilityInfo(BUNDLE_NAME_TEST, ABILITY_NAME_TEST, flags, result);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: QueryAbilityInfos_0100
  * @tc.name: test can get the ability info of list by want
  * @tc.desc: 1.system run normally
@@ -2386,6 +2417,9 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0200, Function | SmallTest | Level0)
     bool emptyRet = hostImpl->DumpInfos(
         DumpFlag::DUMP_BUNDLE_INFO, EMPTY_STRING, DEFAULT_USERID, emptyResult);
     EXPECT_FALSE(emptyRet);
+    emptyRet = hostImpl->DumpInfos(
+        DumpFlag::DUMP_BUNDLE_INFO, BUNDLE_NAME_TEST, DEFAULT_USERID, emptyResult);
+    EXPECT_TRUE(emptyRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -3169,6 +3203,28 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTes
 }
 
 /**
+ * @tc.number: CleanBundleDataFiles_1000
+ * @tc.name: test can clean the bundle data files by bundle name
+ * @tc.desc: 1.system run normally
+ *           2.userDataClearable is false, userId is false
+ *           3.clean the cache files failed
+ * @tc.require: SR000H00TH
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_1000, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
+    CreateFileDir();
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool testRet = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, 10001);
+    EXPECT_FALSE(testRet);
+
+    CleanFileDir();
+    CheckFileNonExist();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: CleanCache_0200
  * @tc.name: test can clean the cache files by empty bundle name
  * @tc.desc: 1.system run normally
@@ -3204,7 +3260,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    auto result = hostImpl->CleanBundleCacheFiles("", cleanCache);
+    auto result = hostImpl->CleanBundleCacheFiles("wrong", cleanCache);
     EXPECT_FALSE(result == ERR_OK);
     CheckCacheExist();
 
@@ -6383,4 +6439,207 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallT
     APP_LOGI("CheckAppInstallControl_0100 finish");
 }
 
+/**
+ * @tc.number: Hidump_001
+ * @tc.name: Hidump
+ * @tc.desc: 1.Returns whether the interface is called successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_001, Function | SmallTest | Level1)
+{
+    std::vector<std::string> args;
+    std::string result;
+    bool testRet = bundleMgrService_->Hidump(args, result);
+    EXPECT_EQ(testRet, true);
+    args.emplace_back("1");
+    testRet = bundleMgrService_->Hidump(args, result);
+    EXPECT_EQ(testRet, true);
+    args.emplace_back("2");
+    testRet = bundleMgrService_->Hidump(args, result);
+    EXPECT_EQ(testRet, true);
+    args.emplace_back("3");
+    testRet = bundleMgrService_->Hidump(args, result);
+    EXPECT_EQ(testRet, true);
+}
+
+/**
+ * @tc.number: CreateNewUser_0100
+ * @tc.name: test new user can get shortcutInfo by bundleName
+ * @tc.desc: 1.create new user
+ *           2.get shortcutInfo success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+
+    int32_t userId = 101;
+    bundleUserMgrHostImpl_->CreateNewUser(userId);
+    auto result = GetBundleDataMgr()->GetShortcutInfos(
+        BUNDLE_NAME_TEST,  userId, shortcutInfos);
+    EXPECT_TRUE(result);
+    CheckShortcutInfoTest(shortcutInfos);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: AgingTest_0001
+ * @tc.name: test Aging Start
+ * @tc.desc: running is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.Start(
+        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
+    EXPECT_FALSE(bundleAgingMgr.running);
+}
+
+/**
+ * @tc.number: AgingTest_0002
+ * @tc.name: test Aging Start
+ * @tc.desc: running is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.Start(
+        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
+    EXPECT_FALSE(bundleAgingMgr.running);
+}
+
+/**
+ * @tc.number: AgingTest_0003
+ * @tc.name: test Aging Start
+ * @tc.desc: running is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.Start(
+        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
+    EXPECT_FALSE(bundleAgingMgr.running);
+}
+
+/**
+ * @tc.number: AginTest_0004
+ * @tc.name: test InitAgingtTimer
+ * @tc.desc: agingTimerInterval is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.InitAgingtTimer();
+    bundleAgingMgr.InitAgingRunner();
+    EXPECT_EQ(bundleAgingMgr.agingTimerInterval,
+        AgingConstants::DEFAULT_AGING_TIMER_INTERVAL);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImplInit_0100
+ * @tc.name: test Init
+ * @tc.desc: Init is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleStreamInstallerHostImplInit_0100, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    bool res = impl.Init(installParam, statusReceiver);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CreateStream_0100
+ * @tc.name: test CreateStream
+ * @tc.desc: CreateStream is success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateStream_0100, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 0;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = "test.hap";
+    long offset = 100;
+    auto res = impl.CreateStream(hapName, offset);
+    EXPECT_GE(res, 0);
+}
+
+/**
+ * @tc.number: CreateStream_0200
+ * @tc.name: test CreateStream
+ * @tc.desc: CreateStream is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateStream_0200, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 0;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = "123";
+    long offset = 100;
+    auto res = impl.CreateStream(hapName, offset);
+    EXPECT_EQ(res, -1);
+}
+
+/**
+ * @tc.number: CreateStream_0300
+ * @tc.name: test CreateStream
+ * @tc.desc: CreateStream is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateStream_0300, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = "test.hap";
+    long offset = 100;
+    auto res = impl.CreateStream(hapName, offset);
+    EXPECT_EQ(res, -1);
+}
+
+/**
+ * @tc.number: Install_0100
+ * @tc.name: test Install
+ * @tc.desc: Install is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, Install_0100, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    bool res = impl.Install();
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetAllDeviceList_0100
+ * @tc.name: test GetAllDeviceList
+ * @tc.desc: GetAllDeviceList is success
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllDeviceList_0100, Function | SmallTest | Level0)
+{
+    BmsDeviceManager deviceManager;
+    std::string deviceId = "100";
+    std::vector<std::string> deviceIds;
+    deviceIds.push_back(deviceId);
+    bool res = deviceManager.GetAllDeviceList(deviceIds);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: GetUdidByNetworkId_0100
+ * @tc.name: test GetUdidByNetworkId
+ * @tc.desc: GetUdidByNetworkId is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest | Level0)
+{
+    BmsDeviceManager deviceManager;
+    std::string netWorkId = "100";
+    std::string uid = "100";
+    bool res = deviceManager.GetUdidByNetworkId(netWorkId, uid);
+    EXPECT_FALSE(res);
+}
 }

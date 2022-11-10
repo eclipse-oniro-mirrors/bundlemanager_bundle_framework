@@ -26,22 +26,19 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        BundlePackInfo info;
+        bool ret = false;
         if (dataMessageParcel.WriteBuffer(data, size)) {
+            BundlePackInfo info;
+            info.SetValid(true);
+            info.GetValid();
             info.Marshalling(dataMessageParcel);
             auto infoPtr = BundlePackInfo::Unmarshalling(dataMessageParcel);
-            return infoPtr != nullptr;
+            ret = (infoPtr != nullptr);
+            if (ret) {
+                delete infoPtr;
+            }
         }
-        info.SetValid(true);
-        info.GetValid();
-        BundlePackInfo *bundlePackInfo = new (std::nothrow) BundlePackInfo();
-        if (bundlePackInfo == nullptr) {
-            return false;
-        }
-        bundlePackInfo->ReadFromParcel(dataMessageParcel);
-        delete bundlePackInfo;
-        bundlePackInfo = nullptr;
-        return true;
+        return ret;
     }
 }
 

@@ -20,6 +20,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_promise.h"
 #include "bundle_util.h"
+#include "event_report.h"
 #include "hitrace_meter.h"
 #ifdef BMS_RDB_ENABLE
 #include "rdb_data_manager.h"
@@ -66,12 +67,14 @@ private:
 void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
+    EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
     APP_LOGD("CreateNewUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     CheckInitialUser();
     BeforeCreateNewUser(userId);
     OnCreateNewUser(userId);
     AfterCreateNewUser(userId);
+    EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     APP_LOGD("CreateNewUser end userId: (%{public}d)", userId);
 }
 
@@ -143,6 +146,7 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
+    EventReport::SendUserSysEvent(UserEventType::REMOVE_START, userId);
     APP_LOGD("RemoveUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     auto dataMgr = GetDataMgrFromService();
@@ -191,6 +195,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif
+    EventReport::SendUserSysEvent(UserEventType::REMOVE_END, userId);
     APP_LOGD("RemoveUser end userId: (%{public}d)", userId);
 }
 

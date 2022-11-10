@@ -30,6 +30,9 @@ const std::string TEST_CPU_ABI = "arm64";
 const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
 const std::string TEST_PATH = "/data/app/el1/bundle/public/com.example.test/";
+const std::string TEST_PATH_PHOTOS = "/data/app/el1/bundle/public/com.ohos.photos/entry";
+const std::string TEST_PATH_TARGET = "/data/test";
+const std::string OVER_MAX_PATH_SIZE(300, 'x');
 }; // namespace
 class BmsInstallDaemonHostImplTest : public testing::Test {
 public:
@@ -472,6 +475,296 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2500, Function | Sma
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::AN;
     ret = installdProxy->ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_2600
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractDiffFiles of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2600, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->ExtractDiffFiles(TEST_PATH_PHOTOS, TEST_PATH_TARGET, TEST_CPU_ABI);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_2700
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CreateBundleDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2700, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->CreateBundleDir("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_2800
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractModuleFiles of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2800, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->ExtractModuleFiles("", "", TEST_STRING, TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_2900
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractFiles of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2900, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    ExtractParam extractParam;
+    extractParam.srcPath = "";
+    extractParam.targetPath = "";
+    ErrCode ret = installdProxy->ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.targetPath = TEST_PATH;
+    ret = installdProxy->ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.targetPath = "";
+    extractParam.srcPath = HAP_FILE_PATH;
+    ret = installdProxy->ExtractFiles(extractParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RenameModuleDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3000, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->RenameModuleDir("", TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->RenameModuleDir(TEST_STRING, "");
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->RenameModuleDir("", "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RenameModuleDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->RenameModuleDir(OVER_MAX_PATH_SIZE, TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CreateBundleDataDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->CreateBundleDataDir(TEST_STRING, -1, -1, -1, TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_0500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RemoveBundleDataDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->RemoveBundleDataDir("", 0);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->RemoveBundleDataDir(TEST_STRING, -1);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->RemoveBundleDataDir("", -1);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RemoveDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->RemoveDir("");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CleanBundleDataDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3500, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->CleanBundleDataDir("");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3600
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetBundleStats of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3600, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    std::vector<int64_t> vec;
+    auto ret = hostImpl->GetBundleStats("", 0, vec);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3700
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetBundleCachePath of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3700, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    std::vector<std::string> vec;
+    auto ret = hostImpl->GetBundleCachePath("", vec);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3800
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ScanDir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3800, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    std::vector<std::string> vec;
+    auto ret = hostImpl->ScanDir("", ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, vec);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3900
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling MoveFile of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3900, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->MoveFile("", "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling Mkdir of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4000, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->Mkdir("", 0, 0, 0);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractDiffFiles of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->ExtractDiffFiles("", TEST_STRING, TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->ExtractDiffFiles(TEST_STRING, "", TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->ExtractDiffFiles("", "", TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ApplyDiffPatch of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->ApplyDiffPatch("", TEST_STRING, TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->ApplyDiffPatch(TEST_STRING, "", TEST_STRING);
+    EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->ApplyDiffPatch("", "", TEST_STRING);
     EXPECT_NE(ret, ERR_OK);
 }
 } // OHOS

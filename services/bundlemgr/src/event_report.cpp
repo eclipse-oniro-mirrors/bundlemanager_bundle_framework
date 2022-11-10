@@ -66,8 +66,17 @@ void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const E
 void EventReport::SendScanSysEvent(BMSEventType bMSEventType)
 {
     EventInfo eventInfo;
-    eventInfo.timeStamp = BundleUtil::GetCurrentTime();
+    eventInfo.timeStamp = BundleUtil::GetCurrentTimeMs();
     EventReport::SendSystemEvent(bMSEventType, eventInfo);
+}
+
+void EventReport::SendUserSysEvent(UserEventType userEventType, int32_t userId)
+{
+    EventInfo eventInfo;
+    eventInfo.timeStamp = BundleUtil::GetCurrentTimeMs();
+    eventInfo.userId = userId;
+    eventInfo.userEventType = userEventType;
+    EventReport::SendSystemEvent(BMSEventType::BMS_USER_EVENT, eventInfo);
 }
 
 void EventReport::SendComponentStateSysEvent(const std::string &bundleName,
