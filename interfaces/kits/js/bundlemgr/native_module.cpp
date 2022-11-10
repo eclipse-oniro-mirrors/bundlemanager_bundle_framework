@@ -61,6 +61,9 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "getNameForUid", moduleName, JsBundleMgr::GetNameForUid);
     BindNativeFunction(*engine, *object, "getAbilityInfo", moduleName, JsBundleMgr::GetAbilityInfo);
     BindNativeFunction(*engine, *object, "getAbilityLabel", moduleName, JsBundleMgr::GetAbilityLabel);
+    BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
+    BindNativeFunction(*engine, *object, "queryExtensionAbilityInfos", moduleName,
+        JsBundleMgr::QueryExtensionAbilityInfos);
     return exports;
 }
 
@@ -139,7 +142,6 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
         DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
-        DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
         DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
@@ -152,7 +154,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
         DECLARE_NAPI_FUNCTION("isModuleRemovable", IsModuleRemovable),
         DECLARE_NAPI_FUNCTION("setModuleUpgradeFlag", SetModuleUpgradeFlag),
-        DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfos", QueryExtensionInfoByWant),
         DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
         DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),

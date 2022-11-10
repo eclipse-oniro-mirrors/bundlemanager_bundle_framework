@@ -454,6 +454,7 @@ public:
         std::string moduleName = "";
         bool hasModuleName = false;
     };
+
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
@@ -468,6 +469,8 @@ public:
     static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -487,9 +490,10 @@ private:
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
     int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
+    NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
-
     NativeValue* CreateInnerMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData);
     NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData);
@@ -522,9 +526,9 @@ private:
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
     NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
     NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
-    bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId);
+    bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId);
+    bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId);
     bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
         BundleOptions &options, bool unwarpBundleOptionsParamsResult);
 };
