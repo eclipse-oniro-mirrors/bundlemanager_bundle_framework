@@ -2019,9 +2019,8 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     ret = bundleInstallChecker_->CheckDeviceType(infos);
     if (ret != ERR_OK) {
         APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
-        return ret;
     }
-    return ERR_OK;
+    return ret;
 }
 
 ErrCode BaseBundleInstaller::CheckHapHashParams(
