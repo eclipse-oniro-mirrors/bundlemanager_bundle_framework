@@ -109,8 +109,6 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0002, Functi
     Parcel parcel;
     auto ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
-    ret = info.ReadFromParcel(parcel);
-    EXPECT_TRUE(ret);
     auto result = DispatcherInfo::Unmarshalling(parcel);
     EXPECT_EQ(result->version, VERSION);
 }
@@ -212,5 +210,123 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0007, Functi
     EXPECT_EQ(unmarshalledResult->transactId, TRANSACT_ID);
     ret = unmarshalledResult->ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0008
+ * Function: TargetInfo
+ * @tc.name: test TargetInfo
+ * @tc.desc: TargetInfo
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0008, Function | SmallTest | Level0)
+{
+    TargetInfo targetInfo;
+    targetInfo.bundleName = Constants::BUNDLE_NAME;
+
+    Parcel parcel;
+    auto ret = targetInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto unmarshalledResult = TargetInfo::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->bundleName, Constants::BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0009
+ * Function: TargetInfo
+ * @tc.name: test TargetInfo
+ * @tc.desc: TargetInfo
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0009, Function | SmallTest | Level0)
+{
+    TargetInfo targetInfo;
+    targetInfo.bundleName = Constants::BUNDLE_NAME;
+    targetInfo.moduleName = Constants::MODULE_NAME;
+    targetInfo.abilityName = Constants::ABILITY_NAME;
+    targetInfo.flags = 2;
+    targetInfo.reasonFlag = 2;
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, targetInfo);
+    TargetInfo result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.bundleName, Constants::BUNDLE_NAME);
+    EXPECT_EQ(result.moduleName, Constants::MODULE_NAME);
+    EXPECT_EQ(result.abilityName, Constants::ABILITY_NAME);
+    EXPECT_EQ(result.flags, 2);
+    EXPECT_EQ(result.reasonFlag, 2);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0010
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0010, Function | SmallTest | Level0)
+{
+    TargetExtSetting targetExtSetting;
+    std::map<std::string, std::string> value;
+    value.emplace("1", "2");
+    targetExtSetting.extValues = value;
+
+    Parcel parcel;
+    bool ret = targetExtSetting.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto unmarshalledResult = TargetExtSetting::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->extValues.size(), 1);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0010
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0011, Function | SmallTest | Level0)
+{
+    TargetExtSetting targetExtSetting;
+    std::map<std::string, std::string> value;
+    value.emplace("1", "2");
+    targetExtSetting.extValues = value;
+    nlohmann::json jsonObject;
+    to_json(jsonObject, targetExtSetting);
+    TargetExtSetting result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.extValues, value);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0012
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0012, Function | SmallTest | Level0)
+{
+    TargetAbilityInfo targetAbilityInfo;
+    targetAbilityInfo.version = "version";
+
+    Parcel parcel;
+    bool ret = targetAbilityInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto unmarshalledResult = TargetAbilityInfo::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->version, "version");
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0013
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0013, Function | SmallTest | Level0)
+{
+    TargetAbilityInfo targetAbilityInfo;
+    targetAbilityInfo.version = "version";
+    nlohmann::json jsonObject;
+    to_json(jsonObject, targetAbilityInfo);
+    TargetAbilityInfo result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.version, "version");
 }
 }

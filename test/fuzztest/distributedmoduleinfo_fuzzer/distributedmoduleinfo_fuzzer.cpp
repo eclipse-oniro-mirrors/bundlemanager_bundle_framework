@@ -26,20 +26,16 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        DistributedModuleInfo info;
+        bool ret = false;
         if (dataMessageParcel.WriteBuffer(data, size)) {
+            DistributedModuleInfo info;
             info.Marshalling(dataMessageParcel);
             auto infoPtr = DistributedModuleInfo::Unmarshalling(dataMessageParcel);
-            return infoPtr != nullptr;
+            ret = (infoPtr != nullptr);
+            if (ret) {
+                delete infoPtr;
+            }
         }
-        DistributedModuleInfo *distributedModuleInfo =
-            new (std::nothrow) DistributedModuleInfo();
-        if (distributedModuleInfo == nullptr) {
-            return false;
-        }
-        bool ret = distributedModuleInfo->ReadFromParcel(dataMessageParcel);
-        delete distributedModuleInfo;
-        distributedModuleInfo = nullptr;
         return ret;
     }
 }

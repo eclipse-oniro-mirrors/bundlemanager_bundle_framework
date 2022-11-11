@@ -33,15 +33,15 @@
 #include "bundle_connect_ability_mgr.h"
 #include "bundle_distributed_manager.h"
 #endif
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-#include "default_app_host_impl.h"
-#endif
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_user_mgr_host_impl.h"
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+#include "default_app_host_impl.h"
+#endif
 #include "hidump_helper.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
@@ -138,6 +138,7 @@ private:
     void SelfClean();
 
     void InitThreadPool();
+    void InitBmsParam();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
     void InitBundleDataMgr();

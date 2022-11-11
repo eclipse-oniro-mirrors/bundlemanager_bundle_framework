@@ -16,7 +16,9 @@
 #include <cstdio>
 #include <dirent.h>
 #include <fcntl.h>
+#include <iostream>
 #include <gtest/gtest.h>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -43,6 +45,7 @@ const std::string TEST_QUICK_FIX_FILE_PATH_FIRST = "/data/app/el1/bundle/public/
 const std::string TEST_QUICK_FIX_FILE_PATH_SECOND = "/data/app/el1/bundle/public/com.example.test/patch_1000002";
 const std::string HAP_FILE_PATH = "/data/app/el1/bundle/public/com.example.test/patch_1000001/entry.hqf";
 const std::string HAP_FILE_PATH_BACKUP = "/data/app/el1/bundle/public/com.example.test/patch_1000002/entry.hqf";
+const std::string OVER_MAX_PATH_SIZE(300, 'x');
 }; // namespace
 class BmsInstallDaemonOperatorTest : public testing::Test {
 public:
@@ -489,6 +492,189 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2700, Function | Sma
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::SO;
     ret = InstalldOperator::ExtractFiles(extractParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_2800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MkOwnerDir of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2800, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::MkOwnerDir(TEST_STRING, 0, 0, 0);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_2900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MkOwnerDir of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2900, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::MkOwnerDir("", 0, 0, 0);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_3000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ChangeDirOwnerRecursively of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3000, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ChangeDirOwnerRecursively("", 0, 0);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_3100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling RenameDir of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::RenameDir("", "");
+    EXPECT_FALSE(ret);
+}
+/**
+ * @tc.number: InstalldOperatorTest_3200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling RenameDir of InstalldOperator
+ *           2. oldDir is over size
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3200, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::RenameDir(OVER_MAX_PATH_SIZE, "");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_3300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling RenameFile of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3300, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::RenameFile("", "");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_3400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling RenameFile of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3400, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::RenameFile(TEST_PATH, TEST_PATH);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_3500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetDiskUsageFromPath of InstalldOperator
+ *           2. path is over size
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3500, Function | SmallTest | Level0)
+{
+    std::vector<std::string> path;
+    path.push_back(OVER_MAX_PATH_SIZE);
+    auto ret = InstalldOperator::GetDiskUsageFromPath(path);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_3600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetDiskUsageFromPath of InstalldOperator
+ *           2. path is over empty
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3600, Function | SmallTest | Level0)
+{
+    std::vector<std::string> path;
+    path.push_back("");
+    auto ret = InstalldOperator::GetDiskUsageFromPath(path);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling CopyFile of InstalldOperator
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3700, Function | SmallTest | Level0)
+{
+    bool ret = InstalldOperator::CopyFile("", "");
+    EXPECT_EQ(ret, false);
+    ret = InstalldOperator::CopyFile("invaild", "");
+    EXPECT_EQ(ret, false);
+    ret = InstalldOperator::CopyFile("data/test", "invaild");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3800, Function | SmallTest | Level0)
+{
+    bool ret = InstalldOperator::ApplyDiffPatch(
+        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_3900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3900, Function | SmallTest | Level0)
+{
+    bool ret = InstalldOperator::ApplyDiffPatch("", "", TEST_PATH);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4000, Function | SmallTest | Level0)
+{
+    bool ret = InstalldOperator::ApplyDiffPatch(
+        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_4100
+ * @tc.name: test function of ExtractDiffFiles
+ * @tc.desc: 1. calling ExtractDiffFiles
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ExtractDiffFiles(
+        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_PATH, TEST_CPU_ABI);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::ExtractDiffFiles("", TEST_PATH, TEST_CPU_ABI);
     EXPECT_FALSE(ret);
 }
 } // OHOS
