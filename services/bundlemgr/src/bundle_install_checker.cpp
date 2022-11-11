@@ -791,7 +791,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
 ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
     std::string deviceType = GetDeviceType();
-    APP_LOGE("deviceType is %{public}s", deviceType.c_str());
+    APP_LOGD("deviceType is %{public}s", deviceType.c_str());
     for (const auto &info : infos) {
         std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
         if (devVec.empty()) {
