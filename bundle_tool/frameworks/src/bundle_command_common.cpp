@@ -462,6 +462,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: disallowed uninstall.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED,
+        "error: device type is not supported"
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }
