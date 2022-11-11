@@ -3543,6 +3543,7 @@ static void ConvertInstallResult(InstallResult &installResult)
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_INCOMPATIBLE";
             break;
