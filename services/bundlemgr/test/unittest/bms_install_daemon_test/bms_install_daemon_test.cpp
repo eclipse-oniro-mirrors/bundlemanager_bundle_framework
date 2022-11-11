@@ -490,6 +490,241 @@ HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0600, Function | SmallTest | Level0
 }
 
 /**
+ * @tc.number: BundleDataDir_0700
+ * @tc.name: test the create and remove bundle data dir function of installd service
+ * @tc.desc: 1. the service is already initialized and the code dir is illegal
+ *           2. the bundle data dir of the illegal code dir can't be created
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0700, Function | SmallTest | Level0)
+{
+    int result = CreateBundleDataDir(BUNDLE_NAME13, USERID, UID, GID, APL);
+    EXPECT_EQ(result, 0);
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    ErrCode ret = InstalldClient::GetInstance()->RemoveBundleDataDir("", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->RemoveBundleDataDir(BUNDLE_NAME, -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BundleDataDir_0800
+ * @tc.name: Test RemoveModuleDataDir
+ * @tc.desc: 1.Test the RemoveModuleDataDir of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0800, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    ErrCode ret = InstalldClient::GetInstance()->RemoveModuleDataDir("", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->RemoveModuleDataDir("entry", -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BundleDataDir_0900
+ * @tc.name: Test CleanBundleDataDir, Param is empty
+ * @tc.desc: 1.Test the CleanBundleDataDir of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0900, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldClient_0100
+ * @tc.name: Test SetDirApl, Param is empty
+ * @tc.desc: 1.Test the SetDirApl of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    std::string TEST_STRING = "test.string";
+    ErrCode ret = InstalldClient::GetInstance()->SetDirApl("", BUNDLE_NAME, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, "", TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldClient_0200
+ * @tc.name: Test GetBundleCachePath, A param is empty
+ * @tc.desc: 1.Test the GetBundleCachePath of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    std::vector<std::string> cachePath;
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleCachePath("", cachePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldClient_0300
+ * @tc.name: Test ScanDir, dir param is empty
+ * @tc.desc: 1.Test the ScanDir of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    std::vector<std::string> paths;
+    ErrCode ret = InstalldClient::GetInstance()->ScanDir(
+        "", ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldClient_0400
+ * @tc.name: Test MoveFile, a param is empty
+ * @tc.desc: 1.Test the MoveFile of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    ErrCode ret = InstalldClient::GetInstance()->MoveFile("", BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->MoveFile(BUNDLE_DATA_DIR, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->MoveFile(
+        BUNDLE_DATA_DIR, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: InstalldClient_0500
+ * @tc.name: Test MoveFile, a param is empty
+ * @tc.desc: 1.Test the MoveFile of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0500, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    ErrCode ret = InstalldClient::GetInstance()->CopyFile("", BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->CopyFile(BUNDLE_DATA_DIR, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldClient_0600
+ * @tc.name: Test Mkdir, a param is empty
+ * @tc.desc: 1.Test the Mkdir of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0600, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    ErrCode ret = InstalldClient::GetInstance()->Mkdir("", 0, 0, 0);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->Mkdir(BUNDLE_DATA_DIR, 0, 0, 0);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldClient_0700
+ * @tc.name: Test GetFileStat, a param is empty
+ * @tc.desc: 1.Test the GetFileStat of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0700, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    FileStat fileStat;
+    ErrCode ret = InstalldClient::GetInstance()->GetFileStat("", fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->GetFileStat("data/test", fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldClient_0800
+ * @tc.name: Test ExtractDiffFiles, a param is empty
+ * @tc.desc: 1.Test the ExtractDiffFiles of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0800, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    std::string TEST_STRING = "test.string";
+    ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles("", TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->ExtractDiffFiles(TEST_STRING, "", TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->ExtractDiffFiles(TEST_STRING, TEST_STRING, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->ExtractDiffFiles(
+        BUNDLE_DATA_DIR, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+}
+
+/**
+ * @tc.number: InstalldClient_0900
+ * @tc.name: Test ApplyDiffPatch, a param is empty
+ * @tc.desc: 1.Test the ApplyDiffPatch of InstalldClient
+ * @tc.require: AR000GJ4KK
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_0900, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    std::string TEST_STRING = "test.string";
+    ErrCode ret = InstalldClient::GetInstance()->ApplyDiffPatch("", TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->ApplyDiffPatch(TEST_STRING, "", TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->ApplyDiffPatch(TEST_STRING, TEST_STRING, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->ApplyDiffPatch(
+        TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: ExtractBundleFile_0100
  * @tc.name: test the ExtractBundleFile function of installd service with flag system bundle
  * @tc.desc: 1. the bundle file is available and the target dir exists
