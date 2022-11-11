@@ -1428,20 +1428,28 @@ int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::strin
     }
     bundleInstallerProxy_->AsObject()->AddDeathRecipient(recipient);
     ErrCode res = bundleInstallerProxy_->StreamInstall(pathVec, installParam, statusReceiver);
+    APP_LOGD("StreamInstall result is %{public}d", res);
     if (res == ERR_OK) {
         return statusReceiver->GetResultCode();
-    } else if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
+    }
+    if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
         APP_LOGE("install param error");
         return IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
-    } else if (res == ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR) {
+    }
+    if (res == ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR) {
         APP_LOGE("install internal error");
         return IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
-    } else if (res == ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) {
+    }
+    if (res == ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) {
         APP_LOGE("install invalid path");
         return IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID;
-    } else {
-        return res;
     }
+    if (res == ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT) {
+        APP_LOGE("install failed due to no space left");
+        return IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
+
+    return res;
 }
 
 int32_t BundleManagerShellCommand::UninstallOperation(

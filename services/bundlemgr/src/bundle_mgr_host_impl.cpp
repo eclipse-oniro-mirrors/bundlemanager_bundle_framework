@@ -2067,10 +2067,6 @@ sptr<IAppControlMgr> BundleMgrHostImpl::GetAppControlProxy()
 sptr<IQuickFixManager> BundleMgrHostImpl::GetQuickFixManagerProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
-        return nullptr;
-    }
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
 #else
     return nullptr;
