@@ -17,6 +17,7 @@
 
 #include "nlohmann/json.hpp"
 
+#include "account_helper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #endif
@@ -544,18 +545,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 
     userId_ = GetUserId(installParam.userId);
-    if (userId_ == Constants::INVALID_USERID) {
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-
-    if (!dataMgr_->HasUserId(userId_)) {
-        APP_LOGE("The user %{public}d does not exist when install.", userId_);
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
-    }
+    ErrCode result = CheckUserId(userId_);
+    CHECK_RESULT(result, "userId check failed %{public}d");
 
     std::vector<std::string> bundlePaths;
     // check hap paths
-    ErrCode result = BundleUtil::CheckFilePath(inBundlePaths, bundlePaths);
+    result = BundleUtil::CheckFilePath(inBundlePaths, bundlePaths);
     CHECK_RESULT(result, "hap file check failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
@@ -577,6 +572,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "parse haps file failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
+    userId_ = GetConfirmUserId(userId_, newInfos);
     // check hap is allow install by app control
     std::vector<std::string> installAppIds;
     for (const auto &info : newInfos) {
@@ -2156,8 +2152,39 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     return ERR_OK;
 }
 
+int32_t BaseBundleInstaller::GetConfirmUserId(
+    const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    if (userId != Constants::UNSPECIFIED_USERID || newInfos.size() <= 0) {
+        return userId;
+    }
+
+    bool isSingleton = newInfos.begin()->second.IsSingleton();
+    APP_LOGI("The userId is Unspecified and app is singleton(%{public}d) when install.",
+        static_cast<int32_t>(isSingleton));
+    return isSingleton ? Constants::DEFAULT_USERID : AccountHelper::GetCurrentActiveUserId();
+}
+
+ErrCode BaseBundleInstaller::CheckUserId(const int32_t &userId) const
+{
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        return ERR_OK;
+    }
+
+    if (!dataMgr_->HasUserId(userId)) {
+        APP_LOGE("The user %{public}d does not exist when install.", userId);
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    return ERR_OK;
+}
+
 int32_t BaseBundleInstaller::GetUserId(const int32_t &userId) const
 {
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        return userId;
+    }
+
     if (userId < Constants::DEFAULT_USERID) {
         APP_LOGE("userId(%{public}d) is invalid.", userId);
         return Constants::INVALID_USERID;

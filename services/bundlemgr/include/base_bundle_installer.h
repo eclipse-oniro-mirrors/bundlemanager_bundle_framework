@@ -521,6 +521,9 @@ private:
         const std::string &nativeLibraryPath, const std::string &hqfLibraryPath) const;
     ErrCode ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath);
     ErrCode DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo);
+    int32_t GetConfirmUserId(
+        const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    ErrCode CheckUserId(const int32_t &userId) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
