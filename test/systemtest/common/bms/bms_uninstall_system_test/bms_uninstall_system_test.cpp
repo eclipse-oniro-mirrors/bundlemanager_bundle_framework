@@ -1273,7 +1273,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     std::cout << "BMS_UidTest_0300 start" << std::endl;
     CommonTool commonTool;
     std::vector<std::string> resvec;
-    std::string bundleName = "com.ohos.settings";
+    std::string bundleName = "com.ohos.camera";
     bool isInstallSucceed = CheckInstallIsSuccess(bundleName);
     EXPECT_TRUE(isInstallSucceed);
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();

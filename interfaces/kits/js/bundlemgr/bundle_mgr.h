@@ -454,6 +454,7 @@ public:
         std::string moduleName = "";
         bool hasModuleName = false;
     };
+
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
@@ -461,7 +462,6 @@ public:
     static NativeValue* GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info);
@@ -470,7 +470,8 @@ public:
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-
+    static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -480,7 +481,6 @@ private:
     NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetProfile(NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType);
@@ -492,9 +492,10 @@ private:
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
     int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
+    NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
-
     NativeValue* CreateInnerMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData);
     NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData);
@@ -527,9 +528,9 @@ private:
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
     NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
     NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
-    bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
+    bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId);
+    bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId);
+    bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId);
     bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
         BundleOptions &options, bool unwarpBundleOptionsParamsResult);
 };

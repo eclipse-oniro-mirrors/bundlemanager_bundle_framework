@@ -430,6 +430,16 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     return true;
 }
 
+static void CreateProxyErrCode(std::unordered_map<int32_t, int32_t> &errCodeMap)
+{
+    errCodeMap = {
+        { ERR_APPEXECFWK_INSTALL_PARAM_ERROR, IStatusReceiver::ERR_INSTALL_PARAM_ERROR },
+        { ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR },
+        { ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID },
+        { ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT }
+    };
+}
+
 void InstallExecuter(napi_env env, void *data)
 {
     AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
@@ -463,17 +473,20 @@ void InstallExecuter(napi_env env, void *data)
         asyncCallbackInfo->installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     }
     ErrCode res = iBundleInstaller->StreamInstall(bundleFilePath, asyncCallbackInfo->installParam, callback);
-    if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
-        APP_LOGE("install param error");
-        installResult.resultCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
-    } else if (res == ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) {
-        APP_LOGE("install invalid path");
-        installResult.resultCode = IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID;
-    } else {
+    if (res == ERR_OK) {
         installResult.resultCode = callback->GetResultCode();
         APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);
         installResult.resultMsg = callback->GetResultMsg();
         APP_LOGD("InnerInstall resultMsg %{public}s", installResult.resultMsg.c_str());
+        return;
+    }
+    APP_LOGE("install failed due to %{public}d", res);
+    std::unordered_map<int32_t, int32_t> proxyErrCodeMap;
+    CreateProxyErrCode(proxyErrCodeMap);
+    if (proxyErrCodeMap.find(res) != proxyErrCodeMap.end()) {
+        installResult.resultCode = proxyErrCodeMap.at(res);
+    } else {
+        installResult.resultCode = IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
     }
 }
 

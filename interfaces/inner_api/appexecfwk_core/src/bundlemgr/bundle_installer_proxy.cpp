@@ -326,8 +326,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     std::vector<std::string> realPaths;
-    bool result = BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths);
-    if (!result) {
+    if (!BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths)) {
         APP_LOGE("stream install failed due to check file failed");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
@@ -335,25 +334,26 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver);
     if (streamInstaller == nullptr) {
         APP_LOGE("stream install failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_OK;
     }
     for (const auto &path : realPaths) {
-        if ((result = WriteFileToStream(streamInstaller, path)) != ERR_OK) {
+        ErrCode res = WriteFileToStream(streamInstaller, path);
+        if (res != ERR_OK) {
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            return result;
+            APP_LOGE("WriteFileToStream failed due to %{public}d", res);
+            return res;
         }
     }
 
     // start install haps
-    bool ret = streamInstaller->Install();
-    if (!ret) {
+    if (!streamInstaller->Install()) {
         APP_LOGE("stream install failed");
         DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     APP_LOGD("stream install end");
-    return result;
+    return ERR_OK;
 }
 
 ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path)
@@ -395,6 +395,7 @@ ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &st
         if (write(outputFd, buffer, offset) < 0) {
             close(inputFd);
             close(outputFd);
+            APP_LOGE("write file to the temp dir failed");
             return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
         }
     }

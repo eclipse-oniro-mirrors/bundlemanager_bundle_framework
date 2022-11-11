@@ -767,6 +767,11 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
         innerBundleInfo.GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
             userId, info.applicationInfo);
     }
+    // set uid for NAPI cache use
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        info.uid = innerBundleUserInfo.uid;
+    }
     return ERR_OK;
 }
 
