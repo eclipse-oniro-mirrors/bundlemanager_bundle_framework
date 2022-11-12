@@ -57,6 +57,9 @@ const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string DEFAULT_APP_BUNDLE_NAME = "com.test.defaultApp";
+const std::string DEFAULT_APP_MODULE_NAME = "module01";
+const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
@@ -6365,6 +6368,56 @@ HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0100, Function | SmallTest | L
     EXPECT_FALSE(isDefaultApp);
 }
 
+/**
+ * @tc.number: GetDefaultAppProxy_0200
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    AAFwk::Want want;
+    ElementName elementName(
+        "", DEFAULT_APP_BUNDLE_NAME, DEFAULT_APP_MODULE_NAME, DEFAULT_APP_VIDEO);
+    want.SetElement(elementName);
+    ErrCode res = getDefaultAppProxy->SetDefaultApplication(USERID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(res, ERR_OK);
+    BundleInfo bundleInfo;
+    res = getDefaultAppProxy->GetDefaultApplication(USERID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_NE(res, ERR_OK);
+    res = getDefaultAppProxy->ResetDefaultApplication(USERID, DEFAULT_APP_VIDEO);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDefaultAppProxy_0400
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ *           2.test GetDefaultApplication failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0400, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    BundleInfo bundleInfo;
+    ErrCode result = getDefaultAppProxy->GetDefaultApplication(USERID, "", bundleInfo);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDefaultAppProxy_0500
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ *           2.test ResetDefaultApplication failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0500, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    ErrCode result = getDefaultAppProxy->ResetDefaultApplication(USERID, "");
+    EXPECT_NE(result, ERR_OK);
+}
 /**
  * @tc.number: CheckAbilityEnabled_0100
  * @tc.name: test SetAbilityEnabled and IsAbilityEnabled proxy

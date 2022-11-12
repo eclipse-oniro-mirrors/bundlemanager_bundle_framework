@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
+
 #include <fstream>
 #include <future>
 #include <vector>
@@ -24,6 +26,7 @@
 #include "bundle_installer_interface.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
+#include "bundle_mgr_client_impl.h"
 #include "bundle_user_mgr_proxy.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -2010,6 +2013,36 @@ HWTEST_F(BundleMgrClientSystemTest, CreateNewUser_001, Function | SmallTest | Le
     ret = GetBundleMgrProxy()->GetApplicationInfo(BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_001
+ * @tc.name: GetAccessibleAppCodePaths
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_001, TestSize.Level1)
+{
+    BundleMgrClientImpl bundleMgrClientImpl;
+    std::string profile = "[]";
+    bool res = bundleMgrClientImpl.TransformFileToJsonString("notExisted", profile);
+    EXPECT_EQ(res, false);
+    res = bundleMgrClientImpl.TransformFileToJsonString("data/test", profile);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_002
+ * @tc.name: GetAccessibleAppCodePaths
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_002, TestSize.Level1)
+{
+    BundleMgrClientImpl bundleMgrClientImpl;
+    bool res = bundleMgrClientImpl.IsFileExisted("");
+    bundleMgrClientImpl.OnDeath();
+    EXPECT_EQ(res, false);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
