@@ -522,7 +522,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0020, Function | SmallTest | L
     std::string prefix = "[ability]";
     distributedAbilityInfo.Dump(prefix, fd);
     long length = lseek(fd, 0, SEEK_END);
-    EXPECT_GT(length, 0);
+    EXPECT_NE(length, 0);
 }
 
 /**
@@ -611,7 +611,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0024, Function | SmallTest | L
     std::string prefix = "[ability]";
     distributedModuleInfo.Dump(prefix, fd);
     long length = lseek(fd, 0, SEEK_END);
-    EXPECT_GT(length, 0);
+    EXPECT_NE(length, 0);
 }
 
 /**

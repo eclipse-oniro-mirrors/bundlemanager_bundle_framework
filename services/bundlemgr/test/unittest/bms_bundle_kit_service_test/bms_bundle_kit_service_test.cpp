@@ -203,6 +203,7 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+    const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -299,6 +300,11 @@ void BmsBundleKitServiceTest::SetUp()
 
 void BmsBundleKitServiceTest::TearDown()
 {}
+
+const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
+{
+    return bundleMgrService_->GetBundleDistributedManager();
+}
 
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
@@ -7237,5 +7243,93 @@ HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest 
     std::string uid = "100";
     bool res = deviceManager.GetUdidByNetworkId(netWorkId, uid);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0001
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test CheckAbilityEnableInstall
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0001, Function | SmallTest | Level0)
+{
+    auto bundleMgr = GetBundleDistributedManager();
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", "bundlename", "abilityname", "moudlename");
+    bool ret = bundleMgr->CheckAbilityEnableInstall(want, 0, 100, nullptr);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0001
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test OnQueryRpcIdFinished
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0002, Function | SmallTest | Level0)
+{
+    auto bundleMgr = GetBundleDistributedManager();
+    std::string queryRpcIdResult;
+    bundleMgr->OnQueryRpcIdFinished(queryRpcIdResult);
+    queryRpcIdResult = "[]";
+    bundleMgr->OnQueryRpcIdFinished(queryRpcIdResult);
+    queryRpcIdResult = "[0]";
+    bundleMgr->OnQueryRpcIdFinished(queryRpcIdResult);
+    EXPECT_EQ(queryRpcIdResult, "[0]");
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0001
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test ComparePcIdString
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0003, Function | SmallTest | Level0)
+{
+    auto bundleMgr = GetBundleDistributedManager();
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", "bundlename", "abilityname", "moudlename");
+    RpcIdResult rpcIdResult;
+    int32_t res = bundleMgr->ComparePcIdString(want, rpcIdResult);
+    EXPECT_EQ(res, ErrorCode::GET_DEVICE_PROFILE_FAILED);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0001
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test QueryRpcIdByAbilityToServiceCenter
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0004, Function | SmallTest | Level0)
+{
+    auto bundleMgr = GetBundleDistributedManager();
+    TargetAbilityInfo targetAbilityInfo;
+    bool res = bundleMgr->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0001
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test OutTimeMonitor
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0005, Function | SmallTest | Level0)
+{
+    auto bundleMgr = GetBundleDistributedManager();
+    std::string transactId;
+    QueryRpcIdParams queryRpcIdParams;
+    bundleMgr->SendCallback(0, queryRpcIdParams);
+    bundleMgr->OutTimeMonitor(transactId);
+    EXPECT_EQ(transactId, "");
 }
 }
