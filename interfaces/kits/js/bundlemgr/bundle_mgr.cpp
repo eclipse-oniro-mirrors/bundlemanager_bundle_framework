@@ -9125,13 +9125,12 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
             std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
             auto env = reinterpret_cast<napi_env>(&engine);
             APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast ENV 1------------");
-            auto item = abilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+            auto item = nativeAbilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
             APP_LOGE("--------OnQueryAbilityInfos find Query------------");
-            if (item != abilityInfoCache.end()) {
+            if (item != nativeAbilityInfoCache.end()) {
                 APP_LOGD("has cache,no need to query from host");
-                auto reference = reinterpret_cast<NativeReference*>(item->second);
                 APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast item->second------------");
-                info->cacheAbilityInfos = reference->Get();
+                info->cacheAbilityInfos  = item->second->Get();
                 APP_LOGE("--------get cacheAbilityInfos------------");
                 info->getCache = true;
                 return;
