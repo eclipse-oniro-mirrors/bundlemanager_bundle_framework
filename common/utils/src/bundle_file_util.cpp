@@ -15,6 +15,7 @@
 
 #include "bundle_file_util.h"
 
+#include <cerrno>
 #include <cinttypes>
 #include <dirent.h>
 #include <fcntl.h>
@@ -156,9 +157,12 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
     if (currentBundlePath.empty()) {
         return false;
     }
+    char errMsg[256] = {0};
     DIR* dir = opendir(currentBundlePath.c_str());
     if (dir == nullptr) {
-        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure", currentBundlePath.c_str());
+        strerror_r(errno, errMsg, sizeof(errMsg));
+        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s",
+            currentBundlePath.c_str(), errMsg);
         return false;
     }
     std::string bundlePath = currentBundlePath;
