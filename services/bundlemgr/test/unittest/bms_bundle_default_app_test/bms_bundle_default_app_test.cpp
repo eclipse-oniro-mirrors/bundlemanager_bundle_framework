@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define private public
 #include <fstream>
 #include <gtest/gtest.h>
 #include <set>
@@ -816,5 +817,204 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3200, Function | SmallTest
     EXPECT_NE(defaultAppProxy, nullptr);
     ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_PPT, ABILITY_PPT_ERROR);
     EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3300
+ * @tc.name: test GetDefaultApplication, param type is empty
+ * @tc.desc: 1. call GetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3300, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    BundleInfo bundleInfo;
+    std::string emptyType = "";
+    ErrCode result = defaultAppProxy->GetDefaultApplication(USER_ID, emptyType, bundleInfo);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3400
+ * @tc.name: test ResetDefaultApplication, param type is empty
+ * @tc.desc: 1. call ResetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3400, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    std::string emptyType = "";
+    ErrCode result = defaultAppProxy->ResetDefaultApplication(USER_ID, emptyType);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3500
+ * @tc.name: test ResetDefaultApplication, param type is empty
+ * @tc.desc: 1. call ResetDefaultApplication, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3500, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json jsonObject;
+    defaultAppData.ToJson(jsonObject);
+    EXPECT_EQ(defaultAppData.FromJson(jsonObject), ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3600
+ * @tc.name: test IsMatch, param is a failed type
+ * @tc.desc: 1. call IsMatch, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3600, Function | SmallTest | Level1)
+{
+    const std::string type = "error";
+    const std::vector<Skill> skills;
+    bool ret = DefaultAppMgr::GetInstance().IsMatch(type, skills);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3700
+ * @tc.name: test MatchAppType, param is a failed type
+ * @tc.desc: 1. call MatchAppType, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3700, Function | SmallTest | Level1)
+{
+    const std::string type = "error";
+    const std::vector<Skill> skills;
+    bool ret = DefaultAppMgr::GetInstance().MatchAppType(type, skills);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3800
+ * @tc.name: test IsAppType, param is a failed type
+ * @tc.desc: 1. call IsAppType, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3800, Function | SmallTest | Level1)
+{
+    const std::string type = "error";
+    bool ret = DefaultAppMgr::GetInstance().IsAppType(type);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_3900
+ * @tc.name: test VerifyElementFormat, set bundleName is empty
+ * @tc.desc: 1. call VerifyElementFormat, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3900, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = "";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4000
+ * @tc.name: test VerifyElementFormat, set moduleName is empty
+ * @tc.desc: 1. call VerifyElementFormat, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4000, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = "com.ohos.setting";
+    element.moduleName = "";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4100
+ * @tc.name: test VerifyElementFormat, set abilityName is empty
+ * @tc.desc: 1. call VerifyElementFormat, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4100, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = "com.ohos.setting";
+    element.moduleName = "entry";
+    element.abilityName= "";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4200
+ * @tc.name: test VerifyElementFormat, set extensionName is empty
+ * @tc.desc: 1. call VerifyElementFormat, return true
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4200, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = "com.ohos.setting";
+    element.moduleName = "entry";
+    element.abilityName= "com.ohos.setting.MainAbility";
+    element.extensionName= "";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4300
+ * @tc.name: test VerifyElementFormat, set extensionName and abilityName empty
+ * @tc.desc: 1. call VerifyElementFormat, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4300, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = "com.ohos.setting";
+    element.moduleName = "entry";
+    element.abilityName= "";
+    element.extensionName= "";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4400
+ * @tc.name: test VerifyElementFormat, set param is not empty
+ * @tc.desc: 1. call VerifyElementFormat, return false
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4400, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = "com.ohos.setting";
+    element.moduleName = "entry";
+    element.abilityName= "com.ohos.setting.MainAbility";
+    element.extensionName= "form";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4500
+ * @tc.name: test VerifyElementFormat, set abilityName is empty
+ * @tc.desc: 1. call VerifyElementFormat, return true
+ * @tc.require: AR000H036M
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4500, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = "com.ohos.setting";
+    element.moduleName = "entry";
+    element.abilityName= "";
+    element.extensionName= "form";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, true);
 }
 } // OHOS
