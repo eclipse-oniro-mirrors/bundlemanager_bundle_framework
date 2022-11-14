@@ -25,6 +25,7 @@
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_host.h"
 #include "bundle_pack_info.h"
+#include "bundle_user_info.h"
 #include "clean_cache_callback_host.h"
 #include "common_tool.h"
 #include "extension_ability_info.h"
@@ -65,6 +66,8 @@ const int TARGETVERSION = 3;
 const int32_t USERID = 100;
 const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
+const int32_t INVALIED_ID = -1;
+const int32_t ZERO_SIZE = 0;
 constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
 
@@ -4410,6 +4413,27 @@ HWTEST_F(ActsBmsKitSystemTest, AbilityDump_0100, Function | MediumTest | Level0)
 }
 
 /**
+ * @tc.number: AbilityDump_0200
+ * @tc.name: Dump
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exists a hap
+ *           2.fd is -1
+ *           3.Dump abilityInfo failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, AbilityDump_0200, Function | MediumTest | Level0)
+{
+    AbilityInfo abilityInfo;
+    std::string path = "/data/test/abilityInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = INVALIED_ID;
+    std::string prefix = "[ability]";
+    abilityInfo.Dump(prefix, fd);
+    long length = lseek(fd, 0, SEEK_END);
+    EXPECT_EQ(length, INVALIED_ID);
+    close(fd);
+}
+
+/**
  * @tc.number: ApplicationInfoDump_0100
  * @tc.name: Dump
  * @tc.desc: 1.under '/data/test/bms_bundle',there exists a hap
@@ -4470,6 +4494,71 @@ HWTEST_F(ActsBmsKitSystemTest, ApplicationInfoDump_0100, Function | MediumTest |
     }
     EXPECT_TRUE(result);
     std::cout << "END ApplicationInfoDump_0100" << std::endl;
+}
+
+/**
+ * @tc.number: ApplicationInfoDump_0200
+ * @tc.name: Dump
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exists a hap
+ *           2.fd is -1
+ *           3.Dump info failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, ApplicationInfoDump_0200, Function | MediumTest | Level0)
+{
+    ApplicationInfo info;
+    std::string path = "/data/test/abilityInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = INVALIED_ID;
+    std::string prefix = "[ability]";
+    info.Dump(prefix, fd);
+    long length = lseek(fd, ZERO_SIZE, SEEK_END);
+    EXPECT_EQ(length, INVALIED_ID);
+    close(fd);
+}
+
+/**
+ * @tc.number: ApplicationInfoDump_0100
+ * @tc.name: Dump
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exists a hap
+ *           2.install the hap
+ *           3.call "GetApplicationInfo" kit
+ *           4.Dump appInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, BundleUserInfoDump_0100, Function | MediumTest | Level1)
+{
+    BundleUserInfo appInfo;
+    std::string path = "/data/test/appInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = open(path.c_str(), O_WRONLY | O_CLOEXEC);
+    EXPECT_NE(fd, INVALIED_ID) << "open file error";
+    std::string prefix = "[appInfo]";
+    appInfo.Dump(prefix, fd);
+    long length = lseek(fd, ZERO_SIZE, SEEK_END);
+    EXPECT_GT(length, ZERO_SIZE);
+    close(fd);
+}
+
+/**
+ * @tc.number: BundleUserInfoDump_0200
+ * @tc.name: Dump
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exists a hap
+ *           2.install the hap
+ *           3.call "GetApplicationInfo" kit
+ *           4.Dump appInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, BundleUserInfoDump_0200, Function | MediumTest | Level1)
+{
+    BundleUserInfo appInfo;
+    std::string path = "/data/test/appInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = INVALIED_ID;
+    std::string prefix = "[appInfo]";
+    appInfo.Dump(prefix, fd);
+    long length = lseek(fd, ZERO_SIZE, SEEK_END);
+    EXPECT_EQ(length, INVALIED_ID);
 }
 
 /**
