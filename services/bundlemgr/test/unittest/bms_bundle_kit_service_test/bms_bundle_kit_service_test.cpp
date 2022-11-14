@@ -22,6 +22,7 @@
 
 #include "ability_manager_client.h"
 #include "ability_info.h"
+#include "bms_device_manager.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -29,6 +30,7 @@
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_proxy.h"
+#include "bundle_stream_installer_host_impl.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
 #include "install_param.h"
@@ -6436,4 +6438,110 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallT
     APP_LOGI("CheckAppInstallControl_0100 finish");
 }
 
+/**
+ * @tc.number: BundleStreamInstallerHostImplInit_0100
+ * @tc.name: test Init
+ * @tc.desc: Init is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleStreamInstallerHostImplInit_0100, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    bool res = impl.Init(installParam, statusReceiver);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CreateStream_0100
+ * @tc.name: test CreateStream
+ * @tc.desc: CreateStream is success
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateStream_0100, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 0;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = "test.hap";
+    long offset = 100;
+    auto res = impl.CreateStream(hapName, offset);
+    EXPECT_GE(res, 0);
+}
+
+/**
+ * @tc.number: CreateStream_0200
+ * @tc.name: test CreateStream
+ * @tc.desc: CreateStream is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateStream_0200, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 0;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = "123";
+    long offset = 100;
+    auto res = impl.CreateStream(hapName, offset);
+    EXPECT_EQ(res, -1);
+}
+
+/**
+ * @tc.number: CreateStream_0300
+ * @tc.name: test CreateStream
+ * @tc.desc: CreateStream is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateStream_0300, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = "test.hap";
+    long offset = 100;
+    auto res = impl.CreateStream(hapName, offset);
+    EXPECT_EQ(res, -1);
+}
+
+/**
+ * @tc.number: Install_0100
+ * @tc.name: test Install
+ * @tc.desc: Install is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, Install_0100, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    bool res = impl.Install();
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetAllDeviceList_0100
+ * @tc.name: test GetAllDeviceList
+ * @tc.desc: GetAllDeviceList is success
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllDeviceList_0100, Function | SmallTest | Level0)
+{
+    BmsDeviceManager deviceManager;
+    std::string deviceId = "100";
+    std::vector<std::string> deviceIds;
+    deviceIds.push_back(deviceId);
+    bool res = deviceManager.GetAllDeviceList(deviceIds);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: GetUdidByNetworkId_0100
+ * @tc.name: test GetUdidByNetworkId
+ * @tc.desc: GetUdidByNetworkId is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest | Level0)
+{
+    BmsDeviceManager deviceManager;
+    std::string netWorkId = "100";
+    std::string uid = "100";
+    bool res = deviceManager.GetUdidByNetworkId(netWorkId, uid);
+    EXPECT_FALSE(res);
+}
 }
