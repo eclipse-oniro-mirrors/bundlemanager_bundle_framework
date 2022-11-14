@@ -36,6 +36,7 @@
 #include "quick_fix_deployer.h"
 #include "quick_fix_switcher.h"
 #include "quick_fix_checker.h"
+#include "quick_fix_status_callback_proxy.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -2573,4 +2574,187 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleCopyFiles_0002, Function | SmallTest | 
     EXPECT_NE(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: BmsBundleCopyFiles_0003
+ * Function: CopyFiles
+ * @tc.name: test CopyFiles
+ * @tc.require: issueI5N7AD
+ * @tc.desc: CopyFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleCopyFiles_0003, Function | SmallTest | Level0)
+{
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    const std::vector<std::string> sourceFiles {FILE1_PATH, ""};
+    CreateFiles(sourceFiles);
+    std::vector<std::string> destFiles = {"hello.hqf"};
+    ErrCode ret = quickFixProxy->CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    DeleteFiles(sourceFiles);
+    DeleteFiles(destFiles);
+}
+
+/**
+ * @tc.number: CreateFd_0100
+ * @tc.name: Test CreateFd
+ * @tc.desc: 1.Test the CreateFd of QuickFixManagerProxy
+ */
+HWTEST_F(BmsBundleQuickFixTest, CreateFd_0100, Function | SmallTest | Level0)
+{
+    auto quickFixProxy = GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
+    std::string fileName = "";
+    int32_t fd = 0;
+    std::string path;
+    ErrCode ret = quickFixProxy->CreateFd(fileName, fd, path);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeployQuickFixResult_0100
+ * @tc.name: Test Marshalling
+ * @tc.desc: 1.Test the Marshalling of DeployQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFixResult_0100, Function | SmallTest | Level0)
+{
+    DeployQuickFixResult result;
+    std::vector<std::string> moduleNames = {"entry1", "entry2"};
+    result.moduleNames = moduleNames;
+    Parcel parcel;
+    bool ret = result.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: DeployQuickFixResult_0200
+ * @tc.name: Test GetResCode
+ * @tc.desc: 1.Test the GetResCode of DeployQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFixResult_0200, Function | SmallTest | Level0)
+{
+    DeployQuickFixResult result;
+    int32_t resCode = 100;
+    result.SetResCode(resCode);
+    int32_t ret = result.GetResCode();
+    EXPECT_EQ(ret, resCode);
+}
+
+/**
+ * @tc.number: SwitchQuickFixResult_0100
+ * @tc.name: Test Marshalling
+ * @tc.desc: 1.Test the Marshalling of SwitchQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFixResult_0100, Function | SmallTest | Level0)
+{
+    SwitchQuickFixResult result;
+    result.resultCode = 100;
+    Parcel parcel;
+    bool ret = result.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SwitchQuickFixResult_0200
+ * @tc.name: Test GetResCode
+ * @tc.desc: 1.Test the GetResCode of SwitchQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFixResult_0200, Function | SmallTest | Level0)
+{
+    SwitchQuickFixResult result;
+    int32_t resCode = 100;
+    result.SetResCode(resCode);
+    int32_t ret = result.GetResCode();
+    EXPECT_EQ(ret, resCode);
+}
+
+/**
+ * @tc.number: DeleteQuickFixResult_0100
+ * @tc.name: Test Marshalling
+ * @tc.desc: 1.Test the Marshalling of DeleteQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeleteQuickFixResult_0100, Function | SmallTest | Level0)
+{
+    DeleteQuickFixResult result;
+    result.resultCode = 100;
+    Parcel parcel;
+    bool ret = result.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: DeleteQuickFixResult_0200
+ * @tc.name: Test ToString
+ * @tc.desc: 1.Test the ToString of DeleteQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeleteQuickFixResult_0200, Function | SmallTest | Level0)
+{
+    DeleteQuickFixResult result;
+    result.resultCode = 100;
+    result.bundleName = "com.ohos.test";
+    std::string ret = "";
+    ret = result.ToString();
+    EXPECT_NE(ret, "");
+}
+
+/**
+ * @tc.number: DeleteQuickFixResult_0300
+ * @tc.name: Test GetResCode
+ * @tc.desc: 1.Test the GetResCode of DeleteQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeleteQuickFixResult_0300, Function | SmallTest | Level0)
+{
+    DeleteQuickFixResult result;
+    int32_t resCode = 100;
+    result.SetResCode(resCode);
+    int32_t ret = result.GetResCode();
+    EXPECT_EQ(ret, resCode);
+}
+
+/**
+ * @tc.number: QuickFixStatusCallbackProxy_0100
+ * @tc.name: Test OnPatchDeployed
+ * @tc.desc: 1.Test the OnPatchDeployed of QuickFixStatusCallbackProxy
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackProxy_0100, Function | SmallTest | Level0)
+{
+    const sptr<IRemoteObject> object;
+    QuickFixStatusCallbackProxy proxy(object);
+    std::shared_ptr<QuickFixResult> result = std::make_shared<DeployQuickFixResult>();
+    uint32_t resultCode = 1;
+    result->SetResCode(resultCode);
+    proxy.OnPatchDeployed(result);
+    EXPECT_EQ(result->GetResCode(), resultCode);
+}
+
+/**
+ * @tc.number: QuickFixStatusCallbackProxy_0200
+ * @tc.name: Test OnPatchSwitched
+ * @tc.desc: 1.Test the OnPatchSwitched of QuickFixStatusCallbackProxy
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackProxy_0200, Function | SmallTest | Level0)
+{
+    const sptr<IRemoteObject> object;
+    QuickFixStatusCallbackProxy proxy(object);
+    std::shared_ptr<QuickFixResult> result = std::make_shared<SwitchQuickFixResult>();
+    uint32_t resultCode = 1;
+    result->SetResCode(resultCode);
+    proxy.OnPatchSwitched(result);
+    EXPECT_EQ(result->GetResCode(), resultCode);
+}
+
+/**
+ * @tc.number: QuickFixStatusCallbackProxy_0300
+ * @tc.name: Test OnPatchDeleted
+ * @tc.desc: 1.Test the OnPatchDeleted of QuickFixStatusCallbackProxy
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackProxy_0300, Function | SmallTest | Level0)
+{
+    const sptr<IRemoteObject> object;
+    QuickFixStatusCallbackProxy proxy(object);
+    std::shared_ptr<QuickFixResult> result = std::make_shared<DeleteQuickFixResult>();
+    uint32_t resultCode = 1;
+    result->SetResCode(resultCode);
+    proxy.OnPatchDeleted(result);
+    EXPECT_EQ(result->GetResCode(), resultCode);
+}
 } // OHOS
