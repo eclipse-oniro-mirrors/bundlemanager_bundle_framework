@@ -1299,6 +1299,17 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
     return true;
 }
 
+bool CheckModuleNameIsValid(const std::string &moduleName)
+{
+    if (moduleName.empty()) {
+        return false;
+    }
+    if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
 void UpdateNativeSoAttrs(
     const std::string &cpuAbi,
     const std::string &soRelativePath,
@@ -1827,8 +1838,8 @@ bool ToInnerBundleInfo(
     InnerBundleInfo &innerBundleInfo)
 {
     APP_LOGD("transform ModuleJson to InnerBundleInfo");
-    if (!CheckBundleNameIsValid(moduleJson.app.bundleName)) {
-        APP_LOGE("bundle name is invalid");
+    if (!CheckBundleNameIsValid(moduleJson.app.bundleName) || !CheckModuleNameIsValid(moduleJson.module.name)) {
+        APP_LOGE("bundle name or module name is invalid");
         return false;
     }
 
