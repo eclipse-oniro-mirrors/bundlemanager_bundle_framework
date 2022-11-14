@@ -77,6 +77,7 @@ public:
     void SetUp();
     void TearDown();
     bool InstallSystemBundle(const std::string &filePath) const;
+    bool OTAInstallSystemBundle(const std::string &filePath) const;
     ErrCode InstallThirdPartyBundle(const std::string &filePath) const;
     ErrCode UpdateThirdPartyBundle(const std::string &filePath) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
@@ -112,6 +113,21 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
+}
+
+bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath) const
+{
+    auto installer = std::make_unique<SystemBundleInstaller>();
+    std::vector<std::string> filePaths;
+    filePaths.push_back(filePath);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    return installer->OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP);
 }
 
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
@@ -1099,5 +1115,20 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0300, Function | SmallTest
     EXPECT_EQ(res, "");
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: OTASystemInstall_0100
+ * @tc.name: test the right system bundle file can be installed
+ * @tc.desc: 1.the system bundle file exists
+ *           2.the system bundle can be installed successfully and can get the bundle info
+ */
+HWTEST_F(BmsBundleInstallerTest, OTASystemInstall_0100, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = OTAInstallSystemBundle(bundleFile);
+    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
+    CheckFileExist();
+    ClearBundleInfo();
 }
 } // OHOS
