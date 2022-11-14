@@ -490,6 +490,18 @@ void CommonFunc::ConvertElementName(napi_env env, napi_value elementInfo,
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, elementName.GetAbilityName().c_str(), NAPI_AUTO_LENGTH, &abilityName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "abilityName", abilityName));
+
+    // wrap uri
+    napi_value uri;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetURI().c_str(), NAPI_AUTO_LENGTH, &uri));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "uri", uri));
+
+    // wrap shortName
+    napi_value shortName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, "", NAPI_AUTO_LENGTH, &shortName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "shortName", shortName));
 }
 
 ErrCode CommonFunc::ConvertErrCode(ErrCode nativeErrCode)
@@ -1385,7 +1397,7 @@ void CommonFunc::ConvertShortcutIntent(napi_env env,
     napi_value nTargetClass;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "targetClass", nTargetClass));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "targetAbility", nTargetClass));
 }
 
 void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value)
@@ -1425,11 +1437,7 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
     napi_value labelId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.labelId, &labelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", labelId));
-    // wrap disableMessage
-    napi_value disableMessage;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, shortcutInfo.disableMessage.c_str(), NAPI_AUTO_LENGTH, &disableMessage));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "disableMessage", disableMessage));
+
     // wrap wants
     napi_value intents;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &intents));
@@ -1440,18 +1448,6 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, intents, index, intent));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "wants", intents));
-    // wrap isStatic
-    napi_value isStatic;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, shortcutInfo.isStatic, &isStatic));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isStatic", isStatic));
-    // wrap isHomeShortcut
-    napi_value isHomeShortcut;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, shortcutInfo.isHomeShortcut, &isHomeShortcut));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isHomeShortcut", isHomeShortcut));
-    // wrap isEnabled
-    napi_value isEnabled;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, shortcutInfo.isEnables, &isEnabled));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isEnabled", isEnabled));
 }
 
 void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
