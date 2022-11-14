@@ -47,6 +47,7 @@ const std::string BASE_ABILITY_NAME = "bmsThirdBundle_A1";
 const std::string SYSTEM_LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 const std::string SYSTEM_SETTINGS_BUNDLE_NAME = "com.ohos.settings";
 const std::string SYSTEM_SYSTEMUI_BUNDLE_NAME = "com.ohos.systemui";
+const std::string SYSTEM_CAMERA_BUNDLE_NAME = "com.ohos.camera";
 const std::string BUNDLE_DATA_ROOT_PATH = "/data/app/el2/100/base/";
 const std::string ERROR_INSTALL_FAILED = "install failed!";
 const std::string ERROR_UNINSTALL_FAILED = "uninstall failed!";
@@ -1707,9 +1708,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0500, Function | MediumTest | 
 
         ApplicationInfo appInfo;
         bool getInfoResult = bundleMgrProxy->GetApplicationInfo(
-            SYSTEM_SETTINGS_BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
+            SYSTEM_CAMERA_BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
         EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(appInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME);
+        EXPECT_EQ(appInfo.name, SYSTEM_CAMERA_BUNDLE_NAME);
         if (!getInfoResult) {
             APP_LOGI("GetApplicationInfo_0500 failed - cycle count: %{public}d", i);
             break;
@@ -2616,7 +2617,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0400, Function | MediumTest | 
             EXPECT_EQ(bundleMgrProxy, nullptr);
         }
 
-        int uid = bundleMgrProxy->GetUidByBundleName(SYSTEM_SETTINGS_BUNDLE_NAME, USERID);
+        int uid = bundleMgrProxy->GetUidByBundleName(SYSTEM_CAMERA_BUNDLE_NAME, USERID);
         EXPECT_GE(uid, Constants::BASE_USER_RANGE);
         if (uid == Constants::INVALID_UID) {
             APP_LOGI("GetUidByBundleName_0400 failed - cycle count: %{public}d", i);
@@ -2722,13 +2723,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0200, Function | MediumTest |
         }
 
         BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(SYSTEM_SETTINGS_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+        bundleMgrProxy->GetBundleInfo(SYSTEM_CAMERA_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
         int uid = bundleInfo.uid;
 
         std::string bundleName;
         bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
         EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleName, SYSTEM_SETTINGS_BUNDLE_NAME);
+        EXPECT_EQ(bundleName, SYSTEM_CAMERA_BUNDLE_NAME);
 
         if (!getInfoResult) {
             APP_LOGI("GetBundleNameForUid_0200 failed - cycle count: %{public}d", i);
@@ -5179,7 +5180,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0300, Function | MediumTest | Le
             APP_LOGE("bundle mgr proxy is nullptr.");
             EXPECT_EQ(bundleMgrProxy, nullptr);
         }
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
+        std::string appName = SYSTEM_CAMERA_BUNDLE_NAME;
         BundleInfo bundleInfo;
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
         int uid = bundleInfo.uid;
@@ -5187,7 +5188,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0300, Function | MediumTest | Le
         bool ret = bundleMgrProxy->GetBundlesForUid(uid, bundleNames);
         EXPECT_TRUE(ret);
         for (auto bundleName : bundleNames) {
-            EXPECT_EQ(bundleName, SYSTEM_SETTINGS_BUNDLE_NAME);
+            EXPECT_EQ(bundleName, SYSTEM_CAMERA_BUNDLE_NAME);
         }
 
         if (!ret) {
@@ -5330,13 +5331,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0300, Function | MediumTest | Level
             APP_LOGE("bundle mgr proxy is nullptr.");
             EXPECT_EQ(bundleMgrProxy, nullptr);
         }
-        std::string appName = SYSTEM_SETTINGS_BUNDLE_NAME;
+        std::string appName = SYSTEM_CAMERA_BUNDLE_NAME;
         BundleInfo bundleInfo;
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
         std::string name;
         ErrCode ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
         EXPECT_EQ(ret, ERR_OK);
-        EXPECT_EQ(name, SYSTEM_SETTINGS_BUNDLE_NAME);
+        EXPECT_EQ(name, SYSTEM_CAMERA_BUNDLE_NAME);
 
         if (ret != ERR_OK) {
             APP_LOGI("GetNameForUid_0300 failed - cycle count: %{public}d", i);
