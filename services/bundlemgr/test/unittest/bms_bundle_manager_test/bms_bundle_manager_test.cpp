@@ -20,12 +20,15 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
+#include <iostream>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "bundle_info.h"
 #include "bundle_data_storage_database.h"
+#include "bundle_file_util.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
@@ -66,6 +69,7 @@ const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
+const std::string OVER_MAX_SIZE(300, 'x');
 const size_t NUMBER_ONE = 1;
 }  // namespace
 
@@ -1151,5 +1155,36 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationInfosV9_0200, Function | MediumTest
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA);
     ret = info.GetApplicationInfoV9(metaDataFlag, notExistUserId, appInfo);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckFilePath_0001
+ * @tc.name: Test GetApplicationInfoV9
+ * @tc.desc: 1.Test the GetApplicationInfoV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleManagerTest, CheckFilePath_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    const int64_t fileSize = -1;
+    const std::vector<std::string> bundlePaths;
+    std::vector<std::string> realPaths;
+    std::vector<std::string> hapFileList;
+    bool res = BundleFileUtil::CheckFilePath(bundlePaths, realPaths);
+    bool res1 = BundleFileUtil::CheckFileType("", "");
+    bool res2 = BundleFileUtil::CheckFileName(OVER_MAX_SIZE);
+    bool res3 = BundleFileUtil::CheckFileSize("data/test", fileSize);
+    bool res4 = BundleFileUtil::GetHapFilesFromBundlePath("", hapFileList);
+    bool res5 = BundleFileUtil::GetHapFilesFromBundlePath(
+        "/data/service/el2/100/hmdfs/account/data/com.example.backuptest", hapFileList);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(res1, false);
+    EXPECT_EQ(res2, false);
+    EXPECT_EQ(res3, false);
+    EXPECT_EQ(res4, false);
+    EXPECT_EQ(res5, true);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS
