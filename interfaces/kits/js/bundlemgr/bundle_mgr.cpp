@@ -3388,10 +3388,6 @@ static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
 
         userId = Constants::UNSPECIFIED_USERID;
         NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &userId), false);
-        if (userId < Constants::DEFAULT_USERID) {
-            APP_LOGE("param userId(%{public}d) is invalid.", userId);
-            return false;
-        }
     }
     return true;
 }

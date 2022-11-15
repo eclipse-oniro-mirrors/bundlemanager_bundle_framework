@@ -345,10 +345,6 @@ static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
     }
     if (property != nullptr) {
         PARSE_PROPERTY(env, property, int32, userId);
-        if (userId < Constants::DEFAULT_USERID) {
-            APP_LOGE("param userId(%{public}d) is invalid.", userId);
-            return false;
-        }
     }
     APP_LOGD("param userId is %{public}d", userId);
     return true;
