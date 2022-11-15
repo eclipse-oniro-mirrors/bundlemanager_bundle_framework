@@ -44,6 +44,8 @@ const std::string TRANSACT_ID = "transact_id";
 const std::string RESULT_MSG = "result_msg";
 const int32_t DOWNLOAD_SIZE = 10;
 const int32_t TOTAL_SIZE = 20;
+const int32_t REASON_FLAG = 2;
+const int32_t VERSIONID = 1;
 const std::string EXT_MAP_KEY = "EXT_MAP_KEY";
 const std::string EXT_MAP_VALUE = "EXT_MAP_VALUE";
 const std::string BUNDLE_NAME = "com.example.freeInstall";
@@ -90,8 +92,10 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0001, Functi
     DispatcherInfo info;
     info.version = VERSION;
     nlohmann::json jsonObj;
-    to_json(jsonObj, info);
     DispatcherInfo result;
+    from_json(jsonObj, result);
+    EXPECT_NE(info.version, result.version);
+    to_json(jsonObj, info);
     from_json(jsonObj, result);
     EXPECT_EQ(info.version, result.version);
 }
@@ -107,9 +111,11 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0002, Functi
     DispatcherInfo info;
     info.version = VERSION;
     Parcel parcel;
+    auto result = DispatcherInfo::Unmarshalling(parcel);
+    EXPECT_NE(result->version, VERSION);
     auto ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
-    auto result = DispatcherInfo::Unmarshalling(parcel);
+    result = DispatcherInfo::Unmarshalling(parcel);
     EXPECT_EQ(result->version, VERSION);
 }
 
@@ -124,10 +130,12 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0003, Functi
     Result installResult;
     installResult.transactId = TRANSACT_ID;
     installResult.resultMsg = RESULT_MSG;
-    installResult.retCode = 1;
+    installResult.retCode = VERSIONID;
     nlohmann::json jsonObj;
-    to_json(jsonObj, installResult);
     Result result;
+    from_json(jsonObj, result);
+    EXPECT_NE(result.transactId, TRANSACT_ID);
+    to_json(jsonObj, installResult);
     from_json(jsonObj, result);
     EXPECT_EQ(result.transactId, TRANSACT_ID);
 }
@@ -143,8 +151,10 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0004, Functi
     InstallResult installResult;
     installResult.version = VERSION;
     nlohmann::json jsonObj;
-    to_json(jsonObj, installResult);
     InstallResult result;
+    from_json(jsonObj, result);
+    EXPECT_NE(result.version, VERSION);
+    to_json(jsonObj, installResult);
     from_json(jsonObj, result);
     EXPECT_EQ(result.version, VERSION);
 }
@@ -162,9 +172,11 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0005, Functi
     installResult.resultMsg = RESULT_MSG;
     installResult.retCode = 1;
     Parcel parcel;
+    auto unmarshalledResult = Result::Unmarshalling(parcel);
+    EXPECT_NE(unmarshalledResult->transactId, TRANSACT_ID);
     auto ret = installResult.Marshalling(parcel);
     EXPECT_TRUE(ret);
-    auto unmarshalledResult = Result::Unmarshalling(parcel);
+    unmarshalledResult = Result::Unmarshalling(parcel);
     EXPECT_EQ(unmarshalledResult->transactId, TRANSACT_ID);
     ret = unmarshalledResult->ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
@@ -182,9 +194,11 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0006, Functi
     progress.downloadSize = DOWNLOAD_SIZE;
     progress.totalSize = TOTAL_SIZE;
     Parcel parcel;
+    auto result = Progress::Unmarshalling(parcel);
+    EXPECT_NE(result->downloadSize, DOWNLOAD_SIZE);
     auto ret = progress.Marshalling(parcel);
     EXPECT_TRUE(ret);
-    auto result = Progress::Unmarshalling(parcel);
+    result = Progress::Unmarshalling(parcel);
     EXPECT_EQ(result->downloadSize, DOWNLOAD_SIZE);
     EXPECT_EQ(result->totalSize, TOTAL_SIZE);
     ret = result->ReadFromParcel(parcel);
@@ -202,7 +216,7 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0007, Functi
     Result installResult;
     installResult.transactId = TRANSACT_ID;
     installResult.resultMsg = RESULT_MSG;
-    installResult.retCode = 1;
+    installResult.retCode = VERSIONID;
     Parcel parcel;
     auto ret = installResult.Marshalling(parcel);
     EXPECT_TRUE(ret);
@@ -210,5 +224,132 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0007, Functi
     EXPECT_EQ(unmarshalledResult->transactId, TRANSACT_ID);
     ret = unmarshalledResult->ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0008
+ * Function: TargetInfo
+ * @tc.name: test TargetInfo
+ * @tc.desc: TargetInfo
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0008, Function | SmallTest | Level0)
+{
+    TargetInfo targetInfo;
+    targetInfo.bundleName = Constants::BUNDLE_NAME;
+
+    Parcel parcel;
+    auto unmarshalledResult = TargetInfo::Unmarshalling(parcel);
+    auto ret = targetInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    unmarshalledResult = TargetInfo::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->bundleName, Constants::BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0009
+ * Function: TargetInfo
+ * @tc.name: test TargetInfo
+ * @tc.desc: TargetInfo
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0009, Function | SmallTest | Level0)
+{
+    TargetInfo targetInfo;
+    targetInfo.bundleName = Constants::BUNDLE_NAME;
+    targetInfo.moduleName = Constants::MODULE_NAME;
+    targetInfo.abilityName = Constants::ABILITY_NAME;
+    targetInfo.flags = REASON_FLAG;
+    targetInfo.reasonFlag = REASON_FLAG;
+
+    nlohmann::json jsonObject;
+    TargetInfo result;
+    from_json(jsonObject, result);
+    EXPECT_NE(result.bundleName, Constants::BUNDLE_NAME);
+    to_json(jsonObject, targetInfo);
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.bundleName, Constants::BUNDLE_NAME);
+    EXPECT_EQ(result.moduleName, Constants::MODULE_NAME);
+    EXPECT_EQ(result.abilityName, Constants::ABILITY_NAME);
+    EXPECT_EQ(result.flags, REASON_FLAG);
+    EXPECT_EQ(result.reasonFlag, REASON_FLAG);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0010
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0010, Function | SmallTest | Level0)
+{
+    TargetExtSetting targetExtSetting;
+    std::map<std::string, std::string> value;
+    value.emplace("1", "2");
+    targetExtSetting.extValues = value;
+
+    Parcel parcel;
+    auto unmarshalledResult = TargetExtSetting::Unmarshalling(parcel);
+    bool ret = targetExtSetting.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    unmarshalledResult = TargetExtSetting::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->extValues.size(), 1);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0010
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0011, Function | SmallTest | Level0)
+{
+    TargetExtSetting targetExtSetting;
+    std::map<std::string, std::string> value;
+    value.emplace("1", "2");
+    targetExtSetting.extValues = value;
+    nlohmann::json jsonObject;
+    TargetExtSetting result;
+    from_json(jsonObject, result);
+    EXPECT_NE(result.extValues, value);
+    to_json(jsonObject, targetExtSetting);
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.extValues, value);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0012
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0012, Function | SmallTest | Level0)
+{
+    TargetAbilityInfo targetAbilityInfo;
+    targetAbilityInfo.version = "version";
+
+    Parcel parcel;
+    auto unmarshalledResult = TargetAbilityInfo::Unmarshalling(parcel);
+    bool ret = targetAbilityInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    unmarshalledResult = TargetAbilityInfo::Unmarshalling(parcel);
+    EXPECT_EQ(unmarshalledResult->version, "version");
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0013
+ * Function: TargetExtSetting
+ * @tc.name: test TargetExtSetting
+ * @tc.desc: TargetExtSetting
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0013, Function | SmallTest | Level0)
+{
+    TargetAbilityInfo targetAbilityInfo;
+    targetAbilityInfo.version = "version";
+    nlohmann::json jsonObject;
+    TargetAbilityInfo result;
+    from_json(jsonObject, result);
+    EXPECT_NE(result.version, "version");
+    to_json(jsonObject, targetAbilityInfo);
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.version, "version");
 }
 }
