@@ -713,7 +713,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0010, Function | MediumTest | Lev
 {
     std::cout << "START GetBundleInfoV9_0010" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
@@ -1332,16 +1332,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0200, Function | MediumTest | Leve
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosV9_0100, Function | MediumTest | Level1)
 {
-    std::cout << "START GetBundleInfosV9_0100" << std::endl;
-    CommonTool commonTool;
-    std::string installResult;
-    for (int i = 6; i < 9; i++) {
-        std::vector<std::string> resvec;
-        std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
-        installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Success") << "install fail!";
-    }
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -1349,17 +1339,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosV9_0100, Function | MediumTest | Le
     }
     std::vector<BundleInfo> bundleInfos;
     auto getInfoResult = bundleMgrProxy->GetBundleInfosV9(
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfos, 101);
-    EXPECT_NE(getInfoResult, ERR_OK);
-
-    for (int i = 1; i <= 3; i++) {
-        std::string appName = BASE_BUNDLE_NAME + std::to_string(i);
-        std::vector<std::string> resvec2;
-        Uninstall(appName, resvec2);
-        std::string uninstallResult = commonTool.VectorToStr(resvec2);
-        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    }
-    std::cout << "END GetBundleInfosV9_0100" << std::endl;
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfos, Constants::INVALID_USERID);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 
 /**
@@ -1966,16 +1947,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0200, Function | MediumTest 
  */
 HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0300, Function | MediumTest | Level1)
 {
-    std::cout << "START GetApplicationInfoV9_0300" << std::endl;
-
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -1983,15 +1954,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0300, Function | MediumTest 
     }
     ApplicationInfo appInfo;
     auto getInfoResult = bundleMgrProxy->GetApplicationInfoV9(
-        appName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), 101, appInfo);
+        "appName", static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+            Constants::INVALID_USERID, appInfo);
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-
-    std::cout << "END GetApplicationInfoV9_0300" << std::endl;
 }
 
 /**
@@ -2196,8 +2161,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0100, Function | MediumTest
     }
     std::vector<ApplicationInfo> appInfos;
     auto getInfoResult = bundleMgrProxy->GetApplicationInfosV9(
-        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), 101, appInfos);
-    EXPECT_NE(getInfoResult, ERR_OK);
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+            Constants::INVALID_USERID, appInfos);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     std::cout << "END GetApplicationInfosV9_0100" << std::endl;
 }
 

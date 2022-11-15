@@ -79,6 +79,7 @@ public:
     ErrCode GetSandboxAppInfo(
         const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info);
     int32_t GenerateSandboxAppIndex(const std::string &bundleName);
+    const std::shared_ptr<BundleSandboxAppHelper> GetBundleSandboxAppHelper() const;
     void SaveSandboxAppInfo(const InnerBundleInfo &info, const int32_t &appIndex);
     void DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex);
     void CheckPathAreExisted(const std::string &bundleName, int32_t appIndex);
@@ -178,6 +179,11 @@ ErrCode BmsSandboxAppTest::GetSandboxAppInfo(
     const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info)
 {
     return bundleSandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, info);
+}
+
+const std::shared_ptr<BundleSandboxAppHelper> BmsSandboxAppTest::GetBundleSandboxAppHelper() const
+{
+    return bundleSandboxAppHelper_;
 }
 
 bool BmsSandboxAppTest::GetSandboxDataMgr()
@@ -449,6 +455,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0600, Function | SmallTest 
 {
     int32_t appIndex = 0;
     auto ret = InstallSandboxApp("", DLP_TYPE_1, INVALID_USERID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    ret = InstallSandboxApp("", DLP_TYPE_1, Constants::DEFAULT_USERID - 1, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 }
 
@@ -933,6 +941,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0300, Function | SmallTes
 
     auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, INVALID_USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST);
+    res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, Constants::DEFAULT_USERID - 1);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
     UninstallBundle(BUNDLE_NAME);
 }
@@ -1079,13 +1089,16 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1100, Function | SmallTes
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
+    auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_NO_SANDBOX_APP_INFO);
+
     int32_t appIndex = 0;
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(appIndex, APP_INDEX_1);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
 
-    auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
+    res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
     EXPECT_EQ(res, ERR_OK);
 
     UninstallBundle(BUNDLE_NAME);
@@ -1530,6 +1543,59 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1000, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: BmsGETSandboxAppMSG_1100
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information successfully
+ * @tc.require: AR000H02C4
+ */
+HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = 0;
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appIndex, APP_INDEX_1);
+    CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
+
+    BundleInfo info;
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    auto testRet = bundleSandboxAppHelper->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
+    EXPECT_EQ(testRet, ERR_OK);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsGETSandboxAppMSG_1200
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. get sandbox app bundleInfo information failed by not install sanbox app
+ * @tc.require: AR000H02C4
+ */
+HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1200, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    BundleInfo info;
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    auto testRet = bundleSandboxAppHelper->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_NO_SANDBOX_APP_INFO);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: GetSandboxHapModuleInfo_0100
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
@@ -1545,7 +1611,7 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest |
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
-    int32_t appIndex = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(appIndex, APP_INDEX_1);
@@ -1572,9 +1638,11 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0200, Function | SmallTest |
 {
     AbilityInfo abilityInfo;
     HapModuleInfo info;
-    int32_t appIndex = -1;
-
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
     ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_NE(testRet, ERR_OK);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_NE(testRet, ERR_OK);
 }
 
@@ -1590,10 +1658,72 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest |
 {
     AbilityInfo abilityInfo;
     HapModuleInfo info;
-    int32_t appIndex = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
 
-    ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, -1, info);
+    ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, Constants::INITIAL_APP_INDEX, info);
     EXPECT_NE(testRet, ERR_OK);
+}
+
+/**
+ * @tc.number: GetSandboxHapModuleInfo_0400
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information failed by empty bundlename
+ * @tc.require: AR000H02C4
+ */
+HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0400, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = Constants::MAX_APP_INDEX - 1;
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appIndex, APP_INDEX_1);
+    CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = BUNDLE_NAME;
+    HapModuleInfo info;
+
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    ErrCode testRet = bundleSandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_NO_MODULE_INFO);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetSandboxHapModuleInfo_0500
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information failed by empty bundlename
+ * @tc.require: AR000H02C4
+ */
+HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0500, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = BUNDLE_NAME;
+
+    HapModuleInfo info;
+
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    ErrCode testRet = bundleSandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR);
+
+    UninstallBundle(BUNDLE_NAME);
 }
 
 /**
