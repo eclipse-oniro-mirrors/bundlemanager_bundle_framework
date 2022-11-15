@@ -1118,6 +1118,209 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0300, Function | SmallTest
 }
 
 /**
+ * @tc.number: CreateInstallTempDir_0400
+ * @tc.name: test CheckFileName, the name max size is 256
+ * @tc.desc: 1.test CheckFileName of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0400, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string maxFileName = std::string(256, 'a');
+    bool res = bundleUtil.CheckFileName(maxFileName);
+    EXPECT_EQ(res, true);
+    maxFileName.append(".txt");
+    res = bundleUtil.CheckFileName(maxFileName);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0500
+ * @tc.name: test CheckFileSize, size is not right
+ * @tc.desc: 1.test CheckFileSize of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0500, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool res = bundleUtil.CheckFileSize(BUNDLE_NAME, 0);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0600
+ * @tc.name: test GetHapFilesFromBundlePath, current path is empty or failed
+ * @tc.desc: 1.test GetHapFilesFromBundlePath of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0600, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string currentPath = "";
+    std::vector<std::string> fileList = {"test1.hap"};
+    bool res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
+    EXPECT_EQ(res, false);
+    currentPath = "/data/test/test2.hap";
+    res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0700
+ * @tc.name: test DeviceAndNameToKey, key is id and name
+ * @tc.desc: 1.test DeviceAndNameToKey of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0700, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string key = "";
+    bundleUtil.DeviceAndNameToKey(
+        Constants::CURRENT_DEVICE_ID, BUNDLE_NAME, key);
+    EXPECT_EQ(key, "PHONE-001_com.example.l3jsdemo");
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0800
+ * @tc.name: test KeyToDeviceAndName, split with underline
+ * @tc.desc: 1.test KeyToDeviceAndName of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0800, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string underline = "_";
+    std::string deviceId = Constants::CURRENT_DEVICE_ID;
+    std::string bundleName = "com.split.underline";
+    std::string key = deviceId + underline + bundleName;
+    bool ret = bundleUtil.KeyToDeviceAndName(key, deviceId, bundleName);
+    EXPECT_EQ(ret, true);
+    key = deviceId + bundleName;
+    ret = bundleUtil.KeyToDeviceAndName(key, deviceId, bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0900
+ * @tc.name: test CreateFileDescriptorForReadOnly, path is file
+ * @tc.desc: 1.test CreateFileDescriptorForReadOnly of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0900, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleUtil bundleUtil;
+    long long offset = 0;
+    auto ret = bundleUtil.CreateFileDescriptorForReadOnly(bundlePath, offset);
+    EXPECT_NE(ret, ERR_OK);
+    bundlePath.append(std::string(256, '/'));
+    ret = bundleUtil.CreateFileDescriptorForReadOnly(bundlePath, offset);
+    EXPECT_NE(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1000
+ * @tc.name: test RenameFile, oldPath or newPath is empty
+ * @tc.desc: 1.test RenameFile of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1000, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool ret = bundleUtil.RenameFile("", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("oldPath", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("", "newPath");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("", "newPath");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("oldPath", "newPath");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1100
+ * @tc.name: test CopyFile, source or destination file is empty
+ * @tc.desc: 1.test CopyFile of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool ret = bundleUtil.CopyFile("", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CopyFile("source", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CopyFile("", "destinationFile");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CopyFile("source", "destinationFile");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1200
+ * @tc.name: test CreateDir, param is empty return false
+ * @tc.desc: 1.test CreateDir of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1200, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool ret = bundleUtil.CreateDir("");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CreateDir(BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1300
+ * @tc.name: test RevertToRealPath, one param is empty return false
+ * @tc.desc: 1.test RevertToRealPath of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1300, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    std::string empty = "";
+    bool ret = util.RevertToRealPath(empty, empty, empty);
+    EXPECT_EQ(ret, false);
+    ret = util.RevertToRealPath("/data/storage/el2/base", empty, empty);
+    EXPECT_EQ(ret, false);
+    ret = util.RevertToRealPath("/data/storage/el2/base", "com.ohos.test", empty);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1400
+ * @tc.name: test StartWith, one of param is empty return false
+ * @tc.desc: 1.test StartWith of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1400, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    bool ret = util.StartWith("", BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, false);
+    ret = util.StartWith(BUNDLE_DATA_DIR, "");
+    EXPECT_EQ(ret, false);
+    ret = util.StartWith(BUNDLE_DATA_DIR, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1500
+ * @tc.name: test EndWith, one of param is empty return false
+ * @tc.desc: 1.test EndWith of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1500, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    bool ret = util.EndWith("", BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, false);
+    ret = util.EndWith(BUNDLE_DATA_DIR, "");
+    EXPECT_EQ(ret, false);
+    ret = util.EndWith(BUNDLE_DATA_DIR, BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, false);
+    ret = util.EndWith(BUNDLE_DATA_DIR, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: OTASystemInstall_0100
  * @tc.name: test the right system bundle file can be installed
  * @tc.desc: 1.the system bundle file exists
