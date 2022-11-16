@@ -3389,10 +3389,6 @@ static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
 
         userId = Constants::UNSPECIFIED_USERID;
         NAPI_CALL_BASE(env, napi_get_value_int32(env, property, &userId), false);
-        if (userId < Constants::DEFAULT_USERID) {
-            APP_LOGE("param userId(%{public}d) is invalid.", userId);
-            return false;
-        }
     }
     return true;
 }
@@ -3544,6 +3540,7 @@ static void ConvertInstallResult(InstallResult &installResult)
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_INCOMPATIBLE";
             break;
@@ -8105,7 +8102,7 @@ NativeValue* JsBundleMgr::CreateBundleInfos(NativeEngine &engine, const std::vec
     return arrayValue;
 }
 
-bool JsBundleMgr::UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId)
+bool JsBundleMgr::UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
 {
     bool flagCall = true;
     if (info.argc == ARGS_SIZE_ONE) {
@@ -8127,7 +8124,7 @@ bool JsBundleMgr::UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackIn
     return flagCall;
 }
 
-bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId)
+bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
 {
     bool flagCall = true;
     if (info.argc == ARGS_SIZE_TWO) {
@@ -8168,7 +8165,7 @@ bool JsBundleMgr::UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallback
     return flagCall;
 }
 
-bool JsBundleMgr::UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t userId)
+bool JsBundleMgr::UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId)
 {
     bool flagCall = true;
     if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {

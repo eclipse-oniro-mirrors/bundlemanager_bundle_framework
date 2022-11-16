@@ -130,8 +130,7 @@
             {
                 "name": "default",
                 "pages": [
-                    "pages/index/index",
-                    "pages/detail/detail"
+                    "pages/index/index"
                 ],
                 "window": {
                     "designWidth": 750,

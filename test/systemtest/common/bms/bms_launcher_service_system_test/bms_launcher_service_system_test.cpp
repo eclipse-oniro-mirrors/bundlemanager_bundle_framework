@@ -979,7 +979,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetShortcutInfos_0200, Function | MediumT
  * @tc.number: GetShortcutInfoV9_0100
  * @tc.name: test GetShortcutInfoV9 by LauncherService
  * @tc.desc: 1.install a normal hap
- *           2.get shortcut infos failed by empty bundleName
+ *           2.get shortcut infos failed by wrong bundleName
  */
 HWTEST_F(BmsLauncherServiceSystemTest, GetShortcutInfoV9_0100, Function | MediumTest | Level2)
 {
@@ -1181,6 +1181,20 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAllLauncherAbility_0100, Function 
     EXPECT_EQ(result, ERR_OK);
 }
 
+/**
+ * @tc.number: BMS_GetAllLauncherAbility_0200
+ * @tc.name: test GetAbilityInfo by LauncherService
+ * @tc.desc: 1.install a low version hap
+ *           2.install a high version hap
+ *           3.get the application info of the high version hap by bundleName
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAllLauncherAbility_0200, Function | MediumTest | Level1)
+{
+    std::vector<LauncherAbilityInfo> launcherAbilityInfos;
+    LauncherService launcherservice;
+    ErrCode result = launcherservice.GetAllLauncherAbility(-1, launcherAbilityInfos);
+    EXPECT_NE(result, ERR_OK);
+}
  // namespace AppExecFwk
 }  // namespace OHOS
 }

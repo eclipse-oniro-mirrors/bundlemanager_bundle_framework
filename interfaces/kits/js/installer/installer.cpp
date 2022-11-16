@@ -57,8 +57,6 @@ const std::string HASH_PARAMS = "hashParams";
 
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
-constexpr int32_t THIRD_PARAM = 2;
-constexpr int32_t INSTALLER_PARAMS_NUMBER = 3;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
 
@@ -261,7 +259,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT, ERROR_INSTALL_NO_DISK_SPACE_LEFT },
         { IStatusReceiver::ERR_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
-        { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE, ERROR_INSTALL_VERSION_DOWNGRADE }
+        { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE, ERROR_INSTALL_VERSION_DOWNGRADE },
+        { IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED, ERROR_INSTALL_PARSE_FAILED }
     };
 }
 
@@ -344,10 +343,6 @@ static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
     }
     if (property != nullptr) {
         PARSE_PROPERTY(env, property, int32, userId);
-        if (userId < Constants::DEFAULT_USERID) {
-            APP_LOGE("param userId(%{public}d) is invalid.", userId);
-            return false;
-        }
     }
     APP_LOGD("param userId is %{public}d", userId);
     return true;
@@ -541,49 +536,50 @@ napi_value Install(napi_env env, napi_callback_info info)
     APP_LOGD("Install called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(INSTALLER_PARAMS_NUMBER, INSTALLER_PARAMS_NUMBER)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
+
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < INSTALLER_PARAMS_NUMBER) {
+    if (argc < ARGS_SIZE_TWO) {
         APP_LOGE("the params number is incorrect");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
+
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
     callbackPtr->option = InstallOption::INSTALL;
-    napi_value firstArg = args.GetArgv(FIRST_PARAM);
-    napi_value secondArg = args.GetArgv(SECOND_PARAM);
-    napi_value thirdArg = args.GetArgv(THIRD_PARAM);
-    if (firstArg == nullptr || secondArg == nullptr || thirdArg == nullptr) {
-        APP_LOGE("the params is nullptr");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-        return nullptr;
-    }
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseStringArray(env, callbackPtr->hapFiles, args[i])) {
+                APP_LOGE("Flags %{public}s invalid!", callbackPtr->bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+                break;
+            }
 
-    std::vector<std::string> bundleFilePaths;
-    InstallParam installParam;
-    if ((CommonFunc::ParseStringArray(env, bundleFilePaths, firstArg) == nullptr) ||
-        (!ParseInstallParam(env, secondArg, installParam))) {
-        APP_LOGE("the param parse failed");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-        return nullptr;
-    }
-    callbackPtr->hapFiles = bundleFilePaths;
-    callbackPtr->installParam = installParam;
-
-    if (argc == INSTALLER_PARAMS_NUMBER) {
-        napi_valuetype valuetype = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, thirdArg, &valuetype));
-        if (valuetype != napi_function) {
-            APP_LOGE("Wrong argument type. Function expected.");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
+            if (!ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                APP_LOGE("userId %{public}d invalid!", callbackPtr->installParam.userId);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+            break;
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
             return nullptr;
         }
-        NAPI_CALL(env, napi_create_reference(env, thirdArg, NAPI_RETURN_ONE, &callbackPtr->callback));
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
@@ -641,47 +637,48 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
     APP_LOGD("UninstallOrRecover by bundleName called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(INSTALLER_PARAMS_NUMBER, INSTALLER_PARAMS_NUMBER)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
+
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < INSTALLER_PARAMS_NUMBER) {
+    if (argc < ARGS_SIZE_TWO) {
         APP_LOGE("the params number is incorrect");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
 
-    napi_value firstArg = args.GetArgv(FIRST_PARAM);
-    napi_value secondArg = args.GetArgv(SECOND_PARAM);
-    napi_value thirdArg = args.GetArgv(THIRD_PARAM);
-    if (firstArg == nullptr || secondArg == nullptr || thirdArg == nullptr) {
-        APP_LOGE("the params is nullptr");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-        return nullptr;
-    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], callbackPtr->bundleName)) {
+                APP_LOGE("Flags %{public}s invalid!", callbackPtr->bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+                break;
+            }
 
-    std::string bundleName;
-    InstallParam installParam;
-    if ((!CommonFunc::ParseString(env, firstArg, bundleName)) || (!ParseInstallParam(env, secondArg, installParam))) {
-        APP_LOGE("the param parse failed");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-        return nullptr;
-    }
-    callbackPtr->bundleName = bundleName;
-    callbackPtr->installParam = installParam;
-
-    if (argc == INSTALLER_PARAMS_NUMBER) {
-        napi_valuetype valuetype = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, thirdArg, &valuetype));
-        if (valuetype != napi_function) {
-            APP_LOGE("Wrong argument type. Function expected.");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
+            if (!ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                APP_LOGE("userId %{public}d invalid!", callbackPtr->installParam.userId);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+            break;
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
             return nullptr;
         }
-        NAPI_CALL(env, napi_create_reference(env, thirdArg, NAPI_RETURN_ONE, &callbackPtr->callback));
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), GetFunctionName(callbackPtr->option),
