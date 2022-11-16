@@ -21,6 +21,7 @@
 #include "bundle_promise.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
+#include "installd_client.h"
 #ifdef BMS_RDB_ENABLE
 #include "rdb_data_manager.h"
 #endif
@@ -32,6 +33,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
+const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -165,6 +167,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
         APP_LOGE("get all bundle info failed when userId is %{public}d.", userId);
+        RemoveArkProfile(userId);
         dataMgr->RemoveUserId(userId);
         return;
     }
@@ -187,11 +190,21 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
         bundlePromise->WaitForAllTasksExecute();
     }
+
+    RemoveArkProfile(userId);
     dataMgr->RemoveUserId(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif
     APP_LOGD("RemoveUser end userId: (%{public}d)", userId);
+}
+
+void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
+{
+    std::string arkProfilePath;
+    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId));
+    APP_LOGI("DeleteArkProfile %{public}s when remove user", arkProfilePath.c_str());
+    InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
 
 void BundleUserMgrHostImpl::CheckInitialUser()
