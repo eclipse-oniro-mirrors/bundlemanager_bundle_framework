@@ -44,6 +44,7 @@ private:
     void BeforeCreateNewUser(int32_t userId);
     void OnCreateNewUser(int32_t userId);
     void AfterCreateNewUser(int32_t userId);
+    void RemoveArkProfile(int32_t userId);
 
     std::mutex bundleUserMgrMutex_;
 };
