@@ -62,7 +62,7 @@ private:
         __LINE__,                                          \
         ##__VA_ARGS__)
 
-#define UnRegisterMissionListenerAPP_LOGD(fmt, ...) AFWK_PRINT_LOG(DEBUG, Debug, fmt, ##__VA_ARGS__)
+#define APP_LOGD(fmt, ...) AFWK_PRINT_LOG(DEBUG, Debug, fmt, ##__VA_ARGS__)
 #define APP_LOGI(fmt, ...) AFWK_PRINT_LOG(INFO, Info, fmt, ##__VA_ARGS__)
 #define APP_LOGW(fmt, ...) AFWK_PRINT_LOG(WARN, Warn, fmt, ##__VA_ARGS__)
 #define APP_LOGE(fmt, ...) AFWK_PRINT_LOG(ERROR, Error, fmt, ##__VA_ARGS__)
