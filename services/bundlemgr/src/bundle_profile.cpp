@@ -2246,6 +2246,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
 
     innerModuleInfo.isModuleJson = false;
     innerModuleInfo.isLibIsolated = configJson.module.isLibIsolated;
+    innerModuleInfo.deviceTypes = configJson.module.deviceType;
     return true;
 }
 

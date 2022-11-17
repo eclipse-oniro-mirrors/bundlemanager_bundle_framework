@@ -3040,5 +3040,16 @@ bool InnerBundleInfo::IsLibIsolated(const std::string &moduleName) const
 
     return moduleInfo->isLibIsolated;
 }
+
+std::vector<std::string> InnerBundleInfo::GetDeviceType(const std::string &packageName) const
+{
+    std::vector<std::string> moduleVec;
+    auto it = innerModuleInfos_.find(packageName);
+    if (it == innerModuleInfos_.end()) {
+        APP_LOGW("%{public}s is not existed", packageName.c_str());
+        return moduleVec;
+    }
+    return innerModuleInfos_.at(packageName).deviceTypes;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

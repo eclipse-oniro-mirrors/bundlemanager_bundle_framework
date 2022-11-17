@@ -1680,6 +1680,7 @@ public:
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
     void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
+    std::vector<std::string> GetDeviceType(const std::string &packageName) const;
 
 private:
     void GetBundleWithAbilities(

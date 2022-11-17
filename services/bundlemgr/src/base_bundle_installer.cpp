@@ -2007,7 +2007,15 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     checkParam.removable = installParam.removable;
     ErrCode ret = bundleInstallChecker_->ParseHapFiles(
         bundlePaths, checkParam, hapVerifyRes, infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("parse hap file failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
+    ret = bundleInstallChecker_->CheckDeviceType(infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
+    }
     return ret;
 }
 
