@@ -992,4 +992,52 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1024
         EXPECT_FALSE(ret);
     }
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1025
+ * @tc.name: test ProcessQuickFixDir
+ * @tc.desc: 1. ProcessQuickFixDir, invalid path
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1025, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->quickFixInfoMap_.clear();
+        std::vector<std::string> dirs;
+        dirs.push_back("wrong");
+        dirs.push_back("bundleName_1000wrong");
+        scanner->ProcessQuickFixDir(dirs);
+        EXPECT_TRUE(scanner->quickFixInfoMap_.empty());
+        dirs.push_back("/");
+        scanner->ProcessQuickFixDir(dirs);
+        EXPECT_TRUE(scanner->quickFixInfoMap_.empty());
+    }
+    DeleteQuickFileDir();
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixBootScannerTest_1026
+ * @tc.name: test RestoreQuickFix
+ * @tc.desc: 1. RestoreQuickFix, file patch not exist
+ * @tc.require: issueI5MZ6Z
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1026, Function | SmallTest | Level0)
+{
+    auto ret = InstallBundle(BUNDLE_PATH);
+    EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
+    CreateQuickFileDir();
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->quickFixInfoMap_.clear();
+        bool res = scanner->ReprocessQuickFix(HAP_FILE_PATH, BUNDLE_NAME);
+        EXPECT_FALSE(res);
+    }
+    DeleteQuickFileDir();
+    ret = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
 } // OHOS
