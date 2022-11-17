@@ -52,6 +52,24 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
         static_cast<int32_t>(installResult.type), installResult.resultCode, installResult.modulePackage.c_str(),
         installResult.abilityName.c_str(), installResult.bundleName.c_str());
 
+    std::string eventData = GetCommonEventData(installResult.type);
+    APP_LOGD("will send event data %{public}s", eventData.c_str());
+    OHOS::AAFwk::Want want;
+    want.SetAction(eventData);
+    ElementName element;
+    element.SetBundleName(installResult.bundleName);
+    element.SetAbilityName(installResult.abilityName);
+    want.SetElement(element);
+    want.SetParam(Constants::UID, installResult.uid);
+    want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
+    want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
+    want.SetParam(Constants::ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
+    EventFwk::CommonEventData commonData { want };
+    // trigger BundleEventCallback first
+    if (dataMgr != nullptr) {
+        dataMgr->NotifyBundleEventCallback(commonData);
+    }
+
     uint8_t installType = ((installResult.type == NotifyType::UNINSTALL_BUNDLE) ||
             (installResult.type == NotifyType::UNINSTALL_MODULE)) ?
             static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK) :
@@ -74,19 +92,6 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     if (installResult.resultCode != ERR_OK) {
         return;
     }
-    std::string eventData = GetCommonEventData(installResult.type);
-    APP_LOGD("will send event data %{public}s", eventData.c_str());
-    OHOS::AAFwk::Want want;
-    want.SetAction(eventData);
-    ElementName element;
-    element.SetBundleName(installResult.bundleName);
-    element.SetAbilityName(installResult.abilityName);
-    want.SetElement(element);
-    want.SetParam(Constants::UID, installResult.uid);
-    want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
-    want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
-    want.SetParam(Constants::ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
-    EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);
 }
 
