@@ -310,6 +310,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(IBundleMgr::Message::IMPLICIT_QUERY_INFO_BY_PRIORITY):
             errCode = HandleImplicitQueryInfoByPriority(data, reply);
             break;
+        case static_cast<uint32_t>(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK):
+            errCode = HandleRegisterBundleEventCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK):
+            errCode = HandleUnregisterBundleEventCallback(data, reply);
+            break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -1153,6 +1159,45 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(Parcel &data, Parcel &
     }
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    BYTRACE_NAME(BYTRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> bundleEventCallback = iface_cast<IBundleEventCallback>(object);
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("Get bundleEventCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    bool ret = RegisterBundleEventCallback(bundleEventCallback);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    BYTRACE_NAME(BYTRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> bundleEventCallback = iface_cast<IBundleEventCallback>(object);
+
+    bool ret = UnregisterBundleEventCallback(bundleEventCallback);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

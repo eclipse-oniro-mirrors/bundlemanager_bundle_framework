@@ -20,6 +20,7 @@
 
 #include "iremote_proxy.h"
 
+#include "bundle_event_callback_interface.h"
 #include "bundle_mgr_interface.h"
 #include "element_name.h"
 #include "bundle_status_callback_interface.h"
@@ -386,6 +387,10 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback) override;
+
+    virtual bool RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback) override;
+
+    virtual bool UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback) override;
     /**
      * @brief Clear the specific bundle status callback through the proxy object.
      * @param bundleStatusCallback Indicates the callback to be cleared.

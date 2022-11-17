@@ -24,6 +24,10 @@ config("appexecfwk_common_config") {
   ]
 }
 
+config("bundle_all_dependent_config") {
+  include_dirs = [ "log/include" ]
+}
+
 ohos_shared_library("libappexecfwk_common") {
   sources = [
     "log/src/app_log_wrapper.cpp",
@@ -39,6 +43,8 @@ ohos_shared_library("libappexecfwk_common") {
     ":appexecfwk_common_config",
     "//utils/native/base:utils_config",
   ]
+
+  all_dependent_configs = [ ":bundle_all_dependent_config" ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",

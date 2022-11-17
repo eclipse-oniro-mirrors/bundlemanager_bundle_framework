@@ -19,6 +19,7 @@
 #include "ability_info.h"
 #include "application_info.h"
 #include "bundle_constants.h"
+#include "bundle_event_callback_interface.h"
 #include "bundle_info.h"
 #include "bundle_installer_interface.h"
 #include "bundle_status_callback_interface.h"
@@ -430,6 +431,16 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback) = 0;
+
+    virtual bool RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+    {
+        return false;
+    }
+
+    virtual bool UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+    {
+        return false;
+    }
     /**
      * @brief Clear the specific bundle status callback.
      * @param bundleStatusCallback Indicates the callback to be cleared.
@@ -804,7 +815,9 @@ public:
         VERIFY_CALLING_PERMISSION,
         GET_ACCESSIBLE_APP_CODE_PATH,
         QUERY_EXTENSION_ABILITY_INFO_BY_URI,
-        IMPLICIT_QUERY_INFO_BY_PRIORITY
+        IMPLICIT_QUERY_INFO_BY_PRIORITY,
+        REGISTER_BUNDLE_EVENT_CALLBACK,
+        UNREGISTER_BUNDLE_EVENT_CALLBACK,
     };
 };
 }  // namespace AppExecFwk

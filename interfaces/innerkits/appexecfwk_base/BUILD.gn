@@ -21,6 +21,13 @@ config("appexecfwk_base_sdk_config") {
   ]
 }
 
+config("bundle_all_dependent_config") {
+  include_dirs = [
+    "//base/notification/ces_standard/interfaces/innerkits/native/include",
+    "include",
+  ]
+}
+
 ohos_shared_library("appexecfwk_base") {
   sources = [
     "src/ability_info.cpp",
@@ -45,6 +52,8 @@ ohos_shared_library("appexecfwk_base") {
   ]
 
   public_configs = [ ":appexecfwk_base_sdk_config" ]
+
+  all_dependent_configs = [ ":bundle_all_dependent_config" ]
 
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
