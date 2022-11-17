@@ -653,6 +653,7 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0400, Function | SmallTest | Le
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     Want want;
     want.SetAction("action.system.home");
+    APP_LOGE("disposedstatus 4");
     auto res = appControlProxy->SetDisposedStatus(APPID, want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
@@ -682,7 +683,10 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0600, Function | SmallTest | Le
     auto bundleMgrProxy = GetBundleMgrProxy();
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     Want want;
-    auto res = appControlProxy->GetDisposedStatus(APPID, want);
+    want.SetAction("action.system.home");
+    auto res = appControlProxy->SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    res = appControlProxy->GetDisposedStatus(APPID, want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS
