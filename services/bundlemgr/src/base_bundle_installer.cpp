@@ -15,6 +15,7 @@
 
 #include "base_bundle_installer.h"
 
+#include <sys/stat.h>
 #include "nlohmann/json.hpp"
 
 #include "account_helper.h"
