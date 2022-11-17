@@ -177,8 +177,27 @@ QuickFixType GetQuickFixType(const std::string &type)
     return QuickFixType::UNKNOWN;
 }
 
-void ToPatchInfo(const PatchJson &patchJson, AppQuickFix &appQuickFix)
+bool CheckNameIsValid(const std::string &name)
 {
+    if (name.empty()) {
+        return false;
+    }
+    if (name.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
+bool ToPatchInfo(const PatchJson &patchJson, AppQuickFix &appQuickFix)
+{
+    if (!CheckNameIsValid(patchJson.app.bundleName)) {
+        APP_LOGE("bundle name is invalid");
+        return false;
+    }
+    if (!CheckNameIsValid(patchJson.module.name)) {
+        APP_LOGE("module name is invalid");
+        return false;
+    }
     appQuickFix.bundleName = patchJson.app.bundleName;
     appQuickFix.versionCode = patchJson.app.versionCode;
     appQuickFix.versionName = patchJson.app.versionName;
@@ -190,6 +209,7 @@ void ToPatchInfo(const PatchJson &patchJson, AppQuickFix &appQuickFix)
     hqfInfo.hapSha256 = patchJson.module.originalModuleHash;
     hqfInfo.type = GetQuickFixType(patchJson.module.type);
     appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
+    return true;
 }
 }
 
@@ -302,7 +322,10 @@ ErrCode PatchProfile::TransformTo(
         PatchProfileReader::parseResult = ERR_OK;
         return ret;
     }
-    PatchProfileReader::ToPatchInfo(patchJson, appQuickFix);
+    if (!PatchProfileReader::ToPatchInfo(patchJson, appQuickFix)) {
+        APP_LOGE("bundle or module name is invalid");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
     // hot reload does not process so files
     if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
