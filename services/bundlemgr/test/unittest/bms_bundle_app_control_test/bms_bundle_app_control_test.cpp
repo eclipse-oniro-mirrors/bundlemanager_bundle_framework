@@ -331,7 +331,7 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0400, Function | SmallTe
 }
 
 /**
- * @tc.number: AppInstallControlRule_0400
+ * @tc.number: AppInstallControlRule_0500
  * @tc.name: test can not add app install control rule
  * @tc.require: issueI5MZ8Q
  * @tc.desc: 1.system run normally
@@ -341,13 +341,15 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0500, Function | SmallTe
 {
     std::vector<std::string> appIds;
     auto InstallRes = appControlManagerDb_->AddAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, appIds, APPID, 100);
+        AppControlConstants::EDM_CALLING, appIds, APPID, USERID);
     auto InstallRes1 = appControlManagerDb_->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, APPID, 100, appIds);
+        AppControlConstants::EDM_CALLING, APPID, USERID, appIds);
     auto InstallRes2 = appControlManagerDb_->DeleteAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, APPID, appIds, 100);
-    appControlManagerDb_->AddAppInstallControlRule(AppControlConstants::EDM_CALLING, appIds, APPID, 100);
-    auto InstallRes3 = appControlManagerDb_->DeleteAppInstallControlRule(AppControlConstants::EDM_CALLING, APPID, 100);
+        AppControlConstants::EDM_CALLING, APPID, appIds, USERID);
+    appControlManagerDb_->AddAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, appIds, APPID, USERID);
+    auto InstallRes3 = appControlManagerDb_->DeleteAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, APPID, USERID);
 
     EXPECT_EQ(InstallRes, ERR_OK);
     EXPECT_EQ(InstallRes1, ERR_OK);
@@ -584,6 +586,19 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0700, Function | SmallTe
 }
 
 /**
+ * @tc.number: AppRunningControlRule_0800
+ * @tc.name: test running control rule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.GetAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0800, Function | SmallTest | Level1)
+{
+    AppRunningControlRuleResult controlRuleResult;
+    auto RunningRes = appControlManagerDb_->GetAppRunningControlRule(APPID, USERID, controlRuleResult);
+    EXPECT_EQ(RunningRes, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+}
+
+/**
  * @tc.number: DisposedStatus_0100
  * @tc.name: test setting disposed status
  * @tc.require: issueI5MZ8C
@@ -605,7 +620,7 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0100, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0200, Function | SmallTest | Level1)
 {
-    auto res = appControlManagerDb_->DeleteDisposedStatus(CALLING_NAME, APPID, 100);
+    auto res = appControlManagerDb_->DeleteDisposedStatus(CALLING_NAME, APPID, USERID);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -619,9 +634,9 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0300, Function | SmallTest | Le
 {
     Want want;
     want.SetAction("action.system.home");
-    auto res = appControlManagerDb_->SetDisposedStatus(CALLING_NAME, APPID, want, 100);
+    auto res = appControlManagerDb_->SetDisposedStatus(CALLING_NAME, APPID, want, USERID);
     EXPECT_EQ(res, ERR_OK);
-    res = appControlManagerDb_->GetDisposedStatus(CALLING_NAME, APPID, want, 100);
+    res = appControlManagerDb_->GetDisposedStatus(CALLING_NAME, APPID, want, USERID);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_EQ(want.GetAction(), "action.system.home");
 }
