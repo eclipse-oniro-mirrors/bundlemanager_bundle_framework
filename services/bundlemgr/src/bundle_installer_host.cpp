@@ -311,7 +311,7 @@ bool BundleInstallerHost::Install(
         return false;
     }
 
-    manager_->CreateInstallTask(bundleFilePath, CheckInstallParam(installParam), statusReceiver);
+    manager_->CreateInstallTask(bundleFilePath, installParam, statusReceiver);
     return true;
 }
 
@@ -328,7 +328,7 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         return false;
     }
 
-    manager_->CreateInstallTask(bundleFilePaths, CheckInstallParam(installParam), statusReceiver);
+    manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
     return true;
 }
 
