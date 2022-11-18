@@ -66,16 +66,22 @@ OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
     size_t fingerprintLen = applicationInfo.fingerprint.size();
     if ((fingerprintLen == 0) || (fingerprintLen + 1) > CHAR_MAX_LENGTH) {
         APP_LOGE("failed due to the length of fingerprint is 0 or to long");
+        free(nativeApplicationInfo.bundleName);
+        nativeApplicationInfo.bundleName = nullptr;
         return nativeApplicationInfo;
     }
     nativeApplicationInfo.fingerprint = static_cast<char*>(malloc(fingerprintLen + 1));
     if (nativeApplicationInfo.fingerprint == nullptr) {
         APP_LOGE("failed due to malloc error");
+        free(nativeApplicationInfo.bundleName);
+        nativeApplicationInfo.bundleName = nullptr;
         return nativeApplicationInfo;
     }
 
     if (strcpy_s(nativeApplicationInfo.fingerprint, fingerprintLen + 1, applicationInfo.fingerprint.c_str()) != EOK) {
         APP_LOGE("failed due to strcpy_s error");
+        free(nativeApplicationInfo.bundleName);
+        nativeApplicationInfo.bundleName = nullptr;
         free(nativeApplicationInfo.fingerprint);
         nativeApplicationInfo.fingerprint = nullptr;
         return nativeApplicationInfo;

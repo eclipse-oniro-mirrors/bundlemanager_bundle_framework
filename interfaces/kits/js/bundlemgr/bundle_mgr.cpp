@@ -8151,6 +8151,7 @@ bool JsBundleMgr::UnwarpBundleOptionsParams(
     bool flagCall = true;
     auto env = reinterpret_cast<napi_env>(&engine);
     if (info.argc == ARGS_SIZE_TWO) {
+        result = true;
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_OBJECT) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
