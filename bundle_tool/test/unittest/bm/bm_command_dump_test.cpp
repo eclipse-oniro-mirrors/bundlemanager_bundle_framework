@@ -365,7 +365,6 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1200, Function | MediumTest | Level1
  * @tc.number: Bm_Command_Dump_1300
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm dump -s" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1300, Function | MediumTest | Level1)
 {
@@ -386,7 +385,6 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1300, Function | MediumTest | Level1
  * @tc.number: Bm_Command_Dump_1400
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm dump -n <bundle-name> -s" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1400, Function | MediumTest | Level1)
 {

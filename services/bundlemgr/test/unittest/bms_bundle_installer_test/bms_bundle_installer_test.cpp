@@ -319,7 +319,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0100, Function | SmallTest | Leve
  * @tc.name: test the wrong system bundle file can't be installed
  * @tc.desc: 1.the system bundle file don't exists
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0200, Function | SmallTest | Level0)
 {
@@ -334,7 +333,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0200, Function | SmallTest | Leve
  * @tc.name: test the empty path can't be installed
  * @tc.desc: 1.the system bundle file path is empty
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0300, Function | SmallTest | Level0)
 {
@@ -348,7 +346,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0300, Function | SmallTest | Leve
  * @tc.name: test the illegal bundleName file can't be installed
  * @tc.desc: 1.the system bundle name is illegal
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0400, Function | SmallTest | Level0)
 {
@@ -363,7 +360,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0400, Function | SmallTest | Leve
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0500, Function | SmallTest | Level0)
 {
@@ -378,7 +374,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0500, Function | SmallTest | Leve
  * @tc.name: test the install will fail when installd service has error
  * @tc.desc: 1.the installd service has error
  *           2.the install result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Level0)
 {
@@ -393,7 +388,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Leve
  * @tc.name: test the right bundle file can be installed and update its info to bms
  * @tc.desc: 1.the system bundle is available
  *           2.the right bundle can be installed and update its info to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0100, Function | SmallTest | Level0)
 {
@@ -416,7 +410,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0100, Function | SmallTest | L
  * @tc.name: test the wrong bundle file can't be installed and its info will not updated to bms
  * @tc.desc: 1.the system bundle is wrong
  *           2.the wrong bundle can't be installed and its info will not updated to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0200, Function | SmallTest | Level0)
 {
@@ -437,7 +430,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0200, Function | SmallTest | L
  * @tc.name: test the already installed bundle can't be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installed
  *           2.the already installed  bundle can't be reinstalled and update its info to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0300, Function | SmallTest | Level0)
 {
@@ -461,7 +453,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0300, Function | SmallTest | L
  * @tc.name: test the already installing bundle can't be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installing.
  *           2.the already installing bundle can't be reinstalled and update its info to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0400, Function | SmallTest | Level0)
 {
@@ -482,7 +473,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0400, Function | SmallTest | L
  * @tc.name: test the installer manager can create task
  * @tc.desc: 1.the bundle file exists
  *           2.the bundle can be installed successfully
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | Level0)
 {
@@ -503,7 +493,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | 
  * @tc.name: test the installer manager can not create task while bundle invalid
  * @tc.desc: 1.the invalid bundle file exists
  *           2.install the invalid bundle failed
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0200, Function | SmallTest | Level0)
 {
@@ -523,7 +512,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0200, Function | SmallTest | 
  * @tc.name: test the installer manager can not create task while bundle invalid
  * @tc.desc: 1.the invalid bundle file exists
  *           2.uninstall the bundle failed
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, CreateUninstallTask_0200, Function | SmallTest | Level0)
 {
@@ -545,7 +533,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateUninstallTask_0200, Function | SmallTest 
  * @tc.desc: 1.the bundle is already installing.
  *           2.You can query the related moudle.json information
  *           3.The system field tested is the configured field
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Level0)
 {
@@ -625,7 +612,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, BackupExtension_0100, Function | SmallTest | Level0)
 {
@@ -715,7 +701,6 @@ HWTEST_F(BmsBundleInstallerTest, THUMBNAILExtension_0100, Function | SmallTest |
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0383
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0100, Function | SmallTest | Level0)
 {
@@ -746,7 +731,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0100, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0200, Function | SmallTest | Level0)
 {
@@ -769,7 +753,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0200, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0300, Function | SmallTest | Level0)
 {
@@ -798,7 +781,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0300, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0400, Function | SmallTest | Level0)
 {
@@ -1054,7 +1036,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1200, Function | Sma
  * @tc.name: test the GetBundleStats
  * @tc.desc: 1.install the hap
  *           2.GetBundleStats
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, GetBundleStats_001, Function | SmallTest | Level0)
 {

@@ -386,7 +386,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0100, Function | MediumTest 
  * @tc.number: BMS_Register_0200
  * @tc.name: test launcher service RegisterCallback
  * @tc.desc: register callback and listen for remove events
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0200, Function | MediumTest | Level1)
 {
@@ -410,7 +409,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0200, Function | MediumTest 
  * @tc.number: BMS_Register_0300
  * @tc.name: test launcher service RegisterCallback
  * @tc.desc: register callback and listen for update events
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0300, Function | MediumTest | Level1)
 {
@@ -438,7 +436,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0300, Function | MediumTest 
  * @tc.number: BMS_Register_0400
  * @tc.name: test launcher service RegisterCallback
  * @tc.desc: unregister callback and listen for events
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0400, Function | MediumTest | Level1)
 {
@@ -463,7 +460,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0400, Function | MediumTest 
  * @tc.number: BMS_Register_0500
  * @tc.name: test launcher service RegisterCallback
  * @tc.desc: register callback and listen for add events by other TestBundleStatusCallback object
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0500, Function | MediumTest | Level1)
 {
@@ -492,7 +488,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0500, Function | MediumTest 
  * @tc.number: BMS_Register_0600
  * @tc.name: test launcher service RegisterCallback
  * @tc.desc: repeatly register callback and listen for events by two launcher objects
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0600, Function | MediumTest | Level1)
 {
@@ -742,7 +737,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0600, Function | Mediu
 HWTEST_F(BmsLauncherServiceSystemTest, GetAllLauncherAbilityInfos_0100, Function | MediumTest | Level2)
 {
     GTEST_LOG_(INFO) << "START GetAllLauncherAbilityInfos_0100";
- 
+
     LauncherService launcherservice;
     std::vector<LauncherAbilityInfo> launcherAbilityInfos;
     bool result = launcherservice.GetAllLauncherAbilityInfos(USERID, launcherAbilityInfos);
@@ -759,7 +754,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetAllLauncherAbilityInfos_0100, Function
 HWTEST_F(BmsLauncherServiceSystemTest, GetAllLauncherAbilityInfos_0200, Function | MediumTest | Level2)
 {
     GTEST_LOG_(INFO) << "START GetAllLauncherAbilityInfos_0200";
- 
+
     LauncherService launcherservice;
     std::vector<LauncherAbilityInfo> launcherAbilityInfos;
     bool result = launcherservice.GetAllLauncherAbilityInfos(1001, launcherAbilityInfos);
@@ -783,7 +778,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetAbilityInfo_0100, Function | MediumTes
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
- 
+
     LauncherService launcherservice;
     LauncherAbilityInfo launcherAbilityInfo;
     Want want;
@@ -816,7 +811,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetAbilityInfo_0200, Function | MediumTes
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
- 
+
     LauncherService launcherservice;
     LauncherAbilityInfo launcherAbilityInfo;
     Want want;
@@ -849,7 +844,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetAbilityInfo_0300, Function | MediumTes
     std::string message;
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
- 
+
     LauncherService launcherservice;
     LauncherAbilityInfo launcherAbilityInfo;
     Want want;
@@ -883,7 +878,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, IsBundleEnabled_0100, Function | MediumTe
     EXPECT_EQ(message, "Success") << "install fail!";
 
     LauncherService launcherservice;
- 
+
     bool result = launcherservice.IsBundleEnabled(bundleName);
     EXPECT_FALSE(result) << "Get ability list failed";
 
@@ -965,7 +960,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetShortcutInfos_0100, Function | MediumT
 HWTEST_F(BmsLauncherServiceSystemTest, GetShortcutInfos_0200, Function | MediumTest | Level2)
 {
     GTEST_LOG_(INFO) << "START GetShortcutInfos_0200";
-    
+
     LauncherService launcherservice;
 
     std::vector<ShortcutInfo> shortcutInfos;

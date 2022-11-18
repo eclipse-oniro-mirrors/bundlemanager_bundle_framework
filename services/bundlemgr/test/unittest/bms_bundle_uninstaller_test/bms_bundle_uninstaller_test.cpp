@@ -314,7 +314,6 @@ ErrCode BmsBundleUninstallerTest::InstallMultipleBundles(const std::vector<std::
  * @tc.name: test the empty bundle name will return fail
  * @tc.desc: 1. the bundle name is empty
  *           2. the empty bundle name will return fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0100, Function | SmallTest | Level0)
 {
@@ -327,7 +326,6 @@ HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0100, Function | SmallTest |
  * @tc.name: test the error bundle name will return fail
  * @tc.desc: 1. the bundle name is error
  *           2. the error bundle name will return fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0200, Function | SmallTest | Level0)
 {
@@ -340,7 +338,6 @@ HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0200, Function | SmallTest |
  * @tc.name: test the uninstall installed bundle with incorrect userId
  * @tc.desc: 1. the bundle name is correct
  *           2. the bundle will be uninstalled failed
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0300, Function | SmallTest | Level0)
 {
@@ -361,7 +358,6 @@ HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0300, Function | SmallTest |
  * @tc.name: test the uninstall installed bundle with correct userId
  * @tc.desc: 1. the bundle name is correct
  *           2. the bundle will be uninstalled successfully
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0400, Function | SmallTest | Level0)
 {
@@ -380,7 +376,6 @@ HWTEST_F(BmsBundleUninstallerTest, Bundle_Uninstall_0400, Function | SmallTest |
  * @tc.name: test the installed Module can be uninstalled
  * @tc.desc: 1. the bundle name is empty
  *           2. the empty bundle name will return fail
- * @tc.require: AR000GHQ9D
  */
 HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0100, Function | SmallTest | Level0)
 {
@@ -393,7 +388,6 @@ HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0100, Function | SmallTest |
  * @tc.name: test the installed Module can be uninstalled
  * @tc.desc: 1. the bundle name is error name
  *           2. the error bundle name will return fail
- * @tc.require: AR000GHQ9D
  */
 HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0200, Function | SmallTest | Level0)
 {
@@ -406,7 +400,6 @@ HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0200, Function | SmallTest |
  * @tc.name: test the installed Module can be uninstalled
  * @tc.desc: 1. the Module name is empty
  *           2. the empty Module name will return fail
- * @tc.require: AR000GHQ9D
  */
 HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0300, Function | SmallTest | Level0)
 {
@@ -419,7 +412,6 @@ HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0300, Function | SmallTest |
  * @tc.name: test the error Module name will return fail.
  * @tc.desc: 1. the Module name is error.
  *           2. the error Module name will return fail.
- * @tc.require: AR000GHQ9D
  */
 HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0400, Function | SmallTest | Level0)
 {
@@ -432,7 +424,6 @@ HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0400, Function | SmallTest |
  * @tc.name: test the uninstall module with correct bundle name, module name and invalid userId
  * @tc.desc: 1. the bundl name and module name are corrct and userId is invalid.
  *           2. the uninstallation will be sfailed
- * @tc.require: AR000GHQ9D
  */
 HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0500, Function | SmallTest | Level0)
 {
@@ -445,7 +436,6 @@ HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0500, Function | SmallTest |
  * @tc.name: test the correct Module name will be uninstalled successfully.
  * @tc.desc: 1. the Module name is com.example.l2jsdemo.
  *           2. the correct Module will be uninstalled successfully.
- * @tc.require: AR000GHQ9D
  */
 HWTEST_F(BmsBundleUninstallerTest, Module_Uninstall_0600, Function | SmallTest | Level0)
 {

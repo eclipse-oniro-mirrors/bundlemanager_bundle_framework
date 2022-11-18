@@ -293,7 +293,6 @@ void BmsBundleManagerTest::ClearBundleInfo()
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0383
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0100, Function | SmallTest | Level0)
 {
@@ -324,7 +323,6 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0100, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0200, Function | SmallTest | Level0)
 {
@@ -347,7 +345,6 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0200, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level0)
 {
@@ -372,7 +369,6 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0300, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0400, Function | SmallTest | Level0)
 {

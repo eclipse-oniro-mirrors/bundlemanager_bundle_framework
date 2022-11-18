@@ -317,7 +317,6 @@ void BmsMultipleInstallerTest::ClearBundleInfo(const std::string &bundleName) co
  * @tc.name: test the right third party bundle file can be installed
  * @tc.desc: 1.the third party bundle file exists
  *           2.the third party bundle can be installed successfully and can get the bundle info
- * @tc.require: SR000H00TF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | Level0)
 {
@@ -336,7 +335,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest 
  * @tc.name: test the wrong third party bundle file can't be installed
  * @tc.desc: 1.the third party bundle file don't exists
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000H0365
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0200, Function | SmallTest | Level0)
 {
@@ -365,7 +363,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0300, Function | SmallTest 
  * @tc.name: test the illegal bundleName file can't be installed
  * @tc.desc: 1.the third party bundle name is illegal
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0400, Function | SmallTest | Level0)
 {
@@ -380,7 +377,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0400, Function | SmallTest 
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0500, Function | SmallTest | Level0)
 {
@@ -395,7 +391,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0500, Function | SmallTest 
  * @tc.name: test the install will fail when installd service has error
  * @tc.desc: 1.the installd service has error
  *           2.the install result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0600, Function | SmallTest | Level0)
 {
@@ -410,7 +405,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0600, Function | SmallTest 
  * @tc.name: test the right bundle file can be installed and update its info to bms
  * @tc.desc: 1.the ThirdParty bundle is available
  *           2.the right bundle can be installed and update its info to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0100, Function | SmallTest | Level0)
 {
@@ -433,7 +427,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0100, Function | SmallTe
  * @tc.name: test the wrong bundle file can't be installed and its info will not updated to bms
  * @tc.desc: 1.the ThirdParty bundle is wrong
  *           2.the wrong bundle can't be installed and its info will not updated to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0200, Function | SmallTest | Level0)
 {
@@ -454,7 +447,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0200, Function | SmallTe
  * @tc.name: test the already installed bundle can't be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installed
  *           2.the already installed  bundle can't be reinstalled and update its info to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0300, Function | SmallTest | Level0)
 {
@@ -478,7 +470,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0300, Function | SmallTe
  * @tc.name: test the already installed bundle can be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installed
  *           2.the already installed  bundle can be reinstalled and update its info to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0400, Function | SmallTest | Level0)
 {
@@ -502,7 +493,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0400, Function | SmallTe
  * @tc.name: test the already installing bundle can't be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installing
  *           2.the already installing bundle can't be reinstalled and update its info to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0500, Function | SmallTest | Level0)
 {
@@ -523,7 +513,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0500, Function | SmallTe
  * @tc.name: test the input array of the input file paths is empty, the installation is failed.
  * @tc.desc: 1.the input array is empty.
  *           2 the installation is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0100, Function | SmallTest | Level0)
 {
@@ -537,7 +526,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0100, Function | SmallTes
  * @tc.name: test the input array of the input file paths has some empty paths, the installation is failed.
  * @tc.desc: 1.there is empty path in the input file path array.
  *           2.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0200, Function | SmallTest | Level0)
 {
@@ -554,7 +542,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0200, Function | SmallTes
  * @tc.name: test the input array only has one valid file path
  * @tc.desc: 1.only one valid path in the input file path array
  *           2.the installation result is successful
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0300, Function | SmallTest | Level0)
 {
@@ -572,7 +559,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0300, Function | SmallTes
  * @tc.name: test the wrong third party bundle file can't be installed
  * @tc.desc: 1.the third party bundle file don't exists
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0400, Function | SmallTest | Level0)
 {
@@ -589,7 +575,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0400, Function | SmallTes
  * @tc.name: test the illegal bundleName file can't be installed
  * @tc.desc: 1.the third party bundle name is illegal
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0500, Function | SmallTest | Level0)
 {
@@ -606,7 +591,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0500, Function | SmallTes
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
  *           2.the third party bundle can't be installed and the result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0600, Function | SmallTest | Level0)
 {
@@ -623,7 +607,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0600, Function | SmallTes
  * @tc.name: test the install will fail when installd service has error
  * @tc.desc: 1.the installd service has error
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0700, Function | SmallTest | Level0)
 {
@@ -641,7 +624,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0700, Function | SmallTes
  * @tc.name: test to install haps with different bundleName in the input file path array
  * @tc.desc: 1.the bundleName is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0800, Function | SmallTest | Level0)
 {
@@ -660,7 +642,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0800, Function | SmallTes
  * @tc.name: test to install haps with different version code in the input file path array
  * @tc.desc: 1.the version code is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0900, Function | SmallTest | Level0)
 {
@@ -679,7 +660,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0900, Function | SmallTes
  * @tc.name: test to install haps with different version name in the input file path array
  * @tc.desc: 1.the version name is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1000, Function | SmallTest | Level1)
 {
@@ -698,7 +678,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1000, Function | SmallTes
  * @tc.name: test to install haps with different releaseType target in the input file path array
  * @tc.desc: 1.the releaseType target is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1100, Function | SmallTest | Level1)
 {
@@ -717,7 +696,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1100, Function | SmallTes
  * @tc.name: test to install haps with different releaseType compatible in the input file path array
  * @tc.desc: 1.the releaseType compatible is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTest | Level1)
 {
@@ -736,7 +714,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTes
  * @tc.name: test to install haps with different vendor in the input file path array
  * @tc.desc: 1.the vendor is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1300, Function | SmallTest | Level1)
 {
@@ -755,7 +732,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1300, Function | SmallTes
  * @tc.name: test to install haps which contain more than one entry hap in the array
  * @tc.desc: 1.there are more than one entry hap in the array
  *           2.the installation is failed
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1400, Function | SmallTest | Level1)
 {
@@ -773,7 +749,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1400, Function | SmallTes
  * @tc.name: test to install haps which contain same feature hap in the array
  * @tc.desc: 1.there are two same feature haps in the array
  *           2.the installation is failed
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1500, Function | SmallTest | Level1)
 {
@@ -793,7 +768,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1500, Function | SmallTes
  * @tc.name: test to install haps with valid paths in the input file path array
  * @tc.desc: 1.the vaild paths in the input file path array
  *           2.the installation result is successful
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1600, Function | SmallTest | Level1)
 {
@@ -824,7 +798,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1600, Function | SmallTes
  * @tc.name: test to install haps which contain some feature haps in the array
  * @tc.desc: 1.there are two different feature haps in the array
  *           2.the installation is failed
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1700, Function | SmallTest | Level1)
 {
@@ -856,7 +829,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1700, Function | SmallTes
  * @tc.name: test to install haps which contain invalid path in the array.
  * @tc.desc: 1.there is an invalid path in the array.
  *           2.the installation is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1800, Function | SmallTest | Level1)
 {
@@ -877,7 +849,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1800, Function | SmallTes
  *           2.the hap files under this direction are valid.
  *           3.there are entry and feature haps under the direction.
  *           4.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1900, Function | SmallTest | Level1)
 {
@@ -907,7 +878,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1900, Function | SmallTes
  *           2.the hap files under this direction are valid.
  *           3.there are only feature haps under the direction.
  *           4.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2000, Function | SmallTest | Level1)
 {
@@ -935,7 +905,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2000, Function | SmallTes
  * @tc.name: test to install haps when one valid hap path and one direction in the array
  * @tc.desc: 1.one hap path and one direction are placed in the array
  *           2.the installation result is failed
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2100, Function | SmallTest | Level1)
 {
@@ -954,7 +923,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2100, Function | SmallTes
  * @tc.name: test to install haps when one direction in the array
  * @tc.desc: 1.one direction are placed in the array, there is on invalid hap file under the direction.
  *           2.the installation result is failed
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2200, Function | SmallTest | Level1)
 {
@@ -971,7 +939,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2200, Function | SmallTes
  * @tc.name: test to install haps when one direction in the array
  * @tc.desc: 1.more than one entry hap under the direction.
  *           2.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2300, Function | SmallTest | Level1)
 {
@@ -988,7 +955,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2300, Function | SmallTes
  * @tc.name: test to install haps when one direction in the array
  * @tc.desc: 1.same feature haps under the direction.
  *           2.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2400, Function | SmallTest | Level1)
 {
@@ -1006,7 +972,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2400, Function | SmallTes
  * @tc.name: test to install haps with some of them having no sign info
  * @tc.desc: 1.sixth_rigth.hap has no sign info in the haps
  *           2.the installation result is failed
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2500, Function | SmallTest | Level1)
 {
@@ -1031,7 +996,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2500, Function | SmallTes
  * @tc.name: test to install haps with different sign info in the input file path array
  * @tc.desc: 1.the sign info is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTest | Level1)
 {
@@ -1050,7 +1014,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTes
  * @tc.name: test to install haps with different releaseType in the input file path array
  * @tc.desc: 1.the releaseType is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2700, Function | SmallTest | Level1)
 {
@@ -1069,7 +1032,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2700, Function | SmallTes
  * @tc.name: test to install haps with different version name in the different input file path array
  * @tc.desc: 1.the version name is differnet in the different input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4700, Function | SmallTest | Level1)
 {
@@ -1095,7 +1057,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4700, Function | SmallTes
  * @tc.name: test to install haps with different minCompatibleVersionCode in the input file path array
  * @tc.desc: 1.the minCompatibleVersionCode is differnet in the input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4800, Function | SmallTest | Level1)
 {
@@ -1114,7 +1075,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4800, Function | SmallTes
  * @tc.name: test to install haps with different minCompatibleVersionCode in the different input file path array
  * @tc.desc: 1.the minCompatibleVersionCode is differnet in the different input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTest | Level1)
 {
@@ -1140,7 +1100,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTes
  * @tc.name: test to install haps with different vendor in the different input file path array
  * @tc.desc: 1.the vendor is differnet in the input different file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5000, Function | SmallTest | Level1)
 {
@@ -1166,7 +1125,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5000, Function | SmallTes
  * @tc.name: test to install haps with different releaseType target in the different input file path array
  * @tc.desc: 1.the releaseType target is differnet in the different input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTest | Level1)
 {
@@ -1192,7 +1150,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTes
  * @tc.name: test to install haps with different releaseType compatible in the different input file path array
  * @tc.desc: 1.the releaseType compatible is differnet in the different input file path array
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTest | Level1)
 {
@@ -1218,7 +1175,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTes
  * @tc.name: test to install haps with same moduelName
  * @tc.desc: 1.the moduleName is different in the same packageName hap
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5300, Function | SmallTest | Level1)
 {
@@ -1244,7 +1200,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5300, Function | SmallTes
  * @tc.name: test to install haps with same moduelName
  * @tc.desc: 1.the moduleType is different in the same packageName hap
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5400, Function | SmallTest | Level1)
 {
@@ -1270,7 +1225,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5400, Function | SmallTes
  * @tc.name: test to install haps with same moduelName
  * @tc.desc: 1.the moduleName is same in the different packageName hap
  *           2.the installation result is fail
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5500, Function | SmallTest | Level1)
 {
@@ -1298,7 +1252,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5500, Function | SmallTes
  *           2.to install a feature hap of this bundle, the feature hap has the same version
  *             code with the entry hap.
  *           3.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0100, Function | SmallTest | Level1)
 {
@@ -1326,7 +1279,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0100, Function | Small
  *           2.to install a feature hap of this bundle, the feature hap has the higher version
  *             code than the entry hap.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0200, Function | SmallTest | Level1)
 {
@@ -1354,7 +1306,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0200, Function | Small
  *           2.to install a feature hap of this bundle, the feature hap has the lower version
  *             code than the entry hap.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0300, Function | SmallTest | Level1)
 {
@@ -1381,7 +1332,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0300, Function | Small
  * @tc.desc: 1.to install an entry hap of a bundle.
  *           2.to install a same entry hap of this bundle.
  *           3.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0400, Function | SmallTest | Level1)
 {
@@ -1409,7 +1359,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0400, Function | Small
  *           2.to install an entry hap of this bundle, the entry hap has the higher version
  *             code than the entry hap.
  *           3.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0500, Function | SmallTest | Level1)
 {
@@ -1437,7 +1386,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0500, Function | Small
  *           2.to install an entry hap of this bundle, the entry hap has the lower version
  *             code than the entry hap.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0600, Function | SmallTest | Level1)
 {
@@ -1465,7 +1413,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0600, Function | Small
  *           2.to install an entry hap of this bundle, the entry hap has the same version
  *             code than the feature hap.
  *           3.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0700, Function | SmallTest | Level1)
 {
@@ -1493,7 +1440,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0700, Function | Small
  *             code than the feature hap.
  *           3.the installation result is successful.
  *           4.the feature hap has been uninstalled after finishing the installation procedure.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0800, Function | SmallTest | Level1)
 {
@@ -1522,7 +1468,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0800, Function | Small
  *           2.to install an entry hap of this bundle, the entry hap has the lower version
  *             code than the feature hap.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0900, Function | SmallTest | Level1)
 {
@@ -1550,7 +1495,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_0900, Function | Small
  *           2.to install a same feature hap of this bundle, this feature hap has the same version
  *             code than the feature hap installed previously.
  *           3.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1000, Function | SmallTest | Level1)
 {
@@ -1578,7 +1522,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1000, Function | Small
  *           2.to install a same feature hap of this bundle, this feature hap has the higher version
  *             code than the feature hap installed previously.
  *           3.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1100, Function | SmallTest | Level1)
 {
@@ -1605,7 +1548,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1100, Function | Small
  *           2.to install a same feature hap of this bundle, this feature hap has the lower version
  *             code than the feature hap installed previously.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1200, Function | SmallTest | Level1)
 {
@@ -1633,7 +1575,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1200, Function | Small
  *           2.to install another feature hap of this bundle, this feature hap has the same version
  *             code than the feature hap installed previously.
  *           3.the installation result is successful.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1300, Function | SmallTest | Level1)
 {
@@ -1663,7 +1604,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1300, Function | Small
  *             code than the feature hap installed previously.
  *           3.the installation result is successful.
  *           4.the feature with lower version code has been uninstalled after finishing the installation.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1400, Function | SmallTest | Level1)
 {
@@ -1692,7 +1632,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1400, Function | Small
  *           2.to install another feature hap of this bundle, this feature hap has the lower version
  *             code than the feature hap installed previously.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1500, Function | SmallTest | Level1)
 {
@@ -1719,7 +1658,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1500, Function | Small
  * @tc.desc: 1.to install a feature hap A and an entry hap B of a bundle.
  *           2.to install a entry hap B of this bundle.
  *           3.the installation result is successfully.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1600, Function | SmallTest | Level1)
 {
@@ -1748,7 +1686,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1600, Function | Small
  *             code than the hap B installed previously.
  *           3.the installation result is successfully.
  *           4. hap A has been uninstalled after finishing installation.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1700, Function | SmallTest | Level1)
 {
@@ -1776,7 +1713,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1700, Function | Small
  * @tc.desc: 1.to install a feature hap A and an entry hap B of a bundle.
  *           2.to install hap A.
  *           3.the installation result is successfully.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1800, Function | SmallTest | Level1)
 {
@@ -1803,7 +1739,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1800, Function | Small
  * @tc.desc: 1.to install a feature hap A and an entry hap B of a bundle.
  *           2.to install a feature hap C which has same package name with hap A, but higher version code.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1900, Function | SmallTest | Level1)
 {
@@ -1830,7 +1765,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_1900, Function | Small
  * @tc.desc: 1.to install a feature hap A and an entry hap B of a bundle.
  *           2.to install a feature hap C which has same package name and version code with hap A.
  *           3.the installation result is successfully.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2000, Function | SmallTest | Level1)
 {
@@ -1858,7 +1792,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2000, Function | Small
  * @tc.desc: 1.to install a feature hap A and an entry hap B of a bundle.
  *           2.to install another feature hap C which has higher version code than hap A.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2100, Function | SmallTest | Level1)
 {
@@ -1885,7 +1818,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2100, Function | Small
  * @tc.desc: 1.to install a feature hap A and an entry hap B of a bundle.
  *           2.to install another feature hap C which has lower version code than hap A.
  *           3.the installation result is failed.
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2200, Function | SmallTest | Level1)
 {
@@ -1911,7 +1843,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2200, Function | Small
  * @tc.name: test the hap files can be installed and update their info to bms
  * @tc.desc: 1.the ThirdParty bundles are available
  *           2.the haps can be installed and update their info to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2300, Function | SmallTest | Level1)
 {
@@ -1946,7 +1877,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2300, Function | Small
  *           their info will not updated to bms
  * @tc.desc: 1.the ThirdParty bundle is wrong
  *           2.the wrong bundle can't be installed and its info will not updated to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2400, Function | SmallTest | Level1)
 {
@@ -1974,7 +1904,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2400, Function | Small
  * @tc.name: test the already installed bundle can't be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installed
  *           2.the already installed  bundle can't be reinstalled and update its info to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2500, Function | SmallTest | Level1)
 {
@@ -2013,7 +1942,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2500, Function | Small
  * @tc.name: test the already installed bundle can be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installed
  *           2.the already installed  bundle can be reinstalled and update its info to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2600, Function | SmallTest | Level1)
 {
@@ -2052,7 +1980,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2600, Function | Small
  * @tc.name: test the installation is failed when install status is incorrect
  * @tc.desc: 1.install status is incorrect
  *           2.the haps are installed failed and their info will not update to bms
- * @tc.require: AR000GJ4KF
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2700, Function | SmallTest | Level1)
 {
