@@ -6465,8 +6465,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateStream_0100, Function | SmallTest | Leve
     int32_t installedUid = 0;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
     std::string hapName = "test.hap";
-    long offset = 100;
-    auto res = impl.CreateStream(hapName, offset);
+    auto res = impl.CreateStream(hapName);
     EXPECT_GE(res, 0);
 }
 
@@ -6481,8 +6480,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateStream_0200, Function | SmallTest | Leve
     int32_t installedUid = 0;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
     std::string hapName = "123";
-    long offset = 100;
-    auto res = impl.CreateStream(hapName, offset);
+    auto res = impl.CreateStream(hapName);
     EXPECT_EQ(res, -1);
 }
 
@@ -6497,8 +6495,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateStream_0300, Function | SmallTest | Leve
     int32_t installedUid = 100;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
     std::string hapName = "test.hap";
-    long offset = 100;
-    auto res = impl.CreateStream(hapName, offset);
+    auto res = impl.CreateStream(hapName);
     EXPECT_EQ(res, -1);
 }
 

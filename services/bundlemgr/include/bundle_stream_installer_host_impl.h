@@ -32,7 +32,7 @@ public:
     bool Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver);
     virtual void UnInit() override;
 
-    virtual int CreateStream(const std::string &bundleName, long offset) override;
+    virtual int CreateStream(const std::string &bundleName) override;
     virtual bool Install() override;
 
     virtual uint32_t GetInstallerId() const override;
