@@ -374,6 +374,10 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback) override;
+
+    virtual bool RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback) override;
+
+    virtual bool UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback) override;
     /**
      * @brief Clear the specific bundle status callback.
      * @param bundleStatusCallback Indicates the callback to be cleared.

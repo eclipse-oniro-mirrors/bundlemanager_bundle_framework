@@ -21,6 +21,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_data_storage_database.h"
+#include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
 #include "bundle_status_callback_death_recipient.h"
 #include "common_event_manager.h"
@@ -34,6 +35,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
+}
 BundleDataMgr::BundleDataMgr()
 {
     InitStateTransferMap();
@@ -1685,6 +1689,55 @@ bool BundleDataMgr::RegisterBundleStatusCallback(const sptr<IBundleStatusCallbac
     return true;
 }
 
+bool BundleDataMgr::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    if (eventCallbackList_.size() >= MAX_EVENT_CALL_BACK_SIZE) {
+        APP_LOGE("eventCallbackList_ reach max size %{public}d", MAX_EVENT_CALL_BACK_SIZE);
+        return false;
+    }
+    if (bundleEventCallback->AsObject() != nullptr) {
+        sptr<BundleEventCallbackDeathRecipient> deathRecipient =
+            new (std::nothrow) BundleEventCallbackDeathRecipient();
+        if (deathRecipient == nullptr) {
+            APP_LOGE("deathRecipient is null");
+            return false;
+        }
+        bundleEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
+    }
+    eventCallbackList_.emplace_back(bundleEventCallback);
+    return true;
+}
+
+bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    APP_LOGD("begin to UnregisterBundleEventCallback");
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    eventCallbackList_.erase(std::remove_if(eventCallbackList_.begin(), eventCallbackList_.end(),
+        [&bundleEventCallback](const sptr<IBundleEventCallback> &callback) {
+            return callback->AsObject() == bundleEventCallback->AsObject();
+        }), eventCallbackList_.end());
+    return true;
+}
+
+void BundleDataMgr::NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const
+{
+    APP_LOGD("begin to NotifyBundleEventCallback");
+    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    for (const auto &callback : eventCallbackList_) {
+        callback->OnReceiveEvent(eventData);
+    }
+    APP_LOGD("finish to NotifyBundleEventCallback");
+}
+
 bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("ClearBundleStatusCallback %{public}s", bundleStatusCallback->GetBundleName().c_str());
@@ -1884,25 +1937,6 @@ bool BundleDataMgr::NotifyBundleStatus(const std::string& bundleName, const std:
 {
     APP_LOGD("notify type %{public}d with %{public}d for %{public}s-%{public}s in %{public}s", type, resultCode,
         modulePackage.c_str(), abilityName.c_str(), bundleName.c_str());
-    uint8_t installType = [&]() -> uint8_t {
-        if ((type == NotifyType::UNINSTALL_BUNDLE) || (type == NotifyType::UNINSTALL_MODULE)) {
-            return static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK);
-        }
-        return static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
-    }();
-    {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
-        for (const auto& callback : callbackList_) {
-            if (callback->GetBundleName() == bundleName) {
-                // if the msg needed, it could convert in the proxy node
-                callback->OnBundleStateChanged(installType, resultCode, Constants::EMPTY_STRING, bundleName);
-            }
-        }
-    }
-
-    if (resultCode != ERR_OK) {
-        return true;
-    }
     std::string eventData = [type]() -> std::string {
         switch (type) {
             case NotifyType::INSTALL:
@@ -1933,6 +1967,28 @@ bool BundleDataMgr::NotifyBundleStatus(const std::string& bundleName, const std:
     want.SetParam(Constants::USER_ID, GetUserIdByUid(uid));
     want.SetParam(Constants::ABILTY_NAME.data(), abilityName);
     EventFwk::CommonEventData commonData { want };
+    // trigger BundleEventCallback first
+    NotifyBundleEventCallback(commonData);
+
+    uint8_t installType = [&]() -> uint8_t {
+        if ((type == NotifyType::UNINSTALL_BUNDLE) || (type == NotifyType::UNINSTALL_MODULE)) {
+            return static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK);
+        }
+        return static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
+    }();
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        for (const auto& callback : callbackList_) {
+            if (callback->GetBundleName() == bundleName) {
+                // if the msg needed, it could convert in the proxy node
+                callback->OnBundleStateChanged(installType, resultCode, Constants::EMPTY_STRING, bundleName);
+            }
+        }
+    }
+
+    if (resultCode != ERR_OK) {
+        return true;
+    }
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);
     return true;
 }

@@ -28,8 +28,10 @@
 #include "ability_info.h"
 #include "application_info.h"
 #include "bundle_data_storage_interface.h"
+#include "bundle_event_callback_interface.h"
 #include "bundle_promise.h"
 #include "bundle_status_callback_interface.h"
+#include "common_event_data.h"
 #include "common_event_manager.h"
 #include "distributed_data_storage.h"
 #include "inner_bundle_info.h"
@@ -380,6 +382,12 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback);
+
+    bool RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback);
+
+    void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
+
+    bool UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback);
     /**
      * @brief Clear the specific bundle status callback.
      * @param bundleStatusCallback Indicates the callback to be cleared.
@@ -786,6 +794,7 @@ private:
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
     mutable std::mutex callbackMutex_;
+    mutable std::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex allPermissionsChangedLock_;
     mutable std::mutex permissionsChangedLock_;
@@ -802,6 +811,8 @@ private:
     std::set<int32_t> multiUserIdsSet_;
     // use vector because these functions using for IPC, the bundleName may duplicate
     std::vector<sptr<IBundleStatusCallback>> callbackList_;
+    // common event callback
+    std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // all installed bundles
     // key:bundleName
     // value:deviceId-innerbundleinfo pair
