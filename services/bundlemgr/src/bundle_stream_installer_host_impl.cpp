@@ -56,7 +56,7 @@ void BundleStreamInstallerHostImpl::UnInit()
     BundleUtil::DeleteDir(tempDir_);
 }
 
-int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName, long offset)
+int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("CreateStream permission denied");
@@ -75,7 +75,7 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName, long
     }
     std::string bundlePath = tempDir_ + hapName;
     int32_t fd = -1;
-    if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, offset)) < 0) {
+    if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, 0)) < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
     if (fd > 0) {
