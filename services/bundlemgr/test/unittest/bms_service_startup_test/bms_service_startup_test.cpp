@@ -21,9 +21,11 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "bundle_permission_mgr.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
 
 namespace {
@@ -242,4 +244,138 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_002, Function | SmallTest | Level0)
     EXPECT_EQ(true, ret);
     ret = BMSEventHandler::HasPreInstallProfile();
     EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0100
+ * @tc.name: test ConvertPermissionDef
+ * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::PermissionDef permDef;
+    OHOS::AppExecFwk::PermissionDef permissionDef;
+    permissionDef.label = "$string: entry_MainAbility";
+    BundlePermissionMgr::ConvertPermissionDef(permDef, permissionDef);
+    EXPECT_TRUE(permissionDef.label == permDef.label);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0200
+ * @tc.name: test GrantPermission
+ * @tc.desc: 1.test GrantPermission of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0200, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    AccessToken::AccessTokenID tokenId = 0;
+    std::string permissionName;
+    AccessToken::PermissionFlag flag =
+        AccessToken::PermissionFlag::PERMISSION_DEFAULT_FLAG;
+    std::string bundleName;
+    ret = BundlePermissionMgr::GrantPermission(
+        tokenId, permissionName, flag, bundleName);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0300
+ * @tc.name: test CheckGrantPermission
+ * @tc.desc: 1.test CheckGrantPermission of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0300, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    AccessToken::PermissionDef permDef;
+    std::string apl;
+    std::vector<std::string> acls;
+    permDef.provisionEnable = true;
+    ret = BundlePermissionMgr::CheckGrantPermission(permDef, apl, acls);
+    EXPECT_EQ(ret, false);
+
+    permDef.availableLevel = AccessToken::ATokenAplEnum::APL_NORMAL;
+    ret = BundlePermissionMgr::CheckGrantPermission(permDef, apl, acls);
+    EXPECT_EQ(ret, true);
+
+    permDef.availableLevel = AccessToken::ATokenAplEnum::APL_SYSTEM_BASIC;
+    apl = Profile::AVAILABLELEVEL_SYSTEM_BASIC;
+    ret = BundlePermissionMgr::CheckGrantPermission(permDef, apl, acls);
+    EXPECT_EQ(ret, true);
+    apl = Profile::AVAILABLELEVEL_SYSTEM_CORE;
+    ret = BundlePermissionMgr::CheckGrantPermission(permDef, apl, acls);
+    EXPECT_EQ(ret, true);
+    apl = "";
+    ret = BundlePermissionMgr::CheckGrantPermission(permDef, apl, acls);
+    EXPECT_EQ(ret, false);
+
+    permDef.availableLevel = AccessToken::ATokenAplEnum::APL_SYSTEM_CORE;
+    apl = Profile::AVAILABLELEVEL_SYSTEM_CORE;
+    ret = BundlePermissionMgr::CheckGrantPermission(permDef, apl, acls);
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::CheckGrantPermission(permDef, apl, acls);
+    apl = "";
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0400
+ * @tc.name: test VerifyPermission
+ * @tc.desc: 1.test VerifyPermission of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0400, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    std::string bundleName;
+    std::string permissionName;
+    int32_t userId = 100;
+    int32_t ret = BundlePermissionMgr::VerifyPermission(bundleName, permissionName, userId);
+    EXPECT_EQ(ret, OHOS::ERR_OK);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0500
+ * @tc.name: test CheckPermissionInDefaultPermissions
+ * @tc.desc: 1.test CheckPermissionInDefaultPermissions of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0500, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    DefaultPermission defaultPermission;
+    PermissionInfo info;
+    info.name = "default";
+    defaultPermission.grantPermission.emplace_back(info);
+    auto permissionName = info.name;
+    bool userCancellable;
+    ret = BundlePermissionMgr::CheckPermissionInDefaultPermissions(
+        defaultPermission, permissionName, userCancellable);
+    EXPECT_EQ(ret, true);
+
+    permissionName = "";
+    ret = BundlePermissionMgr::CheckPermissionInDefaultPermissions(
+        defaultPermission, permissionName, userCancellable);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0600
+ * @tc.name: test GetDefaultPermission
+ * @tc.desc: 1.test GetDefaultPermission of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0600, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    std::string bundleName = "com.ohos.tes1";
+    DefaultPermission permission;
+    ret = BundlePermissionMgr::GetDefaultPermission(bundleName, permission);
+    EXPECT_EQ(ret, false);
+    BundlePermissionMgr::defaultPermissions_.try_emplace("com.ohos.tes1", permission);
+    ret = BundlePermissionMgr::GetDefaultPermission(bundleName, permission);
+    EXPECT_EQ(ret, true);
 }
