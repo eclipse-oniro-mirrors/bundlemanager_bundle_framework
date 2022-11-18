@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -1333,5 +1335,307 @@ HWTEST_F(BmsBundleInstallerTest, OTASystemInstall_0100, Function | SmallTest | L
     EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
     CheckFileExist();
     ClearBundleInfo();
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0100
+ * @tc.name: test BuildTempNativeLibraryPath, needSendEvent is true
+ * @tc.desc: 1.Test the BuildTempNativeLibraryPath of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InstallParam installParam;
+    installParam.needSendEvent = true;
+    ErrCode ret = installer.InstallBundleByBundleName(
+        BUNDLE_NAME, installParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0200
+ * @tc.name: test Recover, needSendEvent is true
+ * @tc.desc: 1.Test the Recover of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.modulePackage_ = "entry";
+    InstallParam installParam;
+    installParam.needSendEvent = true;
+    ErrCode ret = installer.Recover(BUNDLE_NAME, installParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0300
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.Test the ProcessBundleInstall of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> inBundlePaths;
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    installer.dataMgr_ = GetBundleDataMgr();
+
+    installParam.userId = Constants::INVALID_USERID;
+    ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    installParam.userId = Constants::DEFAULT_USERID;
+    installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
+    ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0400
+ * @tc.name: test CheckVersionCompatibilityForHmService
+ * @tc.desc: 1.Test the CheckVersionCompatibilityForHmService of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.versionCode_ = 1;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseBundleInfo_->versionCode = 2;
+    auto ret = installer.CheckVersionCompatibilityForHmService(oldInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    installer.versionCode_ = 3;
+    ret = installer.CheckVersionCompatibilityForHmService(oldInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0500
+ * @tc.name: test CreateBundleUserData, user id is different
+ * @tc.desc: 1.Test the CreateBundleUserData of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    auto ret = installer.CreateBundleUserData(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0600
+ * @tc.name: test RemoveBundleUserData, InnerBundleInfo id is different
+ * @tc.desc: 1.Test the RemoveBundleUserData of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    bool needRemoveData = false;
+    auto ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+    innerBundleInfo.innerBundleUserInfos_.emplace("key", userInfo);
+    installer.userId_ = Constants::ALL_USERID;
+    ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0700
+ * @tc.name: test VerifyUriPrefix, InnerBundleInfo id is different
+ * @tc.desc: 1.Test the VerifyUriPrefix of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    bool isUpdate = false;
+    bool ret = installer.VerifyUriPrefix(
+        innerBundleInfo, Constants::ALL_USERID, isUpdate);
+    EXPECT_EQ(ret, true);
+
+    AbilityInfo info;
+    info.uri = "dataability://";
+    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
+    ret = installer.VerifyUriPrefix(
+        innerBundleInfo, Constants::ALL_USERID, isUpdate);
+    EXPECT_EQ(ret, false);
+
+    info.uri = "dataability://com.ohos.test";
+    ret = installer.VerifyUriPrefix(
+        innerBundleInfo, Constants::ALL_USERID, isUpdate);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0800
+ * @tc.name: test ProcessInstallBundleByBundleName
+ * @tc.desc: 1.Test the ProcessInstallBundleByBundleName of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InstallParam installParam;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessInstallBundleByBundleName(
+        BUNDLE_NAME, installParam, uid);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0900
+ * @tc.name: test ProcessRecover
+ * @tc.desc: 1.Test the ProcessRecover of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InstallParam installParam;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessRecover(
+        BUNDLE_NAME, installParam, uid);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1000
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    bool recoverMode = true;
+    int32_t uid = 0;
+    InstallParam installParam;
+    installParam.userId = Constants::INVALID_USERID;
+    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(
+        BUNDLE_NAME, installParam, uid, recoverMode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    installParam.userId = Constants::DEFAULT_USERID;
+    installer.dataMgr_->multiUserIdsSet_.insert(Constants::DEFAULT_USERID);
+    ret = installer.InnerProcessInstallByPreInstallInfo(
+        BUNDLE_NAME, installParam, uid, recoverMode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1100
+ * @tc.name: test ProcessDeployedHqfInfo
+ * @tc.desc: 1.Test the ProcessDeployedHqfInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "X86";
+    std::string cpuAbi = "armeabi";
+    InnerBundleInfo newInfo;
+    AppQuickFix oldAppQuickFix;
+    ErrCode ret = installer.ProcessDeployedHqfInfo(
+        nativeLibraryPath, cpuAbi, newInfo, oldAppQuickFix);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1200
+ * @tc.name: test ProcessDeployingHqfInfo
+ * @tc.desc: 1.Test the ProcessDeployingHqfInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "X86";
+    std::string cpuAbi = "armeabi";
+    InnerBundleInfo newInfo;
+    ErrCode ret = installer.ProcessDeployingHqfInfo(
+        nativeLibraryPath, cpuAbi, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1300
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "X86";
+    std::string cpuAbi = "armeabi";
+    InnerBundleInfo newInfo;
+    AppqfInfo appQfInfo;
+    ErrCode ret = installer.UpdateLibAttrs(
+        newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1400
+ * @tc.name: test CheckHapLibsWithPatchLibs
+ * @tc.desc: 1.Test the CheckHapLibsWithPatchLibs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "";
+    std::string hqfLibraryPath = "a.hqf";
+    bool ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, false);
+
+    hqfLibraryPath = "/data/storage/el1/a.hqf";
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, false);
+
+    nativeLibraryPath = hqfLibraryPath;
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, true);
+
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, "");
+    EXPECT_EQ(ret, true);
+
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1500
+ * @tc.name: test ProcessDiffFiles
+ * @tc.desc: 1.Test the ProcessDiffFiles of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.modulePackage_ = "entry";
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo info;
+    info.moduleName = "entry";
+    hqfInfos.emplace_back(info);
+    AppqfInfo appQfInfo;
+    appQfInfo.hqfInfos = hqfInfos;
+    std::string nativeLibraryPath = "/an/x86/x86.so";
+    ErrCode ret = installer.ProcessDiffFiles(
+        appQfInfo, nativeLibraryPath);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
 }
 } // OHOS
