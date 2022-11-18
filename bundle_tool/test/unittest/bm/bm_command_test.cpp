@@ -1272,7 +1272,7 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0010, Function | MediumTest | Level1)
  * @tc.desc: Verify the "GetBundlePath".
  */
 HWTEST_F(BmCommandTest, GetBundlePath_0001, Function | MediumTest | Level1)
-{ 
+{
     // install a bundle
     char *argv[] = {
         const_cast<char*>(TOOL_NAME.c_str()),
