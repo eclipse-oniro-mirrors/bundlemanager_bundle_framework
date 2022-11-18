@@ -8146,19 +8146,20 @@ bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInf
 }
 
 bool JsBundleMgr::UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
-    BundleOptions &options, bool result)
+    BundleOptions &options, bool &unwarpBundleOptionsParamsResult)
 {
     bool flagCall = true;
     auto env = reinterpret_cast<napi_env>(&engine);
     if (info.argc == ARGS_SIZE_TWO) {
+        unwarpBundleOptionsParamsResult = true;
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_OBJECT) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        result = ParseBundleOptions(env, options, arg3);
+        unwarpBundleOptionsParamsResult = ParseBundleOptions(env, options, arg3);
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_FOUR) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        result = ParseBundleOptions(env, options, arg3);
+        unwarpBundleOptionsParamsResult = ParseBundleOptions(env, options, arg3);
     }
 
     return flagCall;
@@ -8626,9 +8627,8 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
     }
     auto complete = [obj = this, bundleName, bundleFlags, options, errCode](
                         NativeEngine &engine, AsyncTask &task, int32_t status) {
-        std::string getBundleInfoErrData;
         if (errCode != ERR_OK) {
-            getBundleInfoErrData = "type mismatch";
+            std::string getBundleInfoErrData = "type mismatch";
             task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getBundleInfoErrData));
             return;
@@ -9077,9 +9077,8 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
     };
     auto complete = [obj = this, errCode, ret = apiResult, infos = bundleInfos]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
-        std::string getAllBundleInfoErrData;
         if (errCode != ERR_OK) {
-            getAllBundleInfoErrData = "type mismatch";
+            std::string getAllBundleInfoErrData = "type mismatch";
             task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getAllBundleInfoErrData));
             return;

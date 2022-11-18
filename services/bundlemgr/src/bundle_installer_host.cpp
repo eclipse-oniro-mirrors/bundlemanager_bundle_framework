@@ -148,6 +148,10 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(Parcel &data)
 {
     APP_LOGD("handle install multiple haps message");
     int32_t size = data.ReadInt32();
+    if (size > Constants::MAX_HAP_NUMBER) {
+        APP_LOGE("bundle path size is greater than the max hap number 128");
+        return;
+    }
     std::vector<std::string> pathVec;
     for (int i = 0; i < size; ++i) {
         pathVec.emplace_back(Str16ToStr8(data.ReadString16()));
