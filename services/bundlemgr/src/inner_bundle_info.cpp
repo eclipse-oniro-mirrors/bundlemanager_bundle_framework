@@ -3043,11 +3043,10 @@ bool InnerBundleInfo::IsLibIsolated(const std::string &moduleName) const
 
 std::vector<std::string> InnerBundleInfo::GetDeviceType(const std::string &packageName) const
 {
-    std::vector<std::string> moduleVec;
     auto it = innerModuleInfos_.find(packageName);
     if (it == innerModuleInfos_.end()) {
         APP_LOGW("%{public}s is not existed", packageName.c_str());
-        return moduleVec;
+        return std::vector<std::string>();
     }
     return innerModuleInfos_.at(packageName).deviceTypes;
 }
