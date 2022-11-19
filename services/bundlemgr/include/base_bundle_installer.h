@@ -524,6 +524,9 @@ private:
     int32_t GetConfirmUserId(
         const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode CheckUserId(const int32_t &userId) const;
+    ErrCode CreateArkProfile(
+        const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const;
+    ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
