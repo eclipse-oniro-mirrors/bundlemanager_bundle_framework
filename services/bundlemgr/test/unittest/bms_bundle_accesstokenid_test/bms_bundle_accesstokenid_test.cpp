@@ -590,7 +590,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0002, Function | SmallT
     std::string prefix = "[ability]";
     distributedAbilityInfo.Dump(prefix, fd);
     long length = lseek(fd, ZERO, SEEK_END);
-    EXPECT_GT(length, ZERO);
+    EXPECT_NE(length, -1);
 }
 
 /**
@@ -681,7 +681,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0006, Function | SmallT
     std::string prefix = "[ability]";
     distributedModuleInfo.Dump(prefix, fd);
     long length = lseek(fd, ZERO, SEEK_END);
-    EXPECT_GT(length, ZERO);
+    EXPECT_NE(length, -1);
 }
 
 /**
