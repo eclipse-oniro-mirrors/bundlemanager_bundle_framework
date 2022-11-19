@@ -16,7 +16,7 @@
             "SystemCapability.BundleManager.BundleFramework.Core",
             "SystemCapability.BundleManager.BundleFramework.FreeInstall",
             "SystemCapability.BundleManager.BundleFramework.Launcher",
-            "SystemCapability.BundleManager.BundleFramework.DefaultAppManager",
+            "SystemCapability.BundleManager.BundleFramework.DefaultApp",
             "SystemCapability.BundleManager.BundleFramework.Resource"
         ],
         "features": [
