@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <condition_variable>
 #include <future>
 #include <gtest/gtest.h>
@@ -554,6 +556,22 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0800, Function | MediumTest 
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     Clean();
     GTEST_LOG_(INFO) << "END BMS_Register_0800";
+}
+
+/**
+ * @tc.number: BMS_Register_0900
+ * @tc.name: test launcher service RegisterCallback and UnRegisterCallback
+ * @tc.desc: bundleMonitor_ is nullptr, test failed
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0900, Function | MediumTest | Level1)
+{
+    GTEST_LOG_(INFO) << "START BMS_Register_0500";
+    LauncherService launcherservice;
+    sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+    launcherservice.bundleMonitor_ = nullptr;
+    EXPECT_FALSE(launcherservice.RegisterCallback(callback));
+    EXPECT_FALSE(launcherservice.UnRegisterCallback());
+    GTEST_LOG_(INFO) << "END BMS_Register_0500";
 }
 
 /**
