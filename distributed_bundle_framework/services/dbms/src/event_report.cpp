@@ -52,7 +52,7 @@ void EventReport::SendSystemEvent(
     }
 
     auto eventName = iter->second;
-    OHOS::HiviewDFX::HiSysEvent::Write(
+    HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLE_MANAGER,
         eventName,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
