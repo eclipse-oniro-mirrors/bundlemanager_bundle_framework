@@ -35,6 +35,7 @@
 #include "bundle_data_storage_database.h"
 #include "preinstall_data_storage.h"
 #endif
+#include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
 #include "bundle_status_callback_death_recipient.h"
 #include "bundle_util.h"
@@ -52,6 +53,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
+}
 BundleDataMgr::BundleDataMgr()
 {
     InitStateTransferMap();
@@ -2355,6 +2359,55 @@ bool BundleDataMgr::RegisterBundleStatusCallback(const sptr<IBundleStatusCallbac
         bundleStatusCallback->AsObject()->AddDeathRecipient(deathRecipient);
     }
     return true;
+}
+
+bool BundleDataMgr::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    if (eventCallbackList_.size() >= MAX_EVENT_CALL_BACK_SIZE) {
+        APP_LOGE("eventCallbackList_ reach max size %{public}d", MAX_EVENT_CALL_BACK_SIZE);
+        return false;
+    }
+    if (bundleEventCallback->AsObject() != nullptr) {
+        sptr<BundleEventCallbackDeathRecipient> deathRecipient =
+            new (std::nothrow) BundleEventCallbackDeathRecipient();
+        if (deathRecipient == nullptr) {
+            APP_LOGE("deathRecipient is null");
+            return false;
+        }
+        bundleEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
+    }
+    eventCallbackList_.emplace_back(bundleEventCallback);
+    return true;
+}
+
+bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    APP_LOGD("begin to UnregisterBundleEventCallback");
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    eventCallbackList_.erase(std::remove_if(eventCallbackList_.begin(), eventCallbackList_.end(),
+        [&bundleEventCallback](const sptr<IBundleEventCallback> &callback) {
+            return callback->AsObject() == bundleEventCallback->AsObject();
+        }), eventCallbackList_.end());
+    return true;
+}
+
+void BundleDataMgr::NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const
+{
+    APP_LOGD("begin to NotifyBundleEventCallback");
+    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    for (const auto &callback : eventCallbackList_) {
+        callback->OnReceiveEvent(eventData);
+    }
+    APP_LOGD("finish to NotifyBundleEventCallback");
 }
 
 bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)

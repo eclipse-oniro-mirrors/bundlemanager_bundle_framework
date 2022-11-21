@@ -1628,6 +1628,60 @@ bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallba
     return reply.ReadBool();
 }
 
+bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to RegisterBundleEventCallback");
+    if (!bundleEventCallback) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to RegisterBundleEventCallback due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+        APP_LOGE("write BundleEventCallback failed");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+        APP_LOGE("fail to RegisterBundleEventCallback from server");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+bool BundleMgrProxy::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to UnregisterBundleEventCallback");
+    if (!bundleEventCallback) {
+        APP_LOGE("bundleEventCallback is null");
+        return false;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to UnregisterBundleEventCallback due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+        APP_LOGE("fail to UnregisterBundleEventCallback, for write parcel failed");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+        APP_LOGE("fail to UnregisterBundleEventCallback from server");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
 bool BundleMgrProxy::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

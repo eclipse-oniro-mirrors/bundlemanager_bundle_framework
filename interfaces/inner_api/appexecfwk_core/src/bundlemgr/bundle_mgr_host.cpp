@@ -127,6 +127,10 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_DATA_FILES, &BundleMgrHost::HandleCleanBundleDataFiles);
     funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_STATUS_CALLBACK,
         &BundleMgrHost::HandleRegisterBundleStatusCallback);
+    funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK,
+        &BundleMgrHost::HandleRegisterBundleEventCallback);
+    funcMap_.emplace(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK,
+        &BundleMgrHost::HandleUnregisterBundleEventCallback);
     funcMap_.emplace(IBundleMgr::Message::CLEAR_BUNDLE_STATUS_CALLBACK,
         &BundleMgrHost::HandleClearBundleStatusCallback);
     funcMap_.emplace(IBundleMgr::Message::UNREGISTER_BUNDLE_STATUS_CALLBACK,
@@ -1197,6 +1201,45 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
     }
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> bundleEventCallback = iface_cast<IBundleEventCallback>(object);
+    if (bundleEventCallback == nullptr) {
+        APP_LOGE("Get bundleEventCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    bool ret = RegisterBundleEventCallback(bundleEventCallback);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> bundleEventCallback = iface_cast<IBundleEventCallback>(object);
+
+    bool ret = UnregisterBundleEventCallback(bundleEventCallback);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
