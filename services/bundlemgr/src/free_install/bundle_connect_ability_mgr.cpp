@@ -378,6 +378,10 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
     }
+    if (handler_ == nullptr) {
+        APP_LOGE("OnServiceCenterCall, handler is nullptr");
+        return;
+    }
     handler_->RemoveTask(installResult.result.transactId);
     freeInstallParams = node->second;
     if (installResult.result.retCode == ServiceCenterResultCode::FREE_INSTALL_DOWNLOADING) {
