@@ -49,8 +49,7 @@ int BundleStreamInstallerHost::OnRemoteRequest(uint32_t code, MessageParcel &dat
 ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, MessageParcel &reply)
 {
     std::string hapName = data.ReadString();
-    int64_t offset = data.ReadInt64();
-    int32_t fd = CreateStream(hapName, offset);
+    int32_t fd = CreateStream(hapName);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
