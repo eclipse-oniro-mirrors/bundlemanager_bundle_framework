@@ -27,12 +27,14 @@
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_proxy.h"
 #include "bundle_stream_installer_host_impl.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
+#include "hidump_helper.h"
 #include "install_param.h"
 #include "extension_ability_info.h"
 #include "installd/installd_service.h"
@@ -42,6 +44,7 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "service_control.h"
+#include "system_ability_helper.h"
 #include "want.h"
 
 using namespace testing::ext;
@@ -184,6 +187,7 @@ const std::string PORT_001 = "port001";
 const std::string PORT_002 = "port002";
 const std::string PATH_001 = "path001";
 const std::string PATH_REGEX_001 = ".*";
+const std::string CONTROLMESSAGE = "controlMessage";
 const std::string URI_PATH_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 +
     PORT_SEPARATOR + PORT_001 + PATH_SEPARATOR + PATH_001;
 const std::string URI_PATH_DUPLICATE_001 = SCHEME_001 + SCHEME_SEPARATOR +
@@ -6452,6 +6456,304 @@ HWTEST_F(BmsBundleKitServiceTest, BundleStreamInstallerHostImplInit_0100, Functi
     sptr<IStatusReceiver> statusReceiver;
     bool res = impl.Init(installParam, statusReceiver);
     EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: Hidump_0001
+ * @tc.name: test Hidump_0001
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0001, Function | SmallTest | Level0)
+{
+    std::string arg = "-h";
+    std::vector<std::string> args;
+    args.push_back(arg);
+    std::string result = "";
+    auto res = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: Hidump_0002
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0002, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleDataMgr> dataMgr;
+    HidumpHelper dumpHelper(dataMgr);
+    HidumpParam hidumpParam;
+    hidumpParam.hidumpFlag = HidumpFlag::GET_ABILITY;
+    std::string result = "";
+    auto res1 = dumpHelper.ProcessDump(hidumpParam, result);
+    EXPECT_EQ(res1, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
+
+    std::string arg = "-ability";
+    std::vector<std::string> args;
+    args.push_back(arg);
+    result.clear();
+    auto res2 = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res2);
+}
+
+/**
+ * @tc.number: Hidump_0003
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0003, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleDataMgr> dataMgr;
+    HidumpHelper dumpHelper(dataMgr);
+    HidumpParam hidumpParam;
+    hidumpParam.hidumpFlag = HidumpFlag::GET_ABILITY_LIST;
+    std::string result = "";
+    auto res1 = dumpHelper.ProcessDump(hidumpParam, result);
+    EXPECT_EQ(res1, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
+
+    std::string arg = "-ability-list";
+    std::vector<std::string> args;
+    args.push_back(arg);
+    result.clear();
+    auto res2 = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res2);
+}
+
+/**
+ * @tc.number: Hidump_0004
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0004, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleDataMgr> dataMgr;
+    HidumpHelper dumpHelper(dataMgr);
+    HidumpParam hidumpParam;
+    hidumpParam.hidumpFlag = HidumpFlag::GET_BUNDLE;
+    std::string result = "";
+    auto res1 = dumpHelper.ProcessDump(hidumpParam, result);
+    EXPECT_EQ(res1, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
+
+    std::string arg = "-bundle";
+    std::vector<std::string> args;
+    args.push_back(arg);
+    result.clear();
+    auto res2 = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res2);
+}
+
+/**
+ * @tc.number: Hidump_0005
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0005, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleDataMgr> dataMgr;
+    HidumpHelper dumpHelper(dataMgr);
+    HidumpParam hidumpParam;
+    hidumpParam.hidumpFlag = HidumpFlag::GET_BUNDLE_LIST;
+    std::string result = "";
+    auto res1 = dumpHelper.ProcessDump(hidumpParam, result);
+    EXPECT_EQ(res1, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
+
+    std::string arg = "-bundle-list";
+    std::vector<std::string> args;
+    args.push_back(arg);
+    result.clear();
+    auto res2 = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res2);
+}
+
+/**
+ * @tc.number: Hidump_0006
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0006, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleDataMgr> dataMgr;
+    HidumpHelper dumpHelper(dataMgr);
+    HidumpParam hidumpParam;
+    hidumpParam.hidumpFlag = HidumpFlag::GET_DEVICEID;
+    std::string result = "";
+    auto res1 = dumpHelper.ProcessDump(hidumpParam, result);
+    EXPECT_EQ(res1, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
+
+    std::string arg = "-device";
+    std::vector<std::string> args;
+    args.push_back(arg);
+    result.clear();
+    auto res2 = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res2);
+}
+
+/**
+ * @tc.number: Hidump_0007
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0007, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleDataMgr> dataMgr;
+    HidumpHelper dumpHelper(dataMgr);
+    HidumpParam hidumpParam;
+    hidumpParam.hidumpFlag = HidumpFlag::GET_ABILITY_BY_NAME;
+    std::string result = "";
+    auto res2 = dumpHelper.ProcessDump(hidumpParam, result);
+    EXPECT_EQ(res2, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
+
+    std::string arg1 = "-ability";
+    std::string arg2 = "-ability";
+    std::vector<std::string> args;
+    args.push_back(arg1);
+    args.push_back(arg2);
+    result.clear();
+    auto res = bundleMgrService_->Hidump(args, result);
+    EXPECT_FALSE(res);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::string arg3 = ABILITY_NAME_TEST;
+    std::vector<std::string> args1;
+    args1.push_back(arg1);
+    args1.push_back(arg3);
+    result.clear();
+    auto res1 = bundleMgrService_->Hidump(args1, result);
+    EXPECT_TRUE(res1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: Hidump_0008
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0008, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleDataMgr> dataMgr;
+    HidumpHelper dumpHelper(dataMgr);
+    HidumpParam hidumpParam;
+    hidumpParam.hidumpFlag = HidumpFlag::GET_BUNDLE_BY_NAME;
+    std::string result = "";
+    auto res2 = dumpHelper.ProcessDump(hidumpParam, result);
+    EXPECT_EQ(res2, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
+
+    std::string arg1 = "-bundle";
+    std::string arg2 = "-bundle";
+    std::vector<std::string> args;
+    args.push_back(arg1);
+    args.push_back(arg2);
+    result.clear();
+    auto res = bundleMgrService_->Hidump(args, result);
+    EXPECT_FALSE(res);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::string arg3 = BUNDLE_NAME_TEST;
+    std::vector<std::string> args1;
+    args1.push_back(arg1);
+    args1.push_back(arg3);
+    result.clear();
+    auto res1 = bundleMgrService_->Hidump(args1, result);
+    EXPECT_TRUE(res1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: Hidump_0009
+ * @tc.name: test Hidump
+ * @tc.desc: Hidump is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, Hidump_0009, Function | SmallTest | Level0)
+{
+    std::string arg1 = "-b";
+    std::vector<std::string> args;
+    args.push_back(arg1);
+    std::string result = "";
+    auto res = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res);
+    std::string arg3 = ABILITY_NAME_TEST;
+    std::vector<std::string> args1;
+    args1.push_back(arg1);
+    args1.push_back(arg3);
+    result.clear();
+    auto res1 = bundleMgrService_->Hidump(args1, result);
+    EXPECT_TRUE(res1);
+}
+
+/**
+ * @tc.number: LoadInstallInfosFromDb_0001
+ * @tc.name: test LoadInstallInfosFromDb
+ * @tc.desc: LoadInstallInfosFromDb is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    BMSEventHandler handler(runner);
+    bool res = handler.LoadInstallInfosFromDb();
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: AnalyzeUserData_0001
+ * @tc.name: test AnalyzeUserData
+ * @tc.desc: AnalyzeUserData is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AnalyzeUserData_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    BMSEventHandler handler(runner);
+    int32_t userId = 0;
+    std::string userDataDir = "";
+    std::string userDataBundleName = "";
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    bool res = handler.AnalyzeUserData(userId, userDataDir, userDataBundleName, userMaps);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: AnalyzeUserData_0002
+ * @tc.name: test AnalyzeUserData
+ * @tc.desc: AnalyzeUserData is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, AnalyzeUserData_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    BMSEventHandler handler(runner);
+    int32_t userId = 0;
+    std::string userDataDir = "/data/app/el2/100/base/";
+    std::string userDataBundleName = BUNDLE_NAME_TEST;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    bool res = handler.AnalyzeUserData(userId, userDataDir, userDataBundleName, userMaps);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: RemoveSystemAbility
+ * @tc.name: test RemoveSystemAbility
+ * @tc.desc: RemoveSystemAbility is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, RemoveSystemAbility_0001, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+    int32_t systemAbilityId = 0;
+    bool res = helper.RemoveSystemAbility(systemAbilityId);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: AppRunningControlRuleResult_001
+ * @tc.name: Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling successed
+ */
+HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleResult_001, Function | SmallTest | Level1)
+{
+    AppRunningControlRuleResult result;
+    result.controlMessage = CONTROLMESSAGE;
+    result.controlWant = std::make_shared<AAFwk::Want>();
+    Parcel parcel;
+    auto ret1 = result.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = result.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
 }
 
 /**
