@@ -24,7 +24,7 @@ class IBundleStreamInstaller : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.BundleStreamInstaller");
 
-    virtual int CreateStream(const std::string &hapName, long offset) = 0;
+    virtual int CreateStream(const std::string &hapName) = 0;
     virtual bool Install() = 0;
 
     virtual uint32_t GetInstallerId() const = 0;
