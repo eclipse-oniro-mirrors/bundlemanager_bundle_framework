@@ -1384,7 +1384,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest 
     int32_t uid = 0;
     ErrCode ret = installer.ProcessBundleInstall(
         inBundlePaths, installParam, appType, uid);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
     installer.dataMgr_ = GetBundleDataMgr();
 
     installParam.userId = Constants::INVALID_USERID;
@@ -1396,7 +1396,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest 
     installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
     ret = installer.ProcessBundleInstall(
         inBundlePaths, installParam, appType, uid);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
