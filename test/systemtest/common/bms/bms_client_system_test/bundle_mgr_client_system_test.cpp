@@ -1706,6 +1706,29 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_002, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetProfileFromAbility_003
+ * @tc.name: GetProfileFromAbility
+ * @tc.desc: Test the interface of GetProfileFromAbility
+ *           1. AbilityInfo has incorrect resource path
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_003, TestSize.Level1)
+{
+    auto name = std::string("GetProfileFromAbility_003");
+    GTEST_LOG_(INFO) << name << " start";
+
+    AbilityInfo info;
+    info.hapPath = "/data/app";
+    std::string metadataName = "ohos.extension.forms";
+    std::vector<std::string> profileInfo;
+    auto ret = GetProfileFromAbility(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+    info.hapPath = "";
+    info.resourcePath = RESOURCE_PATH;
+    ret = GetProfileFromAbility(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: GetProfileFromExtension_003
  * @tc.name: GetProfileFromExtension
  * @tc.desc: Test the interface of GetProfileFromExtension
@@ -1759,6 +1782,29 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_004, TestSize.Level1
     EXPECT_FALSE(ret);
 
     GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: GetProfileFromExtension_005
+ * @tc.name: GetProfileFromExtension
+ * @tc.desc: Test the interface of GetProfileFromExtension
+ *           1. ExtensionAbilityInfo has incorrect resource path
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_005, TestSize.Level1)
+{
+    auto name = std::string("GetProfileFromExtensionr_005");
+    GTEST_LOG_(INFO) << name << " start";
+
+    ExtensionAbilityInfo info;
+    info.hapPath = "/data/app";
+    std::string metadataName = "ohos.extension.forms";
+    std::vector<std::string> profileInfo;
+    auto ret = GetProfileFromExtension(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+    info.hapPath = "";
+    info.resourcePath = RESOURCE_PATH;
+    ret = GetProfileFromExtension(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -1908,6 +1954,40 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetProfileFromHap002
+ * @tc.name: GetProfileFromHap
+ * @tc.desc: 1.Test the interface of GetProfileFromHap
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap002, TestSize.Level1)
+{
+    auto name = std::string("GetProfileFromHap002");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    HapModuleInfo info;
+    info.hapPath = "/data/app";
+    std::string metadataName = "ohos.extension.forms";
+    std::vector<std::string> profileInfo;
+    auto ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo);
+    EXPECT_FALSE(ret);
+    info.hapPath = "";
+    info.resourcePath = RESOURCE_PATH;
+    ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
  * @tc.number: GetHapModuleInfo001
  * @tc.name: GetHapModuleInfo
  * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
@@ -2043,6 +2123,173 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_002, TestSize.Level1)
     bool res = bundleMgrClientImpl.IsFileExisted("");
     bundleMgrClientImpl.OnDeath();
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_003
+ * @tc.name: ConvertResourcePath
+ * @tc.desc: 1.Test the interface of ConvertResourcePath
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_003, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    bool isCompressed = true;
+    std::string resPath = "/data/test";
+    bool res = impl.ConvertResourcePath(BUNDLE_NAME, resPath, isCompressed);
+    EXPECT_EQ(res, true);
+    isCompressed = false;
+    resPath = RESOURCE_PATH;
+    res = impl.ConvertResourcePath(BUNDLE_NAME, resPath, isCompressed);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_004
+ * @tc.name: GetResFromResMgr
+ * @tc.desc: 1.Test the interface of GetResFromResMgr
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_004, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    std::string resName = "";
+    std::shared_ptr<Global::Resource::ResourceManager> resMgr
+        = impl.InitResMgr(RESOURCE_PATH);
+    bool isCompressed = true;
+    std::vector<std::string> profileInfos;
+    bool res = impl.GetResFromResMgr(resName, resMgr, isCompressed, profileInfos);
+    EXPECT_EQ(res, false);
+
+    resName = "$profile:file1";
+    res = impl.GetResFromResMgr(BUNDLE_NAME, resMgr, isCompressed, profileInfos);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_005
+ * @tc.name: IsFileExisted
+ * @tc.desc: 1.Test the interface of IsFileExisted
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_005, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    std::string filePath = "/error/path";
+    bool res = impl.IsFileExisted(filePath);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_006
+ * @tc.name: UninstallSandboxApp
+ * @tc.desc: 1.Test the interface of UninstallSandboxApp
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_006, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    EXPECT_NE(impl.bundleInstaller_, nullptr);
+    std::string bundleName = "";
+    int32_t dlpType = 0;
+    int32_t userId = 0;
+    int32_t appIndex = 0;
+    ErrCode ret = impl.InstallSandboxApp(
+        bundleName, dlpType, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    bundleName = BUNDLE_NAME;
+    appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ret = impl.UninstallSandboxApp(bundleName, appIndex, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.UninstallSandboxApp(bundleName, appIndex, userId);
+    EXPECT_NE(ret, ERR_OK);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_007
+ * @tc.name: GetSandboxAbilityInfo
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_007, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    OHOS::AAFwk::Want want;
+    AbilityInfo abilityInfo;
+    int32_t flags = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ErrCode ret = impl.GetSandboxAbilityInfo(
+        want, appIndex, flags, DEFAULT_USERID, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    ret = impl.GetSandboxAbilityInfo(
+        want, appIndex, flags, DEFAULT_USERID, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.GetSandboxAbilityInfo(
+        want, appIndex, flags, DEFAULT_USERID, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_008
+ * @tc.name: GetSandboxExtAbilityInfos
+ * @tc.desc: 1.Test the interface of GetSandboxExtAbilityInfos
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_008, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    OHOS::AAFwk::Want want;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ErrCode ret = impl.GetSandboxExtAbilityInfos(
+        want, appIndex, flags, DEFAULT_USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    ret = impl.GetSandboxExtAbilityInfos(
+        want, appIndex, flags, DEFAULT_USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.GetSandboxExtAbilityInfos(
+        want, appIndex, flags, DEFAULT_USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_009
+ * @tc.name: GetSandboxHapModuleInfo
+ * @tc.desc: 1.Test the interface of GetSandboxHapModuleInfo
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_009, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    AbilityInfo abilityInfo;
+    HapModuleInfo hapModuleInfo;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ErrCode ret = impl.GetSandboxHapModuleInfo(
+        abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    ret = impl.GetSandboxHapModuleInfo(
+        abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.GetSandboxHapModuleInfo(
+        abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP);
+    impl.OnDeath();
 }
 
 /**
