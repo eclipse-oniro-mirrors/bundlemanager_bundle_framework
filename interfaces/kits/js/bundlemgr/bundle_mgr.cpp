@@ -9085,30 +9085,23 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
     int32_t errCode = ERR_OK;
     int32_t bundleFlags = -1;
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    APP_LOGE("--------OnQueryAbilityInfos GetCallingUid------------");
     AAFwk::Want want;
     auto env = reinterpret_cast<napi_env>(&engine);
-    APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast env------------");
     auto inputWant = reinterpret_cast<napi_value>(info.argv[PARAM0]);
-    APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast inputWant------------");
     if (info.argc > ARGS_SIZE_FOUR || info.argc < ARGS_SIZE_TWO) {
         APP_LOGE("wrong number of arguments!");
         errCode = PARAM_TYPE_ERROR;
     }
-    APP_LOGE("--------OnQueryAbilityInfos info.argc number------------");
     if (!ParseWant(env, want, inputWant)) {
         APP_LOGE("parse want faile.");
         errCode = PARAM_TYPE_ERROR;
     }
-    APP_LOGE("--------OnQueryAbilityInfos parse want------------");
     if (info.argv[PARAM1]->TypeOf() != NATIVE_NUMBER) {
         APP_LOGE("input params is not number!");
         errCode = PARAM_TYPE_ERROR;
     }
-    APP_LOGE("--------OnQueryAbilityInfos parse param1------------");
     ConvertFromJsValue(engine, info.argv[PARAM1], bundleFlags);
-    APP_LOGE("--------OnQueryAbilityInfos Convert param1------------");
-    if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+    if (info.argc > ARGS_SIZE_TWO && info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
         ConvertFromJsValue(engine, info.argv[PARAM2], userId);
     } else if (info.argv[PARAM2]->TypeOf() != NATIVE_FUNCTION) {
         APP_LOGE("input params is not function!");
@@ -9118,25 +9111,19 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
     std::shared_ptr<JsQueryAbilityInfo> queryAbilityInfo = std::make_shared<JsQueryAbilityInfo>();
     auto execute = [want, bundleFlags, userId, info = queryAbilityInfo, &engine] () {
         {
-            APP_LOGE("----------execute before lock======");
             std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
             auto env = reinterpret_cast<napi_env>(&engine);
-            APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast ENV 1------------");
-            auto item = nativeAbilityInfoCache.find(Query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
-            APP_LOGE("--------OnQueryAbilityInfos find Query------------");
+            auto item = nativeAbilityInfoCache.find(Query(want.ToString(),
+                QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
             if (item != nativeAbilityInfoCache.end()) {
                 APP_LOGD("has cache,no need to query from host");
-                APP_LOGE("--------OnQueryAbilityInfos reinterpret_cast item->second------------");
                 info->cacheAbilityInfos  = item->second->Get();
-                APP_LOGE("--------get cacheAbilityInfos------------");
                 info->getCache = true;
                 return;
             }
         }
-            auto iBundleMgr = GetBundleMgr();
-            APP_LOGE("--------GetBundleMgr-------1-----");
-            info->ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, info->abilityInfos);
-            APP_LOGE("--------QueryAbilityInfos-2-----------");
+        auto iBundleMgr = GetBundleMgr();
+        info->ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, info->abilityInfos);
     };
 
     AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info = queryAbilityInfo]
@@ -9147,7 +9134,6 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                 task.ResolveWithErr(engine, info->cacheAbilityInfos);
                 return;
             }
-            APP_LOGE("--------info->getCache-1-----------");
             if (errCode != ERR_OK) {
                 queryAbilityInfosErrData = "type mismatch";
                 task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
@@ -9155,9 +9141,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                 return;
             }
             auto env = reinterpret_cast<napi_env>(&engine);
-            APP_LOGE("--------env reinterpret_cast napi_env-----------");
             if (!info->ret) {
-                APP_LOGE("----------ret is fail======");
                 queryAbilityInfosErrData = "QueryAbilityInfos failed";
                 task.RejectWithMessage(engine, CreateJsValue(engine, 1),
                     CreateJsValue(engine, queryAbilityInfosErrData));
@@ -9165,25 +9149,20 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
             }
             NativeValue *cacheAbilityInfoValue = nullptr;
             {
-                APP_LOGE("----------before lock======");
                 std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-                APP_LOGE("----------lock========");
                 Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
-                APP_LOGE("----------query data========");
                 cacheAbilityInfoValue = obj->CreateAbilityInfos(engine, info->abilityInfos);
-                APP_LOGE("----------CreateAbilityInfos========");
                 OnHandleAbilityInfoCache(engine, query, want, info->abilityInfos, cacheAbilityInfoValue);
-                APP_LOGE("----------OnHandleAbilityInfoCache========");
             }
             task.ResolveWithErr(engine, cacheAbilityInfoValue);
-        };
-
+    };
     NativeValue* lastParam = UnwarpQueryAbilityInfolastParams(info);
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnQueryAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
+
 NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGD("%{public}s is called", __FUNCTION__);
