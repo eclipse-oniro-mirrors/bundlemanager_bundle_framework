@@ -9132,7 +9132,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
             std::string queryAbilityInfosErrData;
             if (info->getCache) {
                 APP_LOGD("has cache,no need to query from host");
-                task.ResolveWithErr(engine, info->cacheAbilityInfos);
+                task.RejectWithCustomize(engine, CreateJsValue(engine, 0), info->cacheAbilityInfos);
                 return;
             }
             if (errCode != ERR_OK) {
