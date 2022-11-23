@@ -1680,7 +1680,17 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
                                         Constants::PATH_SEPARATOR +
                                         std::to_string(userId_);
         std::string baseDataDir = baseBundleDataDir + Constants::BASE + info.GetBundleName();
-        ErrCode result = InstalldClient::GetInstance()->SetDirApl(
+        bool isExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
+        if (result != ERR_OK) {
+            APP_LOGE("IsExistDir failed, error is %{public}d", result);
+            return result;
+        }
+        if (!isExist) {
+            APP_LOGD("baseDir: %{public}s is not exist", baseDataDir.c_str());
+            continue;
+        }
+        result = InstalldClient::GetInstance()->SetDirApl(
             baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel());
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
