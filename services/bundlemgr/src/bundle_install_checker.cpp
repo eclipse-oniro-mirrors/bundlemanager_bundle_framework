@@ -801,7 +801,13 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
 
         if ((deviceType == Constants::DEVICE_TYPE_OF_PHONE) &&
             (find(devVec.begin(), devVec.end(), Constants::DEVICE_TYPE_OF_DEFAULT) != devVec.end())) {
-            APP_LOGW("current deviceType is phone");
+            APP_LOGW("current deviceType is phone and bundle is matched with default");
+            continue;
+        }
+
+        if ((deviceType == Constants::DEVICE_TYPE_OF_DEFAULT) &&
+            (find(devVec.begin(), devVec.end(), Constants::DEVICE_TYPE_OF_PHONE) != devVec.end())) {
+            APP_LOGW("current deviceType is default and bundle is matched with phone");
             continue;
         }
 
