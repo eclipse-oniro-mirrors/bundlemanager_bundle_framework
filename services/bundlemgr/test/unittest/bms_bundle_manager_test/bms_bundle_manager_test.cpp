@@ -60,7 +60,7 @@ const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const int32_t USERID = 100;
-const int32_t UID = 20010038;
+const int32_t WRONG_UID = -1;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
@@ -1196,8 +1196,7 @@ HWTEST_F(BmsBundleManagerTest, CheckFilePath_0001, Function | MediumTest | Level
  * @tc.name: test QueryLauncherAbilityInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0001, Function | SmallTest | Level1)
 {
     Want want;
@@ -1213,8 +1212,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0001, Function | SmallTest | Lev
  * @tc.name: test ImplicitQueryAbilityInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0002, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -1235,8 +1233,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0002, Function | SmallTest | Lev
  * @tc.name: test QueryAbilityInfoByUri
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0003, Function | SmallTest | Level1)
 {
     AbilityInfo abilityInfo;
@@ -1252,8 +1249,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0003, Function | SmallTest | Lev
  * @tc.name: test QueryAbilityInfosByUri
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0004, Function | SmallTest | Level1)
 {
     std::vector<AbilityInfo> abilityInfos;
@@ -1269,8 +1265,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0004, Function | SmallTest | Lev
  * @tc.name: test GetApplicationInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0005, Function | SmallTest | Level1)
 {
     std::vector<ApplicationInfo> appInfos;
@@ -1286,8 +1281,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0005, Function | SmallTest | Lev
  * @tc.name: test GetApplicationInfosV9
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0006, Function | SmallTest | Level1)
 {
     std::vector<ApplicationInfo> appInfos;
@@ -1303,8 +1297,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0006, Function | SmallTest | Lev
  * @tc.name: test GetBundleInfosByMetaData
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0007, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> Info;
@@ -1321,8 +1314,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0007, Function | SmallTest | Lev
  * @tc.name: test GetBundleInfosByMetaData
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0008, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> Info;
@@ -1339,8 +1331,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0008, Function | SmallTest | Lev
  * @tc.name: test ImplicitQueryAbilityInfosV9
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0009, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -1361,8 +1352,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0009, Function | SmallTest | Lev
  * @tc.name: test GetBundleList
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0010, Function | SmallTest | Level1)
 {
     std::vector<std::string> info;
@@ -1378,8 +1368,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0010, Function | SmallTest | Lev
  * @tc.name: test GetBundleInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0011, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> bundleInfos;
@@ -1395,8 +1384,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0011, Function | SmallTest | Lev
  * @tc.name: test GetAllBundleInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0012, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> bundleInfos;
@@ -1412,8 +1400,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0012, Function | SmallTest | Lev
  * @tc.name: test GetBundleInfosV9
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0013, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> bundleInfos;
@@ -1429,8 +1416,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0013, Function | SmallTest | Lev
  * @tc.name: test GetInnerBundleInfoByUid
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0014, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
@@ -1446,8 +1432,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0014, Function | SmallTest | Lev
  * @tc.name: test QueryKeepAliveBundleInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0015, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> bundleInfos;
@@ -1463,8 +1448,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0015, Function | SmallTest | Lev
  * @tc.name: test GetHapModuleInfo
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0016, Function | SmallTest | Level1)
 {
     AbilityInfo abilityInfo;
@@ -1481,8 +1465,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0016, Function | SmallTest | Lev
  * @tc.name: test GetInnerBundleInfoWithFlags
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0017, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1498,8 +1481,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0017, Function | SmallTest | Lev
  * @tc.name: test GetInnerBundleInfoWithFlagsV9
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0018, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1515,8 +1497,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0018, Function | SmallTest | Lev
  * @tc.name: test GetInnerBundleInfoWithBundleFlagsV9
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0019, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1532,8 +1513,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0019, Function | SmallTest | Lev
  * @tc.name: test GetAllFormsInfo
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0020, Function | SmallTest | Level1)
 {
     std::vector<FormInfo> formInfos;
@@ -1549,8 +1529,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0020, Function | SmallTest | Lev
  * @tc.name: test GetFormsInfoByModule
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0021, Function | SmallTest | Level1)
 {
     std::vector<FormInfo> formInfos;
@@ -1566,8 +1545,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0021, Function | SmallTest | Lev
  * @tc.name: test GetFormsInfoByApp
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0022, Function | SmallTest | Level1)
 {
     std::vector<FormInfo> formInfos;
@@ -1583,8 +1561,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0022, Function | SmallTest | Lev
  * @tc.name: test GetAllCommonEventInfo
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0023, Function | SmallTest | Level1)
 {
     std::string eventKey = "eventKey";
@@ -1601,8 +1578,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0023, Function | SmallTest | Lev
  * @tc.name: test GetFormsInfoByApp
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0024, Function | SmallTest | Level1)
 {
     std::vector<FormInfo> formInfos;
@@ -1618,8 +1594,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0024, Function | SmallTest | Lev
  * @tc.name: test GetInnerBundleUserInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0025, Function | SmallTest | Level1)
 {
     std::vector<FormInfo> formInfos;
@@ -1636,8 +1611,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0025, Function | SmallTest | Lev
  * @tc.name: test GetAccessibleAppCodePaths
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0026, Function | SmallTest | Level1)
 {
     GetBundleDataMgr()->bundleInfos_.clear();
@@ -1651,8 +1625,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0026, Function | SmallTest | Lev
  * @tc.name: test QueryExtensionAbilityInfoByUri
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0027, Function | SmallTest | Level1)
 {
     ExtensionAbilityInfo extensionAbilityInfo;
@@ -1668,8 +1641,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0027, Function | SmallTest | Lev
  * @tc.name: test GetAllUriPrefix
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0028, Function | SmallTest | Level1)
 {
     std::vector<std::string> uriPrefixList;
@@ -1685,8 +1657,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0028, Function | SmallTest | Lev
  * @tc.name: test GetRemovableBundleNameVec
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0029, Function | SmallTest | Level1)
 {
     std::map<std::string, int> bundlenameAndUids;
@@ -1702,8 +1673,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0029, Function | SmallTest | Lev
  * @tc.name: test MatchUriAndType
  * @tc.desc: 1.system run normally
  *           2.uris is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, SkillFalse_0001, Function | SmallTest | Level1)
 {
     struct Skill skill;
@@ -1718,8 +1688,7 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0001, Function | SmallTest | Level1)
  * @tc.name: test MatchUri
  * @tc.desc: 1.system run normally
  *           2.uris is empty
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, SkillFalse_0002, Function | SmallTest | Level1)
 {
     struct Skill skill;
@@ -1739,8 +1708,7 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0002, Function | SmallTest | Level1)
  * @tc.number: SkillFalse_0003
  * @tc.name: test MatchType
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, SkillFalse_0003, Function | SmallTest | Level1)
 {
     struct Skill skill;
@@ -1753,8 +1721,7 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0003, Function | SmallTest | Level1)
  * @tc.number: InnerBundleInfoFalse_0001
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0001, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1767,8 +1734,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0001, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0002
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0002, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1781,8 +1747,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0002, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0003
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0003, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1796,8 +1761,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0003, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0004
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0004, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1811,8 +1775,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0004, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0005
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0005, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1826,8 +1789,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0005, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0006
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0006, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1840,8 +1802,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0006, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0007
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0007, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1855,8 +1816,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0007, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0008
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0008, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1870,8 +1830,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0008, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0009
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0009, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1886,8 +1845,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0009, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0010
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0010, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1901,8 +1859,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0010, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0011
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0011, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1914,8 +1871,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0011, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0012
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0012, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1928,8 +1884,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0012, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0013
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0013, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1945,8 +1900,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0013, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0014
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0014, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1962,8 +1916,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0014, Function | SmallTest |
  * @tc.number: InnerBundleInfoFalse_0015
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0015, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -1996,20 +1949,14 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0100, Function | MediumTest | L
 /**
  * @tc.number: BundleMgrHostImpl_0200
  * @tc.name: test CheckIsSystemAppByUid proxy
- * @tc.desc: 1.CheckIsSystemAppByUid success
+ * @tc.desc: 1.CheckIsSystemAppByUid failed
  */
 HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0200, Function | MediumTest | Level1)
 {
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
 
-    bool ret = hostImpl->CheckIsSystemAppByUid(UID);
-    EXPECT_EQ(ret, true);
-
-    UnInstallBundle(BUNDLE_BACKUP_NAME);
+    bool ret = hostImpl->CheckIsSystemAppByUid(WRONG_UID);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -2076,8 +2023,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0400, Function | MediumTest | L
  * @tc.number: TestMgrByUserId_0001
  * @tc.name: test ImplicitQueryAbilityInfos
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0001, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -2098,8 +2044,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0001, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0002
  * @tc.name: test ImplicitQueryAbilityInfosV9
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0002, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -2120,8 +2065,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0002, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0003
  * @tc.name: test QueryLauncherAbilityInfos
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0003, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -2139,8 +2083,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0003, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0004
  * @tc.name: test IsAppOrAbilityInstalled
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0004, Function | SmallTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
@@ -2161,8 +2104,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0004, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0005
  * @tc.name: test StoreSandboxPersistentInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0005, Function | SmallTest | Level1)
 {
     SandboxAppPersistentInfo info;
@@ -2177,8 +2119,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0005, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0006
  * @tc.name: test CheckPublicKeys
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0006, Function | SmallTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
@@ -2205,8 +2146,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0006, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0007
  * @tc.name: test GetPreInstallBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0007, Function | SmallTest | Level1)
 {
     PreInstallBundleInfo preInstallBundleInfo;
@@ -2218,8 +2158,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0007, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0008
  * @tc.name: test GetInnerBundleUserInfos
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0008, Function | SmallTest | Level1)
 {
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
@@ -2231,8 +2170,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0008, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0009
  * @tc.name: test GetInnerBundleUserInfos
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0009, Function | SmallTest | Level1)
 {
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
@@ -2244,8 +2182,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0009, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0010
  * @tc.name: test ImplicitQueryExtensionInfosV9
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0010, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -2273,8 +2210,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0010, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0011
  * @tc.name: test UpdatePrivilegeCapability and UpdateRemovable
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0011, Function | SmallTest | Level1)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
@@ -2283,12 +2219,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0011, Function | SmallTest | Leve
 
     ApplicationInfo appInfo;
     GetBundleDataMgr()->UpdateRemovable("", true);
-    GetBundleDataMgr()->UpdateRemovable(BUNDLE_BACKUP_NAME, true);
-    GetBundleDataMgr()->UpdateRemovable(BUNDLE_BACKUP_NAME, true);
-    GetBundleDataMgr()->UpdateRemovable(BUNDLE_BACKUP_NAME, false);
     GetBundleDataMgr()->UpdatePrivilegeCapability("", appInfo);
-    GetBundleDataMgr()->UpdatePrivilegeCapability(BUNDLE_BACKUP_NAME, appInfo);
-    GetBundleDataMgr()->UpdatePrivilegeCapability(BUNDLE_BACKUP_NAME, appInfo);
     EXPECT_EQ(appInfo.bundleName, "");
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
@@ -2298,8 +2229,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0011, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0012
  * @tc.name: test FetchInnerBundleInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0012, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
@@ -2313,8 +2243,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0012, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0013
  * @tc.name: test ExplicitQueryAbilityInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0013, Function | SmallTest | Level1)
 {
     Want want;
@@ -2339,8 +2268,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0013, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0014
  * @tc.name: test QueryAbilityInfoByUri
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0014, Function | SmallTest | Level1)
 {
     AbilityInfo abilityInfo;
@@ -2353,8 +2281,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0014, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0015
  * @tc.name: test GetApplicationInfos
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0015, Function | SmallTest | Level1)
 {
     ApplicationInfo appInfo;
@@ -2374,8 +2301,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0015, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0016
  * @tc.name: test GetBundleInfoV9
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0016, Function | SmallTest | Level1)
 {
     BundleInfo bundleInfo;
@@ -2395,8 +2321,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0016, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0017
  * @tc.name: test GetBundleInfos
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0017, Function | SmallTest | Level1)
 {
     std::vector<std::string> appInfos;
@@ -2406,22 +2331,21 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0017, Function | SmallTest | Leve
     EXPECT_EQ(testRet, false);
     testRet = GetBundleDataMgr()->GetBundleInfos(
         0, bundleInfos, Constants::ALL_USERID);
-    EXPECT_EQ(testRet, true);
+    EXPECT_EQ(testRet, false);
 }
 
 /**
  * @tc.number: TestMgrByUserId_0018
  * @tc.name: test GetBundleInfosV9
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0018, Function | SmallTest | Level1)
 {
     std::vector<std::string> appInfos;
     std::vector<BundleInfo> bundleInfos;
     ErrCode testRet = GetBundleDataMgr()->GetBundleInfosV9(
         0, bundleInfos, Constants::ALL_USERID);
-    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     testRet = GetBundleDataMgr()->GetBundleInfosV9(
         0, bundleInfos, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
@@ -2431,22 +2355,20 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0018, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0019
  * @tc.name: test GetAllBundleInfos
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0019, Function | SmallTest | Level1)
 {
     std::vector<BundleInfo> bundleInfos;
     bool testRet = GetBundleDataMgr()->GetAllBundleInfos(
         0, bundleInfos);
-    EXPECT_EQ(testRet, true);
+    EXPECT_EQ(testRet, false);
 }
 
 /**
  * @tc.number: TestMgrByUserId_0020
  * @tc.name: test GetInnerBundleInfoWithBundleFlagsV9
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0020, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -2462,8 +2384,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0020, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0021
  * @tc.name: test SetAbilityEnabled
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0021, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
@@ -2480,8 +2401,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0021, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0022
  * @tc.name: test GetShortcutInfoV9
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0022, Function | SmallTest | Level1)
 {
     std::vector<ShortcutInfo> shortcutInfos;
@@ -2497,8 +2417,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0022, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0023
  * @tc.name: test GetInnerBundleUserInfoByUserId
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0023, Function | SmallTest | Level1)
 {
     InnerBundleUserInfo innerBundleUserInfo;
@@ -2511,8 +2430,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0023, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0024
  * @tc.name: test ExplicitQueryExtensionInfo
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0024, Function | SmallTest | Level1)
 {
     Want want;
@@ -2537,8 +2455,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0024, Function | SmallTest | Leve
  * @tc.number: TestMgrByUserId_0025
  * @tc.name: test ImplicitQueryInfoByPriority
  * @tc.desc: 1.system run normally
- * @tc.require: SR000GM5QO
- */
+*/
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0025, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -2548,4 +2465,647 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0025, Function | SmallTest | Leve
         want, 0, Constants::INVALID_USERID, abilityInfo, extensionInfo);
     EXPECT_EQ(testRet, false);
 }
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0001
+ * @tc.name: test QueryLauncherAbilityInfos
+ * @tc.desc: 1.system run normally
+ *           2.bundle is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0001, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    std::vector<AbilityInfo> abilityInfos;
+    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(
+        want, USERID, abilityInfos);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0002
+ * @tc.name: test GetHapModuleInfo
+ * @tc.desc: 1.system run normally
+ *           2.bundle is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0002, Function | SmallTest | Level1)
+{
+    AbilityInfo abilityInfo;
+    HapModuleInfo hapModuleInfo;
+    bool testRet = GetBundleDataMgr()->GetHapModuleInfo(
+        abilityInfo, hapModuleInfo, USERID);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0004
+ * @tc.name: test GetInnerBundleInfoWithFlags
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0004, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
+        BUNDLE_BACKUP_NAME, 0, info, USERID);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0005
+ * @tc.name: test GetInnerBundleInfoWithFlagsV9
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0005, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
+        BUNDLE_BACKUP_NAME, 0, info, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0006
+ * @tc.name: test GetInnerBundleInfoWithBundleFlagsV9
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0006, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
+        BUNDLE_BACKUP_NAME, 0, info, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0007
+ * @tc.name: test GetInnerBundleInfo
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0007, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfo(
+        BUNDLE_BACKUP_NAME, info);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0008
+ * @tc.name: test EnableBundle
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0008, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    bool testRet = GetBundleDataMgr()->EnableBundle(
+        BUNDLE_BACKUP_NAME);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0009
+ * @tc.name: test SetApplicationEnabled
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0009, Function | SmallTest | Level1)
+{
+    bool isEnable = false;
+    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
+        BUNDLE_BACKUP_NAME, isEnable, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0010
+ * @tc.name: test IsModuleRemovable
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0010, Function | SmallTest | Level1)
+{
+    bool isRemovable;
+    ErrCode testRet = GetBundleDataMgr()->IsModuleRemovable(
+        BUNDLE_BACKUP_NAME, MODULE_NAME, isRemovable);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0011
+ * @tc.name: test IsAbilityEnabled and SetAbilityEnabled
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0011, Function | SmallTest | Level1)
+{
+    bool isEnable = false;
+    AbilityInfo abilityInfo;
+    ErrCode testRet = GetBundleDataMgr()->IsAbilityEnabled(
+        abilityInfo, isEnable);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    testRet = GetBundleDataMgr()->SetAbilityEnabled(
+        abilityInfo, isEnable, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0012
+ * @tc.name: test SetModuleUpgradeFlag
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0012, Function | SmallTest | Level1)
+{
+    int32_t upgradeFlag = 1;
+    ErrCode testRet = GetBundleDataMgr()->SetModuleUpgradeFlag(
+        BUNDLE_BACKUP_NAME, MODULE_NAME, upgradeFlag);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0013
+ * @tc.name: test GetModuleUpgradeFlag
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0013, Function | SmallTest | Level1)
+{
+    int32_t testRet = GetBundleDataMgr()->GetModuleUpgradeFlag(
+        BUNDLE_BACKUP_NAME, MODULE_NAME);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0014
+ * @tc.name: test GetInnerBundleUserInfoByUserId
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0014, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo info;
+    bool testRet = GetBundleDataMgr()->GetInnerBundleUserInfoByUserId(
+        BUNDLE_BACKUP_NAME, USERID, info);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0015
+ * @tc.name: test GetInnerBundleUserInfos
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0015, Function | SmallTest | Level1)
+{
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    bool testRet = GetBundleDataMgr()->GetInnerBundleUserInfos(
+        BUNDLE_BACKUP_NAME, innerBundleUserInfos);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0016
+ * @tc.name: test GetAllDependentModuleNames
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0016, Function | SmallTest | Level1)
+{
+    std::vector<std::string> dependentModuleNames;
+    bool testRet = GetBundleDataMgr()->GetAllDependentModuleNames(
+        BUNDLE_BACKUP_NAME, MODULE_NAME, dependentModuleNames);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0017
+ * @tc.name: test SetDisposedStatus and GetDisposedStatus
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0017, Function | SmallTest | Level1)
+{
+    int32_t status = 1;
+    bool testRet = GetBundleDataMgr()->SetDisposedStatus(
+        BUNDLE_BACKUP_NAME, status);
+    EXPECT_EQ(testRet, false);
+    testRet = GetBundleDataMgr()->GetDisposedStatus(
+        BUNDLE_BACKUP_NAME);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetMgrFalseByNoBundle_0018
+ * @tc.name: test FetchInnerBundleInfo
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0018, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    bool testRet = GetBundleDataMgr()->FetchInnerBundleInfo(
+        BUNDLE_BACKUP_NAME, innerBundleInfo);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0001
+ * @tc.name: test ExplicitQueryAbilityInfo
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0001, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    AbilityInfo abilityInfo;
+    int32_t appIndex = 1;
+    bool res = GetBundleDataMgr()->ExplicitQueryAbilityInfo(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, false);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    res = GetBundleDataMgr()->ExplicitQueryAbilityInfo(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0002
+ * @tc.name: test ExplicitQueryAbilityInfoV9
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0002, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    AbilityInfo abilityInfo;
+    int32_t appIndex = 1;
+    ErrCode res = GetBundleDataMgr()->ExplicitQueryAbilityInfoV9(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    res = GetBundleDataMgr()->ExplicitQueryAbilityInfoV9(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0003
+ * @tc.name: test ImplicitQueryCurAbilityInfos
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0003, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfo;
+    int32_t appIndex = 0;
+    bool res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfos(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, false);
+    appIndex = 1;
+    res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfos(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, false);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfos(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0004
+ * @tc.name: test ImplicitQueryCurAbilityInfosV9
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0004, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfo;
+    int32_t appIndex = 0;
+    ErrCode res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    appIndex = 1;
+    res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    res = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0005
+ * @tc.name: test ImplicitQueryAllAbilityInfos
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0005, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfo;
+    int32_t appIndex = 1;
+    GetBundleDataMgr()->ImplicitQueryAllAbilityInfos(
+        want, flags, USERID, abilityInfo, appIndex);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    GetBundleDataMgr()->ImplicitQueryAllAbilityInfos(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(abilityInfo.size(), 0);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0006
+ * @tc.name: test ImplicitQueryAllAbilityInfosV9
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0006, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfo;
+    int32_t appIndex = 1;
+    GetBundleDataMgr()->ImplicitQueryAllAbilityInfosV9(
+        want, flags, USERID, abilityInfo, appIndex);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    GetBundleDataMgr()->ImplicitQueryAllAbilityInfosV9(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(abilityInfo.size(), 0);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0007
+ * @tc.name: test QueryAbilityInfosByUri
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0007, Function | SmallTest | Level1)
+{
+    std::vector<AbilityInfo> abilityInfos;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfosByUri(
+        "", abilityInfos);
+    EXPECT_EQ(testRet, false);
+    testRet = GetBundleDataMgr()->QueryAbilityInfosByUri(
+        "dataability://com.example.hiworld.himusic.UserADataAbility", abilityInfos);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0008
+ * @tc.name: test GetAllBundleInfosV9
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0008, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> Info;
+    int32_t flags = 1;
+    ErrCode testRet = GetBundleDataMgr()->GetAllBundleInfosV9(
+        flags, Info);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    GetBundleDataMgr()->bundleInfos_.clear();
+    testRet = GetBundleDataMgr()->GetAllBundleInfosV9(
+        flags, Info);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0009
+ * @tc.name: test GetBundleNameForUid
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0009, Function | SmallTest | Level1)
+{
+    std::string bundleName;
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = GetBundleDataMgr()->GetBundleNameForUid(1, bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0010
+ * @tc.name: test GetBundleNameForUid
+ * @tc.desc: 1.system run normally
+ *           2.sandboxAppHelper_ is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0010, Function | SmallTest | Level1)
+{
+    std::string bundleName;
+    bool testRet = GetBundleDataMgr()->GetBundleNameForUid(
+        1, bundleName);
+    EXPECT_EQ(testRet, false);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    testRet = GetBundleDataMgr()->GetBundleNameForUid(
+        1, bundleName);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0011
+ * @tc.name: test GetNameForUid
+ * @tc.desc: 1.system run normally
+ *           2.sandboxAppHelper_ is empty
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0011, Function | SmallTest | Level1)
+{
+    std::string bundlenName;
+    bool testRet = GetBundleDataMgr()->GetNameForUid(
+        1, bundlenName);
+    EXPECT_EQ(testRet, true);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    testRet = GetBundleDataMgr()->GetNameForUid(
+        1, bundlenName);
+    EXPECT_EQ(testRet, true);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0012
+ * @tc.name: test CheckIsSystemAppByUid
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0012, Function | SmallTest | Level1)
+{
+    bool testRet = GetBundleDataMgr()->CheckIsSystemAppByUid(Constants::ROOT_UID);
+    EXPECT_EQ(testRet, true);
+    testRet = GetBundleDataMgr()->CheckIsSystemAppByUid(Constants::BMS_UID);
+    EXPECT_EQ(testRet, true);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0013
+ * @tc.name: test CheckIsSystemAppByUid
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0013, Function | SmallTest | Level1)
+{
+    bool testRet = GetBundleDataMgr()->IsDisableState(InstallState::UPDATING_START);
+    EXPECT_EQ(testRet, true);
+    testRet = GetBundleDataMgr()->IsDisableState(InstallState::UNINSTALL_START);
+    EXPECT_EQ(testRet, true);
+    testRet = GetBundleDataMgr()->IsDisableState(InstallState::ROLL_BACK);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0014
+ * @tc.name: test ExplicitQueryExtensionInfo
+ * @tc.desc: 1.system run normally
+ *           2.sandboxAppHelper_ is empty
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0014, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t appIndex = 1;
+    ExtensionAbilityInfo extensionInfo;
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    bool testRet = GetBundleDataMgr()->ExplicitQueryExtensionInfo(
+        want, 0, USERID, extensionInfo, appIndex);
+    EXPECT_EQ(testRet, false);
+    ErrCode testRet1 = GetBundleDataMgr()->ExplicitQueryExtensionInfoV9(
+        want, 0, USERID, extensionInfo, appIndex);
+    EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0015
+ * @tc.name: test ImplicitQueryExtensionInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0015, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 0;
+    bool testRet = GetBundleDataMgr()->ImplicitQueryExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, true);
+    ExtensionAbilityInfo info;
+    info.bundleName = BUNDLE_BACKUP_NAME;
+    info.moduleName = MODULE_NAME;
+    extensionInfos.push_back(info);
+    appIndex = 2;
+    testRet = GetBundleDataMgr()->ImplicitQueryExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, false);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0016
+ * @tc.name: test ImplicitQueryCurExtensionInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0016, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 0;
+    bool testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, false);
+    appIndex = 2;
+    testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, false);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0017
+ * @tc.name: test ImplicitQueryCurExtensionInfosV9
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0017, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 2;
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    ErrCode testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0018
+ * @tc.name: test ImplicitQueryAllExtensionInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0018, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 2;
+    GetBundleDataMgr()->ImplicitQueryAllExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(extensionInfos.size(), 0);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    GetBundleDataMgr()->ImplicitQueryAllExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(extensionInfos.size(), 0);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0019
+ * @tc.name: test ImplicitQueryAllExtensionInfosV9
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0019, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 2;
+    GetBundleDataMgr()->ImplicitQueryAllExtensionInfosV9(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(extensionInfos.size(), 0);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    GetBundleDataMgr()->ImplicitQueryAllExtensionInfosV9(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(extensionInfos.size(), 0);
+}
+
+/**
+ * @tc.number: GetBundleDataMgr_0020
+ * @tc.name: test QueryAllDeviceIds
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0020, Function | SmallTest | Level1)
+{
+    std::vector<std::string> deviceIds;
+    bool res = GetBundleDataMgr()->QueryAllDeviceIds(deviceIds);
+    EXPECT_EQ(res, true);
+}
+
 } // OHOS
