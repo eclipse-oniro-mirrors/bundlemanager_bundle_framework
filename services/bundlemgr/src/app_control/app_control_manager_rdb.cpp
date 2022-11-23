@@ -169,7 +169,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
         }
         appIds.push_back(appId);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
-    absSharedResultSet->close();
+    absSharedResultSet->Close();
     return ERR_OK;
 }
 
@@ -275,7 +275,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
         }
         appIds.push_back(appId);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
-    absSharedResultSet->close();
+    absSharedResultSet->Close();
     return ERR_OK;
 }
 
@@ -328,7 +328,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     if (!wantString.empty()) {
         controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
     }
-    absSharedResultSet->close();
+    absSharedResultSet->Close();
     return ERR_OK;
 }
 
@@ -413,7 +413,7 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     want = *Want::FromString(wantString);
-    absSharedResultSet->close();
+    absSharedResultSet->Close();
     return ERR_OK;
 }
 
