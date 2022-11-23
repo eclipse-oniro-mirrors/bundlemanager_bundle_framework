@@ -9023,7 +9023,7 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const Native
                 task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
                 return;
             }
-            task.ResolveWithCustomize(engine, CreateJsValue(engine, errCode), engine.CreateUndefined());
+            task.ResolveWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errCode));
     };
     NativeValue *result = nullptr;
     NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
