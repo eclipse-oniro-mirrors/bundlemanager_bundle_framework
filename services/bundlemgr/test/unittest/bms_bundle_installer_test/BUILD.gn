@@ -149,6 +149,12 @@ ohos_unittest("BmsBundleInstallerTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
+  if (bundle_framework_quick_fix) {
+    include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
+    sources += quick_fix
+    defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
+  }
+
   if (bms_rdb_enable) {
     configs += [ "../../../../../services/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]

@@ -51,7 +51,9 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
         resultCode = InstallBundle(
             bundleFilePath, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
-    statusReceiver_->OnFinished(resultCode, "");
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
     SendRemoveEvent();
 }
 
@@ -70,7 +72,9 @@ void BundleInstaller::Recover(const std::string &bundleName, const InstallParam 
         resultCode = BaseBundleInstaller::Recover(bundleName, installParam);
     }
 
-    statusReceiver_->OnFinished(resultCode, "");
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
     SendRemoveEvent();
 }
 
@@ -89,14 +93,18 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
     } else {
         resultCode = InstallBundle(bundleFilePaths, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
-    statusReceiver_->OnFinished(resultCode, "");
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
     SendRemoveEvent();
 }
 
 void BundleInstaller::InstallByBundleName(const std::string &bundleName, const InstallParam &installParam)
 {
     ErrCode resultCode = InstallBundleByBundleName(bundleName, installParam);
-    statusReceiver_->OnFinished(resultCode, "");
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
     SendRemoveEvent();
 }
 
@@ -128,7 +136,9 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
         resultCode = UninstallBundle(bundleName, installParam);
     }
 
-    statusReceiver_->OnFinished(resultCode, "");
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
     SendRemoveEvent();
 }
 
@@ -161,7 +171,9 @@ void BundleInstaller::Uninstall(
         resultCode = UninstallBundle(bundleName, modulePackage, installParam);
     }
 
-    statusReceiver_->OnFinished(resultCode, "");
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
     SendRemoveEvent();
 }
 

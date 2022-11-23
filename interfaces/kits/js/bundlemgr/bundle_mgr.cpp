@@ -8147,19 +8147,20 @@ bool JsBundleMgr::UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInf
 }
 
 bool JsBundleMgr::UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
-    BundleOptions &options, bool result)
+    BundleOptions &options, bool &unwarpBundleOptionsParamsResult)
 {
     bool flagCall = true;
     auto env = reinterpret_cast<napi_env>(&engine);
     if (info.argc == ARGS_SIZE_TWO) {
+        unwarpBundleOptionsParamsResult = true;
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_THREE && info.argv[PARAM2]->TypeOf() == NATIVE_OBJECT) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        result = ParseBundleOptions(env, options, arg3);
+        unwarpBundleOptionsParamsResult = ParseBundleOptions(env, options, arg3);
         flagCall = false;
     } else if (info.argc == ARGS_SIZE_FOUR) {
         auto arg3 = reinterpret_cast<napi_value>(info.argv[PARAM2]);
-        result = ParseBundleOptions(env, options, arg3);
+        unwarpBundleOptionsParamsResult = ParseBundleOptions(env, options, arg3);
     }
 
     return flagCall;
@@ -8653,7 +8654,7 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
     }
 
     BundleOptions options;
-    bool unwarpBundleOptionsParamsResult = true; 
+    bool unwarpBundleOptionsParamsResult = true;
     bool flagCall = UnwarpBundleOptionsParams(engine, info, options, unwarpBundleOptionsParamsResult);
     if (!unwarpBundleOptionsParamsResult) {
         APP_LOGE("UnwarpBundleOptionsParams failed!");
@@ -8661,9 +8662,8 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
     }
     auto complete = [obj = this, bundleName, bundleFlags, options, errCode](
                         NativeEngine &engine, AsyncTask &task, int32_t status) {
-        std::string getBundleInfoErrData;
         if (errCode != ERR_OK) {
-            getBundleInfoErrData = "type mismatch";
+            std::string getBundleInfoErrData = "type mismatch";
             task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getBundleInfoErrData));
             return;
@@ -8810,10 +8810,6 @@ NativeValue* JsBundleMgr::OnGetProfile(
     APP_LOGD("%{public}s called.", __FUNCTION__);
     auto env = reinterpret_cast<napi_env>(&engine);
     std::shared_ptr<AsyncGetProfileInfo> callbackPtr = std::make_shared<AsyncGetProfileInfo>(env);
-    if (callbackPtr == nullptr) {
-        APP_LOGE("GetProfile failed due to null callbackPtr.");
-        return engine.CreateUndefined();
-    }
     callbackPtr->type = profileType;
     if (info.argc < ARGS_SIZE_TWO || info.argc > ARGS_SIZE_FOUR) {
         APP_LOGE("Input params count error.");
@@ -8887,9 +8883,8 @@ NativeValue* JsBundleMgr::OnGetNameForUid(NativeEngine &engine, NativeCallbackIn
     ConvertFromJsValue(engine, info.argv[PARAM0], uid);
 
     auto complete = [obj = this, uid, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
-        std::string errMessage;
         if (errCode != ERR_OK) {
-            errMessage = "type mismatch";
+            std::string errMessage = "type mismatch";
             task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
             return;
         }
@@ -9191,9 +9186,8 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
     };
     auto complete = [obj = this, errCode, ret = apiResult, infos = bundleInfos]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
-        std::string getAllBundleInfoErrData;
         if (errCode != ERR_OK) {
-            getAllBundleInfoErrData = "type mismatch";
+            std::string getAllBundleInfoErrData = "type mismatch";
             task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getAllBundleInfoErrData));
             return;

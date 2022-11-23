@@ -494,4 +494,27 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1800, Function | MediumTest | Level1
     SetMockObjects(cmd);
     EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_DUMP_FAILED + "\n");
 }
+
+/**
+ * @tc.number: Bm_Command_Dump_1900
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm dump -n <bundle-name> -XXX <user-id>" command.
+ */
+HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_1900, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-XXX"),
+        const_cast<char*>(DEFAULT_USER_ID.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP);
+}
 } // namespace OHOS

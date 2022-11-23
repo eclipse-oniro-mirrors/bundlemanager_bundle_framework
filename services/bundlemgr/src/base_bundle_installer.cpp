@@ -15,6 +15,7 @@
 
 #include "base_bundle_installer.h"
 
+#include <sys/stat.h>
 #include "nlohmann/json.hpp"
 
 #include "account_helper.h"
@@ -52,6 +53,7 @@ namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
+const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -859,6 +861,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return result;
     }
 
+    result = DeleteArkProfile(bundleName, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
+        return result;
+    }
+
     enableGuard.Dismiss();
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
@@ -970,6 +978,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             result = DeleteOldArkNativeFile(oldInfo);
             if (result != ERR_OK) {
                 APP_LOGE("delete old arkNativeFile failed");
+                return result;
+            }
+
+            result = DeleteArkProfile(bundleName, userId_);
+            if (result != ERR_OK) {
+                APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
                 return result;
             }
 
@@ -1390,6 +1404,12 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return result;
     }
 
+    result = CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_));
+    if (result != ERR_OK) {
+        APP_LOGE("fail to create ark profile, error is %{public}d", result);
+        return result;
+    }
+
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         APP_LOGE("old module update state failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -1730,11 +1750,43 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         return result;
     }
 
+    result = CreateArkProfile(
+        info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to create ark profile, error is %{public}d", result);
+        return result;
+    }
+
     std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
         Constants::DATABASE + info.GetBundleName();
     info.SetAppDataBaseDir(dataBaseDir);
     info.AddInnerBundleUserInfo(newInnerBundleUserInfo);
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CreateArkProfile(
+    const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const
+{
+    ErrCode result = DeleteArkProfile(bundleName, userId);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
+        return result;
+    }
+
+    std::string arkProfilePath;
+    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
+                  .append(Constants::PATH_SEPARATOR).append(bundleName);
+    APP_LOGI("CreateArkProfile %{public}s", arkProfilePath.c_str());
+    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, S_IRWXU, uid, gid);
+}
+
+ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int32_t userId) const
+{
+    std::string arkProfilePath;
+    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
+                  .append(Constants::PATH_SEPARATOR).append(bundleName);
+    APP_LOGI("DeleteArkProfile %{public}s", arkProfilePath.c_str());
+    return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
 
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
@@ -2400,12 +2452,19 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
+    ErrCode result = ERR_OK;
     if (!needRemoveData) {
-        ErrCode result = RemoveBundleDataDir(innerBundleInfo);
+        result = RemoveBundleDataDir(innerBundleInfo);
         if (result != ERR_OK) {
             APP_LOGE("remove user data directory failed.");
             return result;
         }
+    }
+
+    result = DeleteArkProfile(bundleName, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
+        return result;
     }
 
     // delete accessTokenId
