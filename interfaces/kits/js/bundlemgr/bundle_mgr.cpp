@@ -9136,14 +9136,14 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
             }
             if (errCode != ERR_OK) {
                 queryAbilityInfosErrData = "type mismatch";
-                task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+                task.RejectWithCustomize(engine, CreateJsValue(engine, errCode),
                     CreateJsValue(engine, queryAbilityInfosErrData));
                 return;
             }
             auto env = reinterpret_cast<napi_env>(&engine);
             if (!info->ret) {
                 queryAbilityInfosErrData = "QueryAbilityInfos failed";
-                task.RejectWithMessage(engine, CreateJsValue(engine, 1),
+                task.RejectWithCustomize(engine, CreateJsValue(engine, 1),
                     CreateJsValue(engine, queryAbilityInfosErrData));
                 return;
             }
@@ -9154,7 +9154,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                 cacheAbilityInfoValue = obj->CreateAbilityInfos(engine, info->abilityInfos);
                 OnHandleAbilityInfoCache(engine, query, want, info->abilityInfos, cacheAbilityInfoValue);
             }
-            task.ResolveWithErr(engine, cacheAbilityInfoValue);
+            task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), cacheAbilityInfoValue);
     };
 
     NativeValue* result = nullptr;
