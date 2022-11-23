@@ -48,7 +48,7 @@ void BundleStreamInstallerHostImpl::UnInit()
     installerId_ = 0;
 }
 
-int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName, long offset)
+int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
 {
     return -1;
 }
