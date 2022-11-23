@@ -8201,7 +8201,7 @@ static bool InnerGetBundleInfo(
 }
 
 NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
-    NativeCallbackInfo &info, std::string userId, std::string &errCode)
+    NativeCallbackInfo &info, int32_t &userId, std::string &errCode)
 {
     if (info.argc == ARGS_SIZE_THREE) {
         if (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION) {

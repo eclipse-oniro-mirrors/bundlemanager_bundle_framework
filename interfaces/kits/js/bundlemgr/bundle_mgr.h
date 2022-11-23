@@ -533,14 +533,14 @@ private:
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
     NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
-    NativeValue* UnwarpQueryAbilityInfoParams(NativeEngine &engine, NativeCallbackInfo &info, std::string userId, std::string &errCode);
+    NativeValue* UnwarpQueryAbilityInfoParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId,
+        std::string &errCode);
     bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
         BundleOptions &options, bool &unwarpBundleOptionsParamsResult);
 };
-
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* BUNDLE_MGR_H */
