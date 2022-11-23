@@ -8199,16 +8199,26 @@ static bool InnerGetBundleInfo(
     return ret;
 }
 
-NativeValue* JsBundleMgr::UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeCallbackInfo &info, std::string userId, std::string &errCode)
 {
     if (info.argc == ARGS_SIZE_THREE) {
         if (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION) {
             return info.argv[PARAM2];
+        } else if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+            ConvertFromJsValue(engine, info.argv[PARAM2], userId);
+            return nullptr;
         } else {
+            errCode = PARAM_TYPE_ERROR;
             return nullptr;
         }
     }
-    if (info.argc == ARGS_SIZE_FOUR) {
+
+    if (info.argc == ARGS_SIZE_FOUR && info.argv[PARAM3]->TypeOf() == NATIVE_FUNCTION) {
+        if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+            ConvertFromJsValue(engine, info.argv[PARAM2], userId);
+        } else {
+            errCode = PARAM_TYPE_ERROR;
+        }
         return info.argv[PARAM3];
     }
     return nullptr;
@@ -9101,12 +9111,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
         errCode = PARAM_TYPE_ERROR;
     }
     ConvertFromJsValue(engine, info.argv[PARAM1], bundleFlags);
-    if (info.argc > ARGS_SIZE_TWO && info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
-        ConvertFromJsValue(engine, info.argv[PARAM2], userId);
-    } else if (info.argv[PARAM2]->TypeOf() != NATIVE_FUNCTION) {
-        APP_LOGE("input params is not function!");
-        errCode = PARAM_TYPE_ERROR;
-    }
+    NativeValue* lastParam = UnwarpQueryAbilityInfoParams(info, userId, errCode);
 
     std::shared_ptr<JsQueryAbilityInfo> queryAbilityInfo = std::make_shared<JsQueryAbilityInfo>();
     auto execute = [want, bundleFlags, userId, info = queryAbilityInfo, &engine] () {
@@ -9156,7 +9161,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
             }
             task.ResolveWithErr(engine, cacheAbilityInfoValue);
     };
-    NativeValue* lastParam = UnwarpQueryAbilityInfolastParams(info);
+
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnQueryAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
