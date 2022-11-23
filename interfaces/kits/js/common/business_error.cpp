@@ -39,7 +39,7 @@ constexpr const char* ERR_MSG_INSTALL_PARSE_FAILED = "Failed to install the hap 
 constexpr const char* ERR_MSG_INSTALL_VERIFY_SIGNATURE_FAILED =
     "Failed to install the hap since the hap signature fails to be verified.";
 constexpr const char* ERR_MSG_INSTALL_HAP_FILEPATH_INVALID =
-    "Failed to install the hap since the path of the hap is invalid.";
+    "Failed to install the hap since the path of the hap is invalid or too large size.";
 constexpr const char* ERR_MSG_INSTALL_HAP_SIZE_TOO_LARGE =
     "Failed to install the hap since the hap is too large.";
 constexpr const char* ERR_MSG_INSTALL_INCORRECT_SUFFIX =
