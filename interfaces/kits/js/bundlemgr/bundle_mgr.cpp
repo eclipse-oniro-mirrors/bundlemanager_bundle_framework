@@ -8200,7 +8200,8 @@ static bool InnerGetBundleInfo(
     return ret;
 }
 
-NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeCallbackInfo &info, std::string userId, std::string &errCode)
+NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
+    NativeCallbackInfo &info, std::string userId, std::string &errCode)
 {
     if (info.argc == ARGS_SIZE_THREE) {
         if (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION) {
@@ -9106,7 +9107,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
         errCode = PARAM_TYPE_ERROR;
     }
     ConvertFromJsValue(engine, info.argv[PARAM1], bundleFlags);
-    NativeValue* lastParam = UnwarpQueryAbilityInfoParams(info, userId, errCode);
+    NativeValue* lastParam = UnwarpQueryAbilityInfoParams(engine, info, userId, errCode);
 
     std::shared_ptr<JsQueryAbilityInfo> queryAbilityInfo = std::make_shared<JsQueryAbilityInfo>();
     auto execute = [want, bundleFlags, userId, info = queryAbilityInfo, &engine] () {
