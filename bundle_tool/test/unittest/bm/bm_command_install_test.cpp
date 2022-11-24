@@ -396,7 +396,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1300, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_1600
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path> <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1600, Function | MediumTest | Level1)
 {
@@ -423,7 +422,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1600, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_1700
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1700, Function | MediumTest | Level1)
 {
@@ -450,7 +448,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1700, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_1800
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1800, Function | MediumTest | Level1)
 {
@@ -477,7 +474,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1800, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_1900
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install --bundle-path <bundle-path> <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1900, Function | MediumTest | Level1)
 {
@@ -504,7 +500,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_1900, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2000
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2000, Function | MediumTest | Level1)
 {
@@ -531,7 +526,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2000, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2100
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2100, Function | MediumTest | Level1)
 {
@@ -558,7 +552,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2100, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2300
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path> <bundle-path> -r" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2300, Function | MediumTest | Level1)
 {
@@ -586,7 +579,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2300, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2400
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -r -p <bundle-path> <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2400, Function | MediumTest | Level1)
 {
@@ -614,7 +606,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2400, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2600
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p -r <bundle-path> <bundle-path>" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2600, Function | MediumTest | Level1)
 {
@@ -642,7 +633,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2600, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2700
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path> <bundle-path> -u xxx" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2700, Function | MediumTest | Level1)
 {
@@ -671,7 +661,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2700, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2800
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path> <bundle-path> -u" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2800, Function | MediumTest | Level1)
 {
@@ -699,7 +688,6 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2800, Function | MediumTest | 
  * @tc.number: Bm_Command_Install_2900
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm install -p <bundle-path> <bundle-path> -u" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandInstallTest, Bm_Command_Install_2900, Function | MediumTest | Level1)
 {

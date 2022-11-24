@@ -355,7 +355,6 @@ void BmsSandboxAppTest::CheckPathAreNonExisted(const std::string &bundleName, in
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName is empty
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0100, Function | SmallTest | Level0)
 {
@@ -369,7 +368,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0100, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input dlp type is anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0200, Function | SmallTest | Level0)
 {
@@ -391,7 +389,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0200, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input dlp type is anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0300, Function | SmallTest | Level0)
 {
@@ -413,7 +410,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0300, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input userId is anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0400, Function | SmallTest | Level0)
 {
@@ -435,7 +431,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0400, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName and dlp type are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0500, Function | SmallTest | Level0)
 {
@@ -449,7 +444,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0500, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName and useId are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0600, Function | SmallTest | Level0)
 {
@@ -465,7 +459,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0600, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input dlp type and useId are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0700, Function | SmallTest | Level0)
 {
@@ -487,7 +480,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0700, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName, dlp type and useId are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0800, Function | SmallTest | Level0)
 {
@@ -501,7 +493,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0800, Function | SmallTest 
  * @tc.name: test original bundle has not been installed
  * @tc.desc: 1. the original bundle has not been installed
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0900, Function | SmallTest | Level0)
 {
@@ -515,7 +506,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0900, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at other userId
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1000, Function | SmallTest | Level1)
 {
@@ -537,7 +527,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1000, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at other userId
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1100, Function | SmallTest | Level1)
 {
@@ -559,7 +548,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1100, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1200, Function | SmallTest | Level1)
 {
@@ -583,7 +571,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1200, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1300, Function | SmallTest | Level1)
 {
@@ -608,7 +595,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1300, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1400, Function | SmallTest | Level1)
 {
@@ -640,7 +626,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1400, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1500, Function | SmallTest | Level1)
 {
@@ -672,7 +657,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1500, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1600, Function | SmallTest | Level1)
 {
@@ -704,7 +688,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1600, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1700, Function | SmallTest | Level1)
 {
@@ -736,7 +719,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1700, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1800, Function | SmallTest | Level1)
 {
@@ -775,7 +757,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1800, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1900, Function | SmallTest | Level1)
 {
@@ -814,7 +795,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1900, Function | SmallTest 
  * @tc.name: test update original bundle after installing sandbox app
  * @tc.desc: 1.update original bundle after installing sandbox app
  *           2.the sandbox app will be installed successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2000, Function | SmallTest | Level1)
 {
@@ -849,7 +829,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2000, Function | SmallTest 
  * @tc.name: test uninstall original bundle after installing sandbox app
  * @tc.desc: 1.uninstall original bundle after installing sandbox app
  *           2.the sandbox app will be installed successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2100, Function | SmallTest | Level1)
 {
@@ -883,7 +862,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2100, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName is anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0100, Function | SmallTest | Level0)
 {
@@ -896,7 +874,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0100, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input app index is anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0200, Function | SmallTest | Level0)
 {
@@ -923,7 +900,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0200, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input userId is anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0300, Function | SmallTest | Level0)
 {
@@ -952,7 +928,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0300, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName and app index are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0400, Function | SmallTest | Level1)
 {
@@ -965,7 +940,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0400, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName and userId are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0500, Function | SmallTest | Level1)
 {
@@ -978,7 +952,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0500, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input app index and userId are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0600, Function | SmallTest | Level1)
 {
@@ -1005,7 +978,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0600, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName, app index and userId are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0700, Function | SmallTest | Level1)
 {
@@ -1018,7 +990,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0700, Function | SmallTes
  * @tc.name: test uninstall sandbox without installing the original bundle
  * @tc.desc: 1. uninstall sandbox without installing the original bundle
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0800, Function | SmallTest | Level1)
 {
@@ -1031,7 +1002,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0800, Function | SmallTes
  * @tc.name: test uninstall sandbox with installing the original bundle
  * @tc.desc: 1. uninstall sandbox without installing the sandbox
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0900, Function | SmallTest | Level1)
 {
@@ -1052,7 +1022,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0900, Function | SmallTes
  * @tc.name: test uninstall sandbox with installing the original bundle
  * @tc.desc: 1. uninstall sandbox with installing the sandbox at other userId
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1000, Function | SmallTest | Level1)
 {
@@ -1079,7 +1048,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1000, Function | SmallTes
  * @tc.name: test uninstall sandbox with installing the original bundle
  * @tc.desc: 1. uninstall sandbox with installing the sandbox at current userId
  *           2.the sandbox app will be uninstalled successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1100, Function | SmallTest | Level1)
 {
@@ -1109,7 +1077,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1100, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1200, Function | SmallTest | Level1)
 {
@@ -1150,7 +1117,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1200, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1300, Function | SmallTest | Level1)
 {
@@ -1191,7 +1157,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1300, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1400, Function | SmallTest | Level1)
 {
@@ -1235,7 +1200,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1400, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1500, Function | SmallTest | Level1)
 {
@@ -1280,7 +1244,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1500, Function | SmallTes
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0100, Function | SmallTest | Level1)
 {
@@ -1309,7 +1272,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0100, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by invalid appIndex
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0200, Function | SmallTest | Level1)
 {
@@ -1338,7 +1300,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0200, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by invalid userId
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0300, Function | SmallTest | Level1)
 {
@@ -1367,7 +1328,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0300, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0400, Function | SmallTest | Level1)
 {
@@ -1396,7 +1356,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0400, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandboxApp bundleInfo information failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0500, Function | SmallTest | Level1)
 {
@@ -1425,7 +1384,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0500, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0600, Function | SmallTest | Level1)
 {
@@ -1453,7 +1411,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0600, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. the sandbox app install failed
  *           2. get sandbox app bundleInfo information failed by not installed hap
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0700, Function | SmallTest | Level1)
 {
@@ -1467,7 +1424,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0700, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. get sandbox app bundleInfo information failed by not installed sandbox app
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0800, Function | SmallTest | Level1)
 {
@@ -1490,7 +1446,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0800, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install failed
  *           3. get sandbox app bundleInfo information by not installed sandbox app under the specified user
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0900, Function | SmallTest | Level1)
 {
@@ -1519,7 +1474,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0900, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1000, Function | SmallTest | Level1)
 {
@@ -1548,7 +1502,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1000, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1100, Function | SmallTest | Level1)
 {
@@ -1577,7 +1530,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1100, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. get sandbox app bundleInfo information failed by not install sanbox app
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1200, Function | SmallTest | Level1)
 {
@@ -1601,7 +1553,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1200, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest | Level1)
 {
@@ -1632,7 +1583,6 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0200, Function | SmallTest | Level1)
 {
@@ -1652,7 +1602,6 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0200, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest | Level1)
 {
@@ -1670,7 +1619,6 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0400, Function | SmallTest | Level1)
 {
@@ -1703,7 +1651,6 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0400, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0500, Function | SmallTest | Level1)
 {
@@ -1763,7 +1710,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0100, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0200, Function | SmallTest | Level1)
 {
@@ -1778,7 +1724,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0200, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by wrong uid
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest | Level1)
 {
@@ -1806,7 +1751,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest |
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest | Level1)
 {
@@ -1828,7 +1772,6 @@ HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest |
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0100, Function | SmallTest | Level1)
 {
