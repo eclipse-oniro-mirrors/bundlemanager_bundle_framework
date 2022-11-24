@@ -1869,14 +1869,14 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName);
         } else if (i == ARGS_POS_ONE) {
             if (valueType != napi_string) {
-                APP_LOGE("GetProfile moduleName is not a string!");
+                APP_LOGE("GetProfile abilityName is not a string!");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, STRING_TYPE);
                 return nullptr;
             }
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName);
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_string)) {
+        } else if (i == ARGS_POS_TWO) {
             if (valueType != napi_string) {
-                APP_LOGE("GetProfile moduleName is not a string!");
+                APP_LOGE("GetProfile metaData name is not a string!");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, METADATA_NAME, STRING_TYPE);
                 return nullptr;
             }
