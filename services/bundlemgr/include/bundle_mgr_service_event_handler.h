@@ -407,6 +407,41 @@ private:
      * @return Returns true if the preInstall is removable; returns false otherwise.
      */
     bool IsPreInstallRemovable(const std::string &path);
+    /**
+     * @brief Ota upgrade scenario, uninstall the hap application updated by the app hot patch and retain the data.
+     * @param bundleName Indicates the bundleName.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    bool HotPatchAppProcessing(const std::string &bundleName);
+    /**
+     * @brief Save the current system version number to the bms database.
+     */
+    void SaveSystemVersion();
+    /**
+     * @brief Judge whether it is OTA upgradde.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    bool IsSystemUpgrade();
+    /**
+     * @brief Get current system version.
+     * @param curSystemVersion Current system version.
+     * @return Returns true if called successfully; returns false code otherwise.
+     */
+    bool GetCurSystemVersion(std::string &curSystemVersion);
+    /**
+     * @brief Get system version from db.
+     * @param curSystemVersion Current system version.
+     * @return Returns true if called successfully; returns false code otherwise.
+     */
+    bool GetOldSystemVersion(std::string &oldSystemVersion);
+    /**
+     * @brief Judge whether hot patch application.
+     * @param bundleName Indicates the bundleName.
+     * @return Returns true if called successfully; returns false code otherwise.
+     */
+    bool IsHotPatchApp(const std::string &bundleName);
+
+    bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
@@ -416,7 +451,6 @@ private:
     void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
     bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
-    bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 #endif
 
     // Used to save the information parsed by Hap in the scanned directory.
