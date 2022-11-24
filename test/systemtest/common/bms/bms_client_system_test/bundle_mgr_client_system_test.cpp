@@ -2044,5 +2044,81 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_002, TestSize.Level1)
     bundleMgrClientImpl.OnDeath();
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: BundleMgrClientImplIsNull_0400
+ * @tc.name: 1.test BundleMgrClient with impl_ is nullptr
+ * @tc.desc: 1. test is failed
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test bundle_installer_0700" << std::endl;
+    BundleMgrClient client;
+    client.impl_ = nullptr;
+    std::string bundleName = "";
+    auto res = client.GetBundleNameForUid(DEFAULT_USERID, bundleName);
+    EXPECT_FALSE(res);
+
+    BundleInfo bundleInfo;
+    res = client.GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, DEFAULT_USERID);
+    EXPECT_FALSE(res);
+
+    BundlePackInfo bundlePackInfo;
+    auto res1 = client.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, bundlePackInfo, DEFAULT_USERID);
+    EXPECT_NE(res1, ERR_OK);
+
+    HapModuleInfo hapModuleInfo;
+    res = client.GetHapModuleInfo(BUNDLE_NAME, "", hapModuleInfo);
+    EXPECT_FALSE(res);
+
+    std::string metadataName = BUNDLE_NAME;
+    std::vector<std::string> profileInfos;
+    res = client.GetResConfigFile(hapModuleInfo, metadataName, profileInfos);
+    EXPECT_FALSE(res);
+
+    ExtensionAbilityInfo extensionInfo;
+    res = client.GetResConfigFile(extensionInfo, metadataName, profileInfos);
+    EXPECT_FALSE(res);
+
+    AbilityInfo abilityInfo;
+    res = client.GetResConfigFile(abilityInfo, metadataName, profileInfos);
+    EXPECT_FALSE(res);
+
+    auto res2 = client.GetAccessibleAppCodePaths(DEFAULT_USERID);
+    EXPECT_EQ(res2.size(), 0);
+
+    res = client.GetProfileFromExtension(extensionInfo, metadataName, profileInfos);
+    EXPECT_FALSE(res);
+
+    res = client.GetProfileFromAbility(abilityInfo, metadataName, profileInfos);
+    EXPECT_FALSE(res);
+
+    res = client.GetResConfigFile(hapModuleInfo, metadataName, profileInfos);
+    EXPECT_FALSE(res);
+
+    int32_t dlpType = 0;
+    int32_t appIndex = 0;
+    res1 = client.InstallSandboxApp(BUNDLE_NAME, dlpType, DEFAULT_USERID, appIndex);
+    EXPECT_NE(res1, ERR_OK);
+
+    res1 = client.UninstallSandboxApp(BUNDLE_NAME, appIndex, DEFAULT_USERID);
+    EXPECT_NE(res1, ERR_OK);
+
+    res1 = client.GetSandboxBundleInfo(BUNDLE_NAME, appIndex, DEFAULT_USERID, bundleInfo);
+    EXPECT_NE(res1, ERR_OK);
+
+    int32_t flags = 0;
+    OHOS::AAFwk::Want want;
+    res1 = client.GetSandboxAbilityInfo(want, appIndex, flags, DEFAULT_USERID, abilityInfo);
+    EXPECT_NE(res1, ERR_OK);
+
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    res1 = client.GetSandboxExtAbilityInfos(want, appIndex, flags, DEFAULT_USERID, extensionInfos);
+    EXPECT_NE(res1, ERR_OK);
+
+    res1 = client.GetSandboxHapModuleInfo(abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
+    EXPECT_NE(res1, ERR_OK);
+    std::cout << "test bundle_installer_0700 done" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
