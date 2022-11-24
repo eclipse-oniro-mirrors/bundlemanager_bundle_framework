@@ -118,6 +118,7 @@ public:
     std::string appIDDesc;
     int dlpType;
     int32_t apiVersion;
+    bool isSystemApp;
 };
 
 class HapPolicyParams final {

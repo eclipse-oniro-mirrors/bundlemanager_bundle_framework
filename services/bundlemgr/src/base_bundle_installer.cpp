@@ -697,8 +697,8 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     }
     if (preInfo.GetAppType() != oldInfo.GetAppType()) {
         APP_LOGD("RollBack bundleName: %{public}s modified app attribute.", bundleName_.c_str());
-        if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
-            APP_LOGE("save InnerBundleInfo failed");
+        if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
+            APP_LOGE("save UpdateInnerBundleInfo failed");
             return;
         }
     }
@@ -728,6 +728,7 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         if (needUpdateTokenIdEx) {
+            APP_LOGD("update accessTokenIdEx tokenAttr: %{public}u", accessTokenIdEx.tokenIdExStruct.tokenAttr);
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
     }
@@ -1449,8 +1450,8 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     // update tokenIdex
     if (noUpdateInfo.GetAppType() != oldInfo.GetAppType()) {
         APP_LOGD("bundleName: %{public}s modified app attribute.", bundleName_.c_str());
-        if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
-            APP_LOGE("save InnerBundleInfo failed");
+        if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
+            APP_LOGE("save UpdateInnerBundleInfo failed");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
     }
