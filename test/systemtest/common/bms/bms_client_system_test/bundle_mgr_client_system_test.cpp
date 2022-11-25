@@ -2257,7 +2257,8 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | M
     EXPECT_FALSE(res);
 
     BundlePackInfo bundlePackInfo;
-    auto res1 = client.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, bundlePackInfo, DEFAULT_USERID);
+    auto res1 = client.GetBundlePackInfo(
+        BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, bundlePackInfo, DEFAULT_USERID);
     EXPECT_NE(res1, ERR_OK);
 
     HapModuleInfo hapModuleInfo;
