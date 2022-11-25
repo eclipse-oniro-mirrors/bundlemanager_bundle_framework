@@ -113,11 +113,6 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
             if (asyncCallbackInfo == nullptr) {
                 return;
             }
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(asyncCallbackInfo->env, &scope);
-            if (scope == nullptr) {
-                return;
-            }
             napi_value callback = nullptr;
             napi_value result[ARGS_SIZE_ONE] = { 0 };
             napi_value placeHolder = nullptr;
@@ -130,7 +125,6 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
                 callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
             delete work;
             work = nullptr;
-            napi_close_handle_scope(asyncCallbackInfo->env, scope);
         });
     if (ret != 0) {
         delete asyncCallbackInfo;
