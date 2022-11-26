@@ -148,16 +148,19 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
         APP_LOGI("GetAppInstallControlRule size 0");
+        absSharedResultSet->Close();
         return ERR_OK;
     }
 
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     do {
@@ -165,6 +168,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
         ret = absSharedResultSet->GetString(APP_ID_INDEX, appId);
         if (ret != NativeRdb::E_OK) {
             APP_LOGE("GetString appId failed, ret: %{public}d", ret);
+            absSharedResultSet->Close();
             return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
         }
         appIds.push_back(appId);
@@ -249,21 +253,25 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("QueryData failed");
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
         APP_LOGI("GetAppRunningControlRule size 0");
+        absSharedResultSet->Close();
         return ERR_OK;
     }
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     do {
@@ -271,6 +279,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
         ret = absSharedResultSet->GetString(APP_ID_INDEX, appId);
         if (ret != NativeRdb::E_OK) {
             APP_LOGE("GetString appId failed, ret: %{public}d", ret);
+            absSharedResultSet->Close();
             return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
         }
         appIds.push_back(appId);
@@ -296,10 +305,12 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
         APP_LOGE("GetAppRunningControlRuleResult size 0");
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
     }
     ret = absSharedResultSet->GoToFirstRow();
@@ -310,11 +321,13 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     std::string callingName;
     if (absSharedResultSet->GetString(CALLING_NAME_INDEX, callingName) != NativeRdb::E_OK) {
         APP_LOGE("GetString callingName failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     ret = absSharedResultSet->GetString(CONTROL_MESSAGE_INDEX, controlRuleResult.controlMessage);
     if (ret != NativeRdb::E_OK) {
         APP_LOGW("GetString controlMessage failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (controlRuleResult.controlMessage.empty() && callingName == AppControlConstants::EDM_CALLING) {
@@ -395,6 +408,7 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
