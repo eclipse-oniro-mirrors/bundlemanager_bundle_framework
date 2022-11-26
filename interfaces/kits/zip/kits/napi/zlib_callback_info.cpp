@@ -43,6 +43,11 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
             if (asyncCallbackInfo == nullptr) {
                 return;
             }
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(asyncCallbackInfo->env, &scope);
+            if (scope == nullptr) {
+                return;
+            }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[ARGS_ONE] = {0};
             if (asyncCallbackInfo->deliverErrcode) {
@@ -79,6 +84,7 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
                 delete work;
                 work = nullptr;
             }
+            napi_close_handle_scope(asyncCallbackInfo->env, scope);
         });
     return ret;
 }

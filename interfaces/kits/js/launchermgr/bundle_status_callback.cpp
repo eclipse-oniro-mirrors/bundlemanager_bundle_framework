@@ -122,7 +122,6 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
-            // JS Thread
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
                 return;
