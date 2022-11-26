@@ -266,13 +266,6 @@ HWTEST_F(BmsServiceStartupTest, ReInstallAllInstallDirApps_001, Function | Small
 * @tc.desc: test gets NO_INSTALLED_DATA
 */
 HWTEST_F(BmsServiceStartupTest, GuardAgainstInstallInfosLossedStrategy_001, Function | SmallTest | Level0)
-/**
-* @tc.number: PreInstall_003
-* @tc.name: Preset application whitelist mechanism
-* @tc.desc: 1. LoadPreInstallProFile
-* @tc.require: issueI56W8O
-*/
-HWTEST_F(BmsServiceStartupTest, PreInstall_003, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
     EXPECT_NE(nullptr, runner);
@@ -370,6 +363,18 @@ HWTEST_F(BmsServiceStartupTest, OTAInstallSystemBundle_001, Function | SmallTest
     res = handler->OTAInstallSystemBundle(filePaths1, appType, removable);
     EXPECT_FALSE(res);
 }
+
+/**
+* @tc.number: PreInstall_003
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. LoadPreInstallProFile
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_003, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->ClearPreInstallCache();
     ResultCode ret = handler->GuardAgainstInstallInfosLossedStrategy();
     EXPECT_EQ(ret, ResultCode::NO_INSTALLED_DATA);
