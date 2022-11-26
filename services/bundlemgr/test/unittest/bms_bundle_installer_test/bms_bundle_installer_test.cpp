@@ -1371,7 +1371,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest 
     installParam.userId = Constants::INVALID_USERID;
     ret = installer.ProcessBundleInstall(
         inBundlePaths, installParam, appType, uid);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_NE(ret, ERR_OK);
 
     installParam.userId = Constants::DEFAULT_USERID;
     installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
