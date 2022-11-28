@@ -250,7 +250,7 @@ void GetRemoteAbilityInfoComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<GetRemoteAbilityInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[ARGS_SIZE_TWO];
+    napi_value result[ARGS_SIZE_TWO] = {0};
     if ((asyncCallbackInfo->err == SUCCESS) && !asyncCallbackInfo->remoteAbilityInfos.empty()) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         if (callbackPtr->isArray) {

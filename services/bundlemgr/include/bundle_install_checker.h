@@ -115,6 +115,8 @@ public:
 
     bool IsContainModuleName(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
 
+    ErrCode CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
 private:
 
     ErrCode ParseBundleInfo(

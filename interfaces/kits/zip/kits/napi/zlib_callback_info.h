@@ -38,6 +38,7 @@ public:
     void SetCallback(napi_ref callback);
     void SetDeferred(napi_deferred deferred);
     void SetDeliverErrCode(bool isDeliverErrCode);
+    void SetValid(bool valid);
 private:
     int32_t ExcuteWork(uv_loop_s* loop, uv_work_t* work);
 private:
@@ -46,6 +47,8 @@ private:
     napi_deferred deferred_ = nullptr;
     bool isCallBack_ = false;
     bool deliverErrcode_ = false;
+    bool valid_ = true;
+    std::mutex validMutex_;
     DISALLOW_COPY_AND_MOVE(ZlibCallbackInfo);
 };
 

@@ -280,7 +280,7 @@ void BmsInstallSystemTest::UninstallBundle(
     EXPECT_NE(statusReceiver, nullptr);
     InstallParam installParam;
     installParam.userId = USERID;
-    
+
     bool uninstallResult = installerProxy->Uninstall(bundleName, installParam, statusReceiver);
     EXPECT_TRUE(uninstallResult);
     uninstallMsg = statusReceiver->GetResultMsg();
@@ -379,7 +379,6 @@ void BmsInstallSystemTest::TearDown()
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle
  *           2.install the bundle
  *           3.check the bundle info
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsInstallSystemTest, BMS_Install_0100, Function | MediumTest | Level1)
 {
@@ -540,7 +539,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_0500, Function | MediumTest | Level1)
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle
  *           2.install the bundle
  *           3.check the bundle info
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsInstallSystemTest, BMS_Install_0600, Function | MediumTest | Level1)
 {
@@ -897,7 +895,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1900, Function | MediumTest | Level1)
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-    
+
     std::cout << "END BMS_Install_1900" << std::endl;
 }
 
@@ -1045,7 +1043,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2400, Function | MediumTest | Level2)
     std::cout << "START BMS_Install_2400" << std::endl;
     std::string bundleName = "com.third.hiworld.example1";
     std::string installMsg;
-    
+
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;

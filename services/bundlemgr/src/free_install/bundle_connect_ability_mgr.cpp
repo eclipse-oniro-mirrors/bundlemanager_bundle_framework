@@ -378,6 +378,10 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
     }
+    if (handler_ == nullptr) {
+        APP_LOGE("OnServiceCenterCall, handler is nullptr");
+        return;
+    }
     handler_->RemoveTask(installResult.result.transactId);
     freeInstallParams = node->second;
     if (installResult.result.retCode == ServiceCenterResultCode::FREE_INSTALL_DOWNLOADING) {
@@ -581,13 +585,15 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
         std::string value = wantParams.GetStringByType(info, typeId);
         extValues.emplace(it.first, value);
     }
+    int32_t callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
+    APP_LOGD("callingUid: %{public}d", callingUid);
 
     targetAbilityInfo->targetExtSetting.extValues = extValues;
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
     targetAbilityInfo->targetInfo.bundleName = bundleName;
     targetAbilityInfo->targetInfo.moduleName = moduleName;
     targetAbilityInfo->targetInfo.abilityName = abilityName;
-    targetAbilityInfo->targetInfo.callingUid = IPCSkeleton::GetCallingUid();
+    targetAbilityInfo->targetInfo.callingUid = callingUid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
     std::string callingAppId = want.GetStringParam(PARAM_FREEINSTALL_APPID);
     if (!callingAppId.empty()) {
@@ -595,7 +601,6 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     }
     callingBundleNames = want.GetStringArrayParam(PARAM_FREEINSTALL_BUNDLENAMES);
     if (callingAppids.empty() && callingBundleNames.empty()) {
-        int32_t callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
         this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
     }
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
@@ -640,7 +645,18 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
     InnerBundleInfo &innerBundleInfo, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
     APP_LOGI("CheckIsModuleNeedUpdate called");
-    if (innerBundleInfo.GetModuleUpgradeFlag(want.GetModuleName()) != 0) {
+    std::string moduleName = want.GetModuleName();
+    if (moduleName.empty()) {
+        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
+        ElementName element = want.GetElement();
+        std::string abilityName = element.GetAbilityName();
+        for (const auto& info : baseAbilitiesInfo) {
+            if (info.second.name == abilityName) {
+                moduleName = info.second.moduleName;
+            }
+        }
+    }
+    if (innerBundleInfo.GetModuleUpgradeFlag(moduleName) != 0) {
         sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
         if (targetAbilityInfo == nullptr) {
             APP_LOGE("targetAbilityInfo is nullptr");
@@ -660,6 +676,9 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
         targetAbilityInfo->targetExtSetting = *targetExtSetting;
         targetAbilityInfo->version = DEFAULT_VERSION;
         this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+        if (targetAbilityInfo->targetInfo.moduleName.empty()) {
+            targetAbilityInfo->targetInfo.moduleName = moduleName;
+        }
         sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
         if (freeInstallParams == nullptr) {
             APP_LOGE("freeInstallParams is nullptr");
@@ -786,6 +805,14 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+    if (targetAbilityInfo->targetInfo.moduleName.empty()) {
+        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
+        for (const auto& info : baseAbilitiesInfo) {
+            if (info.second.name == targetAbilityInfo->targetInfo.abilityName) {
+                targetAbilityInfo->targetInfo.moduleName = info.second.moduleName;
+            }
+        }
+    }
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");

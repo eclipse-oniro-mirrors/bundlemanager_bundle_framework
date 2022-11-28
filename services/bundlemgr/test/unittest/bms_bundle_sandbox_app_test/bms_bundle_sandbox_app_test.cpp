@@ -18,6 +18,7 @@
 #include "bundle_data_storage_database.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
+#include "bundle_sandbox_installer.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "installd/installd_service.h"
@@ -78,7 +79,9 @@ public:
     ErrCode UninstallBundle(const std::string &bundleName) const;
     ErrCode GetSandboxAppInfo(
         const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info);
+    bool DeleteSandboxAppIndex(const std::string &bundleName, int32_t appIndex);
     int32_t GenerateSandboxAppIndex(const std::string &bundleName);
+    const std::shared_ptr<BundleSandboxAppHelper> GetBundleSandboxAppHelper() const;
     void SaveSandboxAppInfo(const InnerBundleInfo &info, const int32_t &appIndex);
     void DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex);
     void CheckPathAreExisted(const std::string &bundleName, int32_t appIndex);
@@ -178,6 +181,19 @@ ErrCode BmsSandboxAppTest::GetSandboxAppInfo(
     const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info)
 {
     return bundleSandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, info);
+}
+
+bool BmsSandboxAppTest::DeleteSandboxAppIndex(const std::string &bundleName, int32_t appIndex)
+{
+    bool ret = GetSandboxDataMgr();
+    EXPECT_TRUE(ret);
+
+    return sandboxDataMgr_->DeleteSandboxAppIndex(bundleName, appIndex);
+}
+
+const std::shared_ptr<BundleSandboxAppHelper> BmsSandboxAppTest::GetBundleSandboxAppHelper() const
+{
+    return bundleSandboxAppHelper_;
 }
 
 bool BmsSandboxAppTest::GetSandboxDataMgr()
@@ -349,7 +365,6 @@ void BmsSandboxAppTest::CheckPathAreNonExisted(const std::string &bundleName, in
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName is empty
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0100, Function | SmallTest | Level0)
 {
@@ -363,7 +378,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0100, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input dlp type is anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0200, Function | SmallTest | Level0)
 {
@@ -385,7 +399,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0200, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input dlp type is anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0300, Function | SmallTest | Level0)
 {
@@ -407,7 +420,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0300, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input userId is anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0400, Function | SmallTest | Level0)
 {
@@ -429,7 +441,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0400, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName and dlp type are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0500, Function | SmallTest | Level0)
 {
@@ -443,12 +454,13 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0500, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName and useId are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0600, Function | SmallTest | Level0)
 {
     int32_t appIndex = 0;
     auto ret = InstallSandboxApp("", DLP_TYPE_1, INVALID_USERID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    ret = InstallSandboxApp("", DLP_TYPE_1, Constants::DEFAULT_USERID - 1, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 }
 
@@ -457,7 +469,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0600, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input dlp type and useId are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0700, Function | SmallTest | Level0)
 {
@@ -479,7 +490,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0700, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1.the input bundleName, dlp type and useId are anormal
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0800, Function | SmallTest | Level0)
 {
@@ -493,7 +503,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0800, Function | SmallTest 
  * @tc.name: test original bundle has not been installed
  * @tc.desc: 1. the original bundle has not been installed
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0900, Function | SmallTest | Level0)
 {
@@ -507,7 +516,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0900, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at other userId
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1000, Function | SmallTest | Level1)
 {
@@ -529,7 +537,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1000, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at other userId
  *           2.the sandbox app install failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1100, Function | SmallTest | Level1)
 {
@@ -551,7 +558,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1100, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1200, Function | SmallTest | Level1)
 {
@@ -575,7 +581,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1200, Function | SmallTest 
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1300, Function | SmallTest | Level1)
 {
@@ -600,7 +605,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1300, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1400, Function | SmallTest | Level1)
 {
@@ -632,7 +636,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1400, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1500, Function | SmallTest | Level1)
 {
@@ -664,7 +667,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1500, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1600, Function | SmallTest | Level1)
 {
@@ -696,7 +698,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1600, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1700, Function | SmallTest | Level1)
 {
@@ -728,7 +729,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1700, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1800, Function | SmallTest | Level1)
 {
@@ -767,7 +767,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1800, Function | SmallTest 
  * @tc.name: test install sandbox app multiple times
  * @tc.desc: 1.install sandbox app multiple times
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1900, Function | SmallTest | Level1)
 {
@@ -806,7 +805,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1900, Function | SmallTest 
  * @tc.name: test update original bundle after installing sandbox app
  * @tc.desc: 1.update original bundle after installing sandbox app
  *           2.the sandbox app will be installed successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2000, Function | SmallTest | Level1)
 {
@@ -841,7 +839,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2000, Function | SmallTest 
  * @tc.name: test uninstall original bundle after installing sandbox app
  * @tc.desc: 1.uninstall original bundle after installing sandbox app
  *           2.the sandbox app will be installed successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2100, Function | SmallTest | Level1)
 {
@@ -875,7 +872,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2100, Function | SmallTest 
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName is anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0100, Function | SmallTest | Level0)
 {
@@ -888,7 +884,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0100, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input app index is anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0200, Function | SmallTest | Level0)
 {
@@ -915,7 +910,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0200, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input userId is anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0300, Function | SmallTest | Level0)
 {
@@ -933,6 +927,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0300, Function | SmallTes
 
     auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, INVALID_USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST);
+    res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, Constants::DEFAULT_USERID - 1);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
     UninstallBundle(BUNDLE_NAME);
 }
@@ -942,7 +938,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0300, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName and app index are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0400, Function | SmallTest | Level1)
 {
@@ -955,7 +950,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0400, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName and userId are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0500, Function | SmallTest | Level1)
 {
@@ -968,7 +962,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0500, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input app index and userId are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0600, Function | SmallTest | Level1)
 {
@@ -995,7 +988,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0600, Function | SmallTes
  * @tc.name: test anormal input parameters
  * @tc.desc: 1. input bundleName, app index and userId are anormal
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0700, Function | SmallTest | Level1)
 {
@@ -1008,7 +1000,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0700, Function | SmallTes
  * @tc.name: test uninstall sandbox without installing the original bundle
  * @tc.desc: 1. uninstall sandbox without installing the original bundle
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0800, Function | SmallTest | Level1)
 {
@@ -1021,7 +1012,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0800, Function | SmallTes
  * @tc.name: test uninstall sandbox with installing the original bundle
  * @tc.desc: 1. uninstall sandbox without installing the sandbox
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0900, Function | SmallTest | Level1)
 {
@@ -1042,7 +1032,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0900, Function | SmallTes
  * @tc.name: test uninstall sandbox with installing the original bundle
  * @tc.desc: 1. uninstall sandbox with installing the sandbox at other userId
  *           2.the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1000, Function | SmallTest | Level1)
 {
@@ -1069,7 +1058,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1000, Function | SmallTes
  * @tc.name: test uninstall sandbox with installing the original bundle
  * @tc.desc: 1. uninstall sandbox with installing the sandbox at current userId
  *           2.the sandbox app will be uninstalled successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1100, Function | SmallTest | Level1)
 {
@@ -1079,13 +1067,16 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1100, Function | SmallTes
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
+    auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_NO_SANDBOX_APP_INFO);
+
     int32_t appIndex = 0;
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(appIndex, APP_INDEX_1);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
 
-    auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
+    res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
     EXPECT_EQ(res, ERR_OK);
 
     UninstallBundle(BUNDLE_NAME);
@@ -1096,7 +1087,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1100, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1200, Function | SmallTest | Level1)
 {
@@ -1137,7 +1127,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1200, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1300, Function | SmallTest | Level1)
 {
@@ -1178,7 +1167,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1300, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1400, Function | SmallTest | Level1)
 {
@@ -1222,7 +1210,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1400, Function | SmallTes
  * @tc.name: test uninstall sandbox multiple times
  * @tc.desc: 1. uninstall sandbox multiple times
  *           2. the sandbox app will be uninstalled failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1500, Function | SmallTest | Level1)
 {
@@ -1262,12 +1249,35 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1500, Function | SmallTes
 }
 
 /**
+ * @tc.number: BmsSandboxAppUnInstallTest_1600
+ * @tc.name: InstallSandboxApp
+ * @tc.desc: 1.Test the interface of InstallSandboxApp
+ */
+HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1600, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    auto installer = std::make_shared<BundleSandboxInstaller>();
+    int32_t appIndex = 0;
+    auto ret = installer->InstallSandboxApp("", DLP_TYPE_1, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    int32_t userId = Constants::DEFAULT_USERID - 1;
+    ret = installer->InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: BmsGETSandboxAppMSG_0100
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0100, Function | SmallTest | Level1)
 {
@@ -1296,7 +1306,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0100, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by invalid appIndex
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0200, Function | SmallTest | Level1)
 {
@@ -1325,7 +1334,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0200, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by invalid userId
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0300, Function | SmallTest | Level1)
 {
@@ -1354,7 +1362,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0300, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0400, Function | SmallTest | Level1)
 {
@@ -1383,7 +1390,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0400, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandboxApp bundleInfo information failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0500, Function | SmallTest | Level1)
 {
@@ -1412,7 +1418,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0500, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0600, Function | SmallTest | Level1)
 {
@@ -1440,7 +1445,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0600, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. the sandbox app install failed
  *           2. get sandbox app bundleInfo information failed by not installed hap
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0700, Function | SmallTest | Level1)
 {
@@ -1454,7 +1458,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0700, Function | SmallTest | Lev
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. get sandbox app bundleInfo information failed by not installed sandbox app
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0800, Function | SmallTest | Level1)
 {
@@ -1477,7 +1480,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0800, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install failed
  *           3. get sandbox app bundleInfo information by not installed sandbox app under the specified user
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0900, Function | SmallTest | Level1)
 {
@@ -1506,7 +1508,6 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0900, Function | SmallTest | Lev
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1000, Function | SmallTest | Level1)
 {
@@ -1530,12 +1531,85 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1000, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: BmsGETSandboxAppMSG_1100
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information successfully
+ */
+HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = 0;
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appIndex, APP_INDEX_1);
+    CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
+
+    BundleInfo info;
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    auto testRet = bundleSandboxAppHelper->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
+    EXPECT_EQ(testRet, ERR_OK);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsGETSandboxAppMSG_1200
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. get sandbox app bundleInfo information failed by not install sanbox app
+ */
+HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1200, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    BundleInfo info;
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    auto testRet = bundleSandboxAppHelper->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_NO_SANDBOX_APP_INFO);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsGETSandboxAppMSG_1300
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. get sandbox app bundleInfo information failed by not install sanbox app
+ */
+HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1300, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    BundleInfo info;
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    auto ret = bundleSandboxAppHelper->GetSandboxAppBundleInfo(
+        BUNDLE_NAME, APP_INDEX_1, Constants::ALL_USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: GetSandboxHapModuleInfo_0100
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest | Level1)
 {
@@ -1545,7 +1619,7 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest |
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
-    int32_t appIndex = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(appIndex, APP_INDEX_1);
@@ -1566,15 +1640,16 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0200, Function | SmallTest | Level1)
 {
     AbilityInfo abilityInfo;
     HapModuleInfo info;
-    int32_t appIndex = -1;
-
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
     ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_NE(testRet, ERR_OK);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_NE(testRet, ERR_OK);
 }
 
@@ -1584,16 +1659,75 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0200, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest | Level1)
 {
     AbilityInfo abilityInfo;
     HapModuleInfo info;
-    int32_t appIndex = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
 
-    ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, -1, info);
+    ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, Constants::INITIAL_APP_INDEX, info);
     EXPECT_NE(testRet, ERR_OK);
+}
+
+/**
+ * @tc.number: GetSandboxHapModuleInfo_0400
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information failed by empty bundlename
+ */
+HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0400, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = Constants::MAX_APP_INDEX - 1;
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appIndex, APP_INDEX_1);
+    CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = BUNDLE_NAME;
+    HapModuleInfo info;
+
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    ErrCode testRet = bundleSandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_NO_MODULE_INFO);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetSandboxHapModuleInfo_0500
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information failed by empty bundlename
+ */
+HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0500, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = BUNDLE_NAME;
+
+    HapModuleInfo info;
+
+    auto bundleSandboxAppHelper = GetBundleSandboxAppHelper();
+    ErrCode testRet = bundleSandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR);
+
+    UninstallBundle(BUNDLE_NAME);
 }
 
 /**
@@ -1633,7 +1767,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0100, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by empty bundlename
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0200, Function | SmallTest | Level1)
 {
@@ -1648,7 +1781,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0200, Function | SmallTest |
  * @tc.desc: 1. install a hap successfully
  *           2. the sandbox app install successfully
  *           3. get sandbox app bundleInfo information failed by wrong uid
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest | Level1)
 {
@@ -1676,7 +1808,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest |
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest | Level1)
 {
@@ -1689,6 +1820,9 @@ HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest |
     int32_t ret1 = GenerateSandboxAppIndex(BUNDLE_NAME);
     EXPECT_NE(ret1, Constants::INITIAL_APP_INDEX);
 
+    ret1 = GenerateSandboxAppIndex("");
+    EXPECT_EQ(ret1, Constants::INITIAL_APP_INDEX);
+
     UninstallBundle(BUNDLE_NAME);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
 }
@@ -1698,7 +1832,6 @@ HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest |
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
  *           2.the sandbox app install successfully
- * @tc.require: AR000H02C4
  */
 HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0100, Function | SmallTest | Level1)
 {
@@ -1720,7 +1853,26 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0100, Function | SmallTest | Level
         BUNDLE_NAME, appIndex, RightUserId, info);
     EXPECT_EQ(ret1, ERR_OK);
 
+    RightUserId = Constants::DEFAULT_USERID - 1;
+    ret1 = GetSandboxAppInfo(
+        BUNDLE_NAME, appIndex, RightUserId, info);
+    EXPECT_EQ(ret1, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    DeleteSandboxAppInfo("", 0);
+
     DeleteSandboxAppInfo(BUNDLE_NAME, 0);
     UninstallBundle(BUNDLE_NAME);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
+}
+
+/**
+ * @tc.number: DeleteSandboxAppIndex_001
+ * @tc.name: ConvertResourcePath
+ * @tc.desc: 1.Test the interface of ConvertResourcePath
+ */
+HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0200, Function | SmallTest | Level1)
+{
+    std::string bundleName = "";
+    int32_t appIndex = 0;
+    bool ret = DeleteSandboxAppIndex(bundleName, appIndex);
+    EXPECT_EQ(ret, false);
 }

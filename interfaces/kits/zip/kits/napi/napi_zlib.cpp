@@ -469,13 +469,25 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
 {
     APP_LOGD("%{public}s,called", __func__);
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
+    napi_value thisArg = nullptr;
     size_t argcAsync = 4;
     const size_t argcPromise = 3;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, &thisArg, nullptr));
     if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);
         return nullptr;
     }
+    if (thisArg == nullptr) {
+        APP_LOGE("%{public}s, This argument is nullptr.", __func__);
+        return nullptr;
+    }
+    napi_valuetype valueTypeOfThis = napi_undefined;
+    NAPI_CALL_BASE(env, napi_typeof(env, thisArg, &valueTypeOfThis), nullptr);
+    if (valueTypeOfThis == napi_undefined) {
+        APP_LOGE("%{public}s, Wrong this value.", __func__);
+        return nullptr;
+    }
+
     CallZipUnzipParam param;
     if (UnwrapZipParam(param, env, args, argcAsync) == nullptr) {
         APP_LOGE("%{public}s, call unwrapWant failed.", __func__);
@@ -501,6 +513,16 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
         NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
         asyncZipCallbackInfo->zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>(env, nullptr, deferred, false);
     }
+
+    std::shared_ptr<ZlibCallbackInfo>* cbInfo =
+        new std::shared_ptr<ZlibCallbackInfo>(asyncZipCallbackInfo->zlibCallbackInfo);
+    napi_wrap(env, thisArg, (void*)cbInfo, [](napi_env env, void* data, void* hint) {
+        std::shared_ptr<ZlibCallbackInfo>* cbInfo = static_cast<std::shared_ptr<ZlibCallbackInfo>*>(data);
+        if (cbInfo != nullptr && *cbInfo != nullptr) {
+            (*cbInfo)->SetValid(false);
+            delete cbInfo;
+        }
+    }, nullptr, nullptr);
     CompressExcute(env, asyncZipCallbackInfo);
     callbackPtr.release();
     return promise;

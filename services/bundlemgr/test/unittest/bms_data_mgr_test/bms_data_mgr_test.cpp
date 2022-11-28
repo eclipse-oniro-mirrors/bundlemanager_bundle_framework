@@ -1012,3 +1012,37 @@ HWTEST_F(BmsDataMgrTest, GetApplicationInfo_0200, Function | SmallTest | Level0)
     EXPECT_NE(appInfo.bundleName, appInfo3.bundleName);
     EXPECT_NE(appInfo.deviceId, appInfo3.deviceId);
 }
+
+/**
+ * @tc.number: BundleStateStorage_0100
+ * @tc.name: Test DeleteBundleState, a param is error
+ * @tc.desc: 1.Test the DeleteBundleState of BundleStateStorage
+*/
+HWTEST_F(BmsDataMgrTest, BundleStateStorage_0100, Function | SmallTest | Level0)
+{
+    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
+    bool ret = bundleStateStorage->DeleteBundleState("", USERID);
+    EXPECT_EQ(ret, false);
+    ret = bundleStateStorage->DeleteBundleState(BUNDLE_NAME, -1);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0200
+ * @tc.name: Test GetBundleStateStorage, a param is error
+ * @tc.desc: 1.Test the GetBundleStateStorage of BundleStateStorage
+*/
+HWTEST_F(BmsDataMgrTest, BundleStateStorage_0200, Function | SmallTest | Level0)
+{
+    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
+    BundleUserInfo bundleUserInfo;
+    bool ret = bundleStateStorage->GetBundleStateStorage(
+        "", USERID, bundleUserInfo);
+    EXPECT_EQ(ret, false);
+    ret = bundleStateStorage->GetBundleStateStorage(
+        BUNDLE_NAME, -1, bundleUserInfo);
+    EXPECT_EQ(ret, false);
+    ret = bundleStateStorage->GetBundleStateStorage(
+        BUNDLE_NAME, USERID, bundleUserInfo);
+    EXPECT_EQ(ret, false);
+}

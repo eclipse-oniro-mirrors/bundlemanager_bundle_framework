@@ -43,6 +43,11 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
             if (asyncCallbackInfo == nullptr) {
                 return;
             }
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(asyncCallbackInfo->env, &scope);
+            if (scope == nullptr) {
+                return;
+            }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[ARGS_ONE] = {0};
             if (asyncCallbackInfo->deliverErrcode) {
@@ -79,12 +84,19 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
                 delete work;
                 work = nullptr;
             }
+            napi_close_handle_scope(asyncCallbackInfo->env, scope);
         });
     return ret;
 }
 
 void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
 {
+    std::lock_guard<std::mutex> lock(validMutex_);
+    if (!valid_) {
+        APP_LOGE("%{public}s, module exported object is invalid.", __func__);
+        return;
+    }
+
     // do callback or promise
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -153,6 +165,12 @@ void ZlibCallbackInfo::SetDeferred(napi_deferred deferred)
 void ZlibCallbackInfo::SetDeliverErrCode(bool isDeliverErrCode)
 {
     deliverErrcode_ = isDeliverErrCode;
+}
+
+void ZlibCallbackInfo::SetValid(bool valid)
+{
+    std::lock_guard<std::mutex> lock(validMutex_);
+    valid_ = valid;
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
