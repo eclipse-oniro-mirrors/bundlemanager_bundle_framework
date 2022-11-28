@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_util.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -144,6 +145,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
         APP_LOGE("GetAppInstallControlRule failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
@@ -169,7 +171,6 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
         }
         appIds.push_back(appId);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
-    absSharedResultSet->Close();
     return ERR_OK;
 }
 
@@ -251,6 +252,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
         APP_LOGE("QueryData failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
@@ -275,7 +277,6 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
         }
         appIds.push_back(appId);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
-    absSharedResultSet->Close();
     return ERR_OK;
 }
 
@@ -292,6 +293,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         APP_LOGE("QueryData failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
@@ -328,7 +330,6 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     if (!wantString.empty()) {
         controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
     }
-    absSharedResultSet->Close();
     return ERR_OK;
 }
 
@@ -391,6 +392,7 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         APP_LOGE("GetAppInstallControlRule failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
@@ -413,7 +415,6 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     want = *Want::FromString(wantString);
-    absSharedResultSet->Close();
     return ERR_OK;
 }
 
