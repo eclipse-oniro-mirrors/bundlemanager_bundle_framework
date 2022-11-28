@@ -379,14 +379,15 @@ bool BMSEventHandler::AnalyzeUserData(
     innerBundleUserInfo.gids.emplace_back(fileStat.gid);
     innerBundleUserInfo.installTime = fileStat.lastModifyTime;
     innerBundleUserInfo.updateTime = innerBundleUserInfo.installTime;
-    auto tokenId = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(
+    auto accessTokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenIDEx(
         innerBundleUserInfo.bundleUserInfo.userId, userDataBundleName, 0);
-    if (tokenId == 0) {
+    if (accessTokenIdEx.tokenIdExStruct.tokenID == 0) {
         APP_LOGE("get tokenId failed.");
         return false;
     }
 
-    innerBundleUserInfo.accessTokenId = tokenId;
+    innerBundleUserInfo.accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID;
+    innerBundleUserInfo.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
     auto userIter = userMaps.find(userDataBundleName);
     if (userIter == userMaps.end()) {
         std::vector<InnerBundleUserInfo> innerBundleUserInfos = { innerBundleUserInfo };

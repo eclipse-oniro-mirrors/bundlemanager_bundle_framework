@@ -27,7 +27,7 @@ AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const H
     return token;
 }
 
-int AccessTokenKit::UpdateHapToken(AccessTokenID tokenID, const std::string& appIDDesc,
+int AccessTokenKit::UpdateHapToken(AccessTokenIDEx &tokenIDEx, bool isSystemApp, const std::string& appIDDesc,
     int32_t apiVersion, const HapPolicyParams& policy)
 {
     return 0;
@@ -83,6 +83,12 @@ int AccessTokenKit::ClearUserGrantedPermissionState(AccessTokenID tokenID)
 AccessTokenID AccessTokenKit::GetHapTokenID(int userID, const std::string& bundleName, int instIndex)
 {
     return 0;
+}
+
+AccessTokenIDEx AccessTokenKit::GetHapTokenIDEx(int userID, const std::string& bundleName, int instIndex)
+{
+    AccessTokenIDEx tokenIdEx;
+    return tokenIdEx;
 }
 
 int AccessTokenKit::GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &nativeTokenInfo)

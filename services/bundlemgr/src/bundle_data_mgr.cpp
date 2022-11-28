@@ -4192,6 +4192,29 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     return false;
 }
 
+bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo)
+{
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    if (bundleName.empty()) {
+        APP_LOGE("UpdateInnerBundleInfo failed, empty bundle name");
+        return false;
+    }
+    APP_LOGD("UpdateInnerBundleInfo:%{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundle info is not existed");
+        return false;
+    }
+
+    if (dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        bundleInfos_.at(bundleName) = innerBundleInfo;
+        return true;
+    }
+    APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
+    return false;
+}
+
 bool BundleDataMgr::CheckAppInstallControl(const std::string &appId, int32_t userId) const
 {
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL

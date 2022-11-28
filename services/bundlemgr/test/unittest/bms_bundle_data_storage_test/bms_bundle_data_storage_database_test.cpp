@@ -61,6 +61,7 @@ protected:
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {
                     "applicationInfo": {
                         "accessTokenId": 0,
+                        "accessTokenIdEx": 0,
                         "accessible": false,
                         "apiCompatibleVersion": 0,
                         "apiReleaseType": "",
@@ -375,6 +376,7 @@ protected:
             },
             "baseApplicationInfo": {
                 "accessTokenId": 0,
+                "accessTokenIdEx": 0,
                 "accessible": false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
@@ -506,6 +508,7 @@ protected:
                 ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
                 "applicationInfo": {
+                    "accessTokenIdEx": 0,
                     "accessTokenId": 0,
                     "accessible": false,
                     "apiCompatibleVersion": 0,

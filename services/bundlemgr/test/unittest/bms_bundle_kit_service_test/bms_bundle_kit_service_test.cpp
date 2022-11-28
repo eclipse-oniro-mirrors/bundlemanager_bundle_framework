@@ -484,8 +484,8 @@ void BmsBundleKitServiceTest::SaveToDatabase(const std::string &bundleName,
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo1);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
-    auto accessTokenId = BundlePermissionMgr::CreateAccessTokenId(innerBundleInfo, bundleName, DEFAULT_USERID);
-    innerBundleInfo.SetAccessTokenId(accessTokenId, DEFAULT_USERID);
+    auto accessTokenId = BundlePermissionMgr::CreateAccessTokenIdEx(innerBundleInfo, bundleName, DEFAULT_USERID);
+    innerBundleInfo.SetAccessTokenIdEx(accessTokenId, DEFAULT_USERID);
     auto moduleNameVec = innerBundleInfo.GetModuleNameVec();
     auto abilityNameVec = innerBundleInfo.GetAbilityNames();
     if (!moduleNameVec.empty() && !abilityNameVec.empty()) {
