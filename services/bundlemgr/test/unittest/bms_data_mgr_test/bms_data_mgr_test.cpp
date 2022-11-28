@@ -1044,5 +1044,5 @@ HWTEST_F(BmsDataMgrTest, BundleStateStorage_0200, Function | SmallTest | Level0)
     EXPECT_EQ(ret, false);
     ret = bundleStateStorage->GetBundleStateStorage(
         BUNDLE_NAME, USERID, bundleUserInfo);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
 }
