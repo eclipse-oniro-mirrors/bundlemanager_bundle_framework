@@ -8655,7 +8655,7 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
                         NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             std::string getBundleInfoErrData = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getBundleInfoErrData));
             return;
         }
@@ -8663,10 +8663,10 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
         std::string name(bundleName);
         auto ret = InnerGetBundleInfo(name, bundleFlags, options, bundleInfo);
         if (!ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateBundleInfo(engine, bundleInfo));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateBundleInfo(engine, bundleInfo));
     };
 
     NativeValue *result = nullptr;
@@ -8748,7 +8748,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
         if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
             obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
             *value = (info == nullptr) ? INVALID_PARAM : *value;
-            task.RejectWithMessage(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
             return;
         }
         std::shared_ptr<Media::PixelMap> pixelMap;
@@ -8756,7 +8756,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
             info->moduleName, info->abilityName, info->hasModuleName);
         if (!pixelMap) {
             obj->errMessage_ = "get pixelMap failed.";
-            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, OPERATION_FAILED),
                 CreateJsValue(engine, obj->errMessage_));
             return;
         }
@@ -8765,7 +8765,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
         Media::PixelMapNapi::Init(env, exports);
         NativeValue *ret = reinterpret_cast<NativeValue*>(
             Media::PixelMapNapi::CreatePixelMap(env, pixelMap));
-        task.ResolveWithErr(engine, ret);
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), ret);
     };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityIcon",
@@ -8785,7 +8785,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
     }
     auto complete = []
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            task.RejectWithMessage(engine, CreateJsError(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
+            task.RejectWithCustomize(engine, CreateJsError(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
                 CreateJsValue(engine, UNSUPPORTED_FEATURE_MESSAGE.c_str())));
         };
     NativeValue *result = nullptr;
@@ -8833,17 +8833,17 @@ NativeValue* JsBundleMgr::OnGetProfile(
         std::string getProfileErrData;
         if (errCode != 0) {
             getProfileErrData = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, getProfileErrData));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, getProfileErrData));
             return;
         }
         napi_env env = nullptr;
         auto ret = InnerGetProfile(env, *asyncInfo);
         if (!ret) {
             getProfileErrData = "GetProfile failed";
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine, getProfileErrData));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), CreateJsValue(engine, getProfileErrData));
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateProfiles(engine, asyncInfo->profileVec));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateProfiles(engine, asyncInfo->profileVec));
     };
     NativeValue* callback = nullptr;
     if (info.argc > 0) {
@@ -8876,16 +8876,16 @@ NativeValue* JsBundleMgr::OnGetNameForUid(NativeEngine &engine, NativeCallbackIn
     auto complete = [obj = this, uid, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             std::string errMessage = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
             return;
         }
         std::string bundleName("");
         auto ret = InnerGetNameForUid(uid, bundleName);
         if (!ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        task.ResolveWithErr(engine, CreateJsValue(engine, bundleName));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), CreateJsValue(engine, bundleName));
     };
     auto lastParam = (info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : nullptr;
     NativeValue *result = nullptr;
@@ -8964,15 +8964,15 @@ NativeValue* JsBundleMgr::OnGetAbilityInfo(NativeEngine &engine, NativeCallbackI
         if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
             obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
             *value = (info == nullptr) ? INVALID_PARAM : *value;
-            task.RejectWithMessage(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
             return;
         }
         if (!info->ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, OPERATION_FAILED),
                 CreateJsValue(engine, engine.CreateUndefined()));
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateAbilityInfo(engine, info->abilityInfo));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateAbilityInfo(engine, info->abilityInfo));
     };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityInfo",
@@ -9058,12 +9058,12 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
         if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
             obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
             *value = (info == nullptr) ? INVALID_PARAM : *value;
-            task.RejectWithMessage(engine, CreateJsValue(engine, *value),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, *value),
                 CreateJsValue(engine, engine.CreateUndefined()));
             return;
         }
         if (info->abilityLabel == "") {
-            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, OPERATION_FAILED),
                 CreateJsValue(engine, engine.CreateUndefined()));
             return;
         }
@@ -9100,15 +9100,15 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             std::string getAllBundleInfoErrData = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getAllBundleInfoErrData));
             return;
         }
         if (!*ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateBundleInfos(engine, *infos));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateBundleInfos(engine, *infos));
     };
 
     NativeValue *result = nullptr;
@@ -9178,15 +9178,15 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
         std::string errMessage;
         if (errCode != ERR_OK) {
             errMessage = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
             return;
         }
         if (!*ret) {
             errMessage = "QueryExtensionInfoByWant failed";
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine, errMessage));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), CreateJsValue(engine, errMessage));
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateExtensionInfo(engine, *infos));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateExtensionInfo(engine, *infos));
     };
 
     NativeValue *result = nullptr;
