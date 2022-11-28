@@ -230,7 +230,6 @@ void BmsBundleGetWindowPropertiesTest::CheckWindowProperty2(const std::string &a
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0100, Function | SmallTest | Level1)
 {
@@ -244,7 +243,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0100, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 0 (UNSPECIFIED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0200, Function | SmallTest | Level1)
 {
@@ -258,7 +256,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0200, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 1 (LANDSCAPE)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0300, Function | SmallTest | Level1)
 {
@@ -272,7 +269,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0300, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 2 (PORTRAIT)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0400, Function | SmallTest | Level1)
 {
@@ -286,7 +282,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0400, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 4 (LANDSCAPE_INVERTED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0500, Function | SmallTest | Level1)
 {
@@ -300,7 +295,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0500, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 5 (PORTRAIT_INVERTED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0600, Function | SmallTest | Level1)
 {
@@ -314,7 +308,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0600, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 6 (AUTO_ROTATION)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0700, Function | SmallTest | Level1)
 {
@@ -328,7 +321,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0700, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 7 (AUTO_ROTATION_LANDSCAPE)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0800, Function | SmallTest | Level1)
 {
@@ -342,7 +334,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0800, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 8 (AUTO_ROTATION_PORTRAIT)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0900, Function | SmallTest | Level1)
 {
@@ -356,7 +347,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0900, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 9 (AUTO_ROTATION_RESTRICTED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1000, Function | SmallTest | Level1)
 {
@@ -370,7 +360,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1000, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 10 (AUTO_ROTATION_LANDSCAPE_RESTRICTED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1100, Function | SmallTest | Level1)
 {
@@ -384,7 +373,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1100, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 11 (AUTO_ROTATION_PORTRAIT_RESTRICTED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1200, Function | SmallTest | Level1)
 {
@@ -398,7 +386,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1200, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 12 (LOCKED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1300, Function | SmallTest | Level1)
 {
@@ -412,7 +399,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1300, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.orientation equals to 12 (LOCKED)
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1400, Function | SmallTest | Level1)
 {
@@ -426,7 +412,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1400, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.supportWindowMode equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1500, Function | SmallTest | Level1)
 {
@@ -440,7 +425,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1500, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.supportWindowMode equals to {0}
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1600, Function | SmallTest | Level1)
 {
@@ -454,7 +438,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1600, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.supportWindowMode equals to {1}
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1700, Function | SmallTest | Level1)
 {
@@ -468,7 +451,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1700, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.supportWindowMode equals to {2}
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1800, Function | SmallTest | Level1)
 {
@@ -482,7 +464,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1800, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.supportWindowMode equals to {0, 1, 2}
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1900, Function | SmallTest | Level1)
 {
@@ -496,7 +477,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1900, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.maxWindowRatio equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2000, Function | SmallTest | Level1)
 {
@@ -510,7 +490,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2000, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.maxWindowRatio equals to 3.5
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2100, Function | SmallTest | Level1)
 {
@@ -524,7 +503,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2100, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.minWindowRatio equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2200, Function | SmallTest | Level1)
 {
@@ -538,7 +516,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2200, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.minWindowRatio equals to 0.5
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2300, Function | SmallTest | Level1)
 {
@@ -552,7 +529,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2300, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.maxWindowWidth equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2400, Function | SmallTest | Level1)
 {
@@ -566,7 +542,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2400, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.maxWindowWidth equals to 2560
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2500, Function | SmallTest | Level1)
 {
@@ -580,7 +555,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2500, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.minWindowWidth equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2600, Function | SmallTest | Level1)
 {
@@ -594,7 +568,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2600, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.minWindowWidth equals to 1400
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2700, Function | SmallTest | Level1)
 {
@@ -608,7 +581,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2700, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.maxWindowHeight equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2800, Function | SmallTest | Level1)
 {
@@ -622,7 +594,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2800, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.maxWindowHeight equals to 300
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2900, Function | SmallTest | Level1)
 {
@@ -636,7 +607,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_2900, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.minWindowHeight equals to default value
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_3000, Function | SmallTest | Level1)
 {
@@ -650,7 +620,6 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_3000, Function | 
  * @tc.desc: 1.install bundle successfully
  *           2.get ability info successfully
  *           3.maxWindowHeight equals to 200
- * @tc.require: SR000H0N0H
  */
 HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_3100, Function | SmallTest | Level1)
 {

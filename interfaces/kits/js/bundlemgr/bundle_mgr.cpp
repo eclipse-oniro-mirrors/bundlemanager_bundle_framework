@@ -3190,6 +3190,17 @@ static void InnerRecover(napi_env env, const std::string &bundleName, InstallPar
     installResult.resultCode = callback->GetResultCode();
     APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
 }
+
+static bool VerifyCallingPermission(std::string permissionName)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    return iBundleMgr->VerifyCallingPermission(permissionName);
+}
+
 /**
  * Promise and async callback
  */
@@ -3230,14 +3241,24 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 napi_value undefined = 0;
                 napi_value callResult = 0;
                 napi_value m_classBundleInstaller = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
-                    &m_classBundleInstaller));
-                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-                NAPI_CALL_RETURN_VOID(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result[PARAM1]));
-                result[PARAM0] = GetCallbackErrorValue(env, CODE_SUCCESS);
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
-                    &result[PARAM0], &callResult));
+                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
+                        &m_classBundleInstaller));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
+                    NAPI_CALL_RETURN_VOID(env, napi_new_instance(
+                        env, m_classBundleInstaller, 0, nullptr, &result[PARAM1]));
+                    result[PARAM0] = GetCallbackErrorValue(env, CODE_SUCCESS);
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(
+                        env, asyncCallbackInfo->callback, &callback));
+                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
+                        &result[PARAM0], &callResult));
+                } else {
+                    napi_value placeHolder = nullptr;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[PARAM0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+                        sizeof(result) / sizeof(result[0]), result, &placeHolder));
+                }
             },
             reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));
@@ -3266,9 +3287,14 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
                 napi_value result;
                 napi_value m_classBundleInstaller = nullptr;
-                napi_get_reference_value(env, g_classBundleInstaller, &m_classBundleInstaller);
-                napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
-                napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
+                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+                    napi_get_reference_value(env, g_classBundleInstaller, &m_classBundleInstaller);
+                    napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
+                    napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
+                } else {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result));
+                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result));
+                }
             },
             reinterpret_cast<void*>(asyncCallbackInfo),
             &asyncCallbackInfo->asyncWork));

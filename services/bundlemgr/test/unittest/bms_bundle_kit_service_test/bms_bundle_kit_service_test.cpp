@@ -1682,7 +1682,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0400, Function | SmallTest | L
  * @tc.name: test can not get the ability's label if module doesn't exist
  * @tc.desc: 1.system run normally
  *           2.get empty ability label
- * @tc.require: SR000H48EM
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0500, Function | SmallTest | Level1)
 {
@@ -1700,7 +1699,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0500, Function | SmallTest | L
  * @tc.name: test can not get the ability's label if module and ability exist
  * @tc.desc: 1.system run normally
  *           2.get empty ability label
- * @tc.require: AR000H4931
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0600, Function | SmallTest | Level1)
 {
@@ -1718,7 +1716,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0600, Function | SmallTest | L
  * @tc.name: test can not get the ability's label if module exist and ability doesn't exist
  * @tc.desc: 1.system run normally
  *           2.get empty ability label
- * @tc.require: AR000H4931
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0700, Function | SmallTest | Level1)
 {
@@ -1736,7 +1733,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0700, Function | SmallTest | L
  * @tc.name: test can not get the ability's label if module exist and ability doesn't exist
  * @tc.desc: 1.system run normally
  *           2.get empty ability label
- * @tc.require: AR000H4931
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0800, Function | SmallTest | Level1)
 {
@@ -1755,7 +1751,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityLabel_0800, Function | SmallTest | L
  * @tc.name: test can get the ability info by want
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: SR000GM5QO
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0100, Function | SmallTest | Level1)
 {
@@ -1818,7 +1813,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0300, Function | SmallTest | 
 /**
  * @tc.number: QueryAbilityInfo_0400
  * @tc.name: test can not get the ability info by want which bundle doesn't exist
- * @tc.require: SR000H48EM
  * @tc.desc: 1.system run normally
  *           2.get ability info failed
  */
@@ -1837,7 +1831,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0400, Function | SmallTest | 
  * @tc.name: test can get the ability info by want with bundleName, moduleName, abilityName
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: SR000GM5QO
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0500, Function | SmallTest | Level1)
 {
@@ -1867,7 +1860,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0500, Function | SmallTest | 
  * @tc.name: test can get the ability info by want with bundleName, moduleName, abilityName
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: SR000GM5QO
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0600, Function | SmallTest | Level1)
 {
@@ -1896,7 +1888,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0600, Function | SmallTest | 
  * @tc.name: test can get the ability info by want with implicit query
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: SR000GM5QO
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0700, Function | SmallTest | Level1)
 {
@@ -1920,7 +1911,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0700, Function | SmallTest | 
  * @tc.name: test can get the ability info by want
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: SR000GM5QO
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0800, Function | SmallTest | Level1)
 {
@@ -1948,7 +1938,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0800, Function | SmallTest | 
  * @tc.name: test can get the ability info of list by want
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: AR000GM5QP
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0100, Function | SmallTest | Level1)
 {
@@ -2016,7 +2005,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0300, Function | SmallTest |
  * @tc.name: test can not get the ability info by want which bundle doesn't exist
  * @tc.desc: 1.system run normally
  *           2.get ability info failed
- * @tc.require: AR000H4931
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0400, Function | SmallTest | Level1)
 {
@@ -2033,7 +2021,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0400, Function | SmallTest |
  * @tc.name: test can get the ability info of list by want with bundleName, moduleName and abilityName
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: AR000H4931
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0500, Function | SmallTest | Level1)
 {
@@ -2076,7 +2063,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0500, Function | SmallTest |
  * @tc.name: test can get the ability info of list by want with bundleName, moduleName and abilityName
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: AR000H4931
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0600, Function | SmallTest | Level1)
 {
@@ -2111,7 +2097,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0600, Function | SmallTest |
  * @tc.name: test can get the ability info by want with implicit query
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: SR000GM5QO
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0700, Function | SmallTest | Level1)
 {
@@ -2134,7 +2119,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0700, Function | SmallTest |
  * @tc.name: test can get the ability info by want with implicit query
  * @tc.desc: 1.system run normally
  *           2.get ability info successfully
- * @tc.require: SR000GM5QO
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0800, Function | SmallTest | Level1)
 {
@@ -3166,7 +3150,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfosByMetaData_0400, Function | Medi
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the bundle data files successfully
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0100, Function | SmallTest | Level1)
 {
@@ -3187,7 +3170,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0100, Function | SmallTes
  * @tc.name: test can clean the bundle data files by empty bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the bundle data files failed
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0200, Function | SmallTest | Level1)
 {
@@ -3208,7 +3190,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0200, Function | SmallTes
  * @tc.name: test can clean the bundle data files by no exist bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the bundle data files failed
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0300, Function | SmallTest | Level1)
 {
@@ -3230,7 +3211,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0300, Function | SmallTes
  * @tc.desc: 1.system run normally
  *           2.userDataClearable is false, isSystemApp is false
  *           3.clean the cache files succeed
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0400, Function | SmallTest | Level1)
 {
@@ -3252,7 +3232,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0400, Function | SmallTes
  * @tc.desc: 1.system run normally
  *           2.userDataClearable is true, isSystemApp is false
  *           3.clean the cache files succeed
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0500, Function | SmallTest | Level1)
 {
@@ -3274,7 +3253,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0500, Function | SmallTes
  * @tc.desc: 1.system run normally
  *           2.userDataClearable is false, isSystemApp is true
  *           3.clean the cache files failed
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0600, Function | SmallTest | Level1)
 {
@@ -3295,7 +3273,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0600, Function | SmallTes
  * @tc.desc: 1.system run normally
  *           2.userDataClearable is true, isSystemApp is true
  *           3.clean the cache files failed
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0700, Function | SmallTest | Level1)
 {
@@ -3320,7 +3297,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0700, Function | SmallTes
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the bundle data files successfully
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0800, Function | SmallTest | Level1)
 {
@@ -3341,7 +3317,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0800, Function | SmallTes
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the bundle data files failed by empty bundle name
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTest | Level1)
 {
@@ -3360,7 +3335,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTes
  * @tc.desc: 1.system run normally
  *           2.userDataClearable is false, userId is false
  *           3.clean the cache files failed
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_1000, Function | SmallTest | Level1)
 {
@@ -3381,7 +3355,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_1000, Function | SmallTes
  * @tc.name: test can clean the cache files by empty bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the cache files failed
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0200, Function | SmallTest | Level1)
 {
@@ -3403,7 +3376,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0200, Function | SmallTest | Level1
  * @tc.name: test can clean the cache files by no exist bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the cache files failed
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1)
 {
@@ -3426,7 +3398,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is true, isSystemApp is false
  *           3.clean the cache files succeed
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1)
 {
@@ -3448,7 +3419,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is false, isSystemApp is false
  *           3.clean the cache files succeed
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0500, Function | SmallTest | Level1)
 {
@@ -3470,7 +3440,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0500, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is true, isSystemApp is true
  *           3.clean the cache files succeed
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0600, Function | SmallTest | Level1)
 {
@@ -3492,7 +3461,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0600, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is false, isSystemApp is true
  *           3.clean the cache files failed
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1)
 {
@@ -3515,7 +3483,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is false, isSystemApp is false
  *           3.clean the cache files succeed
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1)
 {
@@ -3541,7 +3508,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2.userDataClearable is false, isSystemApp is false
  *           3.clean the cache files failed by empty name
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0900, Function | SmallTest | Level1)
 {
@@ -3561,7 +3527,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0900, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is false, isSystemApp is false
  *           3.clean the cache files failed by nullptr cleaCache
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_1000, Function | SmallTest | Level1)
 {
@@ -3586,7 +3551,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_1000, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is false, isSystemApp is false
  *           3. clean the cache files failed by failed userId
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_1100, Function | SmallTest | Level1)
 {
@@ -4029,7 +3993,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0600, Function | SmallTest
 /**
  * @tc.number: CheckAbilityEnabled_0700
  * @tc.name: test can check ability status is enable by empty moduleName
- * @tc.require: AR000H4931
  * @tc.desc: 1.system run normally
  *           2.check the ability status successful
  */
@@ -4052,7 +4015,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0700, Function | SmallTest
 /**
  * @tc.number: CheckAbilityEnabled_0800
  * @tc.name: test can check ability status is disable by moduleName
- * @tc.require: AR000H4931
  * @tc.desc: 1.system run normally
  *           2.check the ability status successful
  */
@@ -4076,7 +4038,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0800, Function | SmallTest
 /**
  * @tc.number: CheckAbilityEnabled_0900
  * @tc.name: test can check ability status is disable by moduleName
- * @tc.require: AR000H4931
  * @tc.desc: 1.system run normally
  *           2.check the ability status failed
  */
@@ -4095,7 +4056,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0900, Function | SmallTest
 /**
  * @tc.number: CheckAbilityEnabled_1000
  * @tc.name: test can check ability status is enable by no setting
- * @tc.require: AR000H4931
  * @tc.desc: 1.system run normally
  *           2.check the ability status successfully
  */
@@ -4115,7 +4075,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1000, Function | SmallTest
 /**
  * @tc.number: CheckAbilityEnabled_1100
  * @tc.name: test can check ability status is enable by no setting
- * @tc.require: AR000H4931
  * @tc.desc: 1.system run normally
  *           2.check the ability status successfully
  */
@@ -4136,7 +4095,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1100, Function | SmallTest
 /**
  * @tc.number: CheckAbilityEnabled_1200
  * @tc.name: test can check ability status is enable by wrong moduleName
- * @tc.require: AR000H4931
  * @tc.desc: 1.system run normally
  *           2.check the ability status failed
  */
@@ -4774,7 +4732,6 @@ HWTEST_F(BmsBundleKitServiceTest, Application_0200, Function | SmallTest | Level
  * @tc.number: QueryAllAbilityInfos
  * @tc.name: test can get the All AbilityInfo
  * @tc.desc: 1.can get All AbilityInfo
- * @tc.require: AR000GJUJ8
  */
 HWTEST_F(BmsBundleKitServiceTest, AllAbility_001, Function | SmallTest | Level1)
 {
@@ -4910,7 +4867,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllCommonEventInfo_0800, Function | SmallTe
  * @tc.number: skill match rules
  * @tc.name: action match test: want empty; skill empty
  * @tc.desc: expect false
- * @tc.require: SR000GGT3C
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_001, Function | SmallTest | Level1)
 {
@@ -4924,7 +4880,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_001, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: action match test: want not empty; skill empty
  * @tc.desc: expect false
- * @tc.require: SR000GGT3C
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_002, Function | SmallTest | Level1)
 {
@@ -4939,7 +4894,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_002, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: action match test: want empty; skill not empty
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_003, Function | SmallTest | Level1)
 {
@@ -4954,7 +4908,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_003, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: action match test: want not empty; skill not empty; skill contains want
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_004, Function | SmallTest | Level1)
 {
@@ -4970,7 +4923,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_004, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: action match test: want not empty; skill not empty; skill not contains want
  * @tc.desc: expect false
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_005, Function | SmallTest | Level1)
 {
@@ -4986,7 +4938,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Action_005, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: entities match test: want empty; skill empty;
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_001, Function | SmallTest | Level1)
 {
@@ -5001,7 +4952,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_001, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: entities match test: want not empty; skill empty;
  * @tc.desc: expect false
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_002, Function | SmallTest | Level1)
 {
@@ -5017,7 +4967,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_002, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: entities match test: want empty; skill not empty;
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_003, Function | SmallTest | Level1)
 {
@@ -5033,7 +4982,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_003, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: entities match test: want not empty; skill not empty; skill contains want
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_004, Function | SmallTest | Level1)
 {
@@ -5050,7 +4998,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_004, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: entities match test: want not empty; skill not empty; skill contains want
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_005, Function | SmallTest | Level1)
 {
@@ -5069,7 +5016,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_005, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: entities match test: want not empty; skill not empty; skill not contains want
  * @tc.desc: expect false
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_006, Function | SmallTest | Level1)
 {
@@ -5086,7 +5032,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Entity_006, Function | SmallTest | 
  * @tc.number: skill match rules
  * @tc.name: uri and type match test: want empty; skill empty
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_001, Function | SmallTest | Level1)
 {
@@ -5103,7 +5048,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_001, Function | SmallTes
  * @tc.number: skill match rules
  * @tc.name: uri and type match test: want uri empty, type not empty; skill uri empty, type not empty
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_002, Function | SmallTest | Level1)
 {
@@ -5122,7 +5066,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_002, Function | SmallTes
  * @tc.number: skill match rules
  * @tc.name: uri and type match test: want uri empty, type not empty; skill uri empty, type not empty; type not equal
  * @tc.desc: expect false
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_003, Function | SmallTest | Level1)
 {
@@ -5141,7 +5084,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_003, Function | SmallTes
  * @tc.number: skill match rules
  * @tc.name: uri and type match test: want uri not empty, type empty; skill uri not empty, type empty
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_004, Function | SmallTest | Level1)
 {
@@ -5160,7 +5102,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_004, Function | SmallTes
  * @tc.number: skill match rules
  * @tc.name: uri and type match test: want uri not empty, type empty; skill uri not empty, type empty; uri not equal
  * @tc.desc: expect false
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_005, Function | SmallTest | Level1)
 {
@@ -5179,7 +5120,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_005, Function | SmallTes
  * @tc.number: skill match rules
  * @tc.name: uri and type match test: want uri empty, type not empty; skill uri empty, type not empty; regex
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_006, Function | SmallTest | Level1)
 {
@@ -5199,7 +5139,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_006, Function | SmallTes
  * @tc.name: uri and type match test: want uri not empty, type empty; skill uri not empty, type empty
  *           uri path match.
  * @tc.desc: expect true
- * @tc.require: AR000GHO34
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_007, Function | SmallTest | Level1)
 {
@@ -5222,7 +5161,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_007, Function | SmallTes
  * @tc.name: uri and type match test: want uri not empty, type empty; skill uri not empty, type empty
  *           uri pathStartWith match.
  * @tc.desc: expect true
- * @tc.require: AR000GHO3B
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_008, Function | SmallTest | Level1)
 {
@@ -5245,7 +5183,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_008, Function | SmallTes
  * @tc.name: uri and type match test: want uri not empty, type empty; skill uri not empty, type empty
  *           uri pathRegex match.
  * @tc.desc: expect true
- * @tc.require: AR000GHO3B
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTest | Level1)
 {
@@ -5267,7 +5204,6 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTes
  * @tc.number: GetAlldependentModuleNames
  * @tc.name: no dependencies
  * @tc.desc: expect true
- * @tc.require: SR000H00TB
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_001, Function | SmallTest | Level1)
 {
@@ -5284,7 +5220,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_001, Function | Sma
  * @tc.number: GetAlldependentModuleNames
  * @tc.name: one dependent module
  * @tc.desc: expect true
- * @tc.require: SR000H0DUR
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_002, Function | SmallTest | Level1)
 {
@@ -5308,7 +5243,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_002, Function | Sma
  * @tc.number: GetAlldependentModuleNames
  * @tc.name: more than one dependent module
  * @tc.desc: expect true
- * @tc.require: AR000H0362
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_003, Function | SmallTest | Level1)
 {
@@ -5335,7 +5269,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_003, Function | Sma
  * @tc.number: GetAlldependentModuleNames
  * @tc.name: Multiple dependent modules
  * @tc.desc: expect true
- * @tc.require: AR000HDTN
  */
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_004, Function | SmallTest | Level1)
 {
@@ -5367,7 +5300,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_004, Function | Sma
  * @tc.number: SetDisposedStatus_001
  * @tc.name: test SetDisposedStatus
  * @tc.desc: bundleName empty, expect false
- * @tc.require: SR000H7MUF
  */
 HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_001, Function | SmallTest | Level1)
 {
@@ -5379,7 +5311,6 @@ HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_001, Function | SmallTest | 
  * @tc.number: SetDisposedStatus_002
  * @tc.name: test SetDisposedStatus
  * @tc.desc: wrong bundleName, expect false
- * @tc.require: SR000H7MUF
  */
 HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_002, Function | SmallTest | Level1)
 {
@@ -5391,7 +5322,6 @@ HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_002, Function | SmallTest | 
  * @tc.number: SetDisposedStatus_003
  * @tc.name: test SetDisposedStatus
  * @tc.desc: right bundleName, expect true
- * @tc.require: AR000H7N9D
  */
 HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_003, Function | SmallTest | Level1)
 {
@@ -5405,7 +5335,6 @@ HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_003, Function | SmallTest | 
  * @tc.number: GetDisposedStatus_001
  * @tc.name: test GetDisposedStatus
  * @tc.desc: empty bundleName, expect 0
- * @tc.require: AR000H7N9D
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_001, Function | SmallTest | Level1)
 {
@@ -5417,7 +5346,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_001, Function | SmallTest | 
  * @tc.number: GetDisposedStatus_002
  * @tc.name: test GetDisposedStatus
  * @tc.desc: wrong bundleName, expect 0
- * @tc.require: AR000H7N9D
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_002, Function | SmallTest | Level1)
 {
@@ -5429,7 +5357,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_002, Function | SmallTest | 
  * @tc.number: GetDisposedStatus_003
  * @tc.name: test GetDisposedStatus
  * @tc.desc: right bundleName, expect true
- * @tc.require: AR000H7N9D
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_003, Function | SmallTest | Level1)
 {
@@ -5899,7 +5826,6 @@ HWTEST_F(BmsBundleKitServiceTest, CompatibleApplicationInfo_002, Function | Smal
  * @tc.number: GetDisposedStatus_002
  * @tc.name: test GetDisposedStatus
  * @tc.desc: wrong bundleName, expect 0
- * @tc.require: AR000H7N9D
  */
 HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_004, Function | SmallTest | Level1)
 {

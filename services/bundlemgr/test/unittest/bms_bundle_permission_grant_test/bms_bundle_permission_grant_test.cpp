@@ -152,7 +152,6 @@ const std::shared_ptr<BundleDataMgr> BmsBundlePermissionGrantTest::GetBundleData
  * @tc.number: BmsBundlePermissionGrantTest
  * Function: Install
  * @tc.name: test install a hap with normal permission and normal apl
- * @tc.require: SR000GP3LF
  * @tc.desc: 1. system running normally
  *           2. install a hap with normal permission and normal apl
  *           3. install successed
@@ -169,7 +168,6 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0100, Functi
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: Install
  * @tc.name: test install a hap with system_bacic/system_core permission and normal apl
- * @tc.require: AR000GP3NU
  * @tc.desc: 1. system running normally
  *           2. install a hap, the request permission exists in acls
  *           3. install successed
@@ -186,7 +184,6 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0300, Functi
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: Install
  * @tc.name: test install a hap with system_bacic/normal permission and system_basic apl
- * @tc.require: AR000GP3NU
  * @tc.desc: 1. system running normally
  *           2. install a hap
  *           3. install successed
@@ -203,7 +200,6 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0400, Functi
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: Install
  * @tc.name: test install a hap with system_core permission and system_basic apl
- * @tc.require: AR000GP3NU
  * @tc.desc: 1. system running normally
  *           2. install a hap, the request permission exists in acls
  *           3. install successed
@@ -220,7 +216,6 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0600, Functi
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: Install
  * @tc.name: test install a hap with normal/system_basic/system_core permission and system_core apl
- * @tc.require: AR000GP3NU
  * @tc.desc: 1. system running normally
  *           2. install a hap
  *           3. install successed

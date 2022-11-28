@@ -196,7 +196,6 @@ HWTEST_F(BmCommandTest, Bm_Command_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0001, Function | MediumTest | Level1)
 {
@@ -216,7 +215,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean xx" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0002, Function | MediumTest | Level1)
 {
@@ -237,7 +235,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0003, Function | MediumTest | Level1)
 {
@@ -258,7 +255,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0004, Function | MediumTest | Level1)
 {
@@ -280,7 +276,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name> xxx" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0005, Function | MediumTest | Level1)
 {
@@ -303,7 +298,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0006
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name> -d" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0006, Function | MediumTest | Level1)
 {
@@ -326,7 +320,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0006, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0007
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name> -c" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0007, Function | MediumTest | Level1)
 {
@@ -349,7 +342,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0007, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0008
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -c" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0008, Function | MediumTest | Level1)
 {
@@ -370,7 +362,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0008, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0009
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -d" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0009, Function | MediumTest | Level1)
 {
@@ -529,7 +520,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0015, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0001, Function | MediumTest | Level1)
 {
@@ -549,7 +539,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0002, Function | MediumTest | Level1)
 {
@@ -570,7 +559,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0003, Function | MediumTest | Level1)
 {
@@ -592,7 +580,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0004, Function | MediumTest | Level1)
 {
@@ -615,7 +602,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0005, Function | MediumTest | Level1)
 {
@@ -771,7 +757,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0011, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0001, Function | MediumTest | Level1)
 {
@@ -791,7 +776,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0002, Function | MediumTest | Level1)
 {
@@ -812,7 +796,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0003, Function | MediumTest | Level1)
 {
@@ -834,7 +817,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0004, Function | MediumTest | Level1)
 {
@@ -857,7 +839,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0005, Function | MediumTest | Level1)
 {
@@ -881,7 +862,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0006
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -u <user-id>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0006, Function | MediumTest | Level1)
 {
@@ -904,7 +884,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0006, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0007
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -u <user-id>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0007, Function | MediumTest | Level1)
 {
@@ -1012,7 +991,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0011, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0001, Function | MediumTest | Level1)
 {
@@ -1036,7 +1014,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0002, Function | MediumTest | Level1)
 {
@@ -1064,7 +1041,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -x" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0003, Function | MediumTest | Level1)
 {
@@ -1089,7 +1065,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u -x" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0004, Function | MediumTest | Level1)
 {
@@ -1115,7 +1090,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u xxx" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0005, Function | MediumTest | Level1)
 {
@@ -1141,7 +1115,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0006
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get --udid" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0006, Function | MediumTest | Level1)
 {
@@ -1169,7 +1142,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0006, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0007
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get --xxx" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0007, Function | MediumTest | Level1)
 {
@@ -1194,7 +1166,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0007, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0008
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get --udid -x" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0008, Function | MediumTest | Level1)
 {
@@ -1220,7 +1191,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0008, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0009
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u xxx" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0009, Function | MediumTest | Level1)
 {

@@ -2314,7 +2314,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
     Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
-    CheckToCache(env, bundleInfo.applicationInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     return nBundleInfo;
 }
 

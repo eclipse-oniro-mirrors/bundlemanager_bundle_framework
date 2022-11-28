@@ -29,7 +29,6 @@
 
 #include "bundle_info.h"
 #include "bundle_data_storage_database.h"
-#include "bundle_event_callback_host.h"
 #include "bundle_file_util.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -314,7 +313,6 @@ void BmsBundleManagerTest::ClearBundleInfo()
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0383
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0100, Function | SmallTest | Level0)
 {
@@ -345,7 +343,6 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0100, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0200, Function | SmallTest | Level0)
 {
@@ -368,7 +365,6 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0200, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level0)
 {
@@ -393,7 +389,6 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0300, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0400, Function | SmallTest | Level0)
 {
@@ -2085,7 +2080,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0700, Function | MediumTest | L
 
     ret = hostImpl->GetSandboxBundleInfo("bundleName", appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    
+
     appIndex = 101;
     ret = hostImpl->GetSandboxBundleInfo("bundleName", appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
