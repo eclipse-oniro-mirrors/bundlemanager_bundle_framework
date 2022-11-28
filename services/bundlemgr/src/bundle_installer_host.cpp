@@ -148,6 +148,10 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(Parcel &data)
 {
     APP_LOGD("handle install multiple haps message");
     int32_t size = data.ReadInt32();
+    if (size > Constants::MAX_HAP_NUMBER) {
+        APP_LOGE("bundle path size is greater than the max hap number 128");
+        return;
+    }
     std::vector<std::string> pathVec;
     for (int i = 0; i < size; ++i) {
         pathVec.emplace_back(Str16ToStr8(data.ReadString16()));
@@ -311,7 +315,7 @@ bool BundleInstallerHost::Install(
         return false;
     }
 
-    manager_->CreateInstallTask(bundleFilePath, CheckInstallParam(installParam), statusReceiver);
+    manager_->CreateInstallTask(bundleFilePath, installParam, statusReceiver);
     return true;
 }
 
@@ -328,7 +332,7 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         return false;
     }
 
-    manager_->CreateInstallTask(bundleFilePaths, CheckInstallParam(installParam), statusReceiver);
+    manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
     return true;
 }
 

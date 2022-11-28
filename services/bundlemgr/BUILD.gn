@@ -161,12 +161,13 @@ group("bms_target") {
 ohos_shared_library("libbms") {
   use_exceptions = true
   visibility = [
-    "//foundation/*",
     "//base/*",
+    "//foundation/*",
   ]
 
   sources = [
     "src/account_helper.cpp",
+    "src/bms_param.cpp",
     "src/bundle_common_event_mgr.cpp",
     "src/bundle_data_mgr.cpp",
     "src/bundle_data_storage.cpp",

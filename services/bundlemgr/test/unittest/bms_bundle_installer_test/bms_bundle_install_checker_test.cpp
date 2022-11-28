@@ -234,4 +234,185 @@ HWTEST_F(BmsBundleInstallCheckerTest, ExtractModule_0100, Function | SmallTest |
     ErrCode ret = baseBundleInstaller.ExtractModule(innerBundleInfo, MODULE_PATH);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: CheckSysCape_0100
+ * @tc.name: test the start function of CheckSysCap
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSysCape_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "/data/test/test.hap";
+    std::vector<std::string> bundlePaths;
+    bundlePaths.push_back(bundlePath);
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSysCap(bundlePaths);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckSystemSize_0100
+ * @tc.name: test the start function of CheckSystemSize
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "/data/app/el1/bundle";
+    Constants::AppType appType = Constants::AppType::SYSTEM_APP;
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSystemSize(bundlePath, appType);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckSystemSize_0200
+ * @tc.name: test the start function of CheckSystemSize
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "/data/app/el1/bundle";
+    Constants::AppType appType = Constants::AppType::THIRD_SYSTEM_APP;
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSystemSize(bundlePath, appType);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckHapHashParams_0100
+ * @tc.name: test the start function of CheckHapHashParams
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckHapHashParams_0100, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::map<std::string, std::string> hashParams;
+    hashParams.insert(pair<string, string>("1", "2"));
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckHapHashParams(infos, hashParams);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_CHECK_HAP_HASH_PARAM);
+}
+
+/**
+ * @tc.number: IsExistedDistroModule_0100
+ * @tc.name: test the start function of IsExistedDistroModule
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo newInfo;
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = ".entry";
+    newInfo.currentPackage_ = "";
+    newInfo.innerModuleInfos_.insert(pair<string, InnerModuleInfo>("", innerModuleInfo));
+    auto ret = installChecker.IsExistedDistroModule(newInfo, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsExistedDistroModule_0200
+ * @tc.name: test the start function of IsExistedDistroModule
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0200, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo newInfo;
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "";
+    newInfo.currentPackage_ = "1";
+    newInfo.innerModuleInfos_.insert(pair<string, InnerModuleInfo>("1", innerModuleInfo));
+    auto ret = installChecker.IsExistedDistroModule(newInfo, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsExistedDistroModule_0300
+ * @tc.name: test the start function of IsExistedDistroModule
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0300, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo newInfo;
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "";
+    newInfo.currentPackage_ = "1";
+    newInfo.innerModuleInfos_.insert(pair<string, InnerModuleInfo>("", innerModuleInfo));
+    auto ret = installChecker.IsExistedDistroModule(newInfo, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckMainElement_0100
+ * @tc.name: test the start function of CheckMainElement
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMainElement_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+    auto ret = installChecker.CheckMainElement(info);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetPrivilegeCapabilityValue_0100
+ * @tc.name: test the start function of GetPrivilegeCapabilityValue
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetPrivilegeCapabilityValue_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo info;
+    std::vector<std::string> existInJson;
+    existInJson.push_back("1");
+    existInJson.push_back("2");
+    std::string key = "1";
+    bool existInPreJson = true;
+    bool existInProvision = false;
+    auto ret = installChecker.GetPrivilegeCapabilityValue(existInJson, key, existInPreJson, existInProvision);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetPrivilegeCapabilityValue_0200
+ * @tc.name: test the start function of GetPrivilegeCapabilityValue
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetPrivilegeCapabilityValue_0200, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo info;
+    std::vector<std::string> existInJson;
+    existInJson.push_back("1");
+    existInJson.push_back("2");
+    std::string key = "0";
+    bool existInPreJson = true;
+    bool existInProvision = false;
+    auto ret = installChecker.GetPrivilegeCapabilityValue(existInJson, key, existInPreJson, existInProvision);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckDeviceType_0100
+ * @tc.name: test the start function of CheckDeviceType
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
+    auto ret = installChecker.CheckDeviceType(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

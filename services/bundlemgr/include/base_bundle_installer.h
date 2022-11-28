@@ -21,6 +21,7 @@
 
 #include "nocopyable.h"
 
+#include "access_token.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
@@ -464,9 +465,9 @@ private:
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    uint32_t CreateAccessTokenId(const InnerBundleInfo &info);
+    Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(const InnerBundleInfo &info);
     ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
-    ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
+    ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
     /**
      * @brief Check to set isRemovable true when install.
@@ -521,6 +522,12 @@ private:
         const std::string &nativeLibraryPath, const std::string &hqfLibraryPath) const;
     ErrCode ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath);
     ErrCode DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo);
+    int32_t GetConfirmUserId(
+        const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    ErrCode CheckUserId(const int32_t &userId) const;
+    ErrCode CreateArkProfile(
+        const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const;
+    ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

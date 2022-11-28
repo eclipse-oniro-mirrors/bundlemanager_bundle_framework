@@ -1853,6 +1853,17 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
     return true;
 }
 
+bool CheckModuleNameIsValid(const std::string &moduleName)
+{
+    if (moduleName.empty()) {
+        return false;
+    }
+    if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
 bool CheckModuleInfosIsValid(ProfileReader::ConfigJson &configJson)
 {
     if (configJson.module.deviceType.empty()) {
@@ -1884,11 +1895,11 @@ bool CheckModuleInfosIsValid(ProfileReader::ConfigJson &configJson)
         }
         return true;
     }
-    if (configJson.module.package.empty()) {
+    if (!CheckModuleNameIsValid(configJson.module.package)) {
         APP_LOGE("module package invalid");
         return false;
     }
-    if (configJson.module.distro.moduleName.empty()) {
+    if (!CheckModuleNameIsValid(configJson.module.distro.moduleName)) {
         APP_LOGE("module distro invalid");
         return false;
     }
@@ -2235,6 +2246,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
 
     innerModuleInfo.isModuleJson = false;
     innerModuleInfo.isLibIsolated = configJson.module.isLibIsolated;
+    innerModuleInfo.deviceTypes = configJson.module.deviceType;
     return true;
 }
 

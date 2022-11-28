@@ -192,7 +192,6 @@ const std::shared_ptr<BundleDataMgr> BmsBundleCrowdtestingTest::GetBundleDataMgr
  * @tc.number: BmsBundleCrowdtestingTest_001
  * Function: GetApplicationInfo
  * @tc.name: test appDistributionType and appProvisionType
- * @tc.require: SR000H7KTG
  * @tc.desc: 1. system running normally
  *           2. get appDistributionType and appProvisionType
  */
@@ -216,7 +215,6 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_001, Function | Sm
  * @tc.number: BmsBundleCrowdtestingTest_002
  * Function: GetApplicationInfo
  * @tc.name: test appDistributionType and appProvisionType
- * @tc.require:AR000H7L6F
  * @tc.desc: 1. system running normally
  *           2. get appDistributionType and appProvisionType
  */
@@ -240,7 +238,6 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_002, Function | Sm
  * @tc.number: BmsBundleCrowdtestingTest_003
  * Function: GetApplicationInfo
  * @tc.name: test crowdtestDeadline, not crowdtesting type
- * @tc.require:AR000H7L6F
  * @tc.desc: 1. system running normally
  *           2. get crowdtestDeadline
  */
@@ -265,7 +262,6 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_003, Function | Sm
  * @tc.number: BmsBundleCrowdtestingTest_004
  * Function: GetApplicationInfo
  * @tc.name: test crowdtestDeadline, first install
- * @tc.require:AR000H7L6F
  * @tc.desc: 1. system running normally
  *           2. get crowdtestDeadline
  */
@@ -290,7 +286,6 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_004, Function | Sm
  * @tc.number: BmsBundleCrowdtestingTest_005
  * Function: GetApplicationInfo
  * @tc.name: test crowdtestDeadline, update the same module
- * @tc.require:AR000H7L6F
  * @tc.desc: 1. system running normally
  *           2. get crowdtestDeadline
  */
@@ -323,7 +318,6 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_005, Function | Sm
  * @tc.number: BmsBundleCrowdtestingTest_006
  * Function: GetApplicationInfo
  * @tc.name: test crowdtestDeadline, new module install
- * @tc.require:AR000H7L6F
  * @tc.desc: 1. system running normally
  *           2. get crowdtestDeadline
  */
@@ -356,7 +350,6 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_006, Function | Sm
  * @tc.number: BmsBundleCrowdtestingTest_007
  * Function: GetApplicationInfo
  * @tc.name: multi-hap install, same type
- * @tc.require:AR000H7L6F
  * @tc.desc: 1. system running normally
  *           2. multi-hap install
  */

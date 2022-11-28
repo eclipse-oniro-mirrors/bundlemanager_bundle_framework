@@ -27,7 +27,7 @@ namespace OHOS {
         sptr<IRemoteObject> object;
         BundleStreamInstallerProxy callbackProxy(object);
         std::string hapName (reinterpret_cast<const char*>(data), size);
-        callbackProxy.CreateStream(hapName, reinterpret_cast<intptr_t>(data));
+        callbackProxy.CreateStream(hapName);
         callbackProxy.Install();
         callbackProxy.GetInstallerId();
         callbackProxy.SetInstallerId(reinterpret_cast<uintptr_t>(data));

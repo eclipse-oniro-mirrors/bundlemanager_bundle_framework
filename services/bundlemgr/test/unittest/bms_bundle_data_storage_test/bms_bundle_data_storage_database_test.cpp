@@ -61,6 +61,7 @@ protected:
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {
                     "applicationInfo": {
                         "accessTokenId": 0,
+                        "accessTokenIdEx": 0,
                         "accessible": false,
                         "apiCompatibleVersion": 0,
                         "apiReleaseType": "",
@@ -375,6 +376,7 @@ protected:
             },
             "baseApplicationInfo": {
                 "accessTokenId": 0,
+                "accessTokenIdEx": 0,
                 "accessible": false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
@@ -506,6 +508,7 @@ protected:
                 ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
                 "applicationInfo": {
+                    "accessTokenIdEx": 0,
                     "accessTokenId": 0,
                     "accessible": false,
                     "apiCompatibleVersion": 0,
@@ -1032,7 +1035,6 @@ void BmsBundleDataStorageDatabaseTest::TearDown()
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally
  *           2.successfully serialize and deserialize all right props in BundleInfo
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0100, Function | SmallTest | Level1)
 {
@@ -1049,7 +1051,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0100, Functi
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally
  *           2.test can catch deserialize error for type error for name prop in BundleInfo
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
@@ -1076,7 +1077,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Functi
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally
  *           2.successfully serialize and deserialize all right props in AbilityInfo
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0100, Function | SmallTest | Level1)
 {
@@ -1093,7 +1093,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0100, Funct
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally
  *           2.test can catch deserialize error for type error for name prop in AbilityInfo
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
@@ -1130,7 +1129,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Funct
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally
  *           2.successfully serialize and deserialize all right props in ApplicationInfo
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0100, Function | SmallTest | Level1)
 {
@@ -1147,7 +1145,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0100, F
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally
  *           2.test can catch deserialize error for type error for name prop in ApplicationInfo
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
@@ -1173,7 +1170,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, F
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally
  *           2.successfully serialize and deserialize all right props in ModuleInfo
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, ModuleInfoJsonSerializer_0100, Function | SmallTest | Level1)
 {
@@ -1191,7 +1187,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ModuleInfoJsonSerializer_0100, Functi
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally and no saved any bundle data
  *           2.successfully save a new bundle installation information for the first time
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0100, Function | SmallTest | Level0)
 {
@@ -1204,7 +1199,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0100, Function | SmallTest |
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally and no saved any bundle data
  *           2.save a new bundle installation information fail by wrong parameter
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0200, Function | SmallTest | Level0)
 {
@@ -1218,7 +1212,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0200, Function | SmallTest |
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally and no saved any bundle data
  *           2.successfully save a new bundle installation information for the first time
- * @tc.require: AR000GJUIR
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0300, Function | SmallTest | Level0)
 {

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -77,6 +79,7 @@ public:
     void SetUp();
     void TearDown();
     bool InstallSystemBundle(const std::string &filePath) const;
+    bool OTAInstallSystemBundle(const std::string &filePath) const;
     ErrCode InstallThirdPartyBundle(const std::string &filePath) const;
     ErrCode UpdateThirdPartyBundle(const std::string &filePath) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
@@ -112,6 +115,21 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
+}
+
+bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath) const
+{
+    auto installer = std::make_unique<SystemBundleInstaller>();
+    std::vector<std::string> filePaths;
+    filePaths.push_back(filePath);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    return installer->OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP);
 }
 
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
@@ -303,7 +321,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0100, Function | SmallTest | Leve
  * @tc.name: test the wrong system bundle file can't be installed
  * @tc.desc: 1.the system bundle file don't exists
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0200, Function | SmallTest | Level0)
 {
@@ -318,7 +335,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0200, Function | SmallTest | Leve
  * @tc.name: test the empty path can't be installed
  * @tc.desc: 1.the system bundle file path is empty
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0300, Function | SmallTest | Level0)
 {
@@ -332,7 +348,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0300, Function | SmallTest | Leve
  * @tc.name: test the illegal bundleName file can't be installed
  * @tc.desc: 1.the system bundle name is illegal
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0400, Function | SmallTest | Level0)
 {
@@ -347,7 +362,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0400, Function | SmallTest | Leve
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
  *           2.the system bundle can't be installed and the result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0500, Function | SmallTest | Level0)
 {
@@ -362,7 +376,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0500, Function | SmallTest | Leve
  * @tc.name: test the install will fail when installd service has error
  * @tc.desc: 1.the installd service has error
  *           2.the install result is fail
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Level0)
 {
@@ -377,7 +390,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Leve
  * @tc.name: test the right bundle file can be installed and update its info to bms
  * @tc.desc: 1.the system bundle is available
  *           2.the right bundle can be installed and update its info to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0100, Function | SmallTest | Level0)
 {
@@ -400,7 +412,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0100, Function | SmallTest | L
  * @tc.name: test the wrong bundle file can't be installed and its info will not updated to bms
  * @tc.desc: 1.the system bundle is wrong
  *           2.the wrong bundle can't be installed and its info will not updated to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0200, Function | SmallTest | Level0)
 {
@@ -421,7 +432,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0200, Function | SmallTest | L
  * @tc.name: test the already installed bundle can't be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installed
  *           2.the already installed  bundle can't be reinstalled and update its info to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0300, Function | SmallTest | Level0)
 {
@@ -445,7 +455,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0300, Function | SmallTest | L
  * @tc.name: test the already installing bundle can't be reinstalled and update its info to bms
  * @tc.desc: 1.the bundle is already installing.
  *           2.the already installing bundle can't be reinstalled and update its info to bms
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0400, Function | SmallTest | Level0)
 {
@@ -466,7 +475,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0400, Function | SmallTest | L
  * @tc.name: test the installer manager can create task
  * @tc.desc: 1.the bundle file exists
  *           2.the bundle can be installed successfully
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | Level0)
 {
@@ -487,7 +495,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | 
  * @tc.name: test the installer manager can not create task while bundle invalid
  * @tc.desc: 1.the invalid bundle file exists
  *           2.install the invalid bundle failed
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0200, Function | SmallTest | Level0)
 {
@@ -507,7 +514,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0200, Function | SmallTest | 
  * @tc.name: test the installer manager can not create task while bundle invalid
  * @tc.desc: 1.the invalid bundle file exists
  *           2.uninstall the bundle failed
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, CreateUninstallTask_0200, Function | SmallTest | Level0)
 {
@@ -529,7 +535,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateUninstallTask_0200, Function | SmallTest 
  * @tc.desc: 1.the bundle is already installing.
  *           2.You can query the related moudle.json information
  *           3.The system field tested is the configured field
- * @tc.require: AR000GHLL7
  */
 HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Level0)
 {
@@ -609,7 +614,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, BackupExtension_0100, Function | SmallTest | Level0)
 {
@@ -699,7 +703,6 @@ HWTEST_F(BmsBundleInstallerTest, THUMBNAILExtension_0100, Function | SmallTest |
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: SR000H0383
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0100, Function | SmallTest | Level0)
 {
@@ -730,7 +733,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0100, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0200, Function | SmallTest | Level0)
 {
@@ -753,7 +755,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0200, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0300, Function | SmallTest | Level0)
 {
@@ -782,7 +783,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0300, Function | Sma
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
  *           2.query extensionAbilityInfos
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_0400, Function | SmallTest | Level0)
 {
@@ -1038,7 +1038,6 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1200, Function | Sma
  * @tc.name: test the GetBundleStats
  * @tc.desc: 1.install the hap
  *           2.GetBundleStats
- * @tc.require: AR000H035G
  */
 HWTEST_F(BmsBundleInstallerTest, GetBundleStats_001, Function | SmallTest | Level0)
 {
@@ -1099,5 +1098,653 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0300, Function | SmallTest
     EXPECT_EQ(res, "");
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0400
+ * @tc.name: test CheckFileName, the name max size is 256
+ * @tc.desc: 1.test CheckFileName of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0400, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string maxFileName = std::string(256, 'a');
+    bool res = bundleUtil.CheckFileName(maxFileName);
+    EXPECT_EQ(res, true);
+    maxFileName.append(".txt");
+    res = bundleUtil.CheckFileName(maxFileName);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0500
+ * @tc.name: test CheckFileSize, size is not right
+ * @tc.desc: 1.test CheckFileSize of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0500, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool res = bundleUtil.CheckFileSize(BUNDLE_NAME, 0);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0600
+ * @tc.name: test GetHapFilesFromBundlePath, current path is empty or failed
+ * @tc.desc: 1.test GetHapFilesFromBundlePath of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0600, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string currentPath = "";
+    std::vector<std::string> fileList = {"test1.hap"};
+    bool res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
+    EXPECT_EQ(res, false);
+    currentPath = "/data/test/test2.hap";
+    res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0700
+ * @tc.name: test DeviceAndNameToKey, key is id and name
+ * @tc.desc: 1.test DeviceAndNameToKey of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0700, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string key = "";
+    bundleUtil.DeviceAndNameToKey(
+        Constants::CURRENT_DEVICE_ID, BUNDLE_NAME, key);
+    EXPECT_EQ(key, "PHONE-001_com.example.l3jsdemo");
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0800
+ * @tc.name: test KeyToDeviceAndName, split with underline
+ * @tc.desc: 1.test KeyToDeviceAndName of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0800, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string underline = "_";
+    std::string deviceId = Constants::CURRENT_DEVICE_ID;
+    std::string bundleName = "com.split.underline";
+    std::string key = deviceId + underline + bundleName;
+    bool ret = bundleUtil.KeyToDeviceAndName(key, deviceId, bundleName);
+    EXPECT_EQ(ret, true);
+    key = deviceId + bundleName;
+    ret = bundleUtil.KeyToDeviceAndName(key, deviceId, bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_0900
+ * @tc.name: test CreateFileDescriptorForReadOnly, path is file
+ * @tc.desc: 1.test CreateFileDescriptorForReadOnly of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0900, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleUtil bundleUtil;
+    long long offset = 0;
+    auto ret = bundleUtil.CreateFileDescriptorForReadOnly(bundlePath, offset);
+    EXPECT_NE(ret, ERR_OK);
+    bundlePath.append(std::string(256, '/'));
+    ret = bundleUtil.CreateFileDescriptorForReadOnly(bundlePath, offset);
+    EXPECT_NE(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1000
+ * @tc.name: test RenameFile, oldPath or newPath is empty
+ * @tc.desc: 1.test RenameFile of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1000, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool ret = bundleUtil.RenameFile("", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("oldPath", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("", "newPath");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("", "newPath");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.RenameFile("oldPath", "newPath");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1100
+ * @tc.name: test CopyFile, source or destination file is empty
+ * @tc.desc: 1.test CopyFile of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool ret = bundleUtil.CopyFile("", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CopyFile("source", "");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CopyFile("", "destinationFile");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CopyFile("source", "destinationFile");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1200
+ * @tc.name: test CreateDir, param is empty return false
+ * @tc.desc: 1.test CreateDir of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1200, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    bool ret = bundleUtil.CreateDir("");
+    EXPECT_EQ(ret, false);
+    ret = bundleUtil.CreateDir(BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1300
+ * @tc.name: test RevertToRealPath, one param is empty return false
+ * @tc.desc: 1.test RevertToRealPath of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1300, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    std::string empty = "";
+    bool ret = util.RevertToRealPath(empty, empty, empty);
+    EXPECT_EQ(ret, false);
+    ret = util.RevertToRealPath("/data/storage/el2/base", empty, empty);
+    EXPECT_EQ(ret, false);
+    ret = util.RevertToRealPath("/data/storage/el2/base", "com.ohos.test", empty);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1400
+ * @tc.name: test StartWith, one of param is empty return false
+ * @tc.desc: 1.test StartWith of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1400, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    bool ret = util.StartWith("", BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, false);
+    ret = util.StartWith(BUNDLE_DATA_DIR, "");
+    EXPECT_EQ(ret, false);
+    ret = util.StartWith(BUNDLE_DATA_DIR, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1500
+ * @tc.name: test EndWith, one of param is empty return false
+ * @tc.desc: 1.test EndWith of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1500, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    bool ret = util.EndWith("", BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, false);
+    ret = util.EndWith(BUNDLE_DATA_DIR, "");
+    EXPECT_EQ(ret, false);
+    ret = util.EndWith(BUNDLE_DATA_DIR, BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, false);
+    ret = util.EndWith(BUNDLE_DATA_DIR, BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: OTASystemInstall_0100
+ * @tc.name: test the right system bundle file can be installed
+ * @tc.desc: 1.the system bundle file exists
+ *           2.the system bundle can be installed successfully and can get the bundle info
+ */
+HWTEST_F(BmsBundleInstallerTest, OTASystemInstall_0100, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = OTAInstallSystemBundle(bundleFile);
+    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
+    CheckFileExist();
+    ClearBundleInfo();
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0100
+ * @tc.name: test BuildTempNativeLibraryPath, needSendEvent is true
+ * @tc.desc: 1.Test the BuildTempNativeLibraryPath of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InstallParam installParam;
+    installParam.needSendEvent = true;
+    ErrCode ret = installer.InstallBundleByBundleName(
+        BUNDLE_NAME, installParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0200
+ * @tc.name: test Recover, needSendEvent is true
+ * @tc.desc: 1.Test the Recover of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.modulePackage_ = "entry";
+    InstallParam installParam;
+    installParam.needSendEvent = true;
+    ErrCode ret = installer.Recover(BUNDLE_NAME, installParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0300
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.Test the ProcessBundleInstall of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> inBundlePaths;
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    installer.dataMgr_ = GetBundleDataMgr();
+
+    installParam.userId = Constants::INVALID_USERID;
+    ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_NE(ret, ERR_OK);
+
+    installParam.userId = Constants::DEFAULT_USERID;
+    installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
+    ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0400
+ * @tc.name: test CheckVersionCompatibilityForHmService
+ * @tc.desc: 1.Test the CheckVersionCompatibilityForHmService of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.versionCode_ = 1;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseBundleInfo_->versionCode = 2;
+    auto ret = installer.CheckVersionCompatibilityForHmService(oldInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    installer.versionCode_ = 3;
+    ret = installer.CheckVersionCompatibilityForHmService(oldInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0500
+ * @tc.name: test CreateBundleUserData, user id is different
+ * @tc.desc: 1.Test the CreateBundleUserData of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    auto ret = installer.CreateBundleUserData(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0600
+ * @tc.name: test RemoveBundleUserData, InnerBundleInfo id is different
+ * @tc.desc: 1.Test the RemoveBundleUserData of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    bool needRemoveData = false;
+    auto ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+    innerBundleInfo.innerBundleUserInfos_.emplace("key", userInfo);
+    installer.userId_ = Constants::ALL_USERID;
+    ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0700
+ * @tc.name: test VerifyUriPrefix, InnerBundleInfo id is different
+ * @tc.desc: 1.Test the VerifyUriPrefix of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    bool isUpdate = false;
+    bool ret = installer.VerifyUriPrefix(
+        innerBundleInfo, Constants::ALL_USERID, isUpdate);
+    EXPECT_EQ(ret, true);
+
+    AbilityInfo info;
+    info.uri = "dataability://";
+    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
+    ret = installer.VerifyUriPrefix(
+        innerBundleInfo, Constants::ALL_USERID, isUpdate);
+    EXPECT_EQ(ret, false);
+
+    info.uri = "dataability://com.ohos.test";
+    ret = installer.VerifyUriPrefix(
+        innerBundleInfo, Constants::ALL_USERID, isUpdate);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0800
+ * @tc.name: test ProcessInstallBundleByBundleName
+ * @tc.desc: 1.Test the ProcessInstallBundleByBundleName of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InstallParam installParam;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessInstallBundleByBundleName(
+        BUNDLE_NAME, installParam, uid);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0900
+ * @tc.name: test ProcessRecover
+ * @tc.desc: 1.Test the ProcessRecover of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InstallParam installParam;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessRecover(
+        BUNDLE_NAME, installParam, uid);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1000
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    bool recoverMode = true;
+    int32_t uid = 0;
+    InstallParam installParam;
+    installParam.userId = Constants::INVALID_USERID;
+    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(
+        BUNDLE_NAME, installParam, uid, recoverMode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    installParam.userId = Constants::DEFAULT_USERID;
+    installer.dataMgr_->multiUserIdsSet_.insert(Constants::DEFAULT_USERID);
+    ret = installer.InnerProcessInstallByPreInstallInfo(
+        BUNDLE_NAME, installParam, uid, recoverMode);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1100
+ * @tc.name: test ProcessDeployedHqfInfo
+ * @tc.desc: 1.Test the ProcessDeployedHqfInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "X86";
+    std::string cpuAbi = "armeabi";
+    InnerBundleInfo newInfo;
+    AppQuickFix oldAppQuickFix;
+    ErrCode ret = installer.ProcessDeployedHqfInfo(
+        nativeLibraryPath, cpuAbi, newInfo, oldAppQuickFix);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1200
+ * @tc.name: test ProcessDeployingHqfInfo
+ * @tc.desc: 1.Test the ProcessDeployingHqfInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "X86";
+    std::string cpuAbi = "armeabi";
+    InnerBundleInfo newInfo;
+    ErrCode ret = installer.ProcessDeployingHqfInfo(
+        nativeLibraryPath, cpuAbi, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1300
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "X86";
+    std::string cpuAbi = "armeabi";
+    InnerBundleInfo newInfo;
+    AppqfInfo appQfInfo;
+    ErrCode ret = installer.UpdateLibAttrs(
+        newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1400
+ * @tc.name: test CheckHapLibsWithPatchLibs
+ * @tc.desc: 1.Test the CheckHapLibsWithPatchLibs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "";
+    std::string hqfLibraryPath = "a.hqf";
+    bool ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, false);
+
+    hqfLibraryPath = "/data/storage/el1/a.hqf";
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, false);
+
+    nativeLibraryPath = hqfLibraryPath;
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, true);
+
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, "");
+    EXPECT_EQ(ret, true);
+
+    ret = installer.CheckHapLibsWithPatchLibs(
+        nativeLibraryPath, hqfLibraryPath);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1500
+ * @tc.name: test ProcessDiffFiles
+ * @tc.desc: 1.Test the ProcessDiffFiles of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.modulePackage_ = "entry";
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo info;
+    info.moduleName = "entry";
+    hqfInfos.emplace_back(info);
+    AppqfInfo appQfInfo;
+    appQfInfo.hqfInfos = hqfInfos;
+    std::string nativeLibraryPath = "/an/x86/x86.so";
+    ErrCode ret = installer.ProcessDiffFiles(
+        appQfInfo, nativeLibraryPath);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1600
+ * @tc.name: test SaveOldRemovableInfo
+ * @tc.desc: 1.Test the SaveOldRemovableInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo info;
+    info.isRemovable.try_emplace("removeInfo1", false);
+    info.isRemovable.try_emplace("removeInfo2", true);
+    oldInfo.innerModuleInfos_.try_emplace("entry", info);
+    InnerModuleInfo newModuleInfo;
+    bool existModule = true;
+    installer.SaveOldRemovableInfo(newModuleInfo, oldInfo, existModule);
+    newModuleInfo.modulePackage = "entry";
+    installer.SaveOldRemovableInfo(newModuleInfo, oldInfo, existModule);
+    EXPECT_EQ(newModuleInfo.isRemovable["removeInfo1"], false);
+    EXPECT_EQ(newModuleInfo.isRemovable["removeInfo2"], true);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1700
+ * @tc.name: test ExtractArkNativeFile
+ * @tc.desc: 1.Test the ExtractArkNativeFile of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    std::string modulePath;
+    ErrCode ret = installer.ExtractArkNativeFile(info, modulePath);
+    EXPECT_EQ(ret, ERR_OK);
+
+    info.baseApplicationInfo_->arkNativeFilePath = "";
+    info.baseApplicationInfo_->arkNativeFileAbi = "errorType";
+    ret = installer.ExtractArkNativeFile(info, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_AN_FAILED);
+
+    info.baseApplicationInfo_->arkNativeFileAbi = "x86";
+    ret = installer.ExtractArkNativeFile(info, modulePath);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1800
+ * @tc.name: test DeleteOldArkNativeFile
+ * @tc.desc: 1.Test the DeleteOldArkNativeFile of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->arkNativeFilePath = "/an/x86/x86.so";
+    ErrCode ret = installer.DeleteOldArkNativeFile(oldInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_1900
+ * @tc.name: test CheckArkNativeFileWithOldInfo
+ * @tc.desc: 1.Test the CheckArkNativeFileWithOldInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    ApplicationInfo applicationInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    oldInfo.SetArkNativeFileAbi("x86");
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetArkNativeFileAbi("");
+    newInfos.try_emplace("so", info);
+    ErrCode ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    newInfos.clear();
+    info.SetArkNativeFileAbi("arm");
+    newInfos.try_emplace("so", info);
+    ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE);
+
+    newInfos.clear();
+    info.SetArkNativeFileAbi("x86");
+    newInfos.try_emplace("so", info);
+    ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_2000
+ * @tc.name: test CheckNativeSoWithOldInfo
+ * @tc.desc: 1.Test the CheckNativeSoWithOldInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    ApplicationInfo applicationInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    oldInfo.SetNativeLibraryPath("/an/x86/x86.so");
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetNativeLibraryPath("/an/arm/arm.so");
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.try_emplace("so", info);
+    ErrCode ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE);
+
+    newInfos.clear();
+    info.SetNativeLibraryPath("/an/x86/x86.so");
+    oldInfo.SetCpuAbi("arm");
+    info.SetCpuAbi("x86");
+    newInfos.try_emplace("so", info);
+    ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE);
+
+    newInfos.clear();
+    info.SetNativeLibraryPath("");
+    oldInfo.SetCpuAbi("x86");
+    newInfos.try_emplace("so", info);
+    ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

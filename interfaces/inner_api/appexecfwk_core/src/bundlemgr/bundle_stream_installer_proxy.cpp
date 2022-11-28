@@ -33,7 +33,7 @@ BundleStreamInstallerProxy:: ~BundleStreamInstallerProxy()
     APP_LOGD("destory bundle stream installer proxy instance");
 }
 
-int BundleStreamInstallerProxy::CreateStream(const std::string &hapName, long offset)
+int BundleStreamInstallerProxy::CreateStream(const std::string &hapName)
 {
     APP_LOGD("bundle stream installer proxy create stream begin");
     int fd = -1;
@@ -48,10 +48,6 @@ int BundleStreamInstallerProxy::CreateStream(const std::string &hapName, long of
     }
     if (!data.WriteString(hapName)) {
         APP_LOGE("fail to CreateStream due to write hapName fail");
-        return fd;
-    }
-    if (!data.WriteInt64(offset)) {
-        APP_LOGE("fail to GetBundleInfo due to write offset fail");
         return fd;
     }
 

@@ -111,8 +111,8 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     }
     // 4.2 generate accesstoken id
     Security::AccessToken::HapPolicyParams hapPolicy = BundlePermissionMgr::CreateHapPolicyParam(info, allPermissions);
-    uint32_t newTokenId =
-        BundlePermissionMgr::CreateAccessTokenId(info, info.GetBundleName(), userId_, dlpType, hapPolicy);
+    auto newTokenIdEx =
+        BundlePermissionMgr::CreateAccessTokenIdEx(info, info.GetBundleName(), userId_, dlpType, hapPolicy);
 
     // 6. create data dir and generate uid and gid
     info.CleanInnerBundleUserInfos();
@@ -123,7 +123,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     info.AddInnerBundleUserInfo(userInfo);
     info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
     info.SetBundleUpdateTime(0, userId_);
-    info.SetAccessTokenId(newTokenId, userId_);
+    info.SetAccessTokenIdEx(newTokenIdEx, userId_);
     APP_LOGD("InstallSandboxApp generate uid of sandbox is %{public}d", userInfo.uid);
     ErrCode result = CreateSandboxDataDir(info, userInfo.uid, newAppIndex);
     if (result != ERR_OK) {
@@ -137,7 +137,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     dataMgr_->EnableBundle(bundleName_);
 
     // 8. SaveSandboxPersistentInfo
-    StoreSandboxPersitentInfo(bundleName, newTokenId, newAppIndex, userId_);
+    StoreSandboxPersitentInfo(bundleName, newTokenIdEx.tokenIdExStruct.tokenID, newAppIndex, userId_);
 
     // 9. publish common event
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();

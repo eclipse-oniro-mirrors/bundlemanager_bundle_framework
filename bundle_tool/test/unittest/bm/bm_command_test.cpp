@@ -196,7 +196,6 @@ HWTEST_F(BmCommandTest, Bm_Command_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0001, Function | MediumTest | Level1)
 {
@@ -216,7 +215,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean xx" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0002, Function | MediumTest | Level1)
 {
@@ -237,7 +235,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0003, Function | MediumTest | Level1)
 {
@@ -258,7 +255,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0004, Function | MediumTest | Level1)
 {
@@ -280,7 +276,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name> xxx" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0005, Function | MediumTest | Level1)
 {
@@ -303,7 +298,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0006
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name> -d" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0006, Function | MediumTest | Level1)
 {
@@ -326,7 +320,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0006, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0007
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -n <bundle-name> -c" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0007, Function | MediumTest | Level1)
 {
@@ -349,7 +342,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0007, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0008
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -c" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0008, Function | MediumTest | Level1)
 {
@@ -370,7 +362,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0008, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Clean_0009
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm clean -d" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Clean_0009, Function | MediumTest | Level1)
 {
@@ -462,10 +453,73 @@ HWTEST_F(BmCommandTest, Bm_Command_Clean_0012, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: Bm_Command_Clean_0013
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm clean -h" command.
+ */
+HWTEST_F(BmCommandTest, Bm_Command_Clean_0013, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("clean"),
+        const_cast<char*>("-h"),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), "error: you must specify an option at least.\n" + HELP_MSG_CLEAN);
+}
+
+/**
+ * @tc.number: Bm_Command_Clean_0014
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm clean -xxx" command.
+ */
+HWTEST_F(BmCommandTest, Bm_Command_Clean_0014, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("clean"),
+        const_cast<char*>("-XXX"),
+        const_cast<char*>(" "),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_CLEAN);
+}
+
+/**
+ * @tc.number: Bm_Command_Clean_0015
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm clean -n <bundle-name> -d -xxx <user-id>" command.
+ */
+HWTEST_F(BmCommandTest, Bm_Command_Clean_0015, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("clean"),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-d"),
+        const_cast<char*>(" "),
+        const_cast<char*>("-XXX"),
+        const_cast<char*>(DEFAULT_USER_ID.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_CLEAN);
+}
+
+/**
  * @tc.number: Bm_Command_Enable_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0001, Function | MediumTest | Level1)
 {
@@ -485,7 +539,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0002, Function | MediumTest | Level1)
 {
@@ -506,7 +559,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0003, Function | MediumTest | Level1)
 {
@@ -528,7 +580,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0004, Function | MediumTest | Level1)
 {
@@ -551,7 +602,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Enable_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm enable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Enable_0005, Function | MediumTest | Level1)
 {
@@ -661,10 +711,52 @@ HWTEST_F(BmCommandTest, Bm_Command_Enable_0009, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: Bm_Command_Enable_0010
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm enable -h" command.
+ */
+HWTEST_F(BmCommandTest, Bm_Command_Enable_0010, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("enable"),
+        const_cast<char*>("-h"),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_ENABLE);
+}
+
+/**
+ * @tc.number: Bm_Command_Enable_0011
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm enable -n <bundle-name> -xxx <user-id>" command.
+ */
+HWTEST_F(BmCommandTest, Bm_Command_Enable_0011, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("enable"),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-XXX"),
+        const_cast<char*>(DEFAULT_USER_ID.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_ENABLE);
+}
+
+/**
  * @tc.number: Bm_Command_Disable_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0001, Function | MediumTest | Level1)
 {
@@ -684,7 +776,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0002, Function | MediumTest | Level1)
 {
@@ -705,7 +796,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0003, Function | MediumTest | Level1)
 {
@@ -727,7 +817,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0004, Function | MediumTest | Level1)
 {
@@ -750,7 +839,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -a <ability-name>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0005, Function | MediumTest | Level1)
 {
@@ -774,7 +862,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0006
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -u <user-id>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0006, Function | MediumTest | Level1)
 {
@@ -797,7 +884,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0006, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Disable_0007
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm disable -n <bundle-name> -u <user-id>" command.
- * @tc.require: AR000GJUII
  */
 HWTEST_F(BmCommandTest, Bm_Command_Disable_0007, Function | MediumTest | Level1)
 {
@@ -879,10 +965,32 @@ HWTEST_F(BmCommandTest, Bm_Command_Disable_0010, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: Bm_Command_Disable_0011
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm disable -n <bundle-name> -xxx <ability-name>" command.
+ */
+HWTEST_F(BmCommandTest, Bm_Command_Disable_0011, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("disable"),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-XXX"),
+        const_cast<char*>(STRING_ABILITY_NAME.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DISABLE);
+}
+
+/**
  * @tc.number: Bm_Command_Get_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0001, Function | MediumTest | Level1)
 {
@@ -906,7 +1014,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0001, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0002
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0002, Function | MediumTest | Level1)
 {
@@ -934,7 +1041,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0002, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0003
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -x" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0003, Function | MediumTest | Level1)
 {
@@ -959,7 +1065,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0003, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0004
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u -x" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0004, Function | MediumTest | Level1)
 {
@@ -985,7 +1090,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0004, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0005
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u xxx" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0005, Function | MediumTest | Level1)
 {
@@ -1011,7 +1115,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0005, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0006
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get --udid" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0006, Function | MediumTest | Level1)
 {
@@ -1039,7 +1142,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0006, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0007
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get --xxx" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0007, Function | MediumTest | Level1)
 {
@@ -1064,7 +1166,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0007, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0008
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get --udid -x" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0008, Function | MediumTest | Level1)
 {
@@ -1090,7 +1191,6 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0008, Function | MediumTest | Level1)
  * @tc.number: Bm_Command_Get_0009
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm get -u xxx" command.
- * @tc.require: AR000GJ4K9
  */
 HWTEST_F(BmCommandTest, Bm_Command_Get_0009, Function | MediumTest | Level1)
 {
@@ -1110,5 +1210,86 @@ HWTEST_F(BmCommandTest, Bm_Command_Get_0009, Function | MediumTest | Level1)
     SetMockObjects(cmd);
 
     EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_GET);
+}
+
+/**
+ * @tc.number: Bm_Command_Get_0010
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm get -h" command.
+ */
+HWTEST_F(BmCommandTest, Bm_Command_Get_0010, Function | MediumTest | Level1)
+{
+    // install a bundle
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("get"),
+        const_cast<char*>("-h"),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_GET);
+}
+
+/**
+ * @tc.number: GetBundlePath_0001
+ * @tc.name: test GetBundlePath
+ * @tc.desc: Verify the "GetBundlePath".
+ */
+HWTEST_F(BmCommandTest, GetBundlePath_0001, Function | MediumTest | Level1)
+{
+    // install a bundle
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>("-h"),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+    std::string param = "";
+    std::vector<std::string> bundlePaths;
+    auto res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "-r";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "--replace";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "-p";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "--bundle-path";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "-u";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "--user-id";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "-w";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "--waitting-time";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+
+    param = "-x";
+    res = cmd.GetBundlePath(param, bundlePaths);
+    EXPECT_EQ(res, ERR_OK);
 }
 } // namespace OHOS

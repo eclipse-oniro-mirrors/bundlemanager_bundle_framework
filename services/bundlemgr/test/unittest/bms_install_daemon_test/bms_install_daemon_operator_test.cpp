@@ -677,4 +677,91 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4100, Function | Sma
     ret = InstalldOperator::ExtractDiffFiles("", TEST_PATH, TEST_CPU_ABI);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_4200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractFiles of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4200, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.srcPath = "/system/etc/init/bootpic.zip";
+    auto ret = InstalldOperator::ExtractFiles(extractParam);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_4300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling RenameDir of InstalldOperator
+ *           2. oldDir is over size
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4300, Function | SmallTest | Level0)
+{
+    std::string oldPath = "/test/123";
+    auto ret = InstalldOperator::RenameDir(oldPath, "");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_4400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ChangeDirOwnerRecursively of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4400, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ChangeDirOwnerRecursively(TEST_PATH, 0, 0);
+    EXPECT_TRUE(ret);
+    ret = InstalldOperator::ChangeDirOwnerRecursively("/system/etc/init/bootpic.zip", 0, 0);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_4500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsValidPath of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4500, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidPath("", "");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_4600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsValidCodePath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4600, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidCodePath("");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_4700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4700, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::DeleteFiles("");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_48000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MkOwnerDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_48000, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::MkOwnerDir("", false, 0, 0);
+    EXPECT_FALSE(ret);
+}
 } // OHOS
