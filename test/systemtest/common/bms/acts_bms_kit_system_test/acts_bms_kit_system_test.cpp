@@ -6473,6 +6473,52 @@ HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0100, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GetDefaultAppProxy_0100
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ *           2.test GetDefaultApplication
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    BundleInfo bundleInfo;
+    ErrCode res = getDefaultAppProxy->GetDefaultApplication(USERID, "", bundleInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+    res = getDefaultAppProxy->GetDefaultApplication(USERID, "type", bundleInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
+ * @tc.number: GetDefaultAppProxy_0100
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ *           2.test SetDefaultApplication
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    Want want;
+    ErrCode res = getDefaultAppProxy->SetDefaultApplication(USERID, "type", want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
+ * @tc.number: GetDefaultAppProxy_0100
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ *           2.test ResetDefaultApplication
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0400, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    ErrCode res = getDefaultAppProxy->ResetDefaultApplication(USERID, "type");
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
  * @tc.number: CheckAbilityEnabled_0100
  * @tc.name: test SetAbilityEnabled and IsAbilityEnabled proxy
  * @tc.desc: 1.system run normally

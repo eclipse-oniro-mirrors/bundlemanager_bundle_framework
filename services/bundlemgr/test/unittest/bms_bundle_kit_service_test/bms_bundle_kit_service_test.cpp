@@ -207,6 +207,7 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+    std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -306,6 +307,11 @@ void BmsBundleKitServiceTest::TearDown()
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
     return bundleMgrService_->GetDataMgr();
+}
+
+std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
+{
+    return bundleMgrService_->GetBundleDistributedManager();
 }
 
 std::shared_ptr<LauncherService> BmsBundleKitServiceTest::GetLauncherService() const
@@ -6842,5 +6848,91 @@ HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest 
     std::string uid = "100";
     bool res = deviceManager.GetUdidByNetworkId(netWorkId, uid);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0100
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.desc: 1.test ConvertTargetAbilityInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0100, Function | SmallTest | Level1)
+{
+    Want want;
+    TargetAbilityInfo targetAbilityInfo;
+    bool ret = GetBundleDistributedManager()->ConvertTargetAbilityInfo(
+        want, targetAbilityInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0200
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.desc: 1.test ConvertTargetAbilityInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0200, Function | SmallTest | Level1)
+{
+    TargetAbilityInfo targetAbilityInfo;
+    bool ret = GetBundleDistributedManager()->QueryRpcIdByAbilityToServiceCenter(
+        targetAbilityInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0300
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.desc: 1.test CheckAbilityEnableInstall
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0300, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t missionId = 0;
+    GetBundleDistributedManager()->handler_ = nullptr;
+    GetBundleDistributedManager()->OutTimeMonitor("");
+    GetBundleDistributedManager()->OnQueryRpcIdFinished("");
+    bool ret = GetBundleDistributedManager()->CheckAbilityEnableInstall(want, missionId, DEFAULT_USERID, nullptr);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0400
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.desc: 1.test CheckAbilityEnableInstall
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0400, Function | SmallTest | Level1)
+{
+    std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    int32_t missionId = 0;
+    bool ret = GetBundleDistributedManager()->CheckAbilityEnableInstall(want, missionId, DEFAULT_USERID, nullptr);
+    EXPECT_EQ(ret, false);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0500
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.desc: 1.test CheckAbilityEnableInstall
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0500, Function | SmallTest | Level1)
+{
+    int32_t resultCode = 0;
+    QueryRpcIdParams queryRpcIdParams;
+    GetBundleDistributedManager()->SendCallback(resultCode, queryRpcIdParams);
+    EXPECT_EQ(queryRpcIdParams.callback, nullptr);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0600
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.desc: 1.test CheckAbilityEnableInstall
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0600, Function | SmallTest | Level1)
+{
+    Want want;
+    RpcIdResult rpcIdResult;
+    int32_t res = GetBundleDistributedManager()->ComparePcIdString(want, rpcIdResult);
+    EXPECT_EQ(res, ErrorCode::GET_DEVICE_PROFILE_FAILED);
 }
 }

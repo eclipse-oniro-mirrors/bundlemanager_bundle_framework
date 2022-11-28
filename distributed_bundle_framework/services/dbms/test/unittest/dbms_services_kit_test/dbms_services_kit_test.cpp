@@ -489,6 +489,114 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0018, Function | SmallTest | L
 
 /**
  * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test GetAbilityInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0019, Function | SmallTest | Level0)
+{
+    auto distributedBmsProxy = GetDistributedBmsProxy();
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        ElementName name;
+        name.SetBundleName(WRONG_BUNDLE_NAME);
+        name.SetAbilityName(ABILITY_NAME);
+        RemoteAbilityInfo info;
+        auto ret = distributedBmsProxy->GetAbilityInfo(name, info);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test GetAbilityInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0020, Function | SmallTest | Level0)
+{
+    auto distributedBmsProxy = GetDistributedBmsProxy();
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        ElementName name;
+        name.SetBundleName(WRONG_BUNDLE_NAME);
+        name.SetAbilityName(ABILITY_NAME);
+        RemoteAbilityInfo info;
+        auto ret = distributedBmsProxy->GetAbilityInfo(name, "localeInfo", info);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test GetAbilityInfos
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0021, Function | SmallTest | Level0)
+{
+    auto distributedBmsProxy = GetDistributedBmsProxy();
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        std::vector<ElementName> names;
+        ElementName name;
+        name.SetBundleName(BUNDLE_NAME);
+        name.SetModuleName(MODULE_NAME);
+        name.SetAbilityName(WRONG_ABILITY_NAME);
+        names.push_back(name);
+        std::vector<RemoteAbilityInfo> infos;
+        auto ret = distributedBmsProxy->GetAbilityInfos(names, infos);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test GetAbilityInfos
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0022, Function | SmallTest | Level0)
+{
+    auto distributedBmsProxy = GetDistributedBmsProxy();
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        std::vector<ElementName> names;
+        ElementName name;
+        name.SetBundleName(BUNDLE_NAME);
+        name.SetModuleName(MODULE_NAME);
+        name.SetAbilityName(WRONG_ABILITY_NAME);
+        names.push_back(name);
+        std::vector<RemoteAbilityInfo> infos;
+        auto ret = distributedBmsProxy->GetAbilityInfos(names, "", infos);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetAbilityInfo
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test GetDistributedBundleInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0023, Function | SmallTest | Level0)
+{
+    auto distributedBmsProxy = GetDistributedBmsProxy();
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        DistributedBundleInfo distributedBundleInfo;
+        auto ret = distributedBmsProxy->GetDistributedBundleInfo("", "", distributedBundleInfo);
+        EXPECT_EQ(ret, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest
  * @tc.name: test OnStart
  * @tc.require: issueI5MZ8V
  * @tc.desc: 1. system running normally
