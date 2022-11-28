@@ -50,6 +50,10 @@ ohos_systemtest("BundleMgrClientSystemTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+  if (global_resmgr_enable) {
+    defines += [ "GLOBAL_RESMGR_ENABLE" ]
+    external_deps += [ "resource_management:global_resmgr" ]
+  }
 }
 
 group("systemtest") {

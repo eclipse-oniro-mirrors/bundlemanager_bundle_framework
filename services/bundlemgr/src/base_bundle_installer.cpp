@@ -442,8 +442,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             newInnerBundleUserInfo.bundleName = bundleName_;
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
-            accessTokenId_ = CreateAccessTokenId(oldInfo);
-            oldInfo.SetAccessTokenId(accessTokenId_, userId_);
+            auto accessTokenIdEx = CreateAccessTokenIdEx(oldInfo);
+            accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
+            oldInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
             result = GrantRequestPermissions(oldInfo, accessTokenId_);
             CHECK_RESULT(result, "GrantRequestPermissions failed %{public}d");
 
@@ -520,9 +521,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     return result;
 }
 
-uint32_t BaseBundleInstaller::CreateAccessTokenId(const InnerBundleInfo &info)
+Security::AccessToken::AccessTokenIDEx BaseBundleInstaller::CreateAccessTokenIdEx(const InnerBundleInfo &info)
 {
-    return BundlePermissionMgr::CreateAccessTokenId(info, info.GetBundleName(), userId_);
+    return BundlePermissionMgr::CreateAccessTokenIdEx(info, info.GetBundleName(), userId_);
 }
 
 ErrCode BaseBundleInstaller::GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId)
@@ -694,20 +695,30 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     if (ret != ERR_OK) {
         return;
     }
+    if (preInfo.GetAppType() != oldInfo.GetAppType()) {
+        APP_LOGD("RollBack bundleName: %{public}s modified app attribute.", bundleName_.c_str());
+        if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
+            APP_LOGE("save UpdateInnerBundleInfo failed");
+            return;
+        }
+    }
     APP_LOGD("finish rollback due to install failed");
 }
 
 ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo,
-    const InnerBundleInfo &newInfo)
+    InnerBundleInfo &newInfo)
 {
     APP_LOGD("UpdateDefineAndRequestPermissions %{public}s start", bundleName_.c_str());
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
+    bool needUpdateTokenIdEx = oldInfo.GetAppType() != newInfo.GetAppType();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
             continue;
         }
         std::vector<std::string> newRequestPermName;
-        if (!BundlePermissionMgr::UpdateDefineAndRequestPermissions(uerInfo.second.accessTokenId, oldInfo,
+        Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+        accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
+        if (!BundlePermissionMgr::UpdateDefineAndRequestPermissions(accessTokenIdEx, oldInfo,
             newInfo, newRequestPermName)) {
             APP_LOGE("UpdateDefineAndRequestPermissions %{public}s failed", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_UPDATE_HAP_TOKEN_FAILED;
@@ -715,6 +726,10 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
         if (!BundlePermissionMgr::GrantRequestPermissions(newInfo, newRequestPermName, uerInfo.second.accessTokenId)) {
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
+        if (needUpdateTokenIdEx) {
+            APP_LOGD("update accessTokenIdEx tokenAttr: %{public}u", accessTokenIdEx.tokenIdExStruct.tokenAttr);
+            newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
     }
     APP_LOGD("UpdateDefineAndRequestPermissions %{public}s end", bundleName_.c_str());
@@ -1083,8 +1098,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             curInnerBundleUserInfo.bundleName = bundleName;
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
-            accessTokenId_ = CreateAccessTokenId(oldInfo);
-            oldInfo.SetAccessTokenId(accessTokenId_, userId_);
+            auto accessTokenIdEx = CreateAccessTokenIdEx(oldInfo);
+            accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
+            oldInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
             result = GrantRequestPermissions(oldInfo, accessTokenId_);
             if (result != ERR_OK) {
                 return result;
@@ -1182,8 +1198,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     uid = info.GetUid(userId_);
     info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
-    accessTokenId_ = CreateAccessTokenId(info);
-    info.SetAccessTokenId(accessTokenId_, userId_);
+    auto accessTokenIdEx = CreateAccessTokenIdEx(info);
+    accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
+    info.SetAccessTokenIdEx(accessTokenIdEx, userId_);
     result = GrantRequestPermissions(info, accessTokenId_);
     if (result != ERR_OK) {
         return result;
@@ -1309,9 +1326,10 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         if (info.second.accessTokenId == 0) {
             continue;
         }
+        Security::AccessToken::AccessTokenIDEx tokenIdEx;
+        tokenIdEx.tokenIDEx = info.second.accessTokenIdEx;
         std::vector<std::string> newRequestPermName;
-        if (!BundlePermissionMgr::AddDefineAndRequestPermissions(info.second.accessTokenId, newInfo,
-            newRequestPermName)) {
+        if (!BundlePermissionMgr::AddDefineAndRequestPermissions(tokenIdEx, newInfo, newRequestPermName)) {
             APP_LOGE("BundlePermissionMgr::AddDefineAndRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_UPDATE_HAP_TOKEN_FAILED;
         }
@@ -1319,6 +1337,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
+        // add new module does not update tokenId, GetAppType will be the same.
     }
 
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTime(), userId_);
@@ -1423,30 +1442,26 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
-    auto bundleUserInfos = oldInfo.GetInnerBundleUserInfos();
-    for (const auto &info : bundleUserInfos) {
-        if (info.second.accessTokenId == 0) {
-            continue;
-        }
-
-        std::vector<std::string> newRequestPermName;
-        if (!BundlePermissionMgr::UpdateDefineAndRequestPermissions(info.second.accessTokenId, noUpdateInfo,
-            oldInfo, newRequestPermName)) {
-            APP_LOGE("UpdateDefineAndRequestPermissions %{public}s failed", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_UPDATE_HAP_TOKEN_FAILED;
-        }
-
-        if (!BundlePermissionMgr::GrantRequestPermissions(oldInfo, newRequestPermName, info.second.accessTokenId)) {
-            APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    ErrCode ret = UpdateDefineAndRequestPermissions(noUpdateInfo, oldInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("UpdateDefineAndRequestPermissions %{public}s failed", bundleName_.c_str());
+        return ret;
+    }
+    // update tokenIdex
+    if (noUpdateInfo.GetAppType() != oldInfo.GetAppType()) {
+        APP_LOGD("bundleName: %{public}s modified app attribute.", bundleName_.c_str());
+        if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
+            APP_LOGE("save UpdateInnerBundleInfo failed");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
     }
 
-    ErrCode ret = SetDirApl(newInfo);
-    if (ret != ERR_OK) {
-        APP_LOGE("SetDirApl failed");
-        return ret;
+    if (noUpdateInfo.GetAppPrivilegeLevel() != oldInfo.GetAppPrivilegeLevel()) {
+        ret = SetDirApl(oldInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("SetDirApl failed");
+            return ret;
+        }
     }
     needDeleteQuickFixInfo_ = true;
     return ERR_OK;
@@ -1680,7 +1695,17 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
                                         Constants::PATH_SEPARATOR +
                                         std::to_string(userId_);
         std::string baseDataDir = baseBundleDataDir + Constants::BASE + info.GetBundleName();
-        ErrCode result = InstalldClient::GetInstance()->SetDirApl(
+        bool isExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
+        if (result != ERR_OK) {
+            APP_LOGE("IsExistDir failed, error is %{public}d", result);
+            return result;
+        }
+        if (!isExist) {
+            APP_LOGD("baseDir: %{public}s is not exist", baseDataDir.c_str());
+            continue;
+        }
+        result = InstalldClient::GetInstance()->SetDirApl(
             baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel());
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
@@ -2439,6 +2464,9 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     }
     if (oldInfo.GetAppProvisionType() != newInfo.GetAppProvisionType()) {
         return ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME;
+    }
+    if (oldInfo.GetAppType() != newInfo.GetAppType()) {
+        return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
     }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;

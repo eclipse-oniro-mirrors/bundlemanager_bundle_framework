@@ -25,6 +25,7 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
   ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/bms_param.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",

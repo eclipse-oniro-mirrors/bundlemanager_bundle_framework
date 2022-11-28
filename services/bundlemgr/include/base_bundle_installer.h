@@ -21,6 +21,7 @@
 
 #include "nocopyable.h"
 
+#include "access_token.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
@@ -464,9 +465,9 @@ private:
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    uint32_t CreateAccessTokenId(const InnerBundleInfo &info);
+    Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(const InnerBundleInfo &info);
     ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
-    ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
+    ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
     /**
      * @brief Check to set isRemovable true when install.

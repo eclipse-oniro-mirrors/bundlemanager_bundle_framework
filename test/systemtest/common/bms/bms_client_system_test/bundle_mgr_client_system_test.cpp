@@ -275,7 +275,6 @@ bool BundleMgrClientSystemTest::GetProfileFromExtension(const ExtensionAbilityIn
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. extensionAbilityInfo is invalid, resourcePath is empty
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_001, TestSize.Level1)
 {
@@ -301,7 +300,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_001, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. extensionAbilityInfo is invalid, resourcePath is not existed
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_002, TestSize.Level1)
 {
@@ -327,7 +325,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_002, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. extensionAbilityInfo is invalid, metadata is not existed
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_003, TestSize.Level1)
 {
@@ -355,7 +352,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_003, TestSize.Level1)
  *           1. extensionAbilityInfo is valid
  *           2. metadataName is not empty
  *           3. extensionAbilityInfo does not have metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_004, TestSize.Level1)
 {
@@ -378,7 +374,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_004, TestSize.Level1)
  *           1. extensionAbilityInfo is valid
  *           2. metadataName is not empty
  *           3. metadataName cannot be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_005, TestSize.Level1)
 {
@@ -406,7 +401,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_005, TestSize.Level1)
  *           1. extensionAbilityInfo is valid and has only one metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_006, TestSize.Level1)
 {
@@ -438,7 +432,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_006, TestSize.Level1)
  *           1. extensionAbilityInfo is valid and has multiple metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_007, TestSize.Level1)
 {
@@ -473,7 +466,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_007, TestSize.Level1)
  *           1. extensionAbilityInfo is valid and has multiple metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_008, TestSize.Level1)
 {
@@ -512,7 +504,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_008, TestSize.Level1)
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadataName is empty
  *           2. extensionAbilityInfo has only one metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_009, TestSize.Level1)
 {
@@ -543,7 +534,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_009, TestSize.Level1)
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadataName is empty
  *           2. extensionAbilityInfo has only multiple metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_010, TestSize.Level1)
 {
@@ -581,7 +571,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_010, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile's suffix is not .json
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_011, TestSize.Level1)
 {
@@ -610,7 +599,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_011, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile is empty file
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_012, TestSize.Level1)
 {
@@ -638,7 +626,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_012, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile is not json-format
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_013, TestSize.Level1)
 {
@@ -667,7 +654,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_013, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profiles both have json-format file and non-json-format file
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_014, TestSize.Level1)
 {
@@ -700,7 +686,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_014, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. AbilityInfo is invalid, resourcePath is empty
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_015, TestSize.Level1)
 {
@@ -726,7 +711,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_015, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. AbilityInfo is invalid, resourcePath is not existed
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_016, TestSize.Level1)
 {
@@ -752,7 +736,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_016, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. AbilityInfo is invalid, metadata is not existed
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_017, TestSize.Level1)
 {
@@ -780,7 +763,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_017, TestSize.Level1)
  *           1. AbilityInfo is valid
  *           2. metadataName is not empty
  *           3. AbilityInfo does not have metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_018, TestSize.Level1)
 {
@@ -803,7 +785,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_018, TestSize.Level1)
  *           1. AbilityInfo is valid
  *           2. metadataName is not empty
  *           3. metadataName cannot be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_019, TestSize.Level1)
 {
@@ -831,7 +812,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_019, TestSize.Level1)
  *           1. AbilityInfo is valid and has only one metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_020, TestSize.Level1)
 {
@@ -863,7 +843,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_020, TestSize.Level1)
  *           1. AbilityInfo is valid and has multiple metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_021, TestSize.Level1)
 {
@@ -901,7 +880,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_021, TestSize.Level1)
  *           1. AbilityInfo is valid and has multiple metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_022, TestSize.Level1)
 {
@@ -940,7 +918,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_022, TestSize.Level1)
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadataName is empty
  *           2. AbilityInfo has only one metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_023, TestSize.Level1)
 {
@@ -971,7 +948,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_023, TestSize.Level1)
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadataName is empty
  *           2. AbilityInfo has only multiple metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_024, TestSize.Level1)
 {
@@ -1009,7 +985,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_024, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile's suffix is not .json
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_025, TestSize.Level1)
 {
@@ -1038,7 +1013,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_025, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile is empty file
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_026, TestSize.Level1)
 {
@@ -1067,7 +1041,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_026, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile is not json-format
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_027, TestSize.Level1)
 {
@@ -1095,7 +1068,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_027, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profiles both have json-format file and non-json-format file
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_028, TestSize.Level1)
 {
@@ -1128,7 +1100,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_028, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. HapModuleInfo is invalid, resourcePath is empty
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_029, TestSize.Level1)
 {
@@ -1154,7 +1125,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_029, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. HapModuleInfo is invalid, resourcePath is not existed
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_030, TestSize.Level1)
 {
@@ -1180,7 +1150,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_030, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. HapModuleInfo is invalid, metadata is not existed
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_031, TestSize.Level1)
 {
@@ -1208,7 +1177,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_031, TestSize.Level1)
  *           1. HapModuleInfo is valid
  *           2. metadataName is not empty
  *           3. HapModuleInfo does not have metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_032, TestSize.Level1)
 {
@@ -1231,7 +1199,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_032, TestSize.Level1)
  *           1. HapModuleInfo is valid
  *           2. metadataName is not empty
  *           3. metadataName cannot be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_033, TestSize.Level1)
 {
@@ -1259,7 +1226,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_033, TestSize.Level1)
  *           1. HapModuleInfo is valid and has only one metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_034, TestSize.Level1)
 {
@@ -1291,7 +1257,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_034, TestSize.Level1)
  *           1. HapModuleInfo is valid and has multiple metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_035, TestSize.Level1)
 {
@@ -1329,7 +1294,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_035, TestSize.Level1)
  *           1. HapModuleInfo is valid and has multiple metadata
  *           2. metadataName is not empty
  *           3. metadataName can be found
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_036, TestSize.Level1)
 {
@@ -1368,7 +1332,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_036, TestSize.Level1)
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadataName is empty
  *           2. HapModuleInfo has only one metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_037, TestSize.Level1)
 {
@@ -1398,7 +1361,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_037, TestSize.Level1)
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadataName is empty
  *           2. HapModuleInfo has only multiple metadata
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_038, TestSize.Level1)
 {
@@ -1436,7 +1398,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_038, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile's suffix is not .json
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_039, TestSize.Level1)
 {
@@ -1465,7 +1426,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_039, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile is empty file
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_040, TestSize.Level1)
 {
@@ -1495,7 +1455,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_040, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profile is not json-format
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_041, TestSize.Level1)
 {
@@ -1524,7 +1483,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_041, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. profiles both have json-format file and non-json-format file
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_042, TestSize.Level1)
 {
@@ -1558,7 +1516,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_042, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadata has incorrect resource without '$profile'
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_043, TestSize.Level1)
 {
@@ -1583,7 +1540,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_043, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadata has incorrect resource without '$profile'
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_044, TestSize.Level1)
 {
@@ -1607,7 +1563,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_044, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadata has incorrect resource without '$profile'
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_045, TestSize.Level1)
 {
@@ -1634,7 +1589,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_045, TestSize.Level1)
  * @tc.name: GetResConfigFile
  * @tc.desc: Test the interface of GetResConfigFile
  *           1. metadataName is not empty
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_046, TestSize.Level1)
 {
@@ -1655,7 +1609,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_046, TestSize.Level1)
  * @tc.name: GetProfileFromAbility
  * @tc.desc: Test the interface of GetProfileFromAbility
  *           1. AbilityInfo without resource path
- * @tc.require: AR000H04IS
  */
 HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_001, TestSize.Level1)
 {
@@ -1682,7 +1635,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_001, TestSize.Level1)
  * @tc.name: GetProfileFromAbility
  * @tc.desc: Test the interface of GetProfileFromAbility
  *           1. AbilityInfo has incorrect resource path
- * @tc.require: AR000H04IS
  */
 HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_002, TestSize.Level1)
 {
@@ -1706,11 +1658,33 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_002, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GetProfileFromAbility_003
+ * @tc.name: GetProfileFromAbility
+ * @tc.desc: Test the interface of GetProfileFromAbility
+ *           1. AbilityInfo has incorrect resource path
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromAbility_003, TestSize.Level1)
+{
+    auto name = std::string("GetProfileFromAbility_003");
+    GTEST_LOG_(INFO) << name << " start";
+
+    AbilityInfo info;
+    info.hapPath = "/data/app";
+    std::string metadataName = "ohos.extension.forms";
+    std::vector<std::string> profileInfo;
+    auto ret = GetProfileFromAbility(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+    info.hapPath = "";
+    info.resourcePath = RESOURCE_PATH;
+    ret = GetProfileFromAbility(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: GetProfileFromExtension_003
  * @tc.name: GetProfileFromExtension
  * @tc.desc: Test the interface of GetProfileFromExtension
  *           1. ExtensionAbilityInfo without resource path
- * @tc.require: AR000H04IS
  */
 HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_003, TestSize.Level1)
 {
@@ -1737,7 +1711,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_003, TestSize.Level1
  * @tc.name: GetProfileFromExtension
  * @tc.desc: Test the interface of GetProfileFromExtension
  *           1. ExtensionAbilityInfo has incorrect resource path
- * @tc.require: AR000H04IS
  */
 HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_004, TestSize.Level1)
 {
@@ -1762,10 +1735,32 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_004, TestSize.Level1
 }
 
 /**
+ * @tc.number: GetProfileFromExtension_005
+ * @tc.name: GetProfileFromExtension
+ * @tc.desc: Test the interface of GetProfileFromExtension
+ *           1. ExtensionAbilityInfo has incorrect resource path
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromExtension_005, TestSize.Level1)
+{
+    auto name = std::string("GetProfileFromExtensionr_005");
+    GTEST_LOG_(INFO) << name << " start";
+
+    ExtensionAbilityInfo info;
+    info.hapPath = "/data/app";
+    std::string metadataName = "ohos.extension.forms";
+    std::vector<std::string> profileInfo;
+    auto ret = GetProfileFromExtension(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+    info.hapPath = "";
+    info.resourcePath = RESOURCE_PATH;
+    ret = GetProfileFromExtension(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: QueryExtensionAbilityInfos_0001
  * @tc.name: QueryExtensionAbilityInfos
  * @tc.desc: Test the interface of QueryExtensionAbilityInfos
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfos_0001, TestSize.Level1)
 {
@@ -1799,7 +1794,6 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfos_0001, TestSize.Le
  * @tc.number: QueryExtensionAbilityInfosV9_000
  * @tc.name: QueryExtensionAbilityInfosV9
  * @tc.desc: Test the interface of QueryExtensionAbilityInfosV9
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0001, TestSize.Level1)
 {
@@ -1833,7 +1827,6 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0001, TestSize.
  * @tc.number: QueryExtensionAbilityInfosV9_0002
  * @tc.name: QueryExtensionAbilityInfosV9
  * @tc.desc: Test the interface of QueryExtensionAbilityInfosV9
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0002, TestSize.Level1)
 {
@@ -1848,7 +1841,6 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0002, TestSize.
  * @tc.number: QueryExtensionAbilityInfosV9_0003
  * @tc.name: QueryExtensionAbilityInfosV9
  * @tc.desc: Test the interface of QueryExtensionAbilityInfosV9
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0003, TestSize.Level1)
 {
@@ -1899,6 +1891,40 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap001, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo);
     EXPECT_FALSE(ret);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: GetProfileFromHap002
+ * @tc.name: GetProfileFromHap
+ * @tc.desc: 1.Test the interface of GetProfileFromHap
+ *           2.Install application
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap002, TestSize.Level1)
+{
+    auto name = std::string("GetProfileFromHap002");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    HapModuleInfo info;
+    info.hapPath = "/data/app";
+    std::string metadataName = "ohos.extension.forms";
+    std::vector<std::string> profileInfo;
+    auto ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo);
+    EXPECT_FALSE(ret);
+    info.hapPath = "";
+    info.resourcePath = RESOURCE_PATH;
+    ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo);
+    EXPECT_EQ(ret, false);
 
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
@@ -2046,6 +2072,173 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_002, TestSize.Level1)
 }
 
 /**
+ * @tc.number: BundleMgrClientImpl_003
+ * @tc.name: ConvertResourcePath
+ * @tc.desc: 1.Test the interface of ConvertResourcePath
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_003, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    bool isCompressed = true;
+    std::string resPath = "/data/test";
+    bool res = impl.ConvertResourcePath(BUNDLE_NAME, resPath, isCompressed);
+    EXPECT_EQ(res, true);
+    isCompressed = false;
+    resPath = RESOURCE_PATH;
+    res = impl.ConvertResourcePath(BUNDLE_NAME, resPath, isCompressed);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_004
+ * @tc.name: GetResFromResMgr
+ * @tc.desc: 1.Test the interface of GetResFromResMgr
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_004, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    std::string resName = "";
+    std::shared_ptr<Global::Resource::ResourceManager> resMgr
+        = impl.InitResMgr(RESOURCE_PATH);
+    bool isCompressed = true;
+    std::vector<std::string> profileInfos;
+    bool res = impl.GetResFromResMgr(resName, resMgr, isCompressed, profileInfos);
+    EXPECT_EQ(res, false);
+
+    resName = "$profile:file1";
+    res = impl.GetResFromResMgr(BUNDLE_NAME, resMgr, isCompressed, profileInfos);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_005
+ * @tc.name: IsFileExisted
+ * @tc.desc: 1.Test the interface of IsFileExisted
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_005, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    std::string filePath = "/error/path";
+    bool res = impl.IsFileExisted(filePath);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_006
+ * @tc.name: UninstallSandboxApp
+ * @tc.desc: 1.Test the interface of UninstallSandboxApp
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_006, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    EXPECT_NE(impl.bundleInstaller_, nullptr);
+    std::string bundleName = "";
+    int32_t dlpType = 0;
+    int32_t userId = 0;
+    int32_t appIndex = 0;
+    ErrCode ret = impl.InstallSandboxApp(
+        bundleName, dlpType, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    bundleName = BUNDLE_NAME;
+    appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ret = impl.UninstallSandboxApp(bundleName, appIndex, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.UninstallSandboxApp(bundleName, appIndex, userId);
+    EXPECT_NE(ret, ERR_OK);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_007
+ * @tc.name: GetSandboxAbilityInfo
+ * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_007, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    OHOS::AAFwk::Want want;
+    AbilityInfo abilityInfo;
+    int32_t flags = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ErrCode ret = impl.GetSandboxAbilityInfo(
+        want, appIndex, flags, DEFAULT_USERID, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    ret = impl.GetSandboxAbilityInfo(
+        want, appIndex, flags, DEFAULT_USERID, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.GetSandboxAbilityInfo(
+        want, appIndex, flags, DEFAULT_USERID, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_008
+ * @tc.name: GetSandboxExtAbilityInfos
+ * @tc.desc: 1.Test the interface of GetSandboxExtAbilityInfos
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_008, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    OHOS::AAFwk::Want want;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t flags = 0;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ErrCode ret = impl.GetSandboxExtAbilityInfos(
+        want, appIndex, flags, DEFAULT_USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    ret = impl.GetSandboxExtAbilityInfos(
+        want, appIndex, flags, DEFAULT_USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.GetSandboxExtAbilityInfos(
+        want, appIndex, flags, DEFAULT_USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: BundleMgrClientImpl_009
+ * @tc.name: GetSandboxHapModuleInfo
+ * @tc.desc: 1.Test the interface of GetSandboxHapModuleInfo
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_009, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    AbilityInfo abilityInfo;
+    HapModuleInfo hapModuleInfo;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    ErrCode ret = impl.GetSandboxHapModuleInfo(
+        abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX + 1;
+    ret = impl.GetSandboxHapModuleInfo(
+        abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    appIndex = Constants::MAX_APP_INDEX;
+    ret = impl.GetSandboxHapModuleInfo(
+        abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP);
+    impl.OnDeath();
+}
+
+/**
  * @tc.number: BundleMgrClientImplIsNull_0400
  * @tc.name: 1.test BundleMgrClient with impl_ is nullptr
  * @tc.desc: 1. test is failed
@@ -2064,7 +2257,8 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | M
     EXPECT_FALSE(res);
 
     BundlePackInfo bundlePackInfo;
-    auto res1 = client.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, bundlePackInfo, DEFAULT_USERID);
+    auto res1 = client.GetBundlePackInfo(
+        BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, bundlePackInfo, DEFAULT_USERID);
     EXPECT_NE(res1, ERR_OK);
 
     HapModuleInfo hapModuleInfo;

@@ -1855,6 +1855,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     appInfo = *baseApplicationInfo_;
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
+    appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
     appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
     appInfo.uid = innerBundleUserInfo.uid;
 
@@ -1904,6 +1905,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     appInfo = *baseApplicationInfo_;
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
+    appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
     appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
     appInfo.uid = innerBundleUserInfo.uid;
 
@@ -2464,6 +2466,20 @@ void InnerBundleInfo::SetAccessTokenId(uint32_t accessToken, const int32_t userI
     }
 
     infoItem->second.accessTokenId = accessToken;
+}
+
+void InnerBundleInfo::SetAccessTokenIdEx(
+    const Security::AccessToken::AccessTokenIDEx accessTokenIdEx,
+    const int32_t userId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        return;
+    }
+
+    infoItem->second.accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID;
+    infoItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
 }
 
 void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)

@@ -74,7 +74,7 @@ bool SendData(void *&buffer, size_t size, const void *data)
         return false;
     }
 
-    if (size <= 0) {
+    if (size == 0) {
         APP_LOGE("size is invalid");
         return false;
     }
