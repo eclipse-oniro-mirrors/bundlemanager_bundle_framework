@@ -110,7 +110,13 @@ bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames)
 {
     auto &entryMap = zipFile_.GetAllEntries();
     auto entryFilter = [&fileNames](const auto &entry) {
-        if (entry.first.find(Constants::RELATIVE_PATH) == std::string::npos) {
+        auto position = entry.first.rfind(Constants::QUICK_FIX_FILE_SUFFIX);
+        bool isHqfFile = false;
+        if (position != std::string::npos) {
+            std::string suffixStr = entry.first.substr(position);
+            isHqfFile = suffixStr == Constants::QUICK_FIX_FILE_SUFFIX;
+        }
+        if ((entry.first.find(Constants::RELATIVE_PATH) == std::string::npos) && !isHqfFile) {
             fileNames.emplace_back(entry.first);
         }
     };

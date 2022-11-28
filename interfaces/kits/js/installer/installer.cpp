@@ -367,6 +367,12 @@ static bool ParseInstallFlag(napi_env env, napi_value args, InstallFlag &install
         int32_t flag = 0;
         PARSE_PROPERTY(env, property, int32, flag);
         APP_LOGD("param installFlag is %{public}d", flag);
+        if ((flag != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::NORMAL)) &&
+            (flag != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::REPLACE_EXISTING)) &&
+            (flag != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::FREE_INSTALL))) {
+            APP_LOGE("invalid installFlag param");
+            return false;
+        }
         installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(flag);
     }
     return true;

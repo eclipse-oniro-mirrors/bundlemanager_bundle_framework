@@ -113,6 +113,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool UpdateInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+
+    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
      * @param bundleName Indicates the bundle name.

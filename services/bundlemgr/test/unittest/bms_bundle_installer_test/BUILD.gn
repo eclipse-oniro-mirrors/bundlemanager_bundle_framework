@@ -23,6 +23,7 @@ ohos_unittest("BmsBundleInstallerTest") {
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/bms_param.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
@@ -181,6 +182,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/bms_param.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
@@ -348,6 +350,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/bms_param.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
@@ -489,6 +492,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/bms_param.cpp",
     "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
     "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",

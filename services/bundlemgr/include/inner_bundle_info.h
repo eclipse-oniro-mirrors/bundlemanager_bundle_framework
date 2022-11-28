@@ -19,6 +19,7 @@
 #include "nocopyable.h"
 
 #include "ability_info.h"
+#include "access_token.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "common_event_info.h"
@@ -1364,6 +1365,17 @@ public:
     }
 
     void SetAccessTokenId(uint32_t accessToken, const int32_t userId);
+
+    uint64_t GetAccessTokenIdEx(const int32_t userId) const
+    {
+        InnerBundleUserInfo userInfo;
+        if (GetInnerBundleUserInfo(userId, userInfo)) {
+            return userInfo.accessTokenIdEx;
+        }
+        return 0;
+    }
+
+    void SetAccessTokenIdEx(const Security::AccessToken::AccessTokenIDEx accessTokenIdEx, const int32_t userId);
 
     void SetIsNewVersion(bool flag)
     {

@@ -16,6 +16,9 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_ACCESS_TOKEN_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_ACCESS_TOKEN_H
 
+#include <vector>
+#include <string>
+
 namespace OHOS {
 namespace Security {
 namespace AccessToken {
@@ -115,6 +118,7 @@ public:
     std::string appIDDesc;
     int dlpType;
     int32_t apiVersion;
+    bool isSystemApp;
 };
 
 class HapPolicyParams final {

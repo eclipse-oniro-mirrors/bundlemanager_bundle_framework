@@ -371,7 +371,7 @@ void InnerEventReport::InnerEventWrite(
     HiSysEventType type,
     Types... keyValues)
 {
-    OHOS::HiviewDFX::HiSysEvent::Write(
+    HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLE_MANAGER,
         eventName,
         static_cast<OHOS::HiviewDFX::HiSysEvent::EventType>(type),
