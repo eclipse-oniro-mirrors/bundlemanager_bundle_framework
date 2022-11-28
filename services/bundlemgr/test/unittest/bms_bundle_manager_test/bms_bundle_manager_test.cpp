@@ -29,6 +29,7 @@
 
 #include "bundle_info.h"
 #include "bundle_data_storage_database.h"
+#include "bundle_event_callback_host.h"
 #include "bundle_file_util.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -96,11 +97,15 @@ public:
     void StopBundleService();
     void CreateInstallerManager();
     void ClearBundleInfo();
+    void ClearDataMgr();
+    void SetDataMgr();
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
 
 BmsBundleManagerTest::BmsBundleManagerTest()
@@ -233,6 +238,19 @@ const std::shared_ptr<BundleDataMgr> BmsBundleManagerTest::GetBundleDataMgr() co
 const std::shared_ptr<BundleInstallerManager> BmsBundleManagerTest::GetBundleInstallerManager() const
 {
     return manager_;
+}
+
+void BmsBundleManagerTest::ClearDataMgr()
+{
+
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsBundleManagerTest::SetDataMgr()
+{
+    EXPECT_NE(dataMgrInfo_, nullptr);
+    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
 void BmsBundleManagerTest::StopInstalldService() const
@@ -1990,7 +2008,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0300, Function | MediumTest | L
 }
 
 /**
- * @tc.number: GetApplicationInfosV9_0100
+ * @tc.number: BundleMgrHostImpl_0400
  * @tc.name: test QueryAllAbilityInfos proxy
  * @tc.desc: 1.query ability infos success
  */
@@ -2017,6 +2035,470 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0400, Function | MediumTest | L
     EXPECT_EQ(ret, false);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query ability infos success
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::u16string> args;
+    int fd = 8;
+    int res = hostImpl->Dump(fd, args);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query ability infos success
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0600, Function | MediumTest | Level1)
+{
+    SetDataMgr();
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::set<int32_t> ret = hostImpl->GetExistsCommonUserIs();
+
+    EXPECT_EQ(ret.size(), 1);
+    ClearDataMgr();
+    ret = hostImpl->GetExistsCommonUserIs();
+    EXPECT_EQ(ret.size(), 0);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0700
+ * @tc.name: BundleMgrHostImpl
+ * @tc.desc: 1.Test the interface of ConvertResourcePath
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0700, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t appIndex = -1;
+    BundleInfo info;
+    ErrCode ret = hostImpl->GetSandboxBundleInfo("", appIndex, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    ret = hostImpl->GetSandboxBundleInfo("bundleName", appIndex, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+    
+    appIndex = 101;
+    ret = hostImpl->GetSandboxBundleInfo("bundleName", appIndex, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    appIndex = 1;
+    ClearDataMgr();
+    ret = hostImpl->GetSandboxBundleInfo("bundleName", appIndex, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0900, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    ApplicationInfo appInfo;
+    std::vector<ApplicationInfo> appInfos;
+
+    ClearDataMgr();
+    bool retBool = hostImpl->GetApplicationInfo("", flags, USERID, appInfo);
+    EXPECT_EQ(retBool, false);
+
+    ErrCode retCode = hostImpl->GetApplicationInfoV9("", flags, USERID, appInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retBool = hostImpl->GetApplicationInfos(flags, USERID, appInfos);
+    EXPECT_EQ(retBool, false);
+
+    retCode = hostImpl->GetApplicationInfosV9(flags, USERID, appInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    int uid = -1;
+    BundleInfo bundleInfo;
+    BundlePackInfo bundlePackInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::string bundleName;
+    std::vector<std::string> bundleNames;
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    std::vector<BundleInfo> bundleInfos;
+
+    ClearDataMgr();
+    bool retBool = hostImpl->GetBundleInfo("", flags, bundleInfo, USERID);
+    EXPECT_EQ(retBool, false);
+
+    ErrCode retCode = hostImpl->GetBundleInfoV9("", flags, bundleInfo, USERID);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retCode = hostImpl->GetBundlePackInfo("", flags, bundlePackInfo, USERID);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    retBool = hostImpl->GetBundleUserInfo("", USERID, innerBundleUserInfo);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetBundleUserInfos("", innerBundleUserInfos);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetBundleInfos(flags, bundleInfos, USERID);
+    EXPECT_EQ(retBool, false);
+
+    retCode = hostImpl->GetBundleInfosV9(flags, bundleInfos, USERID);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retBool = hostImpl->GetBundleNameForUid(uid, bundleName);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetBundlesForUid(uid, bundleNames);
+    EXPECT_EQ(retBool, false);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int uid = -1;
+    std::string bundleName;
+    std::vector<int> gids;
+    std::vector<BundleInfo> bundleInfos;
+
+    ClearDataMgr();
+    ErrCode retCode = hostImpl->GetNameForUid(uid, bundleName);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    bool retBool = hostImpl->GetBundleGids("", gids);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetBundleGidsByUid("", uid, gids);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->CheckIsSystemAppByUid(uid);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetBundleInfosByMetaData("", bundleInfos);
+    EXPECT_EQ(retBool, false);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    Want want;
+    AbilityInfo abilityInfo;
+
+    ClearDataMgr();
+    bool retBool = hostImpl->QueryAbilityInfo(want, flags, USERID, abilityInfo);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->QueryAbilityInfos(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(retBool, false);
+
+    ErrCode retCode = hostImpl->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retBool = hostImpl->QueryAllAbilityInfos(want, USERID, abilityInfos);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->QueryAbilityInfoByUri("", abilityInfo);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->QueryAbilityInfosByUri("", abilityInfos);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->QueryAbilityInfoByUri("", USERID, abilityInfo);
+    EXPECT_EQ(retBool, false);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string label;
+    std::vector<BundleInfo> bundleInfos;
+    Want want;
+    HapModuleInfo hapModuleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = "bundleName";
+    abilityInfo.package = "package";
+
+    ClearDataMgr();
+    bool retBool = hostImpl->QueryKeepAliveBundleInfos(bundleInfos);
+    EXPECT_EQ(retBool, false);
+
+    std::string retString = hostImpl->GetAbilityLabel("", "");
+    EXPECT_EQ(retString, Constants::EMPTY_STRING);
+
+    ErrCode retCode = hostImpl->GetAbilityLabel("", "", "", label);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    retBool = hostImpl->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
+    EXPECT_EQ(retBool, false);
+
+    retCode = hostImpl->GetLaunchWantForBundle("", want, USERID);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t upgradeFlag = 0;
+    std::string result;
+    bool isRemovable = false;
+
+    ClearDataMgr();
+    bool retBool = hostImpl->UnregisterBundleStatusCallback();
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->DumpAllBundleInfoNamesByUserId(USERID, result);
+    EXPECT_EQ(retBool, false);
+
+    ErrCode retCode = hostImpl->IsModuleRemovable("", "", isRemovable);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    retBool = hostImpl->SetModuleRemovable("", "", isRemovable);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetModuleUpgradeFlag("", "");
+    EXPECT_EQ(retBool, false);
+
+    retCode = hostImpl->SetModuleUpgradeFlag("", "", upgradeFlag);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isRemovable = false;
+    std::vector<FormInfo> formInfos;
+    std::vector<ShortcutInfo> shortcutInfos;
+    std::vector<CommonEventInfo> commonEventInfos;
+    AbilityInfo abilityInfo;
+
+    ClearDataMgr();
+    ErrCode retCode = hostImpl->IsApplicationEnabled("", isRemovable);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    retCode = hostImpl->SetApplicationEnabled("", isRemovable, USERID);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    retCode = hostImpl->IsAbilityEnabled(abilityInfo, isRemovable);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    bool retBool = hostImpl->GetAllFormsInfo(formInfos);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetFormsInfoByApp("", formInfos);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetShortcutInfos("", USERID, shortcutInfos);
+    EXPECT_EQ(retBool, false);
+
+    retCode = hostImpl->GetShortcutInfoV9("", shortcutInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retBool = hostImpl->GetAllCommonEventInfo("", commonEventInfos);
+    EXPECT_EQ(retBool, false);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1600, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    Want want;
+
+    ClearDataMgr();
+    bool retBool = hostImpl->QueryExtensionAbilityInfos(want, flags, USERID, extensionInfos);
+    EXPECT_EQ(retBool, false);
+
+    ErrCode retCode = hostImpl->QueryExtensionAbilityInfosV9(want, flags, USERID, extensionInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retBool = hostImpl->QueryExtensionAbilityInfos(
+        want, ExtensionAbilityType::BACKUP, flags, USERID, extensionInfos);
+    EXPECT_EQ(retBool, false);
+
+    retCode = hostImpl->QueryExtensionAbilityInfosV9(
+        want, ExtensionAbilityType::BACKUP, flags, USERID, extensionInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retBool = hostImpl->QueryExtensionAbilityInfos(ExtensionAbilityType::BACKUP, USERID, extensionInfos);
+    EXPECT_EQ(retBool, false);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1700, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ExtensionAbilityInfo extensionAbilityInfo;
+
+    ClearDataMgr();
+    hostImpl->GetAccessibleAppCodePaths(USERID);
+    std::string retString = hostImpl->GetAppPrivilegeLevel("", USERID);
+    EXPECT_EQ(retString, Constants::EMPTY_STRING);
+
+    bool retBool = hostImpl->QueryExtensionAbilityInfoByUri("", USERID, extensionAbilityInfo);
+    EXPECT_EQ(retBool, false);
+
+    retString = hostImpl->GetAppIdByBundleName("", USERID);
+    EXPECT_EQ(retString, Constants::EMPTY_STRING);
+
+    retString = hostImpl->GetAppType("");
+    EXPECT_EQ(retString, Constants::EMPTY_STRING);
+
+    auto res = hostImpl->GetUidByBundleName("", USERID);
+    EXPECT_EQ(res, Constants::INVALID_UID);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1800
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    std::vector<std::string> dependentModuleNames;
+    Want want;
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+
+    ClearDataMgr();
+    bool retBool = hostImpl->ImplicitQueryInfoByPriority(
+        want, flags, USERID, abilityInfo, extensionInfo);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->ImplicitQueryInfos(
+        want, flags, USERID, abilityInfos, extensionInfos);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->GetAllDependentModuleNames(
+        "", "", dependentModuleNames);
+    EXPECT_EQ(retBool, false);
+
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_1900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t status = 0;
+    uint32_t resId = 0;
+    int32_t appIndex = 1;
+    size_t len = 1;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    std::unique_ptr<uint8_t[]> mediaDataPtr;
+    Want want;
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    HapModuleInfo hapModuleInfo;
+
+    ClearDataMgr();
+    bool retBool = hostImpl->SetDisposedStatus("", status);
+    EXPECT_EQ(retBool, false);
+
+    int32_t retInt = hostImpl->GetDisposedStatus("");
+    EXPECT_EQ(retInt, Constants::DEFAULT_DISPOSED_STATUS);
+
+    std::string retString = hostImpl->GetStringById("", "", resId, USERID, "");
+    EXPECT_EQ(retString, Constants::EMPTY_STRING);
+
+    retString = hostImpl->GetIconById("", "", resId, resId, USERID);
+    EXPECT_EQ(retString, Constants::EMPTY_STRING);
+
+    ErrCode retCode = hostImpl->GetSandboxAbilityInfo(
+        want, appIndex, status, USERID, abilityInfo);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+
+    retCode = hostImpl->GetSandboxExtAbilityInfos(
+        want, appIndex, status, USERID, extensionInfos);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+
+    retCode = hostImpl->GetSandboxHapModuleInfo(
+        abilityInfo, appIndex, USERID, hapModuleInfo);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+
+    retCode = hostImpl->GetMediaData(
+        "", "", "", mediaDataPtr, len, USERID);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    SetDataMgr();
 }
 
 /**
