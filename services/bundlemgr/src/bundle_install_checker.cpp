@@ -19,6 +19,7 @@
 #include "bundle_parser.h"
 #include "bundle_util.h"
 #include "parameter.h"
+#include "privilege_extension_ability_type.h"
 #include "systemcapability.h"
 
 namespace OHOS {
@@ -97,6 +98,11 @@ std::string GetAppProvisionType(const Security::Verify::ProvisionType &type)
     }
 
     return Constants::APP_PROVISION_TYPE_RELEASE;
+}
+
+bool IsExtensionAbilityType(ExtensionAbilityType type)
+{
+    return PRIVILEGE_EXTENSION_ABILITY_TYPE.find(type) != PRIVILEGE_EXTENSION_ABILITY_TYPE.end();
 }
 }
 
@@ -762,8 +768,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     // process ExtensionAbility
     auto &extensionAbilityInfos = innerBundleInfo.FetchInnerExtensionInfos();
     for (auto iter = extensionAbilityInfos.begin(); iter != extensionAbilityInfos.end(); ++iter) {
-        bool privilegeType = (iter->second.type == ExtensionAbilityType::SERVICE)
-            || (iter->second.type == ExtensionAbilityType::DATASHARE);
+        bool privilegeType = IsExtensionAbilityType(iter->second.type);
         if (privilegeType && !appPrivilegeCapability.allowUsePrivilegeExtension) {
             APP_LOGE("not allow use privilege extension");
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
