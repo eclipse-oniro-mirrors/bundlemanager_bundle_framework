@@ -25,7 +25,9 @@
         ],
         "deliveryWithInstall": true,
         "dependencies": [
-            "entry_C"
+            {
+                "moduleName": "entry_C"
+            }
         ],
         "description": "$string:entry_desc",
         "descriptionId": 16777220,

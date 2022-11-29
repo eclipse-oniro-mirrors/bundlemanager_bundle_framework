@@ -25,8 +25,14 @@
         ],
         "deliveryWithInstall": true,
         "dependencies": [
-            "entry_A",
-            "entry_B"
+            {
+                "moduleName": "entry_A",
+                "bundleName": ""
+            },
+            {
+                "moduleName": "entry_B",
+                "bundleName": "com.example.dependenciestest"
+            }
         ],
         "description": "$string:entry_desc",
         "descriptionId": 16777220,
