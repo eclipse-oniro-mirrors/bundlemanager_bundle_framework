@@ -84,6 +84,12 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             if (asyncCallbackInfo == nullptr) {
                 return;
             }
+            std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
+            if (scope == nullptr) {
+                return;
+            }
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
@@ -93,10 +99,11 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-            delete work;
-            work = nullptr;
+            napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+            if (work != nullptr) {
+                delete work;
+                work = nullptr;
+            }
         });
     if (ret != 0) {
         delete asyncCallbackInfo;
@@ -126,6 +133,12 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             if (asyncCallbackInfo == nullptr) {
                 return;
             }
+            std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
+            if (scope == nullptr) {
+                return;
+            }
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
@@ -135,10 +148,11 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-            delete work;
-            work = nullptr;
+            napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+            if (work != nullptr) {
+                delete work;
+                work = nullptr;
+            }
         });
     if (ret != 0) {
         if (asyncCallbackInfo != nullptr) {
@@ -173,6 +187,12 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             if (asyncCallbackInfo == nullptr) {
                 return;
             }
+            std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
+            if (scope == nullptr) {
+                return;
+            }
             napi_value callback = nullptr;
             napi_value placeHolder = nullptr;
             napi_value result[2] = { 0 };
@@ -182,10 +202,11 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-            delete work;
-            work = nullptr;
+            napi_close_handle_scope(asyncCallbackInfo->env_, scope);
+            if (work != nullptr) {
+                delete work;
+                work = nullptr;
+            }
         });
     if (ret != 0) {
         delete asyncCallbackInfo;
