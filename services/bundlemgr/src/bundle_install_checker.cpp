@@ -100,9 +100,14 @@ std::string GetAppProvisionType(const Security::Verify::ProvisionType &type)
     return Constants::APP_PROVISION_TYPE_RELEASE;
 }
 
-bool IsExtensionAbilityType(ExtensionAbilityType type)
+bool IsPrivilegeExtensionAbilityType(ExtensionAbilityType type)
 {
     return PRIVILEGE_EXTENSION_ABILITY_TYPE.find(type) != PRIVILEGE_EXTENSION_ABILITY_TYPE.end();
+}
+
+bool IsSystemExtensionAbilityType(ExtensionAbilityType type)
+{
+    return SYSTEM_EXTENSION_ABILITY_TYPE.find(type) != SYSTEM_EXTENSION_ABILITY_TYPE.end();
 }
 }
 
@@ -768,11 +773,18 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     // process ExtensionAbility
     auto &extensionAbilityInfos = innerBundleInfo.FetchInnerExtensionInfos();
     for (auto iter = extensionAbilityInfos.begin(); iter != extensionAbilityInfos.end(); ++iter) {
-        bool privilegeType = IsExtensionAbilityType(iter->second.type);
+        bool privilegeType = IsPrivilegeExtensionAbilityType(iter->second.type);
         if (privilegeType && !appPrivilegeCapability.allowUsePrivilegeExtension) {
             APP_LOGE("not allow use privilege extension");
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
         }
+
+        bool systemType = IsSystemExtensionAbilityType(iter->second.type);
+        if (systemType && !applicationInfo.isSystemApp) {
+            APP_LOGE("not allow use system extension");
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+        }
+
 #ifdef USE_PRE_BUNDLE_PROFILE
         if (!appPrivilegeCapability.allowQueryPriority) {
             iter->second.priority = 0;
