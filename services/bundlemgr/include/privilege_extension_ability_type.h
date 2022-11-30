@@ -26,6 +26,9 @@ const std::set<ExtensionAbilityType> PRIVILEGE_EXTENSION_ABILITY_TYPE = {
     ExtensionAbilityType::SERVICE,
     ExtensionAbilityType::DATASHARE
 };
+
+const std::set<ExtensionAbilityType> SYSTEM_EXTENSION_ABILITY_TYPE = {
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_PRIVILEGE_EXTENSION_ABILITY_TYPE_H
