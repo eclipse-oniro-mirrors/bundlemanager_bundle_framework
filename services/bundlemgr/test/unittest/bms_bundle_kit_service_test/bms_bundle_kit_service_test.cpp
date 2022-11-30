@@ -195,6 +195,7 @@ const std::string URI_PATH_DUPLICATE_001 = SCHEME_001 + SCHEME_SEPARATOR +
 const std::string URI_PATH_REGEX_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 +
     PORT_SEPARATOR + PORT_001 + PATH_SEPARATOR + PATH_REGEX_001;
 const int32_t DEFAULT_USERID = 100;
+const int32_t ALL_USERID = -3;
 const int32_t WAIT_TIME = 5; // init mocked bms
 constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
@@ -2480,6 +2481,68 @@ HWTEST_F(BmsBundleKitServiceTest, DUMP_0400, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: DUMP_0500
+ * @tc.name: Dump empty bundle info for empty bundle name
+ * @tc.desc: 1.system run normally
+ *           2.dump with empty bundle name
+ */
+HWTEST_F(BmsBundleKitServiceTest, DUMP_0500, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string emptyResult;
+    bool emptyRet = hostImpl->DumpInfos(
+        DumpFlag::DUMP_SHORTCUT_INFO, EMPTY_STRING, DEFAULT_USERID, emptyResult);
+    EXPECT_FALSE(emptyRet);
+    emptyRet = hostImpl->DumpInfos(
+        DumpFlag::DUMP_SHORTCUT_INFO, BUNDLE_NAME_TEST, DEFAULT_USERID, emptyResult);
+    EXPECT_TRUE(emptyRet);
+    emptyRet = hostImpl->DumpInfos(
+        DumpFlag::DUMP_SHORTCUT_INFO, BUNDLE_NAME_TEST, ALL_USERID, emptyResult);
+    EXPECT_TRUE(emptyRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DUMP_0600
+ * @tc.name: Dump bundlelist, bundle info for bundleName
+ * @tc.desc: 1.system run normally
+ *           2.dump with empty bundle name
+ */
+HWTEST_F(BmsBundleKitServiceTest, DUMP_0600, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string emptyResult;
+    bool emptyRet = hostImpl->DumpInfos(
+        DumpFlag::DUMP_BUNDLE_LIST, EMPTY_STRING, ALL_USERID, emptyResult);
+    EXPECT_TRUE(emptyRet);
+}
+
+/**
+ * @tc.number: GetSandboxBundleInfo_0100
+ * @tc.name: GetSandboxBundleInfo
+ * @tc.desc: 1.test GetSandboxBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSandboxBundleInfo_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "";
+    int32_t appIndex = 100;
+    std::string bundleName1 = BUNDLE_NAME_TEST;
+    int32_t appIndex1 = 1000;
+    int32_t appIndex2 = -1;
+    BundleInfo info;
+    bool emptyRet = hostImpl->GetSandboxBundleInfo(bundleName, appIndex, DEFAULT_USERID, info);
+    EXPECT_NE(emptyRet, ERR_OK);
+    emptyRet = hostImpl->GetSandboxBundleInfo(bundleName1, appIndex1, DEFAULT_USERID, info);
+    EXPECT_NE(emptyRet, ERR_OK);
+    emptyRet = hostImpl->GetSandboxBundleInfo(bundleName1, appIndex2, DEFAULT_USERID, info);
+    EXPECT_NE(emptyRet, ERR_OK);
+}
+
+/**
  * @tc.number: QueryAbilityInfoByUri_0100
  * @tc.name: test can get the ability info by uri
  * @tc.desc: 1.system run normally
@@ -2814,6 +2877,37 @@ HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_0400, Function | SmallTest | 
     EXPECT_EQ(false, ret);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_0500
+ * @tc.name: test can get the hap module info
+ * @tc.desc: 1.system run normally
+ *           2.get the hap module info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_0500, Function | SmallTest | Level1)
+{
+    AbilityInfo abilityInfo1;
+    abilityInfo1.bundleName = "";
+    abilityInfo1.package = PACKAGE_NAME;
+
+    AbilityInfo abilityInfo2;
+    abilityInfo2.bundleName = BUNDLE_NAME_TEST;
+    abilityInfo2.package = "";
+
+    AbilityInfo abilityInfo3;
+    abilityInfo3.bundleName = "";
+    abilityInfo3.package = "";
+
+    HapModuleInfo hapModuleInfo;
+    bool ret = GetBundleDataMgr()->GetHapModuleInfo(abilityInfo1, hapModuleInfo);
+    EXPECT_FALSE(ret);
+
+    ret = GetBundleDataMgr()->GetHapModuleInfo(abilityInfo2, hapModuleInfo);
+    EXPECT_FALSE(ret);
+
+    ret = GetBundleDataMgr()->GetHapModuleInfo(abilityInfo3, hapModuleInfo);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -3946,6 +4040,28 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1200, Function | SmallTest
 }
 
 /**
+ * @tc.number: CheckAbilityEnabled_1500
+ * @tc.name: test can check ability status is enable by empty moduleName
+ * @tc.desc: 1.system run normally
+ *           2.check the ability status successful
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1500, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME_TEST;
+    abilityInfo.bundleName = BUNDLE_NAME_TEST;
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::UNSPECIFIED_USERID);
+    EXPECT_NE(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    EXPECT_EQ(0, testRet1);
+    EXPECT_TRUE(isEnable);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetFormInfoByModule_0100
  * @tc.name: test can  get the formInfo
  * @tc.desc: 1.system run normally
@@ -4149,6 +4265,39 @@ HWTEST_F(BmsBundleKitServiceTest, GetFormInfoByApp_0600, Function | SmallTest | 
     EXPECT_EQ(result, false);
     EXPECT_TRUE(formInfos.empty());
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetDistributedBundleInfo_0100
+ * @tc.name: GetDistributedBundleInfo
+ * @tc.desc: 1.system run normally
+ *           2.test GetDistributedBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDistributedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    std::string networkId = "";
+    const std::string bundleName = "";
+    DistributedBundleInfo distributedBundleInfo;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->GetDistributedBundleInfo(bundleName, bundleName, distributedBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoBySandBoxPath_0100
+ * @tc.name: Test GetBundleArchiveInfoBySandBoxPath
+ * @tc.desc: 1.Test the GetBundleUserInfo by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoBySandBoxPath_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string hapFilePath = "";
+    int32_t flags = 1;
+    BundleInfo bundleInfo;
+    bool fromV9 = false;
+    auto ret = hostImpl->GetBundleArchiveInfoBySandBoxPath(
+        hapFilePath, flags, bundleInfo, fromV9);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
