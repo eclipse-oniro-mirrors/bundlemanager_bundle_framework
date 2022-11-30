@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <cstdio>
 #include <dirent.h>
@@ -38,7 +39,7 @@ const std::string TEST_ERROR_LIB_STRING = "libs/arm64/test.txt";
 const std::string TEST_DIFF_LIB_STRING = "libs/arm64/test.diff";
 const std::string TEST_CPU_ABI = "arm64";
 const std::string TEST_CPU_ARM = "arm";
-const std::string TEST_PATH = "/test/test/";
+const std::string TEST_PATH = "/test/test/test";
 const std::string TEST_LIB_SO = "libs/arm64/test.so";
 const std::string TEST_LIB_AN = "an/arm64/test.an";
 const std::string TEST_QUICK_FIX_FILE_PATH_FIRST = "/data/app/el1/bundle/public/com.example.test/patch_1000001";
@@ -136,7 +137,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0300, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0400, Function | SmallTest | Level0)
 {
-    auto ret = InstalldOperator::IsExistDir(TEST_PATH);
+    auto ret = InstalldOperator::IsExistDir("");
     EXPECT_FALSE(ret);
 }
 
@@ -329,7 +330,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_1700, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_1800, Function | SmallTest | Level0)
 {
     std::vector<std::string> vec;
-    auto ret = InstalldOperator::ObtainQuickFixFileDir(TEST_PATH, vec);
+    auto ret = InstalldOperator::ObtainQuickFixFileDir("", vec);
     EXPECT_FALSE(ret);
 }
 
@@ -366,6 +367,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2000, Function | Sma
 {
     std::string path;
     auto ret = InstalldOperator::CopyFiles(path, TEST_STRING);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::CopyFiles(path, "/.../");
     EXPECT_FALSE(ret);
 }
 
@@ -529,6 +532,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3000, Function | Sma
 {
     auto ret = InstalldOperator::ChangeDirOwnerRecursively("", 0, 0);
     EXPECT_FALSE(ret);
+    ret = InstalldOperator::ChangeDirOwnerRecursively("data/test", 0, -1);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -564,6 +569,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3200, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3300, Function | SmallTest | Level0)
 {
     auto ret = InstalldOperator::RenameFile("", "");
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::RenameFile("/test/123", "/test/123");
     EXPECT_FALSE(ret);
 }
 
@@ -636,6 +643,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3800, Function | Sma
     bool ret = InstalldOperator::ApplyDiffPatch(
         TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH);
     EXPECT_EQ(ret, false);
+    ret = InstalldOperator::ApplyDiffPatch(
+        TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -730,6 +740,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4500, Function | Sma
 {
     auto ret = InstalldOperator::IsValidPath("", "");
     EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPath("..", "..");
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -752,6 +764,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4700, Function | Sma
 {
     auto ret = InstalldOperator::DeleteFiles("");
     EXPECT_FALSE(ret);
+    ret = InstalldOperator::DeleteFiles("/test/123");
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -763,5 +777,72 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4800, Function | Sma
 {
     auto ret = InstalldOperator::MkOwnerDir("", false, 0, 0);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_4900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling TraverseCacheDirectory of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4900, Function | SmallTest | Level0)
+{
+    std::vector<std::string> cacheDirs;
+    InstalldOperator::TraverseCacheDirectory("", cacheDirs);
+    EXPECT_EQ(cacheDirs.size(), 0);
+    InstalldOperator::TraverseCacheDirectory(OVER_MAX_PATH_SIZE, cacheDirs);
+    EXPECT_EQ(cacheDirs.size(), 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ScanDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5000, Function | SmallTest | Level0)
+{
+    std::vector<std::string> paths;
+    bool res = InstalldOperator::ScanDir(
+        "", ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths);
+    EXPECT_EQ(res, false);
+    res = InstalldOperator::ScanDir(
+        OVER_MAX_PATH_SIZE, ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths);
+    EXPECT_EQ(res, false);
+    res = InstalldOperator::ScanDir(
+        "//", ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling OpenHandle of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5100, Function | SmallTest | Level0)
+{
+    void **handle = nullptr;
+    bool res = InstalldOperator::OpenHandle(handle);
+    EXPECT_EQ(res, false);
+    InstalldOperator::CloseHandle(handle);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessApplyDiffPatchPath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> oldSoFileNames;
+    std::vector<std::string> diffFileNames;
+    bool res = InstalldOperator::ProcessApplyDiffPatchPath(
+        "", "", "", oldSoFileNames, diffFileNames);
+    EXPECT_EQ(res, false);
+    res = InstalldOperator::ProcessApplyDiffPatchPath(
+        "noExist", "noExist", "noExist", oldSoFileNames, diffFileNames);
+    EXPECT_EQ(res, false);
+    res = InstalldOperator::ProcessApplyDiffPatchPath(
+        "data/test", "data/test", "data/test", oldSoFileNames, diffFileNames);
+    EXPECT_EQ(res, false);
 }
 } // OHOS
