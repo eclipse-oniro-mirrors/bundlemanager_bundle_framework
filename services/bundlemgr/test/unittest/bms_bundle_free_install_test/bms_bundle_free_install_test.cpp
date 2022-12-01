@@ -656,41 +656,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0022, Function | Sma
 }
 
 /**
- * @tc.number: BmsBundleFreeInstallTest_0023
- * Function: ConnectAbility
- * @tc.name: test ConnectAbility
- * @tc.desc: test ConnectAbility failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0023, Function | SmallTest | Level0)
-{
-    BundleConnectAbilityMgr connectAbilityMgr;
-    Want want;
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IRemoteObject> callerToken = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    bool res = connectAbilityMgr.ConnectAbility(want, callerToken);
-    EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: BmsBundleFreeInstallTest_0024
- * Function: CheckIsModuleNeedUpdate
- * @tc.name: test CheckIsModuleNeedUpdate
- * @tc.desc: test CheckIsModuleNeedUpdate failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0024, Function | SmallTest | Level0)
-{
-    BundleConnectAbilityMgr connectAbilityMgr;
-    InnerBundleInfo innerBundleInfo;
-    Want want;
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IRemoteObject> callBack = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    bool res = connectAbilityMgr.CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
-    EXPECT_FALSE(res);
-}
-
-/**
  * @tc.number: BmsBundleFreeInstallTest_0025
  * Function: IsObtainAbilityInfo
  * @tc.name: test IsObtainAbilityInfo
