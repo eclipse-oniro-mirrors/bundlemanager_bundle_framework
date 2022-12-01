@@ -19,6 +19,7 @@
 #include "bundle_parser.h"
 #include "bundle_util.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "privilege_extension_ability_type.h"
 #include "systemcapability.h"
 
@@ -231,7 +232,11 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
         }
-
+        result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
+        if (result != ERR_OK) {
+            APP_LOGE("check provision bundleName failed");
+            return result;
+        }
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
                 APP_LOGE("more than one entry hap in the direction!");
@@ -278,6 +283,27 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     }
     APP_LOGD("finish parse hap file");
     return result;
+}
+
+ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundleName, const std::string &bundleName)
+{
+    APP_LOGD("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
+        provisionBundleName.c_str(), bundleName.c_str());
+    if (!system::GetBoolParameter(Constants::CHECK_PROFILE_BUNDLE_NAME, false)) {
+        APP_LOGD("CheckBundleName check_profile_bundle_name is false");
+        return ERR_OK;
+    }
+    if (provisionBundleName.empty() || bundleName.empty()) {
+        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s", provisionBundleName.c_str(),
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
+    if (provisionBundleName == bundleName) {
+        return ERR_OK;
+    }
+    APP_LOGE("CheckBundleName failed provisionBundleName:%{public}s, bundleName:%{public}s",
+        provisionBundleName.c_str(), bundleName.c_str());
+    return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
 }
 
 void BundleInstallChecker::CollectProvisionInfo(

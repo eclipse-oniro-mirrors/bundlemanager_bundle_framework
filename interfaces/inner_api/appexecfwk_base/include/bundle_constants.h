@@ -69,6 +69,7 @@ constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
+constexpr const char* CHECK_PROFILE_BUNDLE_NAME = "check_profile_bundle_name";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
