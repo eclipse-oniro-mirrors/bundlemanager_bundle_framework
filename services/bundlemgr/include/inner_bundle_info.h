@@ -137,6 +137,7 @@ private:
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
+    bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
 };
 
 enum InstallExceptionStatus : int32_t {

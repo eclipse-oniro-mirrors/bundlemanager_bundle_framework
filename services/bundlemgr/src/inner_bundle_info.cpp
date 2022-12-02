@@ -240,13 +240,24 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
     }
 }
 
+bool Skill::StartsWith(const std::string &sourceString, const std::string &targetPrefix) const
+{
+    return sourceString.rfind(targetPrefix, 0) == 0;
+}
+
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
     if (skillUri.scheme.empty()) {
         return uriString.empty();
     }
     if (skillUri.host.empty()) {
-        return uriString == skillUri.scheme;
+        // config uri is : scheme
+        // belows are param uri matched conditions:
+        // 1.scheme
+        // 2.scheme:
+        // 3.scheme:/
+        // 4.scheme://
+        return uriString == skillUri.scheme || StartsWith(uriString, skillUri.scheme + PORT_SEPARATOR);
     }
     std::string skillUriString;
     skillUriString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
@@ -254,7 +265,21 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         skillUriString.append(PORT_SEPARATOR).append(skillUri.port);
     }
     if (skillUri.path.empty() && skillUri.pathStartWith.empty() && skillUri.pathRegex.empty()) {
-        return uriString == skillUriString;
+        // with port, config uri is : scheme://host:port
+        // belows are param uri matched conditions:
+        // 1.scheme://host:port
+        // 2.scheme://host:port/path
+
+        // without port, config uri is : scheme://host
+        // belows are param uri matched conditions:
+        // 1.scheme://host
+        // 2.scheme://host/path
+        // 3.scheme://host:port     scheme://host:port/path
+        bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
+        if (skillUri.port.empty()) {
+            ret |= StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+        }
+        return ret;
     }
     skillUriString.append(PATH_SEPARATOR);
     // if one of path, pathStartWith, pathRegex match, then match
@@ -270,16 +295,16 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // pathStartWith match
         std::string pathStartWithUri(skillUriString);
         pathStartWithUri.append(skillUri.pathStartWith);
-        if (uriString.find(pathStartWithUri) == 0) {
+        if (StartsWith(uriString, pathStartWithUri)) {
             return true;
         }
     }
     if (!skillUri.pathRegex.empty()) {
         // pathRegex match
-        std::string pathRegxUri(skillUriString);
-        pathRegxUri.append(skillUri.pathRegex);
+        std::string pathRegexUri(skillUriString);
+        pathRegexUri.append(skillUri.pathRegex);
         try {
-            std::regex regex(pathRegxUri);
+            std::regex regex(pathRegexUri);
             if (regex_match(uriString, regex)) {
                 return true;
             }
