@@ -466,6 +466,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: device type is not supported"
     },
     {
+        IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR,
+        "error: too large size of string or array type element in the profile"
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }
