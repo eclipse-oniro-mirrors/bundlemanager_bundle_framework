@@ -48,6 +48,10 @@ void CheckArrayType(
     if (arrays.empty()) {
         return;
     }
+    if (arrays.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
+        parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+        return;
+    }
     switch (arrayType) {
         case ArrayType::STRING:
             for (const auto &array : arrays) {
@@ -141,6 +145,9 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                     break;
                 }
                 data = jsonObject.at(key).get<T>();
+                if (jsonObject.at(key).get<std::string>().length() > Constants::MAX_JSON_ELEMENT_LENGTH) {
+                    parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+                }
                 break;
             case JsonType::NULLABLE:
                 APP_LOGE("type is error %{public}s is nullable", key.c_str());

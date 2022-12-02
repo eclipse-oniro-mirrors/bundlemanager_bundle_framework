@@ -189,6 +189,8 @@ constexpr uint8_t MAX_MODULE_ABILITIES_READPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_ABILITIES_WRITEPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
 constexpr uint8_t MAX_MODULE_LABEL = 63;
+constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
+constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 
