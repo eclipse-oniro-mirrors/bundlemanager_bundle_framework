@@ -46,7 +46,6 @@ const std::string DEVICE_ID = "1111";
 const std::string INVALID_NAME = "invalid";
 const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
-int32_t USERID = 100;
 }  // namespace
 
 class DbmsServicesKitTest : public testing::Test {
@@ -592,66 +591,6 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0023, Function | SmallTest | L
         DistributedBundleInfo distributedBundleInfo;
         auto ret = distributedBmsProxy->GetDistributedBundleInfo("", "", distributedBundleInfo);
         EXPECT_EQ(ret, false);
-    }
-}
-
-/**
- * @tc.number: DbmsServicesKitTest
- * @tc.name: test OnStart
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test distributedSub_ not empty
- */
-HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0028, Function | SmallTest | Level0)
-{
-    auto distributedBms = GetDistributedBms();
-    EXPECT_NE(distributedBms, nullptr);
-    if (distributedBms != nullptr) {
-        distributedBms->OnStart();
-        EXPECT_NE(nullptr, distributedBms->distributedSub_);
-        distributedBms->OnStop();
-    }
-}
-
-/**
- * @tc.number: DbmsServicesKitTest
- * @tc.name: test SaveStorageDistributeInfo
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test GetStorageDistributeInfo failed by invalid bundle name
- */
-HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0029, Function | SmallTest | Level0)
-{
-    auto distributedDataStorage = GetDistributedDataStorage();
-    EXPECT_NE(distributedDataStorage, nullptr);
-    if (distributedDataStorage != nullptr) {
-        DistributedBundleInfo info;
-        distributedDataStorage->SaveStorageDistributeInfo(INVALID_NAME, USERID);
-        bool res = distributedDataStorage->GetStorageDistributeInfo("", INVALID_NAME, info);
-        EXPECT_EQ(res, false);
-        distributedDataStorage->UpdateDistributedData(USERID);
-        distributedDataStorage->DeleteStorageDistributeInfo(INVALID_NAME, USERID);
-    }
-}
-
-/**
- * @tc.number: DbmsServicesKitTest
- * @tc.name: test GetAbilityInfo
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test GetStorageDistributeInfo failed by invalid user id
- */
-HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0030, Function | SmallTest | Level0)
-{
-    auto distributedDataStorage = GetDistributedDataStorage();
-    EXPECT_NE(distributedDataStorage, nullptr);
-    if (distributedDataStorage != nullptr) {
-        DistributedBundleInfo info;
-        distributedDataStorage->SaveStorageDistributeInfo(BUNDLE_NAME, Constants::INVALID_USERID);
-        bool res = distributedDataStorage->GetStorageDistributeInfo("", BUNDLE_NAME, info);
-        EXPECT_EQ(res, false);
-        distributedDataStorage->UpdateDistributedData(Constants::INVALID_USERID);
-        distributedDataStorage->DeleteStorageDistributeInfo(BUNDLE_NAME, Constants::INVALID_USERID);
     }
 }
 
