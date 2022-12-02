@@ -543,7 +543,7 @@ napi_value Install(napi_env env, napi_callback_info info)
     APP_LOGD("Install called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -551,7 +551,7 @@ napi_value Install(napi_env env, napi_callback_info info)
 
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < ARGS_SIZE_TWO) {
+    if (argc < ARGS_SIZE_ONE) {
         APP_LOGE("the params number is incorrect");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -644,7 +644,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
     APP_LOGD("UninstallOrRecover by bundleName called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -652,7 +652,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
 
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < ARGS_SIZE_TWO) {
+    if (argc < ARGS_SIZE_ONE) {
         APP_LOGE("the params number is incorrect");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
