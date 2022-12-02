@@ -247,6 +247,124 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_002, Function | SmallTest | Level0)
 }
 
 /**
+* @tc.number: ReInstallAllInstallDirApps_001
+* @tc.name: test ReInstallAllInstallDirApps
+* @tc.desc: 1. test gets SYSTEM_ERROR
+*/
+HWTEST_F(BmsServiceStartupTest, ReInstallAllInstallDirApps_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->ReInstallAllInstallDirApps();
+    EXPECT_EQ(res, ResultCode::SYSTEM_ERROR);
+}
+
+/**
+* @tc.number: GuardAgainstInstallInfosLossedStrategy_001
+* @tc.name: test GuardAgainstInstallInfosLossedStrategy
+* @tc.desc: test gets NO_INSTALLED_DATA
+*/
+HWTEST_F(BmsServiceStartupTest, GuardAgainstInstallInfosLossedStrategy_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->GuardAgainstInstallInfosLossedStrategy();
+    EXPECT_EQ(res, ResultCode::NO_INSTALLED_DATA);
+}
+
+/**
+* @tc.number: AnalyzeUserData_001
+* @tc.name: test AnalyzeUserData
+* @tc.desc: 1. test is failed
+*/
+HWTEST_F(BmsServiceStartupTest, AnalyzeUserData_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    int32_t userId = 0;
+    const std::string userDataDir = "/data/test";
+    const std::string userDataBundleName = "com.user.test";
+    const std::string userDataDir1 = "";
+    const std::string userDataBundleName1 = "";
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfos.push_back(innerBundleUserInfo);
+    userMaps.insert(pair<std::string, std::vector<InnerBundleUserInfo>>("1", innerBundleUserInfos));
+    auto res = handler->AnalyzeUserData(userId, userDataDir, userDataBundleName, userMaps);
+    EXPECT_FALSE(res);
+
+    res = handler->AnalyzeUserData(userId, userDataDir1, userDataBundleName, userMaps);
+    EXPECT_FALSE(res);
+
+    res = handler->AnalyzeUserData(userId, userDataDir, userDataBundleName1, userMaps);
+    EXPECT_FALSE(res);
+
+    res = handler->AnalyzeUserData(userId, userDataDir1, userDataBundleName1, userMaps);
+    EXPECT_FALSE(res);
+}
+
+/**
+* @tc.number: CombineBundleInfoAndUserInfo_001
+* @tc.name: test CombineBundleInfoAndUserInfo
+* @tc.desc: 1. test is failed
+*/
+HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    InnerBundleInfo innerBundleInfo;
+    std::vector<InnerBundleInfo> innerBundleInfos;
+    innerBundleInfos.push_back(innerBundleInfo);
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    installInfos.insert(pair<std::string, std::vector<InnerBundleInfo>>("1", innerBundleInfos));
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    innerBundleUserInfos.push_back(innerBundleUserInfo);
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+    userInfoMaps.insert(pair<std::string, std::vector<InnerBundleUserInfo>>("1", innerBundleUserInfos));
+    auto res = handler->CombineBundleInfoAndUserInfo(installInfos, userInfoMaps);
+    EXPECT_FALSE(res);
+
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos1;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps1;
+    res = handler->CombineBundleInfoAndUserInfo(installInfos1, userInfoMaps);
+    EXPECT_FALSE(res);
+
+    res = handler->CombineBundleInfoAndUserInfo(installInfos, userInfoMaps1);
+    EXPECT_FALSE(res);
+
+    res = handler->CombineBundleInfoAndUserInfo(installInfos1, userInfoMaps1);
+    EXPECT_FALSE(res);
+}
+
+/**
+* @tc.number: OTAInstallSystemBundle_001
+* @tc.name: test OTAInstallSystemBundle_001
+* @tc.desc: 1. test is failed
+*/
+HWTEST_F(BmsServiceStartupTest, OTAInstallSystemBundle_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::string filePath = "/data/test";
+    std::vector<std::string> filePaths;
+    filePaths.push_back(filePath);
+    std::vector<std::string> filePaths1;
+    Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    bool removable = false;
+    auto res = handler->OTAInstallSystemBundle(filePaths, appType, removable);
+    EXPECT_FALSE(res);
+    res = handler->OTAInstallSystemBundle(filePaths1, appType, removable);
+    EXPECT_FALSE(res);
+}
+
+/**
 * @tc.number: PreInstall_003
 * @tc.name: Preset application whitelist mechanism
 * @tc.desc: 1. LoadPreInstallProFile
