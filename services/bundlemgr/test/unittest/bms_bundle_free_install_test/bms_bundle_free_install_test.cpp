@@ -1194,4 +1194,27 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0016, Function | Smal
     connectAbilityMgr.OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "1");
 }
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0017
+ * Function: CheckIsModuleNeedUpdate
+ * @tc.name: test CheckIsModuleNeedUpdate
+ * @tc.desc: test CheckIsModuleNeedUpdate success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0017, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = ".entry";
+    innerModuleInfo.upgradeFlag = 1;
+    innerBundleInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    Want want;
+    want.SetModuleName(".entry");
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> callBack = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    bool res = connectAbilityMgr.CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
+    EXPECT_TRUE(res);
+}
 } // OHOS
