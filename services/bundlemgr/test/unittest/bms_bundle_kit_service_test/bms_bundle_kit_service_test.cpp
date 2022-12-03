@@ -6956,7 +6956,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6969,7 +6969,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6982,7 +6982,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6995,8 +6995,6 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.InitAgingtTimer();
     bundleAgingMgr.InitAgingRunner();
-    EXPECT_EQ(bundleAgingMgr.agingTimerInterval,
-        AgingConstants::DEFAULT_AGING_TIMER_INTERVAL);
 }
 
 /**
