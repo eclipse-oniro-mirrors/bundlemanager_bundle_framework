@@ -47,14 +47,20 @@ namespace {
 const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
-// system version && hotpatch information
-const std::string BASE_VERSION_PARAM_NAME = "const.comp.hl.product_base_version.real";
-const std::string BASE_VERSION_PARAM_RO_NAME = "ro.comp.hl.product_base_version.real";
 // this metadata used to indicate those system application update by hotpatch upgrade.
 const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
 const std::string FINGERPRINT = "fingerprint";
-const std::string UNKNOWN = "UNKNOWN";
+const std::string UNKNOWN = "";
 const int32_t VERSION_LEN = 64;
+const std::vector<std::string> FINGERPRINTS = {
+    "const.product.software.version",
+    "const.product.build.type",
+    "const.product.brand",
+    "const.product.name",
+    "const.product.devicetype",
+    "const.product.incremental.version",
+    "const.comp.hl.product_base_version.real"
+};
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -207,7 +213,8 @@ void BMSEventHandler::OnBmsStarting()
             APP_LOGE("System internal error, install informations missing.");
             break;
     }
-    SaveSystemVersion();
+
+    SaveSystemFingerprint();
 }
 
 void BMSEventHandler::AfterBmsStart()
@@ -261,8 +268,9 @@ void BMSEventHandler::BundleRebootStartEvent()
 
     if (IsSystemUpgrade()) {
         OnBundleRebootStart();
-        SaveSystemVersion();
+        SaveSystemFingerprint();
     }
+
     needNotifyBundleScanStatus_ = true;
 }
 
@@ -1082,84 +1090,78 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName)
     return false;
 }
 
-void BMSEventHandler::SaveSystemVersion()
+void BMSEventHandler::SaveSystemFingerprint()
 {
-    std::string curSystemVersion;
-    if (!GetCurSystemVersion(curSystemVersion)) {
-        APP_LOGE("get currrnet system version fail!");
-        return;
-    }
-
-    if (curSystemVersion.empty()) {
-        APP_LOGE("curSystemVersion:%{public}s empty", curSystemVersion.c_str());
-        return;
-    }
-
     auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     if (bmsPara == nullptr) {
         APP_LOGE("bmsPara is nullptr");
         return;
     }
 
-    bmsPara->SaveBmsParam(FINGERPRINT, curSystemVersion);
+    std::string curSystemFingerprint = GetCurSystemFingerprint();
+    APP_LOGI("curSystemFingerprint(%{public}s)", curSystemFingerprint.c_str());
+    if (curSystemFingerprint.empty()) {
+        return;
+    }
+
+    bmsPara->SaveBmsParam(FINGERPRINT, curSystemFingerprint);
 }
 
 bool BMSEventHandler::IsSystemUpgrade()
 {
-    std::string curSystemVersion;
-    if (!GetCurSystemVersion(curSystemVersion)) {
-        APP_LOGE("get currrnet system version fail!");
-        return false;
-    }
-
-    if (curSystemVersion.empty()) {
-        APP_LOGE("curSystemVersion:%{public}s empty", curSystemVersion.c_str());
-        return false;
-    }
-
-    std::string oldSystemVersion;
-    if (!GetOldSystemVersion(oldSystemVersion)) {
-        APP_LOGE("get system version from db fail!");
-        return false;
-    }
-
-    if (oldSystemVersion.empty()) {
-        APP_LOGE("oldSystemVersion:%{public}s empty", oldSystemVersion.c_str());
-        return false;
-    }
-
-    if (strcmp(curSystemVersion.c_str(), oldSystemVersion.c_str()) != 0) {
-        APP_LOGI("upgrading from %{public}s to %{public}s", oldSystemVersion.c_str(), curSystemVersion.c_str());
+    std::string oldSystemFingerprint = GetOldSystemFingerprint();
+    if (oldSystemFingerprint.empty()) {
+        APP_LOGI("System should be upgraded due to oldSystemFingerprint is empty");
         return true;
     }
-    return false;
+
+    std::string curSystemFingerprint = GetCurSystemFingerprint();
+    APP_LOGI("upgrading from (%{public}s) to (%{public}s)",
+        oldSystemFingerprint.c_str(), curSystemFingerprint.c_str());
+    return curSystemFingerprint != oldSystemFingerprint;
 }
 
-bool BMSEventHandler::GetCurSystemVersion(std::string &curSystemVersion)
+std::string BMSEventHandler::GetCurSystemFingerprint()
+{
+    std::string curSystemFingerprint;
+    for (const auto &item : FINGERPRINTS) {
+        std::string itemFingerprint;
+        if (!GetSystemParameter(item, itemFingerprint) || itemFingerprint.empty()) {
+            continue;
+        }
+
+        if (!curSystemFingerprint.empty()) {
+            curSystemFingerprint.append(Constants::PATH_SEPARATOR);
+        }
+
+        curSystemFingerprint.append(itemFingerprint);
+    }
+
+    return curSystemFingerprint;
+}
+
+bool BMSEventHandler::GetSystemParameter(const std::string &key, std::string &curSystemVersion)
 {
     char firmware[VERSION_LEN] = {0};
-    int32_t ret = GetParameter(BASE_VERSION_PARAM_NAME.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
+    int32_t ret = GetParameter(key.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
     if (ret <= 0) {
         APP_LOGE("GetParameter failed!");
         return false;
     }
+
     curSystemVersion = firmware;
     return true;
 }
 
-bool BMSEventHandler::GetOldSystemVersion(std::string &oldSystemVersion)
+std::string BMSEventHandler::GetOldSystemFingerprint()
 {
+    std::string oldSystemVersion;
     auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        APP_LOGE("bmsPara is nullptr");
-        return false;
+    if (bmsPara != nullptr) {
+        bmsPara->GetBmsParam(FINGERPRINT, oldSystemVersion);
     }
 
-    if (!bmsPara->GetBmsParam(FINGERPRINT, oldSystemVersion)) {
-        APP_LOGE("GetOldSystemVersion failed!");
-        return false;
-    }
-    return true;
+    return oldSystemVersion;
 }
 
 void BMSEventHandler::AddParseInfosToMap(

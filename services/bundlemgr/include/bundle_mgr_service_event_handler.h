@@ -414,32 +414,17 @@ private:
      */
     bool HotPatchAppProcessing(const std::string &bundleName);
     /**
-     * @brief Save the current system version number to the bms database.
-     */
-    void SaveSystemVersion();
-    /**
-     * @brief Judge whether it is OTA upgradde.
-     * @return Returns true if this function called successfully; returns false otherwise.
-     */
-    bool IsSystemUpgrade();
-    /**
-     * @brief Get current system version.
-     * @param curSystemVersion Current system version.
-     * @return Returns true if called successfully; returns false code otherwise.
-     */
-    bool GetCurSystemVersion(std::string &curSystemVersion);
-    /**
-     * @brief Get system version from db.
-     * @param curSystemVersion Current system version.
-     * @return Returns true if called successfully; returns false code otherwise.
-     */
-    bool GetOldSystemVersion(std::string &oldSystemVersion);
-    /**
      * @brief Judge whether hot patch application.
      * @param bundleName Indicates the bundleName.
      * @return Returns true if called successfully; returns false code otherwise.
      */
     bool IsHotPatchApp(const std::string &bundleName);
+
+    void SaveSystemFingerprint();
+    bool IsSystemUpgrade();
+    std::string GetCurSystemFingerprint();
+    bool GetSystemParameter(const std::string &key, std::string &curSystemVersion);
+    std::string GetOldSystemFingerprint();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
