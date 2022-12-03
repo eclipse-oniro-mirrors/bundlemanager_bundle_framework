@@ -283,6 +283,14 @@ sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
     return installer_;
 }
 
+void BundleMgrService::RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImpl)
+{
+    dataMgr_ = dataMgrImpl;
+    if (dataMgr_ != nullptr) {
+        dataMgr_->AddUserId(Constants::DEFAULT_USERID);
+    }
+}
+
 const std::shared_ptr<BundleDataMgr> BundleMgrService::GetDataMgr() const
 {
     return dataMgr_;
