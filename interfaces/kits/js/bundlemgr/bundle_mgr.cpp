@@ -8258,12 +8258,12 @@ static void OnHandleAbilityInfoCache(NativeEngine &engine, const Query &query,
     APP_LOGD("%{public}s called.", __FUNCTION__);
     ElementName element = want.GetElement();
     if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
-        APP_LOGE("OnHandleAbilityInfoCache return");
+        APP_LOGE("get bundleName empty or get abiltityName empty.");
         return;
     }
     uint32_t explicitQueryResultLen = 1;
     if (abilityInfos.size() != explicitQueryResultLen || abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
-        APP_LOGE("OnHandleAbilityInfoCache return");
+        APP_LOGE("abilityInfos not only or abilityInfos uid is wrong");
         return;
     }
 
@@ -9150,6 +9150,11 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
             }
         }
         auto iBundleMgr = GetBundleMgr();
+        if (iBundleMgr == nullptr) {
+            APP_LOGE("can not get iBundleMgr");
+            info->ret = false;
+            return;
+        }
         info->ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, info->abilityInfos);
     };
 
