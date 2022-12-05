@@ -22,6 +22,7 @@ group("test_bundle") {
     "bmsAccessTokentest2:bmsAccessTokentest2",
     "bmsAccessTokentest3:bmsAccessTokentest3",
     "defaultAppTest:defaultAppTest",
+    "devicetype_error:devicetype_error",
     "eighth_right:eighth_right",
     "eleventh_right:eleventh_right",
     "fifteenth_right:fifteenth_right",

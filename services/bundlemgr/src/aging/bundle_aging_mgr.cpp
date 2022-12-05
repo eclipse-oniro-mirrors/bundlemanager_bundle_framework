@@ -44,6 +44,7 @@ void BundleAgingMgr::InitAgingRunner()
     }
     SetEventRunner(agingRunner);
 }
+
 void BundleAgingMgr::InitAgingTimerInterval()
 {
     char szTimerThresold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
@@ -55,7 +56,7 @@ void BundleAgingMgr::InitAgingTimerInterval()
         return;
     }
     if (strcmp(szTimerThresold, "") != 0) {
-        agingTimerInterval = atoi(szTimerThresold);
+        agingTimerInterval_ = atoi(szTimerThresold);
         APP_LOGD("BundleAgingMgr init aging timer success");
     }
 }
@@ -71,7 +72,7 @@ void BundleAgingMgr::InitAgingBatteryThresold()
         return;
     }
     if (strcmp(szBatteryThresold, "") != 0) {
-        agingBatteryThresold = atoi(szBatteryThresold);
+        agingBatteryThresold_ = atoi(szBatteryThresold);
         APP_LOGD("BundleAgingMgr init battery threshold success");
     }
 }
@@ -80,12 +81,12 @@ void BundleAgingMgr::InitAgingtTimer()
 {
     InitAgingBatteryThresold();
     InitAgingTimerInterval();
-    bool isEventStarted = SendEvent(InnerEvent::Get(EVENT_AGING_NOW), agingTimerInterval);
+    bool isEventStarted = SendEvent(InnerEvent::Get(EVENT_AGING_NOW), agingTimerInterval_);
     if (!isEventStarted) {
         APP_LOGE("faild to send event is not started");
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            running = false;
+            running_ = false;
         }
     }
 }
@@ -106,7 +107,8 @@ bool BundleAgingMgr::ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &da
         APP_LOGE("ReInitAgingRequest: dataMgr is null");
         return false;
     }
-    request.RequestReset();
+
+    request_.RequestReset();
     std::map<std::string, int> bundleNamesAndUid;
     dataMgr->GetRemovableBundleNameVec(bundleNamesAndUid);
     if (bundleNamesAndUid.empty()) {
@@ -137,28 +139,29 @@ bool BundleAgingMgr::ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &da
         if (lastBundleUsedTime) {
             APP_LOGD("%{public}s: %{public}" PRId64, iter.first.c_str(), lastBundleUsedTime);
             AgingBundleInfo agingBundleInfo(iter.first, lastBundleUsedTime, dataBytes, iter.second);
-            request.AddAgingBundle(agingBundleInfo);
+            request_.AddAgingBundle(agingBundleInfo);
         } else {
             APP_LOGD("%{public}s: %{public}" PRId64, iter.first.c_str(), lastLaunchTimesMs);
             AgingBundleInfo agingBundleInfo(iter.first, lastLaunchTimesMs, dataBytes, iter.second);
-            request.AddAgingBundle(agingBundleInfo);
+            request_.AddAgingBundle(agingBundleInfo);
         }
     }
-    request.SetTotalDataBytes(dataMgr->GetAllFreeInstallBundleSpaceSize());
-    return request.SortAgingBundles() > 0;
+
+    request_.SetTotalDataBytes(dataMgr->GetAllFreeInstallBundleSpaceSize());
+    return request_.SortAgingBundles() > 0;
 }
 
 void BundleAgingMgr::Process(const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
     APP_LOGD("BundleAging begin to process.");
     if (ReInitAgingRequest(dataMgr)) {
-        if (request.IsReachStartAgingThreshold()) {
-            chain.Process(request);
+        if (request_.IsReachStartAgingThreshold()) {
+            chain_.Process(request_);
         }
     }
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        running = false;
+        running_ = false;
     }
     APP_LOGD("BundleAgingMgr Process done");
 }
@@ -178,11 +181,11 @@ void BundleAgingMgr::Start(AgingTriggertype type)
     }
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (running) {
+        if (running_) {
             APP_LOGD("BundleAgingMgr is running, no need to start is again");
             return;
         }
-        running = true;
+        running_ = true;
     }
 
     auto task = [&, dataMgr]() { Process(dataMgr); };
@@ -191,7 +194,7 @@ void BundleAgingMgr::Start(AgingTriggertype type)
         APP_LOGE("BundleAgingMgr event is not started.");
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            running = false;
+            running_ = false;
         }
     } else {
         APP_LOGD("BundleAgingMgr schedule process done");
@@ -210,8 +213,8 @@ bool BundleAgingMgr::CheckPrerequisite(AgingTriggertype type) const
     }
     int32_t currentBatteryCap = OHOS::PowerMgr::BatterySrvClient::GetInstance().GetCapacity();
     APP_LOGD("current GetCapacity is %{public}d agingBatteryThresold: %{public}" PRId64,
-        currentBatteryCap, agingBatteryThresold);
-    return currentBatteryCap > agingBatteryThresold;
+        currentBatteryCap, agingBatteryThresold_);
+    return currentBatteryCap > agingBatteryThresold_;
 }
 
 void BundleAgingMgr::ProcessEvent(const InnerEvent::Pointer &event)
@@ -222,10 +225,9 @@ void BundleAgingMgr::ProcessEvent(const InnerEvent::Pointer &event)
         case EVENT_AGING_NOW:
             APP_LOGD("BundleAgingMgr timer expire, run aging now.");
             Start(AgingTriggertype::PREIOD);
-            SendEvent(eventId, 0, agingTimerInterval);
+            SendEvent(eventId, 0, agingTimerInterval_);
             APP_LOGD("BundleAginMgr reschedule time.");
             break;
-
         default:
             APP_LOGD("BundleAgingMgr invalid Event %{public}d.", eventId);
             break;
@@ -234,11 +236,11 @@ void BundleAgingMgr::ProcessEvent(const InnerEvent::Pointer &event)
 
 void BundleAgingMgr::InitAgingHandlerChain()
 {
-    chain = AgingHandlerChain();
-    chain.AddHandler(std::make_shared<Over30DaysUnusedBundleAgingHandler>());
-    chain.AddHandler(std::make_shared<Over20DaysUnusedBundleAgingHandler>());
-    chain.AddHandler(std::make_shared<Over10DaysUnusedBundleAgingHandler>());
-    chain.AddHandler(std::make_shared<BundleDataSizeAgingHandler>());
+    chain_ = AgingHandlerChain();
+    chain_.AddHandler(std::make_shared<Over30DaysUnusedBundleAgingHandler>());
+    chain_.AddHandler(std::make_shared<Over20DaysUnusedBundleAgingHandler>());
+    chain_.AddHandler(std::make_shared<Over10DaysUnusedBundleAgingHandler>());
+    chain_.AddHandler(std::make_shared<BundleDataSizeAgingHandler>());
     APP_LOGD("InitAgingHandleChain is finished.");
 }
 }  //  namespace AppExecFwk

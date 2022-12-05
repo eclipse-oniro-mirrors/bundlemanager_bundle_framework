@@ -64,9 +64,6 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo);
 void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo);
 void to_json(nlohmann::json& jsonObject, const BundleUserInfo& bundleUserInfo);
 void from_json(const nlohmann::json& jsonObject, BundleUserInfo& bundleUserInfo);
-void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant);
-void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut);
-void from_json(const nlohmann::json &jsonObject, ShortcutJson &shortcutJson);
 void to_json(nlohmann::json &jsonObject, const RequestPermissionUsedScene &usedScene);
 void from_json(const nlohmann::json &jsonObject, RequestPermissionUsedScene &usedScene);
 void to_json(nlohmann::json &jsonObject, const RequestPermission &requestPermission);
@@ -123,6 +120,13 @@ void to_json(nlohmann::json &jsonObject, const AppqfInfo &appqfInfo);
 void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo);
 void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo);
 void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo);
+void to_json(nlohmann::json &jsonObject, const ShortcutIntent &shortcutIntent);
+void from_json(const nlohmann::json &jsonObject, ShortcutIntent &shortcutIntent);
+void to_json(nlohmann::json &jsonObject, const ShortcutInfo &shortcutInfo);
+void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo);
+void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant);
+void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut);
+void from_json(const nlohmann::json &jsonObject, ShortcutJson &shortcutJson);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

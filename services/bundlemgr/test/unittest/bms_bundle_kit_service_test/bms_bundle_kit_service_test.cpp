@@ -43,6 +43,7 @@
 #include "launcher_service.h"
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
+#include "nlohmann/json.hpp"
 #include "service_control.h"
 #include "system_ability_helper.h"
 #include "want.h"
@@ -198,6 +199,18 @@ const int32_t DEFAULT_USERID = 100;
 const int32_t ALL_USERID = -3;
 const int32_t WAIT_TIME = 5; // init mocked bms
 constexpr int32_t DISPOSED_STATUS = 10;
+const int32_t ICON_ID = 16777258;
+const int32_t LABEL_ID = 16777257;
+const std::string BUNDLE_NAME = "bundleName";
+const std::string MODULE_NAME = "moduleName";
+const std::string ABILITY_NAME = "abilityName";
+const std::string SHORTCUT_ID_KEY = "shortcutId";
+const std::string ICON_KEY = "icon";
+const std::string ICON_ID_KEY = "iconId";
+const std::string LABEL_KEY = "label";
+const std::string LABEL_ID_KEY = "labelId";
+const std::string SHORTCUT_WANTS_KEY = "wants";
+const std::string SHORTCUTS_KEY = "shortcuts";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -231,6 +244,9 @@ public:
     FormInfo MockFormInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
     ShortcutInfo MockShortcutInfo(const std::string &bundleName, const std::string &shortcutId) const;
+    ShortcutIntent MockShortcutIntent() const;
+    ShortcutWant MockShortcutWant() const;
+    Shortcut MockShortcut() const;
     CommonEventInfo MockCommonEventInfo(const std::string &bundleName, const int uid) const;
     void CheckBundleInfo(const std::string &bundleName, const std::string &moduleName, const uint32_t abilitySize,
         const BundleInfo &bundleInfo) const;
@@ -268,6 +284,7 @@ public:
         const std::string &abilityName, InnerBundleInfo &innerBundleInfo) const;
     void SaveToDatabase(const std::string &bundleName, InnerBundleInfo &innerBundleInfo,
         bool userDataClearable, bool isSystemApp) const;
+    void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
 
 public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
@@ -570,12 +587,43 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutInfos.isStatic = true;
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
-    for (auto &info : shortcutInfos.intents) {
-        info.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-        info.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-        info.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    }
+    ShortcutIntent intent;
+    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    shortcutInfos.intents.push_back(intent);
     return shortcutInfos;
+}
+
+ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
+{
+    ShortcutIntent intent;
+    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    return intent;
+}
+
+ShortcutWant BmsBundleKitServiceTest::MockShortcutWant() const
+{
+    ShortcutWant shortcutWant;
+    shortcutWant.bundleName = BUNDLE_NAME_DEMO;
+    shortcutWant.moduleName = MODULE_NAME_DEMO;
+    shortcutWant.abilityName = ABILITY_NAME_DEMO;
+    return shortcutWant;
+}
+
+Shortcut BmsBundleKitServiceTest::MockShortcut() const
+{
+    Shortcut shortcut;
+    shortcut.shortcutId = SHORTCUT_TEST_ID;
+    shortcut.icon = SHORTCUT_ICON;
+    shortcut.iconId = ICON_ID;
+    shortcut.label = SHORTCUT_LABEL;
+    shortcut.labelId = LABEL_ID;
+    ShortcutWant want = MockShortcutWant();
+    shortcut.wants.push_back(want);
+    return shortcut;
 }
 
 CommonEventInfo BmsBundleKitServiceTest::MockCommonEventInfo(
@@ -1078,6 +1126,15 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
             EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
+}
+
+void BmsBundleKitServiceTest::ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant)
+{
+    jsonObject = nlohmann::json {
+        {BUNDLE_NAME, shortcutWant.bundleName},
+        {MODULE_NAME, shortcutWant.moduleName},
+        {ABILITY_NAME, shortcutWant.abilityName},
+    };
 }
 
 /**
@@ -5225,7 +5282,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_004, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_001);
+    want.SetUri(SCHEME_001 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
 }
@@ -5243,7 +5300,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_005, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_002);
+    want.SetUri(SCHEME_002 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(false, ret);
 }
@@ -5330,6 +5387,135 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTes
     want.SetUri(URI_PATH_001);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme, param has "scheme://" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(HOST_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_002 + SCHEME_SEPARATOR;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host, param has "scheme://host" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_002, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PATH_SEPARATOR + PATH_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host and port,
+ * param has "scheme://host:port" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
 }
 
 /**
@@ -6956,7 +7142,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6969,7 +7155,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6982,7 +7168,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6995,8 +7181,6 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.InitAgingtTimer();
     bundleAgingMgr.InitAgingRunner();
-    EXPECT_EQ(bundleAgingMgr.agingTimerInterval,
-        AgingConstants::DEFAULT_AGING_TIMER_INTERVAL);
 }
 
 /**
@@ -7718,4 +7902,169 @@ HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleResult_001, Function | Sm
     auto ret2 = result.Unmarshalling(parcel);
     EXPECT_NE(ret2, nullptr);
 }
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_001
+ * @tc.name: Marshalling branch cover
+ * @tc.desc: 1.Test Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    Parcel parcel;
+    auto ret1 = shortcutInfo.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_002
+ * @tc.name: shortcutIntent to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutIntent to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallTest | Level1)
+{
+    ShortcutIntent intent = MockShortcutIntent();
+    nlohmann::json jsonObj;
+    to_json(jsonObj, intent);
+    ShortcutIntent result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+    EXPECT_EQ(result.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+    EXPECT_EQ(result.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_003
+ * @tc.name: shortcutInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutInfo to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_003, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    nlohmann::json jsonObj;
+    to_json(jsonObj, shortcutInfo);
+    ShortcutInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.id, SHORTCUT_TEST_ID);
+    EXPECT_EQ(result.bundleName, BUNDLE_NAME_DEMO);
+    EXPECT_EQ(result.hostAbility, SHORTCUT_HOST_ABILITY);
+    EXPECT_EQ(result.icon, SHORTCUT_ICON);
+    EXPECT_EQ(result.label, SHORTCUT_LABEL);
+    EXPECT_EQ(result.disableMessage, SHORTCUT_DISABLE_MESSAGE);
+    EXPECT_EQ(result.isStatic, true);
+    EXPECT_EQ(result.isHomeShortcut, true);
+    EXPECT_EQ(result.isEnables, true);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_004
+ * @tc.name: shortcutInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutInfo to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_004, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["id"] = false;
+    jsonObject["label"] = "1";
+    jsonObject["icon"] = "1";
+    ShortcutInfo shortcutInfo;
+    from_json(jsonObject, shortcutInfo);
+    EXPECT_NE(shortcutInfo.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_005
+ * @tc.name: shortcutWant to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutWant to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_005, Function | SmallTest | Level1)
+{
+    ShortcutWant shortcutWant = MockShortcutWant();
+    nlohmann::json jsonObj;
+    ShortcutWantToJson(jsonObj, shortcutWant);
+    ShortcutWant result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.bundleName, BUNDLE_NAME_DEMO);
+    EXPECT_EQ(result.moduleName, MODULE_NAME_DEMO);
+    EXPECT_EQ(result.abilityName, ABILITY_NAME_DEMO);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_006
+ * @tc.name: shortcutWant to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutWant to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_006, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["bundleName"] = false;
+    jsonObject["moduleName"] = "1";
+    jsonObject["abilityName"] = "1";
+    ShortcutWant shortcutWant;
+    from_json(jsonObject, shortcutWant);
+    EXPECT_NE(shortcutWant.moduleName, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_007
+ * @tc.name: shortcut from_json branch cover
+ * @tc.desc: 1.Test shortcut from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_007, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["shortcutId"] = "1";
+    jsonObject["label"] = "1";
+    jsonObject["icon"] = "1";
+    Shortcut shortcut;
+    from_json(jsonObject, shortcut);
+    EXPECT_EQ(shortcut.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_008
+ * @tc.name: shortcut from_json branch cover
+ * @tc.desc: 1.Test shortcut from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_008, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["shortcutId"] = false;
+    jsonObject["label"] = "1";
+    jsonObject["icon"] = "1";
+    Shortcut shortcut;
+    from_json(jsonObject, shortcut);
+    EXPECT_NE(shortcut.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_009
+ * @tc.name: shortcutJson from_json branch cover
+ * @tc.desc: 1.Test shortcutJson from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_009, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject = R"({"shortcuts":[{"shortcutId":"1","label":"1","icon":"1"}]})"_json;
+    ShortcutJson shortcutJson;
+    from_json(jsonObject, shortcutJson);
+    Shortcut shortcut = shortcutJson.shortcuts.front();
+    EXPECT_EQ(shortcut.shortcutId, "1");
+    EXPECT_EQ(shortcut.label, "1");
+    EXPECT_EQ(shortcut.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0010
+ * @tc.name: shortcutJson from_json branch cover
+ * @tc.desc: 1.Test shortcutJson from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0010, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["shortcuts"] = "1";
+    ShortcutJson shortcutJson;
+    from_json(jsonObject, shortcutJson);
+    EXPECT_EQ(shortcutJson.shortcuts.size(), 0);
+}
+
 }

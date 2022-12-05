@@ -52,6 +52,7 @@ const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
 const std::string INVALID_PATH = "/install_bundle/";
 const std::string RIGHT_BUNDLE = "right.hap";
+const std::string TYPE_BUNDLE = "devicetype_error.hap";
 const std::string INVALID_BUNDLE = "nonfile.hap";
 const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
@@ -403,6 +404,20 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Leve
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     bool result = InstallSystemBundle(bundleFile);
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ThirdPartyInstall_0100
+ * @tc.name: test the install will fail when installd service has error
+ * @tc.desc: 1.the installd service has error
+ *           2.the install result is fail
+ */
+HWTEST_F(BmsBundleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | Level0)
+{
+    StopInstalldService();
+    std::string bundleFile = RESOURCE_ROOT_PATH + TYPE_BUNDLE;
+    auto result = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
 }
 
 /**
@@ -1856,6 +1871,154 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2400, Function | SmallTest 
     info.SetBaseApplicationInfo(applicationInfo);
     res = installer.CreateBundleDataDir(info);
     EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_2500
+ * @tc.name: test UpdateDefineAndRequestPermissions
+ * @tc.desc: 1.Test the UpdateDefineAndRequestPermissions of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.accessTokenId = 0;
+    newInfo.innerBundleUserInfos_.insert(pair<std::string, InnerBundleUserInfo>("1", userInfo));
+
+    auto res = installer.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_2600
+ * @tc.name: test ProcessBundleUninstall
+ * @tc.desc: 1.Test the ProcessBundleUninstall of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    std::string modulePackage = MODULE_NAME;
+    InstallParam installParam;
+    installParam.userId = -1;
+    int32_t uid = USERID;
+
+    auto res = installer.ProcessBundleUninstall(bundleName, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    res = installer.ProcessBundleUninstall(bundleName, modulePackage, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_2700
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = "";
+    bool isReplace = false;
+    bool noSkipsKill = false;
+
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_2800
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->singleton = true;
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    bool isReplace = false;
+    bool noSkipsKill = false;
+
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_2900
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.baseApplicationInfo_->singleton = true;
+    bool isReplace = false;
+    bool noSkipsKill = false;
+
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+
+    installer.modulePackage_ = MODULE_NAME;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isLibIsolated = true;
+    moduleInfo.cpuAbi = "123";
+    moduleInfo.nativeLibraryPath = "/data/test";
+    newInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, moduleInfo));
+    installer.ProcessHqfInfo(oldInfo, newInfo);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3000
+ * @tc.name: test ProcessDeployedHqfInfo
+ * @tc.desc: 1.Test the ProcessDeployedHqfInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isFeatureNeedUninstall_ = false;
+    std::string nativeLibraryPath = "/data/test";
+    std::string cpuAbi = "123";
+    InnerBundleInfo newInfo;
+    AppQuickFix oldAppQuickFix;
+    HqfInfo hqfInfo;
+    oldAppQuickFix.deployedAppqfInfo.hqfInfos.push_back(hqfInfo);
+
+    auto res = installer.ProcessDeployedHqfInfo(nativeLibraryPath, cpuAbi, newInfo, oldAppQuickFix);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+
+    hqfInfo.moduleName = MODULE_NAME;
+    installer.modulePackage_ = "123";
+    res = installer.ProcessDeployedHqfInfo(nativeLibraryPath, cpuAbi, newInfo, oldAppQuickFix);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3100
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    newInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, moduleInfo));
+    std::string cpuAbi = "123";
+    std::string nativeLibraryPath = "/data/test";
+    AppqfInfo appQfInfo;
+
+    auto res = installer.UpdateLibAttrs(newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
