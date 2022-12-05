@@ -25,36 +25,35 @@ class AgingBundleInfo {
 public:
     AgingBundleInfo() = default;
     AgingBundleInfo(const std::string &name, int64_t time, int64_t bundleDataBytes, int uid)
-        : bundleName(name), recentlyUsedTime(time), dataBytes(bundleDataBytes), bundleUid(uid)
-    {
-    };
+        : bundleName_(name), recentlyUsedTime_(time), dataBytes_(bundleDataBytes), bundleUid_(uid)
+    {};
     virtual ~AgingBundleInfo() = default;
 
     const std::string &GetBundleName() const
     {
-        return bundleName;
+        return bundleName_;
     };
 
     int64_t GetRecentlyUsedTime() const
     {
-        return recentlyUsedTime;
+        return recentlyUsedTime_;
     };
 
     int64_t GetDataBytes() const
     {
-        return dataBytes;
+        return dataBytes_;
     };
 
     int GetBundleUid() const
     {
-        return bundleUid;
+        return bundleUid_;
     };
 
 private:
-    std::string bundleName;
-    int64_t recentlyUsedTime = 0;
-    int64_t dataBytes = 0;
-    int bundleUid = -1;
+    std::string bundleName_;
+    int64_t recentlyUsedTime_ = 0;
+    int64_t dataBytes_ = 0;
+    int bundleUid_ = -1;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
