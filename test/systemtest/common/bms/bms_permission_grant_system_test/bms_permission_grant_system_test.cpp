@@ -49,9 +49,9 @@ using namespace OHOS::EventFwk;
 class StatusReceiverImpl : public StatusReceiverHost {
 public:
     StatusReceiverImpl();
-    virtual ~StatusReceiverImpl() override;
-    virtual void OnStatusNotify(const int progress) override;
-    virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override;
+    ~StatusReceiverImpl() override;
+    void OnStatusNotify(const int progress) override;
+    void OnFinished(const int32_t resultCode, const std::string &resultMsg) override;
     std::string GetResultMsg() const;
 
 private:
@@ -102,7 +102,7 @@ class SubscriberTest : public CommonEventSubscriber {
 public:
     explicit SubscriberTest(const CommonEventSubscribeInfo &sp) : CommonEventSubscriber(sp){};
     virtual ~SubscriberTest() = default;
-    virtual void OnReceiveEvent(const CommonEventData &data) override;
+    void OnReceiveEvent(const CommonEventData &data) override;
     std::string GetSubscriberResultMsg() const;
 
 private:
