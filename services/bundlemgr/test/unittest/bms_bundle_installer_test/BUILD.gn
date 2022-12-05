@@ -61,6 +61,7 @@ ohos_unittest("BmsBundleInstallerTest") {
   deps = [
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/backupTest:backupTest",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/devicetype_error:devicetype_error",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/fifth_right:fifth_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/fourth_right:fourth_right",

@@ -72,6 +72,8 @@ static void ConvertElementName(napi_env env, napi_value elementInfo, const OHOS:
 
 static bool ParseWant(napi_env env, napi_value args, Want &want);
 
+static bool ParseWantPerformance(napi_env env, napi_value args, Want &want);
+
 static bool ParseWantWithoutVerification(napi_env env, napi_value args, Want &want);
 
 static bool ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& abilityInfo);
