@@ -420,11 +420,13 @@ private:
      */
     bool IsHotPatchApp(const std::string &bundleName);
 
-    void SaveSystemFingerprint();
     bool IsSystemUpgrade();
+    bool IsTestSystemUpgrade();
+    bool IsSystemFingerprintChanged();
     std::string GetCurSystemFingerprint();
-    bool GetSystemParameter(const std::string &key, std::string &curSystemVersion);
     std::string GetOldSystemFingerprint();
+    bool GetSystemParameter(const std::string &key, std::string &value);
+    void SaveSystemFingerprint();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
