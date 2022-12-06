@@ -37,6 +37,7 @@ const std::string NEW_APP = "new";
 const std::string UNKOWN_PATH = "unknown_path";
 const size_t ONE = 1;
 const size_t TWO = 2;
+const std::string OVER_MAX_PATH_SIZE(260, 'x');
 const nlohmann::json CONFIG_JSON = R"(
     {
         "app": {
@@ -208,7 +209,7 @@ protected:
     void CheckNoPropProfileParseModule(const std::string &propKey, const ErrCode expectCode) const;
     void CheckProfilePermission(const nlohmann::json &checkedProfileJson) const;
     void CheckProfileForms(const nlohmann::json &checkedProfileJson) const;
-    void CheckProfileShortcut(const nlohmann::json &checkedProfileJson) const;
+    void CheckProfileShortcut(const nlohmann::json &checkedProfileJson, const ErrCode expectCode) const;
     ErrCode CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
         std::set<DefaultPermission> &defaultPermissions) const;
 protected:
@@ -328,6 +329,11 @@ void BmsBundleParserTest::GetProfileTypeErrorProps(nlohmann::json &typeErrorProp
     // BUNDLE_MODULE_PROFILE_KEY_SHORTCUT_WANTS
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_TARGET_CLASS] = JsonConstants::NOT_STRING_TYPE;
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_TARGET_BUNDLE] = JsonConstants::NOT_STRING_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPATIBLE] = JsonConstants::NOT_NUMBER_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_TARGET] = JsonConstants::NOT_NUMBER_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_REQ_VERSION] = JsonConstants::NOT_OBJECT_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_FLAG] = JsonConstants::NOT_STRING_TYPE;
+    typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_MODE] = JsonConstants::NOT_STRING_TYPE;
 }
 
 void BmsBundleParserTest::CheckNoPropProfileParseApp(const std::string &propKey, const ErrCode expectCode) const
@@ -407,7 +413,7 @@ void BmsBundleParserTest::CheckProfileForms(const nlohmann::json &checkedProfile
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) << profileFileBuffer.str();
 }
 
-void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProfileJson) const
+void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProfileJson, const ErrCode expectCode) const
 {
     BundleProfile bundleProfile;
     InnerBundleInfo innerBundleInfo;
@@ -418,7 +424,7 @@ void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProf
     BundleExtractor bundleExtractor("");
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) << profileFileBuffer.str();
+    EXPECT_EQ(result, expectCode) << profileFileBuffer.str();
 }
 
 ErrCode BmsBundleParserTest::CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
@@ -559,6 +565,12 @@ HWTEST_F(BmsBundleParserTest, TestParse_0800, Function | SmallTest | Level0)
         // sub BUNDLE_MODULE_PROFILE_KEY_SHORTCUT_WANTS
         BUNDLE_MODULE_PROFILE_KEY_TARGET_CLASS,
         BUNDLE_MODULE_PROFILE_KEY_TARGET_BUNDLE,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPATIBLE,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_TARGET,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_REQ_VERSION,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_FLAG,
+        BUNDLE_MODULE_PROFILE_KEY_MODE,
+        BUNDLE_MODULE_PROFILE_KEY_PATH,
     };
 
     for (const auto &propKey : notMustPropKeys) {
@@ -904,7 +916,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2600, Function | SmallTest | Level1)
 
         }]
     )"_json;
-    CheckProfileShortcut(errorShortcutJson);
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
 /**
@@ -928,7 +940,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2700, Function | SmallTest | Level1)
             ]
         }]
     )"_json;
-    CheckProfileShortcut(errorShortcutJson);
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
 /**
@@ -958,6 +970,69 @@ HWTEST_F(BmsBundleParserTest, TestParse_2800, Function | SmallTest | Level1)
     EXPECT_EQ(formInfos[0].supportDimensions[0], newSupportDimension);
 }
 
+/**
+ * @tc.name: TestParse_2900
+ * @tc.desc: 1. system running normally
+ *           2. test parsing failed
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ3F
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_2900, Function | SmallTest | Level1)
+{
+    nlohmann::json errorShortcutJson = CONFIG_JSON;
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "xxx";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = OVER_MAX_PATH_SIZE;
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+    
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName&";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName/";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName?";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName]";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName`";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName|";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+}
+
+
+/**
+ * @tc.name: TestParse_3000
+ * @tc.desc: 1. system running normally
+ *           2. test parsing failed
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ3F
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3000, Function | SmallTest | Level1)
+{
+    nlohmann::json errorShortcutJson = CONFIG_JSON;
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_PACKAGE] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME] = "com../hiworld../";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DEVICE_TYPE] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
 /**
  * @tc.number: TestExtractByName_0100
  * @tc.name: extract file stream by file name from package
