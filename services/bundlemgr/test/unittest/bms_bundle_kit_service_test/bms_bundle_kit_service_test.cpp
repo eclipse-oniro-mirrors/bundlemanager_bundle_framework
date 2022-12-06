@@ -44,6 +44,7 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
+#include "perf_profile.h"
 #include "service_control.h"
 #include "system_ability_helper.h"
 #include "want.h"
@@ -211,6 +212,7 @@ const std::string LABEL_KEY = "label";
 const std::string LABEL_ID_KEY = "labelId";
 const std::string SHORTCUT_WANTS_KEY = "wants";
 const std::string SHORTCUTS_KEY = "shortcuts";
+const size_t ZERO = 0;
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -8065,6 +8067,557 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0010, Function | Small
     ShortcutJson shortcutJson;
     from_json(jsonObject, shortcutJson);
     EXPECT_EQ(shortcutJson.shortcuts.size(), 0);
+}
+
+/**
+ * @tc.number: DBMSBranchCover_0001
+ * @tc.name: dbms Marshalling branch cover
+ * @tc.desc: 1.Test dbms Marshalling and ReadFromParcel branch cover
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSBranchCover_0001, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo distributedModuleInfo1;
+    DistributedModuleInfo distributedModuleInfo2;
+    distributedModuleInfo1.moduleName = "testModuleName";
+    DistributedAbilityInfo distributedAbioityInfo;
+    distributedModuleInfo1.abilities.emplace_back(distributedAbioityInfo);
+    Parcel parcel;
+    auto ret1 = distributedModuleInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    auto ret2 = distributedModuleInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+}
+
+/**
+ * @tc.number: DBMSBranchCover_0002
+ * @tc.name: dbms Unmarshalling branch cover
+ * @tc.desc: 1.Test dbms Unmarshalling branch cover
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSBranchCover_0002, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo distributedModuleInfo1;
+    distributedModuleInfo1.moduleName = "testModuleName";
+    DistributedAbilityInfo distributedAbioityInfo;
+    distributedModuleInfo1.abilities.emplace_back(distributedAbioityInfo);
+    Parcel parcel;
+    auto ret1 = distributedModuleInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    DistributedModuleInfo distributedModuleInfo2;
+    auto ret2 = distributedModuleInfo2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(distributedModuleInfo1.moduleName, ret2->moduleName);
+}
+
+/**
+ * @tc.number: DBMSBranchCover_0003
+ * @tc.name: dbms Unmarshalling branch cover
+ * @tc.desc: 1.Test dbms Unmarshalling branch cover
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSBranchCover_0003, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo distributedModuleInfo;
+    std::string path = "/data/test/distributedModuleinfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = -1;
+    std::string prefix = "[ability]";
+    distributedModuleInfo.Dump(prefix, fd);
+    long length = lseek(fd, ZERO, SEEK_END);
+    EXPECT_EQ(length, -1);
+}
+
+/**
+ * @tc.number: DBMSAbilityInfoBranchCover_0001
+ * @tc.name: DBMSAbilityInfo ReadFromParcel and marshalling test
+ * @tc.desc: 1.DBMSAbilityInfo ReadFromParcel and marshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0001, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo distributedAbilityInfo1;
+    DistributedAbilityInfo distributedAbilityInfo2;
+    distributedAbilityInfo1.abilityName = "testAbilityName";
+    Parcel parcel;
+    auto ret1 = distributedAbilityInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    auto ret2 = distributedAbilityInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+}
+
+/**
+ * @tc.number: DBMSAbilityInfoBranchCover_0002
+ * @tc.name: DBMSAbilityInfo Unmarshalling test
+ * @tc.desc: 1.DBMSAbilityInfo Unmarshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0002, Function | SmallTest | Level1)
+{
+     DistributedAbilityInfo distributedAbilityInfo1;
+    DistributedAbilityInfo distributedAbilityInfo2;
+    distributedAbilityInfo1.abilityName = "testAbilityName";
+    Parcel parcel;
+    auto ret1 = distributedAbilityInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    auto ret2 = distributedAbilityInfo2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(distributedAbilityInfo1.abilityName, ret2->abilityName);
+}
+
+/**
+ * @tc.number: DBMSAbilityInfoBranchCover_0003
+ * @tc.name: DBMSAbilityInfo dump test
+ * @tc.desc: 1.DBMSAbilityInfo dump test
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0003, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo distributedAbilityInfo;
+    std::string path = "/data/test/distributedAbilityInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = -1;
+    std::string prefix = "[ability]";
+    distributedAbilityInfo.Dump(prefix, fd);
+    long length = lseek(fd, ZERO, SEEK_END);
+    EXPECT_EQ(length, -1);
+}
+
+/**
+ * @tc.number: PermissionDefBranchCover_0001
+ * @tc.name: PermissionDef Marshalling test
+ * @tc.desc: 1.PermissionDef Marshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PermissionDefBranchCover_0001, Function | SmallTest | Level1)
+{
+    PermissionDef param1;
+    param1.permissionName = "testPermissioinName";
+    param1.bundleName = "testBundleName";
+    param1.label = "testLabel";
+    param1.description = "testDescription";
+    Parcel parcel;
+    auto ret1 = param1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    PermissionDef param2;
+    auto ret2 = param2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(param1.permissionName, ret2->permissionName);
+    EXPECT_EQ(param1.bundleName, ret2->bundleName);
+    EXPECT_EQ(param1.grantMode, ret2->grantMode);
+    EXPECT_EQ(param1.availableLevel, ret2->availableLevel);
+    EXPECT_EQ(param1.provisionEnable, ret2->provisionEnable);
+    EXPECT_EQ(param1.distributedSceneEnable, ret2->distributedSceneEnable);
+    EXPECT_EQ(param1.label, ret2->label);
+    EXPECT_EQ(param1.labelId, ret2->labelId);
+    EXPECT_EQ(param1.description, ret2->description);
+    EXPECT_EQ(param1.descriptionId, ret2->descriptionId);
+}
+
+/**
+ * @tc.number: CommonEventInfoBranchCover_0001
+ * @tc.name: CommonEventInfo Marshalling test
+ * @tc.desc: 1.CommonEventInfo Marshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CommonEventInfoBranchCover_0001, Function | SmallTest | Level1)
+{
+    CommonEventInfo commonEventInfo;
+    commonEventInfo.name = COMMON_EVENT_NAME;
+    commonEventInfo.bundleName = BUNDLE_NAME;
+    commonEventInfo.uid = 100;
+    commonEventInfo.permission = COMMON_EVENT_PERMISSION;
+    Parcel parcel;
+    auto ret1 = commonEventInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    CommonEventInfo commonEventInfo2;
+    auto ret2 = commonEventInfo2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(commonEventInfo.name, ret2->name);
+    EXPECT_EQ(commonEventInfo.bundleName, ret2->bundleName);
+    EXPECT_EQ(commonEventInfo.uid, ret2->uid);
+    EXPECT_EQ(commonEventInfo.permission, ret2->permission);
+}
+
+/**
+ * @tc.number: CommonEventInfoBranchCover_0002
+ * @tc.name: CommonEventInfo from_json test
+ * @tc.desc: 1.CommonEventInfo from_json test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CommonEventInfoBranchCover_0002, Function | SmallTest | Level1)
+{
+    CommonEventInfo commonEventInfo;
+    commonEventInfo.name = COMMON_EVENT_NAME;
+    commonEventInfo.bundleName = BUNDLE_NAME;
+    commonEventInfo.uid = 100;
+    commonEventInfo.permission = COMMON_EVENT_PERMISSION;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, commonEventInfo);
+    CommonEventInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.name, COMMON_EVENT_NAME);
+    EXPECT_EQ(result.bundleName, BUNDLE_NAME);
+    EXPECT_EQ(result.uid, 100);
+    EXPECT_EQ(result.permission, COMMON_EVENT_PERMISSION);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0001
+ * @tc.name: PerfProfile GetBmsLoadStartTime test
+ * @tc.desc: 1.PerfProfile GetBmsLoadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0001, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBmsLoadStartTime(time);
+    int64_t ret = perfProfile.GetBmsLoadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0002
+ * @tc.name: PerfProfile GetBmsLoadEndTime test
+ * @tc.desc: 1.PerfProfile GetBmsLoadEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0002, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBmsLoadEndTime(time);
+    int64_t ret = perfProfile.GetBmsLoadEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0003
+ * @tc.name: PerfProfile GetBundleScanStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleScanStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0003, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBundleScanStartTime(time);
+    int64_t ret = perfProfile.GetBundleScanStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0004
+ * @tc.name: PerfProfile GetBundleScanEndTime test
+ * @tc.desc: 1.PerfProfile GetBundleScanEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0004, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBundleScanEndTime(time);
+    int64_t ret = perfProfile.GetBundleScanEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0005
+ * @tc.name: PerfProfile GetBundleDownloadStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleDownloadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0005, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleDownloadStartTime(time);
+    int64_t ret = perfProfile.GetBundleDownloadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0006
+ * @tc.name: PerfProfile GetBundleDownloadStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleDownloadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0006, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleDownloadEndTime(time);
+    int64_t ret = perfProfile.GetBundleDownloadEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0007
+ * @tc.name: PerfProfile GetBundleInstallStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleInstallStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0007, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleInstallStartTime(time);
+    int64_t ret = perfProfile.GetBundleInstallStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0008
+ * @tc.name: PerfProfile GetBundleTotalInstallTime test
+ * @tc.desc: 1.PerfProfile GetBundleTotalInstallTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0008, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t ret = perfProfile.GetBundleTotalInstallTime();
+    EXPECT_EQ(ret, ZERO);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0009
+ * @tc.name: PerfProfile GetBundleUninstallStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleUninstallStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0009, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleUninstallStartTime(time);
+    int64_t ret = perfProfile.GetBundleUninstallStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0010
+ * @tc.name: PerfProfile GetBundleUninstallEndTime test
+ * @tc.desc: 1.PerfProfile GetBundleUninstallEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0010, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleUninstallEndTime(time);
+    int64_t ret = perfProfile.GetBundleUninstallEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0011
+ * @tc.name: PerfProfile GetBundleParseStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleParseStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0011, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleParseStartTime(time);
+    int64_t ret = perfProfile.GetBundleParseStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0012
+ * @tc.name: PerfProfile GetBundleParseEndTime test
+ * @tc.desc: 1.PerfProfile GetBundleParseEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0012, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleParseEndTime(time);
+    int64_t ret = perfProfile.GetBundleParseEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0013
+ * @tc.name: PerfProfile GetAmsLoadStartTime test
+ * @tc.desc: 1.PerfProfile GetAmsLoadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0013, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAmsLoadStartTime(time);
+    int64_t ret = perfProfile.GetAmsLoadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0014
+ * @tc.name: PerfProfile GetAbilityLoadStartTime test
+ * @tc.desc: 1.PerfProfile GetAbilityLoadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0014, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAbilityLoadStartTime(time);
+    int64_t ret = perfProfile.GetAbilityLoadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0015
+ * @tc.name: PerfProfile GetAppForkStartTime test
+ * @tc.desc: 1.PerfProfile GetAppForkStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0015, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAppForkStartTime(time);
+    int64_t ret = perfProfile.GetAppForkStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0016
+ * @tc.name: PerfProfile GetPerfProfileEnabled test
+ * @tc.desc: 1.PerfProfile GetPerfProfileEnabled test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0016, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    bool enabled = true;
+    perfProfile.SetPerfProfileEnabled(enabled);
+    int64_t ret = perfProfile.GetPerfProfileEnabled();
+    EXPECT_EQ(ret, enabled);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0017
+ * @tc.name: PerfProfile GetAmsLoadEndTime test
+ * @tc.desc: 1.PerfProfile GetAmsLoadEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0017, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAmsLoadEndTime(time);
+    int64_t ret = perfProfile.GetAmsLoadEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: CompatibleAbilityBranchCover_0001
+ * @tc.name: CompatibleAbility ReadFromParcel permission valid test
+ * @tc.desc: 1.CompatibleAbility ReadFromParcel permission valid test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleAbilityBranchCover_0001, Function | SmallTest | Level1)
+{
+    CompatibleAbilityInfo compatibleAbility;
+    AbilityType type = AbilityType::UNKNOWN;
+    DisplayOrientation orientation = DisplayOrientation::UNSPECIFIED;
+    LaunchMode launchMode = LaunchMode::SINGLETON;
+    std::vector<std::string> permissions;
+    std::string permission = "permission";
+    permissions.push_back(permission);
+    compatibleAbility.type = type;
+    compatibleAbility.orientation = orientation;
+    compatibleAbility.launchMode = launchMode;
+    compatibleAbility.permissions = permissions;
+    Parcel parcel;
+    bool ret1 = compatibleAbility.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    CompatibleAbilityInfo compatibleAbilityInfo2;
+    bool ret2 = compatibleAbilityInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+    EXPECT_EQ(compatibleAbilityInfo2.type, compatibleAbility.type);
+    EXPECT_EQ(compatibleAbilityInfo2.orientation, compatibleAbility.orientation);
+    EXPECT_EQ(compatibleAbilityInfo2.launchMode, compatibleAbility.launchMode);
+    EXPECT_EQ(compatibleAbilityInfo2.permissions, compatibleAbility.permissions);
+}
+
+/**
+ * @tc.number: CompatibleAbilityBranchCover_0002
+ * @tc.name: CompatibleAbility ReadFromParcel params  test
+ * @tc.desc: 1.CompatibleAbility ReadFromParcel params  test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleAbilityBranchCover_0002, Function | SmallTest | Level1)
+{
+    CompatibleAbilityInfo compatibleAbility;
+    compatibleAbility.supportPipMode = false;
+    compatibleAbility.grantPermission = false;
+    compatibleAbility.readPermission = "readPermission";
+    compatibleAbility.writePermission = "writePermisson";
+    compatibleAbility.uriPermissionMode = "uriPermissionMode";
+    compatibleAbility.uriPermissionPath = "uriPermissionPath";
+    compatibleAbility.directLaunch = true;
+    compatibleAbility.bundleName = "bundleName";
+    compatibleAbility.className = "className";
+    compatibleAbility.originalClassName = "originalClassName";
+    compatibleAbility.deviceId = "deviceId";
+    Parcel parcel;
+    bool ret1 = compatibleAbility.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    CompatibleAbilityInfo compatibleAbilityInfo2;
+    bool ret2 = compatibleAbilityInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+    EXPECT_EQ(compatibleAbility.supportPipMode, compatibleAbilityInfo2.supportPipMode);
+    EXPECT_EQ(compatibleAbility.grantPermission, compatibleAbilityInfo2.grantPermission);
+    EXPECT_EQ(compatibleAbility.readPermission, compatibleAbilityInfo2.readPermission);
+    EXPECT_EQ(compatibleAbility.writePermission, compatibleAbilityInfo2.writePermission);
+    EXPECT_EQ(compatibleAbility.uriPermissionMode, compatibleAbilityInfo2.uriPermissionMode);
+    EXPECT_EQ(compatibleAbility.uriPermissionPath, compatibleAbilityInfo2.uriPermissionPath);
+    EXPECT_EQ(compatibleAbility.directLaunch, compatibleAbilityInfo2.directLaunch);
+    EXPECT_EQ(compatibleAbility.bundleName, compatibleAbilityInfo2.bundleName);
+    EXPECT_EQ(compatibleAbility.className, compatibleAbilityInfo2.className);
+    EXPECT_EQ(compatibleAbility.originalClassName, compatibleAbilityInfo2.originalClassName);
+    EXPECT_EQ(compatibleAbility.deviceId, compatibleAbilityInfo2.deviceId);
+    EXPECT_EQ(compatibleAbility.formEntity, compatibleAbilityInfo2.formEntity);
+    EXPECT_EQ(compatibleAbility.minFormHeight, compatibleAbilityInfo2.minFormHeight);
+    EXPECT_EQ(compatibleAbility.defaultFormHeight, compatibleAbilityInfo2.defaultFormHeight);
+    EXPECT_EQ(compatibleAbility.minFormWidth, compatibleAbilityInfo2.minFormWidth);
+    EXPECT_EQ(compatibleAbility.defaultFormWidth, compatibleAbilityInfo2.defaultFormWidth);
+    EXPECT_EQ(compatibleAbility.iconId, compatibleAbilityInfo2.iconId);
+    EXPECT_EQ(compatibleAbility.labelId, compatibleAbilityInfo2.labelId);
+    EXPECT_EQ(compatibleAbility.descriptionId, compatibleAbilityInfo2.descriptionId);
+    EXPECT_EQ(compatibleAbility.enabled, compatibleAbilityInfo2.enabled);
+}
+
+/**
+ * @tc.number: FormInfoBranchCover_0001
+ * @tc.name: FormInfo FormInfo params  test
+ * @tc.desc: 1.FormInfo FormInfo params  test
+ */
+HWTEST_F(BmsBundleKitServiceTest, FormInfoBranchCover_0001, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.bundleName = "bundleName";
+    extensionAbilityInfo.moduleName = "moduleName";
+    extensionAbilityInfo.name = "name";
+    
+    ExtensionFormInfo extensionFormInfo;
+    extensionFormInfo.description = "description";
+    extensionFormInfo.formConfigAbility = "formConfigAbility";
+    extensionFormInfo.scheduledUpdateTime = "scheduledUpdateTime";
+    extensionFormInfo.src = "src";
+    extensionFormInfo.window.designWidth = 240;
+    extensionFormInfo.window.autoDesignWidth = 240;
+    extensionFormInfo.updateDuration = 60;
+    extensionFormInfo.defaultDimension = 4;
+    extensionFormInfo.isDefault = false;
+    extensionFormInfo.formVisibleNotify = true;
+    extensionFormInfo.updateEnabled = true;
+    extensionFormInfo.type = FormType::JS;
+    extensionFormInfo.colorMode = FormsColorMode::AUTO_MODE;
+
+    FormInfo form(extensionAbilityInfo, extensionFormInfo);
+    EXPECT_EQ(form.package, extensionAbilityInfo.bundleName + extensionAbilityInfo.moduleName);
+    EXPECT_EQ(form.bundleName, extensionAbilityInfo.bundleName);
+    EXPECT_EQ(form.originalBundleName, extensionAbilityInfo.bundleName);
+    EXPECT_EQ(form.relatedBundleName, extensionAbilityInfo.bundleName);
+    EXPECT_EQ(form.moduleName, extensionAbilityInfo.moduleName);
+    EXPECT_EQ(form.abilityName, extensionAbilityInfo.name);
+    EXPECT_EQ(form.name, extensionFormInfo.name);
+    EXPECT_EQ(form.description, extensionFormInfo.description);
+    EXPECT_EQ(form.jsComponentName, "");
+    EXPECT_EQ(form.deepLink, "");
+    EXPECT_EQ(form.formConfigAbility, extensionFormInfo.formConfigAbility);
+    EXPECT_EQ(form.scheduledUpdateTime, extensionFormInfo.scheduledUpdateTime);
+    EXPECT_EQ(form.src, extensionFormInfo.src);
+    EXPECT_EQ(form.window.designWidth, extensionFormInfo.window.designWidth);
+    EXPECT_EQ(form.window.autoDesignWidth, extensionFormInfo.window.autoDesignWidth);
+    EXPECT_EQ(form.updateDuration, extensionFormInfo.updateDuration);
+    EXPECT_EQ(form.defaultDimension, extensionFormInfo.defaultDimension);
+    EXPECT_EQ(form.defaultFlag, extensionFormInfo.isDefault);
+    EXPECT_EQ(form.formVisibleNotify, extensionFormInfo.formVisibleNotify);
+    EXPECT_EQ(form.updateEnabled, extensionFormInfo.updateEnabled);
+    EXPECT_EQ(form.type, extensionFormInfo.type);
+    EXPECT_EQ(form.colorMode, extensionFormInfo.colorMode);
 }
 
 }
