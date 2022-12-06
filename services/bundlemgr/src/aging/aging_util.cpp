@@ -19,13 +19,20 @@
 #include "aging/aging_bundle_info.h"
 #include "aging/aging_constants.h"
 #include "aging/aging_request.h"
+#include "bundle_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+int64_t AgingUtil::GetNowSysTimeMs()
+{
+    return BundleUtil::GetCurrentTimeMs();
+}
+
 void AgingUtil::SortAgingBundles(std::vector<AgingBundleInfo> &bundles)
 {
     sort(bundles.begin(), bundles.end(), SortTwoAgingBundleInfos);
 }
+
 bool AgingUtil::SortTwoAgingBundleInfos(AgingBundleInfo &bundle1, AgingBundleInfo &bundle2)
 {
     int64_t currentTimeMs = GetNowSysTimeMs();

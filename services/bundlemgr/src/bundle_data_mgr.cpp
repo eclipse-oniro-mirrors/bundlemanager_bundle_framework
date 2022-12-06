@@ -3783,10 +3783,11 @@ bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundle
         APP_LOGE("bundleInfos_ is data is empty.");
         return false;
     }
+
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    APP_LOGD("bundle userId= %{public}d", userId);
     for (auto &it : bundleInfos_) {
         APP_LOGD("bundleName: %{public}s", it.first.c_str());
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
-        APP_LOGD("bundle userId= %{public}d", userId);
         if (!it.second.HasInnerBundleUserInfo(userId)) {
             continue;
         }

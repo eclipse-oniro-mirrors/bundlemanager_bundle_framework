@@ -455,6 +455,12 @@ public:
         bool hasModuleName = false;
     };
 
+    struct JsQueryAbilityInfo {
+        std::vector<AbilityInfo> abilityInfos;
+        NativeValue *cacheAbilityInfos;
+        bool ret = false;
+        bool getCache = false;
+    };
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
@@ -470,6 +476,7 @@ public:
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
@@ -488,6 +495,7 @@ private:
     NativeValue* OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
+    NativeValue* OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     static int32_t InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
     static int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
@@ -527,14 +535,14 @@ private:
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
     NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
-    static NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
+    static NativeValue* UnwarpQueryAbilityInfoParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId,
+        int32_t &errCode);
     static bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     static bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     static bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     static bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
         BundleOptions &options, bool &unwarpBundleOptionsParamsResult);
 };
-
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* BUNDLE_MGR_H */
