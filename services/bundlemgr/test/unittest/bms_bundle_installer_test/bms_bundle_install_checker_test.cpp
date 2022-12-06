@@ -40,6 +40,7 @@ const std::string ARM_AN_PATH = "/an/arm/arm.so";
 const std::string X86 = "x86";
 const std::string X86_SO_PATH = "/lib/x86/x86.so";
 const std::string X86_AN_PATH = "/an/x86/x86.so";
+const std::string BUNDLE_NAME = "com.example.test";
 const std::string MODULE_PACKAGE = "com.example.test";
 const std::string MODULE_PATH = "test_tmp";
 }  // namespace
@@ -413,6 +414,55 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0100, Function | SmallTest
     infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
     infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
     auto ret = installChecker.CheckDeviceType(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0001
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    oldInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: UpdateDefineAndRequestPermissions_0001
+ * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0001
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0001, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 100;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    oldInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

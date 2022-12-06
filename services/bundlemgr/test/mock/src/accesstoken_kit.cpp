@@ -30,6 +30,11 @@ AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const H
 int AccessTokenKit::UpdateHapToken(AccessTokenIDEx &tokenIDEx, bool isSystemApp, const std::string& appIDDesc,
     int32_t apiVersion, const HapPolicyParams& policy)
 {
+    if (isSystemApp) {
+        tokenIDEx.tokenIdExStruct.tokenAttr = 1;
+    } else {
+        tokenIDEx.tokenIdExStruct.tokenAttr = 0;
+    }
     return 0;
 }
 

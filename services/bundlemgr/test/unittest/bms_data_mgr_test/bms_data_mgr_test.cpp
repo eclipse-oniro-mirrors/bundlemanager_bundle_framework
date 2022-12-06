@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -1045,4 +1044,71 @@ HWTEST_F(BmsDataMgrTest, BundleStateStorage_0200, Function | SmallTest | Level0)
     ret = bundleStateStorage->GetBundleStateStorage(
         BUNDLE_NAME, USERID, bundleUserInfo);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0001
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: UpdateInnerBundleInfo, bundleName is empty
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo info;
+        bool ret = dataMgr->UpdateInnerBundleInfo(info);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0002
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: UpdateInnerBundleInfo, bundleInfos_ is empty
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = BUNDLE_NAME;
+        InnerBundleInfo info;
+        info.SetBaseApplicationInfo(applicationInfo);
+        bool ret = dataMgr->UpdateInnerBundleInfo(info);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0004
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: 1. add info to the data manager
+ *           2. UpdateInnerBundleInfo, bundleInfos_ is not empty
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.name = BUNDLE_NAME;
+        bundleInfo.applicationInfo.name = APP_NAME;
+        ApplicationInfo applicationInfo;
+        applicationInfo.name = BUNDLE_NAME;
+        applicationInfo.deviceId = DEVICE_ID;
+        applicationInfo.bundleName = BUNDLE_NAME;
+        InnerBundleInfo info;
+        info.SetBaseBundleInfo(bundleInfo);
+        info.SetBaseApplicationInfo(applicationInfo);
+        bool ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateInnerBundleInfo(info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        EXPECT_TRUE(ret);
+    }
 }
