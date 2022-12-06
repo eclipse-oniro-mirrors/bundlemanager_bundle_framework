@@ -2164,7 +2164,7 @@ void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 ErrCode BundleMgrHostImpl::SetDebugMode(bool isDebug)
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::ROOT_UID) {
+    if (callingUid != Constants::ROOT_UID && callingUid != Constants::BMS_UID) {
         APP_LOGE("invalid calling uid %{public}d to set debug mode", callingUid);
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED;
     }
