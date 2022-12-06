@@ -75,11 +75,9 @@ public:
     AgingUninstallReceiveImpl() = default;
     virtual ~AgingUninstallReceiveImpl() override = default;
     virtual void OnStatusNotify(const int progress) override
-    {
-    }
+    {}
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
-    {
-    }
+    {}
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

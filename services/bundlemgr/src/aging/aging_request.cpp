@@ -23,11 +23,18 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-int64_t AgingRequest::totalDataBytesThreshold = AgingConstants::DEFAULT_AGING_DATA_SIZE_THRESHOLD;
-int64_t AgingRequest::oneDayTimeMs = AgingConstants::ONE_DAYS_MS;
+int64_t AgingRequest::totalDataBytesThreshold_ = AgingConstants::DEFAULT_AGING_DATA_SIZE_THRESHOLD;
+int64_t AgingRequest::oneDayTimeMs_ = AgingConstants::ONE_DAYS_MS;
+
 AgingRequest::AgingRequest()
 {
     InitAgingPolicySystemParameters();
+}
+
+size_t AgingRequest::SortAgingBundles()
+{
+    AgingUtil::SortAgingBundles(agingBundles_);
+    return agingBundles_.size();
 }
 
 void AgingRequest::InitAgingDatasizeThreshold()
@@ -41,7 +48,7 @@ void AgingRequest::InitAgingDatasizeThreshold()
         return;
     }
     if (strcmp(szDatasizeThreshold, "") != 0) {
-        totalDataBytesThreshold = atoi(szDatasizeThreshold);
+        totalDataBytesThreshold_ = atoi(szDatasizeThreshold);
         APP_LOGD("AgingRequest init aging data size threshold success");
     }
 }
@@ -57,7 +64,7 @@ void AgingRequest::InitAgingOneDayTimeMs()
         return;
     }
     if (strcmp(szOneDayTimeMs, "") != 0) {
-        oneDayTimeMs = atoi(szOneDayTimeMs);
+        oneDayTimeMs_ = atoi(szOneDayTimeMs);
         APP_LOGD("AgingRequest init aging one day time ms success");
     }
 }
@@ -70,27 +77,27 @@ void AgingRequest::InitAgingPolicySystemParameters()
 
 bool AgingRequest::IsReachStartAgingThreshold() const
 {
-    APP_LOGD("tatalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64, tatalDataBytes,
-        totalDataBytesThreshold);
-    return tatalDataBytes > totalDataBytesThreshold;
+    APP_LOGD("tatalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64,
+        tatalDataBytes_, totalDataBytesThreshold_);
+    return tatalDataBytes_ > totalDataBytesThreshold_;
 }
 
 bool AgingRequest::IsReachEndAgingThreshold() const
 {
-    APP_LOGD("tatalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64, tatalDataBytes,
-        totalDataBytesThreshold);
-    return tatalDataBytes < (int64_t)(totalDataBytesThreshold * AgingConstants::AGING_SIZE_RATIO);
+    APP_LOGD("tatalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64,
+        tatalDataBytes_, totalDataBytesThreshold_);
+    return tatalDataBytes_ < (int64_t)(totalDataBytesThreshold_ * AgingConstants::AGING_SIZE_RATIO);
 }
 
 void AgingRequest::AddAgingBundle(AgingBundleInfo &bundleInfo)
 {
-    agingBundles.emplace_back(bundleInfo);
+    agingBundles_.emplace_back(bundleInfo);
 }
 
 void AgingRequest::RequestReset()
 {
-    agingBundles.clear();
-    tatalDataBytes = 0;
+    agingBundles_.clear();
+    tatalDataBytes_ = 0;
     InitAgingPolicySystemParameters();
 }
 }  //  namespace AppExecFwk

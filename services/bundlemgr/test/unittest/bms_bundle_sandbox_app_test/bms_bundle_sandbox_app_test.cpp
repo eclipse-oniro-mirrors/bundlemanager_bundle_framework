@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <gtest/gtest.h>
 
@@ -86,6 +87,8 @@ public:
     void DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex);
     void CheckPathAreExisted(const std::string &bundleName, int32_t appIndex);
     void CheckPathAreNonExisted(const std::string &bundleName, int32_t appIndex);
+    void ClearDataMgr();
+    void SetDataMgr();
 
 private:
     bool GetDataMgr();
@@ -97,6 +100,8 @@ private:
     std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxAppHelper> bundleSandboxAppHelper_ =
         DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
+    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
 
 BmsSandboxAppTest::BmsSandboxAppTest()
@@ -126,6 +131,18 @@ void BmsSandboxAppTest::SetUp()
 
 void BmsSandboxAppTest::TearDown()
 {
+}
+
+void BmsSandboxAppTest::ClearDataMgr()
+{
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsSandboxAppTest::SetDataMgr()
+{
+    EXPECT_NE(dataMgrInfo_, nullptr);
+    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
 ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
@@ -1272,6 +1289,75 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1600, Function | SmallTes
     UninstallBundle(BUNDLE_NAME);
 }
 
+/**
+ * @tc.number: BmsSandboxAppUnInstallTest_1700
+ * @tc.name: InstallSandboxApp
+ * @tc.desc: 1.Test the interface of InstallSandboxApp
+ */
+HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1700, Function | SmallTest | Level1)
+{
+    std::vector<std::string> filePaths;
+    auto bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
+    filePaths.emplace_back(bundleFile);
+    auto installRes = InstallBundles(filePaths, true);
+    EXPECT_EQ(installRes, ERR_OK);
+
+    auto installer = std::make_shared<BundleSandboxInstaller>();
+    ClearDataMgr();
+
+    InnerBundleInfo info;
+    installer->SandboxAppRollBack(info, USERID);
+    EXPECT_EQ(installer->GetSandboxDataMgr(), ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    SetDataMgr();
+
+    installer->SandboxAppRollBack(info, Constants::INVALID_USERID);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+    installer->SandboxAppRollBack(info, USERID);
+
+    UninstallBundle(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsSandboxAppUnInstallTest_1800
+ * @tc.name: InstallSandboxApp
+ * @tc.desc: 1.Test the interface of InstallSandboxApp
+ */
+HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1800, Function | SmallTest | Level1)
+{
+    auto installer = std::make_shared<BundleSandboxInstaller>();
+    ClearDataMgr();
+
+    InnerBundleInfo info;
+    ErrCode res = installer->UninstallAllSandboxApps("", USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    res = installer->UninstallAllSandboxApps("bundleName", USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    SetDataMgr();
+
+    res = installer->UninstallAllSandboxApps("bundleName", USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+    res = installer->UninstallAllSandboxApps(BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
 /**
  * @tc.number: BmsGETSandboxAppMSG_0100
  * @tc.name: get sandbox app bundleInfo information

@@ -15,7 +15,6 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_AGING_UTIL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_AGING_UTIL_H
 
-#include <chrono>
 #include <vector>
 
 #include "aging/aging_bundle_info.h"
@@ -24,11 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class AgingUtil {
 public:
-    static inline int64_t GetNowSysTimeMs()
-    {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count();
-    }
+    static int64_t GetNowSysTimeMs();
     static void SortAgingBundles(std::vector<AgingBundleInfo> &bundles);
     static bool SortTwoAgingBundleInfos(AgingBundleInfo &bundle1, AgingBundleInfo &bundle2);
     static int64_t GetUnusedTimeMsBaseOnCurrentTime(int64_t currentTimeMs, int32_t days);

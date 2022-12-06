@@ -426,6 +426,9 @@ constexpr const char* AVAILABLELEVEL_SYSTEM_CORE = "system_core";
 // compile mode
 constexpr const char* COMPILE_MODE_JS_BUNDLE = "jsbundle";
 constexpr const char* COMPILE_MODE_ES_MODULE = "esmodule";
+// dependencies
+constexpr const char* DEPENDENCIES_MODULE_NAME = "moduleName";
+constexpr const char* DEPENDENCIES_BUNDLE_NAME = "bundleName";
 
 extern thread_local int32_t parseResult;
 }  // namespace Profile
