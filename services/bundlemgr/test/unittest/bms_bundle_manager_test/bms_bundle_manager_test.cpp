@@ -816,7 +816,6 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     EXPECT_EQ(ret, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
-
 }
 
 /**
@@ -3940,5 +3939,27 @@ HWTEST_F(BmsBundleManagerTest, GetDataStorage_0002, Function | SmallTest | Level
     EXPECT_EQ(res, true);
     res = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleFreeInstall_0100
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+
+    AAFwk::Want want;
+    int32_t missionId = 0;
+    int32_t userId = 100;
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    EXPECT_EQ(ret, false);
+
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    EXPECT_EQ(ret, false);
+#endif
 }
 } // OHOS
