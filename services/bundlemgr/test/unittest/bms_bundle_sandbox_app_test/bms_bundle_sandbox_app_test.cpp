@@ -1946,6 +1946,64 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest |
 }
 
 /**
+ * @tc.number: GetInnerBundleInfoByUid_0400
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. system run normally
+ * @tc.require: issueI5Y75O
+ */
+HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    auto testRet = GetBundleSandboxAppHelper();
+
+#ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
+    testRet->sandboxDataMgr_ = nullptr;
+    testRet->SaveSandboxAppInfo(info, APP_INDEX_1);
+    testRet->DeleteSandboxAppInfo(BUNDLE_NAME, APP_INDEX_1);
+
+    BundleInfo bundleInfo;
+    auto res = testRet->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, bundleInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
+
+    res = testRet->GenerateSandboxAppIndex(BUNDLE_NAME);
+    EXPECT_EQ(res, Constants::INITIAL_APP_INDEX);
+
+    res = testRet->DeleteSandboxAppIndex(BUNDLE_NAME, APP_INDEX_1);
+    EXPECT_EQ(res, false);
+
+    int32_t userId = 100;
+    testRet->GetSandboxAppInfoMap();
+    res = testRet->GetSandboxAppInfo(BUNDLE_NAME, APP_INDEX_1, userId, info);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
+
+    AbilityInfo abilityInfo;
+    HapModuleInfo hapModuleInfo;
+    res = testRet->GetSandboxHapModuleInfo(abilityInfo, APP_INDEX_1, USERID, hapModuleInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
+
+    res = testRet->GetInnerBundleInfoByUid(0, info);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
+
+    std::shared_ptr<IBundleDataStorage> dataStorage;
+    testRet->RemoveSandboxApp(dataStorage, info);
+
+    res = testRet->InstallSandboxApp(BUNDLE_NAME, 0, USERID, APP_INDEX_1);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_APP_NOT_EXISTED);
+
+    res = testRet->UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+
+    res = testRet->UninstallAllSandboxApps(BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+
+    EXPECT_EQ(testRet->sandboxDataMgr_, nullptr);
+
+    testRet->sandboxDataMgr_ = std::make_shared<BundleSandboxDataMgr>();
+    EXPECT_NE(testRet->sandboxDataMgr_, nullptr);
+#endif
+}
+
+/**
  * @tc.number: GenerateSandboxAppIndex_0100
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
