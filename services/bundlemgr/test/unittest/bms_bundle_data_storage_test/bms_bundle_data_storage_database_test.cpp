@@ -16,8 +16,9 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-#include "app_log_wrapper.h"
 #include "ability_info.h"
+#include "access_token.h"
+#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "inner_bundle_user_info.h"
@@ -1826,4 +1827,31 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, CommonEventInfo_0100, Function | Smal
     OHOS::Parcel parcel;
     bool res = info.Marshalling(parcel);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: SetAccessTokenIdEx_0100
+ * @tc.name: Test SetAccessTokenIdEx
+ * @tc.desc: 1.Test the SetAccessTokenIdEx
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetAccessTokenIdEx_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = NORMAL_BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    OHOS::Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    accessTokenIdEx.tokenIDEx = 100;
+    int32_t userId = Constants::DEFAULT_USERID;
+    info.SetAccessTokenIdEx(accessTokenIdEx, userId);
+    uint64_t tokenIdEx = info.GetAccessTokenIdEx(userId);
+    EXPECT_EQ(tokenIdEx, 0);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetAccessTokenIdEx(accessTokenIdEx, userId);
+    tokenIdEx = info.GetAccessTokenIdEx(userId);
+    EXPECT_EQ(tokenIdEx, accessTokenIdEx.tokenIDEx);
 }

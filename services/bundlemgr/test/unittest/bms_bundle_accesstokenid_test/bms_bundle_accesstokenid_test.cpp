@@ -270,19 +270,20 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0400, Function | Sma
  */
 HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0500, Function | SmallTest | Level0)
 {
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1); // system app
     EXPECT_EQ(installResult, ERR_OK);
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     ApplicationInfo info;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    ErrCode updateResult = UpdateBundle(HAP_FILE_PATH2);
+    ErrCode updateResult = UpdateBundle(HAP_FILE_PATH2); // normal app
     EXPECT_EQ(updateResult, ERR_OK);
     ApplicationInfo info2;
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info2);
     EXPECT_TRUE(result);
     EXPECT_EQ(info.accessTokenId, info2.accessTokenId);
+    EXPECT_NE(info.accessTokenIdEx, info2.accessTokenIdEx);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
