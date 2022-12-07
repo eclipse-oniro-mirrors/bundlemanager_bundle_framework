@@ -40,6 +40,11 @@ void AgingHandlerChain::AddHandler(const ::std::shared_ptr<AgingHandler> &handle
 
 bool AgingHandlerChain::Process(AgingRequest &request) const
 {
+    if (!request.IsReachStartAgingThreshold()) {
+        APP_LOGI("Not reach agingThreshold and not need aging.");
+        return true;
+    }
+
     for (auto handler : handlers_) {
         bool passed = handler->Process(request);
         APP_LOGD("agingHandler: %{public}s process passed: %{public}d", handler->GetName().c_str(), passed);

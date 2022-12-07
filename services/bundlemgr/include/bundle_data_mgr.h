@@ -698,6 +698,8 @@ public:
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     bool GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids);
+    bool GetRemovableModules(std::map<std::string, std::map<std::string, int64_t>> &moduleToDelete);
+    bool GetFreeInstallModules(std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
@@ -723,18 +725,14 @@ public:
     ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable) const;
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    /**
-     * @brief Get bundle space size (Bytes) by bundleName.
-     * @param bundleName Indicates the application bundle name to be queried.
-     * @return Returns the space size of a bundle by bundleName.
-     */
     int64_t GetBundleSpaceSize(const std::string &bundleName) const;
-    /**
-     * @brief Get all free install bundle space size (Bytes).
-     * @return Returns the space size of all free install bundles.
-     */
+    int64_t GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const;
     int64_t GetAllFreeInstallBundleSpaceSize() const;
 #endif
+
+    bool GetBundleStats(
+        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
     ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);

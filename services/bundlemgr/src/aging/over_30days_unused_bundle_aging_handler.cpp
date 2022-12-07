@@ -25,6 +25,12 @@ bool Over30DaysUnusedBundleAgingHandler::CheckBundle(const AgingBundleInfo &bund
         (AgingConstants::TIME_30_DAYS * AgingRequest::GetOneDayTimeMs());
 }
 
+bool Over30DaysUnusedBundleAgingHandler::CheckModule(const AgingModuleInfo &module) const
+{
+    return (AgingUtil::GetNowSysTimeMs() - module.GetRecentlyUsedTime()) >
+        (AgingConstants::TIME_30_DAYS * AgingRequest::GetOneDayTimeMs());
+}
+
 const std::string &Over30DaysUnusedBundleAgingHandler::GetName() const
 {
     return AgingConstants::UNUSED_FOR_30_DAYS_BUNDLE_AGING_HANDLER;

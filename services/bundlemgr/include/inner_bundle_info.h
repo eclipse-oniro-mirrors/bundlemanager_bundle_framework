@@ -1435,6 +1435,18 @@ public:
      */
     bool IsBundleRemovable(int32_t userId) const;
     /**
+     * @brief Which modules can be removed.
+     * @param moudleToDelete Indicates the modules.
+     * @return Return get module isRemoved result
+     */
+    bool GetRemovableModules(std::map<std::string, int64_t> &moudleToDelete) const;
+    /**
+     * @brief Get freeInstall module.
+     * @param freeInstallMoudle Indicates the modules.
+     * @return Return get freeInstall module result
+     */
+    bool GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const;
+    /**
      * @brief Whether module of userId is exist.
      * @param moduleName Indicates the moduleName.
      * @param userId Indicates the userId.
@@ -1699,6 +1711,10 @@ public:
     void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
+    std::vector<AbilityInfo> FindAbilityInfosByModule(
+        const std::string &moduleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    std::vector<ExtensionAbilityInfo> FindExtensionInfosByModule(
+        const std::string &moduleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
 
 private:
     void GetBundleWithAbilities(
@@ -1712,6 +1728,7 @@ private:
     void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
+    int64_t GetLastInstallationTime() const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;

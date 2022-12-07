@@ -56,6 +56,11 @@ private:
         const std::shared_ptr<BundleDataMgr> &dataMgr);
     void InitAgingTimerInterval();
     void InitAgingBatteryThresold();
+    bool InitAgingRequest();
+    bool ResetRequest();
+    bool IsReachStartAgingThreshold();
+    bool GetRemovableModules(std::map<std::string, std::map<std::string, int64_t>> &modules);
+    bool QueryModuleUsageRecords(std::vector<DeviceUsageStats::BundleActiveModuleRecord> &results);
 
 private:
     std::mutex mutex_;

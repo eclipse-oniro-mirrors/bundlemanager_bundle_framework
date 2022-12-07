@@ -16,10 +16,13 @@
 #include "ability_manager_helper.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_mgr_service.h"
+#include "element.h"
 #include "system_ability_helper.h"
 #include "system_ability_definition.h"
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+#include "ability_manager_client.h"
 #include "app_mgr_interface.h"
 #include "running_process_info.h"
 #endif
@@ -78,6 +81,78 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bund
     APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
     return FAILED;
 #endif
+}
+
+int AbilityManagerHelper::IsRunning(const std::string bundleName, const std::string moduleName)
+{
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    std::vector<AbilityRunningInfo> abilityRunningInfos;
+    auto result = AbilityManagerClient::GetInstance()->GetAbilityRunningInfos(abilityRunningInfos);
+    if (result != ERR_OK) {
+        APP_LOGE("GetAbilityRunningInfos failed.");
+        return FAILED;
+    }
+
+    if (abilityRunningInfos.empty()) {
+        APP_LOGE("No ability running.");
+        return NOT_RUNNING;
+    }
+
+    std::vector<std::string> abilities;
+    if (!FetchAbilityInfos(bundleName, moduleName, abilities)) {
+        APP_LOGE("Fetch abilitys failed by bundleName(%{public}s) and moduleName(%{public}s).",
+            bundleName.c_str(), moduleName.c_str());
+        return FAILED;
+    }
+
+    for (auto &abilitiyName : abilities) {
+        ElementName elementName("", bundleName, abilitiyName, moduleName);
+        APP_LOGI("bundleName(%{public}s) moduleName(%{public}s) abilitiyName(%{public}s)",
+            bundleName.c_str(), moduleName.c_str(), abilitiyName.c_str());
+        auto res = std::any_of(abilityRunningInfos.begin(), abilityRunningInfos.end(),
+            [&elementName](const auto &abilityRunningInfo) {
+                return abilityRunningInfo.ability == elementName;
+            });
+        if (res) {
+            return RUNNING;
+        }
+    }
+
+    return NOT_RUNNING;
+#else
+    APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
+    return FAILED;
+#endif
+}
+
+bool AbilityManagerHelper::FetchAbilityInfos(
+    const std::string bundleName, const std::string moduleName, std::vector<std::string> &abilities)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGW("App(%{public}s) is not installed.", bundleName.c_str());
+        return false;
+    }
+
+    auto abilityInfos =
+        innerBundleInfo.FindAbilityInfosByModule(moduleName, Constants::ANY_USERID);
+    for (const auto &abilityInfo : abilityInfos) {
+        abilities.emplace_back(abilityInfo.name);
+    }
+
+    auto extensionAbilityInfos =
+        innerBundleInfo.FindExtensionInfosByModule(moduleName, Constants::ANY_USERID);
+    for (const auto &extensionAbilityInfo : extensionAbilityInfos) {
+        abilities.emplace_back(extensionAbilityInfo.name);
+    }
+
+    return !abilities.empty();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
