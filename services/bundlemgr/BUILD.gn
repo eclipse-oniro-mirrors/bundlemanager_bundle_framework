@@ -29,6 +29,8 @@ config("bundlemgr_common_config") {
     "../../interfaces/inner_api/appexecfwk_base/include",
   ]
 
+  include_dirs += bundle_mgr_impl_include_dirs
+
   if (bundle_framework_free_install) {
     include_dirs += [ "//base/sensors/sensor/interfaces/native/include" ]
   }
@@ -184,6 +186,8 @@ ohos_shared_library("libbms") {
   ]
 
   sources += bundle_install_sources
+
+  sources += bundle_mgr_impl_sources
 
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
