@@ -8197,7 +8197,7 @@ HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0001, Function | Sm
  */
 HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0002, Function | SmallTest | Level1)
 {
-     DistributedAbilityInfo distributedAbilityInfo1;
+    DistributedAbilityInfo distributedAbilityInfo1;
     DistributedAbilityInfo distributedAbilityInfo2;
     distributedAbilityInfo1.abilityName = "testAbilityName";
     Parcel parcel;
