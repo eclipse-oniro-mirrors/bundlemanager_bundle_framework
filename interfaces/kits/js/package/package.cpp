@@ -201,5 +201,28 @@ NativeValue* JsPackage::OnHasInstalled(NativeEngine &engine, NativeCallbackInfo 
     }
     return engine.CreateUndefined();
 }
+
+NativeValue* JsPackageInit(NativeEngine *engine, NativeValue *exports)
+{
+    APP_LOGE("JsPackageInit is called");
+    if (engine == nullptr || exports == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeObject* object = OHOS::AbilityRuntime::ConvertNativeValueTo<NativeObject>(exports);
+    if (object == nullptr) {
+        APP_LOGE("object is nullptr");
+        return nullptr;
+    }
+
+    std::unique_ptr<JsPackage> jsPackage = std::make_unique<JsPackage>();
+    object->SetNativePointer(jsPackage.release(), JsPackage::Finalizer, nullptr);
+
+    const char *moduleName = "JsPackage";
+    OHOS::AbilityRuntime::BindNativeFunction(*engine, *object, "hasInstalled", moduleName, JsPackage::HasInstalled);
+
+    return exports;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -3007,7 +3007,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static bool InnerGetPermissionDef(napi_env env, const std::string &permissionName, PermissionDef &permissionDef)
+static bool InnerGetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -3020,94 +3020,6 @@ static bool InnerGetPermissionDef(napi_env env, const std::string &permissionNam
         return false;
     }
     return true;
-}
-
-/**
- * Promise and async callback
- */
-napi_value GetPermissionDef(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("GetPermissionDef called");
-    size_t argc = ARGS_SIZE_TWO;
-    napi_value argv[ARGS_SIZE_TWO] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    AsyncPermissionDefCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncPermissionDefCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        return nullptr;
-    }
-    std::unique_ptr<AsyncPermissionDefCallbackInfo> callbackPtr {asyncCallbackInfo};
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valuetype = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valuetype));
-        if ((i == PARAM0) && (valuetype == napi_string)) {
-            ParseString(env, asyncCallbackInfo->permissionName, argv[i]);
-        } else if ((i == PARAM1) && (valuetype == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-        } else {
-            asyncCallbackInfo->err = PARAM_TYPE_ERROR;
-            asyncCallbackInfo->message = "type mismatch";
-        }
-    }
-
-    napi_value promise = nullptr;
-    if (asyncCallbackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env, &promise));
-    }
-
-    napi_value resourceName;
-    NAPI_CALL(env, napi_create_string_latin1(env, "GetPermissionDef", NAPI_AUTO_LENGTH, &resourceName));
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resourceName,
-        [](napi_env env, void *data) {
-            AsyncPermissionDefCallbackInfo *asyncCallbackInfo =
-                reinterpret_cast<AsyncPermissionDefCallbackInfo *>(data);
-            APP_LOGD("asyncCallbackInfo->permissionName=%{public}s.", asyncCallbackInfo->permissionName.c_str());
-            if (!asyncCallbackInfo->err) {
-                asyncCallbackInfo->ret = InnerGetPermissionDef(env, asyncCallbackInfo->permissionName,
-                                                               asyncCallbackInfo->permissionDef);
-            }
-        },
-        [](napi_env env, napi_status status, void *data) {
-            AsyncPermissionDefCallbackInfo *asyncCallbackInfo =
-                reinterpret_cast<AsyncPermissionDefCallbackInfo *>(data);
-            std::unique_ptr<AsyncPermissionDefCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[ARGS_SIZE_TWO] = {0};
-            if (asyncCallbackInfo->err) {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
-                    &result[PARAM0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
-                    NAPI_AUTO_LENGTH, &result[PARAM1]));
-            } else {
-                if (asyncCallbackInfo->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, CODE_SUCCESS, &result[PARAM0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
-                    CommonFunc::ConvertPermissionDef(env, result[PARAM1], asyncCallbackInfo->permissionDef);
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, OPERATION_FAILED, &result[PARAM0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[PARAM1]));
-                }
-            }
-            if (asyncCallbackInfo->deferred) {
-                if (asyncCallbackInfo->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM1]));
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
-                }
-            } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[PARAM0]), result, &placeHolder));
-            }
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    callbackPtr.release();
-    return promise;
 }
 
 static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFilePath, InstallParam &installParam,
@@ -8214,6 +8126,27 @@ static bool InnerQueryExtensionInfo(const OHOS::AppExecFwk::Want want, const int
     }
 }
 
+NativeValue* JsBundleMgr::CreatePermissionDef(NativeEngine &engine, const PermissionDef &permissionDef)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+    object->SetProperty("permissionName", CreateJsValue(engine, permissionDef.permissionName));
+    object->SetProperty("grantMode", CreateJsValue(engine, permissionDef.grantMode));
+    object->SetProperty("labelId", CreateJsValue(engine, permissionDef.labelId));
+    object->SetProperty("descriptionId", CreateJsValue(engine, permissionDef.descriptionId));
+    return objContext;
+}
+
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
 {
     APP_LOGD("JsBundleMgr::Finalizer is called");
@@ -8320,6 +8253,12 @@ NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackI
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
     return (me != nullptr) ? me->OnGetAllBundleInfo(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::GetPermissionDef(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetPermissionDef(*engine, *info) : nullptr;
 }
 
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
@@ -8630,7 +8569,7 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
 }
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-int32_t JsBundleMgr::InitGetAbilityIcon (NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
+int32_t JsBundleMgr::InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
     std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon)
 {
     int32_t errorCode = NAPI_ERR_NO_ERROR;
@@ -9295,5 +9234,60 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
         engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
     return result;
 }
+
+NativeValue* JsBundleMgr::OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    auto jsInfo = std::make_shared<JsGetPermissionDef>();
+    if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM0], jsInfo->permissionName)) {
+            APP_LOGE("conversion failed!");
+            errCode= PARAM_TYPE_ERROR;
+        }
+    } else {
+        APP_LOGE("input params is not string!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    auto execute = [info = jsInfo, errCode] () {
+        if (errCode == ERR_OK) {
+            info->ret = InnerGetPermissionDef(info->permissionName, info->permissionDef);
+            return;
+        }
+    };
+    auto complete = [obj = this, info = jsInfo, errCode]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            OHOS::AppExecFwk::PermissionDef permissionDef;
+            if (errCode != ERR_OK) {
+                std::string errMessage = "type mismatch";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (info == nullptr) {
+                std::string errMessage = "Parameter is empty.";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, INVALID_PARAM), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (!info->ret) {
+                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
+                return;
+            }
+            task.ResolveWithCustomize(
+                engine, CreateJsValue(engine, CODE_SUCCESS), obj->CreatePermissionDef(engine, info->permissionDef));
+    };
+    NativeValue *lastParam = (info.argc == ARGS_SIZE_ONE) ? nullptr : info.argv[PARAM1];
+    NativeValue *result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnGetPermissionDef",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
