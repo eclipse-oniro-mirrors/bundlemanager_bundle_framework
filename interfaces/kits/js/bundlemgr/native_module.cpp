@@ -65,6 +65,7 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
     BindNativeFunction(*engine, *object, "queryExtensionAbilityInfos", moduleName,
         JsBundleMgr::QueryExtensionAbilityInfos);
+    BindNativeFunction(*engine, *object, "getBundleInstaller", moduleName, JsBundleMgr::GetBundleInstaller);
     return exports;
 }
 
@@ -148,7 +149,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_FUNCTION("getDispatcherVersion", GetDispatcherVersion),
-        DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
         DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
         DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
@@ -176,22 +176,6 @@ static napi_value Init(napi_env env, napi_value exports)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 
-    napi_value m_classBundleInstaller;
-    napi_property_descriptor properties[] = {
-        DECLARE_NAPI_FUNCTION("install", Install),
-        DECLARE_NAPI_FUNCTION("recover", Recover),
-        DECLARE_NAPI_FUNCTION("uninstall", Uninstall),
-    };
-    NAPI_CALL(env,
-        napi_define_class(env,
-            "BundleInstaller",
-            NAPI_AUTO_LENGTH,
-            BundleInstallerConstructor,
-            nullptr,
-            sizeof(properties) / sizeof(*properties),
-            properties,
-            &m_classBundleInstaller));
-    napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
     APP_LOGI("Init end");
     return reinterpret_cast<napi_value>(JsBundleMgrInit(reinterpret_cast<NativeEngine*>(env),
         reinterpret_cast<NativeValue*>(exports)));
