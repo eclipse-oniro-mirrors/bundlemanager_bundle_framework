@@ -279,6 +279,34 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: CheckSystemSize_0300
+ * @tc.name: test the start function of CheckSystemSize
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0300, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "/data/app/el1/bundle";
+    Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSystemSize(bundlePath, appType);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckSystemSize_0400
+ * @tc.name: test the start function of CheckSystemSize
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0400, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "";
+    Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSystemSize(bundlePath, appType);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
+}
+
+/**
  * @tc.number: CheckHapHashParams_0100
  * @tc.name: test the start function of CheckHapHashParams
  * @tc.desc: 1. BundleInstallChecker
@@ -414,5 +442,87 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0100, Function | SmallTest
     infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
     auto ret = installChecker.CheckDeviceType(infos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckDeviceType_0200
+ * @tc.name: test the start function of CollectProvisionInfo
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0200, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    Security::Verify::ProvisionInfo provisionInfo;
+    AppPrivilegeCapability appPrivilegeCapability;
+    InnerBundleInfo newInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    provisionInfo.distributionType = Security::Verify::AppDistType::NONE_TYPE;
+    installChecker.CollectProvisionInfo(provisionInfo, appPrivilegeCapability, newInfo);
+    EXPECT_EQ(newInfo.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_DEBUG);
+}
+
+/**
+ * @tc.number: CheckDeviceType_0300
+ * @tc.name: test the start function of CheckSysCap
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0300, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    BundlePackInfo bundlePackInfo;
+    InnerBundleInfo innerBundleInfo;
+    installChecker.SetEntryInstallationFree(bundlePackInfo, innerBundleInfo);
+    std::vector<std::string> bundlePaths;
+    ErrCode res = installChecker.CheckSysCap(bundlePaths);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CheckDeviceType_0400
+ * @tc.name: test the start function of IsContainModuleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0400, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo newInfo;
+    InnerBundleInfo info;
+    bool res = installChecker.IsContainModuleName(newInfo, info);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CheckDeviceType_0500
+ * @tc.name: test the start function of CheckModuleNameForMulitHaps
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0500, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo newInfo;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "";
+    newInfo.AddInnerModuleInfo(innerModuleInfos);
+    infos.emplace("/data/app/el1/bundle", newInfo);
+    ErrCode res = installChecker.CheckModuleNameForMulitHaps(infos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CheckDeviceType_0600
+ * @tc.name: test the start function of MatchSignature
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0600, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::vector<std::string> appSignatures;
+    bool res = installChecker.MatchSignature(appSignatures, "");
+    EXPECT_EQ(res, false);
+    appSignatures.push_back("/data/app/el1/bundle");
+    res = installChecker.MatchSignature(appSignatures, "");
+    EXPECT_EQ(res, false);
 }
 } // OHOS
