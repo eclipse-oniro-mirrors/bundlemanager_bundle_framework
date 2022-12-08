@@ -6370,121 +6370,146 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
     return promise;
 }
 
-void CreateAbilityTypeObject(napi_env env, napi_value value)
+NativeValue *CreateAbilityTypeObject(NativeEngine *engine)
 {
-    napi_value nUnknow;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::UNKNOWN), &nUnknow));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNKNOWN", nUnknow));
-    napi_value nPage;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::PAGE), &nPage));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PAGE", nPage));
-    napi_value nService;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::SERVICE), &nService));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SERVICE", nService));
-    napi_value nData;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::DATA), &nData));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DATA", nData));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("UNKNOWN", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::UNKNOWN)));
+    object->SetProperty("PAGE", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::PAGE)));
+    object->SetProperty("SERVICE", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::SERVICE)));
+    object->SetProperty("DATA", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::DATA)));
+
+    return objValue;
 }
 
-void CreateAbilitySubTypeObject(napi_env env, napi_value value)
+NativeValue *CreateAbilitySubTypeObject(NativeEngine *engine)
 {
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
-    napi_value nCa;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nCa));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CA", nCa));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("UNSPECIFIED", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("CA", CreateJsValue(*engine, NAPI_RETURN_ONE));
+
+    return objValue;
 }
 
-void CreateDisplayOrientationObject(napi_env env, napi_value value)
+NativeValue *CreateDisplayOrientationObject(NativeEngine *engine)
 {
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::UNSPECIFIED), &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
-    napi_value nLandscape;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LANDSCAPE), &nLandscape));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LANDSCAPE", nLandscape));
-    napi_value nPortrait;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT), &nPortrait));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PORTRAIT", nPortrait));
-    napi_value nFollowrecent;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::FOLLOWRECENT), &nFollowrecent));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FOLLOW_RECENT", nFollowrecent));
-    napi_value nReverseLandscape;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LANDSCAPE_INVERTED), &nReverseLandscape));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LANDSCAPE_INVERTED", nReverseLandscape));
-    napi_value nReversePortrait;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED), &nReversePortrait));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PORTRAIT_INVERTED", nReversePortrait));
-    napi_value nAutoRotation;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION), &nAutoRotation));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION", nAutoRotation));
-    napi_value nAutoRotationLandscape;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE),
-            &nAutoRotationLandscape));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE", nAutoRotationLandscape));
-    napi_value nAutoRotationPortrait;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT),
-            &nAutoRotationPortrait));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT", nAutoRotationPortrait));
-    napi_value nAutoRotationRestricted;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_RESTRICTED),
-            &nAutoRotationRestricted));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_RESTRICTED",
-        nAutoRotationRestricted));
-    napi_value nAutoRotationLandscapeRestricted;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED),
-            &nAutoRotationLandscapeRestricted));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE_RESTRICTED", nAutoRotationLandscapeRestricted));
-    napi_value nAutoRotationPortraitRestricted;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED),
-            &nAutoRotationPortraitRestricted));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT_RESTRICTED",
-        nAutoRotationPortraitRestricted));
-    napi_value nLocked;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LOCKED", nLocked));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("UNSPECIFIED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::UNSPECIFIED)));
+    object->SetProperty("LANDSCAPE", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::LANDSCAPE)));
+    object->SetProperty("PORTRAIT", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::PORTRAIT)));
+    object->SetProperty(
+        "FOLLOW_RECENT", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::FOLLOWRECENT)));
+    object->SetProperty(
+        "LANDSCAPE_INVERTED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::LANDSCAPE_INVERTED)));
+    object->SetProperty(
+        "PORTRAIT_INVERTED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED)));
+    object->SetProperty(
+        "AUTO_ROTATION", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION)));
+    object->SetProperty(
+        "AUTO_ROTATION_LANDSCAPE", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE)));
+    object->SetProperty(
+        "AUTO_ROTATION_PORTRAIT", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT)));
+    object->SetProperty(
+        "AUTO_ROTATION_RESTRICTED", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_RESTRICTED)));
+    object->SetProperty(
+        "AUTO_ROTATION_LANDSCAPE_RESTRICTED", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED)));
+    object->SetProperty(
+        "AUTO_ROTATION_PORTRAIT_RESTRICTED", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED)));
+    object->SetProperty("LOCKED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::LOCKED)));
+    return objValue;
 }
 
-void CreateLaunchModeObject(napi_env env, napi_value value)
+NativeValue *CreateLaunchModeObject(NativeEngine *engine)
 {
-    napi_value nSingleton;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::SINGLETON), &nSingleton));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SINGLETON", nSingleton));
-    napi_value nStandard;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::STANDARD), &nStandard));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STANDARD", nStandard));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SINGLETON", CreateJsValue(*engine, static_cast<int32_t>(LaunchMode::SINGLETON)));
+    object->SetProperty("STANDARD", CreateJsValue(*engine, static_cast<int32_t>(LaunchMode::STANDARD)));
+
+    return objValue;
 }
 
-void CreateModuleUpdateFlagObject(napi_env env, napi_value value)
+NativeValue *CreateModuleUpdateFlagObject(NativeEngine *engine)
 {
-    napi_value nFlagModuleUpgradeCheck;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nFlagModuleUpgradeCheck));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_UPGRADE_CHECK", nFlagModuleUpgradeCheck));
-    napi_value nFlagModuleUpgradeInstall;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nFlagModuleUpgradeInstall));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_UPGRADE_INSTALL", nFlagModuleUpgradeInstall));
-    napi_value nFlagModuleUpgradeinstallWithConfigWindows;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nFlagModuleUpgradeinstallWithConfigWindows));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "FLAG_MODULE_UPGRADE_INSTALL_WITH_CONFIG_WINDOWS",
-            nFlagModuleUpgradeinstallWithConfigWindows));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("FLAG_MODULE_UPGRADE_CHECK", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("FLAG_MODULE_UPGRADE_INSTALL", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("FLAG_MODULE_UPGRADE_INSTALL_WITH_CONFIG_WINDOWS", CreateJsValue(*engine, NAPI_RETURN_TWO));
+
+    return objValue;
 }
 
 void CreateFormTypeObject(napi_env env, napi_value value)
@@ -6497,362 +6522,348 @@ void CreateFormTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "JS", nJs));
 }
 
-void CreateColorModeObject(napi_env env, napi_value value)
+NativeValue *CreateColorModeObject(NativeEngine *engine)
 {
-    napi_value nAutoMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_FAILED, &nAutoMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_MODE", nAutoMode));
-    napi_value nDarkMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nDarkMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DARK_MODE", nDarkMode));
-    napi_value nLightMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nLightMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LIGHT_MODE", nLightMode));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("AUTO_MODE", CreateJsValue(*engine, NAPI_RETURN_FAILED));
+    object->SetProperty("DARK_MODE", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("LIGHT_MODE", CreateJsValue(*engine, NAPI_RETURN_ONE));
+
+    return objValue;
 }
 
-void CreateGrantStatusObject(napi_env env, napi_value value)
+NativeValue *CreateGrantStatusObject(NativeEngine *engine)
 {
-    napi_value nPermissionDenied;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_FAILED, &nPermissionDenied));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PERMISSION_DENIED", nPermissionDenied));
-    napi_value nPermissionGranted;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nPermissionGranted));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PERMISSION_GRANTED", nPermissionGranted));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("PERMISSION_DENIED", CreateJsValue(*engine, NAPI_RETURN_FAILED));
+    object->SetProperty("PERMISSION_GRANTED", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+
+    return objValue;
 }
 
-void CreateModuleRemoveFlagObject(napi_env env, napi_value value)
+NativeValue *CreateModuleRemoveFlagObject(NativeEngine *engine)
 {
-    napi_value nFlagModuleNotUsedByForm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nFlagModuleNotUsedByForm));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_NOT_USED_BY_FORM", nFlagModuleNotUsedByForm));
-    napi_value nFlagModuleUsedByForm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nFlagModuleUsedByForm));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_MODULE_USED_BY_FORM", nFlagModuleUsedByForm));
-    napi_value nFlagModuleNotUsedByShortcut;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nFlagModuleNotUsedByShortcut));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_NOT_USED_BY_SHORTCUT", nFlagModuleNotUsedByShortcut));
-    napi_value nFlagModuleUsedByShortcut;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_THREE, &nFlagModuleUsedByShortcut));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_USED_BY_SHORTCUT", nFlagModuleUsedByShortcut));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("FLAG_MODULE_NOT_USED_BY_FORM", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("FLAG_MODULE_USED_BY_FORM", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("FLAG_MODULE_NOT_USED_BY_SHORTCUT", CreateJsValue(*engine, NAPI_RETURN_TWO));
+    object->SetProperty("FLAG_MODULE_USED_BY_SHORTCUT", CreateJsValue(*engine, NAPI_RETURN_THREE));
+
+    return objValue;
 }
 
-void CreateSignatureCompareResultObject(napi_env env, napi_value value)
+NativeValue *CreateSignatureCompareResultObject(NativeEngine *engine)
 {
-    napi_value nSignatureMatched;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nSignatureMatched));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SIGNATURE_MATCHED", nSignatureMatched));
-    napi_value nSignatureNotMatched;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nSignatureNotMatched));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SIGNATURE_NOT_MATCHED", nSignatureNotMatched));
-    napi_value nSignatureUnknownBundle;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nSignatureUnknownBundle));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SIGNATURE_UNKNOWN_BUNDLE", nSignatureUnknownBundle));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SIGNATURE_MATCHED", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("SIGNATURE_NOT_MATCHED", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("SIGNATURE_UNKNOWN_BUNDLE", CreateJsValue(*engine, NAPI_RETURN_TWO));
+
+    return objValue;
 }
 
-void CreateShortcutExistenceObject(napi_env env, napi_value value)
+NativeValue *CreateShortcutExistenceObject(NativeEngine *engine)
 {
-    napi_value nShortcutExistenceExists;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nShortcutExistenceExists));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SHORTCUT_EXISTENCE_EXISTS", nShortcutExistenceExists));
-    napi_value nShortcutExistenceNotExists;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nShortcutExistenceNotExists));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SHORTCUT_EXISTENCE_NOT_EXISTS", nShortcutExistenceNotExists));
-    napi_value nShortcutExistenceUnknow;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nShortcutExistenceUnknow));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SHORTCUT_EXISTENCE_UNKNOW", nShortcutExistenceUnknow));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SHORTCUT_EXISTENCE_EXISTS", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("SHORTCUT_EXISTENCE_NOT_EXISTS", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("SHORTCUT_EXISTENCE_UNKNOW", CreateJsValue(*engine, NAPI_RETURN_TWO));
+
+    return objValue;
 }
 
-void CreateQueryShortCutFlagObject(napi_env env, napi_value value)
+NativeValue *CreateQueryShortCutFlagObject(NativeEngine *engine)
 {
-    napi_value nQueryShortCutHome;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nQueryShortCutHome));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "QUERY_SHORTCUT_HOME", nQueryShortCutHome));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("QUERY_SHORTCUT_HOME", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+
+    return objValue;
 }
 
-void CreateBundleFlagObject(napi_env env, napi_value value)
+NativeValue *CreateBundleFlagObject(NativeEngine *engine)
 {
-    napi_value nGetAllApplicationInfo;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(ApplicationFlag::GET_ALL_APPLICATION_INFO),
-                                                 &nGetAllApplicationInfo));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ALL_APPLICATION_INFO", nGetAllApplicationInfo));
+    APP_LOGD("enter");
 
-    napi_value nGetBundleDefault;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(BundleFlag::GET_BUNDLE_DEFAULT), &nGetBundleDefault));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_DEFAULT", nGetBundleDefault));
-    napi_value nGetBundleWithAbilities;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_ABILITIES),
-                                                 &nGetBundleWithAbilities));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_WITH_ABILITIES", nGetBundleWithAbilities));
-    napi_value nGetBundleWithRequestedPermission;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION),
-                                                 &nGetBundleWithRequestedPermission));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "GET_BUNDLE_WITH_REQUESTED_PERMISSION", nGetBundleWithRequestedPermission));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nGetAbilityInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-                          static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION),
-                          &nGetAbilityInfoWithPermission));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_PERMISSION", nGetAbilityInfoWithPermission));
-    napi_value nGetAbilityInfoWithApplication;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-                          static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION),
-                          &nGetAbilityInfoWithApplication));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_APPLICATION", nGetAbilityInfoWithApplication));
-    napi_value nGetAbilityInfoSystemappOnly;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_SYSTEMAPP_ONLY),
-                                                 &nGetAbilityInfoSystemappOnly));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_SYSTEMAPP_ONLY", nGetAbilityInfoSystemappOnly));
-    napi_value nGetAbilityInfoWithMetadata;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA),
-                                                 &nGetAbilityInfoWithMetadata));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_METADATA", nGetAbilityInfoWithMetadata));
-    napi_value nGetBundleWithExtensionAbility;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO),
-                                                 &nGetBundleWithExtensionAbility));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_WITH_EXTENSION_ABILITY", nGetBundleWithExtensionAbility));
-    napi_value nGetBundleWithHashValue;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_HASH_VALUE),
-                                                 &nGetBundleWithHashValue));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_WITH_HASH_VALUE", nGetBundleWithHashValue));
-    napi_value nGetAbilityInfoWithDisable;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE),
-                                                 &nGetAbilityInfoWithDisable));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_DISABLE", nGetAbilityInfoWithDisable));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    napi_value nGetApplicationInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION),
-            &nGetApplicationInfoWithPermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env,
-                                                       value,
-                                                       "GET_APPLICATION_INFO_WITH_PERMISSION",
-                                                       nGetApplicationInfoWithPermission));
-    napi_value nGetApplicationInfoWithMetadata;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA),
-            &nGetApplicationInfoWithMetadata));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_METADATA", nGetApplicationInfoWithMetadata));
-    napi_value nGetApplicationInfoWithDisable;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
-            &nGetApplicationInfoWithDisable));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_DISABLE", nGetApplicationInfoWithDisable));
-    napi_value nGetApplicationInfoWithFingerprint;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-        static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT),
-        &nGetApplicationInfoWithFingerprint));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT",
-        nGetApplicationInfoWithFingerprint));
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty(
+        "GET_ALL_APPLICATION_INFO", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_ALL_APPLICATION_INFO)));
+    object->SetProperty(
+        "GET_BUNDLE_DEFAULT", CreateJsValue(*engine, static_cast<int32_t>(BundleFlag::GET_BUNDLE_DEFAULT)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_ABILITIES", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_ABILITIES)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_REQUESTED_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_APPLICATION", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_SYSTEMAPP_ONLY", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_SYSTEMAPP_ONLY)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_METADATA", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_EXTENSION_ABILITY", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_HASH_VALUE", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_HASH_VALUE)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_DISABLE", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_METADATA", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_DISABLE", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT)));
+
+    return objValue;
 }
 
-void CreateExtensionFlagObject(napi_env env, napi_value value)
+NativeValue *CreateExtensionFlagObject(NativeEngine *engine)
 {
-    napi_value nGetExtensionInfoDefault;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT),
-            &nGetExtensionInfoDefault));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_DEFAULT", nGetExtensionInfoDefault));
+    APP_LOGD("enter");
 
-    napi_value nGetExtensionInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_PERMISSION),
-            &nGetExtensionInfoWithPermission));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_PERMISSION", nGetExtensionInfoWithPermission));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nGetExtensionInfoWithApplication;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_APPLICATION),
-            &nGetExtensionInfoWithApplication));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_APPLICATION", nGetExtensionInfoWithApplication));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    napi_value nGetExtensionInfoWithMetaData;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA),
-            &nGetExtensionInfoWithMetaData));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_METADATA", nGetExtensionInfoWithMetaData));
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty(
+        "GET_EXTENSION_INFO_DEFAULT", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT)));
+    object->SetProperty(
+        "GET_EXTENSION_INFO_WITH_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_PERMISSION)));
+    object->SetProperty(
+        "GET_EXTENSION_INFO_WITH_APPLICATION", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_APPLICATION)));
+    object->SetProperty(
+        "GET_EXTENSION_INFO_WITH_METADATA", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA)));
+
+    return objValue;
 }
 
-void CreateUpgradeFlagObject(napi_env env, napi_value value)
+NativeValue *CreateUpgradeFlagObject(NativeEngine *engine)
 {
-    napi_value nNotUpgrade;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::NOT_UPGRADE), &nNotUpgrade));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NOT_UPGRADE", nNotUpgrade));
+    APP_LOGD("enter");
 
-    napi_value nSingleUpgrade;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::SINGLE_UPGRADE), &nSingleUpgrade));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SINGLE_UPGRADE", nSingleUpgrade));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nRelationUpgrade;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::RELATION_UPGRADE), &nRelationUpgrade));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "RELATION_UPGRADE", nRelationUpgrade));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("NOT_UPGRADE", CreateJsValue(*engine, static_cast<int32_t>(UpgradeFlag::NOT_UPGRADE)));
+    object->SetProperty("SINGLE_UPGRADE", CreateJsValue(*engine, static_cast<int32_t>(UpgradeFlag::SINGLE_UPGRADE)));
+    object->SetProperty(
+        "RELATION_UPGRADE", CreateJsValue(*engine, static_cast<int32_t>(UpgradeFlag::RELATION_UPGRADE)));
+
+    return objValue;
 }
 
-void CreateInstallErrorCodeObject(napi_env env, napi_value value)
+NativeValue *CreateInstallErrorCodeObject(NativeEngine *engine)
 {
-    napi_value nSuccess;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::SUCCESS), &nSuccess));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SUCCESS", nSuccess));
-    napi_value nStatusInstallFailure;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(
-            env, static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE), &nStatusInstallFailure));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE", nStatusInstallFailure));
-    napi_value nStatusInstallFailureAborted;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED),
-            &nStatusInstallFailureAborted));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_ABORTED", nStatusInstallFailureAborted));
-    napi_value nStatusInstallFailureInvalid;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID),
-            &nStatusInstallFailureInvalid));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INVALID", nStatusInstallFailureInvalid));
-    napi_value nStatusInstallFailureConflict;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT),
-            &nStatusInstallFailureConflict));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_CONFLICT", nStatusInstallFailureConflict));
-    napi_value nStatusInstallFailureStorage;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE),
-            &nStatusInstallFailureStorage));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_STORAGE", nStatusInstallFailureStorage));
-    napi_value nStatusInstallFailureIncompatible;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE),
-            &nStatusInstallFailureIncompatible));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INCOMPATIBLE", nStatusInstallFailureIncompatible));
-    napi_value nStatusUninstallFailure;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(
-            env, static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE), &nStatusUninstallFailure));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE", nStatusUninstallFailure));
-    napi_value nStatusUninstallFailureBlocked;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED),
-            &nStatusUninstallFailureBlocked));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_BLOCKED", nStatusUninstallFailureBlocked));
-    napi_value nStatusUninstallFailureAborted;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED),
-            &nStatusUninstallFailureAborted));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_ABORTED", nStatusUninstallFailureAborted));
-    napi_value nStatusUninstallFailureConflict;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT),
-            &nStatusUninstallFailureConflict));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(
-            env, value, "STATUS_UNINSTALL_FAILURE_CONFLICT", nStatusUninstallFailureConflict));
-    napi_value nStatusInstallFailureDownloadTimeout;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT),
-            &nStatusInstallFailureDownloadTimeout));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", nStatusInstallFailureDownloadTimeout));
-    napi_value nStatusInstallFailureDownloadFailed;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED),
-            &nStatusInstallFailureDownloadFailed));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", nStatusInstallFailureDownloadFailed));
-    napi_value nStatusAbilityNotFound;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(
-            env, static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND), &nStatusAbilityNotFound));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_ABILITY_NOT_FOUND", nStatusAbilityNotFound));
-    napi_value nBmsServiceError;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR), &nBmsServiceError));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_BMS_SERVICE_ERROR", nBmsServiceError));
-    napi_value nStatusGrantRequestPermissionsFailed;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED),
-                          &nStatusGrantRequestPermissionsFailed));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED",
-                          nStatusGrantRequestPermissionsFailed));
-    napi_value nStatusInstallPermissionDenied;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED),
-                          &nStatusInstallPermissionDenied));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_INSTALL_PERMISSION_DENIED",
-                          nStatusInstallPermissionDenied));
-    napi_value nStatusUnInstallPermissionDenied;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED),
-                          &nStatusUnInstallPermissionDenied));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_PERMISSION_DENIED",
-                          nStatusUnInstallPermissionDenied));
-    napi_value nNoSpaceLeft;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT), &nNoSpaceLeft));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_FAILED_NO_SPACE_LEFT", nNoSpaceLeft));
-    napi_value nRecoverFailure;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID), &nRecoverFailure));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "STATUS_RECOVER_FAILURE_INVALID", nRecoverFailure));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SUCCESS", CreateJsValue(*engine, static_cast<int32_t>(InstallErrorCode::SUCCESS)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_ABORTED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_INVALID", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_CONFLICT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_STORAGE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_INCOMPATIBLE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE_BLOCKED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE_ABORTED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE_CONFLICT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED)));
+    object->SetProperty(
+        "STATUS_ABILITY_NOT_FOUND", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND)));
+    object->SetProperty(
+        "STATUS_BMS_SERVICE_ERROR", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR)));
+    object->SetProperty(
+        "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED)));
+    object->SetProperty(
+        "STATUS_INSTALL_PERMISSION_DENIED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_PERMISSION_DENIED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED)));
+    object->SetProperty(
+        "STATUS_FAILED_NO_SPACE_LEFT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT)));
+    object->SetProperty(
+        "STATUS_RECOVER_FAILURE_INVALID", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID)));
+
+    return objValue;
 }
 
 static bool InnerQueryExtensionInfo(napi_env env, AsyncExtensionInfoCallbackInfo &info)
