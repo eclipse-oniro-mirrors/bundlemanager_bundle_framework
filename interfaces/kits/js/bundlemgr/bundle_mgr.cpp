@@ -8851,7 +8851,7 @@ bool JsBundleInstall::GetInstallParamValue(NativeEngine &engine, NativeValue *ob
 {
     auto env = reinterpret_cast<napi_env>(&engine);
     auto param = reinterpret_cast<napi_value>(object);
-    if(!ParseInstallParam(env, installParam, param)) {
+    if (!ParseInstallParam(env, installParam, param)) {
         APP_LOGE("ParseInstallParam fail");
         return false;
     }

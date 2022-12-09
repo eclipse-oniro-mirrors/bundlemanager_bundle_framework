@@ -556,7 +556,8 @@ private:
     NativeValue* OnInstall(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnRecover(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnUninstall(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* CreateInstallStatus(NativeEngine &engine, const std::shared_ptr<BundleInstallResult> bundleInstallResult);
+    NativeValue* CreateInstallStatus(NativeEngine &engine,
+        const std::shared_ptr<BundleInstallResult> bundleInstallResult);
     bool GetStringsValue(NativeEngine &engine, NativeValue *object, std::vector<std::string> &strList);
     bool GetInstallParamValue(NativeEngine &engine, NativeValue *object, InstallParam &installParam);
     void ConvertInstallResult(std::shared_ptr<BundleInstallResult> installResult);
