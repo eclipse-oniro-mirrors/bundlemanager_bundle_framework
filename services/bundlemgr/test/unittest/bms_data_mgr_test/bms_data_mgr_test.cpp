@@ -16,6 +16,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
+#include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_storage_database.h"
@@ -1020,10 +1021,10 @@ HWTEST_F(BmsDataMgrTest, GetApplicationInfo_0200, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsDataMgrTest, BundleStateStorage_0100, Function | SmallTest | Level0)
 {
-    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
-    bool ret = bundleStateStorage->DeleteBundleState("", USERID);
+    BundleStateStorage bundleStateStorage;
+    bool ret = bundleStateStorage.DeleteBundleState("", USERID);
     EXPECT_EQ(ret, false);
-    ret = bundleStateStorage->DeleteBundleState(BUNDLE_NAME, -1);
+    ret = bundleStateStorage.DeleteBundleState(BUNDLE_NAME, -1);
     EXPECT_EQ(ret, false);
 }
 
@@ -1034,15 +1035,42 @@ HWTEST_F(BmsDataMgrTest, BundleStateStorage_0100, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsDataMgrTest, BundleStateStorage_0200, Function | SmallTest | Level0)
 {
-    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
+    BundleStateStorage bundleStateStorage;
     BundleUserInfo bundleUserInfo;
-    bool ret = bundleStateStorage->GetBundleStateStorage(
+    bundleStateStorage.GetBundleStateStorage(BUNDLE_NAME, USERID, bundleUserInfo);
+    bool ret = bundleStateStorage.GetBundleStateStorage(
         "", USERID, bundleUserInfo);
     EXPECT_EQ(ret, false);
-    ret = bundleStateStorage->GetBundleStateStorage(
+    ret = bundleStateStorage.GetBundleStateStorage(
         BUNDLE_NAME, -1, bundleUserInfo);
     EXPECT_EQ(ret, false);
-    ret = bundleStateStorage->GetBundleStateStorage(
-        BUNDLE_NAME, USERID, bundleUserInfo);
-    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: AbilityManager_0100
+ * @tc.name: Test GetBundleStateStorage, a param is error
+ * @tc.desc: 1.Test the GetBundleStateStorage of BundleStateStorage
+*/
+HWTEST_F(BmsDataMgrTest, AbilityManager_0100, Function | SmallTest | Level0)
+{
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    int bundleUid = -1;
+    int ret = AbilityManagerHelper::IsRunning("", bundleUid);
+    EXPECT_EQ(ret, -1);
+    bool res = AbilityManagerHelper::UninstallApplicationProcesses("", 0);
+    EXPECT_EQ(res, true);
+#endif
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: Test GetBundleStateStorage, a param is error
+ * @tc.desc: 1.Test the GetBundleStateStorage of BundleStateStorage
+*/
+HWTEST_F(BmsDataMgrTest, InnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo newInfo;
+    bool res = innerBundleInfo.AddModuleInfo(newInfo);
+    EXPECT_EQ(res, false);
 }
