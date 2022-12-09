@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <chrono>
 #include <fstream>
@@ -8782,4 +8783,88 @@ HWTEST_F(BmsBundleKitServiceTest, FormInfoBranchCover_0001, Function | SmallTest
     EXPECT_EQ(form.colorMode, extensionFormInfo.colorMode);
 }
 
+/**
+ * @tc.number: SelfClean_0100
+ * @tc.name: test SelfClean
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, SelfClean_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService -> ready_ = false;
+    bundleMgrService->SelfClean();
+    bool ret = bundleMgrService -> ready_;
+    EXPECT_FALSE(ret);
+
+    bundleMgrService -> ready_ = true;
+    bundleMgrService -> registerToService_ = false;
+    bundleMgrService->SelfClean();
+    ret = bundleMgrService -> ready_;
+    EXPECT_FALSE(ret);
+
+    bundleMgrService -> registerToService_ = true;
+    bundleMgrService->RegisterService();
+    ret = bundleMgrService -> registerToService_;
+    EXPECT_TRUE(ret);
+
+    int32_t systemAbilityId = 0;
+    const std::string deviceId = "";
+    bundleMgrService->deviceManager_ = nullptr;
+    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
+
+    bundleMgrService->deviceManager_ = std::make_shared<BmsDeviceManager>();
+    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
+}
+
+/**
+ * @tc.number: VerifyPrivilegedPermission_0100
+ * @tc.name: test VerifyPrivilegedPermission
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyPrivilegedPermission_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool testRet = hostImpl->VerifyPrivilegedPermission(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(testRet);
+
+    AbilityInfo abilityInfo;
+    bool isEnabled = false;
+    int32_t userId = -2;
+    auto res = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0900
+ * @tc.name: 1.explicit query extension info failed, extensionInfos is empty
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0900, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService->InitBundleMgrHost();
+    auto hostImpl = bundleMgrService->host_;
+    int32_t flags = 0;
+    int32_t userId = DEFAULT_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    Want want;
+    ExtensionAbilityType extensionType = ExtensionAbilityType::FORM;
+    auto testRet = hostImpl->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    testRet = hostImpl->QueryExtensionAbilityInfosV9(want, extensionType, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    testRet = hostImpl->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    bool res = hostImpl->QueryExtensionAbilityInfos(want, extensionType, flags, userId, extensionInfos);
+    EXPECT_FALSE(res);
+}
 }
