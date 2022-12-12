@@ -804,3 +804,81 @@ HWTEST_F(BmCommandInstallTest, Bm_Command_Install_3200, Function | MediumTest | 
 
     EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_INSTALL);
 }
+
+/**
+ * @tc.number: Bm_Command_Install_3300
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm install -p <bundle-path> -w <waitting-time>" command.
+ */
+HWTEST_F(BmCommandInstallTest, Bm_Command_Install_3300, Function | MediumTest | Level1)
+{
+    // install a bundle
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-w"),
+        const_cast<char*>(MINIMUMT_WAIT_TIME.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), "error: option requires a correct value.\n");
+}
+
+/**
+ * @tc.number: Bm_Command_Install_3400
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm install -p <bundle-path> -w <waitting-time>" command.
+ */
+HWTEST_F(BmCommandInstallTest, Bm_Command_Install_3400, Function | MediumTest | Level1)
+{
+    // install a bundle
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-p"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>("-w"),
+        const_cast<char*>(MAXIMUM_WAIT_TIME.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), "error: option requires a correct value.\n");
+}
+
+/**
+ * @tc.number: Bm_Command_Install_3500
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm install" command.
+ */
+HWTEST_F(BmCommandInstallTest, Bm_Command_Install_3500, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-cc"),
+        const_cast<char*>(STRING_BUNDLE_PATH.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_INSTALL);
+}
