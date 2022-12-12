@@ -3743,7 +3743,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_1100, Function | SmallTest | Level1
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is false, dataMgr is nullptr
  *           3.clean the cache files failed
- * @tc.require: SR000H00TH
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_1200, Function | SmallTest | Level1)
 {
