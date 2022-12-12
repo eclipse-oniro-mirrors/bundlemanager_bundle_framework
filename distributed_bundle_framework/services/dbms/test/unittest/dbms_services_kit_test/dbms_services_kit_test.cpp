@@ -88,7 +88,7 @@ void DbmsServicesKitTest::TearDown()
 std::shared_ptr<DistributedBms> DbmsServicesKitTest::GetDistributedBms()
 {
     if (distributedBms_ == nullptr) {
-        distributedBms_ = DelayedSingleton<DistributedBms>::GetInstance();
+        distributedBms_ = std::make_unique<DistributedBms>();
     }
     return distributedBms_;
 }
@@ -105,7 +105,7 @@ std::shared_ptr<DistributedDataStorage> DbmsServicesKitTest::GetDistributedDataS
 {
     if (distributedDataStorage_ == nullptr) {
         distributedDataStorage_ =
-            DelayedSingleton<DistributedDataStorage>::GetInstance();
+            std::make_unique<DistributedDataStorage>();
     }
     return distributedDataStorage_;
 }
