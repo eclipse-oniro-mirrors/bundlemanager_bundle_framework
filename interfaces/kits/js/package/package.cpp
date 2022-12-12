@@ -204,7 +204,7 @@ NativeValue* JsPackage::OnHasInstalled(NativeEngine &engine, NativeCallbackInfo 
 
 NativeValue* JsPackageInit(NativeEngine *engine, NativeValue *exports)
 {
-    APP_LOGE("JsPackageInit is called");
+    APP_LOGD("JsPackageInit is called");
     if (engine == nullptr || exports == nullptr) {
         APP_LOGE("Invalid input parameters");
         return nullptr;
