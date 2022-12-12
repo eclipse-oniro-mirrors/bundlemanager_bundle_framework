@@ -91,7 +91,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
 
 static napi_value Init(napi_env env, napi_value exports)
 {
-
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
         DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),

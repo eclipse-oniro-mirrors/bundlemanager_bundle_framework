@@ -6560,7 +6560,8 @@ NativeValue *CreateExtensionAbilityTypeObject(NativeEngine *engine)
     object->SetProperty("FORM", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::FORM)));
     object->SetProperty(
         "WORK_SCHEDULER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WORK_SCHEDULER)));
-    object->SetProperty("INPUT_METHOD", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD)));
+    object->SetProperty("INPUT_METHOD",
+        CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD)));
     object->SetProperty("SERVICE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::SERVICE)));
     object->SetProperty(
         "ACCESSIBILITY", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::ACCESSIBILITY)));
@@ -7689,7 +7690,6 @@ NativeValue* JsBundleMgr::CreateBundlePackInfo(
         return objContext;
     }
     if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_MODULE_SUMMARY) {
-
         NativeValue* objValue = engine.CreateObject();
         NativeObject* obj = ConvertNativeValueTo<NativeObject>(objValue);
         obj->SetProperty("modules", CreateSummaryModules(engine, bundlePackInfo));
@@ -7918,7 +7918,6 @@ NativeValue* JsBundleMgr::CreateFormsInfos(
         array->SetElement(i, CreateFormsInfo(engine, forms.at(i)));
     }
     return arrayValue;
-
 }
 
 NativeValue* JsBundleMgr::CreateFormsInfo(NativeEngine &engine, const AbilityFormInfo &form)
@@ -8863,7 +8862,7 @@ NativeValue* JsBundleMgr::OnSetApplicationEnabled(NativeEngine &engine, const Na
     NativeValue *result = nullptr;
     NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
     AsyncTask::Schedule("JsBundleMgr::OnSetApplicationEnabled",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
 
@@ -9148,7 +9147,7 @@ NativeValue* JsBundleMgr::OnGetPermissionDef(NativeEngine &engine, NativeCallbac
     if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
         if (!ConvertFromJsValue(engine, info.argv[PARAM0], jsInfo->permissionName)) {
             APP_LOGE("conversion failed!");
-            errCode= PARAM_TYPE_ERROR;
+            errCode = PARAM_TYPE_ERROR;
         }
     } else {
         APP_LOGE("input params is not string!");
