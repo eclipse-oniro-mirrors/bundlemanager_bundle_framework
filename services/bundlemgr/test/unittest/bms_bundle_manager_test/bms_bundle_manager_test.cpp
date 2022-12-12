@@ -816,7 +816,6 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     EXPECT_EQ(ret, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
-
 }
 
 /**
@@ -3940,5 +3939,140 @@ HWTEST_F(BmsBundleManagerTest, GetDataStorage_0002, Function | SmallTest | Level
     EXPECT_EQ(res, true);
     res = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleFreeInstall_0100
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+
+    AAFwk::Want want;
+    int32_t missionId = 0;
+    int32_t userId = 100;
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    EXPECT_EQ(ret, false);
+
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    EXPECT_EQ(ret, false);
+#endif
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0100
+ * @tc.name: test failed scene when bundle info is not existed
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    InnerBundleInfo oldInfo;
+    bool ret = dataMgr->AddNewModuleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->RemoveModuleInfo(BUNDLE_NAME, "", oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->DisableBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+
+    std::string provisionId = "100";
+    ret = dataMgr->GetProvisionId(BUNDLE_NAME, provisionId);
+    EXPECT_EQ(ret, false);
+
+    std::string appFeature = "ohos_system_app";
+    ret = dataMgr->GetAppFeature(BUNDLE_NAME, appFeature);
+    EXPECT_EQ(ret, false);
+
+    int res = dataMgr->CheckPublicKeys(BUNDLE_NAME, BUNDLE_NAME);
+    EXPECT_EQ(res, Constants::SIGNATURE_UNKNOWN_BUNDLE);
+
+    ret = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_EQ(ret, false);
+
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0200
+ * @tc.name: test failed scene when save info fail or app is not updated
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    InnerBundleInfo oldInfo;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    bool ret = dataMgr->AddNewModuleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->UpdateQuickFixInnerBundleInfo("", info);
+    EXPECT_EQ(ret, false);
+
+    dataMgr->bundleInfos_.clear();
+    ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_EQ(ret, false);
+
+    int res = dataMgr->CheckPublicKeys(BUNDLE_NAME, BUNDLE_BACKUP_NAME);
+    EXPECT_EQ(res, Constants::SIGNATURE_UNKNOWN_BUNDLE);
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0300
+ * @tc.name: test failed scene when preInstallDataStorage is null
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->preInstallDataStorage_ = nullptr;
+    PreInstallBundleInfo preInstallBundleInfo;
+    bool ret = dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    ret = dataMgr->LoadAllPreInstallBundleInfos(preInstallBundleInfos);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0400
+ * @tc.name: test failed scene when userId or bundleInfos failed
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string uri = "dataability:///com.example.FileShare/person/10";
+    int32_t userId = Constants::INVALID_USERID;
+    ExtensionAbilityInfo info;
+    bool ret = dataMgr->QueryExtensionAbilityInfoByUri(uri, userId, info);
+    EXPECT_EQ(ret, false);
+
+    userId = Constants::ALL_USERID;
+    ret = dataMgr->QueryExtensionAbilityInfoByUri(uri, userId, info);
+    EXPECT_EQ(ret, false);
 }
 } // OHOS

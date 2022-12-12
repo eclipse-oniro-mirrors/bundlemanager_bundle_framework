@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <chrono>
 #include <fstream>
@@ -287,6 +288,8 @@ public:
     void SaveToDatabase(const std::string &bundleName, InnerBundleInfo &innerBundleInfo,
         bool userDataClearable, bool isSystemApp) const;
     void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
+    void ClearDataMgr();
+    void SetDataMgr();
 
 public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
@@ -295,6 +298,8 @@ public:
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleUserMgrHostImpl> bundleUserMgrHostImpl_ = std::make_shared<BundleUserMgrHostImpl>();
     NotifyBundleEvents installRes_;
+    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
 
 void BmsBundleKitServiceTest::SetUpTestCase()
@@ -324,6 +329,18 @@ void BmsBundleKitServiceTest::SetUp()
 
 void BmsBundleKitServiceTest::TearDown()
 {}
+
+void BmsBundleKitServiceTest::ClearDataMgr()
+{
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsBundleKitServiceTest::SetDataMgr()
+{
+    EXPECT_NE(dataMgrInfo_, nullptr);
+    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
+}
 
 const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
 {
@@ -3721,6 +3738,29 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_1100, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: CleanCache_1200
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2. userDataClearable is false, dataMgr is nullptr
+ *           3.clean the cache files failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_1200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
+    CreateFileDir();
+
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    SetDataMgr();
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: RegisterBundleStatus_0100
  * @tc.name: test can register the bundle status by bundle name
  * @tc.desc: 1.system run normally
@@ -3780,6 +3820,64 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0300, Function | SmallTes
 }
 
 /**
+ * @tc.number: RegisterBundleStatus_0400
+ * @tc.name: test can register the bundle status by empty bundle name
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0400, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName("");
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: RegisterBundleStatus_0500
+ * @tc.name: test can not register, the bundle status dataMgr is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0500, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(result);
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: RegisterBundleEventCallback_0100
+ * @tc.name: test can not register, the bundle status bundleEventCallback is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleEventCallback_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->RegisterBundleEventCallback(nullptr);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0100
+ * @tc.name: test can not unregister, the bundle status bundleEventCallback is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, UnregisterBundleEventCallback_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->UnregisterBundleEventCallback(nullptr);
+    EXPECT_FALSE(result);
+}
+
+/**
  * @tc.number: ClearBundleStatus_0100
  * @tc.name: test can clear the bundle status by bundle name
  * @tc.desc: 1.system run normally
@@ -3811,6 +3909,23 @@ HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0100, Function | SmallTest |
 
     int32_t callbackResult1 = bundleStatusCallback1->GetResultCode();
     EXPECT_EQ(callbackResult1, ERR_TIMED_OUT);
+}
+
+/**
+ * @tc.number: ClearBundleStatus_0200
+ * @tc.name: test can not unregister, the bundle status dataMgr is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0200, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    bool result = hostImpl->ClearBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(result);
+    SetDataMgr();
 }
 
 /**
@@ -8150,7 +8265,7 @@ HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0001, Function | Sm
  */
 HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0002, Function | SmallTest | Level1)
 {
-     DistributedAbilityInfo distributedAbilityInfo1;
+    DistributedAbilityInfo distributedAbilityInfo1;
     DistributedAbilityInfo distributedAbilityInfo2;
     distributedAbilityInfo1.abilityName = "testAbilityName";
     Parcel parcel;
@@ -8620,4 +8735,88 @@ HWTEST_F(BmsBundleKitServiceTest, FormInfoBranchCover_0001, Function | SmallTest
     EXPECT_EQ(form.colorMode, extensionFormInfo.colorMode);
 }
 
+/**
+ * @tc.number: SelfClean_0100
+ * @tc.name: test SelfClean
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, SelfClean_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService -> ready_ = false;
+    bundleMgrService->SelfClean();
+    bool ret = bundleMgrService -> ready_;
+    EXPECT_FALSE(ret);
+
+    bundleMgrService -> ready_ = true;
+    bundleMgrService -> registerToService_ = false;
+    bundleMgrService->SelfClean();
+    ret = bundleMgrService -> ready_;
+    EXPECT_FALSE(ret);
+
+    bundleMgrService -> registerToService_ = true;
+    bundleMgrService->RegisterService();
+    ret = bundleMgrService -> registerToService_;
+    EXPECT_TRUE(ret);
+
+    int32_t systemAbilityId = 0;
+    const std::string deviceId = "";
+    bundleMgrService->deviceManager_ = nullptr;
+    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
+
+    bundleMgrService->deviceManager_ = std::make_shared<BmsDeviceManager>();
+    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
+}
+
+/**
+ * @tc.number: VerifyPrivilegedPermission_0100
+ * @tc.name: test VerifyPrivilegedPermission
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyPrivilegedPermission_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool testRet = hostImpl->VerifyPrivilegedPermission(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(testRet);
+
+    AbilityInfo abilityInfo;
+    bool isEnabled = false;
+    int32_t userId = -2;
+    auto res = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0900
+ * @tc.name: 1.explicit query extension info failed, extensionInfos is empty
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0900, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService->InitBundleMgrHost();
+    auto hostImpl = bundleMgrService->host_;
+    int32_t flags = 0;
+    int32_t userId = DEFAULT_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    Want want;
+    ExtensionAbilityType extensionType = ExtensionAbilityType::FORM;
+    auto testRet = hostImpl->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    testRet = hostImpl->QueryExtensionAbilityInfosV9(want, extensionType, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    testRet = hostImpl->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    bool res = hostImpl->QueryExtensionAbilityInfos(want, extensionType, flags, userId, extensionInfos);
+    EXPECT_FALSE(res);
+}
 }

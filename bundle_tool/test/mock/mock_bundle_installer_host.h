@@ -36,7 +36,10 @@ const std::string STRING_BUNDLE_NAME = "name";
 const std::string STRING_MODULE_NAME = "module";
 const std::string STRING_ABILITY_NAME = "ability";
 const std::string DEFAULT_USER_ID = "100";
+const std::string ERR_USER_ID = "-1";
 const std::string DEFAULT_WAIT_TIME = "100";
+const std::string MINIMUMT_WAIT_TIME = "1";
+const std::string MAXIMUM_WAIT_TIME = "700";
 const std::string DEFAULT_DEVICE_TIME = "0";
 }  // namespace
 

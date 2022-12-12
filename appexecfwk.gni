@@ -11,6 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+VENDOR_CONFIG_PATH = rebase_path(
+        "//vendor/${product_company}/${product_name}/foundation/bundlemanager/bundle_framework/appexecfwk_impl.gni")
+CMD = "if [ -f ${VENDOR_CONFIG_PATH} ]; then echo true; else echo false; fi"
+
+vendor_config_exist =
+    exec_script("//build/lite/run_shell_cmd.py", [ CMD ], "value")
+if (vendor_config_exist) {
+  import(
+      "//vendor/${product_company}/${product_name}/foundation/bundlemanager/bundle_framework/appexecfwk_impl.gni")
+} else {
+  bundle_mgr_impl_sources = []
+  bundle_mgr_impl_include_dirs = []
+}
+
 ability_runtime_path = "//foundation/ability/ability_runtime"
 ability_runtime_innerkits_path = "${ability_runtime_path}/interfaces/inner_api"
 
