@@ -2270,374 +2270,6 @@ static bool InnerGetBundlePackInfo(const std::string &bundleName, int32_t flags,
     return false;
 }
 
-static void ConvertSummaryApp(napi_env env, napi_value &app, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    napi_value bundleName;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_string_utf8(env, bundleInPackfos.summary.app.bundleName.c_str(), NAPI_AUTO_LENGTH, &bundleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, app, "bundleName", bundleName));
-    napi_value version;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &version));
-    napi_value versionName;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_string_utf8(env, bundleInPackfos.summary.app.version.name.c_str(), NAPI_AUTO_LENGTH, &versionName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, version, "name", versionName));
-    napi_value versionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInPackfos.summary.app.version.code, &versionCode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, version, "code", versionCode));
-    napi_value minCompatibleVersionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInPackfos.summary.app.version.minCompatibleVersionCode,
-                                   &minCompatibleVersionCode));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, version, "minCompatibleVersionCode", minCompatibleVersionCode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, app, "version", version));
-}
-
-static void ConvertModulesApiVersion(
-    napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value apiVersion;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &apiVersion));
-    napi_value releaseType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, module.apiVersion.releaseType.c_str(), NAPI_AUTO_LENGTH, &releaseType));
-    napi_value compatible;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, module.apiVersion.compatible, &compatible));
-    napi_value target;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, module.apiVersion.target, &target));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, apiVersion, "releaseType", releaseType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, apiVersion, "compatible", compatible));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, apiVersion, "target", target));
-
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "apiVersion", apiVersion));
-}
-
-static void ConvertDeviceType(napi_env env, napi_value &Object, std::vector<std::string> deviceTypes)
-{
-    napi_value deviceType;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &deviceType));
-    size_t typeIndex = 0;
-    for (const auto &type : deviceTypes) {
-        napi_value typeValue;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, type.c_str(), NAPI_AUTO_LENGTH, &typeValue));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, deviceType, typeIndex, typeValue));
-        typeIndex++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, Object, "deviceType", deviceType));
-}
-
-static void ConvertDistro(napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value distro;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &distro));
-    napi_value deliveryWithInstall;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, module.distro.deliveryWithInstall, &deliveryWithInstall));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "deliveryWithInstall", deliveryWithInstall));
-    napi_value installationFree;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, module.distro.installationFree, &installationFree));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "installationFree", installationFree));
-    napi_value moduleName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, module.distro.moduleName.c_str(), NAPI_AUTO_LENGTH, &moduleName));
-    napi_value moduleType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, module.distro.moduleType.c_str(), NAPI_AUTO_LENGTH, &moduleType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "moduleName", moduleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "moduleType", moduleType));
-
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "distro", distro));
-}
-
-static void ConvertFormsInfo(napi_env env, napi_value &abilityObject,
-    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms)
-{
-    napi_value formsArray;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &formsArray));
-    size_t index = 0;
-    for (const auto &form : forms) {
-        napi_value formObjdect;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &formObjdect));
-        napi_value name;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, form.name.c_str(), NAPI_AUTO_LENGTH, &name));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "name", name));
-        napi_value type;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, form.type.c_str(), NAPI_AUTO_LENGTH, &type));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "type", type));
-        napi_value updateEnabled;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, form.updateEnabled, &updateEnabled));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "updateEnabled", updateEnabled));
-        napi_value scheduledUpdateTime;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, form.scheduledUpdateTime.c_str(),
-            NAPI_AUTO_LENGTH, &scheduledUpdateTime));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "scheduledUpdateTime",
-            scheduledUpdateTime));
-        napi_value updateDuration;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, form.updateDuration, &updateDuration));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "updateDuration", updateDuration));
-        napi_value supportDimensions;
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &supportDimensions));
-        napi_value defaultDimension;
-        size_t indexValue = 0;
-        for (const auto &dimension : form.supportDimensions) {
-            napi_value value;
-            NAPI_CALL_RETURN_VOID(
-                env, napi_create_string_utf8(env, dimension.c_str(), NAPI_AUTO_LENGTH, &value));
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, supportDimensions, indexValue, value));
-            indexValue++;
-        }
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, form.defaultDimension.c_str(), NAPI_AUTO_LENGTH, &defaultDimension));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "supportDimensions", supportDimensions));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "defaultDimension", defaultDimension));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, formsArray, index, formObjdect));
-        index++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "forms", formsArray));
-}
-
-static void ConvertAbilities(napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value abilities;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &abilities));
-    size_t index = 0;
-    for (const auto &ability : module.abilities) {
-        napi_value abilityObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &abilityObject));
-        napi_value name;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ability.name.c_str(), NAPI_AUTO_LENGTH, &name));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "name", name));
-        napi_value label;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ability.label.c_str(), NAPI_AUTO_LENGTH, &label));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "label", label));
-        napi_value visible;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, ability.visible, &visible));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "visible", visible));
-        ConvertFormsInfo(env, abilityObject, ability.forms);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, abilities, index, abilityObject));
-        index++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "abilities", abilities));
-}
-
-static void ConvertExtensionAbilities(
-    napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value extensionAbilities;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &extensionAbilities));
-    size_t index = 0;
-    for (const auto &extensionAbility : module.extensionAbilities) {
-        napi_value abilityObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &abilityObject));
-        napi_value name;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, extensionAbility.name.c_str(), NAPI_AUTO_LENGTH, &name));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "name", name));
-        ConvertFormsInfo(env, abilityObject, extensionAbility.forms);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, extensionAbilities, index, abilityObject));
-        index++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "extensionAbilities", extensionAbilities));
-}
-
-static void ConvertSummaryModules(
-    napi_env env, napi_value &modulesArray, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    size_t index = 0;
-    for (const auto &module : bundleInPackfos.summary.modules) {
-        napi_value modulesObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &modulesObject));
-        napi_value mainAbility;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, module.mainAbility.c_str(), NAPI_AUTO_LENGTH, &mainAbility));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "mainAbility", mainAbility));
-        ConvertModulesApiVersion(env, modulesObject, module);
-        ConvertDeviceType(env, modulesObject, module.deviceType);
-        ConvertDistro(env, modulesObject, module);
-        ConvertAbilities(env, modulesObject, module);
-        ConvertExtensionAbilities(env, modulesObject, module);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, modulesArray, index, modulesObject));
-        index++;
-    }
-}
-
-static void ConvertPackageSummary(
-    napi_env env, napi_value &jsSummary, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    napi_value app;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &app));
-    ConvertSummaryApp(env, app, bundleInPackfos);
-    napi_value modules;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &modules));
-    ConvertSummaryModules(env, modules, bundleInPackfos);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsSummary, "app", app));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsSummary, "modules", modules));
-}
-
-static void ConvertPackages(
-    napi_env env, napi_value &jsPackagesArray, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    size_t index = 0;
-    for (const auto &package : bundleInPackfos.packages) {
-        napi_value jsPackagesObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsPackagesObject));
-        ConvertDeviceType(env, jsPackagesObject, package.deviceType);
-        napi_value packageName;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, package.name.c_str(), NAPI_AUTO_LENGTH, &packageName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsPackagesObject, "name", packageName));
-        napi_value moduleType;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, package.moduleType.c_str(), NAPI_AUTO_LENGTH, &moduleType));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsPackagesObject, "moduleType", moduleType));
-        napi_value deliveryWithInstall;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, package.deliveryWithInstall, &deliveryWithInstall));
-        NAPI_CALL_RETURN_VOID(
-            env, napi_set_named_property(env, jsPackagesObject, "deliveryWithInstall", deliveryWithInstall));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, jsPackagesArray, index, jsPackagesObject));
-        index++;
-    }
-}
-
-static void ConvertBundlePackInfo(
-    napi_env env, napi_value &result, int32_t flags, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
-    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_PACKAGES) {
-        napi_value jsPackagesArray;
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &jsPackagesArray));
-        ConvertPackages(env, jsPackagesArray, bundleInPackfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "packages", jsPackagesArray));
-        return;
-    }
-    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_BUNDLE_SUMMARY) {
-        napi_value jsSummary;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsSummary));
-        ConvertPackageSummary(env, jsSummary, bundleInPackfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "summary", jsSummary));
-        return;
-    }
-    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_MODULE_SUMMARY) {
-        napi_value jsSummary;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsSummary));
-        napi_value modules;
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &modules));
-        ConvertSummaryModules(env, modules, bundleInPackfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsSummary, "modules", modules));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "summary", jsSummary));
-        return;
-    }
-    napi_value jsSummary;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsSummary));
-    ConvertPackageSummary(env, jsSummary, bundleInPackfos);
-    napi_value jsPackagesArray;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &jsPackagesArray));
-    ConvertPackages(env, jsPackagesArray, bundleInPackfos);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "packages", jsPackagesArray));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "summary", jsSummary));
-}
-
-/**
- * Promise and async callback
- */
-napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("NAPI GetBundlePackInfo called");
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo = new AsyncBundlePackInfoCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is nullptr");
-        return nullptr;
-    }
-    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
-        if ((i == PARAM0) && (valueType == napi_string)) {
-            ParseString(env, asyncCallbackInfo->bundleName, argv[i]);
-        } else if ((i == PARAM1) && (valueType == napi_number)) {
-            ParseInt(env, asyncCallbackInfo->flags, argv[i]);
-        } else if ((i == PARAM2) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            break;
-        } else {
-            asyncCallbackInfo->err = PARAM_TYPE_ERROR;
-            asyncCallbackInfo->message = "type mismatch";
-        }
-    }
-    if (std::find(PACKINFO_FLAGS.begin(), PACKINFO_FLAGS.end(), asyncCallbackInfo->flags) == PACKINFO_FLAGS.end()) {
-        asyncCallbackInfo->err = INVALID_PARAM;
-        asyncCallbackInfo->message = "flag mismatch";
-    }
-
-    napi_value promise = nullptr;
-    if (asyncCallbackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env,  &promise));
-    }
-    callbackPtr.release();
-    return GetBundlePackInfoWrap(env, promise, asyncCallbackInfo);
-}
-
-napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo)
-{
-    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value resource = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, "GetBundlePackInfoPromise", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void* data) {
-            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
-            if (!asyncCallbackInfo->err) {
-                asyncCallbackInfo->ret = InnerGetBundlePackInfo(asyncCallbackInfo->bundleName,
-                    asyncCallbackInfo->flags, asyncCallbackInfo->bundlePackInfo);
-            }
-        },
-        [](napi_env env, napi_status status, void* data) {
-            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
-            std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[2] = { 0 };
-            if (asyncCallbackInfo->err) {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
-                    &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
-                    NAPI_AUTO_LENGTH, &result[1]));
-            } else {
-                if (asyncCallbackInfo->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-                    ConvertBundlePackInfo(env, result[1], asyncCallbackInfo->flags, asyncCallbackInfo->bundlePackInfo);
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
-                }
-            }
-            if (asyncCallbackInfo->deferred) {
-              if (asyncCallbackInfo->ret) {
-                  NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-              } else {
-                  NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-              }
-            } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            }
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    callbackPtr.release();
-    return promise;
-}
-
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetBundleInfoSync call");
@@ -8151,6 +7783,12 @@ NativeValue* JsBundleMgr::GetPermissionDef(NativeEngine *engine, NativeCallbackI
     return (me != nullptr) ? me->OnGetPermissionDef(*engine, *info) : nullptr;
 }
 
+NativeValue* JsBundleMgr::GetBundlePackInfo(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetBundlePackInfo(*engine, *info) : nullptr;
+}
+
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGD("%{public}s is called", __FUNCTION__);
@@ -9236,5 +8874,72 @@ NativeValue* JsBundleMgr::OnGetPermissionDef(NativeEngine &engine, NativeCallbac
     return result;
 }
 
+NativeValue* JsBundleMgr::OnGetBundlePackInfo(NativeEngine &engine, const NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    auto jsInfo = std::make_shared<JsGetBundlePackInfo>();
+    if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM0], jsInfo->bundleName)) {
+            APP_LOGE("conversion failed!");
+            errCode = PARAM_TYPE_ERROR;
+        }
+    } else {
+        APP_LOGE("input params is not string!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (info.argv[PARAM1]->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM1], jsInfo->bundlePackFlag)) {
+            APP_LOGE("conversion failed!");
+            errCode = PARAM_TYPE_ERROR;
+        }
+    } else {
+        APP_LOGE("input params is not nubmer!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (std::find(PACKINFO_FLAGS.begin(), PACKINFO_FLAGS.end(), jsInfo->bundlePackFlag) == PACKINFO_FLAGS.end()) {
+        errCode = INVALID_PARAM;
+    }
+    auto execute = [info = jsInfo, errCode] () {
+        if (errCode == ERR_OK) {
+            std::string name(info->bundleName);
+            info->ret = InnerGetBundlePackInfo(name, info->bundlePackFlag, info->bundlePackInfo);
+            return;
+        }
+    };
+    auto complete = [obj = this, errCode, info = jsInfo]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (errCode != ERR_OK) {
+                std::string errMessage = (errCode == PARAM_TYPE_ERROR) ? "type mismatch" : "flag mismatch";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (info == nullptr) {
+                std::string errMessage = "Parameter is empty.";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, INVALID_PARAM), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (!info->ret) {
+                task.Reject(engine, CreateJsValue(engine, 1));
+                return;
+            }
+            task.ResolveWithCustomize(engine, CreateJsValue(engine, 0),
+                obj->CreateBundlePackInfo(engine, info->bundlePackFlag, info->bundlePackInfo));
+    };
+
+    NativeValue *result = nullptr;
+    auto callback = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
+    AsyncTask::Schedule("JsBundleMgr::OnGetBundlePackInfo",
+        engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
+    return result;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
