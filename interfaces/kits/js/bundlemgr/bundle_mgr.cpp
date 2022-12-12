@@ -8925,6 +8925,11 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const Native
     bool isEnable = false;
     OHOS::AppExecFwk::AbilityInfo abilityInfo;
     auto env = reinterpret_cast<napi_env>(&engine);
+    auto inputAbilityInfo = reinterpret_cast<napi_value>(info.argv[PARAM0]);
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = INVALID_PARAM;
+    }
     for (size_t i = 0; i < info.argc; ++i) {
         if ((i == PARAM0) && (info.argv[PARAM0]->TypeOf() == NATIVE_OBJECT)) {
             if (!UnwrapAbilityInfo(env, inputAbilityInfo, abilityInfo)) {
@@ -8943,7 +8948,6 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const Native
         }
     }
     auto ret = std::make_shared<bool>(false);
-<<<<<<< HEAD
     auto execute = [result = ret, abilityInfo, isEnable, errCode] () {
         if (errCode == ERR_OK) {
             *result = InnerSetAbilityEnabled(abilityInfo, isEnable);
@@ -8951,21 +8955,11 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const Native
         }
     };
     auto complete = [result = ret, errCode]
-=======
-    auto execute = [result = ret, bundleName, isEnable, errCode] () {
-        if (errCode == ERR_OK) {
-            *result = InnerSetApplicationEnabled(bundleName, isEnable);
-            return;
-        }
-    };
-    auto complete = [result = ret, isEnable, errCode]
->>>>>>> 7fa0bbf0786ff8413f2b8d95e7fbfba09e4deb9f
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
             if (errCode != ERR_OK) {
                 task.Reject(engine, CreateJsValue(engine, errCode));
                 return;
             }
-<<<<<<< HEAD
             if (!*result) {
                 task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
                 return;
@@ -8978,21 +8972,7 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const Native
             engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
-=======
-            if (!(*result)) {
-                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
-                return;
-            }
-            task.ResolveWithCustomize(engine, engine.CreateUndefined(), engine.CreateUndefined());
-    };
-    NativeValue *result = nullptr;
-    NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
-    AsyncTask::Schedule("JsBundleMgr::OnSetApplicationEnabled",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
-    return result;
-}
 
->>>>>>> 7fa0bbf0786ff8413f2b8d95e7fbfba09e4deb9f
 NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
 {
     APP_LOGD("%{public}s is called", __FUNCTION__);
