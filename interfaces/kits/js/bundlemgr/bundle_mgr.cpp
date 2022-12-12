@@ -7001,87 +7001,43 @@ napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info)
     return promise;
 }
 
-void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
+NativeValue *CreateExtensionAbilityTypeObject(NativeEngine *engine)
 {
-    napi_value nForm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::FORM), &nForm));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FORM", nForm));
-
-    napi_value nWorkSchedule;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::WORK_SCHEDULER), &nWorkSchedule));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WORK_SCHEDULER", nWorkSchedule));
-
-    napi_value nInputMethod;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD), &nInputMethod));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INPUT_METHOD", nInputMethod));
-
-    napi_value nService;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SERVICE), &nService));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SERVICE", nService));
-
-    napi_value nAccessibility;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ACCESSIBILITY), &nAccessibility));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ACCESSIBILITY", nAccessibility));
-
-    napi_value nDataShare;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::DATASHARE), &nDataShare));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DATA_SHARE", nDataShare));
-
-    napi_value nFileShare;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::FILESHARE), &nFileShare));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILE_SHARE", nFileShare));
-
-    napi_value nStaticSubscriber;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::STATICSUBSCRIBER), &nStaticSubscriber));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATIC_SUBSCRIBER", nStaticSubscriber));
-
-    napi_value nWallpaper;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::WALLPAPER), &nWallpaper));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WALLPAPER", nWallpaper));
-
-    napi_value nBackup;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::BACKUP), &nBackup));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKUP", nBackup));
-
-    napi_value nWindow;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::WINDOW), &nWindow));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WINDOW", nWindow));
-
-    napi_value nFileAccess;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION), &nFileAccess));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILEACCESS_EXTENSION", nFileAccess));
-
-    napi_value nTHUMBNAIL;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::THUMBNAIL), &nTHUMBNAIL));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "THUMBNAIL", nTHUMBNAIL));
-
-    napi_value nPREVIEW;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::PREVIEW), &nPREVIEW));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PREVIEW", nPREVIEW));
-
-    napi_value nEnterpriseAdmin;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN), &nEnterpriseAdmin));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_ADMIN", nEnterpriseAdmin));
-
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
+    APP_LOGD("enter");
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+    object->SetProperty("FORM", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::FORM)));
+    object->SetProperty(
+        "WORK_SCHEDULER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WORK_SCHEDULER)));
+    object->SetProperty("INPUT_METHOD", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD)));
+    object->SetProperty("SERVICE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::SERVICE)));
+    object->SetProperty(
+        "ACCESSIBILITY", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::ACCESSIBILITY)));
+    object->SetProperty("DATA_SHARE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::DATASHARE)));
+    object->SetProperty("FILE_SHARE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::FILESHARE)));
+    object->SetProperty(
+        "STATIC_SUBSCRIBER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::STATICSUBSCRIBER)));
+    object->SetProperty("WALLPAPER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WALLPAPER)));
+    object->SetProperty("BACKUP", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::BACKUP)));
+    object->SetProperty("WINDOW", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WINDOW)));
+    object->SetProperty(
+        "FILEACCESS_EXTENSION", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION)));
+    object->SetProperty("THUMBNAIL", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::THUMBNAIL)));
+    object->SetProperty("PREVIEW", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::PREVIEW)));
+    object->SetProperty(
+        "ENTERPRISE_ADMIN", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN)));
+    object->SetProperty("UNSPECIFIED", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)));
+    return objValue;
 }
-
 static void ConvertDispatcherVersion(
     napi_env env, napi_value &value, const std::string& version, const std::string& dispatchAPI)
 {
@@ -7352,20 +7308,26 @@ napi_value GetProfileByExAbility(napi_env env, napi_callback_info info)
     return GetProfile(env, info, ProfileType::EXTENSION_PROFILE);
 }
 
-void CreateSupportWindowModesObject(napi_env env, napi_value value)
+NativeValue *CreateSupportWindowModesObject(NativeEngine *engine)
 {
-    napi_value nFullscreen;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FULLSCREEN), &nFullscreen));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULL_SCREEN", nFullscreen));
+    APP_LOGD("enter");
 
-    napi_value nSplit;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::SPLIT), &nSplit));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SPLIT", nSplit));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nFloat;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FLOATING), &nFloat));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLOATING", nFloat));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+    object->SetProperty("FULL_SCREEN", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::FULLSCREEN)));
+    object->SetProperty("SPLIT", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::SPLIT)));
+    object->SetProperty("FLOATING", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::FLOATING)));
+    return objValue;
 }
 
 static bool InnerGetApplicationInfo(
