@@ -101,6 +101,12 @@ public:
         const InstallCheckParam &checkParam,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
+    /**
+     * @brief To check dependency whether or not exists.
+     * @param infos Indicates all innerBundleInfo for all haps need to be installed.
+     * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
+     */
+    ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     void ResetProperties();
 
@@ -160,6 +166,17 @@ private:
 
     ErrCode ProcessBundleInfoByPrivilegeCapability(const AppPrivilegeCapability &appPrivilegeCapability,
         InnerBundleInfo &innerBundleInfo);
+
+    bool NeedCheckDependency(const Dependency &dependency, const InnerBundleInfo &info);
+
+    bool FindModuleInInstallingPackage(
+        const std::string &moduleName,
+        const std::string &bundleName,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    bool FindModuleInInstalledPackage(
+        const std::string &moduleName,
+        const std::string &bundleName);
 
     bool isContainEntry_ = false;
 };

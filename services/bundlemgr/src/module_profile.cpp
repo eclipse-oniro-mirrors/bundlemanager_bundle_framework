@@ -33,7 +33,8 @@ thread_local int32_t parseResult;
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "har"
+    "har",
+    "shared"
 };
 
 const std::set<std::string> DEVICE_TYPE_SET = {
