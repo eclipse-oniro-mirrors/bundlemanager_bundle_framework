@@ -1,0 +1,22 @@
+{
+    "module": {
+        "deliveryWithInstall": true,
+        "dependencies": [
+            {
+                "moduleName": "hsp_C"
+            }
+        ],
+        "description": "$string:entry_desc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "tablet",
+            "default"
+        ],
+        "installationFree": false,
+        "name": "hsp_B",
+        "pages": "$profile:main_pages",
+        "type": "feature",
+        "uiSyntax": "ets",
+        "virtualMachine": "ark"
+    }
+}

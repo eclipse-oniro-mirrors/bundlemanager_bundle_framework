@@ -346,6 +346,12 @@ private:
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
+     * @brief To check dependency whether or not exists.
+     * @param infos Indicates all innerBundleInfo for all haps need to be installed.
+     * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
+     */
+    ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    /**
      * @brief To check the hap hash param.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
      * @param hashParams .Indicates all hashParams in installParam.

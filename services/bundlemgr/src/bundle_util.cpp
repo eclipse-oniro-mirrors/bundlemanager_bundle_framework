@@ -47,8 +47,9 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     if (!CheckFileType(bundlePath, Constants::INSTALL_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, Constants::INSTALL_SHARED_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, Constants::QUICK_FIX_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap");
+        APP_LOGE("file is not hap、hsp or hqf");
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
     }
     if (!PathToRealPath(bundlePath, realPath)) {

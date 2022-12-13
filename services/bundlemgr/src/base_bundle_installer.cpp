@@ -573,6 +573,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+    // check the dependencies whether or not exists
+    result = CheckDependency(newInfos);
+    CHECK_RESULT(result, "check dependency failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
@@ -2095,6 +2098,11 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
     }
     return ret;
+}
+
+ErrCode BaseBundleInstaller::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    return bundleInstallChecker_->CheckDependency(infos);
 }
 
 ErrCode BaseBundleInstaller::CheckHapHashParams(
