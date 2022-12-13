@@ -457,7 +457,6 @@ public:
 
     struct JsQueryAbilityInfo {
         std::vector<AbilityInfo> abilityInfos;
-        NativeValue *cacheAbilityInfos;
         bool ret = false;
         bool getCache = false;
     };

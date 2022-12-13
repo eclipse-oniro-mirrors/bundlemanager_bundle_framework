@@ -9119,7 +9119,6 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                 QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
             if (item != nativeAbilityInfoCache.end()) {
                 APP_LOGD("has cache,no need to query from host");
-                info->cacheAbilityInfos  = item->second->Get();
                 info->getCache = true;
                 return;
             }
@@ -9137,8 +9136,12 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
             std::string queryAbilityInfosErrData;
             if (info->getCache) {
+                NativeValue *cacheAbilityInfos;
+                auto item = nativeAbilityInfoCache.find(Query(want.ToString(),
+                    QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+                cacheAbilityInfos  = item->second->Get();
                 APP_LOGD("has cache,no need to query from host");
-                task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), info->cacheAbilityInfos);
+                task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), cacheAbilityInfos);
                 return;
             }
             if (errCode != ERR_OK) {
