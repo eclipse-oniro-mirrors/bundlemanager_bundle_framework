@@ -9135,6 +9135,7 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
     AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info = queryAbilityInfo]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
             std::string queryAbilityInfosErrData;
+            auto env = reinterpret_cast<napi_env>(&engine);
             if (info->getCache) {
                 NativeValue *cacheAbilityInfos;
                 auto item = nativeAbilityInfoCache.find(Query(want.ToString(),
@@ -9150,7 +9151,6 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                     CreateJsValue(engine, queryAbilityInfosErrData));
                 return;
             }
-            auto env = reinterpret_cast<napi_env>(&engine);
             if (!info->ret) {
                 queryAbilityInfosErrData = "QueryAbilityInfos failed";
                 task.RejectWithCustomize(engine, CreateJsValue(engine, 1),
