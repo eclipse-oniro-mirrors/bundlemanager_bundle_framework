@@ -28,6 +28,7 @@
 #ifdef DEVICE_MANAGER_ENABLE
 #include "bms_device_manager.h"
 #endif
+#include "bms_param.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #include "bundle_connect_ability_mgr.h"
@@ -129,6 +130,8 @@ public:
 
     ThreadPool &GetThreadPool();
 
+    const std::shared_ptr<BmsParam> GetBmsParam() const;
+
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -138,6 +141,7 @@ private:
     void SelfClean();
 
     void InitThreadPool();
+    void InitBmsParam();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
     void InitBundleDataMgr();
@@ -169,6 +173,7 @@ private:
     sptr<BundleMgrHostImpl> host_;
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
+    std::shared_ptr<BmsParam> bmsParam_;
     // Thread pool used to start installation or quick fix in parallel.
     ThreadPool bmsThreadPool_ = ThreadPool(Constants::BMS_SERVICE_NAME);
     const int THREAD_NUMBER = std::thread::hardware_concurrency();
