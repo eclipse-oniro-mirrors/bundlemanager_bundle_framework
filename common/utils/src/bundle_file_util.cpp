@@ -51,7 +51,7 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
     if (!CheckFileType(bundlePath, INSTALL_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, INSTALL_SHARED_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, QUICK_FIX_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap、hsp or hqf");
+        APP_LOGE("file is not hap, hsp or hqf");
         return false;
     }
     if (!PathToRealPath(bundlePath, realPath)) {
