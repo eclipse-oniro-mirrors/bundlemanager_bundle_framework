@@ -21,7 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 
 extern "C" __attribute__((constructor))
-void NAPI_bundlemanager_Package_AutoRegister()
+void JsBundleManagerPackageAutoRegister()
 {
     NativeModule newModuleInfo = {
         .name = "package",
