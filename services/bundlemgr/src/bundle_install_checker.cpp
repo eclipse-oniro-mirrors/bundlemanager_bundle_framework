@@ -620,7 +620,7 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
             iter->second(appPrivilegeCapability);
         }
     }
-    if ((provisionInfo.bundleInfo.bundleName != APP_TEST_BUNDLE_NAME) ||
+    if ((provisionInfo.bundleInfo.bundleName != APP_TEST_BUNDLE_NAME) &&
         (provisionInfo.bundleInfo.bundleName.find(BUNDLE_NAME_XTS_TEST) != 0)) {
         appPrivilegeCapability.allowMultiProcess = false;
         appPrivilegeCapability.allowUsePrivilegeExtension = false;
