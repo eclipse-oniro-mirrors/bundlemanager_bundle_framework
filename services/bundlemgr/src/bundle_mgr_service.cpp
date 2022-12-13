@@ -362,6 +362,10 @@ void BundleMgrService::CheckAllUser()
     APP_LOGD("Check all user start.");
     std::set<int32_t> userIds = dataMgr_->GetAllUser();
     for (auto userId : userIds) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+
         bool isExists = false;
         if (AccountHelper::IsOsAccountExists(userId, isExists) != ERR_OK) {
             APP_LOGE("Failed to query whether the user(%{public}d) exists.", userId);
