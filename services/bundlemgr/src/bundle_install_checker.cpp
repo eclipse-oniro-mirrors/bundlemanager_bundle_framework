@@ -41,6 +41,7 @@ const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFrom
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
+const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -619,7 +620,8 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
             iter->second(appPrivilegeCapability);
         }
     }
-    if (provisionInfo.bundleInfo.bundleName != APP_TEST_BUNDLE_NAME) {
+    if ((provisionInfo.bundleInfo.bundleName != APP_TEST_BUNDLE_NAME) ||
+        (provisionInfo.bundleInfo.bundleName.find(BUNDLE_NAME_XTS_TEST) != 0)) {
         appPrivilegeCapability.allowMultiProcess = false;
         appPrivilegeCapability.allowUsePrivilegeExtension = false;
         appPrivilegeCapability.formVisibleNotify = false;
