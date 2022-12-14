@@ -52,6 +52,7 @@ private:
     void JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, const NativeCallbackInfo &info,
         std::shared_ptr<CheckPackageHasInstalledOptions> hasInstalledOptions);
 };
+NativeValue* JsPackageInit(NativeEngine *engine, NativeValue *exports);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* APPEXECFWK_STANDARD_KITS_APPKIT_NAPI_PACKAGE_PACKAGE_H */
