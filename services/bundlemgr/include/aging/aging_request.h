@@ -28,50 +28,50 @@ public:
     AgingRequest();
     bool IsReachStartAgingThreshold() const;
     bool IsReachEndAgingThreshold() const;
+    size_t SortAgingBundles();
+    void RequestReset();
+    void AddAgingBundle(AgingBundleInfo &bundleInfo);
+
     const std::vector<AgingBundleInfo> &GetAgingBundles() const
     {
-        return agingBundles;
+        return agingBundles_;
     };
-    void AddAgingBundle(AgingBundleInfo &bundleInfo);
-    size_t SortAgingBundles()
-    {
-        AgingUtil::SortAgingBundles(agingBundles);
-        return agingBundles.size();
-    };
+
     void UpdateTotalDataBytesAfterUninstalled(const int64_t dataBytes)
     {
-        tatalDataBytes -= dataBytes;
+        tatalDataBytes_ -= dataBytes;
     };
+
     int64_t GetTotalDataBytes() const
     {
-        return tatalDataBytes;
+        return tatalDataBytes_;
     };
+
     void SetTotalDataBytes(const int64_t allBundleDataBytes)
     {
-        tatalDataBytes = allBundleDataBytes;
+        tatalDataBytes_ = allBundleDataBytes;
     };
-    void RequestReset();
 
-public:
     static int64_t GetTotalDataBytesThreshold()
     {
-        return totalDataBytesThreshold;
+        return totalDataBytesThreshold_;
     };
+
     static int64_t GetOneDayTimeMs()
     {
-        return oneDayTimeMs;
+        return oneDayTimeMs_;
     };
 
 private:
     void InitAgingPolicySystemParameters();
     void InitAgingDatasizeThreshold();
     void InitAgingOneDayTimeMs();
-    std::vector<AgingBundleInfo> agingBundles;
-    int64_t tatalDataBytes = 0;
 
-private:
-    static int64_t totalDataBytesThreshold;
-    static int64_t oneDayTimeMs;
+    std::vector<AgingBundleInfo> agingBundles_;
+    int64_t tatalDataBytes_ = 0;
+
+    static int64_t totalDataBytesThreshold_;
+    static int64_t oneDayTimeMs_;
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

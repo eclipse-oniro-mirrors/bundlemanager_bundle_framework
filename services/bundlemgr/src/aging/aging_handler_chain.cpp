@@ -24,8 +24,7 @@ AgingHandlerChain::AgingHandlerChain()
 
 AgingHandlerChain::~AgingHandlerChain()
 {
-    handlers.clear();
-    APP_LOGD("AgingHandlerChain is destroyed");
+    handlers_.clear();
 }
 
 void AgingHandlerChain::AddHandler(const ::std::shared_ptr<AgingHandler> &handler)
@@ -34,19 +33,21 @@ void AgingHandlerChain::AddHandler(const ::std::shared_ptr<AgingHandler> &handle
         APP_LOGE("agingHandler: invalid handler.");
         return;
     }
-    handlers.emplace_back(handler);
+
+    handlers_.emplace_back(handler);
     APP_LOGD("agingHandler: %{public}s is added into handlers", handler->GetName().c_str());
 }
 
 bool AgingHandlerChain::Process(AgingRequest &request) const
 {
-    for (auto handler : handlers) {
+    for (auto handler : handlers_) {
         bool passed = handler->Process(request);
         APP_LOGD("agingHandler: %{public}s process passed: %{public}d", handler->GetName().c_str(), passed);
         if (!passed) {
             break;
         }
     }
+
     APP_LOGD("agingHandler: aging handler chain process done.");
     return request.IsReachEndAgingThreshold();
 }

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <sstream>
 #include <string>
 #include <gtest/gtest.h>
@@ -25,6 +27,7 @@
 #include "common_profile.h"
 #include "default_permission_profile.h"
 #include "json_constants.h"
+#include "module_profile.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -37,6 +40,7 @@ const std::string NEW_APP = "new";
 const std::string UNKOWN_PATH = "unknown_path";
 const size_t ONE = 1;
 const size_t TWO = 2;
+const std::string OVER_MAX_PATH_SIZE(260, 'x');
 const nlohmann::json CONFIG_JSON = R"(
     {
         "app": {
@@ -192,6 +196,238 @@ const nlohmann::json CONFIG_JSON = R"(
         }
     }
 )"_json;
+
+const nlohmann::json MODULE_JSON = R"(
+    {
+    "app": {
+        "apiReleaseType": "Beta3",
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "distributedNotificationEnabled": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0",
+        "entityType": "unknowname",
+        "deviceConfigs": {
+            "car": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "liteWearable": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "phone": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "router": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "smartVision": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "tablet": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "tv": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "wearable": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "default": {
+                "accessible": false,
+                "distributedNotificationEnabled": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            }
+        }
+    },
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home",
+                            "flag.home.intent.from.system"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            },
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.thirdparty.home"
+                        ],
+                        "entities": [
+                            "entity.thirdparty.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            },
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.thirdparty.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            },
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.thirdparty.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "unknowtype"
+        ],
+        "extensionAbilities": [
+            {
+                "name": "extensionAbility_A",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntrance": "",
+                "type": "backup"
+            }
+        ],
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "name": "entry",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "unknowtype",
+        "uiSyntax": "unknowuiSyntax",
+        "virtualMachine": "ark0.0.0.3"
+    }
+}
+)"_json;
 }  // namespace
 
 class BmsBundleParserTest : public testing::Test {
@@ -208,7 +444,8 @@ protected:
     void CheckNoPropProfileParseModule(const std::string &propKey, const ErrCode expectCode) const;
     void CheckProfilePermission(const nlohmann::json &checkedProfileJson) const;
     void CheckProfileForms(const nlohmann::json &checkedProfileJson) const;
-    void CheckProfileShortcut(const nlohmann::json &checkedProfileJson) const;
+    void CheckProfileShortcut(const nlohmann::json &checkedProfileJson, const ErrCode expectCode) const;
+    void CheckProfileModule(const nlohmann::json &checkedProfileJson, const ErrCode code) const;
     ErrCode CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
         std::set<DefaultPermission> &defaultPermissions) const;
 protected:
@@ -328,6 +565,11 @@ void BmsBundleParserTest::GetProfileTypeErrorProps(nlohmann::json &typeErrorProp
     // BUNDLE_MODULE_PROFILE_KEY_SHORTCUT_WANTS
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_TARGET_CLASS] = JsonConstants::NOT_STRING_TYPE;
     typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_TARGET_BUNDLE] = JsonConstants::NOT_STRING_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPATIBLE] = JsonConstants::NOT_NUMBER_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_TARGET] = JsonConstants::NOT_NUMBER_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_REQ_VERSION] = JsonConstants::NOT_OBJECT_TYPE;
+    typeErrorProps[BUNDLE_DEVICE_CONFIG_PROFILE_KEY_FLAG] = JsonConstants::NOT_STRING_TYPE;
+    typeErrorProps[BUNDLE_MODULE_PROFILE_KEY_MODE] = JsonConstants::NOT_STRING_TYPE;
 }
 
 void BmsBundleParserTest::CheckNoPropProfileParseApp(const std::string &propKey, const ErrCode expectCode) const
@@ -407,7 +649,7 @@ void BmsBundleParserTest::CheckProfileForms(const nlohmann::json &checkedProfile
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) << profileFileBuffer.str();
 }
 
-void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProfileJson) const
+void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProfileJson, const ErrCode expectCode) const
 {
     BundleProfile bundleProfile;
     InnerBundleInfo innerBundleInfo;
@@ -418,7 +660,22 @@ void BmsBundleParserTest::CheckProfileShortcut(const nlohmann::json &checkedProf
     BundleExtractor bundleExtractor("");
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) << profileFileBuffer.str();
+    EXPECT_EQ(result, expectCode) << profileFileBuffer.str();
+}
+
+void BmsBundleParserTest::CheckProfileModule(const nlohmann::json &checkedProfileJson, const ErrCode code) const
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->isPreInstallApp = true;
+    std::ostringstream profileFileBuffer;
+
+    profileFileBuffer << checkedProfileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, code) << profileFileBuffer.str();
 }
 
 ErrCode BmsBundleParserTest::CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
@@ -559,6 +816,12 @@ HWTEST_F(BmsBundleParserTest, TestParse_0800, Function | SmallTest | Level0)
         // sub BUNDLE_MODULE_PROFILE_KEY_SHORTCUT_WANTS
         BUNDLE_MODULE_PROFILE_KEY_TARGET_CLASS,
         BUNDLE_MODULE_PROFILE_KEY_TARGET_BUNDLE,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPATIBLE,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_TARGET,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_REQ_VERSION,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_FLAG,
+        BUNDLE_MODULE_PROFILE_KEY_MODE,
+        BUNDLE_MODULE_PROFILE_KEY_PATH,
     };
 
     for (const auto &propKey : notMustPropKeys) {
@@ -904,7 +1167,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2600, Function | SmallTest | Level1)
 
         }]
     )"_json;
-    CheckProfileShortcut(errorShortcutJson);
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
 /**
@@ -928,7 +1191,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2700, Function | SmallTest | Level1)
             ]
         }]
     )"_json;
-    CheckProfileShortcut(errorShortcutJson);
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
 /**
@@ -956,6 +1219,235 @@ HWTEST_F(BmsBundleParserTest, TestParse_2800, Function | SmallTest | Level1)
     innerBundleInfo.GetFormsInfoByApp(formInfos);
     int newSupportDimension = 5;
     EXPECT_EQ(formInfos[0].supportDimensions[0], newSupportDimension);
+}
+
+/**
+ * @tc.name: TestParse_2900
+ * @tc.desc: 1. system running normally
+ *           2. test parsing failed when forms prop has empty in the config.json
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ3F
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_2900, Function | SmallTest | Level1)
+{
+    nlohmann::json errorShortcutJson = CONFIG_JSON;
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "xxx";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = OVER_MAX_PATH_SIZE;
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR);
+    
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName&";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName/";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName?";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName]";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName`";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName|";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+}
+
+
+/**
+ * @tc.name: TestParse_3000
+ * @tc.desc: 1. system running normally
+ *           2. test parsing failed when forms prop has empty in the config.json
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ3F
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3000, Function | SmallTest | Level1)
+{
+    nlohmann::json errorShortcutJson = CONFIG_JSON;
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_PACKAGE] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME] = "com../hiworld../";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    errorShortcutJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DEVICE_TYPE] = "";
+    CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.name: TestParse_3100
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3100, Function | SmallTest | Level1)
+{
+    nlohmann::json moduleJson = MODULE_JSON;
+    CheckProfileModule(moduleJson, ERR_OK);
+
+    moduleJson[BUNDLE_PROFILE_KEY_MODULE][PROFILE_KEY_NAME] = "";
+    CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    moduleJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "";
+    CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    moduleJson[BUNDLE_PROFILE_KEY_MODULE][PROFILE_KEY_NAME] = "../entry";
+    moduleJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "com.ex";
+    CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    moduleJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] =
+        "doe8m8mMt2DicXm3fZ7Nz0xaVaw4R2in5Gm1gJVvzRKmh3SM7Jf5gmkaDGFzRsriDtLRioSvg07wokZtmUDE4XKplv6pIMqF5aVIdaff";
+    CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    moduleJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "1com.example.backuptest";
+    moduleJson[BUNDLE_PROFILE_KEY_MODULE][PROFILE_KEY_NAME] = "entry";
+    CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+
+    moduleJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "com.example/.backuptest";
+    CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+}
+
+
+/**
+ * @tc.name: TestParse_3200
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3200, Function | SmallTest | Level1)
+{
+    nlohmann::json formsJson = R"(
+     {
+      "app": {
+          "bundleName": "com.example.backuptest",
+         "debug": true,
+         "distributedNotificationEnabled": true,
+         "icon": "$media:app_icon",
+         "iconId": 16777220,
+         "label": "$string:app_name",
+         "labelId": 16777216,
+         "minAPIVersion": 9,
+         "targetAPIVersion": 9,
+         "vendor": "example",
+         "versionCode": 1000000,
+         "versionName": "1.0.0"
+      },
+      "module": {
+          "name": "entry",
+          "installationFree": false,
+          "mainElement": "MainAbility",
+          "pages": "$profile:main_pages",
+          "srcEntrance": "./ets/Application/AbilityStage.ts",
+          "type": "entry",
+          "uiSyntax": "ets",
+          "virtualMachine": "ark0.0.0.3"
+      }
+  }
+)"_json;
+//         )"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    profileFileBuffer << formsJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_3300
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3300, Function | SmallTest | Level1)
+{
+    nlohmann::json formsJson = R"(
+     {
+      "app": {
+          "bundleName": "com.example.backuptest",
+         "debug": true,
+         "distributedNotificationEnabled": true,
+         "icon": "$media:app_icon",
+         "iconId": 16777220,
+         "label": "$string:app_name",
+         "labelId": 16777216,
+         "minAPIVersion": 9,
+         "targetAPIVersion": 9,
+         "vendor": "example",
+         "versionCode": 1000000,
+         "versionName": "1.0.0"
+      },
+      "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.thirdparty.home"
+                        ],
+                        "entities": [
+                            "entity.system.home",
+                            "flag.home.intent.from.system"
+                        ]
+                    }
+                ],
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+          "name": "entry",
+          "installationFree": false,
+          "mainElement": "MainAbility",
+          "pages": "$profile:main_pages",
+          "srcEntrance": "./ets/Application/AbilityStage.ts",
+          "type": "entry",
+          "uiSyntax": "ets",
+          "virtualMachine": "ark0.0.0.3"
+      }
+  }
+)"_json;
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    profileFileBuffer << formsJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**

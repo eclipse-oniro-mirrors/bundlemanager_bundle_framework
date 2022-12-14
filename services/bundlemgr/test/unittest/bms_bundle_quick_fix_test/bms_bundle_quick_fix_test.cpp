@@ -39,6 +39,8 @@
 #include "quick_fix_status_callback_proxy.h"
 #include "quick_fix/patch_parser.h"
 #include "quick_fix/patch_profile.h"
+#include "quick_fix/quick_fix_boot_scanner.h"
+#include "quick_fix/quick_fix_manager_rdb.h"
 #include "quick_fix/quick_fix_mgr.h"
 #include "quick_fix/quick_fixer.h"
 
@@ -3329,5 +3331,142 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackProxy_0300, Function | Sma
     result->SetResCode(resultCode);
     proxy.OnPatchDeleted(result);
     EXPECT_EQ(result->GetResCode(), resultCode);
+}
+
+/**
+ * @tc.number: QuickFixDeployer_0100
+ * @tc.name: Test DeployQuickFix with Execute
+ * @tc.desc: 1.Test the DeployQuickFix of QuickFixDeployer
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        ErrCode ret = deployer->Execute();
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+        ret = deployer->DeployQuickFix();
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_0200
+ * @tc.name: Test ProcessPatchDeployEnd with Execute
+ * @tc.desc: 1.Test the ProcessPatchDeployEnd of QuickFixDeployer
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0200, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        appQuickFix.deployingAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
+        appQuickFix.bundleName = BUNDLE_NAME;
+        HqfInfo info;
+        info.hqfFilePath = "/data/test/hello.hqf";
+        appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(info);
+        std::string patchPath = "diff.patch";
+        ErrCode ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_0300
+ * @tc.name: Test FetchInnerBundleInfo with Execute
+ * @tc.desc: 1.Test the FetchInnerBundleInfo of QuickFixDeployer
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0300, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        InnerBundleInfo innerBundleInfo;
+        auto dataMgr = GetBundleDataMgr();
+        EXPECT_NE(dataMgr, nullptr);
+        dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, innerBundleInfo);
+        bool ret = deployer->FetchInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+        EXPECT_EQ(ret, true);
+
+        ret = deployer->IsLibIsolated(BUNDLE_NAME, "entry");
+        EXPECT_EQ(ret, false);
+    }
+}
+
+/**
+ * @tc.number: QuickFixManagerRdb_0100
+ * @tc.name: Test QuickFixManagerRdb
+ * @tc.desc: 1.Test the failed scene of QuickFixManagerRdb
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerRdb rdb;
+    rdb.rdbDataManager_.reset();
+    EXPECT_EQ(rdb.rdbDataManager_, nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    bool ret = rdb.DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+
+    ret = rdb.DeleteDataFromDb(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: QuickFixBootScanner_0100
+ * @tc.name: Test QuickFixBootScanner
+ * @tc.desc: 1.Test the failed scene of ReprocessQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixBootScanner_0100, Function | SmallTest | Level0)
+{
+    QuickFixBootScanner scanner;
+    bool ret = scanner.ReprocessQuickFix("", "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: QuickFixer_0100
+ * @tc.name: Test QuickFixer
+ * @tc.desc: 1.Test the failed scene of QuickFixer
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixer_0100, Function | SmallTest | Level0)
+{
+    int64_t quickFixerId = 0;
+    std::shared_ptr<EventHandler> handler;
+    sptr<IQuickFixStatusCallback> statusCallback;
+    QuickFixer fixer(quickFixerId, handler, statusCallback);
+    const std::vector<std::string> bundleFilePaths;
+    fixer.DeployQuickFix(bundleFilePaths);
+    EXPECT_EQ(fixer.statusCallback_, nullptr);
+    EXPECT_EQ(bundleFilePaths.empty(), true);
+    fixer.SwitchQuickFix("", false);
+    EXPECT_EQ(fixer.statusCallback_, nullptr);
+    fixer.DeleteQuickFix("");
+    EXPECT_EQ(fixer.statusCallback_, nullptr);
+}
+
+/**
+ * @tc.number: QuickFixDataMgr_0100
+ * @tc.name: Test QuickFixDataMgr
+ * @tc.desc: 1.Test the failed scene of QuickFixDataMgr
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDataMgr_0100, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    dataMgr.quickFixManagerDb_.reset();
+    EXPECT_EQ(dataMgr.quickFixManagerDb_, nullptr);
+    std::map<std::string, InnerAppQuickFix> innerAppQuickFixes;
+    bool ret = dataMgr.QueryAllInnerAppQuickFix(innerAppQuickFixes);
+    EXPECT_EQ(ret, false);
+
+    InnerAppQuickFix innerAppQuickFix;
+    ret = dataMgr.QueryInnerAppQuickFix("", innerAppQuickFix);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr.SaveInnerAppQuickFix(innerAppQuickFix);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr.DeleteInnerAppQuickFix("");
+    EXPECT_EQ(ret, false);
 }
 } // OHOS

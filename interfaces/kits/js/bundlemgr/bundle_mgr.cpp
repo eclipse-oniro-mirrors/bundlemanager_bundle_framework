@@ -137,6 +137,7 @@ struct PermissionsKey {
 static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::unordered_map<Query, napi_ref, QueryHash> abilityInfoCache;
+static std::unordered_map<Query, NativeReference*, QueryHash> nativeAbilityInfoCache;
 static std::mutex abilityInfoCacheMutex_;
 static std::mutex bundleMgrMutex_;
 static sptr<BundleMgrDeathRecipient> bundleMgrDeathRecipient(new (std::nothrow) BundleMgrDeathRecipient());
@@ -1936,374 +1937,6 @@ static bool InnerGetBundlePackInfo(const std::string &bundleName, int32_t flags,
     return false;
 }
 
-static void ConvertSummaryApp(napi_env env, napi_value &app, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    napi_value bundleName;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_string_utf8(env, bundleInPackfos.summary.app.bundleName.c_str(), NAPI_AUTO_LENGTH, &bundleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, app, "bundleName", bundleName));
-    napi_value version;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &version));
-    napi_value versionName;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_string_utf8(env, bundleInPackfos.summary.app.version.name.c_str(), NAPI_AUTO_LENGTH, &versionName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, version, "name", versionName));
-    napi_value versionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInPackfos.summary.app.version.code, &versionCode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, version, "code", versionCode));
-    napi_value minCompatibleVersionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInPackfos.summary.app.version.minCompatibleVersionCode,
-                                   &minCompatibleVersionCode));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, version, "minCompatibleVersionCode", minCompatibleVersionCode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, app, "version", version));
-}
-
-static void ConvertModulesApiVersion(
-    napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value apiVersion;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &apiVersion));
-    napi_value releaseType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, module.apiVersion.releaseType.c_str(), NAPI_AUTO_LENGTH, &releaseType));
-    napi_value compatible;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, module.apiVersion.compatible, &compatible));
-    napi_value target;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, module.apiVersion.target, &target));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, apiVersion, "releaseType", releaseType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, apiVersion, "compatible", compatible));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, apiVersion, "target", target));
-
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "apiVersion", apiVersion));
-}
-
-static void ConvertDeviceType(napi_env env, napi_value &Object, std::vector<std::string> deviceTypes)
-{
-    napi_value deviceType;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &deviceType));
-    size_t typeIndex = 0;
-    for (const auto &type : deviceTypes) {
-        napi_value typeValue;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, type.c_str(), NAPI_AUTO_LENGTH, &typeValue));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, deviceType, typeIndex, typeValue));
-        typeIndex++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, Object, "deviceType", deviceType));
-}
-
-static void ConvertDistro(napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value distro;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &distro));
-    napi_value deliveryWithInstall;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, module.distro.deliveryWithInstall, &deliveryWithInstall));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "deliveryWithInstall", deliveryWithInstall));
-    napi_value installationFree;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, module.distro.installationFree, &installationFree));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "installationFree", installationFree));
-    napi_value moduleName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, module.distro.moduleName.c_str(), NAPI_AUTO_LENGTH, &moduleName));
-    napi_value moduleType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, module.distro.moduleType.c_str(), NAPI_AUTO_LENGTH, &moduleType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "moduleName", moduleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, distro, "moduleType", moduleType));
-
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "distro", distro));
-}
-
-static void ConvertFormsInfo(napi_env env, napi_value &abilityObject,
-    const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms)
-{
-    napi_value formsArray;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &formsArray));
-    size_t index = 0;
-    for (const auto &form : forms) {
-        napi_value formObjdect;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &formObjdect));
-        napi_value name;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, form.name.c_str(), NAPI_AUTO_LENGTH, &name));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "name", name));
-        napi_value type;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, form.type.c_str(), NAPI_AUTO_LENGTH, &type));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "type", type));
-        napi_value updateEnabled;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, form.updateEnabled, &updateEnabled));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "updateEnabled", updateEnabled));
-        napi_value scheduledUpdateTime;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, form.scheduledUpdateTime.c_str(),
-            NAPI_AUTO_LENGTH, &scheduledUpdateTime));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "scheduledUpdateTime",
-            scheduledUpdateTime));
-        napi_value updateDuration;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, form.updateDuration, &updateDuration));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "updateDuration", updateDuration));
-        napi_value supportDimensions;
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &supportDimensions));
-        napi_value defaultDimension;
-        size_t indexValue = 0;
-        for (const auto &dimension : form.supportDimensions) {
-            napi_value value;
-            NAPI_CALL_RETURN_VOID(
-                env, napi_create_string_utf8(env, dimension.c_str(), NAPI_AUTO_LENGTH, &value));
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, supportDimensions, indexValue, value));
-            indexValue++;
-        }
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, form.defaultDimension.c_str(), NAPI_AUTO_LENGTH, &defaultDimension));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "supportDimensions", supportDimensions));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObjdect, "defaultDimension", defaultDimension));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, formsArray, index, formObjdect));
-        index++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "forms", formsArray));
-}
-
-static void ConvertAbilities(napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value abilities;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &abilities));
-    size_t index = 0;
-    for (const auto &ability : module.abilities) {
-        napi_value abilityObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &abilityObject));
-        napi_value name;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ability.name.c_str(), NAPI_AUTO_LENGTH, &name));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "name", name));
-        napi_value label;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, ability.label.c_str(), NAPI_AUTO_LENGTH, &label));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "label", label));
-        napi_value visible;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, ability.visible, &visible));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "visible", visible));
-        ConvertFormsInfo(env, abilityObject, ability.forms);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, abilities, index, abilityObject));
-        index++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "abilities", abilities));
-}
-
-static void ConvertExtensionAbilities(
-    napi_env env, napi_value &modulesObject, const OHOS::AppExecFwk::PackageModule &module)
-{
-    napi_value extensionAbilities;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &extensionAbilities));
-    size_t index = 0;
-    for (const auto &extensionAbility : module.extensionAbilities) {
-        napi_value abilityObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &abilityObject));
-        napi_value name;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, extensionAbility.name.c_str(), NAPI_AUTO_LENGTH, &name));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "name", name));
-        ConvertFormsInfo(env, abilityObject, extensionAbility.forms);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, extensionAbilities, index, abilityObject));
-        index++;
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "extensionAbilities", extensionAbilities));
-}
-
-static void ConvertSummaryModules(
-    napi_env env, napi_value &modulesArray, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    size_t index = 0;
-    for (const auto &module : bundleInPackfos.summary.modules) {
-        napi_value modulesObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &modulesObject));
-        napi_value mainAbility;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, module.mainAbility.c_str(), NAPI_AUTO_LENGTH, &mainAbility));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "mainAbility", mainAbility));
-        ConvertModulesApiVersion(env, modulesObject, module);
-        ConvertDeviceType(env, modulesObject, module.deviceType);
-        ConvertDistro(env, modulesObject, module);
-        ConvertAbilities(env, modulesObject, module);
-        ConvertExtensionAbilities(env, modulesObject, module);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, modulesArray, index, modulesObject));
-        index++;
-    }
-}
-
-static void ConvertPackageSummary(
-    napi_env env, napi_value &jsSummary, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    napi_value app;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &app));
-    ConvertSummaryApp(env, app, bundleInPackfos);
-    napi_value modules;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &modules));
-    ConvertSummaryModules(env, modules, bundleInPackfos);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsSummary, "app", app));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsSummary, "modules", modules));
-}
-
-static void ConvertPackages(
-    napi_env env, napi_value &jsPackagesArray, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    size_t index = 0;
-    for (const auto &package : bundleInPackfos.packages) {
-        napi_value jsPackagesObject;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsPackagesObject));
-        ConvertDeviceType(env, jsPackagesObject, package.deviceType);
-        napi_value packageName;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, package.name.c_str(), NAPI_AUTO_LENGTH, &packageName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsPackagesObject, "name", packageName));
-        napi_value moduleType;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, package.moduleType.c_str(), NAPI_AUTO_LENGTH, &moduleType));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsPackagesObject, "moduleType", moduleType));
-        napi_value deliveryWithInstall;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, package.deliveryWithInstall, &deliveryWithInstall));
-        NAPI_CALL_RETURN_VOID(
-            env, napi_set_named_property(env, jsPackagesObject, "deliveryWithInstall", deliveryWithInstall));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, jsPackagesArray, index, jsPackagesObject));
-        index++;
-    }
-}
-
-static void ConvertBundlePackInfo(
-    napi_env env, napi_value &result, int32_t flags, const OHOS::AppExecFwk::BundlePackInfo &bundleInPackfos)
-{
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
-    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_PACKAGES) {
-        napi_value jsPackagesArray;
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &jsPackagesArray));
-        ConvertPackages(env, jsPackagesArray, bundleInPackfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "packages", jsPackagesArray));
-        return;
-    }
-    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_BUNDLE_SUMMARY) {
-        napi_value jsSummary;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsSummary));
-        ConvertPackageSummary(env, jsSummary, bundleInPackfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "summary", jsSummary));
-        return;
-    }
-    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_MODULE_SUMMARY) {
-        napi_value jsSummary;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsSummary));
-        napi_value modules;
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &modules));
-        ConvertSummaryModules(env, modules, bundleInPackfos);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, jsSummary, "modules", modules));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "summary", jsSummary));
-        return;
-    }
-    napi_value jsSummary;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &jsSummary));
-    ConvertPackageSummary(env, jsSummary, bundleInPackfos);
-    napi_value jsPackagesArray;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &jsPackagesArray));
-    ConvertPackages(env, jsPackagesArray, bundleInPackfos);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "packages", jsPackagesArray));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "summary", jsSummary));
-}
-
-/**
- * Promise and async callback
- */
-napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("NAPI GetBundlePackInfo called");
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo = new AsyncBundlePackInfoCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is nullptr");
-        return nullptr;
-    }
-    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
-        if ((i == PARAM0) && (valueType == napi_string)) {
-            ParseString(env, asyncCallbackInfo->bundleName, argv[i]);
-        } else if ((i == PARAM1) && (valueType == napi_number)) {
-            ParseInt(env, asyncCallbackInfo->flags, argv[i]);
-        } else if ((i == PARAM2) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            break;
-        } else {
-            asyncCallbackInfo->err = PARAM_TYPE_ERROR;
-            asyncCallbackInfo->message = "type mismatch";
-        }
-    }
-    if (std::find(PACKINFO_FLAGS.begin(), PACKINFO_FLAGS.end(), asyncCallbackInfo->flags) == PACKINFO_FLAGS.end()) {
-        asyncCallbackInfo->err = INVALID_PARAM;
-        asyncCallbackInfo->message = "flag mismatch";
-    }
-
-    napi_value promise = nullptr;
-    if (asyncCallbackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env,  &promise));
-    }
-    callbackPtr.release();
-    return GetBundlePackInfoWrap(env, promise, asyncCallbackInfo);
-}
-
-napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo)
-{
-    std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value resource = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, "GetBundlePackInfoPromise", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void* data) {
-            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
-            if (!asyncCallbackInfo->err) {
-                asyncCallbackInfo->ret = InnerGetBundlePackInfo(asyncCallbackInfo->bundleName,
-                    asyncCallbackInfo->flags, asyncCallbackInfo->bundlePackInfo);
-            }
-        },
-        [](napi_env env, napi_status status, void* data) {
-            AsyncBundlePackInfoCallbackInfo* asyncCallbackInfo =
-                reinterpret_cast<AsyncBundlePackInfoCallbackInfo*>(data);
-            std::unique_ptr<AsyncBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[2] = { 0 };
-            if (asyncCallbackInfo->err) {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
-                    &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
-                    NAPI_AUTO_LENGTH, &result[1]));
-            } else {
-                if (asyncCallbackInfo->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-                    ConvertBundlePackInfo(env, result[1], asyncCallbackInfo->flags, asyncCallbackInfo->bundlePackInfo);
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
-                }
-            }
-            if (asyncCallbackInfo->deferred) {
-              if (asyncCallbackInfo->ret) {
-                  NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-              } else {
-                  NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-              }
-            } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            }
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    callbackPtr.release();
-    return promise;
-}
-
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetBundleInfoSync call");
@@ -2547,6 +2180,21 @@ static void InnerRecover(napi_env env, const std::string &bundleName, InstallPar
     APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
 }
 
+static bool InnerGetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    };
+    ErrCode ret = iBundleMgr->GetPermissionDef(permissionName, permissionDef);
+    if (ret != NO_ERROR) {
+        APP_LOGE("permissionName is not find");
+        return false;
+    }
+    return true;
+}
+
 static bool VerifyCallingPermission(std::string permissionName)
 {
     auto iBundleMgr = GetBundleMgr();
@@ -2555,109 +2203,6 @@ static bool VerifyCallingPermission(std::string permissionName)
         return false;
     }
     return iBundleMgr->VerifyCallingPermission(permissionName);
-}
-
-/**
- * Promise and async callback
- */
-napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
-{
-    APP_LOGI("GetBundleInstaller called");
-    size_t argc = ARGS_SIZE_ONE;
-    napi_value argv[ARGS_SIZE_ONE] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    APP_LOGI("argc = [%{public}zu]", argc);
-
-    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
-        new (std::nothrow) AsyncGetBundleInstallerCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        return nullptr;
-    }
-    std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (argc > (ARGS_SIZE_ONE - CALLBACK_SIZE)) {
-        APP_LOGI("GetBundleInstaller asyncCallback.");
-        napi_valuetype valuetype = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[PARAM0], &valuetype));
-        NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
-        NAPI_CALL(env, napi_create_reference(env, argv[PARAM0], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "GetBundleInstaller", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {},
-            [](napi_env env, napi_status status, void *data) {
-                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
-                std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
-                napi_value result[ARGS_SIZE_TWO] = {0};
-                napi_value callback = 0;
-                napi_value undefined = 0;
-                napi_value callResult = 0;
-                napi_value m_classBundleInstaller = nullptr;
-                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
-                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
-                        &m_classBundleInstaller));
-                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-                    NAPI_CALL_RETURN_VOID(env, napi_new_instance(
-                        env, m_classBundleInstaller, 0, nullptr, &result[PARAM1]));
-                    result[PARAM0] = GetCallbackErrorValue(env, CODE_SUCCESS);
-                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(
-                        env, asyncCallbackInfo->callback, &callback));
-                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
-                        &result[PARAM0], &callResult));
-                } else {
-                    napi_value placeHolder = nullptr;
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[PARAM0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                        sizeof(result) / sizeof(result[0]), result, &placeHolder));
-                }
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        napi_value result;
-        napi_create_int32(env, NAPI_RETURN_ONE, &result);
-        return result;
-    } else {
-        napi_deferred deferred;
-        napi_value promise;
-        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
-        asyncCallbackInfo->deferred = deferred;
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "GetBundleInstaller", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {},
-            [](napi_env env, napi_status status, void *data) {
-                APP_LOGI("=================load=================");
-                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
-                std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
-                napi_value result;
-                napi_value m_classBundleInstaller = nullptr;
-                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
-                    napi_get_reference_value(env, g_classBundleInstaller, &m_classBundleInstaller);
-                    napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
-                    napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result));
-                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result));
-                }
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        return promise;
-    }
 }
 
 static bool ParseHashParam(napi_env env, std::string &key, std::string &value, napi_value args)
@@ -2860,627 +2405,6 @@ static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_val
         return false;
     }
     return true;
-}
-
-static void ConvertInstallResult(InstallResult &installResult)
-{
-    APP_LOGI("ConvertInstallResult = %{public}s.", installResult.resultMsg.c_str());
-    switch (installResult.resultCode) {
-        case static_cast<int32_t>(IStatusReceiver::SUCCESS):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::SUCCESS);
-            installResult.resultMsg = "SUCCESS";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_HOST_INSTALLER_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DISALLOWED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE);
-            installResult.resultMsg = "STATUS_INSTALL_FAILURE";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERIFICATION_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARAM_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_HAP_SIZE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_HAP_NAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_BUNDLE_FILE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_UNEXPECTED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_MISSING_BUNDLE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_NO_PROFILE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_BAD_PROFILE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_MISSING_PROP):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_AN_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_APP_PKCS7_FAIL):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_PROFILE_PARSE_FAIL):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_DIGEST):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_INTEGRITY_VERIFICATION_FAILURE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_FILE_SIZE_TOO_LARGE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_PUBLICKEY):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_EMPTY):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_DUPLICATE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
-            installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_MISSING_ABILITY):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND);
-            installResult.resultMsg = "STATUS_ABILITY_NOT_FOUND";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE);
-            installResult.resultMsg = "STATUS_INSTALL_FAILURE_INCOMPATIBLE";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED);
-            installResult.resultMsg = "STATUS_INSTALL_PERMISSION_DENIED";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ENTRY_ALREADY_EXIST):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ALREADY_EXIST):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_BUNDLENAME_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSIONCODE_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSIONNAME_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VENDOR_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_RELEASETYPE_TARGET_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ZERO_USER_WITH_NO_SINGLETON):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APPTYPE_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_URI_DUPLICATE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_NOT_COMPATIBLE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_AN_INCOMPATIBLE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_TYPE_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT);
-            installResult.resultMsg = "STATUS_INSTALL_FAILURE_CONFLICT";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_PARAM_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_GET_PROXY_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CREATE_DIR_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CREATE_DIR_EXIST):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CHOWN_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_REMOVE_DIR_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_EXTRACT_FILES_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_RNAME_DIR_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CLEAN_DIR_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_STATE_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_GENERATE_UID_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INSTALLD_SERVICE_ERROR):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE);
-            installResult.resultMsg = "STATUS_INSTALL_FAILURE_STORAGE";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_PERMISSION_DENIED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED);
-            installResult.resultMsg = "STATUS_UNINSTALL_PERMISSION_DENIED";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_INVALID_NAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_PARAM_ERROR):
-            if (CheckIsSystemApp()) {
-                installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED);
-                installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_ABORTED";
-                break;
-            }
-            [[fallthrough]];
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR):
-            if (CheckIsSystemApp()) {
-                installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT);
-                installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_CONFLICT";
-                break;
-            }
-            [[fallthrough]];
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_BUNDLE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_NOT_INSTALL_HAP):
-        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_DISALLOWED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE);
-            installResult.resultMsg = "STATUS_UNINSTALL_FAILURE";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_GET_BUNDLEPATH_ERROR):
-        case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME):
-        case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_NOT_ALLOWED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID);
-            installResult.resultMsg = "STATUS_RECOVER_FAILURE_INVALID";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_FAILED_SERVICE_DIED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_FAILED_GET_INSTALLER_PROXY):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
-            installResult.resultMsg = "STATUS_BMS_SERVICE_ERROR";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT);
-            installResult.resultMsg = "STATUS_FAILED_NO_SPACE_LEFT";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED);
-            installResult.resultMsg = "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_NOT_EXIST):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_NOT_EXIST);
-            installResult.resultMsg = "STATUS_USER_NOT_EXIST";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_CREATE_FAILED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FAILED);
-            installResult.resultMsg = "STATUS_USER_CREATE_FAILED";
-            break;
-        case static_cast<int32_t>(IStatusReceiver::ERR_USER_REMOVE_FAILED):
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FAILED);
-            installResult.resultMsg = "STATUS_USER_REMOVE_FAILED";
-            break;
-        default:
-            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
-            installResult.resultMsg = "STATUS_BMS_SERVICE_ERROR";
-            break;
-    }
-}
-
-/**
- * Promise and async callback
- */
-napi_value Install(napi_env env, napi_callback_info info)
-{
-    APP_LOGI("Install called");
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    APP_LOGI("argc = [%{public}zu]", argc);
-    AsyncInstallCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncInstallCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        return nullptr;
-    }
-    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-
-    std::vector<std::string> bundleFilePaths;
-    InstallParam installParam;
-    napi_value retFirst = nullptr;
-    bool retSecond = true;
-    retFirst = ParseStringArray(env, bundleFilePaths, argv[PARAM0]);
-    retSecond = ParseInstallParam(env, installParam, argv[PARAM1]);
-    if (retFirst == nullptr || !retSecond) {
-        APP_LOGE("Install installParam error.");
-        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
-    }
-    asyncCallbackInfo->hapFiles = bundleFilePaths;
-    asyncCallbackInfo->installParam = installParam;
-    if (argc > (ARGS_SIZE_THREE - CALLBACK_SIZE)) {
-        APP_LOGI("Install asyncCallback.");
-        napi_valuetype valuetype = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
-        if (valuetype != napi_function) {
-            APP_LOGE("Wrong argument type. Function expected.");
-            return nullptr;
-        }
-        NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "Install", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                if (!asyncCallbackInfo->errCode) {
-                    InnerInstall(env,
-                        asyncCallbackInfo->hapFiles,
-                        asyncCallbackInfo->installParam,
-                        asyncCallbackInfo->installResult);
-                }
-            },
-            [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-                napi_value result[ARGS_SIZE_TWO] = {0};
-                napi_value callback = 0;
-                napi_value undefined = 0;
-                napi_value callResult = 0;
-                if (!asyncCallbackInfo->errCode) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
-                    ConvertInstallResult(asyncCallbackInfo->installResult);
-                    napi_value nResultMsg;
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-                        env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "statusMessage",
-                        nResultMsg));
-                    napi_value nResultCode;
-                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
-                        &nResultCode));
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
-                    result[PARAM0] = GetCallbackErrorValue(
-                        env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
-                } else {
-                    napi_value nResultMsg;
-                    std::string msg = "error param type.";
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
-                        &nResultMsg));
-                    result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
-                }
-                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
-                    &result[PARAM0], &callResult));
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        napi_value result;
-        napi_create_int32(env, NAPI_RETURN_ONE, &result);
-        return result;
-    } else {
-        napi_deferred deferred;
-        napi_value promise;
-        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
-        asyncCallbackInfo->deferred = deferred;
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "Install", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                InnerInstall(env,
-                    asyncCallbackInfo->hapFiles,
-                    asyncCallbackInfo->installParam,
-                    asyncCallbackInfo->installResult);
-            },
-            [](napi_env env, napi_status status, void *data) {
-                APP_LOGI("=================load=================");
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-                ConvertInstallResult(asyncCallbackInfo->installResult);
-                napi_value result;
-                NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
-                napi_value nResultMsg;
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-                    env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "statusMessage", nResultMsg));
-                napi_value nResultCode;
-                NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
-                    &nResultCode));
-                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "status", nResultCode));
-                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
-                    result));
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        return promise;
-    }
-}
-
-napi_value Recover(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("Recover by bundleName called");
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    APP_LOGD("argc = [%{public}zu]", argc);
-    AsyncInstallCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncInstallCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        return nullptr;
-    }
-    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-    std::string bundleName;
-    ParseString(env, bundleName, argv[PARAM0]);
-    InstallParam installParam;
-    if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Recover installParam error.");
-        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
-    }
-
-    asyncCallbackInfo->installParam = installParam;
-    asyncCallbackInfo->bundleName = bundleName;
-    if (argc > (ARGS_SIZE_THREE - CALLBACK_SIZE)) {
-        APP_LOGD("Recover by bundleName asyncCallback.");
-        napi_valuetype valuetype = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
-        NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
-        NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "Recover", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                if (!asyncCallbackInfo->errCode) {
-                    InnerRecover(env,
-                        asyncCallbackInfo->bundleName,
-                        asyncCallbackInfo->installParam,
-                        asyncCallbackInfo->installResult);
-                }
-            },
-            [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-                napi_value result[ARGS_SIZE_TWO] = {0};
-                napi_value callback = 0;
-                napi_value undefined = 0;
-                napi_value callResult = 0;
-                if (!asyncCallbackInfo->errCode) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
-                    ConvertInstallResult(asyncCallbackInfo->installResult);
-                    napi_value nResultMsg;
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-                        env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "statusMessage",
-                        nResultMsg));
-                    napi_value nResultCode;
-                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
-                        &nResultCode));
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
-                    result[PARAM0] = GetCallbackErrorValue(
-                        env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
-                } else {
-                    napi_value nResultMsg;
-                    std::string msg = "error param type.";
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
-                        &nResultMsg));
-                    result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
-                }
-                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
-                    &result[PARAM0], &callResult));
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        napi_value result;
-        napi_create_int32(env, NAPI_RETURN_ONE, &result);
-        return result;
-    } else {
-        napi_deferred deferred;
-        napi_value promise;
-        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
-        asyncCallbackInfo->deferred = deferred;
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "Recover", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                InnerRecover(env,
-                    asyncCallbackInfo->bundleName,
-                    asyncCallbackInfo->installParam,
-                    asyncCallbackInfo->installResult);
-            },
-            [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-                ConvertInstallResult(asyncCallbackInfo->installResult);
-                napi_value result;
-                NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
-                napi_value nResultMsg;
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-                    env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "statusMessage", nResultMsg));
-                napi_value nResultCode;
-                NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
-                    &nResultCode));
-                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "status", nResultCode));
-                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
-                    result));
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        return promise;
-    }
-}
-
-static void InnerUninstall(
-    napi_env env, const std::string &bundleName, InstallParam &installParam, InstallResult &installResult)
-{
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return;
-    }
-    installParam.installFlag = InstallFlag::NORMAL;
-    OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
-    if (callback == nullptr) {
-        APP_LOGE("callback nullptr");
-        return;
-    }
-
-    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
-    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
-    iBundleInstaller->Uninstall(bundleName, installParam, callback);
-    installResult.resultMsg = callback->GetResultMsg();
-    APP_LOGI("-----InnerUninstall resultMsg %{public}s-----", installResult.resultMsg.c_str());
-    installResult.resultCode = callback->GetResultCode();
-    APP_LOGI("-----InnerUninstall resultCode %{public}d-----", installResult.resultCode);
-}
-/**
- * Promise and async callback
- */
-napi_value Uninstall(napi_env env, napi_callback_info info)
-{
-    APP_LOGI("Uninstall called");
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    APP_LOGI("argc = [%{public}zu]", argc);
-    AsyncInstallCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncInstallCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        return nullptr;
-    }
-    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-    std::string bundleName;
-    ParseString(env, bundleName, argv[PARAM0]);
-    InstallParam installParam;
-    if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Uninstall installParam error.");
-        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
-    }
-
-    asyncCallbackInfo->installParam = installParam;
-    asyncCallbackInfo->bundleName = bundleName;
-    if (argc > (ARGS_SIZE_THREE - CALLBACK_SIZE)) {
-        APP_LOGI("Uninstall asyncCallback.");
-        napi_valuetype valuetype = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
-        NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
-        NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "Uninstall", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                if (!asyncCallbackInfo->errCode) {
-                    InnerUninstall(env,
-                        asyncCallbackInfo->bundleName,
-                        asyncCallbackInfo->installParam,
-                        asyncCallbackInfo->installResult);
-                }
-            },
-            [](napi_env env, napi_status status, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-                napi_value result[ARGS_SIZE_TWO] = {0};
-                napi_value callback = 0;
-                napi_value undefined = 0;
-                napi_value callResult = 0;
-                if (!asyncCallbackInfo->errCode) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
-                    ConvertInstallResult(asyncCallbackInfo->installResult);
-                    napi_value nResultMsg;
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-                        env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "statusMessage",
-                        nResultMsg));
-                    napi_value nResultCode;
-                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
-                        &nResultCode));
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
-                    result[PARAM0] = GetCallbackErrorValue(
-                        env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
-                } else {
-                    napi_value nResultMsg;
-                    std::string msg = "error param type.";
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
-                        &nResultMsg));
-                    result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
-                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
-                }
-                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
-                    &result[PARAM0], &callResult));
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        napi_value result;
-        napi_create_int32(env, NAPI_RETURN_ONE, &result);
-        return result;
-    } else {
-        napi_deferred deferred;
-        napi_value promise;
-        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
-        asyncCallbackInfo->deferred = deferred;
-
-        napi_value resourceName;
-        NAPI_CALL(env, napi_create_string_latin1(env, "Install", NAPI_AUTO_LENGTH, &resourceName));
-        NAPI_CALL(env, napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                InnerUninstall(
-                    env, asyncCallbackInfo->param, asyncCallbackInfo->installParam, asyncCallbackInfo->installResult);
-            },
-            [](napi_env env, napi_status status, void *data) {
-                APP_LOGI("=================load=================");
-                AsyncInstallCallbackInfo *asyncCallbackInfo =
-                    reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
-                ConvertInstallResult(asyncCallbackInfo->installResult);
-                napi_value result;
-                NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
-                napi_value nResultMsg;
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-                    env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
-                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "statusMessage", nResultMsg));
-                napi_value nResultCode;
-                NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
-                    &nResultCode));
-                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "status", nResultCode));
-                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
-                    result));
-            },
-            reinterpret_cast<void*>(asyncCallbackInfo),
-            &asyncCallbackInfo->asyncWork));
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-        callbackPtr.release();
-        return promise;
-    }
-}
-
-napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
-{
-    napi_value jsthis = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr));
-    return jsthis;
 }
 
 static bool InnerGetAllFormsInfo(napi_env env, std::vector<OHOS::AppExecFwk::FormInfo> &formInfos)
@@ -4049,7 +2973,7 @@ napi_value GetBundleGids(napi_env env, napi_callback_info info)
     return ret;
 }
 
-static bool InnerSetApplicationEnabled(napi_env env, const std::string &bundleName, bool isEnable)
+static bool InnerSetApplicationEnabled(const std::string &bundleName, bool isEnable)
 {
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -4064,7 +2988,7 @@ static bool InnerSetApplicationEnabled(napi_env env, const std::string &bundleNa
     return true;
 }
 
-static bool InnerSetAbilityEnabled(napi_env env, const OHOS::AppExecFwk::AbilityInfo &abilityInfo, bool isEnable)
+static bool InnerSetAbilityEnabled(const OHOS::AppExecFwk::AbilityInfo &abilityInfo, bool isEnable)
 {
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -4099,95 +3023,6 @@ static bool InnerCleanBundleCacheCallback(
     }
 
     return true;
-}
-
-napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
-{
-    {
-        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-        abilityInfoCache.clear();
-    }
-    size_t requireArgc = ARGS_SIZE_TWO;
-    size_t argc = ARGS_SIZE_THREE;
-    napi_value argv[ARGS_SIZE_THREE] = { 0 };
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 2 parameter");
-
-    EnabledInfo *asyncCallbackInfo = new (std::nothrow) EnabledInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        return nullptr;
-    }
-    std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
-    asyncCallbackInfo->env = env;
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
-        if ((i == PARAM0) && (valueType == napi_string)) {
-            ParseString(env, asyncCallbackInfo->bundleName, argv[i]);
-        } else if ((i == PARAM1) && (valueType == napi_boolean)) {
-            bool isEnable = false;
-            NAPI_CALL(env, napi_get_value_bool(env, argv[i], &isEnable));
-            asyncCallbackInfo->isEnable = isEnable;
-        } else if ((i == PARAM2) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-        } else {
-            asyncCallbackInfo->errCode = INVALID_PARAM;
-            asyncCallbackInfo->errMssage = "type misMatch";
-        }
-    }
-    napi_value promise = nullptr;
-
-    if (asyncCallbackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env, &promise));
-    }
-    napi_value resource = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, "JSSetApplicationEnabled", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
-            EnabledInfo* asyncCallbackInfo =
-                reinterpret_cast<EnabledInfo*>(data);
-            if (!asyncCallbackInfo->errCode) {
-                asyncCallbackInfo->result = InnerSetApplicationEnabled(asyncCallbackInfo->env,
-                                                                       asyncCallbackInfo->bundleName,
-                                                                       asyncCallbackInfo->isEnable);
-                if (!asyncCallbackInfo->result) {
-                    asyncCallbackInfo->errCode = OPERATION_FAILED;
-                }
-            }
-        },
-        [](napi_env env, napi_status status, void* data) {
-            EnabledInfo* asyncCallbackInfo =
-                reinterpret_cast<EnabledInfo*>(data);
-            std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[1] = { 0 };
-            if (asyncCallbackInfo->errCode) {
-                NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
-            }
-            if (asyncCallbackInfo->callback) {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            } else {
-                if (asyncCallbackInfo->errCode) {
-                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-                }
-            }
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    callbackPtr.release();
-    return promise;
 }
 
 static bool InnerSetDisposedStatus(const std::string &bundleName, int32_t status)
@@ -5090,121 +3925,146 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
     return promise;
 }
 
-void CreateAbilityTypeObject(napi_env env, napi_value value)
+NativeValue *CreateAbilityTypeObject(NativeEngine *engine)
 {
-    napi_value nUnknow;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::UNKNOWN), &nUnknow));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNKNOWN", nUnknow));
-    napi_value nPage;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::PAGE), &nPage));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PAGE", nPage));
-    napi_value nService;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::SERVICE), &nService));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SERVICE", nService));
-    napi_value nData;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::DATA), &nData));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DATA", nData));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("UNKNOWN", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::UNKNOWN)));
+    object->SetProperty("PAGE", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::PAGE)));
+    object->SetProperty("SERVICE", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::SERVICE)));
+    object->SetProperty("DATA", CreateJsValue(*engine, static_cast<int32_t>(AbilityType::DATA)));
+
+    return objValue;
 }
 
-void CreateAbilitySubTypeObject(napi_env env, napi_value value)
+NativeValue *CreateAbilitySubTypeObject(NativeEngine *engine)
 {
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
-    napi_value nCa;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nCa));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CA", nCa));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("UNSPECIFIED", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("CA", CreateJsValue(*engine, NAPI_RETURN_ONE));
+
+    return objValue;
 }
 
-void CreateDisplayOrientationObject(napi_env env, napi_value value)
+NativeValue *CreateDisplayOrientationObject(NativeEngine *engine)
 {
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::UNSPECIFIED), &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
-    napi_value nLandscape;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LANDSCAPE), &nLandscape));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LANDSCAPE", nLandscape));
-    napi_value nPortrait;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT), &nPortrait));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PORTRAIT", nPortrait));
-    napi_value nFollowrecent;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::FOLLOWRECENT), &nFollowrecent));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FOLLOW_RECENT", nFollowrecent));
-    napi_value nReverseLandscape;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LANDSCAPE_INVERTED), &nReverseLandscape));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LANDSCAPE_INVERTED", nReverseLandscape));
-    napi_value nReversePortrait;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED), &nReversePortrait));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PORTRAIT_INVERTED", nReversePortrait));
-    napi_value nAutoRotation;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION), &nAutoRotation));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION", nAutoRotation));
-    napi_value nAutoRotationLandscape;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE),
-            &nAutoRotationLandscape));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE", nAutoRotationLandscape));
-    napi_value nAutoRotationPortrait;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT),
-            &nAutoRotationPortrait));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT", nAutoRotationPortrait));
-    napi_value nAutoRotationRestricted;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_RESTRICTED),
-            &nAutoRotationRestricted));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_RESTRICTED",
-        nAutoRotationRestricted));
-    napi_value nAutoRotationLandscapeRestricted;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED),
-            &nAutoRotationLandscapeRestricted));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE_RESTRICTED", nAutoRotationLandscapeRestricted));
-    napi_value nAutoRotationPortraitRestricted;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED),
-            &nAutoRotationPortraitRestricted));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT_RESTRICTED",
-        nAutoRotationPortraitRestricted));
-    napi_value nLocked;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LOCKED", nLocked));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("UNSPECIFIED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::UNSPECIFIED)));
+    object->SetProperty("LANDSCAPE", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::LANDSCAPE)));
+    object->SetProperty("PORTRAIT", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::PORTRAIT)));
+    object->SetProperty(
+        "FOLLOW_RECENT", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::FOLLOWRECENT)));
+    object->SetProperty(
+        "LANDSCAPE_INVERTED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::LANDSCAPE_INVERTED)));
+    object->SetProperty(
+        "PORTRAIT_INVERTED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED)));
+    object->SetProperty(
+        "AUTO_ROTATION", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION)));
+    object->SetProperty(
+        "AUTO_ROTATION_LANDSCAPE", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE)));
+    object->SetProperty(
+        "AUTO_ROTATION_PORTRAIT", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT)));
+    object->SetProperty(
+        "AUTO_ROTATION_RESTRICTED", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_RESTRICTED)));
+    object->SetProperty(
+        "AUTO_ROTATION_LANDSCAPE_RESTRICTED", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED)));
+    object->SetProperty(
+        "AUTO_ROTATION_PORTRAIT_RESTRICTED", CreateJsValue(*engine,
+            static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED)));
+    object->SetProperty("LOCKED", CreateJsValue(*engine, static_cast<int32_t>(DisplayOrientation::LOCKED)));
+    return objValue;
 }
 
-void CreateLaunchModeObject(napi_env env, napi_value value)
+NativeValue *CreateLaunchModeObject(NativeEngine *engine)
 {
-    napi_value nSingleton;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::SINGLETON), &nSingleton));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SINGLETON", nSingleton));
-    napi_value nStandard;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::STANDARD), &nStandard));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STANDARD", nStandard));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SINGLETON", CreateJsValue(*engine, static_cast<int32_t>(LaunchMode::SINGLETON)));
+    object->SetProperty("STANDARD", CreateJsValue(*engine, static_cast<int32_t>(LaunchMode::STANDARD)));
+
+    return objValue;
 }
 
-void CreateModuleUpdateFlagObject(napi_env env, napi_value value)
+NativeValue *CreateModuleUpdateFlagObject(NativeEngine *engine)
 {
-    napi_value nFlagModuleUpgradeCheck;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nFlagModuleUpgradeCheck));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_UPGRADE_CHECK", nFlagModuleUpgradeCheck));
-    napi_value nFlagModuleUpgradeInstall;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nFlagModuleUpgradeInstall));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_UPGRADE_INSTALL", nFlagModuleUpgradeInstall));
-    napi_value nFlagModuleUpgradeinstallWithConfigWindows;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nFlagModuleUpgradeinstallWithConfigWindows));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "FLAG_MODULE_UPGRADE_INSTALL_WITH_CONFIG_WINDOWS",
-            nFlagModuleUpgradeinstallWithConfigWindows));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("FLAG_MODULE_UPGRADE_CHECK", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("FLAG_MODULE_UPGRADE_INSTALL", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("FLAG_MODULE_UPGRADE_INSTALL_WITH_CONFIG_WINDOWS", CreateJsValue(*engine, NAPI_RETURN_TWO));
+
+    return objValue;
 }
 
 void CreateFormTypeObject(napi_env env, napi_value value)
@@ -5217,362 +4077,348 @@ void CreateFormTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "JS", nJs));
 }
 
-void CreateColorModeObject(napi_env env, napi_value value)
+NativeValue *CreateColorModeObject(NativeEngine *engine)
 {
-    napi_value nAutoMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_FAILED, &nAutoMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_MODE", nAutoMode));
-    napi_value nDarkMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nDarkMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DARK_MODE", nDarkMode));
-    napi_value nLightMode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nLightMode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LIGHT_MODE", nLightMode));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("AUTO_MODE", CreateJsValue(*engine, NAPI_RETURN_FAILED));
+    object->SetProperty("DARK_MODE", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("LIGHT_MODE", CreateJsValue(*engine, NAPI_RETURN_ONE));
+
+    return objValue;
 }
 
-void CreateGrantStatusObject(napi_env env, napi_value value)
+NativeValue *CreateGrantStatusObject(NativeEngine *engine)
 {
-    napi_value nPermissionDenied;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_FAILED, &nPermissionDenied));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PERMISSION_DENIED", nPermissionDenied));
-    napi_value nPermissionGranted;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nPermissionGranted));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PERMISSION_GRANTED", nPermissionGranted));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("PERMISSION_DENIED", CreateJsValue(*engine, NAPI_RETURN_FAILED));
+    object->SetProperty("PERMISSION_GRANTED", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+
+    return objValue;
 }
 
-void CreateModuleRemoveFlagObject(napi_env env, napi_value value)
+NativeValue *CreateModuleRemoveFlagObject(NativeEngine *engine)
 {
-    napi_value nFlagModuleNotUsedByForm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nFlagModuleNotUsedByForm));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_NOT_USED_BY_FORM", nFlagModuleNotUsedByForm));
-    napi_value nFlagModuleUsedByForm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nFlagModuleUsedByForm));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_MODULE_USED_BY_FORM", nFlagModuleUsedByForm));
-    napi_value nFlagModuleNotUsedByShortcut;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nFlagModuleNotUsedByShortcut));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_NOT_USED_BY_SHORTCUT", nFlagModuleNotUsedByShortcut));
-    napi_value nFlagModuleUsedByShortcut;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_THREE, &nFlagModuleUsedByShortcut));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "FLAG_MODULE_USED_BY_SHORTCUT", nFlagModuleUsedByShortcut));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("FLAG_MODULE_NOT_USED_BY_FORM", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("FLAG_MODULE_USED_BY_FORM", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("FLAG_MODULE_NOT_USED_BY_SHORTCUT", CreateJsValue(*engine, NAPI_RETURN_TWO));
+    object->SetProperty("FLAG_MODULE_USED_BY_SHORTCUT", CreateJsValue(*engine, NAPI_RETURN_THREE));
+
+    return objValue;
 }
 
-void CreateSignatureCompareResultObject(napi_env env, napi_value value)
+NativeValue *CreateSignatureCompareResultObject(NativeEngine *engine)
 {
-    napi_value nSignatureMatched;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nSignatureMatched));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SIGNATURE_MATCHED", nSignatureMatched));
-    napi_value nSignatureNotMatched;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nSignatureNotMatched));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SIGNATURE_NOT_MATCHED", nSignatureNotMatched));
-    napi_value nSignatureUnknownBundle;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nSignatureUnknownBundle));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SIGNATURE_UNKNOWN_BUNDLE", nSignatureUnknownBundle));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SIGNATURE_MATCHED", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("SIGNATURE_NOT_MATCHED", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("SIGNATURE_UNKNOWN_BUNDLE", CreateJsValue(*engine, NAPI_RETURN_TWO));
+
+    return objValue;
 }
 
-void CreateShortcutExistenceObject(napi_env env, napi_value value)
+NativeValue *CreateShortcutExistenceObject(NativeEngine *engine)
 {
-    napi_value nShortcutExistenceExists;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nShortcutExistenceExists));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SHORTCUT_EXISTENCE_EXISTS", nShortcutExistenceExists));
-    napi_value nShortcutExistenceNotExists;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ONE, &nShortcutExistenceNotExists));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SHORTCUT_EXISTENCE_NOT_EXISTS", nShortcutExistenceNotExists));
-    napi_value nShortcutExistenceUnknow;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_TWO, &nShortcutExistenceUnknow));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "SHORTCUT_EXISTENCE_UNKNOW", nShortcutExistenceUnknow));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SHORTCUT_EXISTENCE_EXISTS", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+    object->SetProperty("SHORTCUT_EXISTENCE_NOT_EXISTS", CreateJsValue(*engine, NAPI_RETURN_ONE));
+    object->SetProperty("SHORTCUT_EXISTENCE_UNKNOW", CreateJsValue(*engine, NAPI_RETURN_TWO));
+
+    return objValue;
 }
 
-void CreateQueryShortCutFlagObject(napi_env env, napi_value value)
+NativeValue *CreateQueryShortCutFlagObject(NativeEngine *engine)
 {
-    napi_value nQueryShortCutHome;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NAPI_RETURN_ZERO, &nQueryShortCutHome));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "QUERY_SHORTCUT_HOME", nQueryShortCutHome));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("QUERY_SHORTCUT_HOME", CreateJsValue(*engine, NAPI_RETURN_ZERO));
+
+    return objValue;
 }
 
-void CreateBundleFlagObject(napi_env env, napi_value value)
+NativeValue *CreateBundleFlagObject(NativeEngine *engine)
 {
-    napi_value nGetAllApplicationInfo;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(ApplicationFlag::GET_ALL_APPLICATION_INFO),
-                                                 &nGetAllApplicationInfo));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ALL_APPLICATION_INFO", nGetAllApplicationInfo));
+    APP_LOGD("enter");
 
-    napi_value nGetBundleDefault;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(BundleFlag::GET_BUNDLE_DEFAULT), &nGetBundleDefault));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_DEFAULT", nGetBundleDefault));
-    napi_value nGetBundleWithAbilities;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_ABILITIES),
-                                                 &nGetBundleWithAbilities));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_WITH_ABILITIES", nGetBundleWithAbilities));
-    napi_value nGetBundleWithRequestedPermission;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION),
-                                                 &nGetBundleWithRequestedPermission));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "GET_BUNDLE_WITH_REQUESTED_PERMISSION", nGetBundleWithRequestedPermission));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nGetAbilityInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-                          static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION),
-                          &nGetAbilityInfoWithPermission));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_PERMISSION", nGetAbilityInfoWithPermission));
-    napi_value nGetAbilityInfoWithApplication;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-                          static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION),
-                          &nGetAbilityInfoWithApplication));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_APPLICATION", nGetAbilityInfoWithApplication));
-    napi_value nGetAbilityInfoSystemappOnly;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_SYSTEMAPP_ONLY),
-                                                 &nGetAbilityInfoSystemappOnly));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_SYSTEMAPP_ONLY", nGetAbilityInfoSystemappOnly));
-    napi_value nGetAbilityInfoWithMetadata;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA),
-                                                 &nGetAbilityInfoWithMetadata));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_METADATA", nGetAbilityInfoWithMetadata));
-    napi_value nGetBundleWithExtensionAbility;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO),
-                                                 &nGetBundleWithExtensionAbility));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_WITH_EXTENSION_ABILITY", nGetBundleWithExtensionAbility));
-    napi_value nGetBundleWithHashValue;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_HASH_VALUE),
-                                                 &nGetBundleWithHashValue));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_BUNDLE_WITH_HASH_VALUE", nGetBundleWithHashValue));
-    napi_value nGetAbilityInfoWithDisable;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-                                                 static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE),
-                                                 &nGetAbilityInfoWithDisable));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_DISABLE", nGetAbilityInfoWithDisable));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    napi_value nGetApplicationInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION),
-            &nGetApplicationInfoWithPermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env,
-                                                       value,
-                                                       "GET_APPLICATION_INFO_WITH_PERMISSION",
-                                                       nGetApplicationInfoWithPermission));
-    napi_value nGetApplicationInfoWithMetadata;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA),
-            &nGetApplicationInfoWithMetadata));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_METADATA", nGetApplicationInfoWithMetadata));
-    napi_value nGetApplicationInfoWithDisable;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
-            &nGetApplicationInfoWithDisable));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_DISABLE", nGetApplicationInfoWithDisable));
-    napi_value nGetApplicationInfoWithFingerprint;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-        static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT),
-        &nGetApplicationInfoWithFingerprint));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT",
-        nGetApplicationInfoWithFingerprint));
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty(
+        "GET_ALL_APPLICATION_INFO", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_ALL_APPLICATION_INFO)));
+    object->SetProperty(
+        "GET_BUNDLE_DEFAULT", CreateJsValue(*engine, static_cast<int32_t>(BundleFlag::GET_BUNDLE_DEFAULT)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_ABILITIES", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_ABILITIES)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_REQUESTED_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_APPLICATION", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_SYSTEMAPP_ONLY", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_SYSTEMAPP_ONLY)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_METADATA", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_EXTENSION_ABILITY", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO)));
+    object->SetProperty(
+        "GET_BUNDLE_WITH_HASH_VALUE", CreateJsValue(*engine,
+            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_HASH_VALUE)));
+    object->SetProperty(
+        "GET_ABILITY_INFO_WITH_DISABLE", CreateJsValue(*engine,
+            static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_METADATA", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_DISABLE", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)));
+    object->SetProperty(
+        "GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT", CreateJsValue(*engine,
+            static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT)));
+
+    return objValue;
 }
 
-void CreateExtensionFlagObject(napi_env env, napi_value value)
+NativeValue *CreateExtensionFlagObject(NativeEngine *engine)
 {
-    napi_value nGetExtensionInfoDefault;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT),
-            &nGetExtensionInfoDefault));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_DEFAULT", nGetExtensionInfoDefault));
+    APP_LOGD("enter");
 
-    napi_value nGetExtensionInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_PERMISSION),
-            &nGetExtensionInfoWithPermission));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_PERMISSION", nGetExtensionInfoWithPermission));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nGetExtensionInfoWithApplication;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_APPLICATION),
-            &nGetExtensionInfoWithApplication));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_APPLICATION", nGetExtensionInfoWithApplication));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    napi_value nGetExtensionInfoWithMetaData;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA),
-            &nGetExtensionInfoWithMetaData));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_METADATA", nGetExtensionInfoWithMetaData));
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty(
+        "GET_EXTENSION_INFO_DEFAULT", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT)));
+    object->SetProperty(
+        "GET_EXTENSION_INFO_WITH_PERMISSION", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_PERMISSION)));
+    object->SetProperty(
+        "GET_EXTENSION_INFO_WITH_APPLICATION", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_APPLICATION)));
+    object->SetProperty(
+        "GET_EXTENSION_INFO_WITH_METADATA", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA)));
+
+    return objValue;
 }
 
-void CreateUpgradeFlagObject(napi_env env, napi_value value)
+NativeValue *CreateUpgradeFlagObject(NativeEngine *engine)
 {
-    napi_value nNotUpgrade;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::NOT_UPGRADE), &nNotUpgrade));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NOT_UPGRADE", nNotUpgrade));
+    APP_LOGD("enter");
 
-    napi_value nSingleUpgrade;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::SINGLE_UPGRADE), &nSingleUpgrade));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SINGLE_UPGRADE", nSingleUpgrade));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nRelationUpgrade;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(UpgradeFlag::RELATION_UPGRADE), &nRelationUpgrade));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "RELATION_UPGRADE", nRelationUpgrade));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("NOT_UPGRADE", CreateJsValue(*engine, static_cast<int32_t>(UpgradeFlag::NOT_UPGRADE)));
+    object->SetProperty("SINGLE_UPGRADE", CreateJsValue(*engine, static_cast<int32_t>(UpgradeFlag::SINGLE_UPGRADE)));
+    object->SetProperty(
+        "RELATION_UPGRADE", CreateJsValue(*engine, static_cast<int32_t>(UpgradeFlag::RELATION_UPGRADE)));
+
+    return objValue;
 }
 
-void CreateInstallErrorCodeObject(napi_env env, napi_value value)
+NativeValue *CreateInstallErrorCodeObject(NativeEngine *engine)
 {
-    napi_value nSuccess;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::SUCCESS), &nSuccess));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SUCCESS", nSuccess));
-    napi_value nStatusInstallFailure;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(
-            env, static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE), &nStatusInstallFailure));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE", nStatusInstallFailure));
-    napi_value nStatusInstallFailureAborted;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED),
-            &nStatusInstallFailureAborted));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_ABORTED", nStatusInstallFailureAborted));
-    napi_value nStatusInstallFailureInvalid;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID),
-            &nStatusInstallFailureInvalid));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INVALID", nStatusInstallFailureInvalid));
-    napi_value nStatusInstallFailureConflict;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT),
-            &nStatusInstallFailureConflict));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_CONFLICT", nStatusInstallFailureConflict));
-    napi_value nStatusInstallFailureStorage;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE),
-            &nStatusInstallFailureStorage));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_STORAGE", nStatusInstallFailureStorage));
-    napi_value nStatusInstallFailureIncompatible;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE),
-            &nStatusInstallFailureIncompatible));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INCOMPATIBLE", nStatusInstallFailureIncompatible));
-    napi_value nStatusUninstallFailure;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(
-            env, static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE), &nStatusUninstallFailure));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE", nStatusUninstallFailure));
-    napi_value nStatusUninstallFailureBlocked;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED),
-            &nStatusUninstallFailureBlocked));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_BLOCKED", nStatusUninstallFailureBlocked));
-    napi_value nStatusUninstallFailureAborted;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED),
-            &nStatusUninstallFailureAborted));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_ABORTED", nStatusUninstallFailureAborted));
-    napi_value nStatusUninstallFailureConflict;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT),
-            &nStatusUninstallFailureConflict));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(
-            env, value, "STATUS_UNINSTALL_FAILURE_CONFLICT", nStatusUninstallFailureConflict));
-    napi_value nStatusInstallFailureDownloadTimeout;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT),
-            &nStatusInstallFailureDownloadTimeout));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", nStatusInstallFailureDownloadTimeout));
-    napi_value nStatusInstallFailureDownloadFailed;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED),
-            &nStatusInstallFailureDownloadFailed));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(
-            env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", nStatusInstallFailureDownloadFailed));
-    napi_value nStatusAbilityNotFound;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(
-            env, static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND), &nStatusAbilityNotFound));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, "STATUS_ABILITY_NOT_FOUND", nStatusAbilityNotFound));
-    napi_value nBmsServiceError;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR), &nBmsServiceError));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_BMS_SERVICE_ERROR", nBmsServiceError));
-    napi_value nStatusGrantRequestPermissionsFailed;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED),
-                          &nStatusGrantRequestPermissionsFailed));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED",
-                          nStatusGrantRequestPermissionsFailed));
-    napi_value nStatusInstallPermissionDenied;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED),
-                          &nStatusInstallPermissionDenied));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_INSTALL_PERMISSION_DENIED",
-                          nStatusInstallPermissionDenied));
-    napi_value nStatusUnInstallPermissionDenied;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED),
-                          &nStatusUnInstallPermissionDenied));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_PERMISSION_DENIED",
-                          nStatusUnInstallPermissionDenied));
-    napi_value nNoSpaceLeft;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT), &nNoSpaceLeft));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_FAILED_NO_SPACE_LEFT", nNoSpaceLeft));
-    napi_value nRecoverFailure;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env,
-            static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID), &nRecoverFailure));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "STATUS_RECOVER_FAILURE_INVALID", nRecoverFailure));
+    APP_LOGD("enter");
+
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("SUCCESS", CreateJsValue(*engine, static_cast<int32_t>(InstallErrorCode::SUCCESS)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_ABORTED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_INVALID", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_CONFLICT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_STORAGE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_INCOMPATIBLE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE_BLOCKED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE_ABORTED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_FAILURE_CONFLICT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT)));
+    object->SetProperty(
+        "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED)));
+    object->SetProperty(
+        "STATUS_ABILITY_NOT_FOUND", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND)));
+    object->SetProperty(
+        "STATUS_BMS_SERVICE_ERROR", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR)));
+    object->SetProperty(
+        "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED)));
+    object->SetProperty(
+        "STATUS_INSTALL_PERMISSION_DENIED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED)));
+    object->SetProperty(
+        "STATUS_UNINSTALL_PERMISSION_DENIED", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED)));
+    object->SetProperty(
+        "STATUS_FAILED_NO_SPACE_LEFT", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT)));
+    object->SetProperty(
+        "STATUS_RECOVER_FAILURE_INVALID", CreateJsValue(*engine,
+            static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID)));
+
+    return objValue;
 }
 
 static bool InnerQueryExtensionInfo(napi_env env, AsyncExtensionInfoCallbackInfo &info)
@@ -5710,87 +4556,44 @@ napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info)
     return promise;
 }
 
-void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
+NativeValue *CreateExtensionAbilityTypeObject(NativeEngine *engine)
 {
-    napi_value nForm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::FORM), &nForm));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FORM", nForm));
-
-    napi_value nWorkSchedule;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::WORK_SCHEDULER), &nWorkSchedule));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WORK_SCHEDULER", nWorkSchedule));
-
-    napi_value nInputMethod;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD), &nInputMethod));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INPUT_METHOD", nInputMethod));
-
-    napi_value nService;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SERVICE), &nService));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SERVICE", nService));
-
-    napi_value nAccessibility;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ACCESSIBILITY), &nAccessibility));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ACCESSIBILITY", nAccessibility));
-
-    napi_value nDataShare;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::DATASHARE), &nDataShare));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DATA_SHARE", nDataShare));
-
-    napi_value nFileShare;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::FILESHARE), &nFileShare));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILE_SHARE", nFileShare));
-
-    napi_value nStaticSubscriber;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::STATICSUBSCRIBER), &nStaticSubscriber));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATIC_SUBSCRIBER", nStaticSubscriber));
-
-    napi_value nWallpaper;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::WALLPAPER), &nWallpaper));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WALLPAPER", nWallpaper));
-
-    napi_value nBackup;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::BACKUP), &nBackup));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKUP", nBackup));
-
-    napi_value nWindow;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::WINDOW), &nWindow));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WINDOW", nWindow));
-
-    napi_value nFileAccess;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION), &nFileAccess));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILEACCESS_EXTENSION", nFileAccess));
-
-    napi_value nTHUMBNAIL;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::THUMBNAIL), &nTHUMBNAIL));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "THUMBNAIL", nTHUMBNAIL));
-
-    napi_value nPREVIEW;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::PREVIEW), &nPREVIEW));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PREVIEW", nPREVIEW));
-
-    napi_value nEnterpriseAdmin;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN), &nEnterpriseAdmin));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_ADMIN", nEnterpriseAdmin));
-
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
+    APP_LOGD("enter");
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+    object->SetProperty("FORM", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::FORM)));
+    object->SetProperty(
+        "WORK_SCHEDULER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WORK_SCHEDULER)));
+    object->SetProperty("INPUT_METHOD",
+        CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD)));
+    object->SetProperty("SERVICE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::SERVICE)));
+    object->SetProperty(
+        "ACCESSIBILITY", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::ACCESSIBILITY)));
+    object->SetProperty("DATA_SHARE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::DATASHARE)));
+    object->SetProperty("FILE_SHARE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::FILESHARE)));
+    object->SetProperty(
+        "STATIC_SUBSCRIBER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::STATICSUBSCRIBER)));
+    object->SetProperty("WALLPAPER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WALLPAPER)));
+    object->SetProperty("BACKUP", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::BACKUP)));
+    object->SetProperty("WINDOW", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WINDOW)));
+    object->SetProperty(
+        "FILEACCESS_EXTENSION", CreateJsValue(*engine,
+            static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION)));
+    object->SetProperty("THUMBNAIL", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::THUMBNAIL)));
+    object->SetProperty("PREVIEW", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::PREVIEW)));
+    object->SetProperty(
+        "ENTERPRISE_ADMIN", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN)));
+    object->SetProperty("UNSPECIFIED", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)));
+    return objValue;
 }
-
 static void ConvertDispatcherVersion(
     napi_env env, napi_value &value, const std::string& version, const std::string& dispatchAPI)
 {
@@ -5935,20 +4738,26 @@ static bool InnerGetProfile(napi_env env, AsyncGetProfileInfo &info)
     return false;
 }
 
-void CreateSupportWindowModesObject(napi_env env, napi_value value)
+NativeValue *CreateSupportWindowModesObject(NativeEngine *engine)
 {
-    napi_value nFullscreen;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FULLSCREEN), &nFullscreen));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULL_SCREEN", nFullscreen));
+    APP_LOGD("enter");
 
-    napi_value nSplit;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::SPLIT), &nSplit));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SPLIT", nSplit));
+    if (engine == nullptr) {
+        APP_LOGE("Invalid input parameters");
+        return nullptr;
+    }
 
-    napi_value nFloat;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FLOATING), &nFloat));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLOATING", nFloat));
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+
+    if (object == nullptr) {
+        APP_LOGE("Failed to get object");
+        return nullptr;
+    }
+    object->SetProperty("FULL_SCREEN", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::FULLSCREEN)));
+    object->SetProperty("SPLIT", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::SPLIT)));
+    object->SetProperty("FLOATING", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::FLOATING)));
+    return objValue;
 }
 
 static bool InnerGetApplicationInfo(
@@ -6643,21 +5452,51 @@ static bool InnerGetBundleInfo(
     return ret;
 }
 
-NativeValue* JsBundleMgr::UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
+    NativeCallbackInfo &info, int32_t &userId, int32_t &errCode)
 {
     if (info.argc == ARGS_SIZE_THREE) {
         if (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION) {
             return info.argv[PARAM2];
+        } else if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+            ConvertFromJsValue(engine, info.argv[PARAM2], userId);
+            return nullptr;
         } else {
+            errCode = PARAM_TYPE_ERROR;
             return nullptr;
         }
     }
-    if (info.argc == ARGS_SIZE_FOUR) {
+
+    if (info.argc == ARGS_SIZE_FOUR && info.argv[PARAM3]->TypeOf() == NATIVE_FUNCTION) {
+        if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
+            ConvertFromJsValue(engine, info.argv[PARAM2], userId);
+        } else {
+            errCode = PARAM_TYPE_ERROR;
+        }
         return info.argv[PARAM3];
     }
     return nullptr;
 }
 
+static void OnHandleAbilityInfoCache(NativeEngine &engine, const Query &query,
+    const AAFwk::Want &want, const std::vector<AbilityInfo> &abilityInfos, NativeValue *jsObject)
+{
+    APP_LOGD("%{public}s called.", __FUNCTION__);
+    ElementName element = want.GetElement();
+    if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
+        APP_LOGE("get bundleName empty or get abiltityName empty.");
+        return;
+    }
+    uint32_t explicitQueryResultLen = 1;
+    if (abilityInfos.size() != explicitQueryResultLen || abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
+        APP_LOGE("abilityInfos not only or abilityInfos uid is wrong");
+        return;
+    }
+
+    auto cacheAbilityInfo = engine.CreateReference(jsObject, NAPI_RETURN_ONE);
+    nativeAbilityInfoCache.clear();
+    nativeAbilityInfoCache[query] = cacheAbilityInfo;
+}
 static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
 {
     auto iBundleMgr = GetBundleMgr();
@@ -6690,6 +5529,340 @@ static bool InnerQueryExtensionInfo(const OHOS::AppExecFwk::Want want, const int
     }
 }
 
+NativeValue* JsBundleMgr::CreatePermissionDef(NativeEngine &engine, const PermissionDef &permissionDef)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+    object->SetProperty("permissionName", CreateJsValue(engine, permissionDef.permissionName));
+    object->SetProperty("grantMode", CreateJsValue(engine, permissionDef.grantMode));
+    object->SetProperty("labelId", CreateJsValue(engine, permissionDef.labelId));
+    object->SetProperty("descriptionId", CreateJsValue(engine, permissionDef.descriptionId));
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateBundlePackInfo(
+    NativeEngine &engine, const int32_t &flags, const BundlePackInfo &bundlePackInfo)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_PACKAGES) {
+        object->SetProperty("packages", CreatePackages(engine, bundlePackInfo));
+        return objContext;
+    }
+
+    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_BUNDLE_SUMMARY) {
+        object->SetProperty("summary", CreateSummary(engine, bundlePackInfo));
+        return objContext;
+    }
+    if (static_cast<uint32_t>(flags) & BundlePackFlag::GET_MODULE_SUMMARY) {
+        NativeValue* objValue = engine.CreateObject();
+        NativeObject* obj = ConvertNativeValueTo<NativeObject>(objValue);
+        obj->SetProperty("modules", CreateSummaryModules(engine, bundlePackInfo));
+        object->SetProperty("summary", objValue);
+        return objContext;
+    }
+
+    object->SetProperty("summary", CreateSummary(engine, bundlePackInfo));
+    object->SetProperty("packages", CreatePackages(engine, bundlePackInfo));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreatePackages(NativeEngine &engine, const BundlePackInfo &bundlePackInfo)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    for (const auto &package : bundlePackInfo.packages) {
+        object->SetProperty("deviceType", CreateNativeArray(engine, package.deviceType));
+        object->SetProperty("name", CreateJsValue(engine, package.name));
+        object->SetProperty("moduleType", CreateJsValue(engine, package.moduleType));
+        object->SetProperty("deliveryWithInstall", CreateJsValue(engine, package.deliveryWithInstall));
+    }
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateSummary(NativeEngine &engine, const BundlePackInfo &bundlePackInfo)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("app", CreateSummaryApp(engine, bundlePackInfo));
+    object->SetProperty("modules", CreateSummaryModules(engine, bundlePackInfo));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateSummaryApp(NativeEngine &engine, const BundlePackInfo &bundlePackInfo)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("bundleName", CreateJsValue(engine, bundlePackInfo.summary.app.bundleName));
+    object->SetProperty("version", CreateSummaryAppVersion(engine, bundlePackInfo));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateSummaryAppVersion(NativeEngine &engine, const BundlePackInfo &bundlePackInfo)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, bundlePackInfo.summary.app.version.name));
+    object->SetProperty("code", CreateJsValue(engine, bundlePackInfo.summary.app.version.code));
+    object->SetProperty(
+        "minCompatibleVersionCode", CreateJsValue(engine, bundlePackInfo.summary.app.version.minCompatibleVersionCode));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateSummaryModules(NativeEngine &engine, const BundlePackInfo &bundlePackInfo)
+{
+    APP_LOGD("called");
+    auto *arrayValue = engine.CreateArray(bundlePackInfo.summary.modules.size());
+    auto *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    for (uint32_t i = 0; i < bundlePackInfo.summary.modules.size(); i++) {
+        array->SetElement(i, CreateSummaryModule(engine, bundlePackInfo.summary.modules.at(i)));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateSummaryModule(NativeEngine &engine, const PackageModule &moduleInfo)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("mainAbility", CreateJsValue(engine, moduleInfo.mainAbility));
+    object->SetProperty("apiVersion", CreateModulesApiVersion(engine, moduleInfo));
+    object->SetProperty("deviceType", CreateNativeArray(engine, moduleInfo.deviceType));
+    object->SetProperty("distro", CreateDistro(engine, moduleInfo));
+    object->SetProperty("abilities", CreateAbilities(engine, moduleInfo));
+    object->SetProperty("extensionAbilities", CreateExtensionAbilities(engine, moduleInfo));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateModulesApiVersion(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("releaseType", CreateJsValue(engine, module.apiVersion.releaseType));
+    object->SetProperty("compatible", CreateJsValue(engine, module.apiVersion.compatible));
+    object->SetProperty("target", CreateJsValue(engine, module.apiVersion.target));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateDistro(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("deliveryWithInstall", CreateJsValue(engine, module.distro.deliveryWithInstall));
+    object->SetProperty("installationFree", CreateJsValue(engine, module.distro.installationFree));
+    object->SetProperty("moduleName", CreateJsValue(engine, module.distro.moduleName));
+    object->SetProperty("moduleType", CreateJsValue(engine, module.distro.moduleType));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateAbilities(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module)
+{
+    APP_LOGD("called");
+    auto *arrayValue = engine.CreateArray(module.abilities.size());
+    auto *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    for (uint32_t i = 0; i < module.abilities.size(); i++) {
+        array->SetElement(i, CreateAbility(engine, module.abilities.at(i)));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateAbility(NativeEngine &engine, const ModuleAbilityInfo &ability)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, ability.name));
+    object->SetProperty("label", CreateJsValue(engine, ability.label));
+    object->SetProperty("visible", CreateJsValue(engine, ability.visible));
+    object->SetProperty("forms", CreateFormsInfos(engine, ability.forms));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateFormsInfos(
+    NativeEngine &engine, const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms)
+{
+    APP_LOGD("called");
+    auto *arrayValue = engine.CreateArray(forms.size());
+    auto *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    for (uint32_t i = 0; i < forms.size(); i++) {
+        array->SetElement(i, CreateFormsInfo(engine, forms.at(i)));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateFormsInfo(NativeEngine &engine, const AbilityFormInfo &form)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, form.name));
+    object->SetProperty("type", CreateJsValue(engine, form.type));
+    object->SetProperty("updateEnabled", CreateJsValue(engine, form.updateEnabled));
+    object->SetProperty("scheduledUpdateTime", CreateJsValue(engine, form.scheduledUpdateTime));
+    object->SetProperty("updateDuration", CreateJsValue(engine, form.updateDuration));
+    object->SetProperty("supportDimensions", CreateNativeArray(engine, form.supportDimensions));
+    object->SetProperty("defaultDimension", CreateJsValue(engine, form.defaultDimension));
+
+    return objContext;
+}
+
+NativeValue* JsBundleMgr::CreateExtensionAbilities(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module)
+{
+    APP_LOGD("called");
+    auto *arrayValue = engine.CreateArray(module.extensionAbilities.size());
+    auto *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    for (uint32_t i = 0; i < module.extensionAbilities.size(); i++) {
+        array->SetElement(i, CreateExtensionAbility(engine, module.extensionAbilities.at(i)));
+    }
+    return arrayValue;
+}
+
+NativeValue* JsBundleMgr::CreateExtensionAbility(NativeEngine &engine, const ExtensionAbilities &extensionAbility)
+{
+    APP_LOGD("called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("name", CreateJsValue(engine, extensionAbility.name));
+    object->SetProperty("forms", CreateFormsInfos(engine, extensionAbility.forms));
+
+    return objContext;
+}
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
 {
     APP_LOGD("JsBundleMgr::Finalizer is called");
@@ -6775,6 +5948,23 @@ NativeValue* JsBundleMgr::GetAbilityLabel(NativeEngine *engine, NativeCallbackIn
     return (me != nullptr) ? me->OnGetAbilityLabel(*engine, *info) : nullptr;
 }
 
+NativeValue* JsBundleMgr::SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnSetAbilityEnabled(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnSetApplicationEnabled(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnQueryAbilityInfos(*engine, *info) : nullptr;
+}
 NativeValue* JsBundleMgr::QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
@@ -6785,6 +5975,23 @@ NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackI
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
     return (me != nullptr) ? me->OnGetAllBundleInfo(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetBundleInstaller(*engine, *info) : nullptr;
+}
+NativeValue* JsBundleMgr::GetPermissionDef(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetPermissionDef(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleMgr::GetBundlePackInfo(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
+    return (me != nullptr) ? me->OnGetBundlePackInfo(*engine, *info) : nullptr;
 }
 
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
@@ -7073,7 +6280,7 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
                         NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             std::string getBundleInfoErrData = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getBundleInfoErrData));
             return;
         }
@@ -7081,10 +6288,10 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
         std::string name(bundleName);
         auto ret = InnerGetBundleInfo(name, bundleFlags, options, bundleInfo);
         if (!ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateBundleInfo(engine, bundleInfo));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateBundleInfo(engine, bundleInfo));
     };
 
     NativeValue *result = nullptr;
@@ -7095,7 +6302,7 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
 }
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-int32_t JsBundleMgr::InitGetAbilityIcon (NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
+int32_t JsBundleMgr::InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
     std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon)
 {
     int32_t errorCode = NAPI_ERR_NO_ERROR;
@@ -7166,7 +6373,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
         if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
             obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
             *value = (info == nullptr) ? INVALID_PARAM : *value;
-            task.RejectWithMessage(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
             return;
         }
         std::shared_ptr<Media::PixelMap> pixelMap;
@@ -7174,7 +6381,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
             info->moduleName, info->abilityName, info->hasModuleName);
         if (!pixelMap) {
             obj->errMessage_ = "get pixelMap failed.";
-            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, OPERATION_FAILED),
                 CreateJsValue(engine, obj->errMessage_));
             return;
         }
@@ -7183,7 +6390,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
         Media::PixelMapNapi::Init(env, exports);
         NativeValue *ret = reinterpret_cast<NativeValue*>(
             Media::PixelMapNapi::CreatePixelMap(env, pixelMap));
-        task.ResolveWithErr(engine, ret);
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), ret);
     };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityIcon",
@@ -7203,7 +6410,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
     }
     auto complete = []
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            task.RejectWithMessage(engine, CreateJsError(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
+            task.RejectWithCustomize(engine, CreateJsError(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
                 CreateJsValue(engine, UNSUPPORTED_FEATURE_MESSAGE.c_str())));
         };
     NativeValue *result = nullptr;
@@ -7251,17 +6458,17 @@ NativeValue* JsBundleMgr::OnGetProfile(
         std::string getProfileErrData;
         if (errCode != 0) {
             getProfileErrData = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, getProfileErrData));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, getProfileErrData));
             return;
         }
         napi_env env = nullptr;
         auto ret = InnerGetProfile(env, *asyncInfo);
         if (!ret) {
             getProfileErrData = "GetProfile failed";
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine, getProfileErrData));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), CreateJsValue(engine, getProfileErrData));
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateProfiles(engine, asyncInfo->profileVec));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateProfiles(engine, asyncInfo->profileVec));
     };
     NativeValue* callback = nullptr;
     if (info.argc > 0) {
@@ -7294,16 +6501,16 @@ NativeValue* JsBundleMgr::OnGetNameForUid(NativeEngine &engine, NativeCallbackIn
     auto complete = [obj = this, uid, errCode](NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             std::string errMessage = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
             return;
         }
         std::string bundleName("");
         auto ret = InnerGetNameForUid(uid, bundleName);
         if (!ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        task.ResolveWithErr(engine, CreateJsValue(engine, bundleName));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), CreateJsValue(engine, bundleName));
     };
     auto lastParam = (info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : nullptr;
     NativeValue *result = nullptr;
@@ -7382,15 +6589,15 @@ NativeValue* JsBundleMgr::OnGetAbilityInfo(NativeEngine &engine, NativeCallbackI
         if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
             obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
             *value = (info == nullptr) ? INVALID_PARAM : *value;
-            task.RejectWithMessage(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, *value), CreateJsValue(engine, obj->errMessage_));
             return;
         }
         if (!info->ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, OPERATION_FAILED),
                 CreateJsValue(engine, engine.CreateUndefined()));
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateAbilityInfo(engine, info->abilityInfo));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateAbilityInfo(engine, info->abilityInfo));
     };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityInfo",
@@ -7476,12 +6683,12 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
         if (*value != NAPI_ERR_NO_ERROR || info == nullptr) {
             obj->errMessage_ = (info == nullptr) ? "Pointer is empty." : obj->errMessage_;
             *value = (info == nullptr) ? INVALID_PARAM : *value;
-            task.RejectWithMessage(engine, CreateJsValue(engine, *value),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, *value),
                 CreateJsValue(engine, engine.CreateUndefined()));
             return;
         }
         if (info->abilityLabel == "") {
-            task.RejectWithMessage(engine, CreateJsValue(engine, OPERATION_FAILED),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, OPERATION_FAILED),
                 CreateJsValue(engine, engine.CreateUndefined()));
             return;
         }
@@ -7489,6 +6696,209 @@ NativeValue* JsBundleMgr::OnGetAbilityLabel(NativeEngine &engine, NativeCallback
     };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityLabel",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info)
+{
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    std::string bundleName;
+    bool isEnable = false;
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = INVALID_PARAM;
+    }
+    for (size_t i = 0; i < info.argc; ++i) {
+        if ((i == PARAM0) && (info.argv[PARAM0]->TypeOf() == NATIVE_STRING)) {
+            if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
+                APP_LOGE("conversion failed!");
+                errCode= INVALID_PARAM;
+            }
+        } else if ((i == PARAM1) && (info.argv[PARAM1]->TypeOf() == NATIVE_BOOLEAN)) {
+            if (!ConvertFromJsValue(engine, info.argv[PARAM1], isEnable)) {
+                APP_LOGE("conversion failed!");
+                errCode= INVALID_PARAM;
+            }
+        } else if ((i == PARAM2) && (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION)) {
+            break;
+        } else {
+            errCode = INVALID_PARAM;
+        }
+    }
+    auto ret = std::make_shared<bool>(false);
+    auto execute = [result = ret, bundleName, isEnable, errCode] () {
+        if (errCode == ERR_OK) {
+            *result = InnerSetApplicationEnabled(bundleName, isEnable);
+            return;
+        }
+    };
+    auto complete = [result = ret, isEnable, errCode]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (errCode != ERR_OK) {
+                task.Reject(engine, CreateJsValue(engine, errCode));
+                return;
+            }
+            if (!(*result)) {
+                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
+                return;
+            }
+            task.ResolveWithCustomize(engine, engine.CreateUndefined(), engine.CreateUndefined());
+    };
+    NativeValue *result = nullptr;
+    NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
+    AsyncTask::Schedule("JsBundleMgr::OnSetApplicationEnabled",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info)
+{
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    bool isEnable = false;
+    OHOS::AppExecFwk::AbilityInfo abilityInfo;
+    auto env = reinterpret_cast<napi_env>(&engine);
+    auto inputAbilityInfo = reinterpret_cast<napi_value>(info.argv[PARAM0]);
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = INVALID_PARAM;
+    }
+    for (size_t i = 0; i < info.argc; ++i) {
+        if ((i == PARAM0) && (info.argv[PARAM0]->TypeOf() == NATIVE_OBJECT)) {
+            if (!UnwrapAbilityInfo(env, inputAbilityInfo, abilityInfo)) {
+                APP_LOGE("conversion failed!");
+                errCode= INVALID_PARAM;
+            }
+        } else if ((i == PARAM1) && (info.argv[PARAM1]->TypeOf() == NATIVE_BOOLEAN)) {
+            if (!ConvertFromJsValue(engine, info.argv[PARAM1], isEnable)) {
+                APP_LOGE("conversion failed!");
+                errCode= INVALID_PARAM;
+            }
+        } else if ((i == PARAM2) && (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION)) {
+            break;
+        } else {
+            errCode = INVALID_PARAM;
+        }
+    }
+    auto ret = std::make_shared<bool>(false);
+    auto execute = [result = ret, abilityInfo, isEnable, errCode] () {
+        if (errCode == ERR_OK) {
+            *result = InnerSetAbilityEnabled(abilityInfo, isEnable);
+            return;
+        }
+    };
+    auto complete = [result = ret, errCode]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (errCode != ERR_OK) {
+                task.Reject(engine, CreateJsValue(engine, errCode));
+                return;
+            }
+            if (!*result) {
+                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
+                return;
+            }
+            task.ResolveWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errCode));
+    };
+    NativeValue *result = nullptr;
+    NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
+    AsyncTask::Schedule("JsBundleMgr::OnSetAbilityEnabled",
+            engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    int32_t bundleFlags = -1;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    AAFwk::Want want;
+    auto env = reinterpret_cast<napi_env>(&engine);
+    auto inputWant = reinterpret_cast<napi_value>(info.argv[PARAM0]);
+    if (info.argc > ARGS_SIZE_FOUR || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    if (!ParseWant(env, want, inputWant)) {
+        APP_LOGE("parse want faile.");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM1]->TypeOf() != NATIVE_NUMBER) {
+        APP_LOGE("input params is not number!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    ConvertFromJsValue(engine, info.argv[PARAM1], bundleFlags);
+    NativeValue* lastParam = UnwarpQueryAbilityInfoParams(engine, info, userId, errCode);
+
+    std::shared_ptr<JsQueryAbilityInfo> queryAbilityInfo = std::make_shared<JsQueryAbilityInfo>();
+    auto execute = [want, bundleFlags, userId, info = queryAbilityInfo, &engine] () {
+        {
+            std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+            auto env = reinterpret_cast<napi_env>(&engine);
+            auto item = nativeAbilityInfoCache.find(Query(want.ToString(),
+                QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+            if (item != nativeAbilityInfoCache.end()) {
+                APP_LOGD("has cache,no need to query from host");
+                info->getCache = true;
+                return;
+            }
+        }
+        auto iBundleMgr = GetBundleMgr();
+        if (iBundleMgr == nullptr) {
+            APP_LOGE("can not get iBundleMgr");
+            info->ret = false;
+            return;
+        }
+        info->ret = iBundleMgr->QueryAbilityInfos(want, bundleFlags, userId, info->abilityInfos);
+    };
+
+    AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info = queryAbilityInfo]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            std::string queryAbilityInfosErrData;
+            auto env = reinterpret_cast<napi_env>(&engine);
+            if (info->getCache) {
+                NativeValue *cacheAbilityInfos;
+                auto item = nativeAbilityInfoCache.find(Query(want.ToString(),
+                    QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+                cacheAbilityInfos  = item->second->Get();
+                APP_LOGD("has cache,no need to query from host");
+                task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), cacheAbilityInfos);
+                return;
+            }
+            if (errCode != ERR_OK) {
+                queryAbilityInfosErrData = "type mismatch";
+                task.RejectWithCustomize(engine, CreateJsValue(engine, errCode),
+                    CreateJsValue(engine, queryAbilityInfosErrData));
+                return;
+            }
+            if (!info->ret) {
+                queryAbilityInfosErrData = "QueryAbilityInfos failed";
+                task.RejectWithCustomize(engine, CreateJsValue(engine, 1),
+                    CreateJsValue(engine, queryAbilityInfosErrData));
+                return;
+            }
+            NativeValue *cacheAbilityInfoValue = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+                Query query(want.ToString(), QUERY_ABILITY_BY_WANT, bundleFlags, userId, env);
+                cacheAbilityInfoValue = obj->CreateAbilityInfos(engine, info->abilityInfos);
+                OnHandleAbilityInfoCache(engine, query, want, info->abilityInfos, cacheAbilityInfoValue);
+            }
+            task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), cacheAbilityInfoValue);
+    };
+
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnQueryAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
@@ -7518,15 +6928,15 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
         if (errCode != ERR_OK) {
             std::string getAllBundleInfoErrData = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode),
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode),
                 CreateJsValue(engine, getAllBundleInfoErrData));
             return;
         }
         if (!*ret) {
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateBundleInfos(engine, *infos));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateBundleInfos(engine, *infos));
     };
 
     NativeValue *result = nullptr;
@@ -7541,7 +6951,6 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
         engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
     return result;
 }
-
 
 NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
 {
@@ -7596,15 +7005,15 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
         std::string errMessage;
         if (errCode != ERR_OK) {
             errMessage = "type mismatch";
-            task.RejectWithMessage(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
             return;
         }
         if (!*ret) {
             errMessage = "QueryExtensionInfoByWant failed";
-            task.RejectWithMessage(engine, CreateJsValue(engine, 1), CreateJsValue(engine, errMessage));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), CreateJsValue(engine, errMessage));
             return;
         }
-        task.ResolveWithErr(engine, obj->CreateExtensionInfo(engine, *infos));
+        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateExtensionInfo(engine, *infos));
     };
 
     NativeValue *result = nullptr;
@@ -7617,6 +7026,637 @@ NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, Nat
     AsyncTask::Schedule("JsBundleMgr::OnQueryExtensionAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
     return result;
+}
+
+NativeValue* JsBundleMgr::OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    auto jsInfo = std::make_shared<JsGetPermissionDef>();
+    if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM0], jsInfo->permissionName)) {
+            APP_LOGE("conversion failed!");
+            errCode = PARAM_TYPE_ERROR;
+        }
+    } else {
+        APP_LOGE("input params is not string!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    auto execute = [info = jsInfo, errCode] () {
+        if (errCode == ERR_OK) {
+            info->ret = InnerGetPermissionDef(info->permissionName, info->permissionDef);
+            return;
+        }
+    };
+    auto complete = [obj = this, info = jsInfo, errCode]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            OHOS::AppExecFwk::PermissionDef permissionDef;
+            if (errCode != ERR_OK) {
+                std::string errMessage = "type mismatch";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (info == nullptr) {
+                std::string errMessage = "Parameter is empty.";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, INVALID_PARAM), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (!info->ret) {
+                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
+                return;
+            }
+            task.ResolveWithCustomize(
+                engine, CreateJsValue(engine, CODE_SUCCESS), obj->CreatePermissionDef(engine, info->permissionDef));
+    };
+    NativeValue *lastParam = (info.argc == ARGS_SIZE_ONE) ? nullptr : info.argv[PARAM1];
+    NativeValue *result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnGetPermissionDef",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnGetBundlePackInfo(NativeEngine &engine, const NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    int32_t errCode = ERR_OK;
+    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+    auto jsInfo = std::make_shared<JsGetBundlePackInfo>();
+    if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM0], jsInfo->bundleName)) {
+            APP_LOGE("conversion failed!");
+            errCode = PARAM_TYPE_ERROR;
+        }
+    } else {
+        APP_LOGE("input params is not string!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (info.argv[PARAM1]->TypeOf() == NATIVE_NUMBER) {
+        if (!ConvertFromJsValue(engine, info.argv[PARAM1], jsInfo->bundlePackFlag)) {
+            APP_LOGE("conversion failed!");
+            errCode = PARAM_TYPE_ERROR;
+        }
+    } else {
+        APP_LOGE("input params is not nubmer!");
+        errCode = PARAM_TYPE_ERROR;
+    }
+
+    if (std::find(PACKINFO_FLAGS.begin(), PACKINFO_FLAGS.end(), jsInfo->bundlePackFlag) == PACKINFO_FLAGS.end()) {
+        errCode = INVALID_PARAM;
+    }
+    auto execute = [info = jsInfo, errCode] () {
+        if (errCode == ERR_OK) {
+            std::string name(info->bundleName);
+            info->ret = InnerGetBundlePackInfo(name, info->bundlePackFlag, info->bundlePackInfo);
+            return;
+        }
+    };
+    auto complete = [obj = this, errCode, info = jsInfo]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (errCode != ERR_OK) {
+                std::string errMessage = (errCode == PARAM_TYPE_ERROR) ? "type mismatch" : "flag mismatch";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (info == nullptr) {
+                std::string errMessage = "Parameter is empty.";
+                task.RejectWithCustomize(
+                    engine, CreateJsValue(engine, INVALID_PARAM), CreateJsValue(engine, errMessage));
+                return;
+            }
+            if (!info->ret) {
+                task.Reject(engine, CreateJsValue(engine, 1));
+                return;
+            }
+            task.ResolveWithCustomize(engine, CreateJsValue(engine, 0),
+                obj->CreateBundlePackInfo(engine, info->bundlePackFlag, info->bundlePackInfo));
+    };
+
+    NativeValue *result = nullptr;
+    auto callback = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
+    AsyncTask::Schedule("JsBundleMgr::OnGetBundlePackInfo",
+        engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGI("%{public}s is called", __FUNCTION__);
+    if (info.argc > ARGS_SIZE_ONE) {
+        APP_LOGE("wrong number of arguments!");
+        return engine.CreateUndefined();
+    }
+
+    AsyncTask::CompleteCallback complete = [obj = this](NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (!VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+                APP_LOGE("GetBundleInstaller no permission!");
+                task.Reject(engine, CreateJsValue(engine, 1));
+                return;
+            }
+
+            auto ret = obj->JsBundleInstallInit(engine);
+            if (ret == nullptr) {
+                APP_LOGE("bind func failed");
+            }
+            task.Resolve(engine, ret);
+    };
+
+    NativeValue* lastParam = (info.argc == ARGS_SIZE_ONE) ? info.argv[PARAM0] : nullptr;
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsBundleMgr::OnGetBundleInstaller",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleMgr::JsBundleInstallInit(NativeEngine &engine)
+{
+    APP_LOGD("JsBundleMgrInit is called");
+    auto objBundleInstall = engine.CreateObject();
+    if (objBundleInstall == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return nullptr;
+    }
+    auto object = ConvertNativeValueTo<NativeObject>(objBundleInstall);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return nullptr;
+    }
+
+    auto jsCalss = std::make_unique<JsBundleInstall>();
+    if (jsCalss == nullptr) {
+        APP_LOGE("new JsBundleInstall failed");
+        return nullptr;
+    }
+    object->SetNativePointer(jsCalss.release(), JsBundleInstall::Finalizer, nullptr);
+    const char *moduleName = "JsBundleInstall";
+    BindNativeFunction(engine, *object, "install", moduleName, JsBundleInstall::Install);
+    BindNativeFunction(engine, *object, "recover", moduleName, JsBundleInstall::Recover);
+    BindNativeFunction(engine, *object, "uninstall", moduleName, JsBundleInstall::Uninstall);
+
+    return objBundleInstall;
+}
+
+void JsBundleInstall::Finalizer(NativeEngine *engine, void *data, void *hint)
+{
+    APP_LOGI("JsBundleInstall::Finalizer is called");
+    std::unique_ptr<JsBundleInstall>(static_cast<JsBundleInstall*>(data));
+}
+
+NativeValue* JsBundleInstall::Install(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleInstall* me = CheckParamsAndGetThis<JsBundleInstall>(engine, info);
+    return (me != nullptr) ? me->OnInstall(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleInstall::Recover(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleInstall* me = CheckParamsAndGetThis<JsBundleInstall>(engine, info);
+    return (me != nullptr) ? me->OnRecover(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleInstall::Uninstall(NativeEngine *engine, NativeCallbackInfo *info)
+{
+    JsBundleInstall* me = CheckParamsAndGetThis<JsBundleInstall>(engine, info);
+    return (me != nullptr) ? me->OnUninstall(*engine, *info) : nullptr;
+}
+
+NativeValue* JsBundleInstall::CreateInstallStatus(NativeEngine &engine,
+    const std::shared_ptr<BundleInstallResult> bundleInstallResult)
+{
+    APP_LOGD("CreateInstallStatus is called");
+    auto objContext = engine.CreateObject();
+    if (objContext == nullptr) {
+        APP_LOGE("CreateObject failed");
+        return engine.CreateUndefined();
+    }
+
+    auto object = ConvertNativeValueTo<NativeObject>(objContext);
+    if (object == nullptr) {
+        APP_LOGE("ConvertNativeValueTo object failed");
+        return engine.CreateUndefined();
+    }
+
+    object->SetProperty("status", CreateJsValue(engine, bundleInstallResult->resCode));
+    object->SetProperty("statusMessage", CreateJsValue(engine, bundleInstallResult->resMessage));
+
+    return objContext;
+}
+NativeValue* JsBundleInstall::OnInstall(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+
+    std::vector<std::string> bundleFilePaths;
+    std::shared_ptr<BundleInstallResult> installResult = std::make_shared<BundleInstallResult>();
+    InstallParam installParam;
+    if (info.argc != ARGS_SIZE_THREE) {
+        APP_LOGE("wrong number of arguments!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    }
+    if (!info.argv[PARAM0]->IsArray()) {
+        APP_LOGE("input params is not array!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    } else if (!GetStringsValue(engine, info.argv[PARAM0], bundleFilePaths)) {
+        APP_LOGE("conversion failed!");
+        installResult->resCode= PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM1]->TypeOf() != NATIVE_OBJECT) {
+        APP_LOGE("input params is not array!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    } else if (!GetInstallParamValue(engine, info.argv[PARAM1], installParam)) {
+        APP_LOGE("conversion failed!");
+        installResult->resCode= PARAM_TYPE_ERROR;
+    }
+    if (installParam.installFlag == InstallFlag::NORMAL) {
+        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    }
+    AsyncTask::CompleteCallback complete = [obj = this, bundleFilePaths, installParam, resInstall = installResult]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (resInstall->resCode != 0) {
+                task.Reject(engine, CreateJsError(engine, resInstall->resCode));
+                return;
+            }
+            auto iBundleMgr = GetBundleMgr();
+            auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+            if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+                APP_LOGE("can not get iBundleInstaller");
+                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
+                return;
+            }
+
+            OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+            if (callback == nullptr) {
+                APP_LOGE("callback nullptr");
+                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
+                return;
+            }
+            sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+            iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+            ErrCode res = iBundleInstaller->StreamInstall(bundleFilePaths, installParam, callback);
+
+            if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
+                APP_LOGE("install param error");
+                resInstall->resCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
+                resInstall->resMessage = "STATUS_INSTALL_FAILURE_INVALID";
+            } else if (res == ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) {
+                APP_LOGE("install invalid path");
+                resInstall->resCode = IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID;
+                resInstall->resMessage = "STATUS_INSTALL_FAILURE_INVALID";
+            } else {
+                resInstall->resCode = callback->GetResultCode();
+                APP_LOGD("Install resultCode %{public}d", resInstall->resCode);
+                resInstall->resMessage = callback->GetResultMsg();
+                APP_LOGD("Install resultMsg %{public}s", resInstall->resMessage.c_str());
+            }
+            obj->ConvertInstallResult(resInstall);
+            task.Resolve(engine, obj->CreateInstallStatus(engine, resInstall));
+    };
+    NativeValue* lastParam = info.argv[PARAM2];
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsBundleInstall::OnInstall",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleInstall::OnRecover(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    std::string bundleName;
+    std::shared_ptr<BundleInstallResult> installResult = std::make_shared<BundleInstallResult>();
+    InstallParam installParam;
+
+    if (info.argc != ARGS_SIZE_THREE) {
+        APP_LOGE("wrong number of arguments!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM0]->TypeOf() != NATIVE_STRING) {
+        APP_LOGE("input params is not string!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    } else if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
+        APP_LOGE("conversion failed!");
+        installResult->resCode= PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM1]->TypeOf() != NATIVE_OBJECT) {
+        APP_LOGE("input params is not array!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    } else if (!GetInstallParamValue(engine, info.argv[PARAM1], installParam)) {
+        APP_LOGE("conversion failed!");
+        installResult->resCode= PARAM_TYPE_ERROR;
+    }
+    AsyncTask::CompleteCallback complete = [obj = this, bundleName, installParam, resInstall = installResult]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (resInstall->resCode != ERR_OK) {
+                task.Reject(engine, CreateJsError(engine, resInstall->resCode));
+                return;
+            }
+            auto iBundleMgr = GetBundleMgr();
+            auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+            if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+                APP_LOGE("can not get iBundleInstaller");
+                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
+                return;
+            }
+            OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+            if (callback == nullptr) {
+                APP_LOGE("callback nullptr");
+                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
+                return;
+            }
+
+            sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+            iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+            iBundleInstaller->Recover(bundleName, installParam, callback);
+            resInstall->resCode = callback->GetResultCode();
+            APP_LOGD("Recover resultCode %{public}d", resInstall->resCode);
+            resInstall->resMessage = callback->GetResultMsg();
+            APP_LOGD("Recover resultMsg %{public}s", resInstall->resMessage.c_str());
+            obj->ConvertInstallResult(resInstall);
+            task.Resolve(engine, obj->CreateInstallStatus(engine, resInstall));
+    };
+    NativeValue* lastParam = info.argv[PARAM2];
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsBundleInstall::OnRecover",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsBundleInstall::OnUninstall(NativeEngine &engine, NativeCallbackInfo &info)
+{
+    APP_LOGD("%{public}s is called", __FUNCTION__);
+    std::string bundleName;
+    std::shared_ptr<BundleInstallResult> installResult = std::make_shared<BundleInstallResult>();
+    InstallParam installParam;
+
+    if (info.argc != ARGS_SIZE_THREE) {
+        APP_LOGE("wrong number of arguments!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM0]->TypeOf() != NATIVE_STRING) {
+        APP_LOGE("input params is not string!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    } else if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
+        APP_LOGE("conversion failed!");
+        installResult->resCode= PARAM_TYPE_ERROR;
+    }
+    if (info.argv[PARAM1]->TypeOf() != NATIVE_OBJECT) {
+        APP_LOGE("input params is not array!");
+        installResult->resCode = PARAM_TYPE_ERROR;
+    } else if (!GetInstallParamValue(engine, info.argv[PARAM1], installParam)) {
+        APP_LOGE("conversion failed!");
+        installResult->resCode= PARAM_TYPE_ERROR;
+    }
+    installParam.installFlag = InstallFlag::NORMAL;
+    AsyncTask::CompleteCallback complete = [obj = this, bundleName, installParam, resInstall = installResult]
+        (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (resInstall->resCode != ERR_OK) {
+                task.Reject(engine, CreateJsError(engine, resInstall->resCode));
+                return;
+            }
+            auto iBundleMgr = GetBundleMgr();
+            auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+            if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+                APP_LOGE("can not get iBundleInstaller");
+                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
+                return;
+            }
+
+            OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+            if (callback == nullptr) {
+                APP_LOGE("callback nullptr");
+                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
+                return;
+            }
+            sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+            iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+            iBundleInstaller->Uninstall(bundleName, installParam, callback);
+            resInstall->resCode = callback->GetResultCode();
+            APP_LOGD("Uninstall resultCode %{public}d", resInstall->resCode);
+            resInstall->resMessage = callback->GetResultMsg();
+            APP_LOGD("Uninstall resultMsg %{public}s", resInstall->resMessage.c_str());
+            obj->ConvertInstallResult(resInstall);
+            task.Resolve(engine, obj->CreateInstallStatus(engine, resInstall));
+    };
+    NativeValue* lastParam = info.argv[PARAM2];
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsBundleInstall::OnUninstall",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+bool JsBundleInstall::GetStringsValue(NativeEngine &engine, NativeValue *object, std::vector<std::string> &strList)
+{
+    auto array = ConvertNativeValueTo<NativeArray>(object);
+    if (array == nullptr) {
+        APP_LOGE("input params error");
+        return false;
+    }
+
+    for (uint32_t i = 0; i < array->GetLength(); i++) {
+        std::string itemStr("");
+        if ((array->GetElement(i))->TypeOf() != NATIVE_STRING) {
+            APP_LOGE("GetElement is not string");
+            return false;
+        }
+        if (!ConvertFromJsValue(engine, array->GetElement(i), itemStr)) {
+            APP_LOGE("GetElement from to array [%{public}u] error", i);
+            return false;
+        }
+        strList.push_back(itemStr);
+    }
+
+    return true;
+}
+
+bool JsBundleInstall::GetInstallParamValue(NativeEngine &engine, NativeValue *object, InstallParam &installParam)
+{
+    auto env = reinterpret_cast<napi_env>(&engine);
+    auto param = reinterpret_cast<napi_value>(object);
+    if (!ParseInstallParam(env, installParam, param)) {
+        APP_LOGE("ParseInstallParam fail");
+        return false;
+    }
+    return true;
+}
+
+void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> installResult)
+{
+    APP_LOGD("ConvertInstallResult = %{public}s.", installResult->resMessage.c_str());
+    switch (installResult->resCode) {
+        case static_cast<int32_t>(IStatusReceiver::SUCCESS):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::SUCCESS);
+            installResult->resMessage = "SUCCESS";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_HOST_INSTALLER_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DISALLOWED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE);
+            installResult->resMessage = "STATUS_INSTALL_FAILURE";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERIFICATION_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARAM_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_HAP_SIZE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_HAP_NAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_BUNDLE_FILE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_UNEXPECTED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_MISSING_BUNDLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_NO_PROFILE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_BAD_PROFILE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_MISSING_PROP):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_APP_PKCS7_FAIL):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_PROFILE_PARSE_FAIL):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_DIGEST):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_INTEGRITY_VERIFICATION_FAILURE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_FILE_SIZE_TOO_LARGE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_PUBLICKEY):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_EMPTY):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_DUPLICATE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
+            installResult->resMessage = "STATUS_INSTALL_FAILURE_INVALID";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_MISSING_ABILITY):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND);
+            installResult->resMessage = "STATUS_ABILITY_NOT_FOUND";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE);
+            installResult->resMessage = "STATUS_INSTALL_FAILURE_INCOMPATIBLE";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED);
+            installResult->resMessage = "STATUS_INSTALL_PERMISSION_DENIED";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ENTRY_ALREADY_EXIST):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ALREADY_EXIST):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_BUNDLENAME_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSIONCODE_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSIONNAME_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VENDOR_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_RELEASETYPE_TARGET_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ZERO_USER_WITH_NO_SINGLETON):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APPTYPE_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_URI_DUPLICATE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_NOT_COMPATIBLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_TYPE_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT);
+            installResult->resMessage = "STATUS_INSTALL_FAILURE_CONFLICT";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_PARAM_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_GET_PROXY_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CREATE_DIR_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CREATE_DIR_EXIST):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CHOWN_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_REMOVE_DIR_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_EXTRACT_FILES_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_RNAME_DIR_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CLEAN_DIR_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_STATE_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_GENERATE_UID_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INSTALLD_SERVICE_ERROR):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE);
+            installResult->resMessage = "STATUS_INSTALL_FAILURE_STORAGE";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_PERMISSION_DENIED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED);
+            installResult->resMessage = "STATUS_UNINSTALL_PERMISSION_DENIED";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_INVALID_NAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_PARAM_ERROR):
+            if (CheckIsSystemApp()) {
+                installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED);
+                installResult->resMessage = "STATUS_UNINSTALL_FAILURE_ABORTED";
+                break;
+            }
+            [[fallthrough]];
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR):
+            if (CheckIsSystemApp()) {
+                installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT);
+                installResult->resMessage = "STATUS_UNINSTALL_FAILURE_CONFLICT";
+                break;
+            }
+            [[fallthrough]];
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_BUNDLE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE):
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_NOT_INSTALL_HAP):
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_DISALLOWED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE);
+            installResult->resMessage = "STATUS_UNINSTALL_FAILURE";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_GET_BUNDLEPATH_ERROR):
+        case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME):
+        case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_NOT_ALLOWED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID);
+            installResult->resMessage = "STATUS_RECOVER_FAILURE_INVALID";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_FAILED_SERVICE_DIED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_FAILED_GET_INSTALLER_PROXY):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
+            installResult->resMessage = "STATUS_BMS_SERVICE_ERROR";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT);
+            installResult->resMessage = "STATUS_FAILED_NO_SPACE_LEFT";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED);
+            installResult->resMessage = "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_NOT_EXIST):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_NOT_EXIST);
+            installResult->resMessage = "STATUS_USER_NOT_EXIST";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_CREATE_FAILED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FAILED);
+            installResult->resMessage = "STATUS_USER_CREATE_FAILED";
+            break;
+        case static_cast<int32_t>(IStatusReceiver::ERR_USER_REMOVE_FAILED):
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FAILED);
+            installResult->resMessage = "STATUS_USER_REMOVE_FAILED";
+            break;
+        default:
+            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
+            installResult->resMessage = "STATUS_BMS_SERVICE_ERROR";
+            break;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -30,6 +30,7 @@ constexpr const char* PATCH_PROFILE_NAME = "patch.json";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
+constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
@@ -69,6 +70,7 @@ constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
+constexpr const char* CHECK_PROFILE_BUNDLE_NAME = "check_profile_bundle_name";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
@@ -189,6 +191,8 @@ constexpr uint8_t MAX_MODULE_ABILITIES_READPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_ABILITIES_WRITEPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
 constexpr uint8_t MAX_MODULE_LABEL = 63;
+constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
+constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 

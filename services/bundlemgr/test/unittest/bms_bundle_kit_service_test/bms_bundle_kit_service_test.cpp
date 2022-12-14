@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <chrono>
 #include <fstream>
@@ -43,6 +44,8 @@
 #include "launcher_service.h"
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
+#include "nlohmann/json.hpp"
+#include "perf_profile.h"
 #include "service_control.h"
 #include "system_ability_helper.h"
 #include "want.h"
@@ -198,6 +201,19 @@ const int32_t DEFAULT_USERID = 100;
 const int32_t ALL_USERID = -3;
 const int32_t WAIT_TIME = 5; // init mocked bms
 constexpr int32_t DISPOSED_STATUS = 10;
+const int32_t ICON_ID = 16777258;
+const int32_t LABEL_ID = 16777257;
+const std::string BUNDLE_NAME = "bundleName";
+const std::string MODULE_NAME = "moduleName";
+const std::string ABILITY_NAME = "abilityName";
+const std::string SHORTCUT_ID_KEY = "shortcutId";
+const std::string ICON_KEY = "icon";
+const std::string ICON_ID_KEY = "iconId";
+const std::string LABEL_KEY = "label";
+const std::string LABEL_ID_KEY = "labelId";
+const std::string SHORTCUT_WANTS_KEY = "wants";
+const std::string SHORTCUTS_KEY = "shortcuts";
+const size_t ZERO = 0;
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -212,7 +228,7 @@ public:
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, const std::vector<std::string> &dependencies,
+        const std::string &abilityName, const std::vector<Dependency> &dependencies,
         InnerBundleInfo &innerBundleInfo) const;
     void MockInstallBundle(
         const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
@@ -231,6 +247,9 @@ public:
     FormInfo MockFormInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
     ShortcutInfo MockShortcutInfo(const std::string &bundleName, const std::string &shortcutId) const;
+    ShortcutIntent MockShortcutIntent() const;
+    ShortcutWant MockShortcutWant() const;
+    Shortcut MockShortcut() const;
     CommonEventInfo MockCommonEventInfo(const std::string &bundleName, const int uid) const;
     void CheckBundleInfo(const std::string &bundleName, const std::string &moduleName, const uint32_t abilitySize,
         const BundleInfo &bundleInfo) const;
@@ -268,6 +287,9 @@ public:
         const std::string &abilityName, InnerBundleInfo &innerBundleInfo) const;
     void SaveToDatabase(const std::string &bundleName, InnerBundleInfo &innerBundleInfo,
         bool userDataClearable, bool isSystemApp) const;
+    void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
+    void ClearDataMgr();
+    void SetDataMgr();
 
 public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
@@ -276,6 +298,8 @@ public:
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleUserMgrHostImpl> bundleUserMgrHostImpl_ = std::make_shared<BundleUserMgrHostImpl>();
     NotifyBundleEvents installRes_;
+    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
 
 void BmsBundleKitServiceTest::SetUpTestCase()
@@ -305,6 +329,18 @@ void BmsBundleKitServiceTest::SetUp()
 
 void BmsBundleKitServiceTest::TearDown()
 {}
+
+void BmsBundleKitServiceTest::ClearDataMgr()
+{
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsBundleKitServiceTest::SetDataMgr()
+{
+    EXPECT_NE(dataMgrInfo_, nullptr);
+    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
+}
 
 const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
 {
@@ -570,12 +606,43 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutInfos.isStatic = true;
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
-    for (auto &info : shortcutInfos.intents) {
-        info.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-        info.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-        info.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    }
+    ShortcutIntent intent;
+    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    shortcutInfos.intents.push_back(intent);
     return shortcutInfos;
+}
+
+ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
+{
+    ShortcutIntent intent;
+    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    return intent;
+}
+
+ShortcutWant BmsBundleKitServiceTest::MockShortcutWant() const
+{
+    ShortcutWant shortcutWant;
+    shortcutWant.bundleName = BUNDLE_NAME_DEMO;
+    shortcutWant.moduleName = MODULE_NAME_DEMO;
+    shortcutWant.abilityName = ABILITY_NAME_DEMO;
+    return shortcutWant;
+}
+
+Shortcut BmsBundleKitServiceTest::MockShortcut() const
+{
+    Shortcut shortcut;
+    shortcut.shortcutId = SHORTCUT_TEST_ID;
+    shortcut.icon = SHORTCUT_ICON;
+    shortcut.iconId = ICON_ID;
+    shortcut.label = SHORTCUT_LABEL;
+    shortcut.labelId = LABEL_ID;
+    ShortcutWant want = MockShortcutWant();
+    shortcut.wants.push_back(want);
+    return shortcut;
 }
 
 CommonEventInfo BmsBundleKitServiceTest::MockCommonEventInfo(
@@ -658,7 +725,7 @@ ExtensionAbilityInfo BmsBundleKitServiceTest::MockExtensionInfo(
 }
 
 void BmsBundleKitServiceTest::MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, const std::vector<std::string> &dependencies,
+    const std::string &abilityName, const std::vector<Dependency> &dependencies,
     InnerBundleInfo &innerBundleInfo) const
 {
     ApplicationInfo appInfo;
@@ -1078,6 +1145,15 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
             EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
+}
+
+void BmsBundleKitServiceTest::ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant)
+{
+    jsonObject = nlohmann::json {
+        {BUNDLE_NAME, shortcutWant.bundleName},
+        {MODULE_NAME, shortcutWant.moduleName},
+        {ABILITY_NAME, shortcutWant.abilityName},
+    };
 }
 
 /**
@@ -3662,6 +3738,29 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_1100, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: CleanCache_1200
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2. userDataClearable is false, dataMgr is nullptr
+ *           3.clean the cache files failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_1200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
+    CreateFileDir();
+
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    SetDataMgr();
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: RegisterBundleStatus_0100
  * @tc.name: test can register the bundle status by bundle name
  * @tc.desc: 1.system run normally
@@ -3721,6 +3820,64 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0300, Function | SmallTes
 }
 
 /**
+ * @tc.number: RegisterBundleStatus_0400
+ * @tc.name: test can register the bundle status by empty bundle name
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0400, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName("");
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: RegisterBundleStatus_0500
+ * @tc.name: test can not register, the bundle status dataMgr is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0500, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(result);
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: RegisterBundleEventCallback_0100
+ * @tc.name: test can not register, the bundle status bundleEventCallback is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleEventCallback_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->RegisterBundleEventCallback(nullptr);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0100
+ * @tc.name: test can not unregister, the bundle status bundleEventCallback is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, UnregisterBundleEventCallback_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->UnregisterBundleEventCallback(nullptr);
+    EXPECT_FALSE(result);
+}
+
+/**
  * @tc.number: ClearBundleStatus_0100
  * @tc.name: test can clear the bundle status by bundle name
  * @tc.desc: 1.system run normally
@@ -3752,6 +3909,23 @@ HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0100, Function | SmallTest |
 
     int32_t callbackResult1 = bundleStatusCallback1->GetResultCode();
     EXPECT_EQ(callbackResult1, ERR_TIMED_OUT);
+}
+
+/**
+ * @tc.number: ClearBundleStatus_0200
+ * @tc.name: test can not unregister, the bundle status dataMgr is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0200, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    bool result = hostImpl->ClearBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(result);
+    SetDataMgr();
 }
 
 /**
@@ -5225,7 +5399,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_004, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_001);
+    want.SetUri(SCHEME_001 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
 }
@@ -5243,7 +5417,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_005, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_002);
+    want.SetUri(SCHEME_002 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(false, ret);
 }
@@ -5333,6 +5507,135 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTes
 }
 
 /**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme, param has "scheme://" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(HOST_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_002 + SCHEME_SEPARATOR;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host, param has "scheme://host" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_002, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PATH_SEPARATOR + PATH_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host and port,
+ * param has "scheme://host:port" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
  * @tc.number: GetAlldependentModuleNames
  * @tc.name: no dependencies
  * @tc.desc: expect true
@@ -5340,7 +5643,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTes
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_001, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     std::vector<std::string> dependentModuleName;
     auto res = innerBundleInfo.GetAllDependentModuleNames(MODULE_NAME_TEST, dependentModuleName);
@@ -5356,8 +5659,10 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_001, Function | Sma
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_002, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
-    dependencies.push_back(MODULE_NAME_TEST_1);
+    std::vector<Dependency> dependencies;
+    Dependency dependency;
+    dependency.moduleName = MODULE_NAME_TEST_1;
+    dependencies.push_back(dependency);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_1, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
@@ -5379,9 +5684,13 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_002, Function | Sma
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_003, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
-    dependencies.push_back(MODULE_NAME_TEST_1);
-    dependencies.push_back(MODULE_NAME_TEST_2);
+    std::vector<Dependency> dependencies;
+    Dependency dependency_1;
+    dependency_1.moduleName = MODULE_NAME_TEST_1;
+    Dependency dependency_2;
+    dependency_2.moduleName = MODULE_NAME_TEST_2;
+    dependencies.push_back(dependency_1);
+    dependencies.push_back(dependency_2);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_1, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
@@ -5405,14 +5714,20 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_003, Function | Sma
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_004, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
-    dependencies.push_back(MODULE_NAME_TEST_1);
-    dependencies.push_back(MODULE_NAME_TEST_2);
+    std::vector<Dependency> dependencies;
+    Dependency dependency_1;
+    dependency_1.moduleName = MODULE_NAME_TEST_1;
+    Dependency dependency_2;
+    dependency_2.moduleName = MODULE_NAME_TEST_2;
+    dependencies.push_back(dependency_1);
+    dependencies.push_back(dependency_2);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_1, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
-    dependencies.push_back(MODULE_NAME_TEST_3);
+    Dependency dependency_3;
+    dependency_3.moduleName = MODULE_NAME_TEST_3;
+    dependencies.push_back(dependency_3);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_2, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_3, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
@@ -6944,7 +7259,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6957,7 +7272,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6970,7 +7285,7 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    EXPECT_FALSE(bundleAgingMgr.running);
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 
 /**
@@ -6983,8 +7298,6 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.InitAgingtTimer();
     bundleAgingMgr.InitAgingRunner();
-    EXPECT_EQ(bundleAgingMgr.agingTimerInterval,
-        AgingConstants::DEFAULT_AGING_TIMER_INTERVAL);
 }
 
 /**
@@ -7705,5 +8018,805 @@ HWTEST_F(BmsBundleKitServiceTest, AppRunningControlRuleResult_001, Function | Sm
     EXPECT_EQ(ret1, true);
     auto ret2 = result.Unmarshalling(parcel);
     EXPECT_NE(ret2, nullptr);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_001
+ * @tc.name: Marshalling branch cover
+ * @tc.desc: 1.Test Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    Parcel parcel;
+    auto ret1 = shortcutInfo.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_002
+ * @tc.name: shortcutIntent to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutIntent to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallTest | Level1)
+{
+    ShortcutIntent intent = MockShortcutIntent();
+    nlohmann::json jsonObj;
+    to_json(jsonObj, intent);
+    ShortcutIntent result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+    EXPECT_EQ(result.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+    EXPECT_EQ(result.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_003
+ * @tc.name: shortcutInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutInfo to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_003, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    nlohmann::json jsonObj;
+    to_json(jsonObj, shortcutInfo);
+    ShortcutInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.id, SHORTCUT_TEST_ID);
+    EXPECT_EQ(result.bundleName, BUNDLE_NAME_DEMO);
+    EXPECT_EQ(result.hostAbility, SHORTCUT_HOST_ABILITY);
+    EXPECT_EQ(result.icon, SHORTCUT_ICON);
+    EXPECT_EQ(result.label, SHORTCUT_LABEL);
+    EXPECT_EQ(result.disableMessage, SHORTCUT_DISABLE_MESSAGE);
+    EXPECT_EQ(result.isStatic, true);
+    EXPECT_EQ(result.isHomeShortcut, true);
+    EXPECT_EQ(result.isEnables, true);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_004
+ * @tc.name: shortcutInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutInfo to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_004, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["id"] = false;
+    jsonObject["label"] = "1";
+    jsonObject["icon"] = "1";
+    ShortcutInfo shortcutInfo;
+    from_json(jsonObject, shortcutInfo);
+    EXPECT_NE(shortcutInfo.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_005
+ * @tc.name: shortcutWant to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutWant to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_005, Function | SmallTest | Level1)
+{
+    ShortcutWant shortcutWant = MockShortcutWant();
+    nlohmann::json jsonObj;
+    ShortcutWantToJson(jsonObj, shortcutWant);
+    ShortcutWant result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.bundleName, BUNDLE_NAME_DEMO);
+    EXPECT_EQ(result.moduleName, MODULE_NAME_DEMO);
+    EXPECT_EQ(result.abilityName, ABILITY_NAME_DEMO);
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_006
+ * @tc.name: shortcutWant to_json and from_json branch cover
+ * @tc.desc: 1.Test shortcutWant to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_006, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["bundleName"] = false;
+    jsonObject["moduleName"] = "1";
+    jsonObject["abilityName"] = "1";
+    ShortcutWant shortcutWant;
+    from_json(jsonObject, shortcutWant);
+    EXPECT_NE(shortcutWant.moduleName, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_007
+ * @tc.name: shortcut from_json branch cover
+ * @tc.desc: 1.Test shortcut from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_007, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["shortcutId"] = "1";
+    jsonObject["label"] = "1";
+    jsonObject["icon"] = "1";
+    Shortcut shortcut;
+    from_json(jsonObject, shortcut);
+    EXPECT_EQ(shortcut.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_008
+ * @tc.name: shortcut from_json branch cover
+ * @tc.desc: 1.Test shortcut from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_008, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["shortcutId"] = false;
+    jsonObject["label"] = "1";
+    jsonObject["icon"] = "1";
+    Shortcut shortcut;
+    from_json(jsonObject, shortcut);
+    EXPECT_NE(shortcut.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_009
+ * @tc.name: shortcutJson from_json branch cover
+ * @tc.desc: 1.Test shortcutJson from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_009, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject = R"({"shortcuts":[{"shortcutId":"1","label":"1","icon":"1"}]})"_json;
+    ShortcutJson shortcutJson;
+    from_json(jsonObject, shortcutJson);
+    Shortcut shortcut = shortcutJson.shortcuts.front();
+    EXPECT_EQ(shortcut.shortcutId, "1");
+    EXPECT_EQ(shortcut.label, "1");
+    EXPECT_EQ(shortcut.icon, "1");
+}
+
+/**
+ * @tc.number: ShortcutInfoBranchCover_0010
+ * @tc.name: shortcutJson from_json branch cover
+ * @tc.desc: 1.Test shortcutJson from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_0010, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["shortcuts"] = "1";
+    ShortcutJson shortcutJson;
+    from_json(jsonObject, shortcutJson);
+    EXPECT_EQ(shortcutJson.shortcuts.size(), 0);
+}
+
+/**
+ * @tc.number: DBMSBranchCover_0001
+ * @tc.name: dbms Marshalling branch cover
+ * @tc.desc: 1.Test dbms Marshalling and ReadFromParcel branch cover
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSBranchCover_0001, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo distributedModuleInfo1;
+    DistributedModuleInfo distributedModuleInfo2;
+    distributedModuleInfo1.moduleName = "testModuleName";
+    DistributedAbilityInfo distributedAbioityInfo;
+    distributedModuleInfo1.abilities.emplace_back(distributedAbioityInfo);
+    Parcel parcel;
+    auto ret1 = distributedModuleInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    auto ret2 = distributedModuleInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+}
+
+/**
+ * @tc.number: DBMSBranchCover_0002
+ * @tc.name: dbms Unmarshalling branch cover
+ * @tc.desc: 1.Test dbms Unmarshalling branch cover
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSBranchCover_0002, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo distributedModuleInfo1;
+    distributedModuleInfo1.moduleName = "testModuleName";
+    DistributedAbilityInfo distributedAbioityInfo;
+    distributedModuleInfo1.abilities.emplace_back(distributedAbioityInfo);
+    Parcel parcel;
+    auto ret1 = distributedModuleInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    DistributedModuleInfo distributedModuleInfo2;
+    auto ret2 = distributedModuleInfo2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(distributedModuleInfo1.moduleName, ret2->moduleName);
+}
+
+/**
+ * @tc.number: DBMSBranchCover_0003
+ * @tc.name: dbms Unmarshalling branch cover
+ * @tc.desc: 1.Test dbms Unmarshalling branch cover
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSBranchCover_0003, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo distributedModuleInfo;
+    std::string path = "/data/test/distributedModuleinfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = -1;
+    std::string prefix = "[ability]";
+    distributedModuleInfo.Dump(prefix, fd);
+    long length = lseek(fd, ZERO, SEEK_END);
+    EXPECT_EQ(length, -1);
+}
+
+/**
+ * @tc.number: DBMSAbilityInfoBranchCover_0001
+ * @tc.name: DBMSAbilityInfo ReadFromParcel and marshalling test
+ * @tc.desc: 1.DBMSAbilityInfo ReadFromParcel and marshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0001, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo distributedAbilityInfo1;
+    DistributedAbilityInfo distributedAbilityInfo2;
+    distributedAbilityInfo1.abilityName = "testAbilityName";
+    Parcel parcel;
+    auto ret1 = distributedAbilityInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    auto ret2 = distributedAbilityInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+}
+
+/**
+ * @tc.number: DBMSAbilityInfoBranchCover_0002
+ * @tc.name: DBMSAbilityInfo Unmarshalling test
+ * @tc.desc: 1.DBMSAbilityInfo Unmarshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0002, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo distributedAbilityInfo1;
+    DistributedAbilityInfo distributedAbilityInfo2;
+    distributedAbilityInfo1.abilityName = "testAbilityName";
+    Parcel parcel;
+    auto ret1 = distributedAbilityInfo1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    auto ret2 = distributedAbilityInfo2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(distributedAbilityInfo1.abilityName, ret2->abilityName);
+}
+
+/**
+ * @tc.number: DBMSAbilityInfoBranchCover_0003
+ * @tc.name: DBMSAbilityInfo dump test
+ * @tc.desc: 1.DBMSAbilityInfo dump test
+ */
+HWTEST_F(BmsBundleKitServiceTest, DBMSAbilityInfoBranchCover_0003, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo distributedAbilityInfo;
+    std::string path = "/data/test/distributedAbilityInfo.txt";
+    std::ofstream file(path);
+    file.close();
+    int fd = -1;
+    std::string prefix = "[ability]";
+    distributedAbilityInfo.Dump(prefix, fd);
+    long length = lseek(fd, ZERO, SEEK_END);
+    EXPECT_EQ(length, -1);
+}
+
+/**
+ * @tc.number: PermissionDefBranchCover_0001
+ * @tc.name: PermissionDef Marshalling test
+ * @tc.desc: 1.PermissionDef Marshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PermissionDefBranchCover_0001, Function | SmallTest | Level1)
+{
+    PermissionDef param1;
+    param1.permissionName = "testPermissioinName";
+    param1.bundleName = "testBundleName";
+    param1.label = "testLabel";
+    param1.description = "testDescription";
+    Parcel parcel;
+    auto ret1 = param1.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    PermissionDef param2;
+    auto ret2 = param2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(param1.permissionName, ret2->permissionName);
+    EXPECT_EQ(param1.bundleName, ret2->bundleName);
+    EXPECT_EQ(param1.grantMode, ret2->grantMode);
+    EXPECT_EQ(param1.availableLevel, ret2->availableLevel);
+    EXPECT_EQ(param1.provisionEnable, ret2->provisionEnable);
+    EXPECT_EQ(param1.distributedSceneEnable, ret2->distributedSceneEnable);
+    EXPECT_EQ(param1.label, ret2->label);
+    EXPECT_EQ(param1.labelId, ret2->labelId);
+    EXPECT_EQ(param1.description, ret2->description);
+    EXPECT_EQ(param1.descriptionId, ret2->descriptionId);
+}
+
+/**
+ * @tc.number: CommonEventInfoBranchCover_0001
+ * @tc.name: CommonEventInfo Marshalling test
+ * @tc.desc: 1.CommonEventInfo Marshalling test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CommonEventInfoBranchCover_0001, Function | SmallTest | Level1)
+{
+    CommonEventInfo commonEventInfo;
+    commonEventInfo.name = COMMON_EVENT_NAME;
+    commonEventInfo.bundleName = BUNDLE_NAME;
+    commonEventInfo.uid = 100;
+    commonEventInfo.permission = COMMON_EVENT_PERMISSION;
+    Parcel parcel;
+    auto ret1 = commonEventInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    CommonEventInfo commonEventInfo2;
+    auto ret2 = commonEventInfo2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(commonEventInfo.name, ret2->name);
+    EXPECT_EQ(commonEventInfo.bundleName, ret2->bundleName);
+    EXPECT_EQ(commonEventInfo.uid, ret2->uid);
+    EXPECT_EQ(commonEventInfo.permission, ret2->permission);
+}
+
+/**
+ * @tc.number: CommonEventInfoBranchCover_0002
+ * @tc.name: CommonEventInfo from_json test
+ * @tc.desc: 1.CommonEventInfo from_json test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CommonEventInfoBranchCover_0002, Function | SmallTest | Level1)
+{
+    CommonEventInfo commonEventInfo;
+    commonEventInfo.name = COMMON_EVENT_NAME;
+    commonEventInfo.bundleName = BUNDLE_NAME;
+    commonEventInfo.uid = 100;
+    commonEventInfo.permission = COMMON_EVENT_PERMISSION;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, commonEventInfo);
+    CommonEventInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.name, COMMON_EVENT_NAME);
+    EXPECT_EQ(result.bundleName, BUNDLE_NAME);
+    EXPECT_EQ(result.uid, 100);
+    EXPECT_EQ(result.permission, COMMON_EVENT_PERMISSION);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0001
+ * @tc.name: PerfProfile GetBmsLoadStartTime test
+ * @tc.desc: 1.PerfProfile GetBmsLoadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0001, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBmsLoadStartTime(time);
+    int64_t ret = perfProfile.GetBmsLoadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0002
+ * @tc.name: PerfProfile GetBmsLoadEndTime test
+ * @tc.desc: 1.PerfProfile GetBmsLoadEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0002, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBmsLoadEndTime(time);
+    int64_t ret = perfProfile.GetBmsLoadEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0003
+ * @tc.name: PerfProfile GetBundleScanStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleScanStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0003, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBundleScanStartTime(time);
+    int64_t ret = perfProfile.GetBundleScanStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0004
+ * @tc.name: PerfProfile GetBundleScanEndTime test
+ * @tc.desc: 1.PerfProfile GetBundleScanEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0004, Function | SmallTest | Level1)
+{
+    int64_t time = 100;
+    PerfProfile perfProfile;
+    perfProfile.SetBundleScanEndTime(time);
+    int64_t ret = perfProfile.GetBundleScanEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0005
+ * @tc.name: PerfProfile GetBundleDownloadStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleDownloadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0005, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleDownloadStartTime(time);
+    int64_t ret = perfProfile.GetBundleDownloadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0006
+ * @tc.name: PerfProfile GetBundleDownloadStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleDownloadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0006, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleDownloadEndTime(time);
+    int64_t ret = perfProfile.GetBundleDownloadEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0007
+ * @tc.name: PerfProfile GetBundleInstallStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleInstallStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0007, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleInstallStartTime(time);
+    int64_t ret = perfProfile.GetBundleInstallStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0008
+ * @tc.name: PerfProfile GetBundleTotalInstallTime test
+ * @tc.desc: 1.PerfProfile GetBundleTotalInstallTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0008, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t ret = perfProfile.GetBundleTotalInstallTime();
+    EXPECT_EQ(ret, ZERO);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0009
+ * @tc.name: PerfProfile GetBundleUninstallStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleUninstallStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0009, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleUninstallStartTime(time);
+    int64_t ret = perfProfile.GetBundleUninstallStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0010
+ * @tc.name: PerfProfile GetBundleUninstallEndTime test
+ * @tc.desc: 1.PerfProfile GetBundleUninstallEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0010, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleUninstallEndTime(time);
+    int64_t ret = perfProfile.GetBundleUninstallEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0011
+ * @tc.name: PerfProfile GetBundleParseStartTime test
+ * @tc.desc: 1.PerfProfile GetBundleParseStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0011, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleParseStartTime(time);
+    int64_t ret = perfProfile.GetBundleParseStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0012
+ * @tc.name: PerfProfile GetBundleParseEndTime test
+ * @tc.desc: 1.PerfProfile GetBundleParseEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0012, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetBundleParseEndTime(time);
+    int64_t ret = perfProfile.GetBundleParseEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0013
+ * @tc.name: PerfProfile GetAmsLoadStartTime test
+ * @tc.desc: 1.PerfProfile GetAmsLoadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0013, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAmsLoadStartTime(time);
+    int64_t ret = perfProfile.GetAmsLoadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0014
+ * @tc.name: PerfProfile GetAbilityLoadStartTime test
+ * @tc.desc: 1.PerfProfile GetAbilityLoadStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0014, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAbilityLoadStartTime(time);
+    int64_t ret = perfProfile.GetAbilityLoadStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0015
+ * @tc.name: PerfProfile GetAppForkStartTime test
+ * @tc.desc: 1.PerfProfile GetAppForkStartTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0015, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAppForkStartTime(time);
+    int64_t ret = perfProfile.GetAppForkStartTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0016
+ * @tc.name: PerfProfile GetPerfProfileEnabled test
+ * @tc.desc: 1.PerfProfile GetPerfProfileEnabled test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0016, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    bool enabled = true;
+    perfProfile.SetPerfProfileEnabled(enabled);
+    int64_t ret = perfProfile.GetPerfProfileEnabled();
+    EXPECT_EQ(ret, enabled);
+}
+
+/**
+ * @tc.number: PerfProfileBranchCover_0017
+ * @tc.name: PerfProfile GetAmsLoadEndTime test
+ * @tc.desc: 1.PerfProfile GetAmsLoadEndTime test
+ */
+HWTEST_F(BmsBundleKitServiceTest, PerfProfileBranchCover_0017, Function | SmallTest | Level1)
+{
+    PerfProfile perfProfile;
+    int64_t time = 100;
+    perfProfile.SetAmsLoadEndTime(time);
+    int64_t ret = perfProfile.GetAmsLoadEndTime();
+    EXPECT_EQ(ret, time);
+}
+
+/**
+ * @tc.number: CompatibleAbilityBranchCover_0001
+ * @tc.name: CompatibleAbility ReadFromParcel permission valid test
+ * @tc.desc: 1.CompatibleAbility ReadFromParcel permission valid test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleAbilityBranchCover_0001, Function | SmallTest | Level1)
+{
+    CompatibleAbilityInfo compatibleAbility;
+    AbilityType type = AbilityType::UNKNOWN;
+    DisplayOrientation orientation = DisplayOrientation::UNSPECIFIED;
+    LaunchMode launchMode = LaunchMode::SINGLETON;
+    std::vector<std::string> permissions;
+    std::string permission = "permission";
+    permissions.push_back(permission);
+    compatibleAbility.type = type;
+    compatibleAbility.orientation = orientation;
+    compatibleAbility.launchMode = launchMode;
+    compatibleAbility.permissions = permissions;
+    Parcel parcel;
+    bool ret1 = compatibleAbility.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    CompatibleAbilityInfo compatibleAbilityInfo2;
+    bool ret2 = compatibleAbilityInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+    EXPECT_EQ(compatibleAbilityInfo2.type, compatibleAbility.type);
+    EXPECT_EQ(compatibleAbilityInfo2.orientation, compatibleAbility.orientation);
+    EXPECT_EQ(compatibleAbilityInfo2.launchMode, compatibleAbility.launchMode);
+    EXPECT_EQ(compatibleAbilityInfo2.permissions, compatibleAbility.permissions);
+}
+
+/**
+ * @tc.number: CompatibleAbilityBranchCover_0002
+ * @tc.name: CompatibleAbility ReadFromParcel params  test
+ * @tc.desc: 1.CompatibleAbility ReadFromParcel params  test
+ */
+HWTEST_F(BmsBundleKitServiceTest, CompatibleAbilityBranchCover_0002, Function | SmallTest | Level1)
+{
+    CompatibleAbilityInfo compatibleAbility;
+    compatibleAbility.supportPipMode = false;
+    compatibleAbility.grantPermission = false;
+    compatibleAbility.readPermission = "readPermission";
+    compatibleAbility.writePermission = "writePermisson";
+    compatibleAbility.uriPermissionMode = "uriPermissionMode";
+    compatibleAbility.uriPermissionPath = "uriPermissionPath";
+    compatibleAbility.directLaunch = true;
+    compatibleAbility.bundleName = "bundleName";
+    compatibleAbility.className = "className";
+    compatibleAbility.originalClassName = "originalClassName";
+    compatibleAbility.deviceId = "deviceId";
+    Parcel parcel;
+    bool ret1 = compatibleAbility.Marshalling(parcel);
+    EXPECT_TRUE(ret1);
+    CompatibleAbilityInfo compatibleAbilityInfo2;
+    bool ret2 = compatibleAbilityInfo2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret2);
+    EXPECT_EQ(compatibleAbility.supportPipMode, compatibleAbilityInfo2.supportPipMode);
+    EXPECT_EQ(compatibleAbility.grantPermission, compatibleAbilityInfo2.grantPermission);
+    EXPECT_EQ(compatibleAbility.readPermission, compatibleAbilityInfo2.readPermission);
+    EXPECT_EQ(compatibleAbility.writePermission, compatibleAbilityInfo2.writePermission);
+    EXPECT_EQ(compatibleAbility.uriPermissionMode, compatibleAbilityInfo2.uriPermissionMode);
+    EXPECT_EQ(compatibleAbility.uriPermissionPath, compatibleAbilityInfo2.uriPermissionPath);
+    EXPECT_EQ(compatibleAbility.directLaunch, compatibleAbilityInfo2.directLaunch);
+    EXPECT_EQ(compatibleAbility.bundleName, compatibleAbilityInfo2.bundleName);
+    EXPECT_EQ(compatibleAbility.className, compatibleAbilityInfo2.className);
+    EXPECT_EQ(compatibleAbility.originalClassName, compatibleAbilityInfo2.originalClassName);
+    EXPECT_EQ(compatibleAbility.deviceId, compatibleAbilityInfo2.deviceId);
+    EXPECT_EQ(compatibleAbility.formEntity, compatibleAbilityInfo2.formEntity);
+    EXPECT_EQ(compatibleAbility.minFormHeight, compatibleAbilityInfo2.minFormHeight);
+    EXPECT_EQ(compatibleAbility.defaultFormHeight, compatibleAbilityInfo2.defaultFormHeight);
+    EXPECT_EQ(compatibleAbility.minFormWidth, compatibleAbilityInfo2.minFormWidth);
+    EXPECT_EQ(compatibleAbility.defaultFormWidth, compatibleAbilityInfo2.defaultFormWidth);
+    EXPECT_EQ(compatibleAbility.iconId, compatibleAbilityInfo2.iconId);
+    EXPECT_EQ(compatibleAbility.labelId, compatibleAbilityInfo2.labelId);
+    EXPECT_EQ(compatibleAbility.descriptionId, compatibleAbilityInfo2.descriptionId);
+    EXPECT_EQ(compatibleAbility.enabled, compatibleAbilityInfo2.enabled);
+}
+
+/**
+ * @tc.number: FormInfoBranchCover_0001
+ * @tc.name: FormInfo FormInfo params  test
+ * @tc.desc: 1.FormInfo FormInfo params  test
+ */
+HWTEST_F(BmsBundleKitServiceTest, FormInfoBranchCover_0001, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.bundleName = "bundleName";
+    extensionAbilityInfo.moduleName = "moduleName";
+    extensionAbilityInfo.name = "name";
+    
+    ExtensionFormInfo extensionFormInfo;
+    extensionFormInfo.description = "description";
+    extensionFormInfo.formConfigAbility = "formConfigAbility";
+    extensionFormInfo.scheduledUpdateTime = "scheduledUpdateTime";
+    extensionFormInfo.src = "src";
+    extensionFormInfo.window.designWidth = 240;
+    extensionFormInfo.window.autoDesignWidth = 240;
+    extensionFormInfo.updateDuration = 60;
+    extensionFormInfo.defaultDimension = 4;
+    extensionFormInfo.isDefault = false;
+    extensionFormInfo.formVisibleNotify = true;
+    extensionFormInfo.updateEnabled = true;
+    extensionFormInfo.type = FormType::JS;
+    extensionFormInfo.colorMode = FormsColorMode::AUTO_MODE;
+
+    FormInfo form(extensionAbilityInfo, extensionFormInfo);
+    EXPECT_EQ(form.package, extensionAbilityInfo.bundleName + extensionAbilityInfo.moduleName);
+    EXPECT_EQ(form.bundleName, extensionAbilityInfo.bundleName);
+    EXPECT_EQ(form.originalBundleName, extensionAbilityInfo.bundleName);
+    EXPECT_EQ(form.relatedBundleName, extensionAbilityInfo.bundleName);
+    EXPECT_EQ(form.moduleName, extensionAbilityInfo.moduleName);
+    EXPECT_EQ(form.abilityName, extensionAbilityInfo.name);
+    EXPECT_EQ(form.name, extensionFormInfo.name);
+    EXPECT_EQ(form.description, extensionFormInfo.description);
+    EXPECT_EQ(form.jsComponentName, "");
+    EXPECT_EQ(form.deepLink, "");
+    EXPECT_EQ(form.formConfigAbility, extensionFormInfo.formConfigAbility);
+    EXPECT_EQ(form.scheduledUpdateTime, extensionFormInfo.scheduledUpdateTime);
+    EXPECT_EQ(form.src, extensionFormInfo.src);
+    EXPECT_EQ(form.window.designWidth, extensionFormInfo.window.designWidth);
+    EXPECT_EQ(form.window.autoDesignWidth, extensionFormInfo.window.autoDesignWidth);
+    EXPECT_EQ(form.updateDuration, extensionFormInfo.updateDuration);
+    EXPECT_EQ(form.defaultDimension, extensionFormInfo.defaultDimension);
+    EXPECT_EQ(form.defaultFlag, extensionFormInfo.isDefault);
+    EXPECT_EQ(form.formVisibleNotify, extensionFormInfo.formVisibleNotify);
+    EXPECT_EQ(form.updateEnabled, extensionFormInfo.updateEnabled);
+    EXPECT_EQ(form.type, extensionFormInfo.type);
+    EXPECT_EQ(form.colorMode, extensionFormInfo.colorMode);
+}
+
+/**
+ * @tc.number: SelfClean_0100
+ * @tc.name: test SelfClean
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, SelfClean_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService -> ready_ = false;
+    bundleMgrService->SelfClean();
+    bool ret = bundleMgrService -> ready_;
+    EXPECT_FALSE(ret);
+
+    bundleMgrService -> ready_ = true;
+    bundleMgrService -> registerToService_ = false;
+    bundleMgrService->SelfClean();
+    ret = bundleMgrService -> ready_;
+    EXPECT_FALSE(ret);
+
+    bundleMgrService -> registerToService_ = true;
+    bundleMgrService->RegisterService();
+    ret = bundleMgrService -> registerToService_;
+    EXPECT_TRUE(ret);
+
+    int32_t systemAbilityId = 0;
+    const std::string deviceId = "";
+    bundleMgrService->deviceManager_ = nullptr;
+    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
+
+    bundleMgrService->deviceManager_ = std::make_shared<BmsDeviceManager>();
+    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
+}
+
+/**
+ * @tc.number: VerifyPrivilegedPermission_0100
+ * @tc.name: test VerifyPrivilegedPermission
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifyPrivilegedPermission_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool testRet = hostImpl->VerifyPrivilegedPermission(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(testRet);
+
+    AbilityInfo abilityInfo;
+    bool isEnabled = false;
+    int32_t userId = -2;
+    auto res = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_0900
+ * @tc.name: 1.explicit query extension info failed, extensionInfos is empty
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0900, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService->InitBundleMgrHost();
+    auto hostImpl = bundleMgrService->host_;
+    int32_t flags = 0;
+    int32_t userId = DEFAULT_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    Want want;
+    ExtensionAbilityType extensionType = ExtensionAbilityType::FORM;
+    auto testRet = hostImpl->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    testRet = hostImpl->QueryExtensionAbilityInfosV9(want, extensionType, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    testRet = hostImpl->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extensionInfos.clear();
+    bool res = hostImpl->QueryExtensionAbilityInfos(want, extensionType, flags, userId, extensionInfos);
+    EXPECT_FALSE(res);
 }
 }

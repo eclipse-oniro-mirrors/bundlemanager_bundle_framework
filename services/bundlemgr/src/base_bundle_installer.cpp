@@ -573,6 +573,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+    // check the dependencies whether or not exists
+    result = CheckDependency(newInfos);
+    CHECK_RESULT(result, "check dependency failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
@@ -817,11 +820,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
-    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
-        APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
-    }
-
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
@@ -836,6 +834,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         !oldInfo.IsRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+    }
+
+    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
+        APP_LOGE("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     // reboot scan case will not kill the bundle
@@ -927,11 +930,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
-    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
-        APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
-    }
-
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
@@ -952,6 +950,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!isModuleExist) {
         APP_LOGE("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_MODULE;
+    }
+
+    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
+        APP_LOGD("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
@@ -1072,17 +1075,18 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         InnerBundleInfo oldInfo;
         bool isAppExist = dataMgr_->GetInnerBundleInfo(bundleName, oldInfo);
         if (isAppExist) {
-            std::vector<std::string> installAppIds(1, oldInfo.GetAppId());
-            ErrCode result = InstallAppControl(installAppIds, userId_);
-            if (result != ERR_OK) {
-                APP_LOGE("appid:%{private}s check install app control failed", oldInfo.GetAppId().c_str());
-                return result;
-            }
             dataMgr_->EnableBundle(bundleName);
             versionCode_ = oldInfo.GetVersionCode();
             if (oldInfo.HasInnerBundleUserInfo(userId_)) {
                 APP_LOGE("App is exist in user(%{public}d).", userId_);
                 return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
+            }
+
+            std::vector<std::string> installAppIds(1, oldInfo.GetAppId());
+            ErrCode result = InstallAppControl(installAppIds, userId_);
+            if (result != ERR_OK) {
+                APP_LOGE("appid:%{private}s check install app control failed", oldInfo.GetAppId().c_str());
+                return result;
             }
 
             bool isSingleton = oldInfo.IsSingleton();
@@ -2094,6 +2098,11 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
     }
     return ret;
+}
+
+ErrCode BaseBundleInstaller::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    return bundleInstallChecker_->CheckDependency(infos);
 }
 
 ErrCode BaseBundleInstaller::CheckHapHashParams(

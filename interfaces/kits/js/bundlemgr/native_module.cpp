@@ -45,6 +45,23 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
 
     std::unique_ptr<JsBundleMgr> jsBundleMgr = std::make_unique<JsBundleMgr>();
     object->SetNativePointer(jsBundleMgr.release(), JsBundleMgr::Finalizer, nullptr);
+    object->SetProperty("AbilityType", CreateAbilityTypeObject(engine));
+    object->SetProperty("AbilitySubType", CreateAbilitySubTypeObject(engine));
+    object->SetProperty("DisplayOrientation", CreateDisplayOrientationObject(engine));
+    object->SetProperty("LaunchMode", CreateLaunchModeObject(engine));
+    object->SetProperty("ModuleUpdateFlag", CreateModuleUpdateFlagObject(engine));
+    object->SetProperty("ColorMode", CreateColorModeObject(engine));
+    object->SetProperty("GrantStatus", CreateGrantStatusObject(engine));
+    object->SetProperty("ModuleRemoveFlag", CreateModuleRemoveFlagObject(engine));
+    object->SetProperty("SignatureCompareResult", CreateSignatureCompareResultObject(engine));
+    object->SetProperty("ShortcutExistence", CreateShortcutExistenceObject(engine));
+    object->SetProperty("QueryShortCutFlag", CreateQueryShortCutFlagObject(engine));
+    object->SetProperty("InstallErrorCode", CreateInstallErrorCodeObject(engine));
+    object->SetProperty("SupportWindowMode", CreateSupportWindowModesObject(engine));
+    object->SetProperty("ExtensionAbilityType", CreateExtensionAbilityTypeObject(engine));
+    object->SetProperty("BundleFlag", CreateBundleFlagObject(engine));
+    object->SetProperty("ExtensionFlag", CreateExtensionFlagObject(engine));
+    object->SetProperty("UpgradeFlag", CreateUpgradeFlagObject(engine));
 
     const char *moduleName = "JsBundleMgr";
     BindNativeFunction(*engine, *object, "getAllApplicationInfo", moduleName, JsBundleMgr::GetAllApplicationInfo);
@@ -61,137 +78,34 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "getNameForUid", moduleName, JsBundleMgr::GetNameForUid);
     BindNativeFunction(*engine, *object, "getAbilityInfo", moduleName, JsBundleMgr::GetAbilityInfo);
     BindNativeFunction(*engine, *object, "getAbilityLabel", moduleName, JsBundleMgr::GetAbilityLabel);
+    BindNativeFunction(*engine, *object, "setAbilityEnabled", moduleName, JsBundleMgr::SetAbilityEnabled);
+    BindNativeFunction(*engine, *object, "setApplicationEnabled", moduleName, JsBundleMgr::SetApplicationEnabled);
+    BindNativeFunction(*engine, *object, "queryAbilityByWant", moduleName, JsBundleMgr::QueryAbilityInfos);
     BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
     BindNativeFunction(*engine, *object, "queryExtensionAbilityInfos", moduleName,
         JsBundleMgr::QueryExtensionAbilityInfos);
+    BindNativeFunction(*engine, *object, "getPermissionDef", moduleName, JsBundleMgr::GetPermissionDef);
+    BindNativeFunction(*engine, *object, "getBundlePackInfo", moduleName, JsBundleMgr::GetBundlePackInfo);
+    BindNativeFunction(*engine, *object, "getBundleInstaller", moduleName, JsBundleMgr::GetBundleInstaller);
     return exports;
 }
 
 static napi_value Init(napi_env env, napi_value exports)
 {
-    napi_value nAbilityType = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nAbilityType));
-    CreateAbilityTypeObject(env, nAbilityType);
-
-    napi_value nAbilitySubType = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nAbilitySubType));
-    CreateAbilitySubTypeObject(env, nAbilitySubType);
-
-    napi_value nDisplayOrientation = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nDisplayOrientation));
-    CreateDisplayOrientationObject(env, nDisplayOrientation);
-
-    napi_value nLaunchMode = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nLaunchMode));
-    CreateLaunchModeObject(env, nLaunchMode);
-
-    napi_value nModuleUpdateFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nModuleUpdateFlag));
-    CreateModuleUpdateFlagObject(env, nModuleUpdateFlag);
-
-    napi_value nColorMode = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nColorMode));
-    CreateColorModeObject(env, nColorMode);
-
-    napi_value nGrantStatus = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nGrantStatus));
-    CreateGrantStatusObject(env, nGrantStatus);
-
-    napi_value nModuleRemoveFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nModuleRemoveFlag));
-    CreateModuleRemoveFlagObject(env, nModuleRemoveFlag);
-
-    napi_value nSignatureCompareResult = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nSignatureCompareResult));
-    CreateSignatureCompareResultObject(env, nSignatureCompareResult);
-
-    napi_value nShortcutExistence = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nShortcutExistence));
-    CreateShortcutExistenceObject(env, nShortcutExistence);
-
-    napi_value nQueryShortCutFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nQueryShortCutFlag));
-    CreateQueryShortCutFlagObject(env, nShortcutExistence);
-
-    napi_value nExtensionAbilityType = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nExtensionAbilityType));
-    CreateExtensionAbilityTypeObject(env, nExtensionAbilityType);
-
-    napi_value nExtensionFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nExtensionFlag));
-    CreateExtensionFlagObject(env, nExtensionFlag);
-
-    napi_value nUpgradeFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nUpgradeFlag));
-    CreateUpgradeFlagObject(env, nUpgradeFlag);
-
-    napi_value nBundleFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nBundleFlag));
-    CreateBundleFlagObject(env, nBundleFlag);
-
-    napi_value nInstallErrorCode = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nInstallErrorCode));
-    CreateInstallErrorCodeObject(env, nInstallErrorCode);
-
-    napi_value nSupportWindowMode = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nSupportWindowMode));
-    CreateSupportWindowModesObject(env, nSupportWindowMode);
-    /*
-     * Propertise define
-     */
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
         DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
-        DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
-        DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_FUNCTION("getDispatcherVersion", GetDispatcherVersion),
-        DECLARE_NAPI_FUNCTION("queryAbilityByWant", QueryAbilityInfos),
-        DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
-        DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
-        DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
         DECLARE_NAPI_FUNCTION("isModuleRemovable", IsModuleRemovable),
         DECLARE_NAPI_FUNCTION("setModuleUpgradeFlag", SetModuleUpgradeFlag),
         DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
-        DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),
-        DECLARE_NAPI_PROPERTY("AbilitySubType", nAbilitySubType),
-        DECLARE_NAPI_PROPERTY("DisplayOrientation", nDisplayOrientation),
-        DECLARE_NAPI_PROPERTY("LaunchMode", nLaunchMode),
-        DECLARE_NAPI_PROPERTY("ModuleUpdateFlag", nModuleUpdateFlag),
-        DECLARE_NAPI_PROPERTY("ColorMode", nColorMode),
-        DECLARE_NAPI_PROPERTY("GrantStatus", nGrantStatus),
-        DECLARE_NAPI_PROPERTY("ModuleRemoveFlag", nModuleRemoveFlag),
-        DECLARE_NAPI_PROPERTY("SignatureCompareResult", nSignatureCompareResult),
-        DECLARE_NAPI_PROPERTY("ShortcutExistence", nShortcutExistence),
-        DECLARE_NAPI_PROPERTY("QueryShortCutFlag", nQueryShortCutFlag),
-        DECLARE_NAPI_PROPERTY("InstallErrorCode", nInstallErrorCode),
-        DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
-        DECLARE_NAPI_PROPERTY("ExtensionAbilityType", nExtensionAbilityType),
-        DECLARE_NAPI_PROPERTY("BundleFlag", nBundleFlag),
-        DECLARE_NAPI_PROPERTY("ExtensionFlag", nExtensionFlag),
-        DECLARE_NAPI_PROPERTY("UpgradeFlag", nUpgradeFlag)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 
-    napi_value m_classBundleInstaller;
-    napi_property_descriptor properties[] = {
-        DECLARE_NAPI_FUNCTION("install", Install),
-        DECLARE_NAPI_FUNCTION("recover", Recover),
-        DECLARE_NAPI_FUNCTION("uninstall", Uninstall),
-    };
-    NAPI_CALL(env,
-        napi_define_class(env,
-            "BundleInstaller",
-            NAPI_AUTO_LENGTH,
-            BundleInstallerConstructor,
-            nullptr,
-            sizeof(properties) / sizeof(*properties),
-            properties,
-            &m_classBundleInstaller));
-    napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
     APP_LOGI("Init end");
     return reinterpret_cast<napi_value>(JsBundleMgrInit(reinterpret_cast<NativeEngine*>(env),
         reinterpret_cast<NativeValue*>(exports)));

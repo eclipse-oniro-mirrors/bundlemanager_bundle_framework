@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <fstream>
 #include <gtest/gtest.h>
 
+#include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_storage_database.h"
@@ -1020,10 +1020,10 @@ HWTEST_F(BmsDataMgrTest, GetApplicationInfo_0200, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsDataMgrTest, BundleStateStorage_0100, Function | SmallTest | Level0)
 {
-    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
-    bool ret = bundleStateStorage->DeleteBundleState("", USERID);
+    BundleStateStorage bundleStateStorage;
+    bool ret = bundleStateStorage.DeleteBundleState("", USERID);
     EXPECT_EQ(ret, false);
-    ret = bundleStateStorage->DeleteBundleState(BUNDLE_NAME, -1);
+    ret = bundleStateStorage.DeleteBundleState(BUNDLE_NAME, -1);
     EXPECT_EQ(ret, false);
 }
 
@@ -1034,15 +1034,109 @@ HWTEST_F(BmsDataMgrTest, BundleStateStorage_0100, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsDataMgrTest, BundleStateStorage_0200, Function | SmallTest | Level0)
 {
-    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
+    BundleStateStorage bundleStateStorage;
     BundleUserInfo bundleUserInfo;
-    bool ret = bundleStateStorage->GetBundleStateStorage(
+    bundleStateStorage.GetBundleStateStorage(BUNDLE_NAME, USERID, bundleUserInfo);
+    bool ret = bundleStateStorage.GetBundleStateStorage(
         "", USERID, bundleUserInfo);
     EXPECT_EQ(ret, false);
-    ret = bundleStateStorage->GetBundleStateStorage(
+    ret = bundleStateStorage.GetBundleStateStorage(
         BUNDLE_NAME, -1, bundleUserInfo);
     EXPECT_EQ(ret, false);
-    ret = bundleStateStorage->GetBundleStateStorage(
-        BUNDLE_NAME, USERID, bundleUserInfo);
-    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: AbilityManager_0100
+ * @tc.name: Test GetBundleStateStorage, a param is error
+ * @tc.desc: 1.Test the GetBundleStateStorage of BundleStateStorage
+*/
+HWTEST_F(BmsDataMgrTest, AbilityManager_0100, Function | SmallTest | Level0)
+{
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    int bundleUid = -1;
+    int ret = AbilityManagerHelper::IsRunning("", bundleUid);
+    EXPECT_EQ(ret, -1);
+    bool res = AbilityManagerHelper::UninstallApplicationProcesses("", 0);
+    EXPECT_EQ(res, true);
+#endif
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: Test GetBundleStateStorage, a param is error
+ * @tc.desc: 1.Test the GetBundleStateStorage of BundleStateStorage
+*/
+HWTEST_F(BmsDataMgrTest, InnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo newInfo;
+    bool res = innerBundleInfo.AddModuleInfo(newInfo);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0001
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: UpdateInnerBundleInfo, bundleName is empty
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo info;
+        bool ret = dataMgr->UpdateInnerBundleInfo(info);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0002
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: UpdateInnerBundleInfo, bundleInfos_ is empty
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = BUNDLE_NAME;
+        InnerBundleInfo info;
+        info.SetBaseApplicationInfo(applicationInfo);
+        bool ret = dataMgr->UpdateInnerBundleInfo(info);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0004
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: 1. add info to the data manager
+ *           2. UpdateInnerBundleInfo, bundleInfos_ is not empty
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.name = BUNDLE_NAME;
+        bundleInfo.applicationInfo.name = APP_NAME;
+        ApplicationInfo applicationInfo;
+        applicationInfo.name = BUNDLE_NAME;
+        applicationInfo.deviceId = DEVICE_ID;
+        applicationInfo.bundleName = BUNDLE_NAME;
+        InnerBundleInfo info;
+        info.SetBaseBundleInfo(bundleInfo);
+        info.SetBaseApplicationInfo(applicationInfo);
+        bool ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateInnerBundleInfo(info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        EXPECT_TRUE(ret);
+    }
 }

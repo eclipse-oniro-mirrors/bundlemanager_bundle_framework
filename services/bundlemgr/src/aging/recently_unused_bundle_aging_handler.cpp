@@ -28,16 +28,18 @@ namespace AppExecFwk {
 bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
 {
     bool needContinue = true;
-    APP_LOGD("aging handler start: %{public}s, currentTotalDataBytes: %{pubic}" PRId64, GetName().c_str(),
-        request.GetTotalDataBytes());
-    std::vector<AgingBundleInfo> &agingBundles = const_cast<std::vector<AgingBundleInfo> &>(request.GetAgingBundles());
-    APP_LOGD("aging handler start: agingBundles size :%{public}zu / %{public}" PRId64, agingBundles.size(),
-        request.GetTotalDataBytes());
+    APP_LOGD("aging handler start: %{public}s, currentTotalDataBytes: %{pubic}" PRId64,
+        GetName().c_str(), request.GetTotalDataBytes());
+    std::vector<AgingBundleInfo> &agingBundles =
+        const_cast<std::vector<AgingBundleInfo> &>(request.GetAgingBundles());
+    APP_LOGD("aging handler start: agingBundles size :%{public}zu / %{public}" PRId64,
+        agingBundles.size(), request.GetTotalDataBytes());
     auto iter = agingBundles.begin();
     while (iter != agingBundles.end()) {
         if (!CheckBundle(*iter)) {
             break;
         }
+
         APP_LOGI("found matching bundle: %{public}s.", iter->GetBundleName().c_str());
         bool isBundlerunning = AbilityManagerHelper::IsRunning(iter->GetBundleName(), iter->GetBundleUid());
         if (isBundlerunning == AbilityManagerHelper::NOT_RUNNING) {
@@ -46,6 +48,7 @@ bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
                 request.UpdateTotalDataBytesAfterUninstalled(iter->GetDataBytes());
             }
         }
+
         iter = agingBundles.erase(iter);
         if (GetName() == AgingConstants::UNUSED_FOR_10_DAYS_BUNDLE_AGING_HANDLER
             || GetName() == AgingConstants::BUNDLE_DATA_SIZE_AGING_HANDLER) {
@@ -56,10 +59,12 @@ bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
             }
         }
     }
+
     if (!NeedContinue(request)) {
         APP_LOGD("there is no need to continue now.");
         needContinue = false;
     }
+
     APP_LOGD("aging handle done: %{public}s, currentTotalDataBytes: %{public}" PRId64, GetName().c_str(),
         request.GetTotalDataBytes());
     return needContinue;
@@ -76,6 +81,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
     if (bms == nullptr) {
         return false;
     }
+
     auto bundleInstaller = bms->GetBundleInstaller();
     if (bundleInstaller == nullptr) {
         APP_LOGE("bundleInstaller is null.");
@@ -86,6 +92,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
     if (userReceiverImpl == nullptr) {
         return false;
     }
+
     InstallParam installParam;
     installParam.userId = AccountHelper::GetCurrentActiveUserId();
     installParam.installFlag = InstallFlag::FREE_INSTALL;

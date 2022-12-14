@@ -584,6 +584,34 @@ bool CommonFunc::ParseWant(napi_env env, napi_value args, Want &want)
     return true;
 }
 
+bool CommonFunc::ParseWantPerformance(napi_env env, napi_value args, Want &want)
+{
+    APP_LOGD("begin to parse want performance");
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGE("args not object type");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, args, BUNDLE_NAME, &prop);
+    std::string bundleName = GetStringFromNAPI(env, prop);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, MODULE_NAME, &prop);
+    std::string moduleName = GetStringFromNAPI(env, prop);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, ABILITY_NAME, &prop);
+    std::string abilityName = GetStringFromNAPI(env, prop);
+    if (!bundleName.empty() && !abilityName.empty()) {
+        ElementName elementName("", bundleName, abilityName, moduleName);
+        want.SetElement(elementName);
+        return true;
+    }
+    return ParseWant(env, args, want);
+}
+
 bool CommonFunc::ParseWantWithoutVerification(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;

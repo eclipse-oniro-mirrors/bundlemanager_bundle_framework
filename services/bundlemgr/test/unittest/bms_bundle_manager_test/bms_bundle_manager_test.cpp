@@ -241,7 +241,6 @@ const std::shared_ptr<BundleInstallerManager> BmsBundleManagerTest::GetBundleIns
 
 void BmsBundleManagerTest::ClearDataMgr()
 {
-
     bundleMgrService_->dataMgr_ = nullptr;
 }
 
@@ -817,7 +816,6 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     EXPECT_EQ(ret, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
-
 }
 
 /**
@@ -1847,7 +1845,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0008, Function | SmallTest |
 HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0009, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    bool isEnabled = false;
+    bool isEnabled = true;
     ErrCode ret = info.SetAbilityEnabled(
         Constants::BUNDLE_NAME, Constants::MODULE_NAME,
             Constants::ABILITY_NAME, isEnabled, Constants::NOT_EXIST_USERID);
@@ -1863,7 +1861,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0010, Function | SmallTest |
 {
     InnerBundleInfo info;
     info.innerBundleUserInfos_.clear();
-    bool enabled = false;
+    bool enabled = true;
     ErrCode ret = info.SetApplicationEnabled(enabled, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -2086,6 +2084,9 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0700, Function | MediumTest | L
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
     appIndex = 1;
+    ret = hostImpl->GetSandboxBundleInfo(
+        "bundleName", appIndex, Constants::INVALID_USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
     ClearDataMgr();
     ret = hostImpl->GetSandboxBundleInfo("bundleName", appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
@@ -2284,7 +2285,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1400, Function | MediumTest | L
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t upgradeFlag = 0;
     std::string result;
-    bool isRemovable = false;
+    bool isRemovable = true;
 
     ClearDataMgr();
     bool retBool = hostImpl->UnregisterBundleStatusCallback();
@@ -2316,7 +2317,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1400, Function | MediumTest | L
 HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1500, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool isRemovable = false;
+    bool isRemovable = true;
     std::vector<FormInfo> formInfos;
     std::vector<ShortcutInfo> shortcutInfos;
     std::vector<CommonEventInfo> commonEventInfos;
@@ -2457,6 +2458,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     uint32_t resId = 0;
     int32_t appIndex = 1;
     size_t len = 1;
+    bool isEnabled = true;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::unique_ptr<uint8_t[]> mediaDataPtr;
     Want want;
@@ -2493,7 +2495,212 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
         "", "", "", mediaDataPtr, len, USERID);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
+    int res1 = hostImpl->CheckPublicKeys("", "");
+    EXPECT_EQ(res1, false);
+
+    retCode = hostImpl->SetApplicationEnabled("", isEnabled, USERID);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    retCode = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, USERID);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    std::vector<FormInfo> formInfos;
+    retBool = hostImpl->GetFormsInfoByModule(
+        "bundleName", "moduleName", formInfos);
+    EXPECT_EQ(retBool, false);
     SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    ErrCode retCode = hostImpl->GetBundleArchiveInfoV9("", flags, bundleInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+    retCode = hostImpl->GetBundleArchiveInfoV9("/data/storage/el2/base/noExist", flags, bundleInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    retCode = hostImpl->GetBundleArchiveInfoV9("/data/storage/el2/base", flags, bundleInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    ErrCode retCode = hostImpl->GetBundleArchiveInfoBySandBoxPath("", flags, bundleInfo, true);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    retCode = hostImpl->GetBundleArchiveInfoBySandBoxPath("/data/storage/el2/base/", flags, bundleInfo, true);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    retCode = hostImpl->GetBundleArchiveInfoBySandBoxPath("/data/storage/el2/base", flags, bundleInfo, false);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AbilityInfo abilityInfo;
+    HapModuleInfo hapModuleInfo;
+    abilityInfo.bundleName = "";
+    abilityInfo.package = "";
+    bool ret = hostImpl->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
+    EXPECT_EQ(ret, false);
+
+    abilityInfo.bundleName = "bundleName";
+    ret = hostImpl->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
+    EXPECT_EQ(ret, false);
+
+    abilityInfo.bundleName = "";
+    abilityInfo.package = "package";
+    ret = hostImpl->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test CleanBundleCacheFiles
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode ret = hostImpl->CleanBundleCacheFiles("", nullptr, Constants::INVALID_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpBundleInfo("", Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, false);
+    ret = hostImpl->DumpBundleInfo("bundleName", Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpShortcutInfo("", Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, false);
+    ret = hostImpl->DumpShortcutInfo("bundleName", Constants::ALL_USERID, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2600, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    DistributedBundleInfo distributedBundleInfo;
+    bool ret = hostImpl->GetDistributedBundleInfo("", "", distributedBundleInfo);
+    EXPECT_EQ(ret, false);
+    std::string retString = hostImpl->GetAppType("");
+    EXPECT_EQ(retString, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2700
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2700, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName;
+    bool ret = hostImpl->ObtainCallingBundleName(bundleName);
+    EXPECT_EQ(ret, false);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ret = hostImpl->QueryExtensionAbilityInfos(
+        ExtensionAbilityType::BACKUP, Constants::INVALID_USERID, extensionInfos);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2800
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2800, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<int64_t> bundleStats;
+    bool ret = hostImpl->GetBundleStats("", Constants::INVALID_USERID, bundleStats);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_2900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetUdidByNetworkId
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2900, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string udid;
+    int32_t ret = hostImpl->GetUdidByNetworkId("", udid);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test QueryAbilityInfo
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AAFwk::Want want;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack;
+    bool ret = hostImpl->QueryAbilityInfo(
+        want, 0, Constants::INVALID_USERID, abilityInfo, callBack);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test CheckAbilityEnableInstall
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AAFwk::Want want;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack;
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, 0, 0, callBack);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -2881,6 +3088,9 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0021, Function | SmallTest | Leve
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
         abilityInfo, false, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    testRet = GetBundleDataMgr()->SetAbilityEnabled(
+        abilityInfo, false, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -3040,7 +3250,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0004, Function | SmallTest 
 {
     InnerBundleInfo info;
     bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
-        BUNDLE_BACKUP_NAME, 0, info, USERID);
+        "bundleName", 0, info, USERID);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3054,7 +3264,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0005, Function | SmallTest 
 {
     InnerBundleInfo info;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
-        BUNDLE_BACKUP_NAME, 0, info, USERID);
+        "bundleName", 0, info, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3068,7 +3278,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0006, Function | SmallTest 
 {
     InnerBundleInfo info;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
-        BUNDLE_BACKUP_NAME, 0, info, USERID);
+        "bundleName", 0, info, USERID);
     EXPECT_NE(testRet, ERR_OK);
 }
 
@@ -3082,7 +3292,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0007, Function | SmallTest 
 {
     InnerBundleInfo info;
     bool testRet = GetBundleDataMgr()->GetInnerBundleInfo(
-        BUNDLE_BACKUP_NAME, info);
+        "bundleName", info);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3096,7 +3306,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0008, Function | SmallTest 
 {
     InnerBundleInfo info;
     bool testRet = GetBundleDataMgr()->EnableBundle(
-        BUNDLE_BACKUP_NAME);
+        "bundleName");
     EXPECT_EQ(testRet, false);
 }
 
@@ -3108,9 +3318,9 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0008, Function | SmallTest 
 */
 HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0009, Function | SmallTest | Level1)
 {
-    bool isEnable = false;
+    bool isEnable = true;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        BUNDLE_BACKUP_NAME, isEnable, USERID);
+        "bundleName", isEnable, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3124,7 +3334,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0010, Function | SmallTest 
 {
     bool isRemovable;
     ErrCode testRet = GetBundleDataMgr()->IsModuleRemovable(
-        BUNDLE_BACKUP_NAME, MODULE_NAME, isRemovable);
+        "bundleName", MODULE_NAME, isRemovable);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3136,7 +3346,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0010, Function | SmallTest 
 */
 HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0011, Function | SmallTest | Level1)
 {
-    bool isEnable = false;
+    bool isEnable = true;
     AbilityInfo abilityInfo;
     ErrCode testRet = GetBundleDataMgr()->IsAbilityEnabled(
         abilityInfo, isEnable);
@@ -3156,7 +3366,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0012, Function | SmallTest 
 {
     int32_t upgradeFlag = 1;
     ErrCode testRet = GetBundleDataMgr()->SetModuleUpgradeFlag(
-        BUNDLE_BACKUP_NAME, MODULE_NAME, upgradeFlag);
+        "bundleName", MODULE_NAME, upgradeFlag);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3169,7 +3379,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0012, Function | SmallTest 
 HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0013, Function | SmallTest | Level1)
 {
     int32_t testRet = GetBundleDataMgr()->GetModuleUpgradeFlag(
-        BUNDLE_BACKUP_NAME, MODULE_NAME);
+        "bundleName", MODULE_NAME);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3183,7 +3393,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0014, Function | SmallTest 
 {
     InnerBundleUserInfo info;
     bool testRet = GetBundleDataMgr()->GetInnerBundleUserInfoByUserId(
-        BUNDLE_BACKUP_NAME, USERID, info);
+        "bundleName", USERID, info);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3197,7 +3407,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0015, Function | SmallTest 
 {
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     bool testRet = GetBundleDataMgr()->GetInnerBundleUserInfos(
-        BUNDLE_BACKUP_NAME, innerBundleUserInfos);
+        "bundleName", innerBundleUserInfos);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3211,7 +3421,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0016, Function | SmallTest 
 {
     std::vector<std::string> dependentModuleNames;
     bool testRet = GetBundleDataMgr()->GetAllDependentModuleNames(
-        BUNDLE_BACKUP_NAME, MODULE_NAME, dependentModuleNames);
+        "bundleName", MODULE_NAME, dependentModuleNames);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3225,10 +3435,10 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0017, Function | SmallTest 
 {
     int32_t status = 1;
     bool testRet = GetBundleDataMgr()->SetDisposedStatus(
-        BUNDLE_BACKUP_NAME, status);
+        "", status);
     EXPECT_EQ(testRet, false);
     testRet = GetBundleDataMgr()->GetDisposedStatus(
-        BUNDLE_BACKUP_NAME);
+        "");
     EXPECT_EQ(testRet, false);
 }
 
@@ -3242,7 +3452,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0018, Function | SmallTest 
 {
     InnerBundleInfo innerBundleInfo;
     bool testRet = GetBundleDataMgr()->FetchInnerBundleInfo(
-        BUNDLE_BACKUP_NAME, innerBundleInfo);
+        "bundleName", innerBundleInfo);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3760,5 +3970,140 @@ HWTEST_F(BmsBundleManagerTest, GetDataStorage_0002, Function | SmallTest | Level
     EXPECT_EQ(res, true);
     res = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleFreeInstall_0100
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+
+    AAFwk::Want want;
+    int32_t missionId = 0;
+    int32_t userId = 100;
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    EXPECT_EQ(ret, false);
+
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    EXPECT_EQ(ret, false);
+#endif
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0100
+ * @tc.name: test failed scene when bundle info is not existed
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    InnerBundleInfo oldInfo;
+    bool ret = dataMgr->AddNewModuleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->RemoveModuleInfo(BUNDLE_NAME, "", oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->DisableBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+
+    std::string provisionId = "100";
+    ret = dataMgr->GetProvisionId(BUNDLE_NAME, provisionId);
+    EXPECT_EQ(ret, false);
+
+    std::string appFeature = "ohos_system_app";
+    ret = dataMgr->GetAppFeature(BUNDLE_NAME, appFeature);
+    EXPECT_EQ(ret, false);
+
+    int res = dataMgr->CheckPublicKeys(BUNDLE_NAME, BUNDLE_NAME);
+    EXPECT_EQ(res, Constants::SIGNATURE_UNKNOWN_BUNDLE);
+
+    ret = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_EQ(ret, false);
+
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0200
+ * @tc.name: test failed scene when save info fail or app is not updated
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    InnerBundleInfo oldInfo;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    bool ret = dataMgr->AddNewModuleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info, oldInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->UpdateQuickFixInnerBundleInfo("", info);
+    EXPECT_EQ(ret, false);
+
+    dataMgr->bundleInfos_.clear();
+    ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_EQ(ret, false);
+
+    int res = dataMgr->CheckPublicKeys(BUNDLE_NAME, BUNDLE_BACKUP_NAME);
+    EXPECT_EQ(res, Constants::SIGNATURE_UNKNOWN_BUNDLE);
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0300
+ * @tc.name: test failed scene when preInstallDataStorage is null
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->preInstallDataStorage_ = nullptr;
+    PreInstallBundleInfo preInstallBundleInfo;
+    bool ret = dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    ret = dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    ret = dataMgr->LoadAllPreInstallBundleInfos(preInstallBundleInfos);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DataMgrFailedScene_0400
+ * @tc.name: test failed scene when userId or bundleInfos failed
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string uri = "dataability:///com.example.FileShare/person/10";
+    int32_t userId = Constants::INVALID_USERID;
+    ExtensionAbilityInfo info;
+    bool ret = dataMgr->QueryExtensionAbilityInfoByUri(uri, userId, info);
+    EXPECT_EQ(ret, false);
+
+    userId = Constants::ALL_USERID;
+    ret = dataMgr->QueryExtensionAbilityInfoByUri(uri, userId, info);
+    EXPECT_EQ(ret, false);
 }
 } // OHOS

@@ -8,8 +8,8 @@
         "bundleName": "com.example.bmsaccesstoken1",
         "vendor": "example",
         "version": {
-            "code": 1,
-            "name": "1.0"
+            "code": 2,
+            "name": "2.0"
         }
     },
     "deviceConfig": {},
@@ -93,24 +93,8 @@
         "package": "com.example.bmsaccesstoken1",
         "reqPermissions": [
             {
-                "name": "ohos.permission.ALPHA",
-                "reason": "use ohos.permission.ALPHA"
-            },
-            {
-                "name": "ohos.permission.KEEP_BACKGROUND_RUNNING",
-                "reason": "use ohos.permission.KEEP_BACKGROUND_RUNNING"
-            },
-            {
-                "name": "ohos.permission.LOCATION_IN_BACKGROUND",
-                "reason": "use ohos.permission.LOCATION_IN_BACKGROUND"
-            },
-            {
                 "name": "ohos.permission.USE_BLUETOOTH",
                 "reason": "use ohos.permission.USE_BLUETOOTH"
-            },
-            {
-                "name": "ohos.permission.SYSTEM_FLOAT_WINDOW",
-                "reason": "use ohos.permission.SYSTEM_FLOAT_WINDOW"
             }
         ]
     }

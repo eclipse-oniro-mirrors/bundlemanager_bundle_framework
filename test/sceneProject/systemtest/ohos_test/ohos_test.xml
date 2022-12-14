@@ -120,4 +120,13 @@
     <option name="push" value="BundleClient/bundleClient1.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
+  <target name="BmsPermissionGrantSystemTest">
+    <preparer>
+    <option name="push" value="permissionBundle/permissionGrantBundle1.hap -> /data/test/bms_bundle/" src="res" />
+    <option name="push" value="permissionBundle/permissionGrantBundle2.hap -> /data/test/bms_bundle/" src="res" />
+    <option name="push" value="permissionBundle/permissionGrantBundle3.hap -> /data/test/bms_bundle/" src="res" />
+    <option name="push" value="permissionBundle/permissionGrantBundle4.hap -> /data/test/bms_bundle/" src="res" />
+    <option name="push" value="permissionBundle/permissionGrantBundle5.hap -> /data/test/bms_bundle/" src="res" />
+    </preparer>
+  </target>
 </configuration>

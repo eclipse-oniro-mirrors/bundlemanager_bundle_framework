@@ -15,10 +15,14 @@
 
 #include "bundle_install_checker.h"
 
+#include "bundle_data_mgr.h"
+#include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_parser.h"
 #include "bundle_util.h"
 #include "parameter.h"
+#include "parameters.h"
+#include "privilege_extension_ability_type.h"
 #include "systemcapability.h"
 
 namespace OHOS {
@@ -38,6 +42,8 @@ const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried"
 const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
+const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
+const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -97,6 +103,16 @@ std::string GetAppProvisionType(const Security::Verify::ProvisionType &type)
     }
 
     return Constants::APP_PROVISION_TYPE_RELEASE;
+}
+
+bool IsPrivilegeExtensionAbilityType(ExtensionAbilityType type)
+{
+    return PRIVILEGE_EXTENSION_ABILITY_TYPE.find(type) != PRIVILEGE_EXTENSION_ABILITY_TYPE.end();
+}
+
+bool IsSystemExtensionAbilityType(ExtensionAbilityType type)
+{
+    return SYSTEM_EXTENSION_ABILITY_TYPE.find(type) != SYSTEM_EXTENSION_ABILITY_TYPE.end();
 }
 }
 
@@ -220,7 +236,11 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
         }
-
+        result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
+        if (result != ERR_OK) {
+            APP_LOGE("check provision bundleName failed");
+            return result;
+        }
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
                 APP_LOGE("more than one entry hap in the direction!");
@@ -267,6 +287,134 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     }
     APP_LOGD("finish parse hap file");
     return result;
+}
+
+ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    APP_LOGD("CheckDependency");
+
+    for (const auto &info : infos) {
+        if (info.second.GetInnerModuleInfos().empty()) {
+            continue;
+        }
+        // There is only one innerModuleInfo when installing
+        InnerModuleInfo moduleInfo = info.second.GetInnerModuleInfos().begin()->second;
+        bool isModuleExist = false;
+        for (const auto &dependency : moduleInfo.dependencies) {
+            if (!NeedCheckDependency(dependency, info.second)) {
+                APP_LOGD("deliveryWithInstall is false, do not check whether the dependency exists.");
+                continue;
+            }
+
+            std::string bundleName = 
+                dependency.bundleName.empty() ? info.second.GetBundleName() : dependency.bundleName;
+            isModuleExist = FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos);
+            if (!isModuleExist) {
+                APP_LOGW("The depend module:%{public}s is not exist in installing package.",
+                    dependency.moduleName.c_str());
+                isModuleExist = FindModuleInInstalledPackage(dependency.moduleName, bundleName);
+                if (!isModuleExist) {
+                    APP_LOGE("The depend module:%{public}s is not exist.", dependency.moduleName.c_str());
+                    return ERR_APPEXECFWK_INSTALL_DEPENDENT_MOUULE_NOT_EXIST;
+                }
+            }
+        }
+    }
+
+    return ERR_OK;
+}
+
+bool BundleInstallChecker::NeedCheckDependency(const Dependency &dependency, const InnerBundleInfo &info)
+{
+    APP_LOGD("NeedCheckDependency the moduleName is %{public}s, the bundleName is %{public}s.",
+        dependency.moduleName.c_str(), dependency.bundleName.c_str());
+
+    if (!dependency.bundleName.empty() && dependency.bundleName != info.GetBundleName()) {
+        APP_LOGD("Cross-app dependencies, need check dependency.");
+        return true;
+    }
+    std::vector<PackageModule> modules = info.GetBundlePackInfo().summary.modules;
+    if (modules.empty()) {
+        APP_LOGD("NeedCheckDependency modules is empty, need check dependency.");
+        return true;
+    }
+    for (const auto &module : modules) {
+        if (module.distro.moduleName == dependency.moduleName) {
+            return module.distro.deliveryWithInstall;
+        }
+    }
+
+    APP_LOGD("NeedCheckDependency the module not found, need check dependency.");
+    return true;
+}
+
+bool BundleInstallChecker::FindModuleInInstallingPackage(
+    const std::string &moduleName,
+    const std::string &bundleName,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    APP_LOGD("FindModuleInInstallingPackage the moduleName is %{public}s, the bundleName is %{public}s.",
+        moduleName.c_str(), bundleName.c_str());
+    for (const auto &info : infos) {
+        if (info.second.GetBundleName() == bundleName) {
+            if (info.second.GetInnerModuleInfos().empty()) {
+                continue;
+            }
+            // There is only one innerModuleInfo when installing
+            InnerModuleInfo moduleInfo = info.second.GetInnerModuleInfos().begin()->second;
+            if (moduleInfo.moduleName == moduleName) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool BundleInstallChecker::FindModuleInInstalledPackage(
+    const std::string &moduleName,
+    const std::string &bundleName)
+{
+    APP_LOGD("FindModuleInInstalledPackage the moduleName is %{public}s, the bundleName is %{public}s.",
+        moduleName.c_str(), bundleName.c_str());
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+
+    InnerBundleInfo bundleInfo;
+    bool isBundleExist = dataMgr->GetInnerBundleInfo(bundleName, bundleInfo);
+    if (!isBundleExist) {
+        APP_LOGE("the bundle: %{public}s is not install", bundleName.c_str());
+        return false;
+    }
+    if (!bundleInfo.FindModule(moduleName)) {
+        APP_LOGE("the module: %{public}s is not install", moduleName.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundleName, const std::string &bundleName)
+{
+    APP_LOGD("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
+        provisionBundleName.c_str(), bundleName.c_str());
+    if (!system::GetBoolParameter(Constants::CHECK_PROFILE_BUNDLE_NAME, false)) {
+        APP_LOGD("CheckBundleName check_profile_bundle_name is false");
+        return ERR_OK;
+    }
+    if (provisionBundleName.empty() || bundleName.empty()) {
+        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s", provisionBundleName.c_str(),
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
+    if (provisionBundleName == bundleName) {
+        return ERR_OK;
+    }
+    APP_LOGE("CheckBundleName failed provisionBundleName:%{public}s, bundleName:%{public}s",
+        provisionBundleName.c_str(), bundleName.c_str());
+    return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
 }
 
 void BundleInstallChecker::CollectProvisionInfo(
@@ -581,6 +729,12 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
             iter->second(appPrivilegeCapability);
         }
     }
+    if ((provisionInfo.bundleInfo.bundleName != APP_TEST_BUNDLE_NAME) &&
+        (provisionInfo.bundleInfo.bundleName.find(BUNDLE_NAME_XTS_TEST) != 0)) {
+        appPrivilegeCapability.allowMultiProcess = false;
+        appPrivilegeCapability.allowUsePrivilegeExtension = false;
+        appPrivilegeCapability.formVisibleNotify = false;
+    }
 
     APP_LOGD("AppPrivilegeCapability %{public}s",
         appPrivilegeCapability.ToString().c_str());
@@ -762,12 +916,18 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     // process ExtensionAbility
     auto &extensionAbilityInfos = innerBundleInfo.FetchInnerExtensionInfos();
     for (auto iter = extensionAbilityInfos.begin(); iter != extensionAbilityInfos.end(); ++iter) {
-        bool privilegeType = (iter->second.type == ExtensionAbilityType::SERVICE)
-            || (iter->second.type == ExtensionAbilityType::DATASHARE);
+        bool privilegeType = IsPrivilegeExtensionAbilityType(iter->second.type);
         if (privilegeType && !appPrivilegeCapability.allowUsePrivilegeExtension) {
             APP_LOGE("not allow use privilege extension");
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
         }
+
+        bool systemType = IsSystemExtensionAbilityType(iter->second.type);
+        if (systemType && !applicationInfo.isSystemApp) {
+            APP_LOGE("not allow use system extension");
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+        }
+
 #ifdef USE_PRE_BUNDLE_PROFILE
         if (!appPrivilegeCapability.allowQueryPriority) {
             iter->second.priority = 0;

@@ -68,7 +68,7 @@ public:
 
     // init state transfer map data.
     BundleDataMgr();
-    ~BundleDataMgr();
+    virtual ~BundleDataMgr();
 
     /**
      * @brief Boot query persistent storage.
@@ -329,7 +329,7 @@ public:
      * @param gids Indicates the group IDs associated with the specified bundle.
      * @return Returns true if the gids is successfully obtained; returns false otherwise.
      */
-    bool GetBundleGidsByUid(const std::string &bundleName, const int &uid, std::vector<int> &gids) const;
+    virtual bool GetBundleGidsByUid(const std::string &bundleName, const int &uid, std::vector<int> &gids) const;
     /**
      * @brief Obtains the BundleInfo of all keep-alive applications in the system.
      * @param bundleInfos Indicates all of the obtained BundleInfo objects.

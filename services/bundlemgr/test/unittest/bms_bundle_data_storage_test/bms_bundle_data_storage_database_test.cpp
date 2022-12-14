@@ -16,8 +16,9 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-#include "app_log_wrapper.h"
 #include "ability_info.h"
+#include "access_token.h"
+#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "inner_bundle_user_info.h"
@@ -1284,7 +1285,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0200, Function | Smal
     EXPECT_EQ(ret, true);
 
     std::string type = "text/xml";
-    std::string uri = "uriString";
+    std::string uri = "uriString://";
     want.SetUri(uri);
     want.SetType(type);
     ret = skill.Match(want);
@@ -1680,6 +1681,57 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1900, Function | Smal
 }
 
 /**
+ * @tc.number: InnerBundleInfo_2000
+ * @tc.name: Test IsBundleRemovable
+ * @tc.desc: 1.Test the IsBundleRemovable of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetIsPreInstallApp(false);
+    InnerModuleInfo innerModuleInfo;
+    bool ret = info.IsBundleRemovable(Constants::START_USERID);
+    EXPECT_EQ(ret, true);
+
+    innerModuleInfo.moduleName = "entry";
+    info.InsertInnerModuleInfo("entry", innerModuleInfo);
+    ret = info.IsBundleRemovable(Constants::START_USERID);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2100
+ * @tc.name: Test IsUserExistModule
+ * @tc.desc: 1.Test the IsUserExistModule of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.isRemovable.try_emplace("100", true);
+    info.InsertInnerModuleInfo("entry", innerModuleInfo);
+    bool ret = info.IsUserExistModule("entry", Constants::START_USERID);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2200
+ * @tc.name: Test AddModuleRemovableInfo
+ * @tc.desc: 1.Test the AddModuleRemovableInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    bool ret = info.SetModuleRemovable("entry", false, Constants::START_USERID);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: Test_0500
  * @tc.name: Test Unmarshalling
  * @tc.desc: 1.Test the Unmarshalling of Parcel
@@ -1698,4 +1750,108 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, Parcel_0100, Function | SmallTest | L
 
     RequestPermissionUsedScene *requestPermissionUsedScene = RequestPermissionUsedScene::Unmarshalling(parcel);
     EXPECT_EQ(requestPermissionUsedScene, nullptr);
+}
+
+/**
+ * @tc.number: FormInfo_0200
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test the IsValid of FormInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, FormInfo_0200, Function | SmallTest | Level1)
+{
+    FormInfo formInfo;
+    formInfo.window.autoDesignWidth = false;
+    formInfo.window.designWidth = -1;
+    bool ret = formInfo.IsValid();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DistributedModuleInfo_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling and Dump of DistributedModuleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedModuleInfo_0100, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo info1;
+    info1.moduleName = "entry";
+    OHOS::Parcel parcel;
+    info1.Marshalling(parcel);
+    DistributedModuleInfo info2;
+    info2.Unmarshalling(parcel);
+    bool res = info2.ReadFromParcel(parcel);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: DistributedAbilityInfo_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling and Dump of DistributedAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedAbilityInfo_0100, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo info;
+    info.abilityName = "MainAbility";
+    OHOS::Parcel parcel;
+    info.Marshalling(parcel);
+    info.Unmarshalling(parcel);
+    bool res = info.ReadFromParcel(parcel);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: PerfProfile_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling and Dump of DistributedAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, PerfProfile_0100, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo info;
+    info.abilityName = "MainAbility";
+    OHOS::Parcel parcel;
+    info.Marshalling(parcel);
+    info.Unmarshalling(parcel);
+    bool res = info.ReadFromParcel(parcel);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CommonEventInfo_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling of CommonEventInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, CommonEventInfo_0100, Function | SmallTest | Level1)
+{
+    CommonEventInfo info;
+    info.uid = 0;
+    OHOS::Parcel parcel;
+    bool res = info.Marshalling(parcel);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: SetAccessTokenIdEx_0100
+ * @tc.name: Test SetAccessTokenIdEx
+ * @tc.desc: 1.Test the SetAccessTokenIdEx
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetAccessTokenIdEx_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = NORMAL_BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    OHOS::Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    accessTokenIdEx.tokenIDEx = 100;
+    int32_t userId = Constants::DEFAULT_USERID;
+    info.SetAccessTokenIdEx(accessTokenIdEx, userId);
+    uint64_t tokenIdEx = info.GetAccessTokenIdEx(userId);
+    EXPECT_EQ(tokenIdEx, 0);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetAccessTokenIdEx(accessTokenIdEx, userId);
+    tokenIdEx = info.GetAccessTokenIdEx(userId);
+    EXPECT_EQ(tokenIdEx, accessTokenIdEx.tokenIDEx);
 }
