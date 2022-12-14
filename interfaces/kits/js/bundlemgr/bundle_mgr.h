@@ -349,16 +349,11 @@ extern thread_local napi_ref g_classBundleInstaller;
 
 napi_value WrapVoidToJS(napi_env env);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
-napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info);
-napi_value GetAbilityInfo(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfos(napi_env env, napi_callback_info info);
-napi_value GetBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundlePackInfo(napi_env env, napi_callback_info info);
-napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
-napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetDispatcherVersion(napi_env env, napi_callback_info info);
 napi_value GetAllFormsInfo(napi_env env, napi_callback_info info);
@@ -370,19 +365,9 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info);
-napi_value GetNameForUid(napi_env env, napi_callback_info info);
-napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
-napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value GetBundleGids(napi_env env, napi_callback_info info);
-napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
-napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value IsModuleRemovable(napi_env env, napi_callback_info info);
 napi_value SetModuleUpgradeFlag(napi_env env, napi_callback_info info);
-napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
-napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
-napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType);
-napi_value GetProfileAsync(napi_env env, napi_value value,
-    std::unique_ptr<AsyncGetProfileInfo> &callbackPtr);
 napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo);
 napi_value GetDispatcherVersionWrap(
     napi_env env, napi_value promise, AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo);
