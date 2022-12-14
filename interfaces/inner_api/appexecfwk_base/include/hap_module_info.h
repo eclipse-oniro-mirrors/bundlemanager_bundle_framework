@@ -35,7 +35,8 @@ enum class ModuleType {
     UNKNOWN = 0,
     ENTRY = 1,
     FEATURE = 2,
-    HAR = 3
+    HAR = 3,
+    SHARED = 4
 };
 
 // configuration information about an module

@@ -69,8 +69,9 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
         return -1;
     }
 
-    if (!BundleUtil::CheckFileType(hapName, Constants::INSTALL_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap");
+    if (!BundleUtil::CheckFileType(hapName, Constants::INSTALL_FILE_SUFFIX) &&
+        !BundleUtil::CheckFileType(hapName, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+        APP_LOGE("file is not hap or hsp");
         return -1;
     }
     std::string bundlePath = tempDir_ + hapName;

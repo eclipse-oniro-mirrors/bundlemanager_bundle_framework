@@ -29,7 +29,13 @@ namespace AppExecFwk {
 int AccountHelper::IsOsAccountExists(const int id, bool &isOsAccountExists)
 {
 #ifdef ACCOUNT_ENABLE
-    return AccountSA::OsAccountManager::IsOsAccountCompleted(id, isOsAccountExists);
+    isOsAccountExists = true;
+    auto ret = AccountSA::OsAccountManager::IsOsAccountCompleted(id, isOsAccountExists);
+    if (ret != ERR_OK && isOsAccountExists) {
+        return ret;
+    }
+
+    return ERR_OK;
 #else
     APP_LOGI("ACCOUNT_ENABLE is false");
     // ACCOUNT_ENABLE is false, do nothing and return -1.
