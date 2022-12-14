@@ -30,6 +30,7 @@
 #include "element_name.h"
 #include "image_compress.h"
 #include "json_util.h"
+#include "service_control.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -80,10 +81,18 @@ void DbmsServicesKitTest::TearDownTestCase()
 {}
 
 void DbmsServicesKitTest::SetUp()
-{}
+{
+    std::string strExtra = std::to_string(402);
+    auto extraArgv = strExtra.c_str();
+    ServiceControlWithExtra("d-bms", START, &extraArgv, 1);
+}
 
 void DbmsServicesKitTest::TearDown()
-{}
+{
+    std::string strExtra = std::to_string(402);
+    auto extraArgv = strExtra.c_str();
+    ServiceControlWithExtra("d-bms", STOP, &extraArgv, 1);
+}
 
 std::shared_ptr<DistributedBms> DbmsServicesKitTest::GetDistributedBms()
 {

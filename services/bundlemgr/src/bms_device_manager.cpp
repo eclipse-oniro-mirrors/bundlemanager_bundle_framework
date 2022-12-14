@@ -94,6 +94,7 @@ void BmsDeviceManager::OnRemoveSystemAbility(int32_t systemAbilityId, const std:
 bool BmsDeviceManager::GetAllDeviceList(std::vector<std::string> &deviceIds)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    APP_LOGI("OnRemoveSystemAbility DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID:%{public}d removed!", DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (!GetTrustedDeviceList(deviceList)) {
         APP_LOGE("GetTrustedDeviceList failed");
         return false;
