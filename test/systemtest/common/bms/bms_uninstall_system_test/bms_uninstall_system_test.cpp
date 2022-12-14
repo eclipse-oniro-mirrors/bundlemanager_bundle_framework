@@ -1351,28 +1351,9 @@ HWTEST_F(BmsUninstallSystemTest, BMS_DFX_0500, Function | MediumTest | Level2)
  */
 HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0100, Function | MediumTest | Level1)
 {
-    std::cout << "BMS_StreamInstall_0100 start" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = BASE_BUNDLE_NAME + "1";
-    std::vector<std::string> bundleFilePaths;
-    bundleFilePaths.push_back(bundleFilePath);
-
-    StreamInstall(bundleFilePaths, InstallFlag::NORMAL, resvec);
-
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     bool res = installerProxy->DestoryBundleStreamInstaller(0);
     EXPECT_EQ(res, true);
-
-    resvec.clear();
-    Uninstall(bundleName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "BMS_StreamInstall_0100 end" << std::endl;
 }
 
 /**
