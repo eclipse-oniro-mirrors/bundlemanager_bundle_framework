@@ -1261,61 +1261,12 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0018, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0018
- * Function: CheckIsModuleNeedUpdate
- * @tc.name: test CheckIsModuleNeedUpdate
- * @tc.desc: test CheckIsModuleNeedUpdate success
+ * @tc.number: BundleConnectAbilityMgr_0019
+ * Function: GetBundleConnectAbilityMgr
+ * @tc.name: test GetBundleConnectAbilityMgr
+ * @tc.desc: test GetCallingInfo
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0019, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-    BundleConnectAbilityMgr connectAbilityMgr;
-
-    Want want;
-    ElementName name;
-    name.SetAbilityName(ABILITY_NAME_TEST);
-    name.SetBundleName(BUNDLE_NAME);
-    want.SetElement(name);
-    connectAbilityMgr.connectState_ = ServiceCenterConnectState::CONNECTED;
-    bool ret = connectAbilityMgr.ConnectAbility(want, connectAbilityMgr.serviceCenterRemoteObject_);
-    EXPECT_TRUE(ret);
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0003
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test SendCallBack
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0020, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    BundleConnectAbilityMgr connectAbilityMgr;
-    std::string transactId;
-    Want want;
-    ElementName name;
-    name.SetAbilityName(ABILITY_NAME_TEST);
-    name.SetBundleName(BUNDLE_NAME);
-    want.SetElement(name);
-    connectAbilityMgr.connectState_ = ServiceCenterConnectState::CONNECTED;
-    connectAbilityMgr.SendCallBack(0, want, 100, transactId);
-    EXPECT_EQ(transactId, "");
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0021
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test SendCallBack
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | SmallTest | Level0)
 {
     ClearDataMgr();
     BundleConnectAbilityMgr connectAbilityMgr;
@@ -1327,12 +1278,12 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0022
+ * @tc.number: BundleConnectAbilityMgr_0021
  * Function: IsObtainAbilityInfo
  * @tc.name: test IsObtainAbilityInfo
  * @tc.desc: test IsObtainAbilityInfo failed
  */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | SmallTest | Level0)
 {
     BundleConnectAbilityMgr connectAbilityMgr;
     Want want;
