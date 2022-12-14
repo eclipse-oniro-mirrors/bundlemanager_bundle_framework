@@ -260,7 +260,7 @@ bool BundleUtil::KeyToDeviceAndName(
 int32_t BundleUtil::GetUserIdByCallingUid()
 {
     int32_t uid = IPCSkeleton::GetCallingUid();
-    APP_LOGI("get calling uid(%{public}d)", uid);
+    APP_LOGD("get calling uid(%{public}d)", uid);
     return GetUserIdByUid(uid);
 }
 

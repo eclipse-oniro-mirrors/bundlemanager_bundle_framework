@@ -365,7 +365,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(MessageParcel &data, MessageParcel &r
     std::string name = data.ReadString();
     BundleFlag flag = static_cast<BundleFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
-    APP_LOGI("name %{public}s, flag %{public}d", name.c_str(), flag);
+    APP_LOGD("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundleInfo info;
     reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flag, info, userId);

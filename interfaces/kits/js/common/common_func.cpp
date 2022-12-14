@@ -983,7 +983,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
-    APP_LOGI("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
+    APP_LOGD("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
@@ -1171,7 +1171,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, NAME, nName));
-    APP_LOGI("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
+    APP_LOGD("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
 
     napi_value nIcon;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIcon));
