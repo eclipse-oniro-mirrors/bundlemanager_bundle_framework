@@ -9120,7 +9120,6 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                 QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
             if (item != nativeAbilityInfoCache.end()) {
                 APP_LOGD("has cache,no need to query from host");
-                info->cacheAbilityInfos  = item->second->Get();
                 info->getCache = true;
                 return;
             }
@@ -9137,9 +9136,14 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
     AsyncTask::CompleteCallback complete = [obj = this, want, bundleFlags, userId, errCode, info = queryAbilityInfo]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
             std::string queryAbilityInfosErrData;
+            auto env = reinterpret_cast<napi_env>(&engine);
             if (info->getCache) {
+                NativeValue *cacheAbilityInfos;
+                auto item = nativeAbilityInfoCache.find(Query(want.ToString(),
+                    QUERY_ABILITY_BY_WANT, bundleFlags, userId, env));
+                cacheAbilityInfos  = item->second->Get();
                 APP_LOGD("has cache,no need to query from host");
-                task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), info->cacheAbilityInfos);
+                task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), cacheAbilityInfos);
                 return;
             }
             if (errCode != ERR_OK) {
@@ -9148,7 +9152,6 @@ NativeValue* JsBundleMgr::OnQueryAbilityInfos(NativeEngine &engine, NativeCallba
                     CreateJsValue(engine, queryAbilityInfosErrData));
                 return;
             }
-            auto env = reinterpret_cast<napi_env>(&engine);
             if (!info->ret) {
                 queryAbilityInfosErrData = "QueryAbilityInfos failed";
                 task.RejectWithCustomize(engine, CreateJsValue(engine, 1),
