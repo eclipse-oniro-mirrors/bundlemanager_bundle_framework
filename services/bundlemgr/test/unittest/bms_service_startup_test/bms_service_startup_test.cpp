@@ -19,6 +19,7 @@
 
 #include <fstream>
 
+#include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -639,4 +640,69 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0600, Function | SmallTest |
     BundlePermissionMgr::defaultPermissions_.try_emplace("com.ohos.tes1", permission);
     ret = BundlePermissionMgr::GetDefaultPermission(bundleName, permission);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: AbilityManagerHelper_0100
+ * @tc.name: test IsRunning
+ * @tc.desc: 1.test IsRunning of AbilityManagerHelper
+ */
+HWTEST_F(BmsServiceStartupTest, AbilityManagerHelper_0100, Function | SmallTest | Level0)
+{
+    AbilityManagerHelper helper;
+    int bundleUid = -1;
+    int ret = helper.IsRunning("com.ohos.tes1", bundleUid);
+    EXPECT_EQ(ret, -1);
+    bundleUid = 100;
+    ret = helper.IsRunning("com.ohos.tes1", bundleUid);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0100
+ * @tc.name: test SaveBundleStateStorage
+ * @tc.desc: 1.test SaveBundleStateStorage of BundleStateStorage
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0100, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    BundleUserInfo info;
+    int32_t userId = -1;
+    bool ret = bundleStateStorage.SaveBundleStateStorage("", userId, info);
+    EXPECT_EQ(ret, false);
+    ret = bundleStateStorage.SaveBundleStateStorage("com.ohos.tes1", userId, info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsParam_0100
+ * @tc.name: test GetBmsParam
+ * @tc.desc: 1.test GetBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0100, Function | SmallTest | Level0)
+{
+    BmsParam param;
+    std::string value = "";
+    bool ret = param.GetBmsParam("", value);
+    EXPECT_EQ(ret, false);
+    param.rdbDataManager_.reset();
+    ret = param.GetBmsParam("bms_param", value);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsParam_0200
+ * @tc.name: test SaveBmsParam
+ * @tc.desc: 1.test SaveBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
+{
+    BmsParam param;
+    bool ret = param.SaveBmsParam("bms_param", "");
+    EXPECT_EQ(ret, false);
+    ret = param.SaveBmsParam("", "bms_value");
+    EXPECT_EQ(ret, false);
+    param.rdbDataManager_.reset();
+    ret = param.SaveBmsParam("bms_param", "bms_value");
+    EXPECT_EQ(ret, false);
 }

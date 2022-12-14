@@ -2676,6 +2676,37 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2900, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_3000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test QueryAbilityInfo
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AAFwk::Want want;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack;
+    bool ret = hostImpl->QueryAbilityInfo(
+        want, 0, Constants::INVALID_USERID, abilityInfo, callBack);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test CheckAbilityEnableInstall
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AAFwk::Want want;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack;
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, 0, 0, callBack);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: TestMgrByUserId_0001
  * @tc.name: test ImplicitQueryAbilityInfos
  * @tc.desc: 1.system run normally

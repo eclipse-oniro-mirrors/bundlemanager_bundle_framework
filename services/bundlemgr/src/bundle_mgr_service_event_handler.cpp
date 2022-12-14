@@ -33,6 +33,7 @@
 #endif
 #include "event_report.h"
 #include "installd_client.h"
+#include "parameter.h"
 #include "perf_profile.h"
 #include "status_receiver_host.h"
 #include "system_bundle_installer.h"
@@ -46,6 +47,14 @@ namespace {
 const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
+// system version && hotpatch information
+const std::string BASE_VERSION_PARAM_NAME = "const.comp.hl.product_base_version.real";
+const std::string BASE_VERSION_PARAM_RO_NAME = "ro.comp.hl.product_base_version.real";
+// this metadata used to indicate those system application update by hotpatch upgrade.
+const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
+const std::string FINGERPRINT = "fingerprint";
+const std::string UNKNOWN = "UNKNOWN";
+const int32_t VERSION_LEN = 64;
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -198,6 +207,7 @@ void BMSEventHandler::OnBmsStarting()
             APP_LOGE("System internal error, install informations missing.");
             break;
     }
+    SaveSystemVersion();
 }
 
 void BMSEventHandler::AfterBmsStart()
@@ -249,7 +259,10 @@ void BMSEventHandler::BundleRebootStartEvent()
     }
 #endif
 
-    OnBundleRebootStart();
+    if (IsSystemUpgrade()) {
+        OnBundleRebootStart();
+        SaveSystemVersion();
+    }
     needNotifyBundleScanStatus_ = true;
 }
 
@@ -970,6 +983,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
+        if (HotPatchAppProcessing(bundleName)) {
+            APP_LOGD("OTA Install prefab bundle(%{public}s) by path(%{private}s) for hotPath upgrade.",
+                bundleName.c_str(), scanPathIter.c_str());
+            std::vector<std::string> filePaths { scanPathIter };
+            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+                APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+            }
+
+            continue;
+        }
+
         std::vector<std::string> filePaths;
         for (auto item : infos) {
             auto parserModuleNames = item.second.GetModuleNameVec();
@@ -1025,6 +1049,116 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 #endif
         }
     }
+}
+
+bool BMSEventHandler::IsHotPatchApp(const std::string &bundleName)
+{
+    InnerBundleInfo innerBundleInfo;
+    if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("can not get InnerBundleInfo, bundleName=%{public}s", bundleName.c_str());
+        return false;
+    }
+
+    return innerBundleInfo.CheckSpecialMetaData(HOT_PATCH_METADATA);
+}
+
+bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName:%{public}s empty", bundleName.c_str());
+        return false;
+    }
+
+    if (IsHotPatchApp(bundleName)) {
+        APP_LOGI("get hotpatch meta-data success, bundleName=%{public}s", bundleName.c_str());
+        SystemBundleInstaller installer;
+        if (!installer.UninstallSystemBundle(bundleName, true)) {
+            APP_LOGE("keep data to uninstall app(%{public}s) error", bundleName.c_str());
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+void BMSEventHandler::SaveSystemVersion()
+{
+    std::string curSystemVersion;
+    if (!GetCurSystemVersion(curSystemVersion)) {
+        APP_LOGE("get currrnet system version fail!");
+        return;
+    }
+
+    if (curSystemVersion.empty()) {
+        APP_LOGE("curSystemVersion:%{public}s empty", curSystemVersion.c_str());
+        return;
+    }
+
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return;
+    }
+
+    bmsPara->SaveBmsParam(FINGERPRINT, curSystemVersion);
+}
+
+bool BMSEventHandler::IsSystemUpgrade()
+{
+    std::string curSystemVersion;
+    if (!GetCurSystemVersion(curSystemVersion)) {
+        APP_LOGE("get currrnet system version fail!");
+        return false;
+    }
+
+    if (curSystemVersion.empty()) {
+        APP_LOGE("curSystemVersion:%{public}s empty", curSystemVersion.c_str());
+        return false;
+    }
+
+    std::string oldSystemVersion;
+    if (!GetOldSystemVersion(oldSystemVersion)) {
+        APP_LOGE("get system version from db fail!");
+        return false;
+    }
+
+    if (oldSystemVersion.empty()) {
+        APP_LOGE("oldSystemVersion:%{public}s empty", oldSystemVersion.c_str());
+        return false;
+    }
+
+    if (strcmp(curSystemVersion.c_str(), oldSystemVersion.c_str()) != 0) {
+        APP_LOGI("upgrading from %{public}s to %{public}s", oldSystemVersion.c_str(), curSystemVersion.c_str());
+        return true;
+    }
+    return false;
+}
+
+bool BMSEventHandler::GetCurSystemVersion(std::string &curSystemVersion)
+{
+    char firmware[VERSION_LEN] = {0};
+    int32_t ret = GetParameter(BASE_VERSION_PARAM_NAME.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
+    if (ret <= 0) {
+        APP_LOGE("GetParameter failed!");
+        return false;
+    }
+    curSystemVersion = firmware;
+    return true;
+}
+
+bool BMSEventHandler::GetOldSystemVersion(std::string &oldSystemVersion)
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return false;
+    }
+
+    if (!bmsPara->GetBmsParam(FINGERPRINT, oldSystemVersion)) {
+        APP_LOGE("GetOldSystemVersion failed!");
+        return false;
+    }
+    return true;
 }
 
 void BMSEventHandler::AddParseInfosToMap(
@@ -1386,6 +1520,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
 
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
+#endif
 
 bool BMSEventHandler::FetchInnerBundleInfo(
     const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
@@ -1398,6 +1533,5 @@ bool BMSEventHandler::FetchInnerBundleInfo(
 
     return dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
 }
-#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS

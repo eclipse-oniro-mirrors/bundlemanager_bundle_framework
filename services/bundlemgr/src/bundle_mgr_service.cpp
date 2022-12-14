@@ -106,6 +106,7 @@ bool BundleMgrService::Init()
 
     APP_LOGI("Init begin");
     InitThreadPool();
+    InitBmsParam();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
     InitBundleDataMgr();
@@ -126,6 +127,11 @@ void BundleMgrService::InitThreadPool()
 {
     bmsThreadPool_.Start(THREAD_NUMBER);
     bmsThreadPool_.SetMaxTaskNum(Constants::MAX_TASK_NUMBER);
+}
+
+void BundleMgrService::InitBmsParam()
+{
+    bmsParam_ = std::make_shared<BmsParam>();
 }
 
 bool BundleMgrService::InitBundleMgrHost()
@@ -319,6 +325,11 @@ void BundleMgrService::SelfClean()
 sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
 {
     return userMgrHost_;
+}
+
+const std::shared_ptr<BmsParam> BundleMgrService::GetBmsParam() const
+{
+    return bmsParam_;
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
