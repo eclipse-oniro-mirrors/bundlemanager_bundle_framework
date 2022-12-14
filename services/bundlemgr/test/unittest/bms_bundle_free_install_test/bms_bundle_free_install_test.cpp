@@ -1233,8 +1233,6 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0001, Function | SmallTe
     std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
-    // sptr<ServiceCenterConnection connection = new (std::nothrow) ServiceCenterConnection(connectState,
-    //         cv, weak_from_this());
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
