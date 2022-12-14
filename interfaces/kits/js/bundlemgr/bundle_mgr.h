@@ -361,11 +361,6 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetDispatcherVersion(napi_env env, napi_callback_info info);
-napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
-napi_value Install(napi_env env, napi_callback_info info);
-napi_value Recover(napi_env env, napi_callback_info info);
-napi_value Uninstall(napi_env env, napi_callback_info info);
-napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info);
 napi_value GetAllFormsInfo(napi_env env, napi_callback_info info);
 napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info);
 napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info);
@@ -493,6 +488,7 @@ public:
     static NativeValue* QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetPermissionDef(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
@@ -518,6 +514,7 @@ private:
         std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
     NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnGetBundleInstaller(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundlePackInfo(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
@@ -561,6 +558,7 @@ private:
     static bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     static bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
         BundleOptions &options, bool &unwarpBundleOptionsParamsResult);
+    NativeValue* JsBundleInstallInit(NativeEngine &engine);
     NativeValue* CreateBundlePackInfo(NativeEngine &engine, const int32_t &flags, const BundlePackInfo &bundlePackInfo);
     NativeValue* CreatePackages(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
     NativeValue* CreateSummary(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
@@ -577,6 +575,30 @@ private:
     NativeValue* CreateExtensionAbilities(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module);
     NativeValue* CreateExtensionAbility(NativeEngine &engine, const ExtensionAbilities &extensionAbilitiy);
 };
+
+class JsBundleInstall {
+public:
+    JsBundleInstall() = default;
+    ~JsBundleInstall() = default;
+    struct BundleInstallResult {
+        int32_t resCode = 0;
+        std::string resMessage;
+    };
+    static void Finalizer(NativeEngine *engine, void *data, void *hint);
+    static NativeValue* Install(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* Recover(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* Uninstall(NativeEngine *engine, NativeCallbackInfo *info);
+private:
+    NativeValue* OnInstall(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnRecover(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnUninstall(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* CreateInstallStatus(NativeEngine &engine,
+        const std::shared_ptr<BundleInstallResult> bundleInstallResult);
+    bool GetStringsValue(NativeEngine &engine, NativeValue *object, std::vector<std::string> &strList);
+    bool GetInstallParamValue(NativeEngine &engine, NativeValue *object, InstallParam &installParam);
+    void ConvertInstallResult(std::shared_ptr<BundleInstallResult> installResult);
+};
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* BUNDLE_MGR_H */
