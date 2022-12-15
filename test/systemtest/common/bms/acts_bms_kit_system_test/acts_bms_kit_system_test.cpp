@@ -637,47 +637,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0600, Function | MediumTest | Level
 }
 
 /**
- * @tc.number: GetBundleInfo_0700
- * @tc.name: test query bundle information
- * @tc.desc: 1.under '/system/app/',there is a hap
- *           2.install the hap
- *           3.query bundleInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0700, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleInfo_0700" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string appName = "com.ohos.systemui";
-
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-
-        BundleInfo bundleInfo;
-        bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleInfo.name, appName);
-        EXPECT_GE(bundleInfo.uid, Constants::BASE_APP_UID);
-        EXPECT_GE(bundleInfo.gid, Constants::BASE_APP_UID);
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleInfo_0700 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleInfo_0700 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleInfo_0700" << std::endl;
-}
-
-/**
  * @tc.number: GetBundleInfo_0800
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/system/app/',there is a hap
@@ -4795,7 +4754,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0900, Function | MediumTest | Level1)
 
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(uninstallResult, "Failure[ERR_USER_NOT_INSTALL_HAP]");
+        EXPECT_NE(uninstallResult, "Success");
         if (std::strcmp(uninstallResult.c_str(), "Success") == 0) {
             APP_LOGI("Errors_0900 failed - cycle count: %{public}d", i);
             break;
