@@ -458,6 +458,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     uint32_t compatible = (infos.begin()->second).GetCompatibleVersion();
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
+    bool isStage = (infos.begin()->second).GetIsNewVersion();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -493,6 +494,11 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
         if (appType != info.second.GetAppType()) {
             return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
+        }
+        // check model type(FA or stage)
+        if (isStage != info.second.GetIsNewVersion()) {
+            APP_LOGE("must be all FA model or all stage model");
+            return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
         }
     }
     // check api sdk version
