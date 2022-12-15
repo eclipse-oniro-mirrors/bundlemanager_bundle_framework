@@ -1358,11 +1358,8 @@ HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0100, Function | MediumTest |
 
 /**
  * @tc.number: BMS_Recover_0100
- * @tc.name: test uninstall bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there exists an app
- *           2.install the app
- *           3.uninstall the app
- *           4.check directory
+ * @tc.name: test recover bundle
+ * @tc.desc: 1.test recover failed by nullptr
  */
 HWTEST_F(BmsUninstallSystemTest, BMS_Recover_0100, Function | MediumTest | Level1)
 {
@@ -1375,12 +1372,9 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Recover_0100, Function | MediumTest | Level
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = userId;
-    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
 
-    bool res = installerProxy->Install(bundleFilePaths, installParam, statusReceiver);
-    bool res1 = installerProxy->Recover(bundleFilePath, installParam, statusReceiver);
-    EXPECT_EQ(res, true);
-    EXPECT_EQ(res1, true);
+    bool res = installerProxy->Recover(bundleFilePath, installParam, nullptr);
+    EXPECT_EQ(res, false);
 }
 
 }  // namespace AppExecFwk
