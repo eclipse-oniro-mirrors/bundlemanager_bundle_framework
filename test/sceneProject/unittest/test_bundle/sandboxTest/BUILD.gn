@@ -24,8 +24,7 @@ ohos_hap("sandboxTest") {
     ":hjs_demo_js_assets",
     ":hjs_demo_resources",
   ]
-  certificate_profile =
-      "${appexecfwk_path}/test/sceneProject/openharmony_sx.p7b"
+  certificate_profile = "${appexecfwk_path}/test/sceneProject/signature/com.example.ohosproject.hmservice.p7b"
 }
 
 ohos_app_scope("bmsstagedemoone_app_profile") {
