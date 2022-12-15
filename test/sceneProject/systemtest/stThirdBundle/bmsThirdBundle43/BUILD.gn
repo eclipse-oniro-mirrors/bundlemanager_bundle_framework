@@ -25,7 +25,7 @@ ohos_hap("stbmsThirdBundle43") {
     ":hjs_demo_resources",
   ]
   certificate_profile =
-      "${appexecfwk_path}/test/sceneProject/openharmony_sx.p7b"
+      "${appexecfwk_path}/test/sceneProject/signature/com.third.hiworld.big.p7b"
 }
 ohos_js_assets("hjs_demo_js_assets") {
   source_dir = "./src/main/js/default"
