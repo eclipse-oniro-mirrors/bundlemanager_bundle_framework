@@ -146,6 +146,8 @@ private:
     
     ErrCode CheckMainElement(const InnerBundleInfo &info);
 
+    ErrCode CheckBundleName(const std::string &provisionInfoBundleName, const std::string &bundleName);
+
     void FetchPrivilegeCapabilityFromPreConfig(
         const std::string &bundleName,
         const std::string &appSignature,
