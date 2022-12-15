@@ -196,6 +196,8 @@ std::string TransformResult(ErrCode resultCode)
             return "ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME";
         case ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME:
             return "ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME";
+        case ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR:
+            return "ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR";
         default:
             return "";
     }
