@@ -479,11 +479,13 @@ public:
      * @param userId Indicates the user ID.
      * @return Return whether the application is enabled.
      */
-    bool GetApplicationEnabled(int32_t userId = Constants::UNSPECIFIED_USERID) const
+    bool GetApplicationEnabled(int32_t userId = Constants::UNSPECIFIED_USERID, bool detailedLog = true) const
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
+            if (detailedLog) {
+                APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
+            }
             return false;
         }
 
@@ -574,7 +576,7 @@ public:
      */
     std::optional<AbilityInfo> FindAbilityInfoByUri(const std::string &abilityUri) const
     {
-        APP_LOGI("Uri is %{public}s", abilityUri.c_str());
+        APP_LOGD("Uri is %{public}s", abilityUri.c_str());
         for (const auto &ability : baseAbilityInfos_) {
             auto abilityInfo = ability.second;
             if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
@@ -582,7 +584,7 @@ public:
             }
 
             auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-            APP_LOGI("configUri is %{public}s", configUri.c_str());
+            APP_LOGD("configUri is %{public}s", configUri.c_str());
             if (configUri == abilityUri) {
                 return abilityInfo;
             }
@@ -1348,9 +1350,10 @@ public:
     /**
      * @brief Get response userId.
      * @param userId Indicates the request userId..
+     * @param detailedLog Indicates whether needs detailed log.
      * @return Return response userId.
      */
-    int32_t GetResponseUserId(int32_t requestUserId) const;
+    int32_t GetResponseUserId(int32_t requestUserId, bool detailedLog = true) const;
 
     std::vector<std::string> GetModuleNameVec() const
     {

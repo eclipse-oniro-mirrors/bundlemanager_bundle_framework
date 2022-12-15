@@ -1116,7 +1116,10 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
     } else {
         uri = noPpefixUri.substr(posFirstSeparator + 1, posSecondSeparator - posFirstSeparator - 1);
     }
-
+    bool needDetailedLog = userId >= Constants::START_USERID;
+    if (!needDetailedLog) {
+        APP_LOGI("userId %{public}d less than 100, not printing enable log", userId);
+    }
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
@@ -1124,8 +1127,8 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
             continue;
         }
 
-        int32_t responseUserId = info.GetResponseUserId(requestUserId);
-        if (!info.GetApplicationEnabled(responseUserId)) {
+        int32_t responseUserId = info.GetResponseUserId(requestUserId, needDetailedLog);
+        if (!info.GetApplicationEnabled(responseUserId, needDetailedLog)) {
             continue;
         }
 
@@ -1258,15 +1261,19 @@ bool BundleDataMgr::GetApplicationInfos(
     }
 
     bool find = false;
+    bool needDetailedLog = requestUserId >= Constants::START_USERID;
+    if (!needDetailedLog) {
+        APP_LOGI("userId %{public}d less than 100, not printing enable log", userId);
+    }
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
             APP_LOGE("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        int32_t responseUserId = info.GetResponseUserId(requestUserId);
+        int32_t responseUserId = info.GetResponseUserId(requestUserId, needDetailedLog);
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
-            && !info.GetApplicationEnabled(responseUserId)) {
+            && !info.GetApplicationEnabled(responseUserId, needDetailedLog)) {
             APP_LOGD("bundleName: %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
@@ -1292,6 +1299,10 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
         APP_LOGE("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    bool needDetailedLog = userId >= Constants::START_USERID;
+    if (!needDetailedLog) {
+        APP_LOGI("userId %{public}d less than 100, not printing enable log", userId);
+    }
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
@@ -1301,7 +1312,7 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
         if (!(static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
-            && !info.GetApplicationEnabled(responseUserId)) {
+            && !info.GetApplicationEnabled(responseUserId, needDetailedLog)) {
             APP_LOGD("bundleName: %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }

@@ -1906,7 +1906,9 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        if (userId == Constants::INVALID_USERID) {
+            APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        }
         return;
     }
 
@@ -2841,7 +2843,7 @@ int32_t InnerBundleInfo::GetModuleUpgradeFlag(std::string moduleName) const
     return moduleInfo->upgradeFlag;
 }
 
-int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
+int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId, bool detailedLog) const
 {
     if (innerBundleUserInfos_.empty()) {
         APP_LOGE("Get responseUserId failed due to user map is empty.");
@@ -2857,7 +2859,9 @@ int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
     }
 
     if (requestUserId < Constants::START_USERID) {
-        APP_LOGE("requestUserId(%{public}d) less than start userId.", requestUserId);
+        if (detailedLog) {
+            APP_LOGE("requestUserId(%{public}d) less than start userId.", requestUserId);
+        }
         return Constants::INVALID_USERID;
     }
 
