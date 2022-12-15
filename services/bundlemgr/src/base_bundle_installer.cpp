@@ -423,9 +423,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     ErrCode result = ERR_OK;
     if (isAppExist_) {
-        // to check new or old modle, application or hm service of the bundle.
-        result = CheckHapModleOrType(oldInfo, newInfos);
-        CHECK_RESULT(result, "bundle modle or type is not same %{public}d");
+        result = CheckInstallationFree(oldInfo, newInfos);
+        CHECK_RESULT(result, "CheckInstallationFree failed %{public}d");
         // to guarantee that the hap version can be compatible.
         result = CheckVersionCompatibility(oldInfo);
         CHECK_RESULT(result, "The app has been installed and update lower version bundle %{public}d");
@@ -2477,6 +2476,10 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetAppType() != newInfo.GetAppType()) {
         return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
     }
+    if (oldInfo.GetIsNewVersion() != newInfo.GetIsNewVersion()) {
+        APP_LOGE("same version update module condition, model type must be the same");
+        return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+    }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
 }
@@ -2572,16 +2575,12 @@ bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t u
     return true;
 }
 
-ErrCode BaseBundleInstaller::CheckHapModleOrType(const InnerBundleInfo &innerBundleInfo,
+ErrCode BaseBundleInstaller::CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
     const std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
     for (const auto &item : infos) {
-        if (innerBundleInfo.GetIsNewVersion() != item.second.GetIsNewVersion()) {
-            APP_LOGE("CheckHapModleOrType cannot install new modle and old modle simultaneously");
-            return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
-        }
         if (innerBundleInfo.GetEntryInstallationFree() != item.second.GetEntryInstallationFree()) {
-            APP_LOGE("CheckHapModleOrType cannot install application and hm service simultaneously");
+            APP_LOGE("CheckInstallationFree cannot install application and hm service simultaneously");
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
     }
