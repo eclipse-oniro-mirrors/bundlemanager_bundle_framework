@@ -60,8 +60,6 @@ public:
     std::shared_ptr<DistributedBms> GetDistributedBms();
     std::shared_ptr<DistributedBmsProxy> GetDistributedBmsProxy();
     std::shared_ptr<DistributedDataStorage> GetDistributedDataStorage();
-    void StartInstalldService() const;
-    void StartBundleService();
 private:
     std::shared_ptr<DistributedBms> distributedBms_ = nullptr;
     std::shared_ptr<DistributedBmsProxy> distributedBmsProxy_ = nullptr;
