@@ -68,9 +68,13 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<BundleConnectAbilityMgr> GetBundleConnectAbilityMgr() const;
     void StartBundleService();
+    void ClearDataMgr();
+    void SetDataMgr();
 
 private:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
 
 BmsBundleFreeInstallTest::BmsBundleFreeInstallTest()
@@ -96,6 +100,18 @@ void BmsBundleFreeInstallTest::SetUp()
 
 void BmsBundleFreeInstallTest::TearDown()
 {}
+
+void BmsBundleFreeInstallTest::ClearDataMgr()
+{
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsBundleFreeInstallTest::SetDataMgr()
+{
+    EXPECT_NE(dataMgrInfo_, nullptr);
+    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
+}
 
 void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName)
 {
@@ -1242,6 +1258,48 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0018, Function | Smal
     sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
     connectAbilityMgr.GetTargetAbilityInfo(want, 0, innerBundleInfo, targetAbilityInfo);
     EXPECT_EQ(targetAbilityInfo->targetInfo.bundleName, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0019
+ * Function: GetBundleConnectAbilityMgr
+ * @tc.name: test GetBundleConnectAbilityMgr
+ * @tc.desc: test GetCallingInfo
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0019, Function | SmallTest | Level0)
+{
+    ClearDataMgr();
+    BundleConnectAbilityMgr connectAbilityMgr;
+    std::vector<std::string> bundleNames;
+    std::vector<std::string> callingAppIds;
+    connectAbilityMgr.GetCallingInfo(USERID, USERID, bundleNames, callingAppIds);
+    EXPECT_EQ(bundleNames.size(), 0);
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0021
+ * Function: IsObtainAbilityInfo
+ * @tc.name: test IsObtainAbilityInfo
+ * @tc.desc: test IsObtainAbilityInfo failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    Want want;
+    ElementName name;
+    name.SetAbilityName(ABILITY_NAME_TEST);
+    name.SetBundleName(BUNDLE_NAME);
+    want.SetElement(name);
+    int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack;
+    InnerBundleInfo innerBundleInfo;
+    ClearDataMgr();
+    connectAbilityMgr.UpgradeAtomicService(want, USERID);
+    bool res = connectAbilityMgr.IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
+    EXPECT_FALSE(res);
+    SetDataMgr();
 }
 
 /**
