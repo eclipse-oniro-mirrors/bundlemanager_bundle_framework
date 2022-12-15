@@ -449,7 +449,7 @@ private:
 
     bool VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate = false) const;
 
-    ErrCode CheckHapModleOrType(const InnerBundleInfo &innerBundleInfo,
+    ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
