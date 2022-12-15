@@ -101,6 +101,8 @@ public:
     sptr<IQuickFixManager> GetQuickFixManagerProxy();
     void CreateFiles(const std::vector<std::string>& sourceFiles);
     void DeleteFiles(const std::vector<std::string>& destFiles);
+    void ClearDataMgr();
+    void SetDataMgr();
 
 private:
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
@@ -109,6 +111,8 @@ private:
     std::shared_ptr<QuickFixDeleter> deleter_ = nullptr;
     std::shared_ptr<QuickFixSwitcher> switcher_ = nullptr;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
 
 BmsBundleQuickFixTest::BmsBundleQuickFixTest()
@@ -135,6 +139,18 @@ void BmsBundleQuickFixTest::SetUp()
 
 void BmsBundleQuickFixTest::TearDown()
 {}
+
+void BmsBundleQuickFixTest::ClearDataMgr()
+{
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsBundleQuickFixTest::SetDataMgr()
+{
+    EXPECT_NE(dataMgrInfo_, nullptr);
+    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
+}
 
 ErrCode BmsBundleQuickFixTest::InstallBundle(const std::string &bundlePath) const
 {
@@ -3112,6 +3128,90 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleDeleteQuickFix_0002, Function | SmallTe
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
+
+/**
+ * @tc.number: FixDeployer_0001
+ * @tc.name: test ParseAndCheckAppQuickFixInfos
+ * @tc.desc: ParseAndCheckAppQuickFixInfos
+ */
+HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        std::vector<std::string> bundleFilePaths;
+        bundleFilePaths.push_back(HAP_FILE_PATH1);
+        std::unordered_map<std::string, AppQuickFix> infos;
+        infos.emplace("AppQuickFix", appQuickFix);
+        ErrCode ret = deployer->ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: FixDeployer_0002
+ * @tc.name: test ParseAndCheckAppQuickFixInfos
+ * @tc.desc: ParseAndCheckAppQuickFixInfos
+ */
+HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0002, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        std::vector<std::string> bundleFilePaths;
+        bundleFilePaths.push_back(HAP_FILE_PATH1);
+        InnerAppQuickFix newInnerAppQuickFix;
+        InnerAppQuickFix oldInnerAppQuickFix;
+        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::PATCH;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::PATCH;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: FixDeployer_0003
+ * @tc.name: test SaveToInnerBundleInfo
+ * @tc.desc: SaveToInnerBundleInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0003, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        ClearDataMgr();
+        InnerBundleInfo innerBundleInfo;
+        bool ret = deployer->FetchInnerBundleInfo("", innerBundleInfo);
+        EXPECT_EQ(ret, false);
+        BundleInfo bundleInfo;
+        ErrCode res = deployer->GetBundleInfo("", bundleInfo);
+        EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+        InnerAppQuickFix newInnerAppQuickFix;
+        res = deployer->SaveToInnerBundleInfo(newInnerAppQuickFix);
+        EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+        SetDataMgr();
+    }
+}
+
 /**
  * @tc.number: BmsBundleCopyFiles_0001
  * Function: CopyFiles
@@ -3469,4 +3569,5 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDataMgr_0100, Function | SmallTest | Lev
     ret = dataMgr.DeleteInnerAppQuickFix("");
     EXPECT_EQ(ret, false);
 }
+
 } // OHOS
