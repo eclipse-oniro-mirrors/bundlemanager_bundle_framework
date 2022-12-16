@@ -1377,7 +1377,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Recover_0100, Function | MediumTest | Level
     installParam.userId = userId;
 
     bool res = installerProxy->Recover(bundleFilePath, installParam, nullptr);
-    EXPECT_EQ(res, true);
+    EXPECT_EQ(res, false);
 }
 
 }  // namespace AppExecFwk

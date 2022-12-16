@@ -2362,4 +2362,179 @@ HWTEST_F(BmsBundleInstallerTest, InstallFailed_0100, Function | SmallTest | Leve
     ret = installChecker.CheckHapHashParams(infos, hashParams);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstallChecker_0100
+ * @tc.name: test the start function of CheckSysCap
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<std::string> bundlePaths;
+    bundlePaths.push_back(bundlePath);
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSysCap(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: InstallChecker_0200
+ * @tc.name: test the start function of CheckSysCap
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0200, Function | SmallTest | Level0)
+{    
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST + "rpcid.sc";
+    std::vector<std::string> bundlePaths;
+    bundlePaths.push_back(bundlePath);
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSysCap(bundlePaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_UNEXPECTED);
+}
+
+/**
+ * @tc.number: InstallChecker_0300
+ * @tc.name: test the start function of CheckMultipleHapsSignInfo
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0300, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundlePaths;
+    bundlePaths.push_back("data");
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.GetProvisionInfo().appId = "8519754";
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+}
+
+/**
+ * @tc.number: InstallChecker_0400
+ * @tc.name: test the start function of CheckDependency
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0400, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckDependency(infos);
+    EXPECT_EQ(ret, ERR_OK);//0
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "moduleName";
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "moduleName";
+    Dependency dependency;
+    dependency.moduleName = "moduleName";
+    dependency.bundleName = "bundleName";
+    innerModuleInfo.dependencies.push_back(dependency);
+    innerBundleInfo.innerModuleInfos_.insert(
+        pair<std::string, InnerModuleInfo>("moduleName", innerModuleInfo));
+    infos.insert(pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
+
+    ret = installChecker.CheckDependency(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEPENDENT_MOUULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallChecker_0500
+ * @tc.name: test the start function of NeedCheckDependency
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0500, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "bundleName1";
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    Dependency dependency;
+    dependency.bundleName = "bundleName2";
+    auto ret = installChecker.NeedCheckDependency(dependency, innerBundleInfo);
+    EXPECT_EQ(ret, true);
+    BundlePackInfo bundlePackInfo;
+    PackageModule packageModule;
+    bundlePackInfo.summary.modules.push_back(packageModule);
+    innerBundleInfo.SetBundlePackInfo(bundlePackInfo);
+    ret = installChecker.NeedCheckDependency(dependency, innerBundleInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_0600
+ * @tc.name: test the start function of FindModuleInInstallingPackage
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0600, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.FindModuleInInstallingPackage("moduleName", "bundleName", infos);
+    EXPECT_EQ(ret, false);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "bundleName";
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "moduleName";
+    innerBundleInfo.innerModuleInfos_.insert(
+        pair<std::string, InnerModuleInfo>("moduleName", innerModuleInfo));
+    infos.insert(pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
+    ret = installChecker.FindModuleInInstallingPackage("moduleName", "bundleName", infos);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_0700
+ * @tc.name: test the start function of FindModuleInInstalledPackage
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0700, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.FindModuleInInstalledPackage("", "");
+    EXPECT_EQ(ret, false);
+    ret = installChecker.FindModuleInInstalledPackage("moduleName", "moduleName");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstallChecker_0800
+ * @tc.name: test the start function of ParseBundleInfo
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0800, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo info;
+    BundlePackInfo packInfo;
+    auto ret = installChecker.ParseBundleInfo("", info, packInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_UNEXPECTED);
+}
+
+/**
+ * @tc.number: InstallChecker_0900
+ * @tc.name: test the start function of CheckDeviceType
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_0900, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.clear();
+    auto ret = installChecker.CheckDeviceType(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
