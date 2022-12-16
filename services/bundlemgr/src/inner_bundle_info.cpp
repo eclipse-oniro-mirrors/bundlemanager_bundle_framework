@@ -1644,6 +1644,40 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(
     return std::nullopt;
 }
 
+std::vector<AbilityInfo> InnerBundleInfo::FindAbilityInfosByModule(
+        const std::string &moduleName, int32_t userId) const
+{
+    std::vector<AbilityInfo> abilitys;
+    if (!HasInnerBundleUserInfo(userId)) {
+        return abilitys;
+    }
+
+    for (const auto &ability : baseAbilityInfos_) {
+        if ((ability.second.moduleName == moduleName)) {
+            abilitys.emplace_back(ability.second);
+        }
+    }
+
+    return abilitys;
+}
+
+std::vector<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfosByModule(
+    const std::string &moduleName, int32_t userId) const
+{
+    std::vector<ExtensionAbilityInfo> extensions;
+    if (!HasInnerBundleUserInfo(userId)) {
+        return extensions;
+    }
+
+    for (const auto &extension : baseExtensionInfos_) {
+        if ((extension.second.moduleName == moduleName)) {
+            extensions.emplace_back(extension.second);
+        }
+    }
+
+    return extensions;
+}
+
 std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const
 {
@@ -2494,7 +2528,7 @@ bool InnerBundleInfo::GetInnerBundleUserInfo(
 
 bool InnerBundleInfo::HasInnerBundleUserInfo(int32_t userId) const
 {
-    if (userId == Constants::ALL_USERID) {
+    if (userId == Constants::ALL_USERID || userId == Constants::ANY_USERID) {
         return !innerBundleUserInfos_.empty();
     }
 
@@ -2719,6 +2753,54 @@ bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
     }
     APP_LOGD("this bundle should be cleaned");
     return true;
+}
+
+int64_t InnerBundleInfo::GetLastInstallationTime() const
+{
+    int64_t installTime = 0;
+    for (const auto &innerBundleUserInfo : innerBundleUserInfos_) {
+        installTime = innerBundleUserInfo.second.updateTime > installTime ?
+            innerBundleUserInfo.second.updateTime : installTime;
+    }
+
+    return installTime;
+}
+
+bool InnerBundleInfo::GetRemovableModules(std::map<std::string, int64_t> &moudleToDelete) const
+{
+    int64_t installTime = GetLastInstallationTime();
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (!innerModuleInfo.second.installationFree) {
+            continue;
+        }
+
+        bool canDelete = true;
+        for (const auto &stateIter : innerModuleInfo.second.isRemovable) {
+            if (!stateIter.second) {
+                canDelete = false;
+                break;
+            }
+        }
+
+        if (canDelete) {
+            moudleToDelete.emplace(innerModuleInfo.second.moduleName, installTime);
+        }
+    }
+
+    return !moudleToDelete.empty();
+}
+
+bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (!innerModuleInfo.second.installationFree) {
+            continue;
+        }
+
+        freeInstallMoudle.emplace_back(innerModuleInfo.second.moduleName);
+    }
+
+    return !freeInstallMoudle.empty();
 }
 
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const

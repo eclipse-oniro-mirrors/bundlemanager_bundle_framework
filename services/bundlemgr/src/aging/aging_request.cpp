@@ -52,7 +52,6 @@ void AgingRequest::InitAgingDatasizeThreshold()
         APP_LOGD("AgingRequest init aging data size threshold success");
     }
 }
-
 void AgingRequest::InitAgingOneDayTimeMs()
 {
     char szOneDayTimeMs[AgingConstants::THRESHOLD_VAL_LEN] = {0};
@@ -94,9 +93,15 @@ void AgingRequest::AddAgingBundle(AgingBundleInfo &bundleInfo)
     agingBundles_.emplace_back(bundleInfo);
 }
 
+void AgingRequest::AddAgingModule(AgingModuleInfo &moduleInfo)
+{
+    agingModules_.insert(moduleInfo);
+}
+
 void AgingRequest::RequestReset()
 {
     agingBundles_.clear();
+    agingModules_.clear();
     tatalDataBytes_ = 0;
     InitAgingPolicySystemParameters();
 }

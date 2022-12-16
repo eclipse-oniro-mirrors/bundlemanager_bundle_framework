@@ -1200,7 +1200,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
 
     info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     uid = info.GetUid(userId_);
-    info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
+    info.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     auto accessTokenIdEx = CreateAccessTokenIdEx(info);
     accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
     info.SetAccessTokenIdEx(accessTokenIdEx, userId_);
@@ -1343,7 +1343,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         // add new module does not update tokenId, GetAppType will be the same.
     }
 
-    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTime(), userId_);
+    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE(
             "add module %{public}s to innerBundleInfo %{public}s failed", modulePackage_.c_str(), bundleName_.c_str());
@@ -1439,7 +1439,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
-    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTime(), userId_);
+    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
     auto noUpdateInfo = oldInfo;
     if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE("update innerBundleInfo %{public}s failed", bundleName_.c_str());
@@ -2301,7 +2301,7 @@ ErrCode BaseBundleInstaller::CreateBundleUserData(InnerBundleInfo &innerBundleIn
         return result;
     }
 
-    innerBundleInfo.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
+    innerBundleInfo.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!innerBundleInfo.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
         APP_LOGE("oldInfo do not have user");

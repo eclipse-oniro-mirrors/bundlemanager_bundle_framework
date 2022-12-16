@@ -1673,38 +1673,79 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
+bool BundleDataMgr::HasUserInstallInBundle(
+    const std::string &bundleName, const int32_t userId) const
+{
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        return false;
+    }
+
+    return infoItem->second.HasInnerBundleUserInfo(userId);
+}
+
+bool BundleDataMgr::GetBundleStats(
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const
+{
+    if (!HasUserInstallInBundle(bundleName, userId)) {
+        APP_LOGE("userId(%{public}d) not in bundle(%{public}s)", userId, bundleName.c_str());
+        return false;
+    }
+
+    return InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) == ERR_OK;
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    return GetBundleSpaceSize(bundleName, AccountHelper::GetCurrentActiveUserId());
+}
+
+int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const
+{
     int64_t spaceSize = 0;
-    if (userId == Constants::INVALID_USERID) {
-        APP_LOGE("userId is invalid");
+    if (userId != Constants::ALL_USERID) {
+        std::vector<int64_t> bundleStats;
+        if (!GetBundleStats(bundleName, userId, bundleStats) || bundleStats.empty()) {
+            APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
+            return spaceSize;
+        }
+
+        spaceSize = std::accumulate(bundleStats.begin(), bundleStats.end(), spaceSize);
         return spaceSize;
     }
-    std::vector<int64_t> bundleStats;
-    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
-        APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
-        return spaceSize;
+
+    for (const auto &iterUserId : GetAllUser()) {
+        std::vector<int64_t> bundleStats;
+        if (!GetBundleStats(bundleName, iterUserId, bundleStats) || bundleStats.empty()) {
+            APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
+            continue;
+        }
+
+        auto startIter = bundleStats.begin();
+        auto endIter = bundleStats.end();
+        if (spaceSize == 0) {
+            spaceSize = std::accumulate(startIter, endIter, spaceSize);
+        } else {
+            spaceSize = std::accumulate(++startIter, endIter, spaceSize);
+        }
     }
-    spaceSize = std::accumulate(bundleStats.begin(), bundleStats.end(), spaceSize);
-    APP_LOGI("%{public}s spaceSize:%{public}" PRId64, bundleName.c_str(), spaceSize);
+
     return spaceSize;
 }
 
 int64_t BundleDataMgr::GetAllFreeInstallBundleSpaceSize() const
 {
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
     int64_t allSize = 0;
-    std::vector<BundleInfo> bundleInfos;
+    std::map<std::string, std::vector<std::string>> freeInstallModules;
+    if (!GetFreeInstallModules(freeInstallModules)) {
+        APP_LOGE("no removable bundles");
+        return allSize;
+    }
 
-    if (userId != Constants::INVALID_USERID && GetBundleInfos(GET_ALL_APPLICATION_INFO, bundleInfos, userId) == true) {
-        for (const auto &item : bundleInfos) {
-            APP_LOGD("%{public}s freeInstall:%{public}d", item.name.c_str(), item.applicationInfo.isFreeInstallApp);
-            if (item.applicationInfo.isFreeInstallApp) {
-                allSize += GetBundleSpaceSize(item.name);
-            }
-        }
+    for (const auto &iter : freeInstallModules) {
+        APP_LOGD("%{public}s is freeInstall bundle", iter.first.c_str());
+        allSize += GetBundleSpaceSize(iter.first, Constants::ALL_USERID);
     }
 
     APP_LOGI("All freeInstall app size:%{public}" PRId64, allSize);
@@ -3796,6 +3837,48 @@ bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundle
         }
     }
     return true;
+}
+
+bool BundleDataMgr::GetRemovableModules(
+    std::map<std::string, std::map<std::string, int64_t>> &moduleToDelete)
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos is empty.");
+        return false;
+    }
+
+    for (auto &it : bundleInfos_) {
+        std::map<std::string, int64_t> moudles;
+        if (!it.second.GetRemovableModules(moudles)) {
+            continue;
+        }
+
+        moduleToDelete.emplace(it.first, moudles);
+    }
+
+    return !moduleToDelete.empty();
+}
+
+bool BundleDataMgr::GetFreeInstallModules(
+    std::map<std::string, std::vector<std::string>> &freeInstallModules) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ is data is empty.");
+        return false;
+    }
+
+    for (auto &it : bundleInfos_) {
+        std::vector<std::string> moudles;
+        if (!it.second.GetFreeInstallModules(moudles)) {
+            continue;
+        }
+
+        freeInstallModules.emplace(it.first, moudles);
+    }
+
+    return !freeInstallModules.empty();
 }
 #endif
 
