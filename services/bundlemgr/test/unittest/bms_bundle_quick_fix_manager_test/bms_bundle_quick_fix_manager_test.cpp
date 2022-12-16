@@ -309,4 +309,32 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function |
     }
     APP_LOGI("end of BmsBundleQuickFixManager_0800.");
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_0900
+ * @tc.name: test UpdateQuickFixStatus
+ * @tc.desc: UpdateQuickFixStatus
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0900, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_0900.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        QuickFixStatus nextStatus = QuickFixStatus::DEFAULT_STATUS;
+        InnerAppQuickFix innerAppQuickFix;
+        QuickFixMark mark;
+        mark.status = QuickFixStatus::DEFAULT_STATUS;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        bool ret = dataMgr->UpdateQuickFixStatus(nextStatus, innerAppQuickFix);
+        EXPECT_FALSE(ret);
+
+        mark.status = QuickFixStatus::DELETE_START;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        nextStatus = QuickFixStatus::DEFAULT_STATUS;
+        ret = dataMgr->UpdateQuickFixStatus(nextStatus, innerAppQuickFix);
+        EXPECT_FALSE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_0900.");
+}
 }
