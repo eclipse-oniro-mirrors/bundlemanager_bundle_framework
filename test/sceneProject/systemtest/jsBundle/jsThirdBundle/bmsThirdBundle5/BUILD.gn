@@ -25,7 +25,7 @@ ohos_hap("bmsThirdBundle5") {
     ":hjs_demo_resources",
   ]
   certificate_profile =
-      "${appexecfwk_path}/test/sceneProject/openharmony_sx.p7b"
+      "${appexecfwk_path}/test/sceneProject/signature/com.example.third1.p7b"
 }
 ohos_js_assets("hjs_demo_js_assets") {
   source_dir = "./src/main/js/default"

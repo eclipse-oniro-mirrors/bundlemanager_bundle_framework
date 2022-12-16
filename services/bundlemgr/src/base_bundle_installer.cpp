@@ -423,9 +423,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     ErrCode result = ERR_OK;
     if (isAppExist_) {
-        // to check new or old modle, application or hm service of the bundle.
-        result = CheckHapModleOrType(oldInfo, newInfos);
-        CHECK_RESULT(result, "bundle modle or type is not same %{public}d");
+        result = CheckInstallationFree(oldInfo, newInfos);
+        CHECK_RESULT(result, "CheckInstallationFree failed %{public}d");
         // to guarantee that the hap version can be compatible.
         result = CheckVersionCompatibility(oldInfo);
         CHECK_RESULT(result, "The app has been installed and update lower version bundle %{public}d");
@@ -1201,7 +1200,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
 
     info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     uid = info.GetUid(userId_);
-    info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
+    info.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     auto accessTokenIdEx = CreateAccessTokenIdEx(info);
     accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
     info.SetAccessTokenIdEx(accessTokenIdEx, userId_);
@@ -1344,7 +1343,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         // add new module does not update tokenId, GetAppType will be the same.
     }
 
-    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTime(), userId_);
+    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE(
             "add module %{public}s to innerBundleInfo %{public}s failed", modulePackage_.c_str(), bundleName_.c_str());
@@ -1440,7 +1439,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
-    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTime(), userId_);
+    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
     auto noUpdateInfo = oldInfo;
     if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE("update innerBundleInfo %{public}s failed", bundleName_.c_str());
@@ -2302,7 +2301,7 @@ ErrCode BaseBundleInstaller::CreateBundleUserData(InnerBundleInfo &innerBundleIn
         return result;
     }
 
-    innerBundleInfo.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
+    innerBundleInfo.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!innerBundleInfo.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
         APP_LOGE("oldInfo do not have user");
@@ -2477,6 +2476,10 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetAppType() != newInfo.GetAppType()) {
         return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
     }
+    if (oldInfo.GetIsNewVersion() != newInfo.GetIsNewVersion()) {
+        APP_LOGE("same version update module condition, model type must be the same");
+        return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+    }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
 }
@@ -2572,16 +2575,12 @@ bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t u
     return true;
 }
 
-ErrCode BaseBundleInstaller::CheckHapModleOrType(const InnerBundleInfo &innerBundleInfo,
+ErrCode BaseBundleInstaller::CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
     const std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
     for (const auto &item : infos) {
-        if (innerBundleInfo.GetIsNewVersion() != item.second.GetIsNewVersion()) {
-            APP_LOGE("CheckHapModleOrType cannot install new modle and old modle simultaneously");
-            return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
-        }
         if (innerBundleInfo.GetEntryInstallationFree() != item.second.GetEntryInstallationFree()) {
-            APP_LOGE("CheckHapModleOrType cannot install application and hm service simultaneously");
+            APP_LOGE("CheckInstallationFree cannot install application and hm service simultaneously");
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
     }

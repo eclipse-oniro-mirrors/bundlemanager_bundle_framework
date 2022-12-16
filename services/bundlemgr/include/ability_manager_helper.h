@@ -27,8 +27,14 @@ public:
         NOT_RUNNING = 0,
         RUNNING = 1,
     };
+
     static bool UninstallApplicationProcesses(const std::string &bundleName, const int uid);
     static int IsRunning(const std::string bundleName, const int bundleUid);
+    static int IsRunning(const std::string bundleName, const std::string moduleName);
+
+private:
+    static bool FetchAbilityInfos(
+        const std::string bundleName, const std::string moduleName, std::vector<std::string> &abilities);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

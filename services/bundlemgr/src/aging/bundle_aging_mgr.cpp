@@ -151,13 +151,118 @@ bool BundleAgingMgr::ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &da
     return request_.SortAgingBundles() > 0;
 }
 
+bool BundleAgingMgr::ResetRequest()
+{
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    request_.RequestReset();
+    request_.SetTotalDataBytes(dataMgr->GetAllFreeInstallBundleSpaceSize());
+    return true;
+}
+
+bool BundleAgingMgr::IsReachStartAgingThreshold()
+{
+    return request_.IsReachStartAgingThreshold();
+}
+
+bool BundleAgingMgr::GetRemovableModules(
+    std::map<std::string, std::map<std::string, int64_t>> &modules)
+{
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    if (!dataMgr->GetRemovableModules(modules)) {
+        APP_LOGE("No removable modules");
+        return false;
+    }
+
+    APP_LOGD("Removable module size %{public}zu", modules.size());
+    return !modules.empty();
+}
+
+bool BundleAgingMgr::QueryModuleUsageRecords(
+    std::vector<DeviceUsageStats::BundleActiveModuleRecord> &results)
+{
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    for (const auto &userId : dataMgr->GetAllUser()) {
+        DeviceUsageStats::BundleActiveClient::GetInstance().QueryModuleUsageRecords(
+            AgingConstants::COUNT_MODULE_RECODES_GET, results, userId);
+    }
+
+    APP_LOGD("activeModuleRecord size %{public}zu", results.size());
+    return !results.empty();
+}
+
+bool BundleAgingMgr::InitAgingRequest()
+{
+    if (!ResetRequest()) {
+        APP_LOGE("Reset Request failed");
+        return false;
+    }
+
+    if (!IsReachStartAgingThreshold()) {
+        APP_LOGI("Not reach agingThreshold and not need aging.");
+        return false;
+    }
+
+    std::map<std::string, std::map<std::string, int64_t>> moduleToDeletes;
+    if (!GetRemovableModules(moduleToDeletes)) {
+        APP_LOGE("InitAgingRequest: no removable modules");
+        return false;
+    }
+
+    std::vector<DeviceUsageStats::BundleActiveModuleRecord> activeModuleRecord;
+    if (!QueryModuleUsageRecords(activeModuleRecord)) {
+        APP_LOGE("InitAgingRequest: can not get bundle active module record");
+        return false;
+    }
+
+    for (const auto &bundleIter : moduleToDeletes) {
+        if (bundleIter.second.empty()) {
+            continue;
+        }
+
+        for (const auto &moduleIter : bundleIter.second) {
+            DeviceUsageStats::BundleActiveModuleRecord moduleRecord;
+            moduleRecord.bundleName_ = bundleIter.first;
+            moduleRecord.moduleName_ = moduleIter.first;
+            moduleRecord.lastModuleUsedTime_ = moduleIter.second;
+            std::any_of(activeModuleRecord.begin(), activeModuleRecord.end(),
+                [&moduleRecord](const auto &record) {
+                    if (record.bundleName_ == moduleRecord.bundleName_ &&
+                        record.moduleName_ == moduleRecord.moduleName_) {
+                        moduleRecord = record;
+                        return true;
+                    }
+
+                    return false;
+                });
+            AgingModuleInfo agingModuleInfo(
+                moduleRecord.bundleName_, moduleRecord.moduleName_, moduleRecord.lastModuleUsedTime_);
+            request_.AddAgingModule(agingModuleInfo);
+        }
+    }
+
+    return !request_.GetAgingModules().empty();
+}
+
 void BundleAgingMgr::Process(const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
     APP_LOGD("BundleAging begin to process.");
     if (ReInitAgingRequest(dataMgr)) {
-        if (request_.IsReachStartAgingThreshold()) {
-            chain_.Process(request_);
-        }
+        chain_.Process(request_);
     }
     {
         std::lock_guard<std::mutex> lock(mutex_);

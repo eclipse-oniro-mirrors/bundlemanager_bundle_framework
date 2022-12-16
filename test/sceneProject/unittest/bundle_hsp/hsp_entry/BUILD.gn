@@ -24,7 +24,8 @@ ohos_hap("hsp_entry") {
     ":hjs_demo_js_assets",
     ":hjs_demo_resources",
   ]
-  certificate_profile = "${appexecfwk_path}/test/sceneProject/unittest/bundle_hsp/ohos_provision_release.p7b"
+  certificate_profile =
+      "${appexecfwk_path}/test/sceneProject/signature/com.example.hsptest.p7b"
 }
 
 ohos_app_scope("bmsstagedemoone_app_profile") {
