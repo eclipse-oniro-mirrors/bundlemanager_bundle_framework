@@ -1364,27 +1364,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_0600
- * @tc.name: Test FindAbilityInfos
- * @tc.desc: 1.Test the FindAbilityInfos of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0600, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::string bundleName = "";
-    int32_t userId = Constants::ALL_USERID;
-    auto ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ(ret, std::nullopt);
-
-    AbilityInfo abilityInfo;
-    bundleName = "com.ohos.test";
-    abilityInfo.bundleName = bundleName;
-    info.InsertAbilitiesInfo("key", abilityInfo);
-    ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ((*ret)[0].bundleName, "com.ohos.test");
-}
-
-/**
  * @tc.number: InnerBundleInfo_0700
  * @tc.name: Test RemoveModuleInfo
  * @tc.desc: 1.Test the RemoveModuleInfo of InnerBundleInfo
@@ -1594,29 +1573,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1500, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_1600
- * @tc.name: Test FindAbilityInfos
- * @tc.desc: 1.Test the FindAbilityInfos of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1600, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::string bundleName = "com.ohos.launcher";
-    const int userId = 100;
-    auto ret = info.FindAbilityInfos("", userId);
-    EXPECT_EQ(ret, std::nullopt);
-
-    ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ(ret, std::nullopt);
-
-    AbilityInfo abilityInfo;
-    abilityInfo.bundleName = bundleName;
-    info.InsertAbilitiesInfo("key", abilityInfo);
-    ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ((*ret)[0].bundleName, bundleName);
-}
-
-/**
  * @tc.number: InnerBundleInfo_1700
  * @tc.name: Test IsBundleRemovable
  * @tc.desc: 1.Test the IsBundleRemovable of InnerBundleInfo
@@ -1626,7 +1582,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1700, Function | Smal
     InnerBundleInfo info;
     bool isEnabled = true;
     int32_t userId = Constants::ALL_USERID;
-    auto ret = info.SetAbilityEnabled("", "", "", isEnabled, userId);
+    auto ret = info.SetAbilityEnabled("", "", isEnabled, userId);
     EXPECT_NE(ret, OHOS::ERR_OK);
 }
 
@@ -1638,46 +1594,21 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1700, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    std::string bundleName = "";
+    std::string bundleName = "com.ohos.test";
     std::string moduleName = "";
     std::string extensionName = "";
-    auto ret = info.FindExtensionInfo(bundleName, moduleName, extensionName);
+    auto ret = info.FindExtensionInfo(moduleName, extensionName);
     EXPECT_EQ(ret, std::nullopt);
 
     ExtensionAbilityInfo extensionInfo;
-    bundleName = "com.ohos.test";
     moduleName = "entry";
     extensionName = "extension";
     extensionInfo.bundleName = bundleName;
     extensionInfo.moduleName = moduleName;
     extensionInfo.name = "extension";
     info.InsertExtensionInfo("key", extensionInfo);
-    ret = info.FindExtensionInfo(bundleName, moduleName, extensionName);
+    ret = info.FindExtensionInfo(moduleName, extensionName);
     EXPECT_EQ((*ret).bundleName, "com.ohos.test");
-}
-
-/**
- * @tc.number: InnerBundleInfo_1900
- * @tc.name: Test FindExtensionInfo
- * @tc.desc: 1.Test the FindExtensionInfo of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1900, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::string bundleName = "";
-    auto ret = info.FindExtensionInfos(bundleName);
-    EXPECT_EQ(ret, std::nullopt);
-
-    bundleName = "com.ohos.nullextension";
-    ret = info.FindExtensionInfos(bundleName);
-    EXPECT_EQ(ret, std::nullopt);
-
-    ExtensionAbilityInfo extensionInfo;
-    bundleName = "com.ohos.test";
-    extensionInfo.bundleName = bundleName;
-    info.InsertExtensionInfo("key", extensionInfo);
-    ret = info.FindExtensionInfos(bundleName);
-    EXPECT_EQ((*ret)[0].bundleName, "com.ohos.test");
 }
 
 /**

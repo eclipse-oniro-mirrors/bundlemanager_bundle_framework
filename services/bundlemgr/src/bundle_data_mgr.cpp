@@ -152,7 +152,7 @@ void BundleDataMgr::LoadAllBundleStateDataFromJsonDb()
             auto& tempUserInfo = bundleUserState.second;
             newInfo.SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.first);
             for (auto& disabledAbility : tempUserInfo.disabledAbilities) {
-                newInfo.SetAbilityEnabled(bundleState.first, "", disabledAbility, false, bundleUserState.first);
+                newInfo.SetAbilityEnabled("", disabledAbility, false, bundleUserState.first);
             }
         }
     }
@@ -550,7 +550,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    auto ability = innerBundleInfo.FindAbilityInfo(bundleName, moduleName, abilityName, responseUserId);
+    auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
         APP_LOGE("ability not found");
         return false;
@@ -595,7 +595,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
+    auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
     if (!ability) {
         APP_LOGE("ability not found");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
@@ -1845,13 +1845,13 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
     }
     AbilityInfo abilityInfo;
     if (moduleName.empty()) {
-        auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
+        auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
         if (!ability) {
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
         abilityInfo = *ability;
     } else {
-        ret = innerBundleInfo.FindAbilityInfo(bundleName, moduleName, abilityName, abilityInfo);
+        ret = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
         if (ret != ERR_OK) {
             APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", bundleName.c_str(), ret);
             return ret;
@@ -2342,7 +2342,7 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &is
     }
     InnerBundleInfo innerBundleInfo = infoItem->second;
     auto ability = innerBundleInfo.FindAbilityInfoV9(
-        abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.name);
+        abilityInfo.moduleName, abilityInfo.name);
     if (!ability) {
         APP_LOGE("ability not found");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
@@ -2366,8 +2366,8 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo& newInfo = infoItem->second;
-    ErrCode ret = newInfo.SetAbilityEnabled(abilityInfo.bundleName, abilityInfo.moduleName,
-        abilityInfo.name, isEnabled, userId);
+    ErrCode ret = newInfo.SetAbilityEnabled(
+        abilityInfo.moduleName, abilityInfo.name, isEnabled, userId);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -3211,7 +3211,7 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
             return false;
         }
     }
-    auto extension = innerBundleInfo.FindExtensionInfo(bundleName, moduleName, extensionName);
+    auto extension = innerBundleInfo.FindExtensionInfo(moduleName, extensionName);
     if (!extension) {
         APP_LOGE("extensionAbility not found or disabled");
         return false;
@@ -3267,7 +3267,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
     }
-    auto extension = innerBundleInfo.FindExtensionInfo(bundleName, moduleName, extensionName);
+    auto extension = innerBundleInfo.FindExtensionInfo(moduleName, extensionName);
     if (!extension) {
         APP_LOGE("extensionAbility not found or disabled");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
@@ -4202,13 +4202,13 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
     }
     AbilityInfo abilityInfo;
     if (moduleName.empty()) {
-        auto ability = innerBundleInfo.FindAbilityInfoV9(bundleName, moduleName, abilityName);
+        auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
         if (!ability) {
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
         abilityInfo = *ability;
     } else {
-        errCode = innerBundleInfo.FindAbilityInfo(bundleName, moduleName, abilityName, abilityInfo);
+        errCode = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
         if (errCode != ERR_OK) {
             APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", bundleName.c_str(), errCode);
             return errCode;
