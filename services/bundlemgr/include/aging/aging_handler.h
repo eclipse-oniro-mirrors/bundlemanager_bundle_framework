@@ -48,6 +48,12 @@ private:
     bool ProcessModule(AgingRequest &request) const;
     bool NeedCheckEndAgingThreshold() const;
     bool UpdateUsedTotalDataBytes(AgingRequest &request) const;
+    bool AgingClean(
+        const AgingModuleInfo &agingModule,
+        AgingRequest &request) const;
+    bool CleanCache(const AgingModuleInfo &agingModule, AgingRequest &request) const;
+    bool GetCachePath(
+        const AgingModuleInfo &agingModule, std::vector<std::string> &caches) const;
     bool UnInstallBundle(
         const std::string &bundleName, const std::string &moduleName) const;
 };

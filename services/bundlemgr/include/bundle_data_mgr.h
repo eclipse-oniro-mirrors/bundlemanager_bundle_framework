@@ -698,7 +698,6 @@ public:
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     bool GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids);
-    bool GetRemovableModules(std::map<std::string, std::map<std::string, int64_t>> &moduleToDelete);
     bool GetFreeInstallModules(std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
@@ -789,6 +788,12 @@ public:
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
+
+    const std::map<std::string, InnerBundleInfo> &GetAllInnerbundleInfos() const
+    {
+        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+        return bundleInfos_;
+    }
 private:
     /**
      * @brief Init transferStates.

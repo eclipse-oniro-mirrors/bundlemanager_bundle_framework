@@ -20,11 +20,17 @@
 #include <set>
 
 #include "aging_bundle_info.h"
+#include "aging_bundle_state.h"
 #include "aging_module_info.h"
 #include "aging_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class AgingCleanType {
+    CLEAN_CACHE = 0,
+    CLEAN_OTHERS,
+};
+
 class AgingRequest {
 public:
     AgingRequest();
@@ -34,6 +40,12 @@ public:
     void RequestReset();
     void AddAgingBundle(AgingBundleInfo &bundleInfo);
     void AddAgingModule(AgingModuleInfo &moduleInfo);
+    void AddAgingBundleState(const AgingBundleState &agingBundleState);
+    void SetAgingCleanState(
+        const std::string &bundleName, const std::string &moduleName, bool state);
+    bool HasCleanCache(
+        const std::string &bundleName, const std::string &moduleName, bool hasCleanCache) const;
+    bool CanClearBundleCache(const std::string &bundleName) const;
 
     const std::vector<AgingBundleInfo> &GetAgingBundles() const
     {
@@ -60,6 +72,16 @@ public:
         tatalDataBytes_ = allBundleDataBytes;
     };
 
+    void SetAgingCleanType(const AgingCleanType agingCleanType)
+    {
+        agingCleanType_ = agingCleanType;
+    };
+
+    AgingCleanType GetAgingCleanType() const
+    {
+        return agingCleanType_;
+    };
+
     static int64_t GetTotalDataBytesThreshold()
     {
         return totalDataBytesThreshold_;
@@ -78,6 +100,8 @@ private:
     std::vector<AgingBundleInfo> agingBundles_;
     std::set<AgingModuleInfo> agingModules_;
     int64_t tatalDataBytes_ = 0;
+    std::map<std::string, AgingBundleState> agingBundleStates_;
+    AgingCleanType agingCleanType_ = AgingCleanType::CLEAN_CACHE;
 
     static int64_t totalDataBytesThreshold_;
     static int64_t oneDayTimeMs_;

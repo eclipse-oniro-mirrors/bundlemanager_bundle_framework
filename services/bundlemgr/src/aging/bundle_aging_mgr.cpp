@@ -169,24 +169,6 @@ bool BundleAgingMgr::IsReachStartAgingThreshold()
     return request_.IsReachStartAgingThreshold();
 }
 
-bool BundleAgingMgr::GetRemovableModules(
-    std::map<std::string, std::map<std::string, int64_t>> &modules)
-{
-    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is null");
-        return false;
-    }
-
-    if (!dataMgr->GetRemovableModules(modules)) {
-        APP_LOGE("No removable modules");
-        return false;
-    }
-
-    APP_LOGD("Removable module size %{public}zu", modules.size());
-    return !modules.empty();
-}
-
 bool BundleAgingMgr::QueryModuleUsageRecords(
     std::vector<DeviceUsageStats::BundleActiveModuleRecord> &results)
 {
@@ -207,6 +189,12 @@ bool BundleAgingMgr::QueryModuleUsageRecords(
 
 bool BundleAgingMgr::InitAgingRequest()
 {
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
     if (!ResetRequest()) {
         APP_LOGE("Reset Request failed");
         return false;
@@ -217,28 +205,29 @@ bool BundleAgingMgr::InitAgingRequest()
         return false;
     }
 
-    std::map<std::string, std::map<std::string, int64_t>> moduleToDeletes;
-    if (!GetRemovableModules(moduleToDeletes)) {
-        APP_LOGE("InitAgingRequest: no removable modules");
-        return false;
-    }
-
     std::vector<DeviceUsageStats::BundleActiveModuleRecord> activeModuleRecord;
     if (!QueryModuleUsageRecords(activeModuleRecord)) {
         APP_LOGE("InitAgingRequest: can not get bundle active module record");
         return false;
     }
 
-    for (const auto &bundleIter : moduleToDeletes) {
-        if (bundleIter.second.empty()) {
+    for (const auto &item : dataMgr->GetAllInnerbundleInfos()) {
+        std::vector<std::string> moudles;
+        if (!item.second.GetRemovableModules(moudles) || moudles.empty()) {
             continue;
         }
 
-        for (const auto &moduleIter : bundleIter.second) {
+        int64_t installTime = item.second.GetLastInstallationTime();
+        int32_t totalModuleNum = static_cast<int32_t>(item.second.GetInnerModuleInfos().size());
+        auto bundleName = item.first;
+        AgingBundleState agingBundleState(bundleName, totalModuleNum);
+        APP_LOGD("bundle: %{public}s, moduleNum: %{public}d, removableNum: %{public}zu",
+            bundleName.c_str(), totalModuleNum, moudles.size());
+        for (const auto &moudle : moudles) {
             DeviceUsageStats::BundleActiveModuleRecord moduleRecord;
-            moduleRecord.bundleName_ = bundleIter.first;
-            moduleRecord.moduleName_ = moduleIter.first;
-            moduleRecord.lastModuleUsedTime_ = moduleIter.second;
+            moduleRecord.bundleName_ = bundleName;
+            moduleRecord.moduleName_ = moudle;
+            moduleRecord.lastModuleUsedTime_ = installTime;
             std::any_of(activeModuleRecord.begin(), activeModuleRecord.end(),
                 [&moduleRecord](const auto &record) {
                     if (record.bundleName_ == moduleRecord.bundleName_ &&
@@ -252,7 +241,10 @@ bool BundleAgingMgr::InitAgingRequest()
             AgingModuleInfo agingModuleInfo(
                 moduleRecord.bundleName_, moduleRecord.moduleName_, moduleRecord.lastModuleUsedTime_);
             request_.AddAgingModule(agingModuleInfo);
+            agingBundleState.ChangeModuleCacheState(moudle, true);
         }
+
+        request_.AddAgingBundleState(agingBundleState);
     }
 
     return !request_.GetAgingModules().empty();
@@ -261,7 +253,7 @@ bool BundleAgingMgr::InitAgingRequest()
 void BundleAgingMgr::Process(const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
     APP_LOGD("BundleAging begin to process.");
-    if (ReInitAgingRequest(dataMgr)) {
+    if (InitAgingRequest()) {
         chain_.Process(request_);
     }
     {

@@ -59,7 +59,6 @@ private:
     bool InitAgingRequest();
     bool ResetRequest();
     bool IsReachStartAgingThreshold();
-    bool GetRemovableModules(std::map<std::string, std::map<std::string, int64_t>> &modules);
     bool QueryModuleUsageRecords(std::vector<DeviceUsageStats::BundleActiveModuleRecord> &results);
 
 private:
