@@ -1358,6 +1358,7 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1800, Function | SmallTes
     res = installer->UninstallAllSandboxApps(BUNDLE_NAME, USERID);
     EXPECT_EQ(res, ERR_OK);
 }
+
 /**
  * @tc.number: BmsGETSandboxAppMSG_0100
  * @tc.name: get sandbox app bundleInfo information
@@ -1893,6 +1894,7 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest |
  * @tc.number: GetInnerBundleInfoByUid_0400
  * @tc.name: get sandbox app bundleInfo information
  * @tc.desc: 1. system run normally
+ * @tc.require: issueI5Y75O
  */
 HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0400, Function | SmallTest | Level1)
 {
@@ -1959,6 +1961,10 @@ HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest |
     filePaths.emplace_back(bundleFile);
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
+
+    int32_t appIndex = 0;
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
 
     int32_t ret1 = GenerateSandboxAppIndex(BUNDLE_NAME);
     EXPECT_NE(ret1, Constants::INITIAL_APP_INDEX);

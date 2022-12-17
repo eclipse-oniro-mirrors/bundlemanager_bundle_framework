@@ -2167,6 +2167,17 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1000, Function | MediumTest | L
     retBool = hostImpl->GetBundlesForUid(uid, bundleNames);
     EXPECT_EQ(retBool, false);
 
+    sptr<IBundleEventCallback> bundleEventCallback;
+    retBool = hostImpl->UnregisterBundleEventCallback(bundleEventCallback);
+    EXPECT_EQ(retBool, false);
+
+    retBool = hostImpl->RegisterBundleEventCallback(bundleEventCallback);
+    EXPECT_EQ(retBool, false);
+
+    sptr<IBundleStatusCallback> bundleStatusCallback;
+    retBool = hostImpl->ClearBundleStatusCallback(bundleStatusCallback);
+    EXPECT_EQ(retBool, false);
+
     SetDataMgr();
 }
 
@@ -2532,7 +2543,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2000, Function | MediumTest | L
 /**
  * @tc.number: BundleMgrHostImpl_2100
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test GetBundleArchiveInfoV9
+ * @tc.desc: 1.test GetBundleArchiveInfoBySandBoxPath
  */
 HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2100, Function | MediumTest | Level1)
 {
@@ -2587,7 +2598,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2300, Function | MediumTest | L
 /**
  * @tc.number: BundleMgrHostImpl_2400
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test GetBundleArchiveInfoV9
+ * @tc.desc: 1.test DumpBundleInfo
  */
 HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2400, Function | MediumTest | Level1)
 {
@@ -2602,7 +2613,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2400, Function | MediumTest | L
 /**
  * @tc.number: BundleMgrHostImpl_2500
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test GetBundleArchiveInfoV9
+ * @tc.desc: 1.test DumpShortcutInfo
  */
 HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2500, Function | MediumTest | Level1)
 {
@@ -2617,7 +2628,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2500, Function | MediumTest | L
 /**
  * @tc.number: BundleMgrHostImpl_2600
  * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test GetBundleArchiveInfoV9
+ * @tc.desc: 1.test GetAppType
  */
 HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2600, Function | MediumTest | Level1)
 {
@@ -2701,6 +2712,36 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3100, Function | MediumTest | L
     sptr<IRemoteObject> callBack;
     bool ret = hostImpl->CheckAbilityEnableInstall(want, 0, 0, callBack);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode retCode = hostImpl->GetBundleArchiveInfoV9(bundlePath, flags, bundleInfo);
+    EXPECT_EQ(retCode, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetPermissionDef
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    PermissionDef permissionDef;
+    ErrCode retCode = hostImpl->GetPermissionDef("", permissionDef);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED);
+    retCode = hostImpl->GetPermissionDef("permissionDef", permissionDef);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED);
 }
 
 /**
