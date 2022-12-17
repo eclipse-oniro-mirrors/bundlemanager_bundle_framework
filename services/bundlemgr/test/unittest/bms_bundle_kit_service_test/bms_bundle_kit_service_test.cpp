@@ -7957,6 +7957,52 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0001, Function | SmallT
 }
 
 /**
+ * @tc.number: LoadInstallInfosFromDb_0002
+ * @tc.name: test LoadInstallInfosFromDb
+ * @tc.desc: LoadInstallInfosFromDb is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    BMSEventHandler handler(runner);
+    InnerBundleInfo info;
+    ClearDataMgr();
+    handler.LoadInstallInfosFromDb();
+
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    ScanResultCode res = handler.ScanAndAnalyzeUserDatas(userMaps);
+    EXPECT_EQ(res, ScanResultCode::SCAN_NO_DATA);
+
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+    bool ret = handler.CombineBundleInfoAndUserInfo(
+        installInfos, userInfoMaps);
+    EXPECT_EQ(ret, false);
+
+    handler.SaveInstallInfoToCache(info);
+    handler.SetAllInstallFlag();
+    handler.ProcessRebootBundleUninstall();
+    bool bundleLevel = false;
+    handler.DeletePreInfoInDb("", "", bundleLevel);
+
+    std::list<std::string> scanPathList;
+    handler.InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::SYSTEM_APP);
+
+    ret = handler.LoadAllPreInstallBundleInfos();
+    EXPECT_EQ(ret, false);
+
+    ret = handler.FetchInnerBundleInfo("", info);
+    EXPECT_EQ(ret, false);
+
+#ifdef USE_PRE_BUNDLE_PROFILE
+    handler.UpdateRemovable("", bundleLevel);
+    PreBundleConfigInfo preBundleConfigInfo;
+    handler.UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
+#endif
+    SetDataMgr();
+}
+
+/**
  * @tc.number: AnalyzeUserData_0001
  * @tc.name: test AnalyzeUserData
  * @tc.desc: AnalyzeUserData is false

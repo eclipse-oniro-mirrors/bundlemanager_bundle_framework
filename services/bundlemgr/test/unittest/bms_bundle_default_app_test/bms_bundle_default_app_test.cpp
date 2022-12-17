@@ -972,4 +972,89 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4500, Function | SmallTest
     bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
     EXPECT_EQ(ret, true);
 }
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4600
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. return ERR_OK
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4600, Function | SmallTest | Level1)
+{
+    bool isDefaultApp = false;
+    ErrCode ret = DefaultAppMgr::GetInstance().IsDefaultApplication(
+        USER_ID, DEFAULT_APP_VIDEO, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4700
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. GetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4700, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4800
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. create new user and test it
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4800, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    int32_t newUserId = 101;
+    DefaultAppMgr::GetInstance().HandleCreateUser(newUserId);
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        newUserId, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    DefaultAppMgr::GetInstance().HandleRemoveUser(newUserId);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4900
+ * @tc.name: test GetBundleInfoByFileType
+ * @tc.desc: 1. test GetBundleInfoByFileType failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4900, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    ErrCode ret = DefaultAppMgr::GetInstance().GetBundleInfoByFileType(
+        Constants::INVALID_USERID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5000
+ * @tc.name: test GetBundleInfo
+ * @tc.desc: 1. test GetBundleInfo false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5000, Function | SmallTest | Level1)
+{
+    Element element;
+    BundleInfo bundleInfo;
+    element.bundleName = "";
+    bool ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    element.bundleName = "bundleName";
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        Constants::INVALID_USERID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, INVALID_TYPE6, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    element.bundleName = BUNDLE_NAME;
+    element.abilityName = "abilityName";
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+}
 } // OHOS

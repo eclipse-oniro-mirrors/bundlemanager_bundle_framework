@@ -1273,9 +1273,12 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     std::cout << "BMS_UidTest_0300 start" << std::endl;
     CommonTool commonTool;
     std::vector<std::string> resvec;
-    std::string bundleName = "com.ohos.camera";
-    bool isInstallSucceed = CheckInstallIsSuccess(bundleName);
-    EXPECT_TRUE(isInstallSucceed);
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    std::string bundleName = BASE_BUNDLE_NAME + "1";
+
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -1283,14 +1286,11 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     }
     int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
     EXPECT_GE(uid, Constants::BASE_USER_RANGE);
+    
     resvec.clear();
     Uninstall(bundleName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Failure[MSG_ERR_UNINSTALL_SYSTEM_APP_ERROR]");
-    bool isUninstallSucceed = CheckUninstallIsSuccess(bundleName);
-    EXPECT_FALSE(isUninstallSucceed);
-    APP_LOGE("Do not have permission to uninstall!");
-
+    EXPECT_EQ(uninstallResult, "Success");
     std::cout << "BMS_UidTest_0300 end" << std::endl;
 }
 
@@ -1358,11 +1358,8 @@ HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0100, Function | MediumTest |
 
 /**
  * @tc.number: BMS_Recover_0100
- * @tc.name: test uninstall bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there exists an app
- *           2.install the app
- *           3.uninstall the app
- *           4.check directory
+ * @tc.name: test recover bundle
+ * @tc.desc: 1.test recover failed by nullptr
  */
 HWTEST_F(BmsUninstallSystemTest, BMS_Recover_0100, Function | MediumTest | Level1)
 {
