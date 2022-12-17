@@ -221,33 +221,31 @@ public:
         int32_t flags, const std::string &modulePackage, HapModuleInfo &hapModuleInfo) const;
     /**
      * @brief Find abilityInfo by bundle name and ability name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name
      * @param abilityName Indicates the ability name.
      * @param userId Indicates the user ID.
      * @return Returns the AbilityInfo object if find it; returns null otherwise.
      */
-    std::optional<AbilityInfo> FindAbilityInfo(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName,
+    std::optional<AbilityInfo> FindAbilityInfo(
+        const std::string &moduleName,
+        const std::string &abilityName,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Find abilityInfo by bundle name and ability name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name
      * @param abilityName Indicates the ability name.
      * @return Returns the AbilityInfo object if find it; returns null otherwise.
      */
-    std::optional<AbilityInfo> FindAbilityInfoV9(const std::string &bundleName,
+    std::optional<AbilityInfo> FindAbilityInfoV9(
         const std::string &moduleName, const std::string &abilityName) const;
     /**
      * @brief Find abilityInfo by bundle name module name and ability name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name
      * @param abilityName Indicates the ability name.
      * @return Returns ERR_OK if abilityInfo find successfully obtained; returns other ErrCode otherwise.
      */
-    ErrCode FindAbilityInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, AbilityInfo &info) const;
+    ErrCode FindAbilityInfo(
+        const std::string &moduleName, const std::string &abilityName, AbilityInfo &info) const;
     /**
      * @brief Find abilityInfo of list by bundle name.
      * @param bundleName Indicates the bundle name.
@@ -255,22 +253,21 @@ public:
      * @return Returns the AbilityInfo of list if find it; returns null otherwise.
      */
     std::optional<std::vector<AbilityInfo>> FindAbilityInfos(
-        const std::string &bundleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Find extensionInfo by bundle name and extension name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @param extensionName Indicates the extension name
      * @return Returns the ExtensionAbilityInfo object if find it; returns null otherwise.
      */
     std::optional<ExtensionAbilityInfo> FindExtensionInfo(
-        const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const;
+        const std::string &moduleName, const std::string &extensionName) const;
     /**
      * @brief Find extensionInfos by bundle name.
      * @param bundleName Indicates the bundle name.
      * @return Returns the ExtensionAbilityInfo array if find it; returns null otherwise.
      */
-    std::optional<std::vector<ExtensionAbilityInfo>> FindExtensionInfos(const std::string &bundleName) const;
+    std::optional<std::vector<ExtensionAbilityInfo>> FindExtensionInfos() const;
     /**
      * @brief Transform the InnerBundleInfo object to string.
      * @return Returns the string object
@@ -1117,15 +1114,17 @@ public:
     }
     /**
      * @brief Set ability enabled.
-     * @param bundleName Indicates the bundleName.
      * @param moduleName Indicates the moduleName.
      * @param abilityName Indicates the abilityName.
      * @param isEnabled Indicates the ability enabled.
      * @param userId Indicates the user id.
      * @return Returns ERR_OK if the setAbilityEnabled is successfully; returns error code otherwise.
      */
-    ErrCode SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, bool isEnabled, int32_t userId);
+    ErrCode SetAbilityEnabled(
+        const std::string &moduleName,
+        const std::string &abilityName,
+        bool isEnabled,
+        int32_t userId);
     /**
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.

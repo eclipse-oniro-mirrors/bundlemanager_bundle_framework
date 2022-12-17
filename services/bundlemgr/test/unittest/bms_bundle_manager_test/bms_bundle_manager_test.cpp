@@ -1131,10 +1131,10 @@ HWTEST_F(BmsBundleManagerTest, FindAbilityInfoV9_0100, Function | MediumTest | L
     abilityInfo.moduleName = moduleName;
     abilityInfo.name = abilityName;
     info.InsertAbilitiesInfo("key", abilityInfo);
-    auto ret = info.FindAbilityInfoV9(bundleName, "", "");
+    auto ret = info.FindAbilityInfoV9("", "");
     EXPECT_EQ(ret, std::nullopt);
 
-    ret = info.FindAbilityInfoV9(bundleName, moduleName, abilityName);
+    ret = info.FindAbilityInfoV9(moduleName, abilityName);
     EXPECT_EQ((*ret).bundleName, "com.example.test");
 }
 
@@ -1847,8 +1847,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0009, Function | SmallTest |
     InnerBundleInfo info;
     bool isEnabled = true;
     ErrCode ret = info.SetAbilityEnabled(
-        Constants::BUNDLE_NAME, Constants::MODULE_NAME,
-            Constants::ABILITY_NAME, isEnabled, Constants::NOT_EXIST_USERID);
+        Constants::MODULE_NAME, Constants::ABILITY_NAME, isEnabled, Constants::NOT_EXIST_USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 
