@@ -3047,6 +3047,121 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0290, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleQuickFixTest_0300
+ * @tc.name: test CheckPatchNativeSoWithInstalledBundle
+ * @tc.desc: test failed scene of CheckPatchNativeSoWithInstalledBundle
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0300, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    BundleInfo bundleInfo;
+    bundleInfo.applicationInfo.nativeLibraryPath = "libs/armeabi-v7a";
+    bundleInfo.applicationInfo.cpuAbi = "x86";
+    AppqfInfo qfInfo;
+    qfInfo.cpuAbi = "arm";
+    qfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    QuickFixChecker checker;
+    auto ret = checker.CheckPatchNativeSoWithInstalledBundle(bundleInfo, qfInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0310
+ * @tc.name: test CheckSignatureInfo
+ * @tc.desc: test success scene of CheckSignatureInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0310, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    BundleInfo bundleInfo;
+    bundleInfo.name = "Device";
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.appId = "001";
+    bundleInfo.appId = "Device_001";
+    bundleInfo.applicationInfo.appPrivilegeLevel = provisionInfo.bundleInfo.apl;
+    QuickFixChecker checker;
+    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0320
+ * @tc.name: test CheckMultiNativeSo
+ * @tc.desc: test failed scene of CheckMultiNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0320, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    AppQuickFix info2;
+    infos["path1"] = info1;
+    infos["path2"] = info2;
+    QuickFixChecker checker;
+    auto ret = checker.CheckMultiNativeSo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0330
+ * Function: InnerDeletePatchDir
+ * @tc.name: test InnerDeletePatchDir
+ * @tc.desc: InnerDeletePatchDir with different typr
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0330, Function | SmallTest | Level0)
+{
+    auto deleter = GetQuickFixDeleter();
+    EXPECT_FALSE(deleter == nullptr);
+    if (deleter != nullptr) {
+        AppqfInfo appqfInfo;
+        appqfInfo.type = QuickFixType::UNKNOWN;
+        std::vector<HqfInfo> hqfInfos;
+        HqfInfo info;
+        hqfInfos.emplace_back(info);
+        appqfInfo.hqfInfos = hqfInfos;
+        ErrCode ret = deleter->InnerDeletePatchDir(appqfInfo, BUNDLE_NAME);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE);
+        appqfInfo.type = QuickFixType::HOT_RELOAD;
+        ret = deleter->InnerDeletePatchDir(appqfInfo, BUNDLE_NAME);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: PatchParser_0100
+ * Function: ParsePatchInfo
+ * @tc.name: test ParsePatchInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, PatchParser_0100, Function | SmallTest | Level0)
+{
+    PatchParser patchParser;
+    std::vector<std::string> filePaths = {HAP_FILE_PATH1};
+    std::unordered_map<std::string, AppQuickFix> appQuickFixes;
+    ErrCode res = patchParser.ParsePatchInfo(filePaths, appQuickFixes);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DefaultNativeSo_0100
+ * Function: DefaultNativeSo
+ * @tc.name: test DefaultNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0100, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(Constants::LIBS + Constants::ARM64_V8A);
+    patchExtractor.Init();
+    bool isSystemLib64Exist = true;
+    AppqfInfo appqfInfo;
+    bool res = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_EQ(res, false);
+}
+
+/**
  * @tc.number: BmsBundleSwitchQuickFix_0001
  * Function: SwitchQuickFix
  * @tc.name: test SwitchQuickFix
@@ -3506,6 +3621,27 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0100, Function | SmallTest | 
     EXPECT_EQ(rdb.rdbDataManager_, nullptr);
     InnerAppQuickFix innerAppQuickFix;
     bool ret = rdb.DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+
+    ret = rdb.DeleteDataFromDb(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: QuickFixManagerRdb_0200
+ * @tc.name: Test QuickFixManagerRdb
+ * @tc.desc: 1.Test the failed scene of QuickFixManagerRdb
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0200, Function | SmallTest | Level0)
+{
+    QuickFixManagerRdb rdb;
+    rdb.rdbDataManager_.reset();
+    ASSERT_EQ(rdb.rdbDataManager_, nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    bool ret = rdb.DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+
+    ret = rdb.GetDataFromDb(BUNDLE_NAME, innerAppQuickFix);
     EXPECT_EQ(ret, false);
 
     ret = rdb.DeleteDataFromDb(BUNDLE_NAME);

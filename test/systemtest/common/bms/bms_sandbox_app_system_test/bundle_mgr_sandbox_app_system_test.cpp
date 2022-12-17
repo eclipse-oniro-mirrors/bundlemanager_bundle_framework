@@ -344,7 +344,6 @@ void BundleMgrSandboxAppSystemTest::CheckSandboxAppInfo(const std::string &bundl
  * @tc.number: InstallSandboxAppTest001
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of InstallSandboxApp
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest001, TestSize.Level1)
 {
@@ -376,7 +375,6 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest001, TestSize.Level
  * @tc.number: InstallSandboxAppTest002
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of InstallSandboxApp
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest002, TestSize.Level1)
 {
@@ -414,7 +412,6 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest002, TestSize.Level
  * @tc.number: InstallSandboxAppTest003
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of InstallSandboxApp
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest003, TestSize.Level1)
 {
@@ -445,7 +442,6 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest003, TestSize.Level
  * @tc.number: InstallSandboxAppTest004
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of InstallSandboxApp
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest004, TestSize.Level1)
 {
@@ -482,7 +478,6 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest004, TestSize.Level
  * @tc.number: InstallSandboxAppTest005
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of InstallSandboxApp
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest005, TestSize.Level1)
 {
@@ -518,8 +513,7 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest005, TestSize.Level
  * @tc.number: UninstallSandboxAppTest001
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
- *           1. Install application 
- * @tc.require: AR000GNT9D
+ *           1. Install application
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest001, TestSize.Level1)
 {
@@ -553,8 +547,7 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest001, TestSize.Lev
  * @tc.number: UninstallSandboxAppTest002
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
- *           1. Install application 
- * @tc.require: AR000GNT9D
+ *           1. Install application
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest002, TestSize.Level1)
 {
@@ -596,8 +589,7 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest002, TestSize.Lev
  * @tc.number: UninstallSandboxAppTest003
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
- *           1. Install application 
- * @tc.require: AR000GNT9D
+ *           1. Install application
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest003, TestSize.Level1)
 {
@@ -639,8 +631,7 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest003, TestSize.Lev
  * @tc.number: UninstallSandboxAppTest004
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
- *           1. Install application 
- * @tc.require: AR000GNT9D
+ *           1. Install application
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest004, TestSize.Level1)
 {
@@ -683,8 +674,7 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest004, TestSize.Lev
  * @tc.number: UninstallSandboxAppTest004
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
- *           1. Install application 
- * @tc.require: AR000GNT9D
+ *           1. Install application
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest005, TestSize.Level1)
 {
@@ -718,8 +708,7 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, UninstallSandboxAppTest005, TestSize.Lev
  * @tc.number: GetSandboxBundleInfoTest001
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
- *           1. Install application 
- * @tc.require: AR000GNT9D
+ *           1. Install application
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, GetSandboxBundleInfoTest001, TestSize.Level1)
 {
@@ -752,9 +741,8 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, GetSandboxBundleInfoTest001, TestSize.Le
  * @tc.number: GetSandboxBundleInfoTest002
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
- *           1. Install application 
+ *           1. Install application
  *           2. GetSandboxBundleInfo failed by empty
- * @tc.require: AR000GNT9D
  */
 HWTEST_F(BundleMgrSandboxAppSystemTest, GetSandboxBundleInfoTest002, TestSize.Level1)
 {
