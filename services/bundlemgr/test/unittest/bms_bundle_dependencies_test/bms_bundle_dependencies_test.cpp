@@ -187,7 +187,6 @@ const std::shared_ptr<BundleDataMgr> BmsBundleDependenciesTest::GetBundleDataMgr
  * @tc.number: BmsBundleDependenciesTest
  * Function: GetAllDependentModuleName
  * @tc.name: test wrong bundleName
- * @tc.require: SR000H0DUR
  * @tc.desc: 1. system running normally
  *           2. get the dependentModuleName
  */
@@ -205,7 +204,6 @@ HWTEST_F(BmsBundleDependenciesTest, BmsBundleDependenciesTest_0100, Function | S
  * @tc.number: BmsBundleDependenciesTest
  * Function: GetAllDependentModuleName
  * @tc.name: test dependencies is empty
- * @tc.require: SR000H0DUR
  * @tc.desc: 1. system running normally
  *           2. install a hap
  *           3. get the dependentModuleName
@@ -228,7 +226,6 @@ HWTEST_F(BmsBundleDependenciesTest, BmsBundleDependenciesTest_0200, Function | S
  * @tc.number: BmsBundleDependenciesTest
  * Function: GetAllDependentModuleName
  * @tc.name: test dependencies is not empty
- * @tc.require: SR000H0DUR
  * @tc.desc: 1. system running normally
  *           2. install two haps
  *           3. get the dependentModuleName
@@ -256,7 +253,6 @@ HWTEST_F(BmsBundleDependenciesTest, BmsBundleDependenciesTest_0300, Function | S
  * @tc.number: BmsBundleDependenciesTest
  * Function: GetAllDependentModuleName
  * @tc.name: test dependencies is not empty
- * @tc.require: SR000H0DUR
  * @tc.desc: 1. system running normally
  *           2. install three haps
  *           3. get the dependentModuleName
@@ -286,7 +282,6 @@ HWTEST_F(BmsBundleDependenciesTest, BmsBundleDependenciesTest_0400, Function | S
  * @tc.number: BmsBundleDependenciesTest
  * Function: GetAllDependentModuleName
  * @tc.name: test dependencies is not empty
- * @tc.require: SR000H0DUR
  * @tc.desc: 1. system running normally
  *           2. install four haps
  *           3. get the dependentModuleName

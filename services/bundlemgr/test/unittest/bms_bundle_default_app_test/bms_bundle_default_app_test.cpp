@@ -215,7 +215,6 @@ ErrCode BmsBundleDefaultAppTest::SetDefaultApplicationWrap(sptr<IDefaultApp> def
  * @tc.number: BmsBundleDefaultApp_0100
  * @tc.name: test IsDefaultApplication
  * @tc.desc: 1. call IsDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0100, Function | SmallTest | Level1)
 {
@@ -232,7 +231,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0100, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type normal test
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0200, Function | SmallTest | Level1)
 {
@@ -263,7 +261,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0200, Function | SmallTest
  * @tc.name: test SetDefaultApplication, set empty
  * @tc.desc: 1. call SetDefaultApplication not empty, GetDefaultApplication return true
  *           2. call SetDefaultApplication empty, GetDefaultApplication return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0300, Function | SmallTest | Level1)
 {
@@ -289,7 +286,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0300, Function | SmallTest
  * @tc.desc: 1. call SetDefaultApplication set app type, return true
  *           2. call SetDefaultApplication set file type, return true
  *           3. call GetDefaultApplication query file type, ability name is app type
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0400, Function | SmallTest | Level1)
 {
@@ -315,7 +311,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0400, Function | SmallTest
  * @tc.name: test SetDefaultApplication, file type normal test
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0500, Function | SmallTest | Level1)
 {
@@ -343,7 +338,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0500, Function | SmallTest
  * @tc.name: test ResetDefaultApplication, app type test
  * @tc.desc: 1. call SetDefaultApplication then call GetDefaultApplication, return not empty
  *           2. call ResetDefaultApplication then call GetDefaultApplication, return empty
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0600, Function | SmallTest | Level1)
 {
@@ -367,7 +361,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0600, Function | SmallTest
  * @tc.name: test ResetDefaultApplication, file type test
  * @tc.desc: 1. call SetDefaultApplication then call GetDefaultApplication, return not empty
  *           2. call ResetDefaultApplication then call GetDefaultApplication, return empty
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0700, Function | SmallTest | Level1)
 {
@@ -394,7 +387,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0700, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type IMAGE
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0800, Function | SmallTest | Level1)
 {
@@ -416,7 +408,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0800, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type BROWSER
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0900, Function | SmallTest | Level1)
 {
@@ -438,7 +429,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0900, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type AUDIO
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1000, Function | SmallTest | Level1)
 {
@@ -460,7 +450,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1000, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type PDF
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1100, Function | SmallTest | Level1)
 {
@@ -482,7 +471,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1100, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type WORD
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1200, Function | SmallTest | Level1)
 {
@@ -504,7 +492,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1200, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type EXCEL
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1300, Function | SmallTest | Level1)
 {
@@ -526,7 +513,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1300, Function | SmallTest
  * @tc.name: test SetDefaultApplication, app type PPT
  * @tc.desc: 1. call SetDefaultApplication, return true
  *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1400, Function | SmallTest | Level1)
 {
@@ -547,7 +533,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1400, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_1500
  * @tc.name: test IsDefaultApplication, invalid type
  * @tc.desc: 1. call IsDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1500, Function | SmallTest | Level1)
 {
@@ -565,7 +550,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1500, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_1600
  * @tc.name: test SetDefaultApplication, invalid type
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1600, Function | SmallTest | Level1)
 {
@@ -581,7 +565,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1600, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_1700
  * @tc.name: test GetDefaultApplication, invalid type
  * @tc.desc: 1. call GetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1700, Function | SmallTest | Level1)
 {
@@ -598,7 +581,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1700, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_1800
  * @tc.name: test ResetDefaultApplication, invalid type
  * @tc.desc: 1. call ResetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1800, Function | SmallTest | Level1)
 {
@@ -614,7 +596,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1800, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_1900
  * @tc.name: test SetDefaultApplication, invalid userId
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1900, Function | SmallTest | Level1)
 {
@@ -631,7 +612,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1900, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2000
  * @tc.name: test GetDefaultApplication, invalid userId
  * @tc.desc: 1. call GetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2000, Function | SmallTest | Level1)
 {
@@ -646,7 +626,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2000, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2100
  * @tc.name: test ResetDefaultApplication, invalid userId
  * @tc.desc: 1. call ResetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2100, Function | SmallTest | Level1)
 {
@@ -660,7 +639,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2100, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2200
  * @tc.name: test SetDefaultApplication, lack bundleName
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2200, Function | SmallTest | Level1)
 {
@@ -677,7 +655,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2200, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2300
  * @tc.name: test SetDefaultApplication, lack moduleName
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2300, Function | SmallTest | Level1)
 {
@@ -694,7 +671,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2300, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2400
  * @tc.name: test SetDefaultApplication, lack abilityName
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2400, Function | SmallTest | Level1)
 {
@@ -711,7 +687,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2400, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2500
  * @tc.name: test SetDefaultApplication, error browser
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2500, Function | SmallTest | Level1)
 {
@@ -725,7 +700,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2500, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2600
  * @tc.name: test SetDefaultApplication, error video
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2600, Function | SmallTest | Level1)
 {
@@ -739,7 +713,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2600, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2700
  * @tc.name: test SetDefaultApplication, error image
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2700, Function | SmallTest | Level1)
 {
@@ -753,7 +726,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2700, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2800
  * @tc.name: test SetDefaultApplication, error audio
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2800, Function | SmallTest | Level1)
 {
@@ -767,7 +739,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2800, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_2900
  * @tc.name: test SetDefaultApplication, error pdf
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2900, Function | SmallTest | Level1)
 {
@@ -781,7 +752,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_2900, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3000
  * @tc.name: test SetDefaultApplication, error word
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3000, Function | SmallTest | Level1)
 {
@@ -795,7 +765,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3000, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3100
  * @tc.name: test SetDefaultApplication, error excel
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3100, Function | SmallTest | Level1)
 {
@@ -809,7 +778,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3100, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3200
  * @tc.name: test SetDefaultApplication, error ppt
  * @tc.desc: 1. call SetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3200, Function | SmallTest | Level1)
 {
@@ -823,7 +791,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3200, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3300
  * @tc.name: test GetDefaultApplication, param type is empty
  * @tc.desc: 1. call GetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3300, Function | SmallTest | Level1)
 {
@@ -839,7 +806,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3300, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3400
  * @tc.name: test ResetDefaultApplication, param type is empty
  * @tc.desc: 1. call ResetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3400, Function | SmallTest | Level1)
 {
@@ -854,7 +820,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3400, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3500
  * @tc.name: test ResetDefaultApplication, param type is empty
  * @tc.desc: 1. call ResetDefaultApplication, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3500, Function | SmallTest | Level1)
 {
@@ -868,7 +833,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3500, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3600
  * @tc.name: test IsMatch, param is a failed type
  * @tc.desc: 1. call IsMatch, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3600, Function | SmallTest | Level1)
 {
@@ -882,7 +846,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3600, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3700
  * @tc.name: test MatchAppType, param is a failed type
  * @tc.desc: 1. call MatchAppType, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3700, Function | SmallTest | Level1)
 {
@@ -896,7 +859,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3700, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3800
  * @tc.name: test IsAppType, param is a failed type
  * @tc.desc: 1. call IsAppType, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3800, Function | SmallTest | Level1)
 {
@@ -909,7 +871,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3800, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_3900
  * @tc.name: test VerifyElementFormat, set bundleName is empty
  * @tc.desc: 1. call VerifyElementFormat, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3900, Function | SmallTest | Level1)
 {
@@ -923,7 +884,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_3900, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_4000
  * @tc.name: test VerifyElementFormat, set moduleName is empty
  * @tc.desc: 1. call VerifyElementFormat, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4000, Function | SmallTest | Level1)
 {
@@ -938,7 +898,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4000, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_4100
  * @tc.name: test VerifyElementFormat, set abilityName is empty
  * @tc.desc: 1. call VerifyElementFormat, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4100, Function | SmallTest | Level1)
 {
@@ -954,7 +913,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4100, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_4200
  * @tc.name: test VerifyElementFormat, set extensionName is empty
  * @tc.desc: 1. call VerifyElementFormat, return true
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4200, Function | SmallTest | Level1)
 {
@@ -971,7 +929,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4200, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_4300
  * @tc.name: test VerifyElementFormat, set extensionName and abilityName empty
  * @tc.desc: 1. call VerifyElementFormat, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4300, Function | SmallTest | Level1)
 {
@@ -988,7 +945,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4300, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_4400
  * @tc.name: test VerifyElementFormat, set param is not empty
  * @tc.desc: 1. call VerifyElementFormat, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4400, Function | SmallTest | Level1)
 {
@@ -1005,7 +961,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4400, Function | SmallTest
  * @tc.number: BmsBundleDefaultApp_4500
  * @tc.name: test VerifyElementFormat, set abilityName is empty
  * @tc.desc: 1. call VerifyElementFormat, return true
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4500, Function | SmallTest | Level1)
 {
@@ -1016,5 +971,90 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4500, Function | SmallTest
     element.extensionName= "form";
     bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4600
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. return ERR_OK
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4600, Function | SmallTest | Level1)
+{
+    bool isDefaultApp = false;
+    ErrCode ret = DefaultAppMgr::GetInstance().IsDefaultApplication(
+        USER_ID, DEFAULT_APP_VIDEO, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4700
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. GetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4700, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        USER_ID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4800
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. create new user and test it
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4800, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    int32_t newUserId = 101;
+    DefaultAppMgr::GetInstance().HandleCreateUser(newUserId);
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        newUserId, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    DefaultAppMgr::GetInstance().HandleRemoveUser(newUserId);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_4900
+ * @tc.name: test GetBundleInfoByFileType
+ * @tc.desc: 1. test GetBundleInfoByFileType failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4900, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    ErrCode ret = DefaultAppMgr::GetInstance().GetBundleInfoByFileType(
+        Constants::INVALID_USERID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5000
+ * @tc.name: test GetBundleInfo
+ * @tc.desc: 1. test GetBundleInfo false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5000, Function | SmallTest | Level1)
+{
+    Element element;
+    BundleInfo bundleInfo;
+    element.bundleName = "";
+    bool ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    element.bundleName = "bundleName";
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        Constants::INVALID_USERID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, INVALID_TYPE6, element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    element.bundleName = BUNDLE_NAME;
+    element.abilityName = "abilityName";
+    ret = DefaultAppMgr::GetInstance().GetBundleInfo(
+        USER_ID, DEFAULT_APP_VIDEO, element, bundleInfo);
+    EXPECT_EQ(ret, false);
 }
 } // OHOS

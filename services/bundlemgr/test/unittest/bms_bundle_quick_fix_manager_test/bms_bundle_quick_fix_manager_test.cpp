@@ -134,7 +134,6 @@ void BmsBundleQuickFixManagerTest::DeleteFiles(const std::vector<std::string>& d
  * @tc.number: BmsBundleQuickFixManager_0100
  * @tc.name: test CopyFiles
  * @tc.desc: 1. call CopyFiles, files copy to dest path, return true
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function | SmallTest | Level1)
 {
@@ -164,7 +163,6 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function |
  * @tc.number: BmsBundleQuickFixManager_0200
  * @tc.name: test CopyFiles
  * @tc.desc: 1. call CopyFiles with invalid file suffix, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function | SmallTest | Level1)
 {
@@ -184,7 +182,6 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function |
  * @tc.number: BmsBundleQuickFixManager_0300
  * @tc.name: test CopyFiles
  * @tc.desc: 1. call CopyFiles with not exist file, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0300, Function | SmallTest | Level1)
 {
@@ -202,7 +199,6 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0300, Function |
  * @tc.number: BmsBundleQuickFixManager_0400
  * @tc.name: test CopyFiles
  * @tc.desc: 1. call CopyFiles with empty vector, return false
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0400, Function | SmallTest | Level1)
 {
@@ -220,7 +216,6 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0400, Function |
  * @tc.number: BmsBundleQuickFixManager_0500
  * @tc.name: test SaveInnerAppQuickFix
  * @tc.desc: SaveInnerAppQuickFix
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0500, Function | SmallTest | Level1)
 {
@@ -242,7 +237,6 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0500, Function |
  * @tc.number: BmsBundleQuickFixManager_0600
  * @tc.name: test QueryInnerAppQuickFix
  * @tc.desc: QueryInnerAppQuickFix
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0600, Function | SmallTest | Level1)
 {
@@ -268,7 +262,6 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0600, Function |
  * @tc.number: BmsBundleQuickFixManager_0700
  * @tc.name: test QueryAllInnerAppQuickFix
  * @tc.desc: QueryAllInnerAppQuickFix
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0700, Function | SmallTest | Level1)
 {
@@ -294,7 +287,6 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0700, Function |
  * @tc.number: BmsBundleQuickFixManager_0800
  * @tc.name: test QueryAllInnerAppQuickFix
  * @tc.desc: QueryAllInnerAppQuickFix
- * @tc.require: AR000H036M
  */
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function | SmallTest | Level1)
 {
@@ -308,5 +300,33 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function |
         EXPECT_TRUE(newInnerAppQuickFixes.empty());
     }
     APP_LOGI("end of BmsBundleQuickFixManager_0800.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_0900
+ * @tc.name: test UpdateQuickFixStatus
+ * @tc.desc: UpdateQuickFixStatus
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0900, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_0900.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        QuickFixStatus nextStatus = QuickFixStatus::DEFAULT_STATUS;
+        InnerAppQuickFix innerAppQuickFix;
+        QuickFixMark mark;
+        mark.status = QuickFixStatus::DEFAULT_STATUS;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        bool ret = dataMgr->UpdateQuickFixStatus(nextStatus, innerAppQuickFix);
+        EXPECT_FALSE(ret);
+
+        mark.status = QuickFixStatus::DELETE_START;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        nextStatus = QuickFixStatus::DEFAULT_STATUS;
+        ret = dataMgr->UpdateQuickFixStatus(nextStatus, innerAppQuickFix);
+        EXPECT_FALSE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_0900.");
 }
 }

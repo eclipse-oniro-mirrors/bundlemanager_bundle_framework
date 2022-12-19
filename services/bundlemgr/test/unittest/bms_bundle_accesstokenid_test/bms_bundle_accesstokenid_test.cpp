@@ -205,7 +205,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0100, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetApplicationInfo
  * @tc.name: test can create accessTokenId
- * @tc.require: SR000GKG1R
  * @tc.desc: 1. system running normally
  *           2. install a hap
  *           3. test bundle accessTokenId
@@ -228,7 +227,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0200, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetApplicationInfo
  * @tc.name: test can create accessTokenId
- * @tc.require: AR000GKH9O
  * @tc.desc: 1. system running normally
  *           2. install a hap, install failed
  *           3. test bundle accessTokenId
@@ -249,7 +247,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0300, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetApplicationInfo
  * @tc.name: test can create accessTokenId
- * @tc.require: AR000GKH9O
  * @tc.desc: 1. system running normally
  *           2. install a hap, install failed, install again
  *           3. test the failed
@@ -267,7 +264,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0400, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetApplicationInfo
  * @tc.name: test can create accessTokenId
- * @tc.require: AR000GKH9O
  * @tc.desc: 1. system running normally
  *           2. install a hap, update it
  *           3. test the accessTokenId
@@ -295,7 +291,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0500, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetApplicationInfo
  * @tc.name: test can create accessTokenId
- * @tc.require: AR000GKH9O
  * @tc.desc: 1. system running normally
  *           2. install multi-hap
  *           3. test the accessTokenId
@@ -323,7 +318,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0600, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetBundleInfo
  * @tc.name: test can create accessTokenId and system permissions
- * @tc.require: SR000GM6NK
  * @tc.desc: 1. system running normally
  *           2. install a hap
  *           3. check defPermission
@@ -347,7 +341,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0700, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetBundleInfo
  * @tc.name: test can create accessTokenId and system permissions
- * @tc.require: AR000GM6NQ
  * @tc.desc: 1. system running normally
  *           2. check ohos.global.systemres accessTokenId and defpermissions
  */
@@ -370,7 +363,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0800, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetBundleInfo
  * @tc.name: test can create accessTokenId and system permissions
- * @tc.require: SR000GM5R6
  * @tc.desc: 1. system running normally
  *           2. install a hap
  *           3. check reqPermissionStates
@@ -394,7 +386,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0900, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetBundleInfo
  * @tc.name: test can create accessTokenId
- * @tc.require: AR000GM5R7
  * @tc.desc: 1. system running normally
  *           2. install a hap, update it
  *           3. check reqPermissionStates
@@ -421,7 +412,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_1000, Function | Sma
  * @tc.number: BmsBundleAccessTokenIdTest
  * Function: GetBundleInfo
  * @tc.name: test can create accessTokenId
- * @tc.require: AR000GM5R7
  * @tc.desc: 1. system running normally
  *           2. install multi-hap
  *           3. check reqPermissionStates

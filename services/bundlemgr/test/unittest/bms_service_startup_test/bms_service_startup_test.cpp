@@ -509,6 +509,84 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_0010, Function | SmallTest | Level0)
 }
 
 /**
+* @tc.number: PreInstall_0011
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. IsPreInstallRemovable
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0011, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    handler->ClearPreInstallCache();
+    std::string filePath = "/data/test";
+    bool res = handler->IsPreInstallRemovable("");
+    EXPECT_EQ(res, false);
+    res = handler->IsPreInstallRemovable(filePath);
+    EXPECT_EQ(res, false);
+}
+
+/**
+* @tc.number: PreInstall_0012
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. ParseHapFiles
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0012, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    handler->ClearPreInstallCache();
+    std::string filePath = "/data/test";
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    bool res = handler->ParseHapFiles("", infos);
+    EXPECT_EQ(res, false);
+    res = handler->ParseHapFiles(filePath, infos);
+    EXPECT_EQ(res, false);
+}
+
+/**
+* @tc.number: PreInstall_0013
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. LoadPreInstallProFile
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0013, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    InnerBundleInfo info;
+    std::list<std::string> scanPathList;
+    handler->LoadAllPreInstallBundleInfos();
+    handler->ProcessRebootBundleInstall();
+    handler->ProcessRebootBundleUninstall();
+    handler->ProcessReBootPreBundleProFileInstall();
+    handler->InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::SYSTEM_APP);
+    handler->ProcessReBootPreBundleProFileInstall();
+    handler->SaveInstallInfoToCache(info);
+    EXPECT_EQ(info.GetBundleName(), "");
+}
+
+/**
+* @tc.number: PreInstall_0014
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. LoadPreInstallProFile
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0014, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::vector<std::string> hapPaths;
+    std::vector<std::string> res = handler->CheckHapPaths(hapPaths);
+    EXPECT_EQ(res.size(), 0);
+}
+
+/**
  * @tc.number: BundlePermissionMgr_0100
  * @tc.name: test ConvertPermissionDef
  * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
