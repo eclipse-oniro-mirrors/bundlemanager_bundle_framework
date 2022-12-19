@@ -1007,7 +1007,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4700, Function | SmallTest
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4800, Function | SmallTest | Level1)
 {
     BundleInfo bundleInfo;
-    int32_t newUserId = 101;
+    int32_t newUserId = 1000;
     DefaultAppMgr::GetInstance().HandleCreateUser(newUserId);
     ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
         newUserId, DEFAULT_APP_VIDEO, bundleInfo);

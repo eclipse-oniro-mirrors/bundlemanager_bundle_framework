@@ -1984,6 +1984,9 @@ HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
     auto ret = bundleMgrClient.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, info, DEFAULT_USERID);
     EXPECT_TRUE(ret == ERR_OK);
 
+    ret = bundleMgrClient.GetBundlePackInfo("", BundlePackFlag::GET_PACK_INFO_ALL, info, DEFAULT_USERID);
+    EXPECT_FALSE(ret == ERR_OK);
+
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
