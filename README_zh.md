@@ -93,9 +93,9 @@ bm install -p /data/app/ohosapp.hap -r
 
 * 示例
 ```Bash
-# 卸载一个hap
+# 卸载一个应用
 bm uninstall -n com.ohos.app
-# 卸载一个hap下面的ability
+# 卸载应用的一个模块
 bm uninstall -n com.ohos.app -m com.ohos.app.MainAbility
 ```
 #### 查询命令
