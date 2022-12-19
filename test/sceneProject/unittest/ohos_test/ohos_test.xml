@@ -284,6 +284,8 @@
      <option name="push" value="bundle_hsp/hsp_A.hsp -> /data/test/resource/bms/hsp/" src="res" />
      <option name="push" value="bundle_hsp/hsp_B.hsp -> /data/test/resource/bms/hsp/" src="res" />
      <option name="push" value="bundle_hsp/hsp_C.hsp -> /data/test/resource/bms/hsp/" src="res" />
+     <option name="push" value="bundle_hsp/hsp_C2.hsp -> /data/test/resource/bms/hspC2/" src="res" />
+     <option name="push" value="bundle_hsp/hsp_D.hsp -> /data/test/resource/bms/hspD/" src="res" />
     </preparer>
   </target>
 </configuration>

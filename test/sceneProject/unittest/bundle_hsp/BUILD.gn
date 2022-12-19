@@ -20,6 +20,8 @@ group("bundle_hsp") {
     "hsp_A:hsp_A",
     "hsp_B:hsp_B",
     "hsp_C:hsp_C",
+    "hsp_C2:hsp_C2",
+    "hsp_D:hsp_D",
     "hsp_entry:hsp_entry",
   ]
 }
