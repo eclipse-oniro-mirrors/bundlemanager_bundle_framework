@@ -34,6 +34,8 @@ namespace OHOS {
         if (rulePtr == nullptr) {
             return false;
         }
+        delete rulePtr;
+        rulePtr = nullptr;
         HapModuleInfo *hapModuleInfo = new (std::nothrow) HapModuleInfo();
         if (hapModuleInfo == nullptr) {
             return false;
