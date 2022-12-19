@@ -34,8 +34,8 @@ namespace OHOS {
         if (rulePtr == nullptr) {
             return false;
         }
-        delete rulePtr；
-        rulePtr = nullptr；
+        delete rulePtr;
+        rulePtr = nullptr;
         ExtensionAbilityInfo *extensionAbilityInfo =
             new (std::nothrow) ExtensionAbilityInfo();
         if (extensionAbilityInfo == nullptr) {
