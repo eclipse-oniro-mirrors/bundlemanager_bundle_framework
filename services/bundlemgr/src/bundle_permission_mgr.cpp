@@ -592,7 +592,8 @@ bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionN
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     APP_LOGD("callerToken : %{private}u", callerToken);
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE || callingUid == Constants::ROOT_UID) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
