@@ -1327,35 +1327,33 @@ HWTEST_F(BmsBundleParserTest, TestParse_3100, Function | SmallTest | Level1)
  */
 HWTEST_F(BmsBundleParserTest, TestParse_3200, Function | SmallTest | Level1)
 {
-    nlohmann::json formsJson = R"(
-     {
-      "app": {
-          "bundleName": "com.example.backuptest",
-         "debug": true,
-         "distributedNotificationEnabled": true,
-         "icon": "$media:app_icon",
-         "iconId": 16777220,
-         "label": "$string:app_name",
-         "labelId": 16777216,
-         "minAPIVersion": 9,
-         "targetAPIVersion": 9,
-         "vendor": "example",
-         "versionCode": 1000000,
-         "versionName": "1.0.0"
-      },
-      "module": {
-          "name": "entry",
-          "installationFree": false,
-          "mainElement": "MainAbility",
-          "pages": "$profile:main_pages",
-          "srcEntrance": "./ets/Application/AbilityStage.ts",
-          "type": "entry",
-          "uiSyntax": "ets",
-          "virtualMachine": "ark0.0.0.3"
-      }
-  }
-)"_json;
-//         )"_json;
+    nlohmann::json formsJson = R"({
+        "app": {
+            "bundleName": "com.example.backuptest",
+            "debug": true,
+            "distributedNotificationEnabled": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0"
+        },
+        "module": {
+            "name": "entry",
+            "installationFree": false,
+            "mainElement": "MainAbility",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "entry",
+            "uiSyntax": "ets",
+            "virtualMachine": "ark0.0.0.3"
+        }
+    }
+    )"_json;
     ModuleProfile moduleProfile;
     InnerBundleInfo innerBundleInfo;
     std::vector<FormInfo> formInfos;
@@ -1377,66 +1375,65 @@ HWTEST_F(BmsBundleParserTest, TestParse_3200, Function | SmallTest | Level1)
  */
 HWTEST_F(BmsBundleParserTest, TestParse_3300, Function | SmallTest | Level1)
 {
-    nlohmann::json formsJson = R"(
-     {
-      "app": {
-          "bundleName": "com.example.backuptest",
-         "debug": true,
-         "distributedNotificationEnabled": true,
-         "icon": "$media:app_icon",
-         "iconId": 16777220,
-         "label": "$string:app_name",
-         "labelId": 16777216,
-         "minAPIVersion": 9,
-         "targetAPIVersion": 9,
-         "vendor": "example",
-         "versionCode": 1000000,
-         "versionName": "1.0.0"
-      },
-      "module": {
-        "deliveryWithInstall": true,
-        "description": "$string:entry_desc",
-        "descriptionId": 16777219,
-        "deviceTypes": [
-            "default"
-        ],
-        "abilities": [
-            {
-                "description": "$string:MainAbility_desc",
-                "descriptionId": 16777217,
-                "icon": "$media:icon",
-                "iconId": 16777221,
-                "label": "$string:MainAbility_label",
-                "labelId": 16777218,
-                "name": "MainAbility",
-                "launchType": "unknowlaunchType",
-                "orientation": "unknoworientation",
-                "skills": [
-                    {
-                        "actions": [
-                            "action.thirdparty.home"
-                        ],
-                        "entities": [
-                            "entity.system.home",
-                            "flag.home.intent.from.system"
-                        ]
-                    }
-                ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
-            }
-        ],
-          "name": "entry",
-          "installationFree": false,
-          "mainElement": "MainAbility",
-          "pages": "$profile:main_pages",
-          "srcEntrance": "./ets/Application/AbilityStage.ts",
-          "type": "entry",
-          "uiSyntax": "ets",
-          "virtualMachine": "ark0.0.0.3"
-      }
-  }
-)"_json;
+    nlohmann::json formsJson = R"({
+        "app": {
+            "bundleName": "com.example.backuptest",
+            "debug": true,
+            "distributedNotificationEnabled": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0"
+        },
+        "module": {
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [
+                "default"
+            ],
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.thirdparty.home"
+                            ],
+                            "entities": [
+                                "entity.system.home",
+                                "flag.home.intent.from.system"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                }
+            ],
+            "name": "entry",
+            "installationFree": false,
+            "mainElement": "MainAbility",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "entry",
+            "uiSyntax": "ets",
+            "virtualMachine": "ark0.0.0.3"
+        }
+    }
+    )"_json;
     ModuleProfile moduleProfile;
     InnerBundleInfo innerBundleInfo;
     std::vector<FormInfo> formInfos;
