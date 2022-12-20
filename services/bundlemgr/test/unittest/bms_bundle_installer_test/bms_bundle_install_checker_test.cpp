@@ -22,6 +22,7 @@
 
 #include "base_bundle_installer.h"
 #include "bundle_install_checker.h"
+#include "bundle_util.h"
 #include "directory_ex.h"
 
 using namespace testing::ext;
@@ -314,7 +315,10 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0400, Function | SmallTest
 */
 HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0500, Function | SmallTest | Level0)
 {
-    std::string bundlePath = "/data/app/el1/bundle/public/ohos.samples.clock";
+    std::string bundlePath = "/data/app/el1/bundle/public/patch_1000001";
+    bool res = BundleUtil::CreateDir(bundlePath);
+    EXPECT_TRUE(res);
+
     Constants::AppType appType = Constants::AppType::SYSTEM_APP;
     Constants::AppType appType1 = Constants::AppType::THIRD_SYSTEM_APP;
     Constants::AppType appType2 = Constants::AppType::THIRD_PARTY_APP;
@@ -325,6 +329,9 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckSystemSize_0500, Function | SmallTest
     EXPECT_EQ(ret, ERR_OK);
     ret = installChecker.CheckSystemSize(bundlePath, appType2);
     EXPECT_EQ(ret, ERR_OK);
+
+    res = BundleUtil::DeleteDir(bundlePath);
+    EXPECT_TRUE(res);
 }
 
 /**
