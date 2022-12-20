@@ -31,6 +31,7 @@ using OHOS::DelayedSingleton;
 
 namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
+const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 } // namespace
 
 class BmsServiceStartupTest : public testing::Test {
@@ -309,6 +310,23 @@ HWTEST_F(BmsServiceStartupTest, AnalyzeUserData_001, Function | SmallTest | Leve
 }
 
 /**
+* @tc.number: CheckHapPaths_0001
+* @tc.name: test CheckHapPaths
+* @tc.desc: 1. test is valid input
+*/
+HWTEST_F(BmsServiceStartupTest, CheckHapPaths_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::vector<std::string> hapPaths;
+    hapPaths.emplace_back("test1.hap");
+    hapPaths.emplace_back("test2.ha");
+    std::vector<std::string> checkPaths = handler->CheckHapPaths(hapPaths);
+    EXPECT_EQ(checkPaths[0], "test1.hap");
+}
+
+/**
 * @tc.number: CombineBundleInfoAndUserInfo_001
 * @tc.name: test CombineBundleInfoAndUserInfo
 * @tc.desc: 1. test is failed
@@ -341,6 +359,37 @@ HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_001, Function | Sma
 
     res = handler->CombineBundleInfoAndUserInfo(installInfos1, userInfoMaps1);
     EXPECT_FALSE(res);
+}
+
+/**
+* @tc.number: CombineBundleInfoAndUserInfo_002
+* @tc.name: test CombineBundleInfoAndUserInfo
+* @tc.desc: 1. test empty installinfos and userInfoMaps
+*/
+HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+    bool res = handler->CombineBundleInfoAndUserInfo(installInfos, userInfoMaps);
+    EXPECT_FALSE(res);
+}
+
+/**
+* @tc.number: IsHotPatchApp_00001
+* @tc.name: test IsHotPatchApp
+* @tc.desc: 1. test empty installinfos and userInfoMaps
+*/
+HWTEST_F(BmsServiceStartupTest, InnerProcessBootPreBundleProFileInstall_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::string bundleName = "com.ohos.tes1";
+    bool ret = handler->IsHotPatchApp(bundleName);
+    EXPECT_EQ(ret, false);
 }
 
 /**

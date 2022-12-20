@@ -2313,6 +2313,27 @@ HWTEST_F(BmsBundleInstallerTest, ZipFile_0100, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: ZipFile_0200
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test open file, file name is bigger than PATH_MAX
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0200, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+    ZipPos start = 0;
+    size_t length = 0;
+    file.SetContentLocation(start, length);
+    bool ret = file.ParseEndDirectory();
+    EXPECT_EQ(ret, false);
+
+    std::string maxFileName = std::string(4096, 'a');
+    maxFileName.append(".zip");
+    file.pathName_ = maxFileName;
+    ret = file.Open();
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: BaseExtractor_0100
  * @tc.name: Test HasEntry
  * @tc.desc: 1.Test HasEntry of BaseExtractor
@@ -2537,4 +2558,5 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0900, Function | SmallTest | Lev
     auto ret = installChecker.CheckDeviceType(infos);
     EXPECT_EQ(ret, ERR_OK);
 }
+
 } // OHOS
