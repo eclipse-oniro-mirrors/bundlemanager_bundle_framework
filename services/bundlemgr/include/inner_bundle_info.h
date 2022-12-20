@@ -1438,7 +1438,7 @@ public:
      * @param moudleToDelete Indicates the modules.
      * @return Return get module isRemoved result
      */
-    bool GetRemovableModules(std::map<std::string, int64_t> &moudleToDelete) const;
+    bool GetRemovableModules(std::vector<std::string> &moudleToDelete) const;
     /**
      * @brief Get freeInstall module.
      * @param freeInstallMoudle Indicates the modules.
@@ -1714,6 +1714,7 @@ public:
         const std::string &moduleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     std::vector<ExtensionAbilityInfo> FindExtensionInfosByModule(
         const std::string &moduleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    int64_t GetLastInstallationTime() const;
 
 private:
     void GetBundleWithAbilities(
@@ -1727,7 +1728,6 @@ private:
     void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
-    int64_t GetLastInstallationTime() const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;

@@ -24,6 +24,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_promise.h"
 #include "install_param.h"
+#include "installd_client.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -68,11 +69,21 @@ private:
     bool isRunning_ = false;
     std::shared_ptr<BundlePromise> agingPromise_ = nullptr;
 };
+
+bool HasSubStr(const std::string &sourceStr, const std::string &subStr)
+{
+    if (sourceStr.empty() || subStr.empty()) {
+        APP_LOGE("sourceStr or subStr is empty.");
+        return false;
+    }
+
+    return sourceStr.find(subStr) != std::string::npos;
+}
 }
 
 bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
 {
-    return ProcessBundle(request);
+    return ProcessModule(request);
 }
 
 bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
@@ -121,8 +132,8 @@ bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
 
 bool RecentlyUnuseBundleAgingHandler::ProcessModule(AgingRequest &request) const
 {
-    APP_LOGD("aging handler start: %{public}s, totalDataBytes: %{public}" PRId64,
-        GetName().c_str(), request.GetTotalDataBytes());
+    APP_LOGD("aging handler start: %{public}s, cleanType: %{public}d, totalDataBytes: %{public}" PRId64,
+        GetName().c_str(), static_cast<int32_t>(request.GetAgingCleanType()), request.GetTotalDataBytes());
     for (const auto &agingModule : request.GetAgingModules()) {
         if (!CheckModule(agingModule)) {
             break;
@@ -136,7 +147,11 @@ bool RecentlyUnuseBundleAgingHandler::ProcessModule(AgingRequest &request) const
             continue;
         }
 
-        UnInstallBundle(agingModule.GetBundleName(), agingModule.GetModuleName());
+        bool result = AgingClean(agingModule, request);
+        if (!result) {
+            continue;
+        }
+
         if (NeedCheckEndAgingThreshold()) {
             UpdateUsedTotalDataBytes(request);
             if (!NeedContinue(request)) {
@@ -171,6 +186,99 @@ bool RecentlyUnuseBundleAgingHandler::UpdateUsedTotalDataBytes(AgingRequest &req
 
     request.SetTotalDataBytes(dataMgr->GetAllFreeInstallBundleSpaceSize());
     return true;
+}
+
+bool RecentlyUnuseBundleAgingHandler::AgingClean(
+    const AgingModuleInfo &agingModule,
+    AgingRequest &request) const
+{
+    if (request.GetAgingCleanType() == AgingCleanType::CLEAN_CACHE) {
+        return CleanCache(agingModule, request);
+    }
+
+    return UnInstallBundle(agingModule.GetBundleName(), agingModule.GetModuleName());
+}
+
+bool RecentlyUnuseBundleAgingHandler::CleanCache(
+    const AgingModuleInfo &agingModule, AgingRequest &request) const
+{
+    bool hasCleanCache = false;
+    if (!request.HasCleanCache(agingModule.GetBundleName(), agingModule.GetModuleName(), hasCleanCache) || hasCleanCache) {
+        APP_LOGD("Has clean cache bundle: %{public}s , module: %{public}s",
+            agingModule.GetBundleName().c_str(), agingModule.GetModuleName().c_str());
+        return false;
+    }
+
+    std::vector<std::string> caches;
+    if (!GetCachePath(agingModule, caches)) {
+        APP_LOGD("Get cache path failed: %{public}s , module: %{public}s",
+            agingModule.GetBundleName().c_str(), agingModule.GetModuleName().c_str());
+        return false;
+    }
+
+    request.SetAgingCleanState(agingModule.GetBundleName(), agingModule.GetModuleName(), false);
+    hasCleanCache = false;
+    bool needCleanBundleCache = request.CanClearBundleCache(agingModule.GetBundleName());
+    std::string subStr =
+        Constants::PATH_SEPARATOR + agingModule.GetModuleName() +
+        Constants::PATH_SEPARATOR + Constants::CACHE_DIR;
+    for (const auto &cache : caches) {
+        bool canClean = needCleanBundleCache || HasSubStr(cache, subStr);
+        APP_LOGD("cache path: %{public}s, canClean: %{public}d",
+            cache.c_str(), canClean);
+        if (canClean) {
+            ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+            if (ret != ERR_OK) {
+                APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
+                continue;
+            }
+
+            hasCleanCache = true;
+        }
+    }
+
+    return hasCleanCache;
+}
+
+bool RecentlyUnuseBundleAgingHandler::GetCachePath(
+    const AgingModuleInfo &agingModule, std::vector<std::string> &caches) const
+{
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    if (!dataMgr->GetInnerBundleUserInfos(agingModule.GetBundleName(), innerBundleUserInfos)) {
+        APP_LOGE("GetInnerBundleUserInfos failed bundle: %{public}s",
+            agingModule.GetBundleName().c_str());
+        return false;
+    }
+
+    std::vector<std::string> rootDir;
+    for (const auto &innerBundleUserInfo : innerBundleUserInfos) {
+        int32_t userId = innerBundleUserInfo.bundleUserInfo.userId;
+        for (const auto &el : Constants::BUNDLE_EL) {
+            std::string dataDir =
+                Constants::BUNDLE_APP_DATA_BASE_DIR + el +
+                Constants::PATH_SEPARATOR + std::to_string(userId) +
+                Constants::BASE + agingModule.GetBundleName();
+            rootDir.emplace_back(dataDir);
+        }
+    }
+
+    for (const auto &st : rootDir) {
+        std::vector<std::string> cache;
+        if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
+            APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
+            continue;
+        }
+
+        std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
+    }
+
+    return !caches.empty();
 }
 
 bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(

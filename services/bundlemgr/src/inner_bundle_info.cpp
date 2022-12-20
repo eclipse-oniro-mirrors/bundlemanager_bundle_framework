@@ -2759,9 +2759,8 @@ int64_t InnerBundleInfo::GetLastInstallationTime() const
     return installTime;
 }
 
-bool InnerBundleInfo::GetRemovableModules(std::map<std::string, int64_t> &moudleToDelete) const
+bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDelete) const
 {
-    int64_t installTime = GetLastInstallationTime();
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!innerModuleInfo.second.installationFree) {
             continue;
@@ -2776,7 +2775,7 @@ bool InnerBundleInfo::GetRemovableModules(std::map<std::string, int64_t> &moudle
         }
 
         if (canDelete) {
-            moudleToDelete.emplace(innerModuleInfo.second.moduleName, installTime);
+            moudleToDelete.emplace_back(innerModuleInfo.second.moduleName);
         }
     }
 

@@ -30,6 +30,11 @@ public:
 
     bool operator < (const AgingModuleInfo &agingModuleInfo) const
     {
+        if (bundleName_ == agingModuleInfo.GetBundleName() &&
+            moduleName_ == agingModuleInfo.GetModuleName()) {
+            return false;
+        }
+
         return recentlyUsedTime_ <= agingModuleInfo.GetRecentlyUsedTime();
     }
 

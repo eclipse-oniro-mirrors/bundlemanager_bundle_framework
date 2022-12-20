@@ -3839,27 +3839,6 @@ bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundle
     return true;
 }
 
-bool BundleDataMgr::GetRemovableModules(
-    std::map<std::string, std::map<std::string, int64_t>> &moduleToDelete)
-{
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGE("bundleInfos is empty.");
-        return false;
-    }
-
-    for (auto &it : bundleInfos_) {
-        std::map<std::string, int64_t> moudles;
-        if (!it.second.GetRemovableModules(moudles)) {
-            continue;
-        }
-
-        moduleToDelete.emplace(it.first, moudles);
-    }
-
-    return !moduleToDelete.empty();
-}
-
 bool BundleDataMgr::GetFreeInstallModules(
     std::map<std::string, std::vector<std::string>> &freeInstallModules) const
 {

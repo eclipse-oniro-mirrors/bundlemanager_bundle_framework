@@ -18,9 +18,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-AgingHandlerChain::AgingHandlerChain()
-{
+namespace {
+const std::vector<AgingCleanType> SUPPORT_AGING_CLEAN_TYPE = {
+    AgingCleanType::CLEAN_CACHE,
+    AgingCleanType::CLEAN_OTHERS,
+};
 }
+
+AgingHandlerChain::AgingHandlerChain() {}
 
 AgingHandlerChain::~AgingHandlerChain()
 {
@@ -45,16 +50,32 @@ bool AgingHandlerChain::Process(AgingRequest &request) const
         return true;
     }
 
-    for (auto handler : handlers_) {
-        bool passed = handler->Process(request);
-        APP_LOGD("agingHandler: %{public}s process passed: %{public}d", handler->GetName().c_str(), passed);
-        if (!passed) {
+    bool isPassed = false;
+    for (const auto &agingCleanType : SUPPORT_AGING_CLEAN_TYPE) {
+        request.SetAgingCleanType(agingCleanType);
+        isPassed = InnerProcess(request);
+        if (isPassed) {
             break;
         }
     }
 
     APP_LOGD("agingHandler: aging handler chain process done.");
-    return request.IsReachEndAgingThreshold();
+    return isPassed;
+}
+
+bool AgingHandlerChain::InnerProcess(AgingRequest &request) const
+{
+    bool isPassed = false;
+    for (auto handler : handlers_) {
+        isPassed = !handler->Process(request);
+        APP_LOGD("agingHandler: %{public}s process, passed: %{public}d, type: %{public}d",
+            handler->GetName().c_str(), isPassed, static_cast<AgingCleanType>(request.GetAgingCleanType()));
+        if (isPassed) {
+            break;
+        }
+    }
+
+    return isPassed;
 }
 }  //  namespace AppExecFwk
 }  //  namespace OHOS
