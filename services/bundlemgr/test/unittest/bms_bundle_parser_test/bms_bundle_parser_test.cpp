@@ -1327,7 +1327,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_3100, Function | SmallTest | Level1)
  */
 HWTEST_F(BmsBundleParserTest, TestParse_3200, Function | SmallTest | Level1)
 {
-    nlohmann: :json formsJson = R"({
+    nlohmann::json formsJson = R"({
         "app": {
             "bundleName": "com.example.backuptest",
             "debug": true,
