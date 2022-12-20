@@ -128,6 +128,8 @@ public:
      */
     bool Hidump(const std::vector<std::string> &args, std::string& result) const;
 
+    void RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImpl);
+
     ThreadPool &GetThreadPool();
 
     const std::shared_ptr<BmsParam> GetBmsParam() const;
