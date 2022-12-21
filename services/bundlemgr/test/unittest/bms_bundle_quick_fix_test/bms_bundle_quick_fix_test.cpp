@@ -3132,6 +3132,31 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0330, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleQuickFixTest_0340
+ * Function: Query inner app quick fix
+ * @tc.name: test QuickFixDataMgr
+ * @tc.require: issueI5N7AD
+ * @tc.desc: 1. check module not same
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0340, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    QuickFixMark mark;
+    mark.bundleName = appQuickFix.bundleName;
+    mark.status = QuickFixStatus::DEPLOY_START;
+    InnerAppQuickFix innerAppQuickFix(appQuickFix, mark);
+    auto quickFixMgr = GetQuickFixDataMgr();
+    quickFixMgr->quickFixManagerDb_ = nullptr;
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    ErrCode ret = ERR_OK;
+    if (deployer != nullptr) {
+        ret = deployer->SaveAppQuickFix(innerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED);
+    }
+}
+
+/**
  * @tc.number: PatchParser_0100
  * Function: ParsePatchInfo
  * @tc.name: test ParsePatchInfo
@@ -3342,9 +3367,9 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleCopyFiles_0001, Function | SmallTest | 
     CreateFiles(sourceFiles);
     std::vector<std::string> destFiles;
     ErrCode ret = quickFixProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_EQ(ret, ERR_OK);
-    DeleteFiles(sourceFiles);
-    DeleteFiles(destFiles);
+    if (!ret) {
+        EXPECT_EQ(ret, ERR_OK);
+    }
 }
 
 /**
