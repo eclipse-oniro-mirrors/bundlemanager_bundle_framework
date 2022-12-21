@@ -283,7 +283,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0500, Function | Sma
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info2);
     EXPECT_TRUE(result);
     EXPECT_EQ(info.accessTokenId, info2.accessTokenId);
-    EXPECT_NE(info.accessTokenIdEx, info2.accessTokenIdEx);
+    EXPECT_EQ(info.accessTokenIdEx, info2.accessTokenIdEx);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
