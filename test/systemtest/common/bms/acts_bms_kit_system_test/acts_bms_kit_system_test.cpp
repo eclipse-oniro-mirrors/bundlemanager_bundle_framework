@@ -6243,9 +6243,9 @@ HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0100, Function | SmallTest | Level
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool result = bundleMgrProxy->SetDisposedStatus(appName, DISPOSED_STATUS);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
     int32_t status = bundleMgrProxy->GetDisposedStatus(appName);
-    EXPECT_EQ(status, 0);
+    EXPECT_EQ(status, 10);
 
     resvec.clear();
     Uninstall(appName, resvec);
