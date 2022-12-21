@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <gtest/gtest.h>
 
@@ -276,5 +277,41 @@ HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0100, Function | SmallTest | Level
     ret = defaultAppDb->DeleteDefaultApplicationInfos(TEST_USERID);
     EXPECT_TRUE(ret);
 #endif
+}
+
+/**
+ * @tc.number: DefaultAppRdb_0200
+ * @tc.name: save get and delete
+ * @tc.desc: 1.SetDefaultApplicationInfos
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0200, Function | SmallTest | Level1)
+{
+    DefaultAppRdb defaultAppRdb;
+    std::map<std::string, Element> infos;
+    defaultAppRdb.rdbDataManager_ = nullptr;
+    bool ret = defaultAppRdb.SetDefaultApplicationInfos(Constants::INVALID_UID, infos);
+    EXPECT_FALSE(ret);
+    ret = defaultAppRdb.DeleteDefaultApplicationInfos(Constants::INVALID_UID);
+    EXPECT_FALSE(ret);
+    ret = defaultAppRdb.DeleteDefaultApplicationInfo(Constants::INVALID_UID, "");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DefaultAppRdb_0300
+ * @tc.name: save get and delete
+ * @tc.desc: 1.SetDefaultApplicationInfos
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0300, Function | SmallTest | Level1)
+{
+    DefaultAppRdb defaultAppRdb;
+    std::map<std::string, Element> infos;
+    Element element;
+    element.bundleName = TEST_BUNDLE_NAME;
+    defaultAppRdb.rdbDataManager_ = nullptr;
+    bool ret = defaultAppRdb.SetDefaultApplicationInfo(Constants::INVALID_UID, "", element);
+    EXPECT_FALSE(ret);
 }
 }  // namespace
