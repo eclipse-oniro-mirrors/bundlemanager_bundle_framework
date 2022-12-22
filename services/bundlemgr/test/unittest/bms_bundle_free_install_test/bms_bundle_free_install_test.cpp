@@ -628,22 +628,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0019, Function | Sma
 }
 
 /**
- * @tc.number: BmsBundleFreeInstallTest_0020
- * Function: UpgradeCheck
- * @tc.name: test UpgradeCheck
- * @tc.desc: test UpgradeCheck successed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0020, Function | SmallTest | Level0)
-{
-    BundleConnectAbilityMgr connectAbilityMgr;
-    TargetAbilityInfo targetAbilityInfo;
-    Want want;
-    FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr.UpgradeCheck(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_TRUE(res);
-}
-
-/**
  * @tc.number: BmsBundleFreeInstallTest_0021
  * Function: UpgradeInstall
  * @tc.name: test UpgradeInstall
@@ -1362,48 +1346,6 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0003, Function | SmallTe
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     int32_t resultCode = 0;
     connection.OnAbilityConnectDone(element, remoteObject, resultCode);
-    EXPECT_FALSE(resultCode);
-}
-
-/**
- * @tc.number: OnAbilityDisconnectDone_0001
- * Function: OnAbilityDisconnectDone
- * @tc.name: test OnAbilityDisconnectDone
- * @tc.desc: test OnAbilityDisconnectDone success
- */
-HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0001, Function | SmallTest | Level0)
-{
-    int32_t connectState = 0;
-    std::condition_variable cv;
-    const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
-    ElementName element;
-    connection.serviceCenterRemoteObject_ = nullptr;
-    connection.deathRecipient_ = nullptr;
-    int32_t resultCode = 0;
-    connection.OnAbilityDisconnectDone(element, resultCode);
-    EXPECT_FALSE(resultCode);
-}
-
-/**
- * @tc.number: OnAbilityDisconnectDone_0002
- * Function: OnAbilityDisconnectDone
- * @tc.name: test OnAbilityDisconnectDone
- * @tc.desc: test OnAbilityDisconnectDone success
- */
-HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0002, Function | SmallTest | Level0)
-{
-    int32_t connectState = 0;
-    std::condition_variable cv;
-    const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
-    ElementName element;
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    connection.serviceCenterRemoteObject_ = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    connection.deathRecipient_ = new (std::nothrow) ServiceCenterDeathRecipient(connectAbilityMgr);
-    int32_t resultCode = 0;
-    connection.OnAbilityDisconnectDone(element, resultCode);
     EXPECT_FALSE(resultCode);
 }
 
