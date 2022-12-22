@@ -2464,7 +2464,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0400, Function | SmallTest | Lev
     infos.insert(pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
 
     ret = installChecker.CheckDependency(infos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEPENDENT_MOUULE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST);
 }
 
 /**

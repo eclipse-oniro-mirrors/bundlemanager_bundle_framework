@@ -315,7 +315,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                 isModuleExist = FindModuleInInstalledPackage(dependency.moduleName, bundleName);
                 if (!isModuleExist) {
                     APP_LOGE("The depend module:%{public}s is not exist.", dependency.moduleName.c_str());
-                    return ERR_APPEXECFWK_INSTALL_DEPENDENT_MOUULE_NOT_EXIST;
+                    return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
                 }
             }
         }
