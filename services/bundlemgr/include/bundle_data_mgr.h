@@ -903,6 +903,7 @@ private:
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;
     bool initialUserFlag_ = false;
+    int32_t baseAppUid_ = Constants::BASE_APP_UID;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
     // using for generating bundleId
