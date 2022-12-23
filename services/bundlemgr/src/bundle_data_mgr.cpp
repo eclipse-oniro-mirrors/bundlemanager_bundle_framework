@@ -49,6 +49,7 @@
 #endif
 #include "nlohmann/json.hpp"
 #include "free_install_params.h"
+#include "parameters.h"
 #include "singleton.h"
 
 namespace OHOS {
@@ -68,6 +69,10 @@ BundleDataMgr::BundleDataMgr()
 #endif
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
+    baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
+    if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= Constants::MAX_APP_UID) {
+        baseAppUid_ = Constants::BASE_APP_UID;
+    }
     APP_LOGI("BundleDataMgr instance is created");
 }
 
@@ -2501,7 +2506,7 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
     std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
     if (bundleIdMap_.empty()) {
         APP_LOGI("first app install");
-        bundleId = Constants::BASE_APP_UID;
+        bundleId = baseAppUid_;
         bundleIdMap_.emplace(bundleId, bundleName);
         return true;
     }
@@ -2513,7 +2518,7 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
         }
     }
 
-    for (int32_t i = Constants::BASE_APP_UID; i < bundleIdMap_.rbegin()->first; ++i) {
+    for (int32_t i = baseAppUid_; i < bundleIdMap_.rbegin()->first; ++i) {
         if (bundleIdMap_.find(i) == bundleIdMap_.end()) {
             APP_LOGI("the %{public}d app install", i);
             bundleId = i;
