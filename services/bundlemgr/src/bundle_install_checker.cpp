@@ -400,13 +400,9 @@ ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundle
 {
     APP_LOGD("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
         provisionBundleName.c_str(), bundleName.c_str());
-    if (!system::GetBoolParameter(Constants::CHECK_PROFILE_BUNDLE_NAME, false)) {
-        APP_LOGD("CheckBundleName check_profile_bundle_name is false");
-        return ERR_OK;
-    }
     if (provisionBundleName.empty() || bundleName.empty()) {
-        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s", provisionBundleName.c_str(),
-            bundleName.c_str());
+        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s failed",
+            provisionBundleName.c_str(), bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
     }
     if (provisionBundleName == bundleName) {
