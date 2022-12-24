@@ -64,37 +64,6 @@ public:
     virtual bool GetAbilityList(
         const std::string &bundleName, const int userId, std::vector<LauncherAbilityInfo> &launcherAbilityInfos);
     /**
-     * @brief Obtains launcher ability based on the want and user id.
-     * @param want Indicates the application bundle name to be queried.
-     * @param userId Indicates the user ID.
-     * @param launcherAbilityInfo Indicates the obtained LauncherAbilityInfo object.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    virtual bool GetAbilityInfo(const Want &want, const int userId, LauncherAbilityInfo &launcherAbilityInfo);
-    /**
-     * @brief Obtains the ApplicationInfo based on a given bundle name.
-     * @param bundleName Indicates the application bundle name to be queried.
-     * @param flag Indicates the flag used to specify information contained
-     *             in the ApplicationInfo object that will be returned.
-     * @param userId Indicates the user ID.
-     * @param applicationInfo Indicates the obtained ApplicationInfo object.
-     * @return Returns true if the function is successfully called; returns false otherwise.
-     */
-    virtual bool GetApplicationInfo(const std::string &bundleName, const ApplicationFlag &flags, const int userId,
-        ApplicationInfo &applicationInfo);
-    /**
-     * @brief Checks whether a bundle exists and is enabled.
-     * @param bundleName Indicates the bundle name.
-     * @return Returns true if the bundle is enabled; returns false otherwise.
-     */
-    virtual bool IsBundleEnabled(const std::string &bundleName);
-    /**
-     * @brief Checks whether an ability exists and is enabled.
-     * @param abilityInfo Indicates information about the ability to check.
-     * @return Returns true if the ability exists and is enabled; returns false otherwise.
-     */
-    virtual bool IsAbilityEnabled(const AbilityInfo &abilityInfo);
-    /**
      * @brief Obtains information about the shortcuts of the application.
      * @param bundleName Indicates the bundle name of the application.
      * @param launcherShortcutInfo List of LauncherShortcutInfo objects if obtained.
