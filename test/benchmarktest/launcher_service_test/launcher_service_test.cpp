@@ -112,75 +112,6 @@ namespace {
     }
 
     /**
-     * @tc.name: BenchmarkTestForGetAbilityInfo
-     * @tc.desc: Testcase for testing 'GetAbilityInfo' function.
-     * @tc.type: FUNC
-     * @tc.require: Issue Number
-     */
-    static void BenchmarkTestForGetAbilityInfo(benchmark::State &state)
-    {
-        LauncherService launcherservice;
-        OHOS::AAFwk::Want want;
-        int userId = 100;
-        LauncherAbilityInfo launcherAbilityInfo;
-        for (auto _ : state) {
-            /* @tc.steps: step1.call GetAbilityInfo in loop */
-            launcherservice.GetAbilityInfo(want, userId, launcherAbilityInfo);
-        }
-    }
-
-    /**
-     * @tc.name: BenchmarkTestForGetApplicationInfo
-     * @tc.desc: Testcase for testing 'GetApplicationInfo' function.
-     * @tc.type: FUNC
-     * @tc.require: Issue Number
-     */
-    static void BenchmarkTestForGetApplicationInfo(benchmark::State &state)
-    {
-        LauncherService launcherservice;
-        std::string bundleName = "ohos.global.systemres";
-        int userId = 100;
-        ApplicationInfo applicationInfo;
-        for (auto _ : state) {
-            /* @tc.steps: step1.call GetApplicationInfo in loop */
-            launcherservice.GetApplicationInfo(bundleName,
-                ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, applicationInfo);
-        }
-    }
-
-    /**
-     * @tc.name: BenchmarkTestForIsBundleEnabled
-     * @tc.desc: Testcase for testing 'IsBundleEnabled' function.
-     * @tc.type: FUNC
-     * @tc.require: Issue Number
-     */
-    static void BenchmarkTestForIsBundleEnabled(benchmark::State &state)
-    {
-        LauncherService launcherservice;
-        std::string bundleName = "ohos.global.systemres";
-        for (auto _ : state) {
-            /* @tc.steps: step1.call IsBundleEnabled in loop */
-            launcherservice.IsBundleEnabled(bundleName);
-        }
-    }
-
-    /**
-     * @tc.name: BenchmarkTestForIsAbilityEnabled
-     * @tc.desc: Testcase for testing 'IsAbilityEnabled' function.
-     * @tc.type: FUNC
-     * @tc.require: Issue Number
-     */
-    static void BenchmarkTestForIsAbilityEnabled(benchmark::State &state)
-    {
-        LauncherService launcherservice;
-        AbilityInfo abilityInfo;
-        for (auto _ : state) {
-            /* @tc.steps: step1.call IsAbilityEnabled in loop */
-            launcherservice.IsAbilityEnabled(abilityInfo);
-        }
-    }
-
-    /**
      * @tc.name: BenchmarkTestForGetShortcutInfos
      * @tc.desc: Testcase for testing 'GetShortcutInfos' function.
      * @tc.type: FUNC
@@ -217,10 +148,6 @@ namespace {
     BENCHMARK(BenchmarkTestForRegisterCallback)->Iterations(1000);
     BENCHMARK(BenchmarkTestForUnRegisterCallback)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetAbilityList)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForGetAbilityInfo)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForGetApplicationInfo)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForIsBundleEnabled)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForIsAbilityEnabled)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetShortcutInfos)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetAllLauncherAbilityInfos)->Iterations(1000);
 }
