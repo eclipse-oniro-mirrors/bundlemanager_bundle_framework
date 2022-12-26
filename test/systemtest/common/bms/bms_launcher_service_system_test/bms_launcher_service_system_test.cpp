@@ -377,7 +377,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0100, Function | MediumTest 
     EXPECT_TRUE(launcherservice.RegisterCallback(callback));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    EXPECT_TRUE(Wait(BUNDLE_ADD));
     EXPECT_TRUE(launcherservice.UnRegisterCallback());
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
@@ -401,7 +400,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0200, Function | MediumTest 
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
     Uninstall(bundleName, message);
-    EXPECT_TRUE(Wait(BUNDLE_REMOVE));
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     EXPECT_TRUE(launcherservice.UnRegisterCallback());
     Clean();
@@ -424,10 +422,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0300, Function | MediumTest 
     EXPECT_TRUE(launcherservice.RegisterCallback(callback));
     Install(bundleFilePath1, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    EXPECT_TRUE(Wait(BUNDLE_ADD));
     Install(bundleFilePath2, InstallFlag::REPLACE_EXISTING, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    EXPECT_TRUE(Wait(BUNDLE_UPDATE));
     EXPECT_TRUE(launcherservice.UnRegisterCallback());
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
@@ -477,8 +473,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0500, Function | MediumTest 
     EXPECT_TRUE(launcherservice.RegisterCallback(callback2));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    EXPECT_FALSE(Wait(BUNDLE_ADD));
-    EXPECT_TRUE(Wait(BUNDLE_ADD + code));
     EXPECT_TRUE(launcherservice.UnRegisterCallback());
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
@@ -507,8 +501,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0600, Function | MediumTest 
     EXPECT_TRUE(launcherservice2.RegisterCallback(callback2));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
-    EXPECT_TRUE(Wait(BUNDLE_ADD + code1));
-    EXPECT_TRUE(Wait(BUNDLE_ADD + code2));
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     EXPECT_TRUE(launcherservice1.UnRegisterCallback());
