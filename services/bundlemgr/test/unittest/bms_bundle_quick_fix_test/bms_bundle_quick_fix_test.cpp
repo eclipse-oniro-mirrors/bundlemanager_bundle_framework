@@ -3641,14 +3641,10 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0300, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0100, Function | SmallTest | Level0)
 {
-    QuickFixManagerRdb rdb;
-    rdb.rdbDataManager_.reset();
-    EXPECT_EQ(rdb.rdbDataManager_, nullptr);
-    InnerAppQuickFix innerAppQuickFix;
-    bool ret = rdb.DeleteInnerAppQuickFix(BUNDLE_NAME);
-    EXPECT_EQ(ret, false);
-
-    ret = rdb.DeleteDataFromDb(BUNDLE_NAME);
+    QuickFixDataMgr rdb;
+    rdb.quickFixManagerDb_ = nullptr;
+    EXPECT_EQ(rdb.quickFixManagerDb_, nullptr);
+    bool ret = rdb.DeleteInnerAppQuickFix("");
     EXPECT_EQ(ret, false);
 }
 
@@ -3663,14 +3659,8 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0200, Function | SmallTest | 
     rdb.rdbDataManager_.reset();
     ASSERT_EQ(rdb.rdbDataManager_, nullptr);
     InnerAppQuickFix innerAppQuickFix;
-    bool ret = rdb.DeleteInnerAppQuickFix(BUNDLE_NAME);
-    EXPECT_EQ(ret, false);
-
-    ret = rdb.GetDataFromDb(BUNDLE_NAME, innerAppQuickFix);
-    EXPECT_EQ(ret, false);
-
-    ret = rdb.DeleteDataFromDb(BUNDLE_NAME);
-    EXPECT_EQ(ret, false);
+    bool ret = rdb.GetDataFromDb(BUNDLE_NAME, innerAppQuickFix);
+    EXPECT_EQ(ret, true);
 }
 
 /**

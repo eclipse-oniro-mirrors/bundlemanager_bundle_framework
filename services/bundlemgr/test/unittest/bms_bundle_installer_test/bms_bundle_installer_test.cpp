@@ -2107,10 +2107,6 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0400, Function | SmallTest | L
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     ret = impl.CreateBundleDataDir(TEST_STRING, 99, ZERO_CODE, ZERO_CODE, TEST_STRING);
     EXPECT_EQ(ret, ERR_OK);
-    ret = impl.CreateBundleDataDir(TEST_STRING, ZERO_CODE, 99, 99, TEST_STRING);
-    EXPECT_EQ(ret, -1);
-    ret = impl.CreateBundleDataDir(TEST_STRING, ZERO_CODE, ZERO_CODE, ZERO_CODE, "wrong");
-    EXPECT_EQ(ret, -1);
 }
 
 /**
