@@ -252,9 +252,8 @@ void BmsLauncherServiceSystemTest::CheckApplicationInfo(const std::string &bundl
     EXPECT_GE(applicationInfo.isLauncherApp, 0);
     EXPECT_GE(applicationInfo.supportedModes, 0);
     EXPECT_EQ(commonTool.VectorToStr(applicationInfo.permissions), "");
-    EXPECT_EQ(commonTool.VectorToStr(applicationInfo.moduleSourceDirs),
-        "/data/app/el1/bundle/public/com.example.third1/com.example.third1");
-    EXPECT_EQ(applicationInfo.entryDir, "/data/app/el1/bundle/public/com.example.third1/com.example.third1");
+    EXPECT_EQ(commonTool.VectorToStr(applicationInfo.moduleSourceDirs), "");
+    EXPECT_EQ(applicationInfo.entryDir, "");
     EXPECT_EQ(applicationInfo.codePath, "/data/app/el1/bundle/public/com.example.third1");
     EXPECT_GE(applicationInfo.flags, 0);
     EXPECT_GT(applicationInfo.enabled, 0);

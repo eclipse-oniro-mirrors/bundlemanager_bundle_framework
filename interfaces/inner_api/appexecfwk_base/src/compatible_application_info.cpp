@@ -76,7 +76,7 @@ bool CompatibleApplicationInfo::ReadFromParcel(Parcel& parcel)
         ModuleInfo moduleInfo;
         std::string moduleName = Str16ToStr8(parcel.ReadString16());
         std::string moduleSourceDir = Str16ToStr8(parcel.ReadString16());
-        if (moduleName.empty() || moduleSourceDir.empty()) {
+        if (moduleName.empty()) {
             APP_LOGE("ReadParcelable<string> failed");
             return false;
         }
