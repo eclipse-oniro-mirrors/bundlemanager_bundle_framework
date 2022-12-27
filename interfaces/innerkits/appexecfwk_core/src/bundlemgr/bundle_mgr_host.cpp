@@ -30,6 +30,7 @@ namespace AppExecFwk {
 namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
+const std::string ZERO_STRING = "0";
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -1984,7 +1985,11 @@ bool BundleMgrHost::WriteParcelableVectorIntoAshmem(
     int32_t offset = 0;
     for (auto &infoStr : infoStrs) {
         int itemLen = static_cast<int>(strlen(infoStr.c_str()));
-        ret = ashmem->WriteToAshmem(std::to_string(itemLen).c_str(), ASHMEM_LEN, offset);
+        std::string itemStrLen = std::to_string(itemLen);
+        while (itemStrLen.size() < ASHMEM_LEN) {
+            itemStrLen = ZERO_STRING + itemStrLen;
+        }
+        ret = ashmem->WriteToAshmem(itemStrLen.c_str(), ASHMEM_LEN, offset);
         if (!ret) {
             APP_LOGE("Write itemLen to shared memory fail");
             ClearAshMem(ashmem);
