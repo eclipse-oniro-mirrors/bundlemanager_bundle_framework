@@ -15,6 +15,7 @@
 
 #include "bundle_mgr_host.h"
 
+#include <algorithm>
 #include <cinttypes>
 #include <unistd.h>
 
@@ -31,7 +32,6 @@ namespace AppExecFwk {
 namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
-const std::string STRING_ZERO = "0";
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -2315,9 +2315,7 @@ bool BundleMgrHost::WriteParcelableVectorIntoAshmem(
     for (auto &infoStr : infoStrs) {
         int itemLen = static_cast<int>(strlen(infoStr.c_str()));
         std::string strLen = std::to_string(itemLen);
-        while (strLen.size() < ASHMEM_LEN) {
-            strLen = STRING_ZERO + strLen;
-        }
+        strLen = std::string(std::max(0, static_cast<int32_t>(ASHMEM_LEN - strLen.size())), '0') + strLen;
         ret = ashmem->WriteToAshmem(strLen.c_str(), ASHMEM_LEN, offset);
         if (!ret) {
             APP_LOGE("Write itemLen to shared memory fail");
