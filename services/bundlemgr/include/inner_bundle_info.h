@@ -1657,6 +1657,10 @@ public:
     void SetHideDesktopIcon(bool hideDesktopIcon)
     {
         baseApplicationInfo_->hideDesktopIcon = hideDesktopIcon;
+        if (hideDesktopIcon && baseApplicationInfo_->needAppDetail) {
+            baseApplicationInfo_->needAppDetail = false;
+            baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+        }
     }
 
     void SetFormVisibleNotify(bool formVisibleNotify)
@@ -1715,6 +1719,7 @@ public:
     std::vector<ExtensionAbilityInfo> FindExtensionInfosByModule(
         const std::string &moduleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     int64_t GetLastInstallationTime() const;
+    void UpdateAppDetailAbilityAttrs(const ApplicationInfo &applicationInfo);
 
 private:
     void GetBundleWithAbilities(

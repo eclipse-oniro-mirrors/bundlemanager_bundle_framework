@@ -1793,9 +1793,18 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->vendor = applicationInfo.vendor;
     baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
-    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     UpdatePrivilegeCapability(applicationInfo);
+    UpdateAppDetailAbilityAttrs(applicationInfo);
+}
+
+void InnerBundleInfo::UpdateAppDetailAbilityAttrs(const ApplicationInfo &applicationInfo)
+{
+    SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
+    if (baseApplicationInfo_->needAppDetail) {
+        baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
+        baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
+    }
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
