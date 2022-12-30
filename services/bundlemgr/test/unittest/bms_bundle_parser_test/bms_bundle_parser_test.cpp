@@ -197,6 +197,160 @@ const nlohmann::json CONFIG_JSON = R"(
     }
 )"_json;
 
+const nlohmann::json CONFIG_JSON_2 = R"(
+{
+    "app":{
+        "apiVersion":{
+            "compatible":8,
+            "releaseType":"Release",
+            "target":8
+        },
+        "bundleName":"com.example.myapplication",
+        "vendor":"example",
+        "version":{
+            "code":1000000,
+            "name":"1.0.0"
+        }
+    },
+    "deviceConfig":{
+        "default":{
+            "debug":true
+        }
+    },
+    "module":{
+        "abilities":[
+            {
+                "description":"$string:MainAbility_desc",
+                "descriptionId":16777216,
+                "formsEnabled":false,
+                "icon":"$media:icon",
+                "iconId":16777220,
+                "label":"$string:MainAbility_label",
+                "labelId":16777217,
+                "launchType":"standard",
+                "name":".MainAbility",
+                "orientation":"unspecified",
+                "srcLanguage":"ets",
+                "srcPath":"MainAbility",
+                "type":"page",
+                "visible":true
+            }
+        ],
+        "deviceType":[
+            "phone"
+        ],
+        "distro":{
+            "deliveryWithInstall":true,
+            "installationFree":false,
+            "moduleName":"entry",
+            "moduleType":"entry",
+            "virtualMachine":"ark0.0.0.2"
+        },
+        "js":[
+            {
+                "mode":{
+                    "syntax":"ets",
+                    "type":"pageAbility"
+                },
+                "name":".MainAbility",
+                "pages":[
+                    "pages/index"
+                ],
+                "window":{
+                    "autoDesignWidth":false,
+                    "designWidth":720
+                }
+            }
+        ],
+        "mainAbility":".MainAbility",
+        "name":".entry",
+        "package":"com.example.myapplication"
+    }
+}
+)"_json;
+
+const nlohmann::json CONFIG_JSON_3 = R"(
+{
+    "app":{
+        "apiVersion":{
+            "compatible":8,
+            "releaseType":"Release",
+            "target":8
+        },
+        "bundleName":"com.example.myapplication",
+        "vendor":"example",
+        "version":{
+            "code":1000000,
+            "name":"1.0.0"
+        }
+    },
+    "deviceConfig":{
+        "default":{
+            "debug":true
+        }
+    },
+    "module":{
+        "abilities":[
+            {
+                "skills": [
+                    {
+                        "entities": [
+                            "entity.system.home"
+                        ],
+                        "actions": [
+                            "action.system.home"
+                        ]
+                    }
+                ],
+                "description":"$string:MainAbility_desc",
+                "descriptionId":16777216,
+                "formsEnabled":false,
+                "icon":"$media:icon",
+                "iconId":16777220,
+                "label":"$string:MainAbility_label",
+                "labelId":16777217,
+                "launchType":"standard",
+                "name":".MainAbility",
+                "orientation":"unspecified",
+                "srcLanguage":"ets",
+                "srcPath":"MainAbility",
+                "type":"page",
+                "visible":true
+            }
+        ],
+        "deviceType":[
+            "phone"
+        ],
+        "distro":{
+            "deliveryWithInstall":true,
+            "installationFree":false,
+            "moduleName":"entry",
+            "moduleType":"entry",
+            "virtualMachine":"ark0.0.0.2"
+        },
+        "js":[
+            {
+                "mode":{
+                    "syntax":"ets",
+                    "type":"pageAbility"
+                },
+                "name":".MainAbility",
+                "pages":[
+                    "pages/index"
+                ],
+                "window":{
+                    "autoDesignWidth":false,
+                    "designWidth":720
+                }
+            }
+        ],
+        "mainAbility":".MainAbility",
+        "name":".entry",
+        "package":"com.example.myapplication"
+    }
+}
+)"_json;
+
 const nlohmann::json MODULE_JSON = R"(
     {
     "app": {
@@ -427,6 +581,116 @@ const nlohmann::json MODULE_JSON = R"(
         "virtualMachine": "ark0.0.0.3"
     }
 }
+)"_json;
+
+const nlohmann::json MODULE_JSON_2 = R"(
+{
+        "app": {
+            "bundleName": "com.example.backuptest",
+            "debug": true,
+            "distributedNotificationEnabled": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0"
+        },
+        "module": {
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [
+                "default"
+            ],
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                }
+            ],
+            "name": "entry",
+            "installationFree": false,
+            "mainElement": "MainAbility",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "entry",
+            "uiSyntax": "ets",
+            "virtualMachine": "ark0.0.0.3"
+        }
+    }
+)"_json;
+
+const nlohmann::json MODULE_JSON_3 = R"(
+{
+    "app": {
+            "bundleName": "com.example.backuptest",
+            "debug": true,
+            "distributedNotificationEnabled": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0"
+        },
+        "module": {
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [
+                "default"
+            ],
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true,
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.system.home"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "name": "entry",
+            "installationFree": false,
+            "mainElement": "MainAbility",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "entry",
+            "uiSyntax": "ets",
+            "virtualMachine": "ark0.0.0.3"
+        }
+    }
 )"_json;
 }  // namespace
 
@@ -1707,5 +1971,442 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0500, Function | Smal
         )"_json;
     ErrCode result = CheckProfileDefaultPermission(errorProfileJson, defaultPermissions);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+}
+
+/**
+ * @tc.name: TestParse_3400
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3400, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_3500
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3500, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_3600
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3600, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["type"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_3700
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3700, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["type"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_3800
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3800, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_3;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_3900
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3900, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_3;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4000
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4000, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_3;
+    profileJson["module"]["type"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4100
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_3;
+    profileJson["module"]["type"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4200
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["labelId"] = 0;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4300
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4300, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["labelId"] = 0;
+    profileJson["app"]["label"] = "";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4400
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4400, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["label"] = "";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4500
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4500, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_2;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4600
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4600, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_2;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4700
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4700, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = CONFIG_JSON_2;
+    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4800
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4800, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_2;
+    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_4900
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_4900, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5000
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5000, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5100
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5100, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5200
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5200, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
 } // OHOS

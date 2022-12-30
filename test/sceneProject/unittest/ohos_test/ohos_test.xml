@@ -56,6 +56,14 @@
         src="res" />
       <option name="push" value="test_bundle/wrong_bundle_name.ha ->
         /data/test/resource/bms/accesstoken_bundle/" src="res" />
+      <option name="push" value="test_bundle/bmsThirdBundle1.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+      <option name="push" value="test_bundle/bmsThirdBundle2.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+      <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+      <option name="push" value="test_bundle/thumbnail2.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
     </preparer>
   </target>
   <target name="BmsBundleParserTest">
