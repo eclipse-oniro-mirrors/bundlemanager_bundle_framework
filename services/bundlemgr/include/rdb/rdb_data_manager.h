@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_RDB_DATA_MANAGER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_RDB_DATA_MANAGER_H
 
+#include "bms_rdb_config.h"
 #include "bms_rdb_open_callback.h"
 #include "rdb_helper.h"
 
@@ -40,6 +41,7 @@ public:
     bool DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredicates);
     std::shared_ptr<NativeRdb::AbsSharedResultSet> QueryData(
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+    bool CreateTable();
 
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
