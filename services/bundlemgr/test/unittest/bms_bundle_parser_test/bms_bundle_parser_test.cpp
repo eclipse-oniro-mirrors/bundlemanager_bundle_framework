@@ -294,12 +294,12 @@ const nlohmann::json CONFIG_JSON_3 = R"(
             {
                 "skills": [
                     {
-                      "entities": [
-                        "entity.system.home"
-                      ],
-                      "actions": [
-                        "action.system.home"
-                      ]
+                        "entities": [
+                            "entity.system.home"
+                        ],
+                        "actions": [
+                            "action.system.home"
+                        ]
                     }
                 ],
                 "description":"$string:MainAbility_desc",
@@ -672,7 +672,7 @@ const nlohmann::json MODULE_JSON_3 = R"(
                     "skills": [
                         {
                             "actions": [
-                               "action.system.home"
+                                "action.system.home"
                             ],
                             "entities": [
                                 "entity.system.home"
