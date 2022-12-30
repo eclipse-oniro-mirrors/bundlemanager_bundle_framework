@@ -1426,10 +1426,12 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return result;
     }
 
-    result = CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_));
-    if (result != ERR_OK) {
-        APP_LOGE("fail to create ark profile, error is %{public}d", result);
-        return result;
+    if (versionCode_ > oldInfo.GetVersionCode()) {
+        result = CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_));
+        if (result != ERR_OK) {
+            APP_LOGE("fail to create ark profile, error is %{public}d", result);
+            return result;
+        }
     }
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
