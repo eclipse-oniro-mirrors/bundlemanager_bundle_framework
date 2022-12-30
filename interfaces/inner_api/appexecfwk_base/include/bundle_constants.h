@@ -293,6 +293,9 @@ constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 // thread pool
 constexpr int32_t MAX_TASK_NUMBER = 10;
 constexpr const char* RELATIVE_PATH = "../";
+
+// app detail ability
+constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

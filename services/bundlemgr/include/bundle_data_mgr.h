@@ -897,6 +897,7 @@ private:
     bool CheckAppInstallControl(const std::string &appId, int32_t userId) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const;
+    void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
