@@ -137,25 +137,6 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
             ExtractTargetFile(extractor, entryName, targetSoPath, cpuAbi);
             continue;
         }
-        if (system::GetBoolParameter(Constants::COMPRESS_PROPERTY, false)) {
-            continue;
-        }
-        const std::string dir = GetPathDir(entryName);
-        std::string filePath = targetDir + dir;
-        if (!dir.empty()) {
-            if (!MkRecursiveDir(filePath, true)) {
-                return false;
-            }
-        }
-        filePath = targetDir + entryName;
-        if (!extractor.ExtractFile(entryName, filePath)) {
-            return false;
-        }
-        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-        if (!OHOS::ChangeModeFile(filePath, mode)) {
-            APP_LOGE("change mode failed");
-        }
-        filePath.clear();
     }
     APP_LOGD("InstalldOperator::ExtractFiles end");
     return true;

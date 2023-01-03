@@ -1978,12 +1978,15 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     appInfo.uid = innerBundleUserInfo.uid;
 
     for (const auto &info : innerModuleInfos_) {
+        bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
         moduleInfo.moduleName = info.second.moduleName;
-        moduleInfo.moduleSourceDir = info.second.modulePath;
+        if (deCompress) {
+            moduleInfo.moduleSourceDir = info.second.modulePath;
+            appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
+        }
         appInfo.moduleInfos.emplace_back(moduleInfo);
-        appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
-        if (info.second.isEntry) {
+        if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
         if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_PERMISSION) ==
@@ -2028,12 +2031,15 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     appInfo.uid = innerBundleUserInfo.uid;
 
     for (const auto &info : innerModuleInfos_) {
+        bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
         moduleInfo.moduleName = info.second.moduleName;
-        moduleInfo.moduleSourceDir = info.second.modulePath;
+        if (deCompress) {
+            moduleInfo.moduleSourceDir = info.second.modulePath;
+            appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
+        }
         appInfo.moduleInfos.emplace_back(moduleInfo);
-        appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
-        if (info.second.isEntry) {
+        if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
         if ((static_cast<uint32_t>(flags) &
@@ -2252,7 +2258,9 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
             } else {
                 hapModuleInfo.hashValue = it->second.hashValue;
             }
-            hapModuleInfo.moduleSourceDir = info.second.modulePath;
+            if (hapModuleInfo.hapPath.empty()) {
+                hapModuleInfo.moduleSourceDir = info.second.modulePath;
+            }
             if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
                 != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
                 hapModuleInfo.metadata.clear();
