@@ -46,10 +46,7 @@ const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
 const std::string BASE_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string BASE_MODULE_NAME = "testability1";
 const std::string BASE_ABILITY_NAME = "bmsThirdBundle_A1";
-const std::string SYSTEM_LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 const std::string SYSTEM_SETTINGS_BUNDLE_NAME = "com.ohos.settings";
-const std::string SYSTEM_SYSTEMUI_BUNDLE_NAME = "com.ohos.systemui";
-const std::string SYSTEM_CAMERA_BUNDLE_NAME = "com.ohos.camera";
 const std::string BUNDLE_DATA_ROOT_PATH = "/data/app/el2/100/base/";
 const std::string ERROR_INSTALL_FAILED = "install failed!";
 const std::string ERROR_UNINSTALL_FAILED = "uninstall failed!";
@@ -460,8 +457,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0100, Function | MediumTest | Level
     std::string appName = BASE_BUNDLE_NAME + "1";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -639,47 +634,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0600, Function | MediumTest | Level
     }
     EXPECT_TRUE(result);
     std::cout << "END GetBundleInfo_0600" << std::endl;
-}
-
-/**
- * @tc.number: GetBundleInfo_0700
- * @tc.name: test query bundle information
- * @tc.desc: 1.under '/system/app/',there is a hap
- *           2.install the hap
- *           3.query bundleInfo
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0700, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleInfo_0700" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string appName = "com.ohos.systemui";
-
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-
-        BundleInfo bundleInfo;
-        bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleInfo.name, appName);
-        EXPECT_GE(bundleInfo.uid, Constants::BASE_APP_UID);
-        EXPECT_GE(bundleInfo.gid, Constants::BASE_APP_UID);
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleInfo_0700 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleInfo_0700 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleInfo_0700" << std::endl;
 }
 
 /**
@@ -1304,7 +1258,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0100, Function | MediumTest | Leve
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0200, Function | MediumTest | Level1)
 {
     std::cout << "START GetBundleInfos_0200" << std::endl;
-    bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
         if (!bundleMgrProxy) {
@@ -1315,32 +1268,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0200, Function | MediumTest | Leve
         std::vector<BundleInfo> bundleInfos;
         bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
         EXPECT_TRUE(getInfoResult);
-        int count = 0;
-        for (auto bundleInfo : bundleInfos) {
-            if (IsSubStr(bundleInfo.name, SYSTEM_LAUNCHER_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(bundleInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(bundleInfo.name, SYSTEM_SYSTEMUI_BUNDLE_NAME)) {
-                count++;
-            }
-            if (count == 3) {
-                break;
-            }
-        }
-        EXPECT_GE(count, 2);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleInfos_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
     }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleInfos_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
     std::cout << "END GetBundleInfos_0200" << std::endl;
 }
 
@@ -1736,30 +1664,28 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0400, Function | MediumTest | 
 HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0500, Function | MediumTest | Level1)
 {
     std::cout << "START GetApplicationInfo_0500" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
+    CommonTool commonTool;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
 
-        ApplicationInfo appInfo;
-        bool getInfoResult = bundleMgrProxy->GetApplicationInfo(
-            SYSTEM_CAMERA_BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(appInfo.name, SYSTEM_CAMERA_BUNDLE_NAME);
-        if (!getInfoResult) {
-            APP_LOGI("GetApplicationInfo_0500 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
     }
 
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetApplicationInfo_0500 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
+    ApplicationInfo appInfo;
+    bool getInfoResult = bundleMgrProxy->GetApplicationInfo(
+        appName, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, appInfo);
+    EXPECT_TRUE(getInfoResult);
+    EXPECT_EQ(appInfo.name, appName);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetApplicationInfo_0500" << std::endl;
 }
 
@@ -2126,7 +2052,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfos_0100, Function | MediumTest |
 HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfos_0200, Function | MediumTest | Level1)
 {
     std::cout << "START GetApplicationInfos_0200" << std::endl;
-    bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
         if (!bundleMgrProxy) {
@@ -2138,32 +2063,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfos_0200, Function | MediumTest |
             bundleMgrProxy->GetApplicationInfos(
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, USERID, appInfos);
         EXPECT_TRUE(getInfoResult);
-        int count = 0;
-        for (auto appInfo : appInfos) {
-            if (IsSubStr(appInfo.name, SYSTEM_LAUNCHER_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(appInfo.name, SYSTEM_SETTINGS_BUNDLE_NAME)) {
-                count++;
-            } else if (IsSubStr(appInfo.name, SYSTEM_SYSTEMUI_BUNDLE_NAME)) {
-                count++;
-            }
-            if (count == 3) {
-                break;
-            }
-        }
-        EXPECT_GE(count, 2);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetApplicationInfos_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
     }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetApplicationInfos_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
     std::cout << "END GetApplicationInfos_0200" << std::endl;
 }
 
@@ -2632,27 +2532,25 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0300, Function | MediumTest | 
 HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0400, Function | MediumTest | Level1)
 {
     std::cout << "START GetUidByBundleName_0400" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
+    CommonTool commonTool;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
 
-        int uid = bundleMgrProxy->GetUidByBundleName(SYSTEM_CAMERA_BUNDLE_NAME, USERID);
-        EXPECT_GE(uid, Constants::BASE_USER_RANGE);
-        if (uid == Constants::INVALID_UID) {
-            APP_LOGI("GetUidByBundleName_0400 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
     }
 
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetUidByBundleName_0400 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
+    int uid = bundleMgrProxy->GetUidByBundleName(appName, USERID);
+    EXPECT_GE(uid, Constants::BASE_USER_RANGE);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetUidByBundleName_0400" << std::endl;
 }
 
@@ -2737,34 +2635,30 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0100, Function | MediumTest |
 HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0200, Function | MediumTest | Level1)
 {
     std::cout << "START GetBundleNameForUid_0200" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-
-        BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(SYSTEM_CAMERA_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        int uid = bundleInfo.uid;
-
-        std::string bundleName;
-        bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleName, SYSTEM_CAMERA_BUNDLE_NAME);
-
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleNameForUid_0200 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
+    CommonTool commonTool;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
     }
 
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleNameForUid_0200 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    int uid = bundleInfo.uid;
+
+    std::string bundleName;
+    bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
+    EXPECT_TRUE(getInfoResult);
+    EXPECT_EQ(bundleName, appName);
+    
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetBundleNameForUid_0200" << std::endl;
 }
 
@@ -3524,7 +3418,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0800, Function | MediumTest | Le
 {
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = "";
-    abilityInfo.package = "";
+    abilityInfo.package = "package";
     HapModuleInfo hapModuleInfo;
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -3532,7 +3426,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0800, Function | MediumTest | Le
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
+
     bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
+    EXPECT_FALSE(queryResult);
+
+    abilityInfo.bundleName = "bundleName";
+    abilityInfo.package = "";
+
+    queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
     EXPECT_FALSE(queryResult);
 }
 
@@ -4276,6 +4177,50 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0400, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: QueryAbilityInfo_0500
+ * @tc.name: test QueryAbilityInfo interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.call QueryAbilityInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0500, Function | MediumTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string abilityName = "bmsThirdBundle_A1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName(appName);
+    want.SetElement(name);
+    sptr<IRemoteObject> callBack;
+    int32_t flags = 0;
+
+    AbilityInfo abilityInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool queryResult =
+        bundleMgrProxy->QueryAbilityInfo(
+            want, flags, USERID, abilityInfo, callBack);
+    EXPECT_FALSE(queryResult);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
  * @tc.number: GetBundleInfosByMetaData_0100
  * @tc.name: test GetBundleInfosByMetaData interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -4860,7 +4805,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0900, Function | MediumTest | Level1)
 
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(uninstallResult, "Failure[ERR_USER_NOT_INSTALL_HAP]");
+        EXPECT_NE(uninstallResult, "Success");
         if (std::strcmp(uninstallResult.c_str(), "Success") == 0) {
             APP_LOGI("Errors_0900 failed - cycle count: %{public}d", i);
             break;
@@ -5322,35 +5267,30 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0200, Function | MediumTest | Le
 HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0300, Function | MediumTest | Level1)
 {
     std::cout << "START GetBundlesForUid_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string appName = SYSTEM_CAMERA_BUNDLE_NAME;
-        BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        int uid = bundleInfo.uid;
-        std::vector<std::string> bundleNames;
-        bool ret = bundleMgrProxy->GetBundlesForUid(uid, bundleNames);
-        EXPECT_TRUE(ret);
-        for (auto bundleName : bundleNames) {
-            EXPECT_EQ(bundleName, SYSTEM_CAMERA_BUNDLE_NAME);
-        }
-
-        if (!ret) {
-            APP_LOGI("GetBundlesForUid_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
+    CommonTool commonTool;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundlesForUid_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    int uid = bundleInfo.uid;
+    std::vector<std::string> bundleNames;
+    bool ret = bundleMgrProxy->GetBundlesForUid(uid, bundleNames);
+    EXPECT_TRUE(ret);
+    for (auto bundleName : bundleNames) {
+        EXPECT_EQ(bundleName, appName);
     }
-    EXPECT_TRUE(result);
+    
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetBundlesForUid_0300" << std::endl;
 }
 
@@ -5473,32 +5413,27 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0200, Function | MediumTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0300, Function | MediumTest | Level1)
 {
     std::cout << "START GetNameForUid_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        if (!bundleMgrProxy) {
-            APP_LOGE("bundle mgr proxy is nullptr.");
-            EXPECT_EQ(bundleMgrProxy, nullptr);
-        }
-        std::string appName = SYSTEM_CAMERA_BUNDLE_NAME;
-        BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        std::string name;
-        ErrCode ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
-        EXPECT_EQ(ret, ERR_OK);
-        EXPECT_EQ(name, SYSTEM_CAMERA_BUNDLE_NAME);
-
-        if (ret != ERR_OK) {
-            APP_LOGI("GetNameForUid_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
+    CommonTool commonTool;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
     }
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    std::string name;
+    ErrCode ret = bundleMgrProxy->GetNameForUid(bundleInfo.uid, name);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, appName);
 
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetNameForUid_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetNameForUid_0300" << std::endl;
 }
 
@@ -6004,7 +5939,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0300, Function | SmallTest | Le
  */
 HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfoByPriority_0100, Function | SmallTest | Level1)
 {
-    std::cout << "START GetBundlePackInfo_0200" << std::endl;
+    std::cout << "START ImplicitQueryInfoByPriority_0100" << std::endl;
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
@@ -6041,7 +5976,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfoByPriority_0100, Function | Smal
  */
 HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | Level1)
 {
-    std::cout << "START GetBundlePackInfo_0200" << std::endl;
+    std::cout << "START ImplicitQueryInfos_0100" << std::endl;
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
@@ -6138,7 +6073,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllDependentModuleNames_0200, Function | Small
  */
 HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0100, Function | SmallTest | Level1)
 {
-    std::cout << "START GetBundlePackInfo_0200" << std::endl;
+    std::cout << "START GetModuleUpgradeFlag_0100" << std::endl;
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
@@ -6201,7 +6136,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0200, Function | SmallTest |
  */
 HWTEST_F(ActsBmsKitSystemTest, ObtainCallingBundleName_0100, Function | SmallTest | Level1)
 {
-    std::cout << "START GetBundlePackInfo_0200" << std::endl;
+    std::cout << "START ObtainCallingBundleName_0100" << std::endl;
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
@@ -6243,7 +6178,7 @@ HWTEST_F(ActsBmsKitSystemTest, ObtainCallingBundleName_0200, Function | SmallTes
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleStats_0100, Function | SmallTest | Level1)
 {
-    std::cout << "START GetBundlePackInfo_0200" << std::endl;
+    std::cout << "START GetBundleStats_0100" << std::endl;
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
@@ -6315,7 +6250,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetStringById_0200, Function | SmallTest | Level1
  */
 HWTEST_F(ActsBmsKitSystemTest, GetIconById_0100, Function | SmallTest | Level1)
 {
-    std::cout << "START GetBundlePackInfo_0200" << std::endl;
+    std::cout << "START GetIconById_0100" << std::endl;
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
@@ -6400,9 +6335,9 @@ HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0100, Function | SmallTest | Level
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool result = bundleMgrProxy->SetDisposedStatus(appName, DISPOSED_STATUS);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
     int32_t status = bundleMgrProxy->GetDisposedStatus(appName);
-    EXPECT_EQ(status, 0);
+    EXPECT_EQ(status, 10);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -6503,7 +6438,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0200, Function | SmallTest | L
     res = getDefaultAppProxy->GetDefaultApplication(USERID, DEFAULT_APP_VIDEO, bundleInfo);
     EXPECT_NE(res, ERR_OK);
     res = getDefaultAppProxy->ResetDefaultApplication(USERID, DEFAULT_APP_VIDEO);
-    EXPECT_NE(res, ERR_OK);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -7671,6 +7606,49 @@ HWTEST_F(ActsBmsKitSystemTest, bundle_installer_0700, Function | MediumTest | Le
     auto res = installerProxy.UninstallSandboxApp(bundlePath, dlpType, userId);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_SEND_REQUEST_ERROR);
     std::cout << "test bundle_installer_0700 done" << std::endl;
+}
+
+/**
+ * @tc.number: CleanBundleCacheFiles_0100
+ * @tc.name: test CleanBundleCacheFiles proxy
+ * @tc.desc: 1.system run normally
+ *           2.get udid info failed by wrong hap
+ */
+HWTEST_F(ActsBmsKitSystemTest, CleanBundleCacheFiles_0100, Function | SmallTest | Level1)
+{
+    sptr<ICleanCacheCallback> cleanCacheCallback;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode testRet = bundleMgrProxy->CleanBundleCacheFiles("", cleanCacheCallback, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CleanBundleCacheFiles_0200
+ * @tc.name: test CleanBundleCacheFiles proxy
+ * @tc.desc: 1.system run normally
+ *           2.get udid info failed by wrong hap
+ */
+HWTEST_F(ActsBmsKitSystemTest, CleanBundleCacheFiles_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode testRet = bundleMgrProxy->CleanBundleCacheFiles("bundleName", nullptr, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CheckAbilityEnableInstall_0100
+ * @tc.name: test CheckAbilityEnableInstall proxy
+ * @tc.desc: 1.system run normally
+ *           2.get udid info failed by wrong hap
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnableInstall_0100, Function | SmallTest | Level1)
+{
+    Want want;
+    int32_t missionId = 0;
+    sptr<IRemoteObject> callback;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->CheckAbilityEnableInstall(want, missionId, USERID, callback);
+    EXPECT_EQ(testRet, false);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

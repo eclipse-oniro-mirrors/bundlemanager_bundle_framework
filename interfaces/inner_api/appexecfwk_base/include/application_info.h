@@ -181,6 +181,7 @@ struct ApplicationInfo : public Parcelable {
 
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;
+    uint64_t accessTokenIdEx = 0;
     bool enabled = false;
     int32_t uid = -1;
 
@@ -212,6 +213,10 @@ struct ApplicationInfo : public Parcelable {
 
     // switch
     bool multiProjects = false;
+
+    // app detail ability
+    bool needAppDetail = false;
+    std::string appDetailAbilityLibraryPath;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

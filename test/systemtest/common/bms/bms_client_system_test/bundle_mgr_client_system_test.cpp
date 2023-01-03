@@ -42,6 +42,8 @@ using namespace testing::ext;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string HAP_PATH =
+    "/data/app/el1/bundle/public/com.example.ohosproject.hmservice/entry_phone.hap";
 const std::string RESOURCE_PATH =
     "/data/app/el1/bundle/public/com.example.ohosproject.hmservice/entry_phone/resources.index";
 const std::string RESOURCE_PATH_TEST =
@@ -413,7 +415,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_006, TestSize.Level1)
     data.name = "ohos.extension.forms";
     data.resource = "$profile:form_config";
     metadata.emplace_back(data);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
 
@@ -449,7 +451,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_007, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
@@ -484,7 +486,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_008, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -516,7 +518,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_009, TestSize.Level1)
     data.name = "ohos.extension.forms";
     data.resource = "$profile:form_config";
     metadata.emplace_back(data);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName;
     std::vector<std::string> profileInfo;
@@ -552,7 +554,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_010, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName;
     std::vector<std::string> profileInfo;
@@ -824,7 +826,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_020, TestSize.Level1)
     data.name = "ohos.extension.forms";
     data.resource = "$profile:form_config";
     metadata.emplace_back(data);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -861,7 +863,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_021, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -898,7 +900,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_022, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -930,7 +932,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_023, TestSize.Level1)
     data.name = "ohos.extension.forms";
     data.resource = "$profile:form_config";
     metadata.emplace_back(data);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName;
     std::vector<std::string> profileInfo;
@@ -966,7 +968,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_024, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName;
     std::vector<std::string> profileInfo;
@@ -1238,7 +1240,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_034, TestSize.Level1)
     data.name = "ohos.extension.forms";
     data.resource = "$profile:form_config";
     metadata.emplace_back(data);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -1275,7 +1277,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_035, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -1312,7 +1314,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_036, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -1344,7 +1346,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_037, TestSize.Level1)
     data.name = "ohos.extension.forms";
     data.resource = "$profile:form_config";
     metadata.emplace_back(data);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
     std::string metadataName;
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
@@ -1379,7 +1381,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_038, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName;
     std::vector<std::string> profileInfo;
@@ -1500,7 +1502,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_042, TestSize.Level1)
 
     metadata.emplace_back(data);
     metadata.emplace_back(data1);
-    info.resourcePath = RESOURCE_PATH;
+    info.hapPath = HAP_PATH;
 
     std::string metadataName = "ohos.extension.forms";
     std::vector<std::string> profileInfo;
@@ -1984,6 +1986,9 @@ HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
     auto ret = bundleMgrClient.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, info, DEFAULT_USERID);
     EXPECT_TRUE(ret == ERR_OK);
 
+    ret = bundleMgrClient.GetBundlePackInfo("", BundlePackFlag::GET_PACK_INFO_ALL, info, DEFAULT_USERID);
+    EXPECT_FALSE(ret == ERR_OK);
+
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
@@ -2257,7 +2262,8 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | M
     EXPECT_FALSE(res);
 
     BundlePackInfo bundlePackInfo;
-    auto res1 = client.GetBundlePackInfo(BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, bundlePackInfo, DEFAULT_USERID);
+    auto res1 = client.GetBundlePackInfo(
+        BUNDLE_NAME, BundlePackFlag::GET_PACK_INFO_ALL, bundlePackInfo, DEFAULT_USERID);
     EXPECT_NE(res1, ERR_OK);
 
     HapModuleInfo hapModuleInfo;

@@ -68,7 +68,7 @@ public:
 
     // init state transfer map data.
     BundleDataMgr();
-    ~BundleDataMgr();
+    virtual ~BundleDataMgr();
 
     /**
      * @brief Boot query persistent storage.
@@ -113,6 +113,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool UpdateInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+
+    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
      * @param bundleName Indicates the bundle name.
@@ -327,7 +329,7 @@ public:
      * @param gids Indicates the group IDs associated with the specified bundle.
      * @return Returns true if the gids is successfully obtained; returns false otherwise.
      */
-    bool GetBundleGidsByUid(const std::string &bundleName, const int &uid, std::vector<int> &gids) const;
+    virtual bool GetBundleGidsByUid(const std::string &bundleName, const int &uid, std::vector<int> &gids) const;
     /**
      * @brief Obtains the BundleInfo of all keep-alive applications in the system.
      * @param bundleInfos Indicates all of the obtained BundleInfo objects.
@@ -696,6 +698,7 @@ public:
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     bool GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids);
+    bool GetFreeInstallModules(std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
@@ -721,18 +724,14 @@ public:
     ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable) const;
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    /**
-     * @brief Get bundle space size (Bytes) by bundleName.
-     * @param bundleName Indicates the application bundle name to be queried.
-     * @return Returns the space size of a bundle by bundleName.
-     */
     int64_t GetBundleSpaceSize(const std::string &bundleName) const;
-    /**
-     * @brief Get all free install bundle space size (Bytes).
-     * @return Returns the space size of all free install bundles.
-     */
+    int64_t GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const;
     int64_t GetAllFreeInstallBundleSpaceSize() const;
 #endif
+
+    bool GetBundleStats(
+        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
     ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
@@ -789,6 +788,12 @@ public:
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
+
+    const std::map<std::string, InnerBundleInfo> &GetAllInnerbundleInfos() const
+    {
+        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+        return bundleInfos_;
+    }
 private:
     /**
      * @brief Init transferStates.
@@ -892,6 +897,7 @@ private:
     bool CheckAppInstallControl(const std::string &appId, int32_t userId) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const;
+    void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
@@ -903,6 +909,7 @@ private:
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;
     bool initialUserFlag_ = false;
+    int32_t baseAppUid_ = Constants::BASE_APP_UID;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
     // using for generating bundleId

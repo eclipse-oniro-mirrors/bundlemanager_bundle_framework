@@ -32,13 +32,12 @@ const std::string SYSTEM_DIR = "/sys/com.example.l3jsdemo";
 const std::string TEMP_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/temp";
 const std::string MODULE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/com.example.l3jsdemo";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
+const std::string BUNDLE_DATA_DIR_CACHE = "/data/app/el2/100/base/com.example.l3jsdemo/cache/temp";
+const std::string BUNDLE_DATA_DIR_TEMP = "/data/app/el2/100/base/com.example.l3jsdemo/files/temp";
+const std::string BUNDLE_DATA_DIR_DATA_BASE = "/data/app/el2/100/database/com.example.l3jsdemo";
+const std::string BUNDLE_DATA_DIR_DATA_BASE_TEMP = "/data/app/el2/100/database/com.example.l3jsdemo/temp";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
-const std::string BUNDLE_APP_DIR = "/data/app/el1/bundle/public/com.example.l4jsdemo/code";
-const std::string BUNDLE_EL1_BASE_DIR = "/data/app/el1/101/base/com.example.l4jsdemo/files/temp";
-const std::string BUNDLE_EL1_DATABASE_DIR = "/data/app/el1/101/database/com.example.l4jsdemo/temp";
-const std::string BUNDLE_EL2_BASE_DIR = "/data/app/el2/101/base/com.example.l4jsdemo/cache/temp";
-const std::string BUNDLE_EL3_BASE_DIR = "/data/app/el3/101/base/com.example.l4jsdemo/temp";
-const std::string BUNDLE_EL4_BASE_DIR = "/data/app/el4/101/base/com.example.l4jsdemo/temp";
+const std::string BUNDLE_CODE_DIR_CODE = "/data/app/el1/bundle/public/com.example.l3jsdemo/code";
 const std::string BUNDLE_NAME = "com.example.l4jsdemo";
 const std::string TEST_CPU_ABI = "arm64";
 const std::string HAP_FILE_PATH =
@@ -48,7 +47,6 @@ const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
 const std::string APL = "normal";
-const int32_t USERID_2 = 101;
 }  // namespace
 
 class BmsInstallDaemonTest : public testing::Test {
@@ -99,6 +97,7 @@ void BmsInstallDaemonTest::TearDown()
     // clear files.
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR);
+    OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_DATA_BASE);
 
     if (service_->IsServiceReady()) {
         service_->Stop();
@@ -313,7 +312,7 @@ HWTEST_F(BmsInstallDaemonTest, Communication_0200, Function | SmallTest | Level0
 */
 HWTEST_F(BmsInstallDaemonTest, Communication_0300, Function | SmallTest | Level0)
 {
-    int result = CreateBundleDataDir(BUNDLE_DATA_DIR, USERID, UID, GID, APL);
+    int result = CreateBundleDir(BUNDLE_DATA_DIR);
     EXPECT_EQ(result, 0);
 }
 
@@ -330,7 +329,7 @@ HWTEST_F(BmsInstallDaemonTest, Communication_0400, Function | SmallTest | Level0
     bool ready = installdService->IsServiceReady();
     EXPECT_EQ(false, ready);
     InstalldClient::GetInstance()->ResetInstalldProxy();
-    int result = InstalldClient::GetInstance()->CreateBundleDataDir(BUNDLE_DATA_DIR, USERID, UID, GID, APL);
+    int result = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_DATA_DIR);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
@@ -438,7 +437,7 @@ HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0300, Function | SmallTest | Level0
 */
 HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0400, Function | SmallTest | Level0)
 {
-    int result = CreateBundleDataDir(BUNDLE_DATA_DIR, USERID, -1, GID, APL);
+    int result = CreateBundleDataDir(BUNDLE_NAME13, USERID, -1, GID, APL);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     bool dirExist = CheckBundleDataDirExist();
     EXPECT_FALSE(dirExist);
@@ -452,7 +451,7 @@ HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0400, Function | SmallTest | Level0
 */
 HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0500, Function | SmallTest | Level0)
 {
-    int result = CreateBundleDataDir(BUNDLE_DATA_DIR, USERID, UID, -1, APL);
+    int result = CreateBundleDataDir(BUNDLE_NAME13, USERID, UID, -1, APL);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     bool dirExist = CheckBundleDataDirExist();
     EXPECT_FALSE(dirExist);
@@ -800,7 +799,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0100, Function | SmallTest | Level
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0200, Function | SmallTest | Level0)
 {
     std::vector<int64_t> stats;
-    bool result = GetBundleStats(BUNDLE_NAME, 0, stats);
+    bool result = GetBundleStats(BUNDLE_NAME13, 0, stats);
     EXPECT_EQ(result, true);
     for (const auto &t : stats) {
         EXPECT_EQ(t, 0);
@@ -814,12 +813,12 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0200, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0300, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_APP_DIR);
+    OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR_CODE);
     std::vector<int64_t> stats;
-    bool result = GetBundleStats(BUNDLE_NAME, USERID, stats);
+    bool result = GetBundleStats(BUNDLE_NAME13, 0, stats);
     EXPECT_EQ(result, true);
     EXPECT_EQ(stats[1], 0);
-    OHOS::ForceRemoveDirectory(BUNDLE_APP_DIR);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR_CODE);
 }
 
 /**
@@ -829,26 +828,24 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0300, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_APP_DIR);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BASE_DIR);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATABASE_DIR);
-    OHOS::ForceCreateDirectory(BUNDLE_EL2_BASE_DIR);
-    OHOS::ForceCreateDirectory(BUNDLE_EL3_BASE_DIR);
-    OHOS::ForceCreateDirectory(BUNDLE_EL4_BASE_DIR);
+    OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_CACHE);
+    OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_TEMP);
+    OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR_CODE);
+    OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_DATA_BASE);
+    OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_DATA_BASE_TEMP);
     std::vector<int64_t> stats;
-    bool result = GetBundleStats(BUNDLE_NAME, USERID_2, stats);
+    bool result = GetBundleStats(BUNDLE_NAME13, USERID, stats);
     EXPECT_EQ(result, true);
     EXPECT_NE(stats[0], 0);
     EXPECT_NE(stats[1], 0);
     EXPECT_EQ(stats[2], 0); // distributed file does not exist
     EXPECT_NE(stats[3], 0);
     EXPECT_NE(stats[4], 0);
-    OHOS::ForceRemoveDirectory(BUNDLE_APP_DIR);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BASE_DIR);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATABASE_DIR);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL2_BASE_DIR);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL3_BASE_DIR);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL4_BASE_DIR);
+    OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_CACHE);
+    OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_TEMP);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR_CODE);
+    OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_DATA_BASE);
+    OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_DATA_BASE_TEMP);
 }
 
 /**

@@ -16,8 +16,9 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-#include "app_log_wrapper.h"
 #include "ability_info.h"
+#include "access_token.h"
+#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "inner_bundle_user_info.h"
@@ -61,6 +62,7 @@ protected:
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {
                     "applicationInfo": {
                         "accessTokenId": 0,
+                        "accessTokenIdEx": 0,
                         "accessible": false,
                         "apiCompatibleVersion": 0,
                         "apiReleaseType": "",
@@ -159,7 +161,9 @@ protected:
                         "associatedWakeUp": false,
                         "hideDesktopIcon": false,
                         "formVisibleNotify": false,
-                        "allowCommonEvent": []
+                        "allowCommonEvent": [],
+                        "needAppDetail": false,
+                        "appDetailAbilityLibraryPath": ""
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -375,6 +379,7 @@ protected:
             },
             "baseApplicationInfo": {
                 "accessTokenId": 0,
+                "accessTokenIdEx": 0,
                 "accessible": false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
@@ -499,13 +504,16 @@ protected:
                 "associatedWakeUp": false,
                 "hideDesktopIcon": false,
                 "formVisibleNotify": false,
-                "allowCommonEvent": []
+                "allowCommonEvent": [],
+                "needAppDetail": false,
+                "appDetailAbilityLibraryPath": ""
             },
             "baseBundleInfo": {
                 "abilityInfos": [
                 ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
                 "applicationInfo": {
+                    "accessTokenIdEx": 0,
                     "accessTokenId": 0,
                     "accessible": false,
                     "apiCompatibleVersion": 0,
@@ -610,7 +618,9 @@ protected:
                     "associatedWakeUp": false,
                     "hideDesktopIcon": false,
                     "formVisibleNotify": false,
-                    "allowCommonEvent": []
+                    "allowCommonEvent": [],
+                    "needAppDetail": false,
+                    "appDetailAbilityLibraryPath": ""
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",
@@ -1281,7 +1291,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0200, Function | Smal
     EXPECT_EQ(ret, true);
 
     std::string type = "text/xml";
-    std::string uri = "uriString";
+    std::string uri = "uriString://";
     want.SetUri(uri);
     want.SetType(type);
     ret = skill.Match(want);
@@ -1357,27 +1367,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | Smal
     info.AddInnerModuleInfo(innerModuleInfos);
     auto it = info.FindHapModuleInfo("modulePackage", 100);
     EXPECT_EQ(it->hqfInfo.moduleName, "modulePackage");
-}
-
-/**
- * @tc.number: InnerBundleInfo_0600
- * @tc.name: Test FindAbilityInfos
- * @tc.desc: 1.Test the FindAbilityInfos of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0600, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::string bundleName = "";
-    int32_t userId = Constants::ALL_USERID;
-    auto ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ(ret, std::nullopt);
-
-    AbilityInfo abilityInfo;
-    bundleName = "com.ohos.test";
-    abilityInfo.bundleName = bundleName;
-    info.InsertAbilitiesInfo("key", abilityInfo);
-    ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ((*ret)[0].bundleName, "com.ohos.test");
 }
 
 /**
@@ -1590,29 +1579,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1500, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_1600
- * @tc.name: Test FindAbilityInfos
- * @tc.desc: 1.Test the FindAbilityInfos of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1600, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::string bundleName = "com.ohos.launcher";
-    const int userId = 100;
-    auto ret = info.FindAbilityInfos("", userId);
-    EXPECT_EQ(ret, std::nullopt);
-
-    ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ(ret, std::nullopt);
-
-    AbilityInfo abilityInfo;
-    abilityInfo.bundleName = bundleName;
-    info.InsertAbilitiesInfo("key", abilityInfo);
-    ret = info.FindAbilityInfos(bundleName, userId);
-    EXPECT_EQ((*ret)[0].bundleName, bundleName);
-}
-
-/**
  * @tc.number: InnerBundleInfo_1700
  * @tc.name: Test IsBundleRemovable
  * @tc.desc: 1.Test the IsBundleRemovable of InnerBundleInfo
@@ -1622,7 +1588,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1700, Function | Smal
     InnerBundleInfo info;
     bool isEnabled = true;
     int32_t userId = Constants::ALL_USERID;
-    auto ret = info.SetAbilityEnabled("", "", "", isEnabled, userId);
+    auto ret = info.SetAbilityEnabled("", "", isEnabled, userId);
     EXPECT_NE(ret, OHOS::ERR_OK);
 }
 
@@ -1634,46 +1600,72 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1700, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    std::string bundleName = "";
+    std::string bundleName = "com.ohos.test";
     std::string moduleName = "";
     std::string extensionName = "";
-    auto ret = info.FindExtensionInfo(bundleName, moduleName, extensionName);
+    auto ret = info.FindExtensionInfo(moduleName, extensionName);
     EXPECT_EQ(ret, std::nullopt);
 
     ExtensionAbilityInfo extensionInfo;
-    bundleName = "com.ohos.test";
     moduleName = "entry";
     extensionName = "extension";
     extensionInfo.bundleName = bundleName;
     extensionInfo.moduleName = moduleName;
     extensionInfo.name = "extension";
     info.InsertExtensionInfo("key", extensionInfo);
-    ret = info.FindExtensionInfo(bundleName, moduleName, extensionName);
+    ret = info.FindExtensionInfo(moduleName, extensionName);
     EXPECT_EQ((*ret).bundleName, "com.ohos.test");
 }
 
 /**
- * @tc.number: InnerBundleInfo_1900
- * @tc.name: Test FindExtensionInfo
- * @tc.desc: 1.Test the FindExtensionInfo of InnerBundleInfo
+ * @tc.number: InnerBundleInfo_2000
+ * @tc.name: Test IsBundleRemovable
+ * @tc.desc: 1.Test the IsBundleRemovable of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2000, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    std::string bundleName = "";
-    auto ret = info.FindExtensionInfos(bundleName);
-    EXPECT_EQ(ret, std::nullopt);
+    BundleInfo bundleInfo;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetIsPreInstallApp(false);
+    InnerModuleInfo innerModuleInfo;
+    bool ret = info.IsBundleRemovable(Constants::START_USERID);
+    EXPECT_EQ(ret, true);
 
-    bundleName = "com.ohos.nullextension";
-    ret = info.FindExtensionInfos(bundleName);
-    EXPECT_EQ(ret, std::nullopt);
+    innerModuleInfo.moduleName = "entry";
+    info.InsertInnerModuleInfo("entry", innerModuleInfo);
+    ret = info.IsBundleRemovable(Constants::START_USERID);
+    EXPECT_EQ(ret, false);
+}
 
-    ExtensionAbilityInfo extensionInfo;
-    bundleName = "com.ohos.test";
-    extensionInfo.bundleName = bundleName;
-    info.InsertExtensionInfo("key", extensionInfo);
-    ret = info.FindExtensionInfos(bundleName);
-    EXPECT_EQ((*ret)[0].bundleName, "com.ohos.test");
+/**
+ * @tc.number: InnerBundleInfo_2100
+ * @tc.name: Test IsUserExistModule
+ * @tc.desc: 1.Test the IsUserExistModule of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.isRemovable.try_emplace("100", true);
+    info.InsertInnerModuleInfo("entry", innerModuleInfo);
+    bool ret = info.IsUserExistModule("entry", Constants::START_USERID);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2200
+ * @tc.name: Test AddModuleRemovableInfo
+ * @tc.desc: 1.Test the AddModuleRemovableInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    bool ret = info.SetModuleRemovable("entry", false, Constants::START_USERID);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -1695,4 +1687,108 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, Parcel_0100, Function | SmallTest | L
 
     RequestPermissionUsedScene *requestPermissionUsedScene = RequestPermissionUsedScene::Unmarshalling(parcel);
     EXPECT_EQ(requestPermissionUsedScene, nullptr);
+}
+
+/**
+ * @tc.number: FormInfo_0200
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test the IsValid of FormInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, FormInfo_0200, Function | SmallTest | Level1)
+{
+    FormInfo formInfo;
+    formInfo.window.autoDesignWidth = false;
+    formInfo.window.designWidth = -1;
+    bool ret = formInfo.IsValid();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DistributedModuleInfo_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling and Dump of DistributedModuleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedModuleInfo_0100, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo info1;
+    info1.moduleName = "entry";
+    OHOS::Parcel parcel;
+    info1.Marshalling(parcel);
+    DistributedModuleInfo info2;
+    info2.Unmarshalling(parcel);
+    bool res = info2.ReadFromParcel(parcel);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: DistributedAbilityInfo_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling and Dump of DistributedAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedAbilityInfo_0100, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo info;
+    info.abilityName = "MainAbility";
+    OHOS::Parcel parcel;
+    info.Marshalling(parcel);
+    info.Unmarshalling(parcel);
+    bool res = info.ReadFromParcel(parcel);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: PerfProfile_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling and Dump of DistributedAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, PerfProfile_0100, Function | SmallTest | Level1)
+{
+    DistributedAbilityInfo info;
+    info.abilityName = "MainAbility";
+    OHOS::Parcel parcel;
+    info.Marshalling(parcel);
+    info.Unmarshalling(parcel);
+    bool res = info.ReadFromParcel(parcel);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CommonEventInfo_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling of CommonEventInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, CommonEventInfo_0100, Function | SmallTest | Level1)
+{
+    CommonEventInfo info;
+    info.uid = 0;
+    OHOS::Parcel parcel;
+    bool res = info.Marshalling(parcel);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: SetAccessTokenIdEx_0100
+ * @tc.name: Test SetAccessTokenIdEx
+ * @tc.desc: 1.Test the SetAccessTokenIdEx
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetAccessTokenIdEx_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = NORMAL_BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    OHOS::Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    accessTokenIdEx.tokenIDEx = 100;
+    int32_t userId = Constants::DEFAULT_USERID;
+    info.SetAccessTokenIdEx(accessTokenIdEx, userId);
+    uint64_t tokenIdEx = info.GetAccessTokenIdEx(userId);
+    EXPECT_EQ(tokenIdEx, 0);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetAccessTokenIdEx(accessTokenIdEx, userId);
+    tokenIdEx = info.GetAccessTokenIdEx(userId);
+    EXPECT_EQ(tokenIdEx, accessTokenIdEx.tokenIDEx);
 }

@@ -584,6 +584,34 @@ bool CommonFunc::ParseWant(napi_env env, napi_value args, Want &want)
     return true;
 }
 
+bool CommonFunc::ParseWantPerformance(napi_env env, napi_value args, Want &want)
+{
+    APP_LOGD("begin to parse want performance");
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGE("args not object type");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, args, BUNDLE_NAME, &prop);
+    std::string bundleName = GetStringFromNAPI(env, prop);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, MODULE_NAME, &prop);
+    std::string moduleName = GetStringFromNAPI(env, prop);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, ABILITY_NAME, &prop);
+    std::string abilityName = GetStringFromNAPI(env, prop);
+    if (!bundleName.empty() && !abilityName.empty()) {
+        ElementName elementName("", bundleName, abilityName, moduleName);
+        want.SetElement(elementName);
+        return true;
+    }
+    return ParseWant(env, args, want);
+}
+
 bool CommonFunc::ParseWantWithoutVerification(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;
@@ -1061,6 +1089,10 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.appProvisionType.c_str(), NAPI_AUTO_LENGTH,
         &nAppProvisionType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "appProvisionType", nAppProvisionType));
+
+    napi_value nIsSystemApp;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.isSystemApp, &nIsSystemApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "systemApp", nIsSystemApp));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)

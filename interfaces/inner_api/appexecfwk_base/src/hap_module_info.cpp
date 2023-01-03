@@ -71,6 +71,30 @@ const size_t MODULE_CAPACITY = 10240; // 10K
 
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 {
+    int32_t abilityInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfosSize);
+    CONTAINER_SECURITY_VERIFY(parcel, abilityInfosSize, &abilityInfos);
+    for (auto i = 0; i < abilityInfosSize; i++) {
+        std::unique_ptr<AbilityInfo> abilityInfo(parcel.ReadParcelable<AbilityInfo>());
+        if (!abilityInfo) {
+            APP_LOGE("ReadParcelable<AbilityInfo> failed");
+            return false;
+        }
+        abilityInfos.emplace_back(*abilityInfo);
+    }
+
+    int32_t extensionInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfosSize);
+    CONTAINER_SECURITY_VERIFY(parcel, extensionInfosSize, &extensionInfos);
+    for (auto i = 0; i < extensionInfosSize; i++) {
+        std::unique_ptr<ExtensionAbilityInfo> extensionAbilityInfo(parcel.ReadParcelable<ExtensionAbilityInfo>());
+        if (!extensionAbilityInfo) {
+            APP_LOGE("ReadParcelable<ExtensionAbilityInfo> failed");
+            return false;
+        }
+        extensionInfos.emplace_back(*extensionAbilityInfo);
+    }
+
     name = Str16ToStr8(parcel.ReadString16());
     package = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
@@ -108,18 +132,6 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         dependencies.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
-    int32_t abilityInfosSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfosSize);
-    CONTAINER_SECURITY_VERIFY(parcel, abilityInfosSize, &abilityInfos);
-    for (auto i = 0; i < abilityInfosSize; i++) {
-        std::unique_ptr<AbilityInfo> abilityInfo(parcel.ReadParcelable<AbilityInfo>());
-        if (!abilityInfo) {
-            APP_LOGE("ReadParcelable<AbilityInfo> failed");
-            return false;
-        }
-        abilityInfos.emplace_back(*abilityInfo);
-    }
-
     colorMode = static_cast<ModuleColorMode>(parcel.ReadInt32());
     bundleName = Str16ToStr8(parcel.ReadString16());
     mainElementName = Str16ToStr8(parcel.ReadString16());
@@ -143,18 +155,6 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         isRemovable[key] = isRemove;
     }
     moduleType = static_cast<ModuleType>(parcel.ReadInt32());
-
-    int32_t extensionInfosSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfosSize);
-    CONTAINER_SECURITY_VERIFY(parcel, extensionInfosSize, &extensionInfos);
-    for (auto i = 0; i < extensionInfosSize; i++) {
-        std::unique_ptr<ExtensionAbilityInfo> extensionAbilityInfo(parcel.ReadParcelable<ExtensionAbilityInfo>());
-        if (!extensionAbilityInfo) {
-            APP_LOGE("ReadParcelable<ExtensionAbilityInfo> failed");
-            return false;
-        }
-        extensionInfos.emplace_back(*extensionAbilityInfo);
-    }
 
     int32_t metadataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
@@ -196,6 +196,16 @@ HapModuleInfo *HapModuleInfo::Unmarshalling(Parcel &parcel)
 
 bool HapModuleInfo::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfos.size());
+    for (auto &abilityInfo : abilityInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfos.size());
+    for (auto &extensionInfo : extensionInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo);
+    }
+
     CHECK_PARCEL_CAPACITY(parcel, MODULE_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(package));
@@ -228,11 +238,6 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dependency));
     }
 
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfos.size());
-    for (auto &abilityInfo : abilityInfos) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo);
-    }
-
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(colorMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mainElementName));
@@ -254,11 +259,6 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     }
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(moduleType));
-
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfos.size());
-    for (auto &extensionInfo : extensionInfos) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo);
-    }
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
     for (auto &mete : metadata) {

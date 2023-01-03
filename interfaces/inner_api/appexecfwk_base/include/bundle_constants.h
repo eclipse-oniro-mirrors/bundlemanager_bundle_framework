@@ -30,6 +30,7 @@ constexpr const char* PATCH_PROFILE_NAME = "patch.json";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
+constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
@@ -62,7 +63,6 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bun
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
-constexpr const char* COMPRESS_PROPERTY = "compress";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
@@ -189,6 +189,8 @@ constexpr uint8_t MAX_MODULE_ABILITIES_READPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_ABILITIES_WRITEPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
 constexpr uint8_t MAX_MODULE_LABEL = 63;
+constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
+constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 
@@ -291,6 +293,9 @@ constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 // thread pool
 constexpr int32_t MAX_TASK_NUMBER = 10;
 constexpr const char* RELATIVE_PATH = "../";
+
+// app detail ability
+constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

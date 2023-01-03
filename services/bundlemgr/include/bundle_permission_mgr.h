@@ -60,17 +60,17 @@ public:
     static bool RequestPermissionFromUser(
         const std::string &bundleName, const std::string &permissionName, const int32_t userId);
 
-    static Security::AccessToken::AccessTokenID CreateAccessTokenId(
+    static Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(
         const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId);
 
-    static Security::AccessToken::AccessTokenID CreateAccessTokenId(
+    static Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(
         const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId,
         const int32_t dlpType, const Security::AccessToken::HapPolicyParams &hapPolicy);
 
-    static bool UpdateDefineAndRequestPermissions(const Security::AccessToken::AccessTokenID tokenId,
+    static bool UpdateDefineAndRequestPermissions(Security::AccessToken::AccessTokenIDEx &tokenIdEx,
         const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, std::vector<std::string> &newRequestPermName);
 
-    static bool AddDefineAndRequestPermissions(const Security::AccessToken::AccessTokenID tokenId,
+    static bool AddDefineAndRequestPermissions(Security::AccessToken::AccessTokenIDEx &tokenIdEx,
         const InnerBundleInfo &innerBundleInfo, std::vector<std::string> &newRequestPermName);
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId);

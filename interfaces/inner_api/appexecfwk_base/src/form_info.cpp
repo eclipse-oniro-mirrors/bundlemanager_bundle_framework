@@ -76,7 +76,10 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     src = formInfo.src;
     window.designWidth = formInfo.window.designWidth;
     window.autoDesignWidth = formInfo.window.autoDesignWidth;
-    descriptionId = 0;
+    std::size_t pos = formInfo.description.find(":");
+    if (pos != std::string::npos) {
+        descriptionId = atoi(formInfo.description.substr(pos + 1, formInfo.description.length() - pos - 1).c_str());
+    }
     updateDuration = formInfo.updateDuration;
     defaultDimension = formInfo.defaultDimension;
     defaultFlag = formInfo.isDefault;

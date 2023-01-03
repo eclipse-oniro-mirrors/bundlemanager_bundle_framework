@@ -17,61 +17,94 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_AGING_REQUEST_H
 
 #include <vector>
+#include <set>
 
 #include "aging_bundle_info.h"
+#include "aging_bundle_state.h"
+#include "aging_module_info.h"
 #include "aging_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class AgingCleanType {
+    CLEAN_CACHE = 0,
+    CLEAN_OTHERS,
+};
+
 class AgingRequest {
 public:
     AgingRequest();
     bool IsReachStartAgingThreshold() const;
     bool IsReachEndAgingThreshold() const;
+    size_t SortAgingBundles();
+    void RequestReset();
+    void AddAgingBundle(AgingBundleInfo &bundleInfo);
+    void AddAgingModule(AgingModuleInfo &moduleInfo);
+    void AddAgingBundleState(const AgingBundleState &agingBundleState);
+    void SetAgingCleanState(
+        const std::string &bundleName, const std::string &moduleName, bool state);
+    bool HasCleanCache(
+        const std::string &bundleName, const std::string &moduleName, bool hasCleanCache) const;
+    bool CanClearBundleCache(const std::string &bundleName) const;
+
     const std::vector<AgingBundleInfo> &GetAgingBundles() const
     {
-        return agingBundles;
+        return agingBundles_;
     };
-    void AddAgingBundle(AgingBundleInfo &bundleInfo);
-    size_t SortAgingBundles()
+
+    const std::set<AgingModuleInfo> &GetAgingModules() const
     {
-        AgingUtil::SortAgingBundles(agingBundles);
-        return agingBundles.size();
+        return agingModules_;
     };
+
     void UpdateTotalDataBytesAfterUninstalled(const int64_t dataBytes)
     {
-        tatalDataBytes -= dataBytes;
+        tatalDataBytes_ -= dataBytes;
     };
+
     int64_t GetTotalDataBytes() const
     {
-        return tatalDataBytes;
+        return tatalDataBytes_;
     };
+
     void SetTotalDataBytes(const int64_t allBundleDataBytes)
     {
-        tatalDataBytes = allBundleDataBytes;
+        tatalDataBytes_ = allBundleDataBytes;
     };
-    void RequestReset();
 
-public:
+    void SetAgingCleanType(const AgingCleanType agingCleanType)
+    {
+        agingCleanType_ = agingCleanType;
+    };
+
+    AgingCleanType GetAgingCleanType() const
+    {
+        return agingCleanType_;
+    };
+
     static int64_t GetTotalDataBytesThreshold()
     {
-        return totalDataBytesThreshold;
+        return totalDataBytesThreshold_;
     };
+
     static int64_t GetOneDayTimeMs()
     {
-        return oneDayTimeMs;
+        return oneDayTimeMs_;
     };
 
 private:
     void InitAgingPolicySystemParameters();
     void InitAgingDatasizeThreshold();
     void InitAgingOneDayTimeMs();
-    std::vector<AgingBundleInfo> agingBundles;
-    int64_t tatalDataBytes = 0;
 
-private:
-    static int64_t totalDataBytesThreshold;
-    static int64_t oneDayTimeMs;
+    std::vector<AgingBundleInfo> agingBundles_;
+    std::set<AgingModuleInfo> agingModules_;
+    int64_t tatalDataBytes_ = 0;
+    std::map<std::string, AgingBundleState> agingBundleStates_;
+    AgingCleanType agingCleanType_ = AgingCleanType::CLEAN_CACHE;
+
+    static int64_t totalDataBytesThreshold_;
+    static int64_t oneDayTimeMs_;
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

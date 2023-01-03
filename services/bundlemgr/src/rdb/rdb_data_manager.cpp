@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -182,11 +183,15 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
     absRdbPredicates.EqualTo(BMS_KEY, key);
     auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
-    if (absSharedResultSet == nullptr || !absSharedResultSet->HasBlock()) {
+    if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
         return false;
     }
-
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    if (!absSharedResultSet->HasBlock()) {
+        APP_LOGE("absSharedResultSet has no block");
+        return false;
+    }
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
@@ -234,8 +239,13 @@ bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
     auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
-    if (absSharedResultSet == nullptr || !absSharedResultSet->HasBlock()) {
+    if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
+        return false;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    if (!absSharedResultSet->HasBlock()) {
+        APP_LOGE("absSharedResultSet has no block");
         return false;
     }
 

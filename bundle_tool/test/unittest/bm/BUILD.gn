@@ -75,6 +75,7 @@ ohos_unittest("bm_command_dump_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:quickfix_manager",
+    "access_token:libaccesstoken_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -128,6 +129,7 @@ ohos_unittest("bm_command_dump_dependencies_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:quickfix_manager",
+    "access_token:libaccesstoken_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -181,6 +183,7 @@ ohos_unittest("bm_command_install_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:quickfix_manager",
+    "access_token:libaccesstoken_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -234,6 +237,7 @@ ohos_unittest("bm_command_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:quickfix_manager",
+    "access_token:libaccesstoken_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -287,6 +291,7 @@ ohos_unittest("bm_command_uninstall_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:quickfix_manager",
+    "access_token:libaccesstoken_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -340,6 +345,7 @@ ohos_unittest("bm_command_quickfix_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:quickfix_manager",
+    "access_token:libaccesstoken_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",

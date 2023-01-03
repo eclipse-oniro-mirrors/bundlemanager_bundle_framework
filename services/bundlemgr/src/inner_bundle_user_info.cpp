@@ -21,6 +21,7 @@ namespace {
 const std::string INNER_BUNDLE_USER_INFO_UID = "uid";
 const std::string INNER_BUNDLE_USER_INFO_GIDS = "gids";
 const std::string INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID = "accessTokenId";
+const std::string INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
 const std::string INNER_BUNDLE_USER_INFO_BUNDLE_NAME = "bundleName";
 const std::string INNER_BUNDLE_USER_INFO_INSTALL_TIME = "installTime";
 const std::string INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
@@ -33,6 +34,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_UID, innerBundleUserInfo.uid},
         {INNER_BUNDLE_USER_INFO_GIDS, innerBundleUserInfo.gids},
         {INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID, innerBundleUserInfo.accessTokenId},
+        {INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX, innerBundleUserInfo.accessTokenIdEx},
         {INNER_BUNDLE_USER_INFO_BUNDLE_NAME, innerBundleUserInfo.bundleName},
         {INNER_BUNDLE_USER_INFO_INSTALL_TIME, innerBundleUserInfo.installTime},
         {INNER_BUNDLE_USER_INFO_UPDATE_TIME, innerBundleUserInfo.updateTime},
@@ -64,6 +66,14 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID,
         innerBundleUserInfo.accessTokenId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint64_t>(jsonObject,
+        jsonObjectEnd,
+        INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX,
+        innerBundleUserInfo.accessTokenIdEx,
         JsonType::NUMBER,
         false,
         parseResult,

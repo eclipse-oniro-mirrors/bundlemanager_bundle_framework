@@ -32,7 +32,9 @@ public:
     bool Process(AgingRequest &request) const;
 
 private:
-    std::vector<std::shared_ptr<AgingHandler>> handlers;
+    bool InnerProcess(AgingRequest &request) const;
+
+    std::vector<std::shared_ptr<AgingHandler>> handlers_;
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

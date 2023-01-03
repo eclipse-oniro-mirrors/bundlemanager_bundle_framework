@@ -56,14 +56,18 @@ private:
         const std::shared_ptr<BundleDataMgr> &dataMgr);
     void InitAgingTimerInterval();
     void InitAgingBatteryThresold();
+    bool InitAgingRequest();
+    bool ResetRequest();
+    bool IsReachStartAgingThreshold();
+    bool QueryModuleUsageRecords(std::vector<DeviceUsageStats::BundleActiveModuleRecord> &results);
 
 private:
     std::mutex mutex_;
-    bool running = false;
-    AgingHandlerChain chain;
-    AgingRequest request;
-    int64_t agingTimerInterval = AgingConstants::DEFAULT_AGING_TIMER_INTERVAL;
-    int64_t agingBatteryThresold = AgingConstants::DEFAULT_AGING_BATTERY_THRESHOLD;;
+    bool running_ = false;
+    AgingHandlerChain chain_;
+    AgingRequest request_;
+    int64_t agingTimerInterval_ = AgingConstants::DEFAULT_AGING_TIMER_INTERVAL;
+    int64_t agingBatteryThresold_ = AgingConstants::DEFAULT_AGING_BATTERY_THRESHOLD;;
 
 private:
     static const uint32_t EVENT_AGING_NOW = 1;

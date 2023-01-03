@@ -260,7 +260,9 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT, ERROR_INSTALL_NO_DISK_SPACE_LEFT },
         { IStatusReceiver::ERR_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
         { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE, ERROR_INSTALL_VERSION_DOWNGRADE },
-        { IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED, ERROR_INSTALL_PARSE_FAILED }
+        { IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST, ERROR_INSTALL_DEPENDENT_MODULE_NOT_EXIST },
     };
 }
 
@@ -542,7 +544,7 @@ napi_value Install(napi_env env, napi_callback_info info)
     APP_LOGD("Install called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -550,7 +552,7 @@ napi_value Install(napi_env env, napi_callback_info info)
 
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < ARGS_SIZE_TWO) {
+    if (argc < ARGS_SIZE_ONE) {
         APP_LOGE("the params number is incorrect");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -643,7 +645,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
     APP_LOGD("UninstallOrRecover by bundleName called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -651,7 +653,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
 
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < ARGS_SIZE_TWO) {
+    if (argc < ARGS_SIZE_ONE) {
         APP_LOGE("the params number is incorrect");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;

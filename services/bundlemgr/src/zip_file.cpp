@@ -52,7 +52,7 @@ ZipEntry::ZipEntry(const CentralDirEntry &centralEntry)
 
 ZipFile::ZipFile(const std::string &pathName) : pathName_(pathName)
 {
-    APP_LOGI("create instance from %{private}s", pathName_.c_str());
+    APP_LOGD("create instance from %{private}s", pathName_.c_str());
 }
 
 ZipFile::~ZipFile()

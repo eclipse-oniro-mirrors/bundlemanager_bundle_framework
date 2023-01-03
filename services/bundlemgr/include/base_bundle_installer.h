@@ -21,6 +21,7 @@
 
 #include "nocopyable.h"
 
+#include "access_token.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
@@ -345,6 +346,12 @@ private:
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
+     * @brief To check dependency whether or not exists.
+     * @param infos Indicates all innerBundleInfo for all haps need to be installed.
+     * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
+     */
+    ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    /**
      * @brief To check the hap hash param.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
      * @param hashParams .Indicates all hashParams in installParam.
@@ -449,7 +456,7 @@ private:
 
     bool VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate = false) const;
 
-    ErrCode CheckHapModleOrType(const InnerBundleInfo &innerBundleInfo,
+    ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
@@ -464,9 +471,9 @@ private:
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    uint32_t CreateAccessTokenId(const InnerBundleInfo &info);
+    Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(const InnerBundleInfo &info);
     ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
-    ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
+    ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
     /**
      * @brief Check to set isRemovable true when install.

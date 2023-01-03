@@ -114,6 +114,7 @@ void BmsBundleQuickFixBootScannerTest::StartService()
     bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bundleMgrService_ != nullptr && !bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 

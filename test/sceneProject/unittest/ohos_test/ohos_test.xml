@@ -56,6 +56,14 @@
         src="res" />
       <option name="push" value="test_bundle/wrong_bundle_name.ha ->
         /data/test/resource/bms/accesstoken_bundle/" src="res" />
+      <option name="push" value="test_bundle/bmsThirdBundle1.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+      <option name="push" value="test_bundle/bmsThirdBundle2.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+      <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+      <option name="push" value="test_bundle/thumbnail2.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
     </preparer>
   </target>
   <target name="BmsBundleParserTest">
@@ -83,6 +91,7 @@
       <option name="push" value="test_bundle/backup.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/preview.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/devicetype_error.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleManagerTest">
@@ -275,6 +284,16 @@
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/"
         src="res" />
+    </preparer>
+  </target>
+  <target name="BmsBundleHspTest">
+  <preparer>
+     <option name="push" value="bundle_hsp/hap_entry.hap -> /data/test/resource/bms/hsp/" src="res" />
+     <option name="push" value="bundle_hsp/hsp_A.hsp -> /data/test/resource/bms/hsp/" src="res" />
+     <option name="push" value="bundle_hsp/hsp_B.hsp -> /data/test/resource/bms/hsp/" src="res" />
+     <option name="push" value="bundle_hsp/hsp_C.hsp -> /data/test/resource/bms/hsp/" src="res" />
+     <option name="push" value="bundle_hsp/hsp_C2.hsp -> /data/test/resource/bms/hspC2/" src="res" />
+     <option name="push" value="bundle_hsp/hsp_D.hsp -> /data/test/resource/bms/hspD/" src="res" />
     </preparer>
   </target>
 </configuration>

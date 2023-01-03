@@ -34,7 +34,8 @@ thread_local int32_t parseResult;
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "har"
+    "har",
+    "shared"
 };
 const std::map<std::string, AbilityType> ABILITY_TYPE_MAP = {
     {"page", AbilityType::PAGE},
@@ -313,7 +314,7 @@ struct Module {
     std::vector<std::string> supportedModes;
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceType;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     Distro distro;
     MetaData metaData;
     std::vector<Ability> abilities;
@@ -1773,14 +1774,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+    GetValueIfFindKey<std::vector<Dependency>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_MODULE_DEPENDENCIES,
         module.dependencies,
         JsonType::ARRAY,
         false,
         parseResult,
-        ArrayType::STRING);
+        ArrayType::OBJECT);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         BUNDLE_MODULE_PROFILE_KEY_IS_LIB_ISOLATED,
@@ -2473,7 +2474,18 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-
+    if (!find && !transformParam.isPreInstallApp &&
+        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+        applicationInfo.needAppDetail = true;
+        if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
+            applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
+        } else {
+            applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH;
+        }
+        if ((applicationInfo.labelId == 0) && (applicationInfo.label.empty())) {
+            applicationInfo.label = applicationInfo.bundleName;
+        }
+    }
     innerBundleInfo.SetCurrentModulePackage(configJson.module.package);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);

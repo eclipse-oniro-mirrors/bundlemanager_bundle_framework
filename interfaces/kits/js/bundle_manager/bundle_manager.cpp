@@ -749,7 +749,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
-            if (!CommonFunc::ParseWant(env, args[i], asyncCallbackInfo->want)) {
+            if (!CommonFunc::ParseWantPerformance(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -2314,7 +2314,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
     Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
-    CheckToCache(env, bundleInfo.applicationInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     return nBundleInfo;
 }
 
