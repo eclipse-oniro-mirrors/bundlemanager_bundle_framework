@@ -242,7 +242,8 @@ static void CheckCompatibleApplicationInfo(
     EXPECT_EQ(compatibleApplicationInfo.label, "$string:app_name");
     if (!compatibleApplicationInfo.moduleInfos.empty()) {
         EXPECT_EQ(compatibleApplicationInfo.moduleInfos[0].moduleName, "entry");
-        EXPECT_EQ(compatibleApplicationInfo.moduleInfos[0].moduleSourceDir, "");
+        EXPECT_EQ(compatibleApplicationInfo.moduleInfos[0].moduleSourceDir,
+            "/data/app/el1/bundle/public/com.example.third1/com.example.third1");
     }
     EXPECT_TRUE(compatibleApplicationInfo.enabled);
 }
