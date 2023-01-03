@@ -4806,23 +4806,11 @@ NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityI
     object->SetProperty("orientation", CreateJsValue(engine, static_cast<int32_t>(abilityInfo.orientation)));
     object->SetProperty("launchMode", CreateJsValue(engine, static_cast<int32_t>(abilityInfo.launchMode)));
 
-<<<<<<< HEAD
-    napi_value nPrint;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-    static_cast<int32_t>(ExtensionAbilityType::PRINT), &nPrint));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PRINT", nPrint));
-
-    napi_value nBackup;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::BACKUP), &nBackup));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKUP", nBackup));
-=======
     if (!abilityInfo.isModuleJson) {
         object->SetProperty("backgroundModes", CreateJsValue(engine, abilityInfo.backgroundModes));
     } else {
         object->SetProperty("backgroundModes", CreateJsValue(engine, 0));
     }
->>>>>>> 971a0f8d0560ceafc03c49c51cc54a87795cc88b
 
     object->SetProperty("descriptionId", CreateJsValue(engine, abilityInfo.descriptionId));
     object->SetProperty("formEnabled", CreateJsValue(engine, abilityInfo.formEnabled));
