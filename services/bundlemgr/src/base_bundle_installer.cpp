@@ -57,8 +57,14 @@ const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
-    return info.GetAppCodePath() + Constants::PATH_SEPARATOR
-        + moduleName + Constants::INSTALL_FILE_SUFFIX;
+    std::string fileSuffix = Constants::INSTALL_FILE_SUFFIX;
+    auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
+    if (moduleInfo && moduleInfo->distro.moduleType == Profile::MODULE_TYPE_SHARED) {
+        APP_LOGD("The module(%{public}s) is shared.", moduleName.c_str());
+        fileSuffix = Constants::INSTALL_SHARED_FILE_SUFFIX;
+    }
+
+    return info.GetAppCodePath() + Constants::PATH_SEPARATOR + moduleName + fileSuffix;
 }
 
 std::string GetHapPath(const InnerBundleInfo &info)
