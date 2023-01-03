@@ -186,7 +186,7 @@ HWTEST_F(BmsDistributedDataStorageTest, QueryStroageDistributeInfo_0300, Functio
     EXPECT_TRUE(result);
 
     DistributedKv::DistributedKvDataManager dataManager;
-    DeviceInfo deviceInfo;
+    DistributedKv::DeviceInfo deviceInfo;
     dataManager.GetLocalDevice(deviceInfo);
 
     DistributedBundleInfo getInfo;
@@ -209,7 +209,7 @@ HWTEST_F(BmsDistributedDataStorageTest, QueryStroageDistributeInfo_0400, Functio
     EXPECT_TRUE(result);
 
     DistributedKv::DistributedKvDataManager dataManager;
-    DeviceInfo deviceInfo;
+    DistributedKv::DeviceInfo deviceInfo;
     dataManager.GetLocalDevice(deviceInfo);
 
     DistributedBundleInfo getInfo;
