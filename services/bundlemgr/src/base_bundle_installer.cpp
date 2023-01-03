@@ -60,10 +60,8 @@ std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleNam
     std::string fileSuffix = Constants::INSTALL_FILE_SUFFIX;
     auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
     if (moduleInfo && moduleInfo->distro.moduleType == Profile::MODULE_TYPE_SHARED) {
-        APP_LOGE("The module(%{public}s) is shared.", moduleName.c_str());
+        APP_LOGD("The module(%{public}s) is shared.", moduleName.c_str());
         fileSuffix = Constants::INSTALL_SHARED_FILE_SUFFIX;
-    } else {
-        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
     }
 
     return info.GetAppCodePath() + Constants::PATH_SEPARATOR + moduleName + fileSuffix;
