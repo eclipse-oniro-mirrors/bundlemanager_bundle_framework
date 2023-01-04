@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("../../../../dbms.gni")
 
-ohos_shared_library("distributedbundle") {
+ohos_shared_library("distributedbundlemanager") {
   include_dirs = [ "${kits_path}/js/common" ]
   defines = [
     "APP_LOG_TAG = \"DistributedBundleMgrService\"",
@@ -47,14 +47,14 @@ ohos_shared_library("distributedbundle") {
   ]
 
   relative_install_dir = "module/bundle"
-  subsystem_name = "bundle_framework"
+  subsystem_name = "bundlemanager"
   part_name = "distributed_bundle_framework"
 }
 
-group("jsapi_target_v9") {
+group("jsapi_target") {
   deps = []
 
   if (support_jsapi && bundle_framework_graphics) {
-    deps += [ ":distributedbundle" ]
+    deps += [ ":distributedbundlemanager" ]
   }
 }
