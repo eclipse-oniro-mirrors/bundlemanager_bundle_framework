@@ -6111,9 +6111,7 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
                 CreateJsValue(engine, obj->errMessage_));
             return;
         }
-        napi_value exports = nullptr;
         auto env = reinterpret_cast<napi_env>(&engine);
-        Media::PixelMapNapi::Init(env, exports);
         NativeValue *ret = reinterpret_cast<NativeValue*>(
             Media::PixelMapNapi::CreatePixelMap(env, pixelMap));
         task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), ret);
