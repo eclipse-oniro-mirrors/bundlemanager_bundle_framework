@@ -71,6 +71,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest1:rightTest1",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/second_right:second_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/seventh_right:seventh_right",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/signatureTest:signatureTest",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/system_module:system_module",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/third_right:third_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
