@@ -55,7 +55,17 @@
                 "launchType": "singleton",
                 "orientation": "unspecified",
                 "type": "page",
-                "visible": true
+                "visible": true,
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ]
             }
         ],
         "js": [

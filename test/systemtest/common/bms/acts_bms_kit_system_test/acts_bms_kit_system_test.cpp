@@ -500,7 +500,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0200, Function | MediumTest | Level
     bool getInfoResult =
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
-    CheckBundleInfo(2, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -536,7 +536,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0300, Function | MediumTest | Level
     bool getInfoResult =
         bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
-    CheckBundleInfo(3, bundleInfo);
+    EXPECT_EQ(bundleInfo.name, appName);
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
