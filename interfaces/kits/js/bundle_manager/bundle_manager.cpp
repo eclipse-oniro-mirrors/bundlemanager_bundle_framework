@@ -1074,8 +1074,6 @@ void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
     napi_value result[2] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-        napi_value exports = nullptr;
-        Media::PixelMapNapi::Init(env, exports);
         result[1] = Media::PixelMapNapi::CreatePixelMap(env, asyncCallbackInfo->pixelMap);
     } else {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
