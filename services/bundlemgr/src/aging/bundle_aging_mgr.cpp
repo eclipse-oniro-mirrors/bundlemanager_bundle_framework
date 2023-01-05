@@ -206,7 +206,7 @@ bool BundleAgingMgr::InitAgingRequest()
 
                 return false;
             });
-        APP_LOGD("bundle: %{public}s, lastTimeUsed: %{public}lld, startCount: %{public}d",
+        APP_LOGD("bundle: %{public}s, lastTimeUsed: %{public}" PRId64 ", startCount: %{public}d",
             bundleName.c_str(), bundleRecord.lastTimeUsed_, bundleRecord.startCount_);
         AgingBundleInfo agingBundleInfo(bundleName, bundleRecord.lastTimeUsed_, bundleRecord.startCount_);
         request_.AddAgingBundle(agingBundleInfo);
