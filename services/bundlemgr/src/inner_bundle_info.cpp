@@ -1543,6 +1543,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.metadata = it->second.metadata;
     bool first = false;
     for (auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         if (ability.first.find(key) != std::string::npos) {
             if (!first) {
                 hapInfo.deviceTypes = ability.second.deviceTypes;
@@ -1628,6 +1631,9 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
 
     std::vector<AbilityInfo> abilitys;
     for (const auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         auto abilityInfo = ability.second;
         GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
@@ -1651,6 +1657,9 @@ std::vector<AbilityInfo> InnerBundleInfo::FindAbilityInfosByModule(
     }
 
     for (const auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         if ((ability.second.moduleName == moduleName)) {
             abilitys.emplace_back(ability.second);
         }
@@ -2282,7 +2291,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
     }
     APP_LOGD("Get bundleInfo with abilities.");
     for (auto &ability : baseAbilityInfos_) {
-        if (ability.second.moduleName != hapModuleInfo.moduleName) {
+        if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
+            (ability.second.name == Constants::APP_DETAIL_ABILITY)) {
             continue;
         }
         bool isEnabled = IsAbilityEnabled(ability.second, userId);
@@ -2331,6 +2341,9 @@ void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleIn
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
         for (auto &ability : baseAbilityInfos_) {
+            if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+                continue;
+            }
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
