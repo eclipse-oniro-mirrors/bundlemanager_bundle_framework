@@ -13,5 +13,8 @@
 
 group("unittest") {
   testonly = true
-  deps = [ "unittest/dbms_services_kit_test:unittest" ]
+  deps = [
+    "unittest/dbms_services_kit_test:unittest",
+    "unittest/distributed_bms_host_test:unittest",
+  ]
 }

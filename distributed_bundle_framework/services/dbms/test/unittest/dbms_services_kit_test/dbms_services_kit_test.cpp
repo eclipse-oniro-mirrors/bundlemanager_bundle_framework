@@ -677,4 +677,309 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0034, Function | SmallTest | L
         EXPECT_EQ(res, false);
     }
 }
+
+/**
+ * @tc.number: DbmsServicesKitTest_0035
+ * @tc.name: SendSystemEvent
+ * @tc.desc: Send System Event failed
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0035, Function | SmallTest | Level0)
+{
+    auto eventReport = GetEventReport();
+    EXPECT_NE(eventReport, nullptr);
+    if (eventReport != nullptr) {
+        DBMSEventType dbmsEventType = DBMSEventType::UNKNOW;
+        DBMSEventInfo eventInfo;
+        eventReport->SendSystemEvent(dbmsEventType, eventInfo);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0036
+ * @tc.name: SendSystemEvent
+ * @tc.desc: Send System Event sucess
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0036, Function | SmallTest | Level0)
+{
+    auto eventReport = GetEventReport();
+    EXPECT_NE(eventReport, nullptr);
+    if (eventReport != nullptr) {
+        DBMSEventType dbmsEventType = DBMSEventType::GET_REMOTE_ABILITY_INFO;
+        DBMSEventInfo eventInfo;
+        eventInfo.deviceID = "deviceID";
+        eventInfo.bundleName = "bundleName";
+        eventInfo.localeInfo = "localeInfo";
+        eventInfo.abilityName = "abilityName";
+        eventInfo.resultCode = 0;
+        eventReport->SendSystemEvent(dbmsEventType, eventInfo);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0037
+ * @tc.name: GetKvStore
+ * @tc.desc: Get KvStore
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0037, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        auto ret = distributedDataStorage->GetKvStore();
+        EXPECT_EQ(ret, DistributedKv::Status::SUCCESS);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0038
+ * @tc.name: GetLocalUdid
+ * @tc.desc: Get Local Udid
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0038, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string udid = "udid";
+        auto ret = distributedDataStorage->GetLocalUdid(udid);
+        EXPECT_EQ(ret, true);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0039
+ * @tc.name: GetUdidByNetworkId
+ * @tc.desc: Get Udid By NetworkId
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0039, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string networkId = "networkId";
+        std::string udid = "udid";
+        auto ret = distributedDataStorage->GetUdidByNetworkId(networkId, udid);
+        EXPECT_EQ(ret, 0); 
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0040
+ * @tc.name: ConvertToDistributedBundleInfo
+ * @tc.desc: Convert To Distributed BundleInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0040, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.name = "name";
+        AbilityInfo abilityInfo;
+        abilityInfo.moduleName = "moduleName";
+        bundleInfo.abilityInfos.push_back(abilityInfo);
+        auto ret = distributedDataStorage->ConvertToDistributedBundleInfo(bundleInfo);
+        EXPECT_EQ(ret.bundleName, "name"); 
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0041
+ * @tc.name: ConvertToDistributedBundleInfo
+ * @tc.desc: Convert To Distributed BundleInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0041, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.name = "name";
+        AbilityInfo abilityInfo1;
+        abilityInfo1.moduleName = "moduleName";
+        bundleInfo.abilityInfos.push_back(abilityInfo1);
+        AbilityInfo abilityInfo2;
+        abilityInfo2.moduleName = "moduleName";
+        bundleInfo.abilityInfos.push_back(abilityInfo2);
+        auto ret = distributedDataStorage->ConvertToDistributedBundleInfo(bundleInfo);
+        EXPECT_EQ(ret.bundleName, "name");
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0042
+ * @tc.name: UpdateDistributedData
+ * @tc.desc: Update Distributed Data
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0042, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        int32_t userId = 1;
+        distributedDataStorage->UpdateDistributedData(userId);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0043
+ * @tc.name: CheckKvStore
+ * @tc.desc: Check KvStore
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0043, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        auto ret = distributedDataStorage->CheckKvStore();
+        EXPECT_EQ(ret, true); 
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0044
+ * @tc.name: DeviceAndNameToKey
+ * @tc.desc: Device And Name To Key
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0044, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string udid = "udid";
+        std::string bundleName = "bundleName";
+        auto ret = distributedDataStorage->DeviceAndNameToKey(udid, bundleName);
+        EXPECT_EQ(ret, "udid_bundleName"); 
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0045
+ * @tc.name: GetStorageDistributeInfo
+ * @tc.desc: Get Storage DistributeInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0045, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string networkId = "networkId";
+        std::string bundleName = "bundleName";
+        DistributedBundleInfo info;
+        auto ret = distributedDataStorage->GetStorageDistributeInfo(networkId, bundleName, info);
+        EXPECT_EQ(ret, false); 
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0046
+ * @tc.name: DeleteStorageDistributeInfo
+ * @tc.desc: Delete Storage DistributeInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0046, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string bundleName = "bundleName";
+        int32_t userId = 1;
+        distributedDataStorage->DeleteStorageDistributeInfo(bundleName, userId); 
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0047
+ * @tc.name: InnerSaveStorageDistributeInfo
+ * @tc.desc: Inner Save Storage DistributeInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0047, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        DistributedBundleInfo distributedBundleInfo;
+        distributedBundleInfo.bundleName = "bundleName";
+        auto ret = distributedDataStorage->InnerSaveStorageDistributeInfo(distributedBundleInfo);
+        EXPECT_EQ(ret, true); 
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0048
+ * @tc.name: SaveStorageDistributeInfo
+ * @tc.desc: Save Storage DistributeInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0048, Function | SmallTest | Level0)
+{
+    auto distributedDataStorage = GetDistributedDataStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string bundleName = "bundleName";
+        int32_t userId = 1;
+        distributedDataStorage->SaveStorageDistributeInfo(bundleName, userId);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0049
+ * @tc.name: OnStart
+ * @tc.desc: On Start
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0049, Function | SmallTest | Level0)
+{
+    auto distributedBms = GetDistributedBms();
+    EXPECT_NE(distributedBms, nullptr);
+    if (distributedBms != nullptr) {
+        distributedBms->OnStart();
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0050
+ * @tc.name: OnStop
+ * @tc.desc: On Stop
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0050, Function | SmallTest | Level0)
+{
+    auto distributedBms = GetDistributedBms();
+    EXPECT_NE(distributedBms, nullptr);
+    if (distributedBms != nullptr) {
+        distributedBms->OnStop();
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0051
+ * @tc.name: Init
+ * @tc.desc: Init
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0051, Function | SmallTest | Level0)
+{
+    auto distributedBms = GetDistributedBms();
+    EXPECT_NE(distributedBms, nullptr);
+    if (distributedBms != nullptr) {
+        distributedBms->distributedSub_ = nullptr;
+        distributedBms->Init();
+        EXPECT_NE(distributedBms->distributedSub_, nullptr);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0052
+ * @tc.name: GetRemoteAbilityInfo
+ * @tc.desc: Get Remote AbilityInfo
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0052, Function | SmallTest | Level0)
+{
+    auto distributedBms = GetDistributedBms();
+    EXPECT_NE(distributedBms, nullptr);
+    if (distributedBms != nullptr) {
+        OHOS::AppExecFwk::ElementName elementName;
+        elementName.SetDeviceID("");
+        std::string localeInfo = "localeInfo";
+        RemoteAbilityInfo remoteAbilityInfo;
+        auto ret = distributedBms->GetRemoteAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
+    }
+}
 } // OHOS
