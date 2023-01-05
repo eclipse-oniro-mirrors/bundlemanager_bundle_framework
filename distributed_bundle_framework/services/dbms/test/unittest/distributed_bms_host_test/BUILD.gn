@@ -20,24 +20,11 @@ ohos_unittest("DistributedBmsHostTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
-    #"${inner_api_path}/appexecfwk_base/include",
-    #"${inner_api_path}/appexecfwk_base/include/distributed_manager",
-    #"${inner_api_path}/appexecfwk_base/include/free_install",
-    #"${inner_api_path}/appexecfwk_base/include/quick_fix",
-    #"${inner_api_path}/appexecfwk_core/include/bundlemgr",
-    #"${inner_api_path}/appexecfwk_core/include/distributed_manager",
-    #"${inner_api_path}/appexecfwk_core/include/free_install",
-    #"${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
-    #"${dbms_inner_api_path}/include",
     "${dbms_services_path}/include",
   ]
 
   sources = [
-    #"${dbms_inner_api_path}/src/distributed_bms_proxy.cpp",
-    #"${dbms_services_path}/src/account_manager_helper.cpp",
-    #"${dbms_services_path}/src/distributed_bms.cpp",
     "${dbms_services_path}/src/distributed_bms_host.cpp",
-    #"${dbms_services_path}/src/distributed_data_storage.cpp",
   ]
 
   sources += [
