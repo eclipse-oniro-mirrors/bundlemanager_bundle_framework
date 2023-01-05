@@ -488,7 +488,9 @@ HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfo_0400, Function | MediumTes
     Parcel data;
     Parcel reply;
     MockDistributedBmsHost host;
+    std::string localeInfo = "localeInfo";
+    data.WriteString(localeInfo);
     int res = host.HandleGetAbilityInfo(data, reply);
-    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(res, NO_ERROR);
 }
 }
