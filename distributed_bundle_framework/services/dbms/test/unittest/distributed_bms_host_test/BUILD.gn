@@ -19,13 +19,9 @@ module_output_path = "bundle_framework/distributedbundleservice"
 ohos_unittest("DistributedBmsHostTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "${dbms_services_path}/include",
-  ]
+  include_dirs = [ "${dbms_services_path}/include" ]
 
-  sources = [
-    "${dbms_services_path}/src/distributed_bms_host.cpp",
-  ]
+  sources = [ "${dbms_services_path}/src/distributed_bms_host.cpp" ]
 
   sources += [
     "distributed_bms_host_test.cpp",

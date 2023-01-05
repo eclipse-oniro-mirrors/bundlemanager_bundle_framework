@@ -15,7 +15,7 @@
 #ifndef FOUNDATION_APPEXECFWK_MOCK_DISTRIBUTED_BMS_HOST_H
 #define FOUNDATION_APPEXECFWK_MOCK_DISTRIBUTED_BMS_HOST_H
 
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
 
 #define private public
 #include "distributed_bms_host.h"
