@@ -28,6 +28,7 @@
 #include "distributed_bundle_info.h"
 #include "distributed_module_info.h"
 #include "element_name.h"
+#include "event_report.h"
 #include "image_compress.h"
 #include "json_util.h"
 #include "service_control.h"
@@ -60,10 +61,12 @@ public:
     std::shared_ptr<DistributedBms> GetDistributedBms();
     std::shared_ptr<DistributedBmsProxy> GetDistributedBmsProxy();
     std::shared_ptr<DistributedDataStorage> GetDistributedDataStorage();
+    std::shared_ptr<EventReport> GetEventReport();
 private:
     std::shared_ptr<DistributedBms> distributedBms_ = nullptr;
     std::shared_ptr<DistributedBmsProxy> distributedBmsProxy_ = nullptr;
     std::shared_ptr<DistributedDataStorage> distributedDataStorage_ = nullptr;
+    std::shared_ptr<EventReport> eventReport_ = nullptr;
 };
 
 DbmsServicesKitTest::DbmsServicesKitTest()
@@ -116,6 +119,15 @@ std::shared_ptr<DistributedDataStorage> DbmsServicesKitTest::GetDistributedDataS
     }
     return distributedDataStorage_;
 }
+
+std::shared_ptr<EventReport> DbmsServicesKitTest::GetEventReport()
+{
+    if (eventReport_ == nullptr) {
+        eventReport_ = std::make_shared<EventReport>();
+    }
+    return eventReport_;
+}
+
 /**
  * @tc.number: DbmsServicesKitTest
  * @tc.name: test GetRemoteAbilityInfo
