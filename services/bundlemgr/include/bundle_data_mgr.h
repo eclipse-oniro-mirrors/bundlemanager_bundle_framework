@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -696,10 +696,6 @@ public:
 
     bool RemoveInnerBundleUserInfo(const std::string &bundleName, int32_t userId);
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    bool GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids);
-    bool GetFreeInstallModules(std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
-#endif
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
 
@@ -727,6 +723,8 @@ public:
     int64_t GetBundleSpaceSize(const std::string &bundleName) const;
     int64_t GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const;
     int64_t GetAllFreeInstallBundleSpaceSize() const;
+    bool GetFreeInstallModules(
+        std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
 
     bool GetBundleStats(

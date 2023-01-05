@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,7 @@ void AgingRequest::InitAgingDatasizeThreshold()
         APP_LOGD("GetParameter failed");
         return;
     }
+
     if (strcmp(szDatasizeThreshold, "") != 0) {
         totalDataBytesThreshold_ = atoi(szDatasizeThreshold);
         APP_LOGD("AgingRequest init aging data size threshold success");
@@ -62,6 +63,7 @@ void AgingRequest::InitAgingOneDayTimeMs()
         APP_LOGD("GetParameter failed");
         return;
     }
+
     if (strcmp(szOneDayTimeMs, "") != 0) {
         oneDayTimeMs_ = atoi(szOneDayTimeMs);
         APP_LOGD("AgingRequest init aging one day time ms success");
@@ -93,66 +95,11 @@ void AgingRequest::AddAgingBundle(AgingBundleInfo &bundleInfo)
     agingBundles_.emplace_back(bundleInfo);
 }
 
-void AgingRequest::AddAgingModule(AgingModuleInfo &moduleInfo)
-{
-    agingModules_.insert(moduleInfo);
-}
-
-void AgingRequest::AddAgingBundleState(const AgingBundleState &agingBundleState)
-{
-    auto item = agingBundleStates_.find(agingBundleState.GetBundleName());
-    if (item == agingBundleStates_.end()) {
-        agingBundleStates_.emplace(agingBundleState.GetBundleName(), agingBundleState);
-        return;
-    }
-
-    item->second = agingBundleState;
-}
-
-void AgingRequest::SetAgingCleanState(
-    const std::string &bundleName, const std::string &moduleName, bool state)
-{
-    auto item = agingBundleStates_.find(bundleName);
-    if (item == agingBundleStates_.end()) {
-        return;
-    }
-
-    item->second.ChangeModuleCacheState(moduleName, state);
-}
-
-bool AgingRequest::HasCleanCache(
-    const std::string &bundleName, const std::string &moduleName, bool hasCleanCache) const
-{
-    auto item = agingBundleStates_.find(bundleName);
-    if (item == agingBundleStates_.end()) {
-        return false;
-    }
-
-    return item->second.GetCacheState(moduleName, hasCleanCache);
-}
-
-bool AgingRequest::CanClearBundleCache(const std::string &bundleName) const
-{
-    auto item = agingBundleStates_.find(bundleName);
-    if (item == agingBundleStates_.end()) {
-        return false;
-    }
-
-    return item->second.CanClearBundleCache();
-}
-
-void AgingRequest::RequestReset()
+void AgingRequest::ResetRequest()
 {
     agingBundles_.clear();
-    agingModules_.clear();
     agingCleanType_ = AgingCleanType::CLEAN_CACHE;
     tatalDataBytes_ = 0;
-    InitAgingPolicySystemParameters();
-    for (auto &item : agingBundleStates_) {
-        item.second.Clear();
-    }
-
-    agingBundleStates_.clear();
 }
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

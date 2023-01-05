@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,12 +22,6 @@ namespace AppExecFwk {
 bool Over30DaysUnusedBundleAgingHandler::CheckBundle(const AgingBundleInfo &bundle) const
 {
     return (AgingUtil::GetNowSysTimeMs() - bundle.GetRecentlyUsedTime()) >
-        (AgingConstants::TIME_30_DAYS * AgingRequest::GetOneDayTimeMs());
-}
-
-bool Over30DaysUnusedBundleAgingHandler::CheckModule(const AgingModuleInfo &module) const
-{
-    return (AgingUtil::GetNowSysTimeMs() - module.GetRecentlyUsedTime()) >
         (AgingConstants::TIME_30_DAYS * AgingRequest::GetOneDayTimeMs());
 }
 

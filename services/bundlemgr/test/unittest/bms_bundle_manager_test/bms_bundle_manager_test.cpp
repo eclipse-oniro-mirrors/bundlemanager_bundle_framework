@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1660,22 +1660,6 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0028, Function | SmallTest | Lev
     GetBundleDataMgr()->bundleInfos_.clear();
     GetBundleDataMgr()->GetAllUriPrefix(
         uriPrefixList, USERID, excludeModule);
-    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
-}
-
-/**
- * @tc.number: bundleInfosFalse_0029
- * @tc.name: test GetRemovableBundleNameVec
- * @tc.desc: 1.system run normally
- *           2.bundleInfos is empty
-*/
-HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0029, Function | SmallTest | Level1)
-{
-    std::map<std::string, int> bundlenameAndUids;
-    GetBundleDataMgr()->bundleInfos_.clear();
-    bool testRet = GetBundleDataMgr()->GetRemovableBundleNameVec(
-        bundlenameAndUids);
-    EXPECT_EQ(testRet, false);
     EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
 }
 

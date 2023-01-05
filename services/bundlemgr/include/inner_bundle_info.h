@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1427,12 +1427,8 @@ public:
     void GetUriPrefixList(std::vector<std::string> &uriPrefixList, const std::string &excludeModule = "") const;
     void GetUriPrefixList(std::vector<std::string> &uriPrefixList, int32_t userId,
         const std::string &excludeModule = "") const;
-    /**
-     * @brief Whether bundle of userId should be removed.
-     * @param userId Indicates the userId.
-     * @return Return get bundle isRemoved result
-     */
-    bool IsBundleRemovable(int32_t userId) const;
+
+    bool IsBundleRemovable() const;
     /**
      * @brief Which modules can be removed.
      * @param moudleToDelete Indicates the modules.
@@ -1718,10 +1714,6 @@ public:
     void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
-    std::vector<AbilityInfo> FindAbilityInfosByModule(
-        const std::string &moduleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
-    std::vector<ExtensionAbilityInfo> FindExtensionInfosByModule(
-        const std::string &moduleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     int64_t GetLastInstallationTime() const;
     void UpdateAppDetailAbilityAttrs();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,12 +19,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 bool BundleDataSizeAgingHandler::CheckBundle(const AgingBundleInfo &bundle) const
-{
-    // the size of all app is bigger than 0
-    return true;
-}
-
-bool BundleDataSizeAgingHandler::CheckModule(const AgingModuleInfo &bundle) const
 {
     // the size of all app is bigger than 0
     return true;
