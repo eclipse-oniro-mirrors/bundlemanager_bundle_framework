@@ -1825,6 +1825,27 @@ int64_t BundleDataMgr::GetAllFreeInstallBundleSpaceSize() const
     APP_LOGI("All freeInstall app size:%{public}" PRId64, allSize);
     return allSize;
 }
+
+bool BundleDataMgr::GetFreeInstallModules(
+    std::map<std::string, std::vector<std::string>> &freeInstallModules) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ is data is empty.");
+        return false;
+    }
+
+    for (const auto &iter : bundleInfos_) {
+        std::vector<std::string> moudles;
+        if (!iter.second.GetFreeInstallModules(moudles)) {
+            continue;
+        }
+
+        freeInstallModules.emplace(iter.first, moudles);
+    }
+
+    return !freeInstallModules.empty();
+}
 #endif
 
 bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bundleNames) const
@@ -3887,51 +3908,6 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 #endif
     resourceManager->UpdateResConfig(*resConfig);
     return resourceManager;
-}
-#endif
-
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-bool BundleDataMgr::GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids)
-{
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGE("bundleInfos_ is data is empty.");
-        return false;
-    }
-
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    APP_LOGD("bundle userId= %{public}d", userId);
-    for (auto &it : bundleInfos_) {
-        APP_LOGD("bundleName: %{public}s", it.first.c_str());
-        if (!it.second.HasInnerBundleUserInfo(userId)) {
-            continue;
-        }
-        if (it.second.IsBundleRemovable(userId)) {
-            bundlenameAndUids.emplace(it.first, it.second.GetUid(userId));
-        }
-    }
-    return true;
-}
-
-bool BundleDataMgr::GetFreeInstallModules(
-    std::map<std::string, std::vector<std::string>> &freeInstallModules) const
-{
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGE("bundleInfos_ is data is empty.");
-        return false;
-    }
-
-    for (auto &it : bundleInfos_) {
-        std::vector<std::string> moudles;
-        if (!it.second.GetFreeInstallModules(moudles)) {
-            continue;
-        }
-
-        freeInstallModules.emplace(it.first, moudles);
-    }
-
-    return !freeInstallModules.empty();
 }
 #endif
 

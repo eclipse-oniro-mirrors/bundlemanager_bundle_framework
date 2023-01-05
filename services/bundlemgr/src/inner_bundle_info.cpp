@@ -1648,43 +1648,6 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     return abilitys;
 }
 
-std::vector<AbilityInfo> InnerBundleInfo::FindAbilityInfosByModule(
-        const std::string &moduleName, int32_t userId) const
-{
-    std::vector<AbilityInfo> abilitys;
-    if (!HasInnerBundleUserInfo(userId)) {
-        return abilitys;
-    }
-
-    for (const auto &ability : baseAbilityInfos_) {
-        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
-            continue;
-        }
-        if ((ability.second.moduleName == moduleName)) {
-            abilitys.emplace_back(ability.second);
-        }
-    }
-
-    return abilitys;
-}
-
-std::vector<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfosByModule(
-    const std::string &moduleName, int32_t userId) const
-{
-    std::vector<ExtensionAbilityInfo> extensions;
-    if (!HasInnerBundleUserInfo(userId)) {
-        return extensions;
-    }
-
-    for (const auto &extension : baseExtensionInfos_) {
-        if ((extension.second.moduleName == moduleName)) {
-            extensions.emplace_back(extension.second);
-        }
-    }
-
-    return extensions;
-}
-
 std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     const std::string &moduleName, const std::string &extensionName) const
 {
@@ -2784,22 +2747,25 @@ const std::string &InnerBundleInfo::GetCurModuleName() const
     return Constants::EMPTY_STRING;
 }
 
-bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
+bool InnerBundleInfo::IsBundleRemovable() const
 {
-    APP_LOGD("userId is %{public}d", userId);
     if (IsPreInstallApp()) {
         APP_LOGE("PreInstallApp should not be cleaned");
         return false;
     }
+
     for (const auto &innerModuleInfo : innerModuleInfos_) {
-        bool isRemovable = true;
-        if ((IsModuleRemovable(innerModuleInfo.second.moduleName, userId, isRemovable) == ERR_OK) &&
-            !isRemovable) {
-            APP_LOGE("not all haps should be cleaned");
+        if (!innerModuleInfo.second.installationFree) {
             return false;
         }
+
+        for (const auto &stateIter : innerModuleInfo.second.isRemovable) {
+            if (!stateIter.second) {
+                return false;
+            }
+        }
     }
-    APP_LOGD("this bundle should be cleaned");
+
     return true;
 }
 

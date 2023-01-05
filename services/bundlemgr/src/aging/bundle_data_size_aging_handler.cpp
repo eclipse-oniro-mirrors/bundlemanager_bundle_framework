@@ -24,12 +24,6 @@ bool BundleDataSizeAgingHandler::CheckBundle(const AgingBundleInfo &bundle) cons
     return true;
 }
 
-bool BundleDataSizeAgingHandler::CheckModule(const AgingModuleInfo &bundle) const
-{
-    // the size of all app is bigger than 0
-    return true;
-}
-
 const std::string &BundleDataSizeAgingHandler::GetName() const
 {
     return AgingConstants::BUNDLE_DATA_SIZE_AGING_HANDLER;

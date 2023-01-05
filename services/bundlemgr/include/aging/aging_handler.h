@@ -40,49 +40,41 @@ public:
     virtual ~RecentlyUnuseBundleAgingHandler() = default;
     virtual bool Process(AgingRequest &request) const override;
     virtual bool CheckBundle(const AgingBundleInfo &bundle) const = 0;
-    virtual bool CheckModule(const AgingModuleInfo &module) const = 0;
     virtual bool NeedContinue(const AgingRequest &request) const;
 
 private:
     bool ProcessBundle(AgingRequest &request) const;
-    bool ProcessModule(AgingRequest &request) const;
     bool NeedCheckEndAgingThreshold() const;
     bool UpdateUsedTotalDataBytes(AgingRequest &request) const;
     bool AgingClean(
-        const AgingModuleInfo &agingModule,
-        AgingRequest &request) const;
-    bool CleanCache(const AgingModuleInfo &agingModule, AgingRequest &request) const;
+        const AgingBundleInfo &agingBundle, AgingRequest &request) const;
+    bool CleanCache(const AgingBundleInfo &agingBundle) const;
     bool GetCachePath(
-        const AgingModuleInfo &agingModule, std::vector<std::string> &caches) const;
-    bool UnInstallBundle(
-        const std::string &bundleName, const std::string &moduleName) const;
+        const AgingBundleInfo &agingBundle, std::vector<std::string> &caches) const;
+    bool UnInstallBundle(const std::string &bundleName) const;
 };
 
 class Over30DaysUnusedBundleAgingHandler : public RecentlyUnuseBundleAgingHandler {
 public:
     bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    bool CheckModule(const AgingModuleInfo &module) const override;
     const std::string &GetName() const override;
 };
 
 class Over20DaysUnusedBundleAgingHandler : public RecentlyUnuseBundleAgingHandler {
 public:
     bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    bool CheckModule(const AgingModuleInfo &module) const override;
     const std::string &GetName() const override;
 };
 
 class Over10DaysUnusedBundleAgingHandler : public RecentlyUnuseBundleAgingHandler {
 public:
     bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    bool CheckModule(const AgingModuleInfo &module) const override;
     const std::string &GetName() const override;
 };
 
 class BundleDataSizeAgingHandler : public RecentlyUnuseBundleAgingHandler {
 public:
     bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    bool CheckModule(const AgingModuleInfo &module) const override;
     const std::string &GetName() const override;
 };
 }  //  namespace AppExecFwk

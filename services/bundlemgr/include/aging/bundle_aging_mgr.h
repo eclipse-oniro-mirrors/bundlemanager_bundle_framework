@@ -51,15 +51,12 @@ private:
     void Process(const std::shared_ptr<BundleDataMgr> &dataMgr);
     void ProcessEvent(const InnerEvent::Pointer &event) override;
     bool CheckPrerequisite(AgingTriggertype type) const;
-    bool ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &dataMgr);
-    int AgingQueryFormStatistics(std::vector<DeviceUsageStats::BundleActiveModuleRecord>& results,
-        const std::shared_ptr<BundleDataMgr> &dataMgr);
     void InitAgingTimerInterval();
     void InitAgingBatteryThresold();
     bool InitAgingRequest();
     bool ResetRequest();
     bool IsReachStartAgingThreshold();
-    bool QueryModuleUsageRecords(std::vector<DeviceUsageStats::BundleActiveModuleRecord> &results);
+    bool QueryBundleStatsInfoByInterval(std::vector<DeviceUsageStats::BundleActivePackageStats> &results);
 
 private:
     std::mutex mutex_;

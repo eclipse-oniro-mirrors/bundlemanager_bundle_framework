@@ -30,11 +30,7 @@ public:
 
     static bool UninstallApplicationProcesses(const std::string &bundleName, const int uid);
     static int IsRunning(const std::string bundleName, const int bundleUid);
-    static int IsRunning(const std::string bundleName, const std::string moduleName);
-
-private:
-    static bool FetchAbilityInfos(
-        const std::string bundleName, const std::string moduleName, std::vector<std::string> &abilities);
+    static int IsRunning(const std::string bundleName);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

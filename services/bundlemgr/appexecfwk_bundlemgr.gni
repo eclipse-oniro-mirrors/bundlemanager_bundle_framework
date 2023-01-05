@@ -54,7 +54,6 @@ bundle_install_sources = [
 ]
 
 aging = [
-  "${services_path}/bundlemgr/src/aging/aging_bundle_state.cpp",
   "${services_path}/bundlemgr/src/aging/aging_handler_chain.cpp",
   "${services_path}/bundlemgr/src/aging/aging_request.cpp",
   "${services_path}/bundlemgr/src/aging/aging_util.cpp",

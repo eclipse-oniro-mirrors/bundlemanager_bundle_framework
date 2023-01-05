@@ -20,8 +20,6 @@
 #include <set>
 
 #include "aging_bundle_info.h"
-#include "aging_bundle_state.h"
-#include "aging_module_info.h"
 #include "aging_util.h"
 
 namespace OHOS {
@@ -37,24 +35,12 @@ public:
     bool IsReachStartAgingThreshold() const;
     bool IsReachEndAgingThreshold() const;
     size_t SortAgingBundles();
-    void RequestReset();
+    void ResetRequest();
     void AddAgingBundle(AgingBundleInfo &bundleInfo);
-    void AddAgingModule(AgingModuleInfo &moduleInfo);
-    void AddAgingBundleState(const AgingBundleState &agingBundleState);
-    void SetAgingCleanState(
-        const std::string &bundleName, const std::string &moduleName, bool state);
-    bool HasCleanCache(
-        const std::string &bundleName, const std::string &moduleName, bool hasCleanCache) const;
-    bool CanClearBundleCache(const std::string &bundleName) const;
 
     const std::vector<AgingBundleInfo> &GetAgingBundles() const
     {
         return agingBundles_;
-    };
-
-    const std::set<AgingModuleInfo> &GetAgingModules() const
-    {
-        return agingModules_;
     };
 
     void UpdateTotalDataBytesAfterUninstalled(const int64_t dataBytes)
@@ -98,9 +84,7 @@ private:
     void InitAgingOneDayTimeMs();
 
     std::vector<AgingBundleInfo> agingBundles_;
-    std::set<AgingModuleInfo> agingModules_;
     int64_t tatalDataBytes_ = 0;
-    std::map<std::string, AgingBundleState> agingBundleStates_;
     AgingCleanType agingCleanType_ = AgingCleanType::CLEAN_CACHE;
 
     static int64_t totalDataBytesThreshold_;

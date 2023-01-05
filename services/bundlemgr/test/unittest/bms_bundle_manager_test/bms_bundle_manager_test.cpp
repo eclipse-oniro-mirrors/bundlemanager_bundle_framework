@@ -1664,22 +1664,6 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0028, Function | SmallTest | Lev
 }
 
 /**
- * @tc.number: bundleInfosFalse_0029
- * @tc.name: test GetRemovableBundleNameVec
- * @tc.desc: 1.system run normally
- *           2.bundleInfos is empty
-*/
-HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0029, Function | SmallTest | Level1)
-{
-    std::map<std::string, int> bundlenameAndUids;
-    GetBundleDataMgr()->bundleInfos_.clear();
-    bool testRet = GetBundleDataMgr()->GetRemovableBundleNameVec(
-        bundlenameAndUids);
-    EXPECT_EQ(testRet, false);
-    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
-}
-
-/**
  * @tc.number: SkillFalse_0001
  * @tc.name: test MatchUriAndType
  * @tc.desc: 1.system run normally

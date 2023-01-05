@@ -1629,12 +1629,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2000, Function | Smal
     info.SetBaseBundleInfo(bundleInfo);
     info.SetIsPreInstallApp(false);
     InnerModuleInfo innerModuleInfo;
-    bool ret = info.IsBundleRemovable(Constants::START_USERID);
-    EXPECT_EQ(ret, true);
+    bool ret = info.IsBundleRemovable();
+    EXPECT_EQ(ret, false);
 
     innerModuleInfo.moduleName = "entry";
     info.InsertInnerModuleInfo("entry", innerModuleInfo);
-    ret = info.IsBundleRemovable(Constants::START_USERID);
+    ret = info.IsBundleRemovable();
     EXPECT_EQ(ret, false);
 }
 

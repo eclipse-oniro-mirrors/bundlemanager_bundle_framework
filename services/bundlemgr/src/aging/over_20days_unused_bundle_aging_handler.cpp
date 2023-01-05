@@ -25,12 +25,6 @@ bool Over20DaysUnusedBundleAgingHandler::CheckBundle(const AgingBundleInfo &bund
         (AgingConstants::TIME_20_DAYS * AgingRequest::GetOneDayTimeMs());
 }
 
-bool Over20DaysUnusedBundleAgingHandler::CheckModule(const AgingModuleInfo &module) const
-{
-    return (AgingUtil::GetNowSysTimeMs() - module.GetRecentlyUsedTime()) >
-        (AgingConstants::TIME_20_DAYS * AgingRequest::GetOneDayTimeMs());
-}
-
 const std::string &Over20DaysUnusedBundleAgingHandler::GetName() const
 {
     return AgingConstants::UNUSED_FOR_20_DAYS_BUNDLE_AGING_HANDLER;
