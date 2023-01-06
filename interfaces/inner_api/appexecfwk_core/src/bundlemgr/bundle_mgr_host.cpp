@@ -208,6 +208,12 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
 #endif
     funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
+    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, &BundleMgrHost::HandleGetBundleInfoForSelf);
+    funcMap_.emplace(IBundleMgr::Message::GET_NAME_FOR_UID_V9, &BundleMgrHost::HandleGetNameForUidV9);
+    funcMap_.emplace(IBundleMgr::Message::IS_APPLICATION_ENABLED_V9, &BundleMgrHost::HandleIsApplicationEnabledV9);
+    funcMap_.emplace(IBundleMgr::Message::IS_ABILITY_ENABLED_V9, &BundleMgrHost::HandleIsAbilityEnabledV9);
+    funcMap_.emplace(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE_V9, &BundleMgrHost::HandleGetLaunchWantForBundleV9);
+    funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_LABEL_WITH_MODULE_NAME_V9, &BundleMgrHost::HandleGetAbilityLabelWithModuleNameV9);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -579,6 +585,25 @@ ErrCode BundleMgrHost::HandleGetBundlesForUid(MessageParcel &data, MessageParcel
 }
 
 ErrCode BundleMgrHost::HandleGetNameForUid(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int uid = data.ReadInt32();
+    std::string name;
+    ErrCode ret = GetNameForUid(uid, name);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteString(name)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetNameForUidV9(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int uid = data.ReadInt32();
@@ -1318,6 +1343,25 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    bool isEnable = false;
+    ErrCode ret = IsApplicationEnabledV9(bundleName, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isEnable)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1330,6 +1374,25 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId);
     if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
+    if (abilityInfo == nullptr) {
+        APP_LOGE("ReadParcelable<abilityInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    bool isEnable = false;
+    ErrCode ret = IsAbilityEnabled(*abilityInfo, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

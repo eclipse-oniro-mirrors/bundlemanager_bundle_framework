@@ -155,6 +155,13 @@ private:
      */
     ErrCode HandleGetNameForUid(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetNameForUid function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetNameForUidV9(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetBundleGids function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -275,6 +282,13 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
+    ErrCode HandleGetAbilityLabelWithModuleNameV9(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the GetAbilityLabel function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
     ErrCode HandleGetAbilityLabelWithModuleName(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CheckIsSystemAppByUid function called from a IBundleMgr proxy object.
@@ -325,6 +339,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetLaunchWantForBundle(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the GetLaunchWantForBundle function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetLaunchWantForBundleV9(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CheckPublicKeys function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -428,6 +449,13 @@ private:
      */
     ErrCode HandleIsApplicationEnabled(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the IsApplicationEnabled function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleIsApplicationEnabledV9(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the SetApplicationEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -441,6 +469,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the IsAbilityEnabled function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleIsAbilityEnabledV9(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the SetAbilityEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

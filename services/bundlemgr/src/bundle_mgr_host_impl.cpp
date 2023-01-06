@@ -268,6 +268,26 @@ bool BundleMgrHostImpl::GetBundlesForUid(const int uid, std::vector<std::string>
     return dataMgr->GetBundlesForUid(uid, bundleNames);
 }
 
+ErrCode BundleMgrHostImpl::GetNameForUidV9(const int uid, std::string &name)
+{
+    APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify query permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetNameForUid(uid, name);
+}
+
 ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 {
     APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
@@ -551,6 +571,25 @@ ErrCode BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const 
     return dataMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
 }
 
+ErrCode BundleMgrHostImpl::GetAbilityLabelV9(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, std::string &label)
+{
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return dataMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
+}
+
 bool BundleMgrHostImpl::GetBundleArchiveInfo(
     const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)
 {
@@ -690,6 +729,28 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t
 ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId)
 {
     APP_LOGD("start GetLaunchWantForBundle, bundleName : %{public}s", bundleName.c_str());
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    APP_LOGD("verify permission success, begin to GetLaunchWantForBundle");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
+}
+
+ErrCode BundleMgrHostImpl::GetLaunchWantForBundleV9(const std::string &bundleName, Want &want, int32_t userId)
+{
+    APP_LOGD("start GetLaunchWantForBundle, bundleName : %{public}s", bundleName.c_str());
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -1232,6 +1293,21 @@ ErrCode BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName, b
     return dataMgr->IsApplicationEnabled(bundleName, isEnable);
 }
 
+ErrCode BundleMgrHostImpl::IsApplicationEnabledV9(const std::string &bundleName, bool &isEnable)
+{
+    APP_LOGD("start IsApplicationEnabled, bundleName : %{public}s", bundleName.c_str());
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return dataMgr->IsApplicationEnabled(bundleName, isEnable);
+}
+
 ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     APP_LOGD("SetApplicationEnabled begin");
@@ -1281,6 +1357,21 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 ErrCode BundleMgrHostImpl::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     APP_LOGD("start IsAbilityEnabled");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return dataMgr->IsAbilityEnabled(abilityInfo, isEnable);
+}
+
+ErrCode BundleMgrHostImpl::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, bool &isEnable)
+{
+    APP_LOGD("start IsAbilityEnabled");
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");

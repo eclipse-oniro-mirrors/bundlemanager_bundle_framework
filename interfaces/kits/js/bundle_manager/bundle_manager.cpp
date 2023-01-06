@@ -182,7 +182,7 @@ static ErrCode InnerGetBundleNameByUid(int32_t uid, std::string &bundleName)
         APP_LOGE("iBundleMgr is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = iBundleMgr->GetNameForUid(uid, bundleName);
+    ErrCode ret = iBundleMgr->GetNameForUidV9(uid, bundleName);
     APP_LOGD("GetNameForUid ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -549,7 +549,7 @@ static ErrCode InnerIsApplicationEnabled(const std::string &bundleName, bool &is
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = bundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    ErrCode ret = bundleMgr->IsApplicationEnabledV9(bundleName, isEnable);
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -571,7 +571,7 @@ static ErrCode InnerIsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEna
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = bundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
+    ErrCode ret = bundleMgr->IsAbilityEnabledV9(abilityInfo, isEnable);
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -583,7 +583,7 @@ static ErrCode InnerGetAbilityLabel(const std::string &bundleName, const std::st
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
-    ErrCode ret = bundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel);
+    ErrCode ret = bundleMgr->GetAbilityLabelV9(bundleName, moduleName, abilityName, abilityLabel);
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -1599,7 +1599,7 @@ static ErrCode InnerGetLaunchWantForBundleExec(
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    ErrCode result = iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId);
+    ErrCode result = iBundleMgr->GetLaunchWantForBundleV9(bundleName, want, userId);
     if (result != ERR_OK) {
         APP_LOGE("GetLaunchWantForBundle call error");
     }
