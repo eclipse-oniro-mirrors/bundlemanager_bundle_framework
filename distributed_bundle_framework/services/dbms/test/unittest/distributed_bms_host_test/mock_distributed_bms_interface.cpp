@@ -22,55 +22,55 @@ MockDistributedBmsHost::~MockDistributedBmsHost()
 int32_t MockDistributedBmsHost::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName &elementName,
         RemoteAbilityInfo &remoteAbilityInfo)
 {
-    return 0; 
+    return 0;
 }
 
 int32_t MockDistributedBmsHost::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName &elementName,
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
-    return 0; 
+    return 0;
 }
 
 int32_t MockDistributedBmsHost::GetRemoteAbilityInfos(
     const std::vector<ElementName> &elementNames, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
-    return 0; 
+    return 0;
 }
 
 int32_t MockDistributedBmsHost::GetRemoteAbilityInfos(const std::vector<ElementName> &elementNames,
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
-    return 0; 
+    return 0;
 }
 
 int32_t MockDistributedBmsHost::GetAbilityInfo(
     const OHOS::AppExecFwk::ElementName &elementName, RemoteAbilityInfo &remoteAbilityInfo)
 {
-    return 0; 
+    return 0;
 }
 
 int32_t MockDistributedBmsHost::GetAbilityInfo(const OHOS::AppExecFwk::ElementName &elementName,
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
-    return 0; 
+    return 0;
 }
 
 int32_t MockDistributedBmsHost::GetAbilityInfos(
     const std::vector<ElementName> &elementNames, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
-    return 0; 
+    return 0;
 }
 
 int32_t MockDistributedBmsHost::GetAbilityInfos(const std::vector<ElementName> &elementNames,
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
-    return 0; 
+    return 0;
 }
 
 bool MockDistributedBmsHost::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
     DistributedBundleInfo &distributedBundleInfo)
 {
-    return true; 
+    return true;
 }
 
 } // namespace AppExecFwk

@@ -771,7 +771,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0039, Function | SmallTest | L
         std::string networkId = "networkId";
         std::string udid = "udid";
         auto ret = distributedDataStorage->GetUdidByNetworkId(networkId, udid);
-        EXPECT_EQ(ret, 0); 
+        EXPECT_EQ(ret, 0);
     }
 }
 
@@ -791,7 +791,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0040, Function | SmallTest | L
         abilityInfo.moduleName = "moduleName";
         bundleInfo.abilityInfos.push_back(abilityInfo);
         auto ret = distributedDataStorage->ConvertToDistributedBundleInfo(bundleInfo);
-        EXPECT_EQ(ret.bundleName, "name"); 
+        EXPECT_EQ(ret.bundleName, "name");
     }
 }
 
@@ -844,7 +844,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0043, Function | SmallTest | L
     EXPECT_NE(distributedDataStorage, nullptr);
     if (distributedDataStorage != nullptr) {
         auto ret = distributedDataStorage->CheckKvStore();
-        EXPECT_EQ(ret, true); 
+        EXPECT_EQ(ret, true);
     }
 }
 
@@ -861,7 +861,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0044, Function | SmallTest | L
         std::string udid = "udid";
         std::string bundleName = "bundleName";
         auto ret = distributedDataStorage->DeviceAndNameToKey(udid, bundleName);
-        EXPECT_EQ(ret, "udid_bundleName"); 
+        EXPECT_EQ(ret, "udid_bundleName");
     }
 }
 
@@ -879,7 +879,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0045, Function | SmallTest | L
         std::string bundleName = "bundleName";
         DistributedBundleInfo info;
         auto ret = distributedDataStorage->GetStorageDistributeInfo(networkId, bundleName, info);
-        EXPECT_EQ(ret, false); 
+        EXPECT_EQ(ret, false);
     }
 }
 
@@ -895,7 +895,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0046, Function | SmallTest | L
     if (distributedDataStorage != nullptr) {
         std::string bundleName = "bundleName";
         int32_t userId = 1;
-        distributedDataStorage->DeleteStorageDistributeInfo(bundleName, userId); 
+        distributedDataStorage->DeleteStorageDistributeInfo(bundleName, userId);
     }
 }
 
@@ -912,7 +912,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0047, Function | SmallTest | L
         DistributedBundleInfo distributedBundleInfo;
         distributedBundleInfo.bundleName = "bundleName";
         auto ret = distributedDataStorage->InnerSaveStorageDistributeInfo(distributedBundleInfo);
-        EXPECT_EQ(ret, true); 
+        EXPECT_EQ(ret, true);
     }
 }
 
