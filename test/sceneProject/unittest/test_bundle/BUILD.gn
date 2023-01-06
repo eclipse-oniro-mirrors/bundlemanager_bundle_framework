@@ -47,6 +47,7 @@ group("test_bundle") {
     "second_right:second_right",
     "second_right_with_same_moduleName:second_right_with_same_moduleName",
     "seventh_right:seventh_right",
+    "signatureTest:signatureTest",
     "sixteenth_right:sixteenth_right",
     "sixth_right:sixth_right",
     "system_module:system_module",

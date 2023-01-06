@@ -2559,4 +2559,17 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0900, Function | SmallTest | Lev
     EXPECT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: BmsBundleSignatureType_0100
+ * @tc.name: test signed name is not the same
+ * @tc.desc: 1. system running normally
+ *           2. install a hap failed
+ */
+HWTEST_F(BmsBundleInstallerTest, BmsBundleSignatureType_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "signatureTest.hap";
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
 } // OHOS

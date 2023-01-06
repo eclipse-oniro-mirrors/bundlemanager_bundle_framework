@@ -51,11 +51,21 @@
             {
                 "name": "bmsThirdBundle_A3",
                 "icon": "$media:snowball",
-                "label": "bmsThirdBundle_A1 Ability",
+                "label": "bmsThirdBundle_A3 Ability",
                 "launchType": "singleton",
                 "orientation": "unspecified",
                 "type": "page",
-                "visible": true
+                "visible": true,
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ]
             }
         ],
         "js": [
