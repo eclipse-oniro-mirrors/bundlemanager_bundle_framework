@@ -18,7 +18,7 @@ domain: BUNDLE_MANAGER
 ################################################################################
 BUNDLE_INSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle install}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
@@ -27,7 +27,7 @@ BUNDLE_INSTALL_EXCEPTION:
 
 BUNDLE_UNINSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle uninstall}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
@@ -35,7 +35,7 @@ BUNDLE_UNINSTALL_EXCEPTION:
 
 BUNDLE_UPDATE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle update}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
@@ -43,7 +43,7 @@ BUNDLE_UPDATE_EXCEPTION:
 
 PRE_BUNDLE_RECOVER_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when prebundle recover}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
@@ -51,14 +51,14 @@ PRE_BUNDLE_RECOVER_EXCEPTION:
 
 BUNDLE_STATE_CHANGE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when state change}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   ABILITY_NAME: {type: STRING, desc: abilityName}
   TYPE: {type: STRING, desc: application or ability}
 
 BUNDLE_CLEAN_CACHE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when clean cache or clean data}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
 
@@ -75,7 +75,7 @@ BOOT_SCAN_END:
 
 BUNDLE_INSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle install}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
@@ -83,28 +83,28 @@ BUNDLE_INSTALL:
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
 
 BUNDLE_STATE_CHANGE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle or component disable or enable}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   ABILITY_NAME: {type: STRING, desc: abilityName}
   TYPE: {type: STRING, desc: application or ability}
@@ -112,7 +112,7 @@ BUNDLE_STATE_CHANGE:
 
 BUNDLE_CLEAN_CACHE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle clean cache}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
 
@@ -135,5 +135,5 @@ GET_REMOTE_ABILITY_INFOS:
 BMS_USER_EVENT:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: user event}
   TYPE: {type: STRING, desc: user event type}
-  USERID: {type: INT32, desc: userId}
+  USERID: {type: INT32, desc: userId of the bundle}
   TIME: {type: INT64, desc: time stamp}
