@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
 class BundlePermissionMgr {
 public:
     /**
@@ -93,6 +94,8 @@ public:
 
     static bool GetAllReqPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
         std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState);
+
+    static bool VerifySystemApp();
 
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(

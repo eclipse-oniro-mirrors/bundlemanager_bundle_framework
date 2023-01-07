@@ -165,6 +165,24 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
 }
 
+ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
+{
+    auto uid = IPCSkeleton::GetCallingUid();
+    int32_t userId = uid / Constants::BASE_USER_RANGE;
+    std::string bundleName;
+    bool ret = GetBundleNameForUid(uid, bundleName);
+    if (!ret) {
+        APP_LOGE("GetBundleNameForUid failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+}
+
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {

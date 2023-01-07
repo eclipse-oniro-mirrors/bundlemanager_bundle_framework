@@ -132,6 +132,13 @@ public:
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName,
         int32_t flags, BundleInfo &bundleInfo, int32_t userId) override;
     /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo) override;
+    /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
@@ -376,6 +383,16 @@ public:
     virtual ErrCode GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, std::string &label) override;
     /**
+     * @brief Obtains the label of a specified ability.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param abilityName Indicates the ability name.
+     * @param label Indicates the obtained label.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetAbilityLabelV9(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, std::string &label) override;
+    /**
      * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
      * @param hapFilePath Indicates the absolute file path of the HAP.
      * @param flag Indicates the information contained in the BundleInfo object to be returned.
@@ -426,6 +443,15 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     virtual ErrCode GetLaunchWantForBundle(
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        /**
+     * @brief Obtains the Want for starting the main ability of an application based on the given bundle name.
+     * @param bundleName Indicates the bundle name.
+     * @param want Indicates the obtained launch Want object.
+     * @param userId Indicates the userId.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetLaunchWantForBundleV9(
         const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Checks whether the publickeys of two bundles are the same.
@@ -517,6 +543,13 @@ public:
      */
     virtual ErrCode IsApplicationEnabled(const std::string &bundleName, bool &isEnable) override;
     /**
+     * @brief Checks whether a specified application is enabled.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsApplicationEnabledV9(const std::string &bundleName, bool &isEnable) override;
+    /**
      * @brief Sets whether to enable a specified application.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Specifies whether to enable the application.
@@ -533,6 +566,13 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) override;
+    /**
+     * @brief Sets whether to enable a specified ability through the proxy object.
+     * @param abilityInfo Indicates information about the ability to check.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, bool &isEnable) override;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.

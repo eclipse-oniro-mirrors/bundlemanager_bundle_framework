@@ -19,6 +19,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -670,6 +671,24 @@ bool BundlePermissionMgr::MatchSignature(
 
     return std::find(permission.appSignature.begin(),
         permission.appSignature.end(), signature) != permission.appSignature.end();
+}
+
+bool BundlePermissionMgr::VerifySystemApp()
+{
+    APP_LOGI("verifying systemApp");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    APP_LOGD("callerToken : %{private}u", callerToken);
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        APP_LOGD("caller tokenType is native, verify success");
+        return true;
+    }
+    uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
+    if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -173,6 +173,18 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief Obtains the BundleInfo for the calling app.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
