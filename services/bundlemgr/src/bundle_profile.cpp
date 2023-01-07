@@ -2452,7 +2452,7 @@ bool ToInnerBundleInfo(
                         skill.actions.end() &&
                         std::find(skill.entities.begin(), skill.entities.end(), Constants::INTENT_ENTITY_HOME) !=
                         skill.entities.end() &&
-                    (!find)) {
+                    (!find) && (abilityInfo.type == AbilityType::PAGE)) {
                     innerModuleInfo.entryAbilityKey = keyName;
                     // if there is main ability, it's label will be the application's label
                     applicationInfo.label = ability.label;
@@ -2466,7 +2466,8 @@ bool ToInnerBundleInfo(
                     find = true;
                 }
                 if (std::find(skill.entities.begin(), skill.entities.end(), Constants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
-                    skill.entities.end() && transformParam.isPreInstallApp) {
+                    skill.entities.end() && transformParam.isPreInstallApp &&
+                    (abilityInfo.type == AbilityType::PAGE)) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
                 }

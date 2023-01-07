@@ -1784,7 +1784,7 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
             continue;
         }
         for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want)) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
                 isExistLauncherAbility = true;
                 break;
             }
