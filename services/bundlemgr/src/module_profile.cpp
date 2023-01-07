@@ -191,6 +191,7 @@ struct Ability {
     uint32_t maxWindowHeight = 0;
     uint32_t minWindowHeight = 0;
     bool excludeFromMissions = false;
+    bool recoverable = false;
 };
 
 struct Extension {
@@ -544,6 +545,15 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_RECOVERABLE,
+        ability.recoverable,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY    
+    );
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -1654,6 +1664,7 @@ bool ToAbilityInfo(
     abilityInfo.labelId = ability.labelId;
     abilityInfo.priority = ability.priority;
     abilityInfo.excludeFromMissions = ability.excludeFromMissions;
+    abilityInfo.recoverable = ability.recoverable;
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
     abilityInfo.continuable = ability.continuable;

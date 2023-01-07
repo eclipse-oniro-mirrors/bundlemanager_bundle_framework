@@ -237,6 +237,8 @@ struct AbilityInfo : public Parcelable {
     int32_t startWindowBackgroundId;
     // whether to display in the missions list
     bool excludeFromMissions = false;
+    // whether to support recover UI interface
+    bool recoverable = false;
 
     // support windows mode
     std::vector<SupportWindowMode> windowModes;

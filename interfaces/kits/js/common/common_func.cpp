@@ -56,6 +56,7 @@ constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON = "icon";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* APPLICATION_INFO = "applicationInfo";
+constexpr const char* RECOVERABLE = "recoverable";
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
     { ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
@@ -852,6 +853,10 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWindowSize));
     ConvertWindowSize(env, abilityInfo, nWindowSize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "windowSize", nWindowSize));
+
+    napi_value nRecoverable;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.recoverable, &nRecoverable));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, RECOVERABLE, nRecoverable));
 }
 
 void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
