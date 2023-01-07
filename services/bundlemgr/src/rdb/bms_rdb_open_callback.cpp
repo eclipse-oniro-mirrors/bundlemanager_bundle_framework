@@ -47,25 +47,7 @@ int32_t BmsRdbOpenCallback::OnDowngrade(
 int32_t BmsRdbOpenCallback::OnOpen(NativeRdb::RdbStore &rdbStore)
 {
     APP_LOGI("OnOpen");
-    int ret = NativeRdb::E_OK;
-    if (hasTableInit_) {
-        return ret;
-    }
-    std::string createTableSql;
-    if (bmsRdbConfig_.createTableSql.empty()) {
-        createTableSql = std::string(
-            "CREATE TABLE IF NOT EXISTS "
-            + bmsRdbConfig_.tableName
-            + "(KEY TEXT NOT NULL PRIMARY KEY, VALUE TEXT NOT NULL);");
-    } else {
-        createTableSql = bmsRdbConfig_.createTableSql;
-    }
-    ret = rdbStore.ExecuteSql(createTableSql);
-    if (ret == NativeRdb::E_OK) {
-        hasTableInit_ = true;
-    }
-
-    return ret;
+    return NativeRdb::E_OK;
 }
 
 int32_t BmsRdbOpenCallback::onCorruption(std::string databaseFile)
