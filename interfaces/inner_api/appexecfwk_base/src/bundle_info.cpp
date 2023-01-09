@@ -31,7 +31,6 @@ const std::string BUNDLE_INFO_SINGLETON = "singleton";
 const std::string BUNDLE_INFO_IS_NATIVE_APP = "isNativeApp";
 const std::string BUNDLE_INFO_IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string BUNDLE_INFO_IS_DIFFERENT_NAME = "isDifferentName";
-const std::string BUNDLE_INFO_APPLICATION_INFO = "applicationInfo";
 const std::string BUNDLE_INFO_ABILITY_INFOS = "abilityInfos";
 const std::string BUNDLE_INFO_HAP_MODULE_INFOS = "hapModuleInfos";
 const std::string BUNDLE_INFO_EXTENSION_ABILITY_INFOS = "extensionAbilityInfo";
@@ -577,7 +576,6 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_IS_NATIVE_APP, bundleInfo.isNativeApp},
         {BUNDLE_INFO_IS_PREINSTALL_APP, bundleInfo.isPreInstallApp},
         {BUNDLE_INFO_IS_DIFFERENT_NAME, bundleInfo.isDifferentName},
-        {BUNDLE_INFO_APPLICATION_INFO, bundleInfo.applicationInfo},
         {BUNDLE_INFO_ABILITY_INFOS, bundleInfo.abilityInfos},
         {BUNDLE_INFO_HAP_MODULE_INFOS, bundleInfo.hapModuleInfos},
         {BUNDLE_INFO_EXTENSION_ABILITY_INFOS, bundleInfo.extensionInfos},
@@ -680,14 +678,6 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         BUNDLE_INFO_IS_DIFFERENT_NAME,
         bundleInfo.isDifferentName,
         JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<ApplicationInfo>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_APPLICATION_INFO,
-        bundleInfo.applicationInfo,
-        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
