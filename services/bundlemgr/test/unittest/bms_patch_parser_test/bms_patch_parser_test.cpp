@@ -64,6 +64,7 @@ std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES = "deviceTypes";
 std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH = "originalModuleHash";
 std::string BUNDLE_PATCH_PROFILE_KEY_APP = "app";
 std::string BUNDLE_PATCH_PROFILE_KEY_MODULE = "module";
+constexpr const char* BUNDLE_PATCH_TYPE_HOT_RELOAD = "hotreload";
 } // namespace
 
 class BmsPatchParserTest : public testing::Test {
@@ -529,7 +530,7 @@ HWTEST_F(BmsPatchParserTest, PatchExtractor_ExtractPatchProfile_0100, Function |
  * @tc.number: PatchProfile_DefaultNativeSo_0100
  * @tc.name: DefaultNativeSo
  * @tc.desc: 1. system running normally
- *           2. call GetQuickFixType with isSystemLib64Exist is true
+ *           2. call DefaultNativeSo with isSystemLib64Exist is true
  */
 HWTEST_F(BmsPatchParserTest, PatchProfile_DefaultNativeSo_0100, Function | SmallTest | Level0)
 {
@@ -545,7 +546,7 @@ HWTEST_F(BmsPatchParserTest, PatchProfile_DefaultNativeSo_0100, Function | Small
  * @tc.number: PatchProfile_DefaultNativeSo_0200
  * @tc.name: DefaultNativeSo
  * @tc.desc: 1. system running normally
- *           2. call GetQuickFixType with isSystemLib64Exist is false
+ *           2. call DefaultNativeSo with isSystemLib64Exist is false
  */
 HWTEST_F(BmsPatchParserTest, PatchProfile_DefaultNativeSo_0200, Function | SmallTest | Level0)
 {
