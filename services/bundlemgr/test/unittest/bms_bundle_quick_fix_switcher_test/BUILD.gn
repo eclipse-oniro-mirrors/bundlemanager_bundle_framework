@@ -140,6 +140,7 @@ ohos_unittest("BmsBundleQuickFixSwitcherTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
+  external_deps += [ "kv_store:distributeddata_inner" ]
   if (bms_rdb_enable) {
     configs += [ "../../../../../services/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
@@ -154,7 +155,6 @@ ohos_unittest("BmsBundleQuickFixSwitcherTest") {
     sources -=
         [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
   } else {
-    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
       "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",

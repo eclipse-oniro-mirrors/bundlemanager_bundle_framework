@@ -98,6 +98,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
+    "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -326,6 +327,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
+  external_deps += [ "kv_store:distributeddata_inner" ]
   if (bms_rdb_enable) {
     configs += [ "../../../../../services/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
@@ -337,7 +339,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
       "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     ]
   } else {
-    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
       "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
