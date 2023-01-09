@@ -62,6 +62,7 @@ group("unittest") {
       "unittest/bms_bundle_quick_fix_boot_scanner_test:unittest",
       "unittest/bms_bundle_quick_fix_deleter_test:unittest",
       "unittest/bms_bundle_quick_fix_manager_test:unittest",
+      "unittest/bms_bundle_quick_fix_mgr_rdb_test:unittest",
       "unittest/bms_bundle_quick_fix_query_test:unittest",
       "unittest/bms_bundle_quick_fix_switcher_test:unittest",
       "unittest/bms_bundle_quick_fix_test:unittest",
