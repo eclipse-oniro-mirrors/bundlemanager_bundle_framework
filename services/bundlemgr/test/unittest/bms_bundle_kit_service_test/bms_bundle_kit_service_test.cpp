@@ -606,21 +606,21 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutInfos.isStatic = true;
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
-    ShortcutIntent intent;
-    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutInfos.intents.push_back(intent);
+    ShortcutIntent shortcutIntent;
+    shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    shortcutInfos.intents.push_back(shortcutIntent);
     return shortcutInfos;
 }
 
 ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
 {
-    ShortcutIntent intent;
-    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    return intent;
+    ShortcutIntent shortcutIntent;
+    shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    return shortcutIntent;
 }
 
 ShortcutWant BmsBundleKitServiceTest::MockShortcutWant() const
@@ -1100,10 +1100,10 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isStatic, true);
         EXPECT_EQ(shortcutInfo.isHomeShortcut, true);
         EXPECT_EQ(shortcutInfo.isEnables, true);
-        for (auto &intent : shortcutInfo.intents) {
-            EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
-            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
-            EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+        for (auto &shortcutIntent : shortcutInfo.intents) {
+            EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+            EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
 }
@@ -1139,10 +1139,10 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isStatic, true);
         EXPECT_EQ(shortcutInfo.isHomeShortcut, true);
         EXPECT_EQ(shortcutInfo.isEnables, true);
-        for (auto &intent : shortcutInfo.intents) {
-            EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
-            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
-            EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+        for (auto &shortcutIntent : shortcutInfo.intents) {
+            EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+            EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
 }
@@ -8131,9 +8131,9 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_001, Function | SmallT
  */
 HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallTest | Level1)
 {
-    ShortcutIntent intent = MockShortcutIntent();
+    ShortcutIntent shortcutIntent = MockShortcutIntent();
     nlohmann::json jsonObj;
-    to_json(jsonObj, intent);
+    to_json(jsonObj, shortcutIntent);
     ShortcutIntent result;
     from_json(jsonObj, result);
     EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
@@ -9147,6 +9147,7 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0003, Function | S
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
     AbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
@@ -9163,6 +9164,28 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0004, Function | S
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0005
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0005, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::DATA;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);

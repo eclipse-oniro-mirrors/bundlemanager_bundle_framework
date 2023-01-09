@@ -33,7 +33,6 @@ public:
 
 private:
     BmsRdbConfig bmsRdbConfig_;
-    bool hasTableInit_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

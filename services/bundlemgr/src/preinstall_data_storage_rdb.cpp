@@ -26,6 +26,7 @@ PreInstallDataStorageRdb::PreInstallDataStorageRdb()
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = Constants::PRE_BUNDLE_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager_->CreateTable();
 }
 
 PreInstallDataStorageRdb::~PreInstallDataStorageRdb()
