@@ -775,10 +775,14 @@ bool BundleInstallChecker::IsExistedDistroModule(const InnerBundleInfo &newInfo,
         return false;
     }
     std::string oldModuleName = info.GetModuleNameByPackage(packageName);
-    // check consistency of module name
-    if (moduleName.compare(oldModuleName) != 0) {
-        APP_LOGE("no moduleName in the innerModuleInfo");
-        return false;
+    // if FA update to Stage, allow module name inconsistent
+    bool isFAToStage = !info.GetIsNewVersion() && newInfo.GetIsNewVersion();
+    if (!isFAToStage) {
+        // if not FA update to Stage, check consistency of module name
+        if (moduleName.compare(oldModuleName) != 0) {
+            APP_LOGE("no moduleName in the innerModuleInfo");
+            return false;
+        }
     }
     // check consistency of module type
     std::string newModuleType = newInfo.GetModuleTypeByPackage(packageName);
