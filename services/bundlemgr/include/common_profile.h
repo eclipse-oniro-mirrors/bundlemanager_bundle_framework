@@ -399,6 +399,7 @@ constexpr const char* ABILITY_MIN_WINDOW_WIDTH = "minWindowWidth";
 constexpr const char* ABILITY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 constexpr const char* ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 constexpr const char* ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+constexpr const char* ABILITY_RECOVERABLE = "recoverable";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";
