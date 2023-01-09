@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#define private public
 #include <gtest/gtest.h>
+#define private public
 #include "distributed_bms_host.h"
 
 #include "appexecfwk_errors.h"
 #include "distributed_bms_proxy.h"
+#undef private
 #include "mock_distributed_bms_interface.h"
 
 using namespace testing::ext;

@@ -19,8 +19,8 @@ namespace AppExecFwk {
 MockDistributedBmsHost::~MockDistributedBmsHost()
 {}
 
-int32_t MockDistributedBmsHost::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName &elementName,
-        RemoteAbilityInfo &remoteAbilityInfo)
+int32_t MockDistributedBmsHost::GetRemoteAbilityInfo(
+    const OHOS::AppExecFwk::ElementName &elementName, RemoteAbilityInfo &remoteAbilityInfo)
 {
     return 0;
 }
@@ -67,8 +67,8 @@ int32_t MockDistributedBmsHost::GetAbilityInfos(const std::vector<ElementName> &
     return 0;
 }
 
-bool MockDistributedBmsHost::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
-    DistributedBundleInfo &distributedBundleInfo)
+bool MockDistributedBmsHost::GetDistributedBundleInfo(
+    const std::string &networkId, const std::string &bundleName, DistributedBundleInfo &distributedBundleInfo)
 {
     return true;
 }

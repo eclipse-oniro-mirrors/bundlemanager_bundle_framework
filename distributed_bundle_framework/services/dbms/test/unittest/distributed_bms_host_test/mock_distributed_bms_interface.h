@@ -19,6 +19,7 @@
 
 #define private public
 #include "distributed_bms_host.h"
+#undef private
 
 namespace OHOS {
 namespace AppExecFwk {
