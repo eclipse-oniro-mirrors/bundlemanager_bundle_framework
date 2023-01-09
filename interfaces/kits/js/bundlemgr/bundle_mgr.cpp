@@ -6874,7 +6874,7 @@ NativeValue* JsBundleMgr::OnGetBundlePackInfo(NativeEngine &engine, const Native
     return result;
 }
 
-NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info)
 {
     APP_LOGI("%{public}s is called", __FUNCTION__);
     if (info.argc > ARGS_SIZE_ONE) {
@@ -6918,10 +6918,6 @@ NativeValue* JsBundleMgr::JsBundleInstallInit(NativeEngine &engine)
     }
 
     auto jsCalss = std::make_unique<JsBundleInstall>();
-    if (jsCalss == nullptr) {
-        APP_LOGE("new JsBundleInstall failed");
-        return nullptr;
-    }
     object->SetNativePointer(jsCalss.release(), JsBundleInstall::Finalizer, nullptr);
     const char *moduleName = "JsBundleInstall";
     BindNativeFunction(engine, *object, "install", moduleName, JsBundleInstall::Install);
@@ -7011,6 +7007,10 @@ NativeValue* JsBundleInstall::OnInstall(NativeEngine &engine, NativeCallbackInfo
                 return;
             }
             auto iBundleMgr = GetBundleMgr();
+            if (iBundleMgr == nullptr) {
+                APP_LOGE("iBundleMgr is nullptr");
+                return;
+            }
             auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
             if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
                 APP_LOGE("can not get iBundleInstaller");
@@ -7084,6 +7084,10 @@ NativeValue* JsBundleInstall::OnRecover(NativeEngine &engine, NativeCallbackInfo
                 return;
             }
             auto iBundleMgr = GetBundleMgr();
+            if (iBundleMgr == nullptr) {
+                APP_LOGE("iBundleMgr is nullptr");
+                return;
+            }
             auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
             if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
                 APP_LOGE("can not get iBundleInstaller");
@@ -7147,6 +7151,10 @@ NativeValue* JsBundleInstall::OnUninstall(NativeEngine &engine, NativeCallbackIn
                 return;
             }
             auto iBundleMgr = GetBundleMgr();
+            if (iBundleMgr == nullptr) {
+                APP_LOGE("iBundleMgr is nullptr");
+                return;
+            }
             auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
             if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
                 APP_LOGE("can not get iBundleInstaller");
