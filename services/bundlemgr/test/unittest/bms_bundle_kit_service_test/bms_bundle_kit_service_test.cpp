@@ -9190,4 +9190,78 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0005, Function | S
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
 }
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0006
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0006, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0007
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0007, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0008
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(ABILITY_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.SetIsNewVersion(true);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+
+    innerBundleInfo.baseApplicationInfo_->iconId = 1;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
 }

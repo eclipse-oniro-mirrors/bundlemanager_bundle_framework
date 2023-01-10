@@ -1397,6 +1397,11 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0002, Function | SmallTest
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
     EXPECT_FALSE(abilityInfos.empty());
+
+    abilityInfos.clear();
+    innerBundleInfo.SetIsNewVersion(true);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    EXPECT_FALSE(abilityInfos.empty());
 }
 
 /**
@@ -1428,6 +1433,7 @@ HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Le
     applicationInfo.iconId = 0;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetCurrentModulePackage(BUNDLE_NAME);
+    innerBundleInfo.SetIsNewVersion(true);
     dataMgr->AddAppDetailAbilityInfo(innerBundleInfo);
 
     ability = innerBundleInfo.FindAbilityInfo(BUNDLE_NAME, Constants::APP_DETAIL_ABILITY, USERID);
