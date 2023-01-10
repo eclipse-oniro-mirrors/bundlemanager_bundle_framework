@@ -1061,15 +1061,16 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     }
     // add app detail ability
     if (!isExist && info.GetBaseApplicationInfo().needAppDetail) {
-        APP_LOGD("bundleName: %{public}s add detail ability info.", info.GetBundleName().c_str());
+        std::string bundleName = info.GetBundleName();
+        APP_LOGD("bundleName: %{public}s add detail ability info.", bundleName.c_str());
         std::string moduleName = "";
-        auto ability = info.FindAbilityInfo(moduleName, Constants::APP_DETAIL_ABILITY, responseUserId);
+        auto ability = info.FindAbilityInfo(bundleName, moduleName, Constants::APP_DETAIL_ABILITY, responseUserId);
         if (!ability) {
-            APP_LOGE("bundleName: %{public}s can not find app detail ability.", info.GetBundleName().c_str());
+            APP_LOGE("bundleName: %{public}s can not find app detail ability.", bundleName.c_str());
             return;
         }
         if (!info.GetIsNewVersion()) {
-            ability->applicationInfo.label = info.GetBundleName();
+            ability->applicationInfo.label = bundleName;
         }
         abilityInfos.emplace_back(*ability);
     }
