@@ -21,6 +21,7 @@
 #include <string>
 
 #include "appexecfwk_errors.h"
+#include "appqf_info.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
@@ -65,6 +66,7 @@ const uint32_t QUICK_FIX_VERSION_CODE = 1;
 const std::string QUICK_FIX_VERSION_NAME = "1.0";
 const uint32_t BUNDLE_VERSION_CODE = 1;
 const std::string BUNDLE_VERSION_NAME = "1.0";
+const std::string PATCH_PATH = "/data/app/el1/bundle/public/com.example.l3jsdemo/patch_1000001";
 } // namespace
 
 class BmsBundleQuickFixMgrRdbTest : public testing::Test {
@@ -797,5 +799,106 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, CheckMultiNativeSo_0010, Function | SmallT
     QuickFixChecker checker;
     auto ret = checker.CheckMultiNativeSo(infos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessQuickFixDir_0010
+ * @tc.name: ProcessQuickFixDir
+ * @tc.desc: Verification function ProcessQuickFixDir.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, ProcessQuickFixDir_0010, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->quickFixInfoMap_.clear();
+        std::vector<std::string> dirs;
+        dirs.push_back("wrong");
+        dirs.push_back("bundleName_10");
+        dirs.push_back("bund/bundleName_10");
+        scanner->ProcessQuickFixDir(dirs);
+        EXPECT_TRUE(scanner->quickFixInfoMap_.empty());
+    }
+}
+
+/**
+ * @tc.number: ProcessQuickFixDir_0020
+ * @tc.name: ProcessQuickFixDir
+ * @tc.desc: Verification function ProcessQuickFixDir.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, ProcessQuickFixDir_0020, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        scanner->quickFixInfoMap_.clear();
+        std::vector<std::string> dirs;
+        auto pair = std::pair<int32_t, std::string>(1, "a");
+        scanner->quickFixInfoMap_.emplace("a", pair);
+        scanner->quickFixInfoMap_.emplace("/n", pair);
+        scanner->quickFixInfoMap_.emplace("n", pair);
+        scanner->quickFixInfoMap_.emplace("nd", pair);
+        dirs.push_back("bu/nd/bundleName_10");
+        scanner->ProcessQuickFixDir(dirs);
+        EXPECT_FALSE(scanner->quickFixInfoMap_.empty());
+    }
+}
+
+/**
+ * @tc.number: ReprocessQuickFix_0010
+ * @tc.name: ReprocessQuickFix
+ * @tc.desc: Verification function ReprocessQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, ReprocessQuickFix_0010, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        std::string realPath = "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
+        std::string bundlePath = "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.hqf";
+        std::string pathpatch = "/data/service/el1/public/bms/bundle_manager_service/quick_fix_tmp";
+        std::vector<std::string> pathVec;
+        pathVec.emplace_back(pathpatch);
+        std::shared_ptr<QuickFixDeployer> quickFixDeployer = std::make_shared<QuickFixDeployer>(pathVec);
+        quickFixDeployer->quickFixDataMgr_ = std::make_shared<QuickFixDataMgr>();
+        quickFixDeployer->patchPaths_.emplace_back(pathpatch);
+        auto ret = scanner->ReprocessQuickFix(realPath, bundlePath);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: GetApplicationInfo_0010
+ * @tc.name: GetApplicationInfo
+ * @tc.desc: Verification function GetApplicationInfo.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, GetApplicationInfo_0010, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+        ApplicationInfo info;
+        auto ret = scanner->GetApplicationInfo(BUNDLE_NAME, HAP_FILE_PATH, info);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: RestoreQuickFix_0010
+ * @tc.name: RestoreQuickFix
+ * @tc.desc: Verification function RestoreQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, RestoreQuickFix_0010, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_FALSE(scanner == nullptr);
+    if (scanner != nullptr) {
+        HqfInfo hqfInfo;
+        AppqfInfo app;
+        app.hqfInfos.emplace_back(hqfInfo);
+        scanner->RestoreQuickFix();
+        EXPECT_EQ(scanner->state_, nullptr);
+    }
 }
 } // OHOS
