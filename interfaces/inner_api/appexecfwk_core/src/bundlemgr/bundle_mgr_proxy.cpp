@@ -704,34 +704,6 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::GetNameForUidV9(const int uid, std::string &name)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetNameForUid of %{public}d", uid);
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetNameForUid due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(uid)) {
-        APP_LOGE("fail to GetNameForUid due to write uid fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_NAME_FOR_UID_V9, data, reply)) {
-        APP_LOGE("fail to GetNameForUid from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    ErrCode ret = reply.ReadInt32();
-    if (ret != ERR_OK) {
-        APP_LOGE("host reply errCode : %{public}d", ret);
-        return ret;
-    }
-    name = reply.ReadString();
-    return ERR_OK;
-}
-
 bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1227,44 +1199,6 @@ ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::GetAbilityLabelV9(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, std::string &label)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin to GetAbilityLabel of %{public}s", bundleName.c_str());
-    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
-        APP_LOGE("fail to GetAbilityLabel due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAbilityLabel due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetAbilityLabel due to write bundleName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(moduleName)) {
-        APP_LOGE("fail to GetAbilityLabel due to write moduleName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetAbilityLabel due to write abilityName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ABILITY_LABEL_WITH_MODULE_NAME_V9, data, reply)) {
-        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
-    }
-    int32_t errCode = reply.ReadInt32();
-    if (errCode != ERR_OK) {
-        return errCode;
-    }
-    label = reply.ReadString();
-    return ERR_OK;
-}
-
 bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1434,35 +1368,6 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
 
     return GetParcelableInfoWithErrCode<Want>(
         IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, data, want);
-}
-
-ErrCode BundleMgrProxy::GetLaunchWantForBundleV9(const std::string &bundleName, Want &want, int32_t userId)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetLaunchWantForBundle of %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("fail to GetHapModuleInfo due to params empty");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetLaunchWantForBundle due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetLaunchWantForBundle due to write bundleName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetLaunchWantForBundle due to write userId fail");
-        return false;
-    }
-
-    return GetParcelableInfoWithErrCode<Want>(
-        IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE_V9, data, want);
 }
 
 int BundleMgrProxy::CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName)
@@ -2001,36 +1906,6 @@ ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool
     return NO_ERROR;
 }
 
-ErrCode BundleMgrProxy::IsApplicationEnabledV9(const std::string &bundleName, bool &isEnable)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGE("fail to IsApplicationEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to IsApplicationEnabled due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to IsApplicationEnabled due to write bundleName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED_V9, data, reply)) {
-        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
-    }
-    int32_t ret = reply.ReadInt32();
-    if (ret != NO_ERROR) {
-        return ret;
-    }
-    isEnable = reply.ReadBool();
-    return NO_ERROR;
-}
-
 ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2083,35 +1958,6 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
     }
     MessageParcel reply;
     if (!SendTransactCmd(IBundleMgr::Message::IS_ABILITY_ENABLED, data, reply)) {
-        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
-    }
-    int32_t ret = reply.ReadInt32();
-    if (ret != NO_ERROR) {
-        return ret;
-    }
-    isEnable = reply.ReadBool();
-    return NO_ERROR;
-}
-
-ErrCode BundleMgrProxy::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, bool &isEnable)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to IsAbilityEnabled of %{public}s", abilityInfo.name.c_str());
-    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
-        APP_LOGE("fail to IsAbilityEnabled due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to IsAbilityEnabled due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteParcelable(&abilityInfo)) {
-        APP_LOGE("fail to IsAbilityEnabled due to write abilityInfo fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_ABILITY_ENABLED_V9, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     int32_t ret = reply.ReadInt32();

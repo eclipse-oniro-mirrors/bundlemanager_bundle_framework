@@ -298,16 +298,6 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
-     * @brief Obtains the formal name associated with the given UID.
-     * @param uid Indicates the uid.
-     * @param name Indicates the obtained formal name.
-     * @return Returns ERR_OK if execute success; returns errCode otherwise.
-     */
-    virtual ErrCode GetNameForUidV9(const int uid, std::string &name)
-    {
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
      * @param gids Indicates the group IDs associated with the specified bundle.
@@ -511,19 +501,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
-     * @brief Obtains the label of a specified ability.
-     * @param bundleName Indicates the bundle name.
-     * @param moduleName Indicates the module name.
-     * @param abilityName Indicates the ability name.
-     * @param label Indicates the obtained label.
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    virtual ErrCode GetAbilityLabelV9(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, std::string &label)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-    /**
      * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
      * @param hapFilePath Indicates the absolute file path of the HAP.
      * @param flag Indicates the information contained in the BundleInfo object to be returned.
@@ -588,18 +565,6 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     virtual ErrCode GetLaunchWantForBundle(
-        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-        /**
-     * @brief Obtains the Want for starting the main ability of an application based on the given bundle name.
-     * @param bundleName Indicates the bundle name.
-     * @param want Indicates the obtained launch Want object.
-     * @param userId Indicates the userId.
-     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
-     */
-    virtual ErrCode GetLaunchWantForBundleV9(
         const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -761,16 +726,6 @@ public:
         return ERR_OK;
     }
     /**
-     * @brief Checks whether a specified application is enabled.
-     * @param bundleName Indicates the bundle name of the application.
-     * @param isEnable Indicates the application status is enabled.
-     * @return Returns result of the operation.
-     */
-    virtual ErrCode IsApplicationEnabledV9(const std::string &bundleName, bool &isEnable)
-    {
-        return ERR_OK;
-    }
-    /**
      * @brief Sets whether to enable a specified application.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Specifies whether to enable the application.
@@ -790,16 +745,6 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
-    {
-        return ERR_OK;
-    }
-    /**
-     * @brief Sets whether to enable a specified ability.
-     * @param abilityInfo Indicates information about the ability to check.
-     * @param isEnable Indicates the ability status is enabled.
-     * @return Returns result of the operation.
-     */
-    virtual ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, bool &isEnable)
     {
         return ERR_OK;
     }
@@ -975,6 +920,17 @@ public:
     }
 
     virtual bool VerifyCallingPermission(const std::string &permission)
+    {
+        return true;
+    }
+
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
+        const std::string bundleName = Constants::EMPTY_STRING)
+    {
+        return true;
+    }
+
+    virtual bool VerifySystemApi(const std::string bundleName)
     {
         return true;
     }
@@ -1275,11 +1231,6 @@ public:
         REGISTER_BUNDLE_EVENT_CALLBACK,
         UNREGISTER_BUNDLE_EVENT_CALLBACK,
         GET_BUNDLE_INFO_FOR_SELF,
-        GET_NAME_FOR_UID_V9,
-        IS_APPLICATION_ENABLED_V9,
-        IS_ABILITY_ENABLED_V9,
-        GET_LAUNCH_WANT_FOR_BUNDLE_V9,
-        GET_ABILITY_LABEL_WITH_MODULE_NAME_V9,
     };
 };
 }  // namespace AppExecFwk
