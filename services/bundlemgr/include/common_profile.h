@@ -427,6 +427,10 @@ constexpr const char* AVAILABLELEVEL_SYSTEM_CORE = "system_core";
 constexpr const char* COMPILE_MODE_JS_BUNDLE = "jsbundle";
 constexpr const char* COMPILE_MODE_ES_MODULE = "esmodule";
 
+// app detail ability library path
+constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH = "/system/lib/appdetailability";
+constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH_64 = "/system/lib64/appdetailability";
+
 extern thread_local int32_t parseResult;
 }  // namespace Profile
 }  // namespace AppExecFwk

@@ -1709,9 +1709,43 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->vendor = applicationInfo.vendor;
     baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
-    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
+    baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
+    baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     UpdatePrivilegeCapability(applicationInfo);
+    SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
+}
+
+void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
+{
+    bool isExistLauncherAbility = false;
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    for (const auto& abilityInfoPair : baseAbilityInfos_) {
+        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos_.end()) {
+            continue;
+        }
+        for (const Skill& skill : skillsPair->second) {
+            if (skill.MatchLauncher(want)) {
+                isExistLauncherAbility = true;
+                break;
+            }
+        }
+    }
+    if (isExistLauncherAbility) {
+        baseApplicationInfo_->needAppDetail = false;
+        baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+    }
+    if (!baseApplicationInfo_->needAppDetail) {
+        for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+            if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+                baseAbilityInfos_.erase(iter);
+                break;
+            }
+        }
+    }
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)

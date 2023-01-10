@@ -213,6 +213,10 @@ struct ApplicationInfo : public Parcelable {
     // switch
     bool multiProjects = false;
 
+    // app detail ability
+    bool needAppDetail = false;
+    std::string appDetailAbilityLibraryPath;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

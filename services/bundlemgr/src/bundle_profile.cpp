@@ -2473,7 +2473,18 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-
+    if (!find && !transformParam.isPreInstallApp &&
+        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+        applicationInfo.needAppDetail = true;
+        if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
+            applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
+        } else {
+            applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH;
+        }
+        if ((applicationInfo.labelId == 0) && (applicationInfo.label.empty())) {
+            applicationInfo.label = applicationInfo.bundleName;
+        }
+    }
     innerBundleInfo.SetCurrentModulePackage(configJson.module.package);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);

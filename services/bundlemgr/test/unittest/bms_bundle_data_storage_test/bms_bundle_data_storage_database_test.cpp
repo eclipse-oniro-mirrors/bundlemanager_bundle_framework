@@ -159,7 +159,9 @@ protected:
                         "associatedWakeUp": false,
                         "hideDesktopIcon": false,
                         "formVisibleNotify": false,
-                        "allowCommonEvent": []
+                        "allowCommonEvent": [],
+                        "needAppDetail": false,
+                        "appDetailAbilityLibraryPath": ""
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -499,7 +501,9 @@ protected:
                 "associatedWakeUp": false,
                 "hideDesktopIcon": false,
                 "formVisibleNotify": false,
-                "allowCommonEvent": []
+                "allowCommonEvent": [],
+                "needAppDetail": false,
+                "appDetailAbilityLibraryPath": ""
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -610,7 +614,9 @@ protected:
                     "associatedWakeUp": false,
                     "hideDesktopIcon": false,
                     "formVisibleNotify": false,
-                    "allowCommonEvent": []
+                    "allowCommonEvent": [],
+                    "needAppDetail": false,
+                    "appDetailAbilityLibraryPath": ""
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",
