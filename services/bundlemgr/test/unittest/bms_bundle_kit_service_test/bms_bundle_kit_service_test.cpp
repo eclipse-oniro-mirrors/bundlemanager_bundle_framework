@@ -5447,7 +5447,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_004, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_001);
+    want.SetUri(SCHEME_001 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
 }
@@ -5465,7 +5465,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_005, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_002);
+    want.SetUri(SCHEME_002 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(false, ret);
 }
@@ -5552,6 +5552,135 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTes
     want.SetUri(URI_PATH_001);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme, param has "scheme://" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(HOST_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_002 + SCHEME_SEPARATOR;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host, param has "scheme://host" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_002, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PATH_SEPARATOR + PATH_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host and port,
+ * param has "scheme://host:port" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
 }
 
 /**
