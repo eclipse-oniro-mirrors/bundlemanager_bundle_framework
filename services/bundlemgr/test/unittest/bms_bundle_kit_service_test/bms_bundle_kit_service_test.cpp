@@ -228,7 +228,7 @@ public:
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, const std::vector<std::string> &dependencies,
+        const std::string &abilityName, const std::vector<Dependency> &dependencies,
         InnerBundleInfo &innerBundleInfo) const;
     void MockInstallBundle(
         const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
@@ -725,7 +725,7 @@ ExtensionAbilityInfo BmsBundleKitServiceTest::MockExtensionInfo(
 }
 
 void BmsBundleKitServiceTest::MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, const std::vector<std::string> &dependencies,
+    const std::string &abilityName, const std::vector<Dependency> &dependencies,
     InnerBundleInfo &innerBundleInfo) const
 {
     ApplicationInfo appInfo;
@@ -5562,7 +5562,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTes
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_001, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     std::vector<std::string> dependentModuleName;
     auto res = innerBundleInfo.GetAllDependentModuleNames(MODULE_NAME_TEST, dependentModuleName);
@@ -5578,8 +5578,10 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_001, Function | Sma
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_002, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
-    dependencies.push_back(MODULE_NAME_TEST_1);
+    std::vector<Dependency> dependencies;
+    Dependency dependency;
+    dependency.moduleName = MODULE_NAME_TEST_1;
+    dependencies.push_back(dependency);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_1, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
@@ -5601,9 +5603,13 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_002, Function | Sma
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_003, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
-    dependencies.push_back(MODULE_NAME_TEST_1);
-    dependencies.push_back(MODULE_NAME_TEST_2);
+    std::vector<Dependency> dependencies;
+    Dependency dependency_1;
+    dependency_1.moduleName = MODULE_NAME_TEST_1;
+    Dependency dependency_2;
+    dependency_2.moduleName = MODULE_NAME_TEST_2;
+    dependencies.push_back(dependency_1);
+    dependencies.push_back(dependency_2);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_1, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
@@ -5627,14 +5633,20 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_003, Function | Sma
 HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_004, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> dependencies;
-    dependencies.push_back(MODULE_NAME_TEST_1);
-    dependencies.push_back(MODULE_NAME_TEST_2);
+    std::vector<Dependency> dependencies;
+    Dependency dependency_1;
+    dependency_1.moduleName = MODULE_NAME_TEST_1;
+    Dependency dependency_2;
+    dependency_2.moduleName = MODULE_NAME_TEST_2;
+    dependencies.push_back(dependency_1);
+    dependencies.push_back(dependency_2);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_1, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
-    dependencies.push_back(MODULE_NAME_TEST_3);
+    Dependency dependency_3;
+    dependency_3.moduleName = MODULE_NAME_TEST_3;
+    dependencies.push_back(dependency_3);
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_2, ABILITY_NAME_TEST, dependencies, innerBundleInfo);
     dependencies.clear();
     MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST_3, ABILITY_NAME_TEST, dependencies, innerBundleInfo);

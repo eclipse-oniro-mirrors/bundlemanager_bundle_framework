@@ -33,7 +33,8 @@ thread_local int32_t parseResult;
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "har"
+    "har",
+    "shared"
 };
 
 const std::set<std::string> DEVICE_TYPE_SET = {
@@ -259,7 +260,7 @@ struct Module {
     std::vector<Extension> extensionAbilities;
     std::vector<RequestPermission> requestPermissions;
     std::vector<DefinePermission> definePermissions;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     std::string compileMode;
     bool isLibIsolated = false;
 };
@@ -1214,14 +1215,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+    GetValueIfFindKey<std::vector<Dependency>>(jsonObject,
         jsonObjectEnd,
         MODULE_DEPENDENCIES,
         module.dependencies,
         JsonType::ARRAY,
         false,
         parseResult,
-        ArrayType::STRING);
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_COMPILE_MODE,

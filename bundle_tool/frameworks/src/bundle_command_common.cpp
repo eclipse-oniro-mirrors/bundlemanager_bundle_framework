@@ -470,6 +470,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: too large size of string or array type element in the profile"
     },
     {
+        IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST,
+        "error: dependent module does not exist.",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }

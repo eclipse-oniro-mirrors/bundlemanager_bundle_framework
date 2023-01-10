@@ -69,11 +69,11 @@ bm help
 | 命令                                | 描述                       |
 | ----------------------------------- | -------------------------- |
 | bm install -h | 显示install支持的命令信息 |
-| bm install -p <hap-file-path>    | 安装hap包，支持指定路径和多个hap同时安装 |
-| bm install -p <hap-file-path> -u <user-id>   |给指定用户安装一个hap包 |
-| bm install -r -p <hap-file-path> | 覆盖安装一个hap包 |
-| bm install -r -p <hap-file-path> -u <user-id> | 给指定用户覆盖安装一个hap包 |
-| bm install -r -p <hap-file-path> -u <user-id> -w <waitting-time> | 安装hap包时指定bm工具等待时间，最小的等待时长为5s，最大的等待时长为600s, 默认缺省为5s |
+| bm install -p <file-path>    | 安装应用，支持指定路径和多个hap、hsp同时安装 |
+| bm install -p <file-path> -u <user-id>   |给指定用户安装一个应用 |
+| bm install -r -p <file-path> | 覆盖安装一个应用 |
+| bm install -r -p <file-path> -u <user-id> | 给指定用户覆盖安装一个应用 |
+| bm install -r -p <file-path> -u <user-id> -w <waitting-time> | 安装时指定bm工具等待时间，最小的等待时长为5s，最大的等待时长为600s, 默认缺省为5s |
 
 * 示例
 ```Bash
@@ -93,9 +93,9 @@ bm install -p /data/app/ohosapp.hap -r
 
 * 示例
 ```Bash
-# 卸载一个hap
+# 卸载一个应用
 bm uninstall -n com.ohos.app
-# 卸载一个hap下面的ability
+# 卸载应用的一个模块
 bm uninstall -n com.ohos.app -m com.ohos.app.MainAbility
 ```
 #### 查询命令
