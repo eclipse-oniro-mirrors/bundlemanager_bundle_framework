@@ -48,6 +48,8 @@ const std::string DEVICE_ID = "1111";
 const std::string INVALID_NAME = "invalid";
 const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
+const std::string PATH_LOCATION = "/data/app/el1/bundle/public/com.ohos.launcher";
+const std::string PATH_LOCATIONS = "/data/app/el1/bundle/public/com.ohos.nweb/libs/arm/libnweb_adapter.so";
 }  // namespace
 
 class DbmsServicesKitTest : public testing::Test {
@@ -992,6 +994,363 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0052, Function | SmallTest | L
         RemoteAbilityInfo remoteAbilityInfo;
         auto ret = distributedBms->GetRemoteAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0053
+ * @tc.name: test IsPathValid
+ * @tc.desc: 1. system running normally
+ *           2. The test path is valid
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0053, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        bool res = imageCompress->IsPathValid(PATH_LOCATION);
+        EXPECT_EQ(res, true);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0054
+ * @tc.name: test IsPathValid
+ * @tc.desc: 1. system running normally
+ *           2. Invalid test path (parameter is "")
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0054, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        bool res = imageCompress->IsPathValid("");
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0055
+ * @tc.name: test IsPathValid
+ * @tc.desc: 1. system running normally
+ *           2. Invalid test path (parameter is "null")
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0055, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        bool res = imageCompress->IsPathValid("null");
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0056
+ * @tc.name: test IsPathValid
+ * @tc.desc: 1. system running normally
+ *           2. Invalid test path (parameter is "/data/data11")
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0056, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        bool res = imageCompress->IsPathValid("/data/data11");
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0057
+ * @tc.name: test CalculateRatio
+ * @tc.desc: 1. system running normally
+ *           2. test CalculateRatio
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0057, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t filesize = 2;
+        double res = imageCompress->CalculateRatio(filesize, "image/webp");
+        EXPECT_EQ(res, 8);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0058
+ * @tc.name: test CalculateRatio
+ * @tc.desc: 1. system running normally
+ *           2. test CalculateRatio (Invalid imageType parameter is "image")
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0058, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t filesize = 1;
+        double res = imageCompress->CalculateRatio(filesize, "image");
+        EXPECT_EQ(res, 64);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0059
+ * @tc.name: test CalculateRatio
+ * @tc.desc: 1. system running normally
+ *           2. test CalculateRatio (Invalid imageType parameter is "/")
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0059, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t filesize = 4;
+        double res = imageCompress->CalculateRatio(filesize, "/");
+        EXPECT_EQ(res, 32);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0060
+ * @tc.name: test IsImageNeedCompressBySize
+ * @tc.desc: 1. system running normally
+ *           2. test IsImageNeedCompressBySize (parameters are 10241)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0060, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t fileSize = 10241;
+        bool res = imageCompress->IsImageNeedCompressBySize(fileSize);
+        EXPECT_EQ(res, true);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0061
+ * @tc.name: test IsImageNeedCompressBySize
+ * @tc.desc: 1. system running normally
+ *           2. test IsImageNeedCompressBySize (parameters are 10239)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0061, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t fileSize = 10239;
+        bool res = imageCompress->IsImageNeedCompressBySize(fileSize);
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0062
+ * @tc.name: test GetImageType
+ * @tc.desc: 1. system running normally
+ *           2. test Get Image Type (The fileData parameter is valid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0062, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t fileLength = 64;
+        std::unique_ptr<uint8_t[]> fileData = std::make_unique<uint8_t[]>(fileLength);
+        uint8_t *data = fileData.get();
+        data[0] = 0xFF;
+        data[1] = 0xD8;
+        data[2] = 0xFF;
+        ImageType res = imageCompress->GetImageType(fileData, fileLength);
+        EXPECT_EQ(res, ImageType::JPEG);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0063
+ * @tc.name: test GetImageType
+ * @tc.desc: 1. system running normally
+ *           2. test Get Image Type (The fileData parameter is invalid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0063, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t fileLength = 64;
+        std::unique_ptr<uint8_t[]> fileData = std::make_unique<uint8_t[]>(fileLength);
+        uint8_t *data = fileData.get();
+        data[0] = 0xFF;
+        data[1] = 0xD8;
+        ImageType res = imageCompress->GetImageType(fileData, fileLength);
+        EXPECT_EQ(res, ImageType::WORNG_TYPE);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0064
+ * @tc.name: test GetImageType
+ * @tc.desc: 1. system running normally
+ *           2. test Get Image Type (The fileData parameter is valid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0064, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t fileLength = 64;
+        std::unique_ptr<uint8_t[]> fileData = std::make_unique<uint8_t[]>(fileLength);
+        uint8_t *data = fileData.get();
+        data[0] = 0x89;
+        data[1] = 0x50;
+        data[2] = 0x4E;
+        data[3] = 0x47;
+        ImageType res = imageCompress->GetImageType(fileData, fileLength);
+        EXPECT_EQ(res, ImageType::PNG);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0065
+ * @tc.name: test GetImageType
+ * @tc.desc: 1. system running normally
+ *           2. test Get Image Type (The fileData parameter is invalid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0065, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        constexpr size_t fileLength = 64;
+        std::unique_ptr<uint8_t[]> fileData = std::make_unique<uint8_t[]>(fileLength);
+        uint8_t *data = fileData.get();
+        data[0] = 0x89;
+        data[1] = 0x50;
+        data[2] = 0x4E;
+        ImageType res = imageCompress->GetImageType(fileData, fileLength);
+        EXPECT_EQ(res, ImageType::WORNG_TYPE);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0066
+ * @tc.name: test GetImageFileInfo
+ * @tc.desc: 1. system running normally
+ *           2. test Get Image File Info (The srcFile parameter is invalid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0066, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        std::unique_ptr<uint8_t[]> fileContent;
+        int64_t fileLength;
+        bool res = imageCompress->GetImageFileInfo(PATH_LOCATION, fileContent, fileLength);
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0067
+ * @tc.name: test GetImageFileInfo
+ * @tc.desc: 1. system running normally
+ *           2. test Get Image File Info (The srcFile parameter is valid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0067, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        int64_t fileLength = 64;
+        std::unique_ptr<uint8_t[]> fileContent = std::make_unique<uint8_t[]>(fileLength);
+        bool res = imageCompress->GetImageFileInfo(PATH_LOCATIONS, fileContent, fileLength);
+        EXPECT_EQ(res, true);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0068
+ * @tc.name: test GetImageFileInfo
+ * @tc.desc: 1. system running normally
+ *           2. test CompressImageByContent (The fileData parameter is invalid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0068, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        std::unique_ptr<uint8_t[]> fileData;
+        std::unique_ptr<uint8_t[]> compressedData;
+        constexpr size_t fileSize = 7;
+        int64_t compressedSize = 2;
+        std::string imageType = "image/jpeg";
+        bool res = imageCompress->CompressImageByContent(fileData, fileSize, compressedData, compressedSize, imageType);
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0069
+ * @tc.name: test GetImageFileInfo
+ * @tc.desc: 1. system running normally
+ *           2. test CompressImageByContent (The fileData parameter is valid)
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0069, Function | SmallTest | Level0)
+{
+    std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
+    EXPECT_NE(imageCompress, nullptr);
+    if (imageCompress != nullptr) {
+        std::unique_ptr<uint8_t[]> fileData = std::make_unique<uint8_t[]>(100);
+        uint8_t *data = fileData.get();
+        data[0] = 0xFF;
+        data[1] = 0xD8;
+        data[2] = 0xFF;
+        std::unique_ptr<uint8_t[]> compressedData = std::make_unique<uint8_t[]>(100);
+        constexpr size_t fileSize = 8;
+        int64_t compressedSize = 2;
+        std::string imageType = "image/jpeg";
+        bool res = imageCompress->CompressImageByContent(fileData, fileSize, compressedData, compressedSize, imageType);
+        EXPECT_EQ(res, false);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0070
+ * @tc.name: test CheckElementName
+ * @tc.desc: 1. system running normally
+ *           2. test CheckElementName
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0070, Function | SmallTest | Level0)
+{
+    auto distributedBmsProxy = GetDistributedBmsProxy();
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        ElementName name;
+        name.SetBundleName(BUNDLE_NAME);
+        name.SetAbilityName(WRONG_ABILITY_NAME);
+        name.SetDeviceID(DEVICE_ID);
+        auto ret = distributedBmsProxy->CheckElementName(name);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: DbmsServicesKitTest_0071
+ * @tc.name: test GetAbilityInfo
+ * @tc.desc: 1. system running normally
+ *           2. test bundleName empty
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0071, Function | SmallTest | Level0)
+{
+    auto distributedBmsProxy = GetDistributedBmsProxy();
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        ElementName name;
+        RemoteAbilityInfo info;
+        auto ret = distributedBmsProxy->GetRemoteAbilityInfo(name, info);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
 }
 } // OHOS

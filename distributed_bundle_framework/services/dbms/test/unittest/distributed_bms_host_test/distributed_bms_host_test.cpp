@@ -494,4 +494,199 @@ HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfo_0400, Function | MediumTes
     int res = host.HandleGetAbilityInfo(data, reply);
     EXPECT_EQ(res, NO_ERROR);
 }
+
+/**
+ * @tc.number: HandleGetAbilityInfos_0100
+ * @tc.name: Test HandleGetAbilityInfos
+ * @tc.desc: Verify the HandleGetAbilityInfo return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0100, Function | MediumTest | Level1)
+{
+
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    ElementName elementName;
+    elementName.SetBundleName("elementName");
+    std::vector<ElementName> elementNames;
+    elementNames.emplace_back(elementName);
+    std::string localeInfo = "localeInfo";
+    DistributedBmsProxy proxy(nullptr);
+    data.WriteString(localeInfo);
+    proxy.WriteParcelableVector(elementNames, data);
+    int res = host.HandleGetAbilityInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetAbilityInfos_0200
+ * @tc.name: Test HandleGetAbilityInfos
+ * @tc.desc: Verify the HandleGetAbilityInfo return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0200, Function | MediumTest | Level1)
+{
+
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::string localeInfo = "localeInfo";
+    DistributedBmsProxy proxy(nullptr);
+    data.WriteString(localeInfo);
+    int res = host.HandleGetAbilityInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetAbilityInfos_0300
+ * @tc.name: Test HandleGetAbilityInfos
+ * @tc.desc: Verify the HandleGetAbilityInfo return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0300, Function | MediumTest | Level1)
+{
+
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    ElementName elementName;
+    elementName.SetBundleName("elementName");
+    std::vector<ElementName> elementNames;
+    elementNames.emplace_back(elementName);
+    DistributedBmsProxy proxy(nullptr);
+    proxy.WriteParcelableVector(elementNames, data);
+    int res = host.HandleGetAbilityInfos(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetAbilityInfos_0400
+ * @tc.name: Test HandleGetAbilityInfos
+ * @tc.desc: Verify the HandleGetAbilityInfo return ERR_APPEXECFWK_PARCEL_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0400, Function | MediumTest | Level1)
+{
+
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    int res = host.HandleGetAbilityInfos(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleInfo_0100
+ * @tc.name: Test HandleGetDistributedBundleInfo
+ * @tc.desc: Verify the HandleGetDistributedBundleInfo return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleInfo_0100, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::string networkId = "networkId";
+    std::string bundleName = "bundleName";
+    data.WriteString(networkId);
+    data.WriteString(bundleName);
+    int res = host.HandleGetDistributedBundleInfo(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleInfo_0200
+ * @tc.name: Test HandleGetDistributedBundleInfo
+ * @tc.desc: Verify the HandleGetDistributedBundleInfo return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleInfo_0200, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::string networkId = "networkId";
+    data.WriteString(networkId);
+    int res = host.HandleGetDistributedBundleInfo(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleInfo_0300
+ * @tc.name: Test HandleGetDistributedBundleInfo
+ * @tc.desc: Verify the HandleGetDistributedBundleInfo return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleInfo_0300, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::string bundleName = "bundleName";
+    data.WriteString(bundleName);
+    int res = host.HandleGetDistributedBundleInfo(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleInfo_0400
+ * @tc.name: Test HandleGetDistributedBundleInfo
+ * @tc.desc: Verify the HandleGetDistributedBundleInfo return INVALID_OPERATION.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleInfo_0400, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    int res = host.HandleGetDistributedBundleInfo(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCallingPermission_0100
+ * @tc.name: Test VerifyCallingPermission
+ * @tc.desc: Verify the VerifyCallingPermission return true.
+ */
+HWTEST_F(DistributedBmsHostTest, VerifyCallingPermission_0100, Function | MediumTest | Level1)
+{
+    MockDistributedBmsHost host;
+    int res = host.VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: VerifyCallingPermission_0200
+ * @tc.name: Test VerifyCallingPermission
+ * @tc.desc: Verify the VerifyCallingPermission return false.
+ */
+HWTEST_F(DistributedBmsHostTest, VerifyCallingPermission_0200, Function | MediumTest | Level1)
+{
+    MockDistributedBmsHost host;
+    int res = host.VerifyCallingPermission("");
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: WriteParcelableVector_0100
+ * @tc.name: Test WriteParcelableVector
+ * @tc.desc: Verify the WriteParcelableVector return true.
+ */
+HWTEST_F(DistributedBmsHostTest, WriteParcelableVector_0100, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::vector<RemoteAbilityInfo> vector;
+    int res = host.WriteParcelableVector<RemoteAbilityInfo>(vector, data);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: GetParcelableInfos_0100
+ * @tc.name: Test GetParcelableInfos
+ * @tc.desc: Verify the GetParcelableInfos return false.
+ */
+HWTEST_F(DistributedBmsHostTest, GetParcelableInfos_0100, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::vector<ElementName> vector;
+    int res = host.GetParcelableInfos<ElementName>(data, vector);
+    EXPECT_TRUE(res);
+}
 }
