@@ -21,6 +21,8 @@
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
 
+#define SYSTEM_API_VERIFICATION
+
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
@@ -676,6 +678,7 @@ bool BundlePermissionMgr::MatchSignature(
 bool BundlePermissionMgr::VerifySystemApp()
 {
     APP_LOGI("verifying systemApp");
+#ifdef SYSTEM_API_VERIFICATION
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     APP_LOGD("callerToken : %{private}u", callerToken);
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
@@ -688,6 +691,7 @@ bool BundlePermissionMgr::VerifySystemApp()
         APP_LOGE("non-system app calling system api");
         return false;
     }
+#endif
     return true;
 }
 }  // namespace AppExecFwk
