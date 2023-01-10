@@ -274,7 +274,6 @@ bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
 
 bool RdbDataManager::CreateTable()
 {
-    int ret = NativeRdb::E_OK;
     std::string createTableSql;
     if (bmsRdbConfig_.createTableSql.empty()) {
         createTableSql = std::string(
@@ -289,7 +288,7 @@ bool RdbDataManager::CreateTable()
         APP_LOGE("RdbStore is null");
         return false;
     }
-    ret = rdbStore->ExecuteSql(createTableSql);
+    int ret = rdbStore->ExecuteSql(createTableSql);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("CreateTable failed, ret: %{public}d", ret);
         return false;
