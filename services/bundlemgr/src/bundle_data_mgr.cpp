@@ -1747,6 +1747,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
@@ -1769,7 +1770,6 @@ bool BundleDataMgr::GetBundleStats(
     return InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) == ERR_OK;
 }
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
     return GetBundleSpaceSize(bundleName, AccountHelper::GetCurrentActiveUserId());
