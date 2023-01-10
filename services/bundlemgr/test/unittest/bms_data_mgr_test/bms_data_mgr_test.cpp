@@ -1417,7 +1417,7 @@ HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Le
     EXPECT_NE(dataMgr, nullptr);
     dataMgr->AddAppDetailAbilityInfo(innerBundleInfo);
     auto ability = innerBundleInfo.FindAbilityInfo(Constants::EMPTY_STRING, Constants::APP_DETAIL_ABILITY, USERID);
-    if (!ability) {
+    if (ability) {
         EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
     }
 
@@ -1431,7 +1431,7 @@ HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Le
     dataMgr->AddAppDetailAbilityInfo(innerBundleInfo);
 
     ability = innerBundleInfo.FindAbilityInfo(BUNDLE_NAME, Constants::APP_DETAIL_ABILITY, USERID);
-    if (!ability) {
+    if (ability) {
         EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
     }
 }
