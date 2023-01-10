@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1432,5 +1432,139 @@ HWTEST_F(BmsBundleFreeInstallTest, WriteFileToStream_0100, Function | SmallTest 
     path = "/";
     ret = installerProxy.WriteFileToStream(streamInstaller, path);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_0001
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    uint32_t code = 0;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
+    callbackStub.OnRemoteRequest(code, data, reply, option);
+
+    EXPECT_FALSE(code);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_0002
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    uint32_t code = 0;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
+    callbackStub.OnRemoteRequest(code, data, reply, option);
+
+    EXPECT_FALSE(code);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_0003
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0003, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    uint32_t code = 0;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
+    data.WriteString("OK");
+    callbackStub.OnRemoteRequest(code, data, reply, option);
+
+    EXPECT_FALSE(code);
+}
+
+/**
+ * @tc.number:OnRemoteDied_0001
+ * Function: OnRemoteDied
+ * @tc.name: test OnRemoteDied
+ * @tc.desc: test OnRemoteDied success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteDied_0001, Function | SmallTest | Level0)
+{
+    const std::weak_ptr<BundleConnectAbilityMgr> server;
+    ServiceCenterDeathRecipient recipient(server);
+    wptr<IRemoteObject> wptrDeath;
+    recipient.OnRemoteDied(wptrDeath);
+}
+
+/**
+ * @tc.number:OnRemoteDied_0002
+ * Function: OnRemoteDied
+ * @tc.name: test OnRemoteDied
+ * @tc.desc: test OnRemoteDied success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteDied_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterDeathRecipient recipient(server);
+    wptr<IRemoteObject> wptrDeath;
+    recipient.OnRemoteDied(wptrDeath);
+}
+
+/**
+ * @tc.number: OnInstallFinished_0002
+ * Function: OnInstallFinished
+ * @tc.name: test OnInstallFinished
+ * @tc.desc: test OnInstallFinished success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0002, Function | SmallTest | Level0)
+{
+    const std::weak_ptr<BundleConnectAbilityMgr> server1;
+    ServiceCenterStatusCallback callbackStub(server1);
+    std::string installResult = "";
+    auto result = callbackStub.OnInstallFinished(installResult);
+    EXPECT_EQ(result, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: OnInstallFinished_0003
+ * Function: OnInstallFinished
+ * @tc.name: test OnInstallFinished
+ * @tc.desc: test OnInstallFinished success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0003, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    std::string installResult = "ok";
+    auto result = callbackStub.OnInstallFinished(installResult);
+    EXPECT_EQ(result, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0001
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    std::string installResult = "ok";
+    auto result = callbackStub.OnInstallFinished(installResult);
+    EXPECT_EQ(result, ERR_OK);
 }
 } // OHOS
