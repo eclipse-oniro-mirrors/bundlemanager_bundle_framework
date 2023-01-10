@@ -1794,12 +1794,19 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
         baseApplicationInfo_->needAppDetail = false;
         baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
     }
-    if (!baseApplicationInfo_->needAppDetail) {
-        for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
-            if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+    for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+            if (!baseApplicationInfo_->needAppDetail) {
                 baseAbilityInfos_.erase(iter);
-                break;
+                return;
             }
+            if (isNewVersion_) {
+                iter->second.labelId = baseApplicationInfo_->labelId;
+                if (baseApplicationInfo_->iconId != 0) {
+                    iter->second.iconId = baseApplicationInfo_->iconId;
+                }
+            }
+            return;
         }
     }
 }
