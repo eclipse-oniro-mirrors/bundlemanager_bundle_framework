@@ -22,7 +22,6 @@
 #include "app_control_constants.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd_client.h"
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
@@ -47,6 +46,7 @@
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_info.h"
 #endif
+#include "installd_client.h"
 #include "nlohmann/json.hpp"
 #include "free_install_params.h"
 #include "parameters.h"
