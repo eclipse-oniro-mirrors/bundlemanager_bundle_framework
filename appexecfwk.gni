@@ -38,7 +38,7 @@ core_path = "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/ap
 
 declare_args() {
   bundle_framework_graphics = true
-  bundle_framework_free_install = true
+  bundle_framework_free_install = false
   bundle_framework_default_app = true
   bundle_framework_launcher = true
   bundle_framework_sandbox_app = true
