@@ -3957,6 +3957,24 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0400, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: FromJson_0500
+ * Function: FromJson
+ * @tc.name: test FromJson
+ * @tc.desc: FromJson
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0500, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : {},
+            "quickFixMark" : "2222222222"
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+/**
  * @tc.number: to_json_0100
  * Function: to_json
  * @tc.name: test to_json

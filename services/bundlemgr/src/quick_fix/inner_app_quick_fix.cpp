@@ -132,7 +132,7 @@ int32_t InnerAppQuickFix::FromJson(const nlohmann::json &jsonObject)
         quickFixMark_,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerAppQuickFix from database error, error code : %{public}d", parseResult);
