@@ -2412,11 +2412,15 @@ bool ToInnerBundleInfo(
         }
     }
     bool find = false;
+    bool isExistPageAbility = false;
     for (const auto &ability : configJson.module.abilities) {
         AbilityInfo abilityInfo;
         if (!ToAbilityInfo(configJson, ability, transformParam, abilityInfo)) {
             APP_LOGE("parse to abilityInfo failed");
             return false;
+        }
+        if (abilityInfo.type == AbilityType::PAGE) {
+            isExistPageAbility = true;
         }
         if (innerModuleInfo.mainAbility == abilityInfo.name) {
             innerModuleInfo.icon = abilityInfo.iconPath;
@@ -2465,7 +2469,8 @@ bool ToInnerBundleInfo(
                     find = true;
                 }
                 if (std::find(skill.entities.begin(), skill.entities.end(), Constants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
-                    skill.entities.end() && transformParam.isPreInstallApp) {
+                    skill.entities.end() && transformParam.isPreInstallApp &&
+                    (abilityInfo.type == AbilityType::PAGE)) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
                 }
@@ -2473,7 +2478,7 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-    if (!find && !transformParam.isPreInstallApp &&
+    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp &&
         innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
