@@ -1567,4 +1567,64 @@ HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0001, Function | SmallTest 
     auto result = callbackStub.OnInstallFinished(installResult);
     EXPECT_EQ(result, ERR_OK);
 }
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0022
+ * @tc.name: DisconnectAbility
+ * @tc.desc: Disconnect Ability failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    Want want;
+    ElementName name;
+    name.SetAbilityName("abilityName");
+    name.SetBundleName("bundleName");
+    want.SetElement(name);
+    sptr<IRemoteObject> callerToken = nullptr;
+    bool ret = connectAbilityMgr.ConnectAbility(want, callerToken);
+    EXPECT_FALSE(ret);
+    connectAbilityMgr.DisconnectAbility();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0023
+ * @tc.name: CheckIsModuleNeedUpdate
+ * @tc.desc: Check Is Module Need Update
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0023, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    InnerBundleInfo innerBundleInfo;
+    std::string key = "key";
+    AbilityInfo abilityInfo;
+    abilityInfo.name = "abilityName";
+    innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName("abilityName");
+    want.SetElement(name);
+    int32_t userId = 1;
+    sptr<IRemoteObject> callBack = nullptr;
+    bool ret = connectAbilityMgr.CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0024
+ * @tc.name: UpgradeAtomicService
+ * @tc.desc: Upgrade Atomic Service
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    Want want;
+    ElementName name;
+    name.SetAbilityName("abilityName");
+    name.SetBundleName("bundleName");
+    want.SetElement(name);
+    int32_t userId = 1;
+    connectAbilityMgr.UpgradeAtomicService(want, userId);
+}
 } // OHOS
