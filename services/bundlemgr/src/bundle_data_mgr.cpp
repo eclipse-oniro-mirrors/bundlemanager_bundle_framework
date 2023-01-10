@@ -1068,6 +1068,9 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
             APP_LOGE("bundleName: %{public}s can not find app detail ability.", info.GetBundleName().c_str());
             return;
         }
+        if (!info.GetIsNewVersion()) {
+            ability->applicationInfo.label = info.GetBundleName();
+        }
         abilityInfos.emplace_back(*ability);
     }
 }
@@ -1092,8 +1095,11 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     ApplicationInfo applicationInfo = info.GetBaseApplicationInfo();
     appDetailAbility.applicationName = applicationInfo.name;
     appDetailAbility.labelId = applicationInfo.labelId;
+    if (!info.GetIsNewVersion()) {
+        appDetailAbility.labelId = 0;
+    }
     appDetailAbility.iconId = applicationInfo.iconId;
-    if (appDetailAbility.iconId == 0) {
+    if ((appDetailAbility.iconId == 0) || !info.GetIsNewVersion()) {
         APP_LOGD("AddAppDetailAbilityInfo appDetailAbility.iconId is 0.");
         // get system resource icon Id
         auto iter = bundleInfos_.find(GLOBAL_RESOURCE_BUNDLE_NAME);
