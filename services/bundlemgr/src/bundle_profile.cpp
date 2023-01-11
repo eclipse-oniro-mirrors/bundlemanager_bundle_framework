@@ -34,7 +34,6 @@ thread_local int32_t parseResult;
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "har",
     "shared"
 };
 const std::map<std::string, AbilityType> ABILITY_TYPE_MAP = {
