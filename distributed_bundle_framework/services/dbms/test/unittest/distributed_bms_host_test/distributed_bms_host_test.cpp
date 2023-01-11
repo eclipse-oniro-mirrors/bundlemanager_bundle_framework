@@ -502,7 +502,6 @@ HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfo_0400, Function | MediumTes
  */
 HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0100, Function | MediumTest | Level1)
 {
-
     Parcel data;
     Parcel reply;
     MockDistributedBmsHost host;
@@ -525,7 +524,6 @@ HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0100, Function | MediumTe
  */
 HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0200, Function | MediumTest | Level1)
 {
-
     Parcel data;
     Parcel reply;
     MockDistributedBmsHost host;
@@ -543,7 +541,6 @@ HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0200, Function | MediumTe
  */
 HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0300, Function | MediumTest | Level1)
 {
-
     Parcel data;
     Parcel reply;
     MockDistributedBmsHost host;
@@ -564,7 +561,6 @@ HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0300, Function | MediumTe
  */
 HWTEST_F(DistributedBmsHostTest, HandleGetAbilityInfos_0400, Function | MediumTest | Level1)
 {
-
     Parcel data;
     Parcel reply;
     MockDistributedBmsHost host;
