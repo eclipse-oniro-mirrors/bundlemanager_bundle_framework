@@ -1448,10 +1448,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0001, Function | SmallTes
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
-    callbackStub.OnRemoteRequest(code, data, reply, option);
+    auto result = callbackStub.OnRemoteRequest(code, data, reply, option);
 
-    EXPECT_FALSE(code);
+    EXPECT_EQ(result, -1);
 }
 
 /**
@@ -1462,16 +1461,16 @@ HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0001, Function | SmallTes
  */
 HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    std::shared_ptr<BundleConnectAbilityMgr> server = nullptr;
     ServiceCenterStatusCallback callbackStub(server);
     uint32_t code = 0;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
-    callbackStub.OnRemoteRequest(code, data, reply, option);
+    auto result = callbackStub.OnRemoteRequest(code, data, reply, option);
 
-    EXPECT_FALSE(code);
+    EXPECT_EQ(result, ERR_INVALID_VALUE);
 }
 
 /**
@@ -1490,11 +1489,10 @@ HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0003, Function | SmallTes
     MessageOption option;
     data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
     data.WriteString("OK");
-    callbackStub.OnRemoteRequest(code, data, reply, option);
+    auto result = callbackStub.OnRemoteRequest(code, data, reply, option);
 
-    EXPECT_FALSE(code);
+    EXPECT_EQ(result, ERR_OK);
 }
-
 /**
  * @tc.number:OnRemoteDied_0001
  * Function: OnRemoteDied
