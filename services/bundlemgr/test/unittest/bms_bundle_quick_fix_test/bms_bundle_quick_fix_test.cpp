@@ -4025,12 +4025,12 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0200, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: from_json_0200
+ * @tc.number: from_json_0100
  * Function: from_json
  * @tc.name: test from_json
  * @tc.desc: from_json
  */
-HWTEST_F(BmsBundleQuickFixTest, from_json_0200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleQuickFixTest, from_json_0100, Function | SmallTest | Level0)
 {
     nlohmann::json jsonObject;
     QuickFixMark quickFixMark;
