@@ -1526,8 +1526,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         hapInfo.moduleType = ModuleType::ENTRY;
     } else if (moduleType == Profile::MODULE_TYPE_FEATURE) {
         hapInfo.moduleType = ModuleType::FEATURE;
-    } else if (moduleType == Profile::MODULE_TYPE_HAR) {
-        hapInfo.moduleType = ModuleType::HAR;
     } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
         hapInfo.moduleType = ModuleType::SHARED;
     } else {
@@ -1794,12 +1792,19 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
         baseApplicationInfo_->needAppDetail = false;
         baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
     }
-    if (!baseApplicationInfo_->needAppDetail) {
-        for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
-            if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+    for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+            if (!baseApplicationInfo_->needAppDetail) {
                 baseAbilityInfos_.erase(iter);
-                break;
+                return;
             }
+            if (isNewVersion_) {
+                iter->second.labelId = baseApplicationInfo_->labelId;
+                if (baseApplicationInfo_->iconId != 0) {
+                    iter->second.iconId = baseApplicationInfo_->iconId;
+                }
+            }
+            return;
         }
     }
 }

@@ -1073,6 +1073,9 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
             APP_LOGE("bundleName: %{public}s can not find app detail ability.", info.GetBundleName().c_str());
             return;
         }
+        if (!info.GetIsNewVersion()) {
+            ability->applicationInfo.label = info.GetBundleName();
+        }
         abilityInfos.emplace_back(*ability);
     }
 }
@@ -1097,8 +1100,11 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     ApplicationInfo applicationInfo = info.GetBaseApplicationInfo();
     appDetailAbility.applicationName = applicationInfo.name;
     appDetailAbility.labelId = applicationInfo.labelId;
+    if (!info.GetIsNewVersion()) {
+        appDetailAbility.labelId = 0;
+    }
     appDetailAbility.iconId = applicationInfo.iconId;
-    if (appDetailAbility.iconId == 0) {
+    if ((appDetailAbility.iconId == 0) || !info.GetIsNewVersion()) {
         APP_LOGD("AddAppDetailAbilityInfo appDetailAbility.iconId is 0.");
         // get system resource icon Id
         auto iter = bundleInfos_.find(GLOBAL_RESOURCE_BUNDLE_NAME);
@@ -1747,6 +1753,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
@@ -1769,7 +1776,6 @@ bool BundleDataMgr::GetBundleStats(
     return InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) == ERR_OK;
 }
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
     return GetBundleSpaceSize(bundleName, AccountHelper::GetCurrentActiveUserId());

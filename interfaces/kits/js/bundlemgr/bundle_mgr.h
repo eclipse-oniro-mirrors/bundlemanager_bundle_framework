@@ -499,7 +499,7 @@ private:
         std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
     NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetBundleInstaller(NativeEngine &engine, NativeCallbackInfo &info);
+    NativeValue* OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundlePackInfo(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
@@ -558,7 +558,7 @@ private:
     NativeValue* CreateFormsInfos(NativeEngine &engine, const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms);
     NativeValue* CreateFormsInfo(NativeEngine &engine, const AbilityFormInfo &form);
     NativeValue* CreateExtensionAbilities(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module);
-    NativeValue* CreateExtensionAbility(NativeEngine &engine, const ExtensionAbilities &extensionAbilitiy);
+    NativeValue* CreateExtensionAbility(NativeEngine &engine, const ExtensionAbilities &extensionAbility);
 };
 
 class JsBundleInstall {
@@ -580,8 +580,8 @@ private:
     NativeValue* CreateInstallStatus(NativeEngine &engine,
         const std::shared_ptr<BundleInstallResult> bundleInstallResult);
     bool GetStringsValue(NativeEngine &engine, NativeValue *object, std::vector<std::string> &strList);
-    bool GetInstallParamValue(NativeEngine &engine, NativeValue *object, InstallParam &installParam);
-    void ConvertInstallResult(std::shared_ptr<BundleInstallResult> installResult);
+    static bool GetInstallParamValue(NativeEngine &engine, NativeValue *object, InstallParam &installParam);
+    static void ConvertInstallResult(std::shared_ptr<BundleInstallResult> installResult);
 };
 
 }  // namespace AppExecFwk
