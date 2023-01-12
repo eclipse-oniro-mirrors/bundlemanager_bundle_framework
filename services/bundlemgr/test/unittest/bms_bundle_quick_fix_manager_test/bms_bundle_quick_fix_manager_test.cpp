@@ -24,8 +24,10 @@
 #include "file_ex.h"
 #include "if_system_ability_manager.h"
 #include "inner_app_quick_fix.h"
+#include "iservice_registry.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_manager_rdb.h"
+#include "system_ability_definition.h"
 
 #define private public
 

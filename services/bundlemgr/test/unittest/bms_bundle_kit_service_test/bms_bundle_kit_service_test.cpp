@@ -224,7 +224,9 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
+#endif
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -342,10 +344,12 @@ void BmsBundleKitServiceTest::SetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
 {
     return bundleMgrService_->GetBundleDistributedManager();
 }
+#endif
 
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
@@ -7280,6 +7284,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Lev
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: AgingTest_0001
  * @tc.name: test Aging Start
@@ -7330,6 +7335,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     bundleAgingMgr.InitAgingtTimer();
     bundleAgingMgr.InitAgingRunner();
 }
+#endif
 
 /**
  * @tc.number: GetApplicationInfoV9_0100
@@ -7679,6 +7685,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest 
     EXPECT_FALSE(res);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleDistributedManager_0001
  * @tc.name: test GetBundleDistributedManager
@@ -7766,6 +7773,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0005, Function | S
     bundleMgr->OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "");
 }
+#endif
 
 /**
  * @tc.number: Hidump_0001

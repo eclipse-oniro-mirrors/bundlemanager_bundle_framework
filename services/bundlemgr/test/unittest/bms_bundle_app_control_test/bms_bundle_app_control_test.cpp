@@ -25,11 +25,14 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "if_system_ability_manager.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "iservice_registry.h"
 #include "mock_status_receiver.h"
 #include "permission_define.h"
+#include "system_ability_definition.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
