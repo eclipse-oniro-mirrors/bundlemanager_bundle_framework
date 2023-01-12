@@ -297,7 +297,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0900, TestSize.L
 HWTEST_F(BmsBundleExceptionHandlerTest, DeleteBundleInfoFromStorageTest_1000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1000 start";
-     bool isBundleValid = true;
+    bool isBundleValid = true;
     std::shared_ptr<IBundleDataStorage> dataStorage_ = std::make_shared<BundleDataStorageRdb>();
     BundleExceptionHandler BundleExceptionHandler(dataStorage_);
     InnerBundleInfo info;

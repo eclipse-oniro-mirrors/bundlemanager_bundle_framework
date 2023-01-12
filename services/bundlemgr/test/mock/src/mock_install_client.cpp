@@ -47,7 +47,7 @@ ErrCode InstalldClient::CreateBundleDataDir(
 ErrCode InstalldClient::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     if (bundleName.empty()) {
-      return -1;  
+        return -1;
     }
     return 0;
 }
@@ -60,7 +60,7 @@ ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const
 ErrCode InstalldClient::RemoveDir(const std::string &dir)
 {
     if (dir.empty()) {
-      return -1;  
+        return -1;
     }
     return 0;
 }

@@ -158,7 +158,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0300, T
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
     ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractModuleFiles, 
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractModuleFiles,
     srcModulePath, targetPath, targetSoPath, cpuAbi));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0300 end";
 }
@@ -342,7 +342,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0500, 
     int gid = GID;
     std::string apl = APL;
     ErrCode result = installClient_->CreateBundleDataDir(bundleName, userid, uid, gid, apl);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CreateBundleDataDir, 
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CreateBundleDataDir,
     bundleName, userid, uid, gid, apl));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0500 end";
 }
@@ -671,7 +671,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ScanDir_0200, TestSize.Lev
     std::string dir = DIR;
     std::vector<std::string> paths;
     ErrCode result = installClient_->ScanDir(dir, ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ScanDir, 
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ScanDir,
     dir, ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ScanDir_0200 end";
 }
