@@ -86,7 +86,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0200, TestSiz
 {
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0200 start";
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir("", BUNDLEORMOUDLEDIR, userId);
     EXPECT_EQ(result, false);
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0200 end";
 }
@@ -99,8 +99,8 @@ HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0200, TestSiz
 HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0300 start";
-    int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    int32_t userId = 0;
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir("", BUNDLEORMOUDLEDIR, userId);
     EXPECT_EQ(result, false);
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0300 end";
 }
@@ -114,7 +114,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0400, TestSiz
 {
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0400 start";
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir("", BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir("", "", userId);
     EXPECT_EQ(result, false);
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0400 end";
 }
