@@ -4130,4 +4130,152 @@ HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0400, Function | SmallTest | L
     ret = dataMgr->QueryExtensionAbilityInfoByUri(uri, userId, info);
     EXPECT_EQ(ret, false);
 }
+
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+/**
+ * @tc.name: HasUserInstallInBundle_0100
+ * @tc.desc: 1.install the hap
+ *           2.check if it is a user installation
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleManagerTest, HasUserInstallInBundle_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    bool result = dataMgr->HasUserInstallInBundle(BUNDLE_PREVIEW_NAME, USERID);
+    EXPECT_EQ(result, true);
+
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.name: HasUserInstallInBundle_0200
+ * @tc.desc: 1.install the hap
+ *           2.check if it is a user installation
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleManagerTest, HasUserInstallInBundle_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    bool result = dataMgr->HasUserInstallInBundle("wrong", USERID);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.name: GetBundleStats_0100
+ * @tc.desc: 1.install the hap
+ *           2.query bundle stats
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleStats_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::vector<int64_t> bundleStats;
+
+    bool result = dataMgr->GetBundleStats(BUNDLE_PREVIEW_NAME, USERID, bundleStats);
+    EXPECT_EQ(result, true);
+
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.name: GetBundleStats_0200
+ * @tc.desc: 1.query bundle stats
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleStats_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::vector<int64_t> bundleStats;
+
+    bool result = dataMgr->GetBundleStats("wrong", USERID, bundleStats);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: GetBundleSpaceSize_0100
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME);
+    EXPECT_EQ(ret, 0);
+}
+#endif
+
+/**
+ * @tc.number: FindAbilityInfo_0100
+ * @tc.name: test FindAbilityInfo proxy
+ * @tc.desc: 1.find ability info success
+ */
+HWTEST_F(BmsBundleManagerTest, FindAbilityInfo_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    AbilityInfo abilityInfo;
+    std::string bundleName = "com.example.test";
+    std::string moduleName = "module";
+    std::string abilityName = "mainAbility";
+    abilityInfo.bundleName = bundleName;
+    abilityInfo.moduleName = moduleName;
+    abilityInfo.name = abilityName;
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    ErrCode ret = info.FindAbilityInfo("", "", abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    ret = info.FindAbilityInfo(moduleName, abilityName, abilityInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: FindAbilityInfo_0200
+ * @tc.name: test FindAbilityInfo proxy
+ * @tc.desc: 1.find ability info success
+ */
+HWTEST_F(BmsBundleManagerTest, FindAbilityInfo_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    AbilityInfo abilityInfo;
+    std::string bundleName = "com.example.test";
+    std::string moduleName = "module";
+    std::string abilityName = "mainAbility";
+    abilityInfo.bundleName = bundleName;
+    abilityInfo.moduleName = moduleName;
+    abilityInfo.name = abilityName;
+    info.InsertAbilitiesInfo("key", abilityInfo);
+
+    ErrCode ret = info.FindAbilityInfo(moduleName, "", abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: FindAbilityInfo_0200
+ * @tc.name: test FindAbilityInfo proxy
+ * @tc.desc: 1.find ability info success
+ */
+HWTEST_F(BmsBundleManagerTest, FindAbilityInfo_0300, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::optional<std::vector<AbilityInfo>> ret =
+        info.FindAbilityInfos(Constants::INVALID_USERID);
+    EXPECT_EQ(ret, std::nullopt);
+}
 } // OHOS
