@@ -1067,6 +1067,51 @@ HWTEST_F(BmsDataMgrTest, AbilityManager_0100, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: AbilityManager_0200
+ * @tc.name: test IsRunning
+ * @tc.desc: 1.test IsRunning of AbilityManagerHelper
+ */
+HWTEST_F(BmsDataMgrTest, AbilityManager_0200, Function | SmallTest | Level0)
+{
+    AbilityManagerHelper helper;
+    int failed = -1;
+    int ret = helper.IsRunning("");
+    EXPECT_EQ(ret, failed);
+    ret = helper.IsRunning("com.ohos.tes1");
+    EXPECT_EQ(ret, failed);
+}
+
+/**
+ * @tc.number: GetFreeInstallModules_0100
+ * @tc.name: test GetFreeInstallModules
+ * @tc.desc: 1.test GetFreeInstallModules of BundleDataMgr
+ */
+HWTEST_F(BmsDataMgrTest, GetFreeInstallModules_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::map<std::string, std::vector<std::string>> freeInstallModules;
+    bool ret = dataMgr->GetFreeInstallModules(freeInstallModules);
+    EXPECT_EQ(ret, false);
+    InnerBundleInfo info1;
+    dataMgr->bundleInfos_.try_emplace("com.ohos.tes1", info1);
+    ret = dataMgr->GetFreeInstallModules(freeInstallModules);
+    EXPECT_EQ(ret, false);
+    freeInstallModules.clear();
+    InnerBundleInfo info2;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.installationFree = true;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfos.try_emplace("module", innerModuleInfo);
+    info2.innerModuleInfos_ = innerModuleInfos;
+    dataMgr->bundleInfos_.try_emplace("com.ohos.tes2", info2);
+    ret = dataMgr->GetFreeInstallModules(freeInstallModules);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: InnerBundleInfo_0100
  * @tc.name: Test GetBundleStateStorage, a param is error
  * @tc.desc: 1.Test the GetBundleStateStorage of BundleStateStorage
