@@ -362,6 +362,7 @@ constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
 constexpr const char* MODULE_TYPE_HAR = "har";
+constexpr const char* MODULE_TYPE_SHARED = "shared";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
 constexpr const char* DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificationEnabled";
@@ -426,6 +427,10 @@ constexpr const char* AVAILABLELEVEL_SYSTEM_CORE = "system_core";
 // compile mode
 constexpr const char* COMPILE_MODE_JS_BUNDLE = "jsbundle";
 constexpr const char* COMPILE_MODE_ES_MODULE = "esmodule";
+
+// app detail ability library path
+constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH = "/system/lib/appdetailability";
+constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH_64 = "/system/lib64/appdetailability";
 
 extern thread_local int32_t parseResult;
 }  // namespace Profile

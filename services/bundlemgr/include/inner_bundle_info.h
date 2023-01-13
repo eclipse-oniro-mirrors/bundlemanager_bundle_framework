@@ -1466,6 +1466,10 @@ public:
     void SetEntryInstallationFree(bool installationFree)
     {
         baseBundleInfo_->entryInstallationFree = installationFree;
+        if (installationFree) {
+            baseApplicationInfo_->needAppDetail = false;
+            baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+        }
     }
 
     bool GetEntryInstallationFree() const
@@ -1629,6 +1633,10 @@ public:
     void SetHideDesktopIcon(bool hideDesktopIcon)
     {
         baseApplicationInfo_->hideDesktopIcon = hideDesktopIcon;
+        if (hideDesktopIcon) {
+            baseApplicationInfo_->needAppDetail = false;
+            baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+        }
     }
 
     void SetFormVisibleNotify(bool formVisibleNotify)
@@ -1682,6 +1690,7 @@ public:
     void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
+    void UpdateAppDetailAbilityAttrs();
 
 private:
     void GetBundleWithAbilities(

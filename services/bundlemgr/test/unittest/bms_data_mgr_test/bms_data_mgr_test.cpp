@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -48,6 +50,8 @@ const std::string RESOURCE_PATH = "/data/app/el1/bundle/public/com.example.l3jsd
 const std::string LIB_PATH = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const bool VISIBLE = true;
 const int32_t USERID = 100;
+const std::string ACTION = "action.system.home";
+const std::string ENTITY = "entity.system.home";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -1073,4 +1077,302 @@ HWTEST_F(BmsDataMgrTest, InnerBundleInfo_0100, Function | SmallTest | Level0)
     InnerBundleInfo newInfo;
     bool res = innerBundleInfo.AddModuleInfo(newInfo);
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0004
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: 1. add info to the data manager
+ *           2. UpdateInnerBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0004, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.name = BUNDLE_NAME;
+        bundleInfo.applicationInfo.name = APP_NAME;
+        ApplicationInfo applicationInfo;
+        applicationInfo.name = BUNDLE_NAME;
+        applicationInfo.deviceId = DEVICE_ID;
+        applicationInfo.bundleName = BUNDLE_NAME;
+        applicationInfo.needAppDetail = false;
+        InnerBundleInfo info;
+        info.SetBaseBundleInfo(bundleInfo);
+        info.SetBaseApplicationInfo(applicationInfo);
+        bool ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info, info);
+        EXPECT_TRUE(ret);
+        InnerBundleInfo newInfo = info;
+        applicationInfo.needAppDetail = true;
+        newInfo.SetBaseApplicationInfo(applicationInfo);
+        ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, newInfo, info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0005
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: 1. add info to the data manager
+ *           2. UpdateInnerBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0005, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.name = BUNDLE_NAME;
+        bundleInfo.applicationInfo.name = APP_NAME;
+        ApplicationInfo applicationInfo;
+        applicationInfo.name = BUNDLE_NAME;
+        applicationInfo.deviceId = DEVICE_ID;
+        applicationInfo.bundleName = BUNDLE_NAME;
+        applicationInfo.needAppDetail = true;
+        InnerBundleInfo info;
+        info.SetBaseBundleInfo(bundleInfo);
+        info.SetBaseApplicationInfo(applicationInfo);
+        bool ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info, info);
+        EXPECT_TRUE(ret);
+        InnerBundleInfo newInfo = info;
+        applicationInfo.needAppDetail = false;
+        newInfo.SetBaseApplicationInfo(applicationInfo);
+        ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, newInfo, info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: AddInnerBundleInfo_0001
+ * @tc.name: AddInnerBundleInfo
+ * @tc.desc: AddInnerBundleInfo, needAppDetail is true
+ */
+HWTEST_F(BmsDataMgrTest, AddInnerBundleInfo_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = true;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: AddInnerBundleInfo_0002
+ * @tc.name: AddInnerBundleInfo
+ * @tc.desc: AddInnerBundleInfo, needAppDetail is false
+ */
+HWTEST_F(BmsDataMgrTest, AddInnerBundleInfo_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: AddInnerBundleInfo_0003
+ * @tc.name: AddInnerBundleInfo
+ * @tc.desc: AddInnerBundleInfo, needAppDetail is false
+ */
+HWTEST_F(BmsDataMgrTest, AddInnerBundleInfo_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GetMatchLauncherAbilityInfos_0001
+ * @tc.name: GetMatchLauncherAbilityInfos
+ * @tc.desc: GetMatchLauncherAbilityInfos, needAppDetail is false
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BundleUserInfo userInfo;
+    userInfo.userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    EXPECT_FALSE(abilityInfos.empty());
+
+    applicationInfo.needAppDetail = true;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    EXPECT_FALSE(abilityInfos.empty());
+}
+
+/**
+ * @tc.number: GetMatchLauncherAbilityInfos_0002
+ * @tc.name: GetMatchLauncherAbilityInfos
+ * @tc.desc: GetMatchLauncherAbilityInfos, needAppDetail is true
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BundleUserInfo userInfo;
+    userInfo.userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    EXPECT_TRUE(abilityInfos.empty());
+
+    applicationInfo.needAppDetail = true;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    EXPECT_TRUE(abilityInfos.empty());
+
+    AbilityInfo abilityInfo;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    EXPECT_FALSE(abilityInfos.empty());
+
+    abilityInfos.clear();
+    innerBundleInfo.SetIsNewVersion(true);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    EXPECT_FALSE(abilityInfos.empty());
+}
+
+/**
+ * @tc.number: AddAppDetailAbilityInfo_0001
+ * @tc.name: AddAppDetailAbilityInfo
+ * @tc.desc: AddAppDetailAbilityInfo, needAppDetail is true
+ */
+HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.iconId = 1;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->AddAppDetailAbilityInfo(innerBundleInfo);
+    auto ability = innerBundleInfo.FindAbilityInfo(BUNDLE_NAME, Constants::EMPTY_STRING,
+        Constants::APP_DETAIL_ABILITY, USERID);
+    if (ability) {
+        EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
+    }
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = BUNDLE_NAME;
+    innerModuleInfo.moduleName = BUNDLE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
+    applicationInfo.iconId = 0;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetCurrentModulePackage(BUNDLE_NAME);
+    innerBundleInfo.SetIsNewVersion(true);
+    dataMgr->AddAppDetailAbilityInfo(innerBundleInfo);
+
+    ability = innerBundleInfo.FindAbilityInfo(BUNDLE_NAME, BUNDLE_NAME,
+        Constants::APP_DETAIL_ABILITY, USERID);
+    if (ability) {
+        EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
+    }
 }
