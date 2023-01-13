@@ -628,7 +628,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   module_out_path = module_output_path
   include_dirs = [
     "//third_party/jsoncpp/include",
-    "../mock/include/parameter",
+    "../../mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = [
