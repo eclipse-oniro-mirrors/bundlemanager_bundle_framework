@@ -233,6 +233,11 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
         }
+        result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
+        if (result != ERR_OK) {
+            APP_LOGE("check provision bundleName failed");
+            return result;
+        }
 
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
@@ -280,6 +285,23 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     }
     APP_LOGD("finish parse hap file");
     return result;
+}
+
+ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundleName, const std::string &bundleName)
+{
+    APP_LOGD("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
+        provisionBundleName.c_str(), bundleName.c_str());
+    if (provisionBundleName.empty() || bundleName.empty()) {
+        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s failed", provisionBundleName.c_str(),
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
+    if (provisionBundleName == bundleName) {
+        return ERR_OK;
+    }
+    APP_LOGE("CheckBundleName failed provisionBundleName:%{public}s, bundleName:%{public}s",
+        provisionBundleName.c_str(), bundleName.c_str());
+    return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
 }
 
 void BundleInstallChecker::CollectProvisionInfo(
