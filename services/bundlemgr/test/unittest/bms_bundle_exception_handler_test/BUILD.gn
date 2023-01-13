@@ -24,55 +24,11 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
     "//third_party/json/include",
   ]
   sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
-    "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp",
-    "${services_path}/bundlemgr/test/mock/src/mock_installd_host_impl.cpp",
-  ]
-
-  sources += [
-    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
-    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
-  ]
-
-  sources += [
-    "${services_path}/bundlemgr/src/ability_manager_helper.cpp",
-    "${services_path}/bundlemgr/src/base_bundle_installer.cpp",
     "${services_path}/bundlemgr/src/bundle_exception_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_install_checker.cpp",
-    "${services_path}/bundlemgr/src/bundle_installer.cpp",
-    "${services_path}/bundlemgr/src/bundle_installer_host.cpp",
-    "${services_path}/bundlemgr/src/bundle_installer_manager.cpp",
-    "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_stream_installer_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_util.cpp",
-    "${services_path}/bundlemgr/src/bundle_verify_mgr.cpp",
-    "${services_path}/bundlemgr/src/event_report.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
-    "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
-    "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
-    "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
-    "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
-    "${services_path}/bundlemgr/src/pre_install_bundle_info.cpp",
     "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_app_helper.cpp",
-    "${services_path}/bundlemgr/src/status_receiver_proxy.cpp",
-    "${services_path}/bundlemgr/src/system_bundle_installer.cpp",
-    "${services_path}/bundlemgr/src/xcollie_helper.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp",
   ]
 
   sources += [ "bms_bundle_exception_handler_test.cpp" ]
@@ -98,15 +54,10 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
   deps += bundle_install_deps
 
   external_deps = [
-    "ability_base:want",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
-    "common_event_service:cesfwk_innerkits",
-    "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -122,9 +73,6 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
     defines += [ "ACCOUNT_ENABLE" ]
   }
   if (bundle_framework_free_install) {
-    sources += aging
-    sources += free_install
-    sources += distributed_manager
     external_deps += [
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
@@ -135,7 +83,6 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
       "power_manager:powermgr_client",
       "syscap_codec:syscap_interface_shared",
     ]
-    defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
   if (device_manager_enable) {
     sources += [ "${services_path}/bundlemgr/src/bms_device_manager.cpp" ]
