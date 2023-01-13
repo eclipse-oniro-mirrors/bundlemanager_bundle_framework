@@ -18,6 +18,8 @@
 #include <sys/stat.h>
 #include "nlohmann/json.hpp"
 
+#include <unistd.h>
+
 #include "account_helper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
@@ -671,6 +673,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
+    sync();
     return result;
 }
 
@@ -2616,9 +2619,9 @@ bool BaseBundleInstaller::SaveHapToInstallPath()
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
-        if (InstalldClient::GetInstance()->CopyFile(
+        if (InstalldClient::GetInstance()->MoveFile(
             hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-            APP_LOGE("Copy hap to install path failed");
+            APP_LOGE("Move hap to install path failed");
             return false;
         }
     }
