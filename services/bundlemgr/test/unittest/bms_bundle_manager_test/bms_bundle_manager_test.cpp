@@ -1210,7 +1210,7 @@ HWTEST_F(BmsBundleManagerTest, CheckFilePath_0001, Function | MediumTest | Level
 */
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0001, Function | SmallTest | Level1)
 {
-    Want want;
+    AAFwk::Want want;
     std::vector<AbilityInfo> abilityInfos;
     GetBundleDataMgr()->bundleInfos_.clear();
     bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos);
@@ -2206,7 +2206,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1200, Function | MediumTest | L
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t flags = 0;
     std::vector<AbilityInfo> abilityInfos;
-    Want want;
+    AAFwk::Want want;
     AbilityInfo abilityInfo;
 
     ClearDataMgr();
@@ -2244,7 +2244,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1300, Function | MediumTest | L
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string label;
     std::vector<BundleInfo> bundleInfos;
-    Want want;
+    AAFwk::Want want;
     HapModuleInfo hapModuleInfo;
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = "bundleName";
@@ -2355,7 +2355,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1600, Function | MediumTest | L
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t flags = 0;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    Want want;
+    AAFwk::Want want;
 
     ClearDataMgr();
     bool retBool = hostImpl->QueryExtensionAbilityInfos(want, flags, USERID, extensionInfos);
@@ -2420,7 +2420,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | L
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::vector<std::string> dependentModuleNames;
-    Want want;
+    AAFwk::Want want;
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
 
@@ -2455,7 +2455,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     bool isEnabled = true;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::unique_ptr<uint8_t[]> mediaDataPtr;
-    Want want;
+    AAFwk::Want want;
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
     HapModuleInfo hapModuleInfo;
@@ -2666,6 +2666,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2900, Function | MediumTest | L
     EXPECT_NE(ret, 0);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: BundleMgrHostImpl_3000
  * @tc.name: test BundleMgrHostImpl
@@ -2681,6 +2682,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3000, Function | MediumTest | L
         want, 0, Constants::INVALID_USERID, abilityInfo, callBack);
     EXPECT_EQ(ret, false);
 }
+#endif
 
 /**
  * @tc.number: BundleMgrHostImpl_3100
@@ -2972,7 +2974,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0012, Function | SmallTest | Leve
 */
 HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0013, Function | SmallTest | Level1)
 {
-    Want want;
+    AAFwk::Want want;
     int32_t flags = 0;
     std::vector<AbilityInfo> abilityInfos;
     InnerBundleInfo innerBundleInfo;
@@ -3487,7 +3489,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0018, Function | SmallTest 
 */
 HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0001, Function | SmallTest | Level1)
 {
-    Want want;
+    AAFwk::Want want;
     int32_t flags = 0;
     AbilityInfo abilityInfo;
     int32_t appIndex = 1;
@@ -3507,7 +3509,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0001, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0002, Function | SmallTest | Level1)
 {
-    Want want;
+    AAFwk::Want want;
     int32_t flags = 0;
     AbilityInfo abilityInfo;
     int32_t appIndex = 1;
@@ -3527,7 +3529,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0002, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0003, Function | SmallTest | Level1)
 {
-    Want want;
+    AAFwk::Want want;
     int32_t flags = 0;
     std::vector<AbilityInfo> abilityInfo;
     int32_t appIndex = 0;
@@ -3763,7 +3765,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0013, Function | SmallTest | Lev
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0014, Function | SmallTest | Level1)
 {
-    Want want;
+    AAFwk::Want want;
     int32_t appIndex = 1;
     ExtensionAbilityInfo extensionInfo;
     GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
