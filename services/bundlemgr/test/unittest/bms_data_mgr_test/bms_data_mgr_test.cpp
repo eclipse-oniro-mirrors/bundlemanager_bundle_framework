@@ -1081,6 +1081,7 @@ HWTEST_F(BmsDataMgrTest, AbilityManager_0200, Function | SmallTest | Level0)
     EXPECT_EQ(ret, failed);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetFreeInstallModules_0100
  * @tc.name: test GetFreeInstallModules
@@ -1110,6 +1111,7 @@ HWTEST_F(BmsDataMgrTest, GetFreeInstallModules_0100, Function | SmallTest | Leve
     ret = dataMgr->GetFreeInstallModules(freeInstallModules);
     EXPECT_EQ(ret, true);
 }
+#endif
 
 /**
  * @tc.number: InnerBundleInfo_0100
