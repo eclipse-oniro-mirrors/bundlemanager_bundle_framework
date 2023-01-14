@@ -3080,6 +3080,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0310, Function | SmallTest
     provisionInfo.appId = "001";
     bundleInfo.appId = "Device_001";
     bundleInfo.applicationInfo.appPrivilegeLevel = provisionInfo.bundleInfo.apl;
+    provisionInfo.bundleInfo.bundleName = bundleInfo.name;
     QuickFixChecker checker;
     auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
     EXPECT_EQ(ret, ERR_OK);
@@ -3154,6 +3155,26 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0340, Function | SmallTest
         ret = deployer->SaveAppQuickFix(innerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED);
     }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0350
+ * @tc.name: test CheckSignatureInfo
+ * @tc.desc: test success scene of CheckSignatureInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0350, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    BundleInfo bundleInfo;
+    bundleInfo.name = "Device";
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.appId = "001";
+    bundleInfo.appId = "Device_001";
+    bundleInfo.applicationInfo.appPrivilegeLevel = provisionInfo.bundleInfo.apl;
+    QuickFixChecker checker;
+    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
