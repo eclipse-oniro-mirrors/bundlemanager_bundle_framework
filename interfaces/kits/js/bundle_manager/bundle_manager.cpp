@@ -2801,19 +2801,19 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value)
 void CreateModuleTypeObject(napi_env env, napi_value value)
 {
     napi_value nUnknown;
-    NAPI_CALL_RETURN_VOID(env,napi_create_int32(env, static_cast<int32_t>(ModuleType::UNKNOWN), &nUnknown));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::UNKNOWN), &nUnknown));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNKNOWN", nUnknown));
 
     napi_value nEntry;
-    NAPI_CALL_RETURN_VOID(env,napi_create_int32(env, static_cast<int32_t>(ModuleType::ENTRY), &nEntry));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::ENTRY), &nEntry));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTRY", nEntry));
 
     napi_value nFeature;
-    NAPI_CALL_RETURN_VOID(env,napi_create_int32(env, static_cast<int32_t>(ModuleType::FEATURE), &nFeature));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::FEATURE), &nFeature));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FEATURE", nFeature));
 
     napi_value nShared;
-    NAPI_CALL_RETURN_VOID(env,napi_create_int32(env, static_cast<int32_t>(ModuleType::SHARED), &nShared));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::SHARED), &nShared));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SHARED", nShared));
 }
 }
