@@ -234,8 +234,6 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo,
     napi_value nFlags;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.flags, &nFlags));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "flags", nFlags));
-
-    APP_LOGD("ConvertApplicationInfo entryDir=%{public}s.", appInfo.entryDir.c_str());
 }
 
 static void ConvertElementName(napi_env env, napi_value elementInfo, const OHOS::AppExecFwk::ElementName &elementName)

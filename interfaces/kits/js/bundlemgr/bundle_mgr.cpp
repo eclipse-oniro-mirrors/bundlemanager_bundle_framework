@@ -790,19 +790,16 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "name", nName));
-    APP_LOGD("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "moduleName", nModuleName));
-    APP_LOGD("ConvertHapModuleInfo moduleName=%{public}s.", hapModuleInfo.moduleName.c_str());
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "description", nDescription));
-    APP_LOGD("ConvertHapModuleInfo description=%{public}s.", hapModuleInfo.description.c_str());
 
     napi_value ndescriptionId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.descriptionId, &ndescriptionId));
@@ -815,13 +812,11 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     napi_value nLabel;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.label.c_str(), NAPI_AUTO_LENGTH, &nLabel));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "label", nLabel));
-    APP_LOGD("ConvertHapModuleInfo label=%{public}s.", hapModuleInfo.label.c_str());
 
     napi_value nHashValue;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.hashValue.c_str(), NAPI_AUTO_LENGTH, &nHashValue));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "hashValue", nHashValue));
-    APP_LOGD("ConvertHapModuleInfo hashValue=%{public}s.", hapModuleInfo.hashValue.c_str());
 
     napi_value nLabelId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.labelId, &nLabelId));
@@ -835,7 +830,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.backgroundImg.c_str(), NAPI_AUTO_LENGTH, &nBackgroundImg));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "backgroundImg", nBackgroundImg));
-    APP_LOGD("ConvertHapModuleInfo backgroundImg=%{public}s.", hapModuleInfo.backgroundImg.c_str());
 
     napi_value nSupportedModes;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.supportedModes, &nSupportedModes));
@@ -876,7 +870,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.mainAbility.c_str(), NAPI_AUTO_LENGTH, &nMainAbilityName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "mainAbilityName", nMainAbilityName));
-    APP_LOGD("ConvertHapModuleInfo mainAbilityName=%{public}s.", hapModuleInfo.mainAbility.c_str());
 
     napi_value nInstallationFree;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, hapModuleInfo.installationFree, &nInstallationFree));

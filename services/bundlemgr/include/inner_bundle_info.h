@@ -476,13 +476,11 @@ public:
      * @param userId Indicates the user ID.
      * @return Return whether the application is enabled.
      */
-    bool GetApplicationEnabled(int32_t userId = Constants::UNSPECIFIED_USERID, bool detailedLog = true) const
+    bool GetApplicationEnabled(int32_t userId = Constants::UNSPECIFIED_USERID) const
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            if (detailedLog) {
-                APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
-            }
+            APP_LOGD("can not find userId %{public}d when GetApplicationEnabled", userId);
             return false;
         }
 
@@ -492,7 +490,7 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
+            APP_LOGD("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
@@ -1349,10 +1347,9 @@ public:
     /**
      * @brief Get response userId.
      * @param userId Indicates the request userId..
-     * @param detailedLog Indicates whether needs detailed log.
      * @return Return response userId.
      */
-    int32_t GetResponseUserId(int32_t requestUserId, bool detailedLog = true) const;
+    int32_t GetResponseUserId(int32_t requestUserId) const;
 
     std::vector<std::string> GetModuleNameVec() const
     {
