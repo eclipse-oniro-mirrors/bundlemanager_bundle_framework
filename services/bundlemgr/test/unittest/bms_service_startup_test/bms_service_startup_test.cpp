@@ -19,6 +19,7 @@
 
 #include <fstream>
 
+#include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -30,6 +31,7 @@ using OHOS::DelayedSingleton;
 
 namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
+const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 } // namespace
 
 class BmsServiceStartupTest : public testing::Test {
@@ -308,6 +310,23 @@ HWTEST_F(BmsServiceStartupTest, AnalyzeUserData_001, Function | SmallTest | Leve
 }
 
 /**
+* @tc.number: CheckHapPaths_0001
+* @tc.name: test CheckHapPaths
+* @tc.desc: 1. test is valid input
+*/
+HWTEST_F(BmsServiceStartupTest, CheckHapPaths_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::vector<std::string> hapPaths;
+    hapPaths.emplace_back("test1.hap");
+    hapPaths.emplace_back("test2.ha");
+    std::vector<std::string> checkPaths = handler->CheckHapPaths(hapPaths);
+    EXPECT_EQ(checkPaths[0], "test1.hap");
+}
+
+/**
 * @tc.number: CombineBundleInfoAndUserInfo_001
 * @tc.name: test CombineBundleInfoAndUserInfo
 * @tc.desc: 1. test is failed
@@ -340,6 +359,37 @@ HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_001, Function | Sma
 
     res = handler->CombineBundleInfoAndUserInfo(installInfos1, userInfoMaps1);
     EXPECT_FALSE(res);
+}
+
+/**
+* @tc.number: CombineBundleInfoAndUserInfo_002
+* @tc.name: test CombineBundleInfoAndUserInfo
+* @tc.desc: 1. test empty installinfos and userInfoMaps
+*/
+HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+    bool res = handler->CombineBundleInfoAndUserInfo(installInfos, userInfoMaps);
+    EXPECT_FALSE(res);
+}
+
+/**
+* @tc.number: IsHotPatchApp_00001
+* @tc.name: test IsHotPatchApp
+* @tc.desc: 1. test empty installinfos and userInfoMaps
+*/
+HWTEST_F(BmsServiceStartupTest, InnerProcessBootPreBundleProFileInstall_001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::string bundleName = "com.ohos.tes1";
+    bool ret = handler->IsHotPatchApp(bundleName);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -508,6 +558,84 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_0010, Function | SmallTest | Level0)
 }
 
 /**
+* @tc.number: PreInstall_0011
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. IsPreInstallRemovable
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0011, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    handler->ClearPreInstallCache();
+    std::string filePath = "/data/test";
+    bool res = handler->IsPreInstallRemovable("");
+    EXPECT_EQ(res, false);
+    res = handler->IsPreInstallRemovable(filePath);
+    EXPECT_EQ(res, false);
+}
+
+/**
+* @tc.number: PreInstall_0012
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. ParseHapFiles
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0012, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    handler->ClearPreInstallCache();
+    std::string filePath = "/data/test";
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    bool res = handler->ParseHapFiles("", infos);
+    EXPECT_EQ(res, false);
+    res = handler->ParseHapFiles(filePath, infos);
+    EXPECT_EQ(res, false);
+}
+
+/**
+* @tc.number: PreInstall_0013
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. LoadPreInstallProFile
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0013, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    InnerBundleInfo info;
+    std::list<std::string> scanPathList;
+    handler->LoadAllPreInstallBundleInfos();
+    handler->ProcessRebootBundleInstall();
+    handler->ProcessRebootBundleUninstall();
+    handler->ProcessReBootPreBundleProFileInstall();
+    handler->InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::SYSTEM_APP);
+    handler->ProcessReBootPreBundleProFileInstall();
+    handler->SaveInstallInfoToCache(info);
+    EXPECT_EQ(info.GetBundleName(), "");
+}
+
+/**
+* @tc.number: PreInstall_0014
+* @tc.name: Preset application whitelist mechanism
+* @tc.desc: 1. LoadPreInstallProFile
+* @tc.require: issueI56W8O
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstall_0014, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::vector<std::string> hapPaths;
+    std::vector<std::string> res = handler->CheckHapPaths(hapPaths);
+    EXPECT_EQ(res.size(), 0);
+}
+
+/**
  * @tc.number: BundlePermissionMgr_0100
  * @tc.name: test ConvertPermissionDef
  * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
@@ -639,4 +767,69 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0600, Function | SmallTest |
     BundlePermissionMgr::defaultPermissions_.try_emplace("com.ohos.tes1", permission);
     ret = BundlePermissionMgr::GetDefaultPermission(bundleName, permission);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: AbilityManagerHelper_0100
+ * @tc.name: test IsRunning
+ * @tc.desc: 1.test IsRunning of AbilityManagerHelper
+ */
+HWTEST_F(BmsServiceStartupTest, AbilityManagerHelper_0100, Function | SmallTest | Level0)
+{
+    AbilityManagerHelper helper;
+    int bundleUid = -1;
+    int ret = helper.IsRunning("com.ohos.tes1", bundleUid);
+    EXPECT_EQ(ret, -1);
+    bundleUid = 100;
+    ret = helper.IsRunning("com.ohos.tes1", bundleUid);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0100
+ * @tc.name: test SaveBundleStateStorage
+ * @tc.desc: 1.test SaveBundleStateStorage of BundleStateStorage
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0100, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    BundleUserInfo info;
+    int32_t userId = -1;
+    bool ret = bundleStateStorage.SaveBundleStateStorage("", userId, info);
+    EXPECT_EQ(ret, false);
+    ret = bundleStateStorage.SaveBundleStateStorage("com.ohos.tes1", userId, info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsParam_0100
+ * @tc.name: test GetBmsParam
+ * @tc.desc: 1.test GetBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0100, Function | SmallTest | Level0)
+{
+    BmsParam param;
+    std::string value = "";
+    bool ret = param.GetBmsParam("", value);
+    EXPECT_EQ(ret, false);
+    param.rdbDataManager_.reset();
+    ret = param.GetBmsParam("bms_param", value);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsParam_0200
+ * @tc.name: test SaveBmsParam
+ * @tc.desc: 1.test SaveBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
+{
+    BmsParam param;
+    bool ret = param.SaveBmsParam("bms_param", "");
+    EXPECT_EQ(ret, false);
+    ret = param.SaveBmsParam("", "bms_value");
+    EXPECT_EQ(ret, false);
+    param.rdbDataManager_.reset();
+    ret = param.SaveBmsParam("bms_param", "bms_value");
+    EXPECT_EQ(ret, false);
 }

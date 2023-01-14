@@ -1273,9 +1273,12 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     std::cout << "BMS_UidTest_0300 start" << std::endl;
     CommonTool commonTool;
     std::vector<std::string> resvec;
-    std::string bundleName = "com.ohos.camera";
-    bool isInstallSucceed = CheckInstallIsSuccess(bundleName);
-    EXPECT_TRUE(isInstallSucceed);
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    std::string bundleName = BASE_BUNDLE_NAME + "1";
+
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
@@ -1283,14 +1286,11 @@ HWTEST_F(BmsUninstallSystemTest, BMS_UidTest_0300, Function | MediumTest | Level
     }
     int uid = bundleMgrProxy->GetUidByBundleName(bundleName, userId);
     EXPECT_GE(uid, Constants::BASE_USER_RANGE);
+    
     resvec.clear();
     Uninstall(bundleName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Failure[MSG_ERR_UNINSTALL_SYSTEM_APP_ERROR]");
-    bool isUninstallSucceed = CheckUninstallIsSuccess(bundleName);
-    EXPECT_FALSE(isUninstallSucceed);
-    APP_LOGE("Do not have permission to uninstall!");
-
+    EXPECT_EQ(uninstallResult, "Success");
     std::cout << "BMS_UidTest_0300 end" << std::endl;
 }
 
@@ -1351,37 +1351,15 @@ HWTEST_F(BmsUninstallSystemTest, BMS_DFX_0500, Function | MediumTest | Level2)
  */
 HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0100, Function | MediumTest | Level1)
 {
-    std::cout << "BMS_StreamInstall_0100 start" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleName = BASE_BUNDLE_NAME + "1";
-    std::vector<std::string> bundleFilePaths;
-    bundleFilePaths.push_back(bundleFilePath);
-
-    StreamInstall(bundleFilePaths, InstallFlag::NORMAL, resvec);
-
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     bool res = installerProxy->DestoryBundleStreamInstaller(0);
     EXPECT_EQ(res, true);
-
-    resvec.clear();
-    Uninstall(bundleName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "BMS_StreamInstall_0100 end" << std::endl;
 }
 
 /**
  * @tc.number: BMS_Recover_0100
- * @tc.name: test uninstall bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there exists an app
- *           2.install the app
- *           3.uninstall the app
- *           4.check directory
+ * @tc.name: test recover bundle
+ * @tc.desc: 1.test recover failed by nullptr
  */
 HWTEST_F(BmsUninstallSystemTest, BMS_Recover_0100, Function | MediumTest | Level1)
 {
@@ -1394,12 +1372,9 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Recover_0100, Function | MediumTest | Level
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = userId;
-    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
 
-    bool res = installerProxy->Install(bundleFilePaths, installParam, statusReceiver);
-    bool res1 = installerProxy->Recover(bundleFilePath, installParam, statusReceiver);
-    EXPECT_EQ(res, true);
-    EXPECT_EQ(res1, true);
+    bool res = installerProxy->Recover(bundleFilePath, installParam, nullptr);
+    EXPECT_EQ(res, false);
 }
 
 }  // namespace AppExecFwk

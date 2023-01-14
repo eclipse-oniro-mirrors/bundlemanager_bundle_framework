@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,12 +47,12 @@ void AgingRequest::InitAgingDatasizeThreshold()
         APP_LOGD("GetParameter failed");
         return;
     }
+
     if (strcmp(szDatasizeThreshold, "") != 0) {
         totalDataBytesThreshold_ = atoi(szDatasizeThreshold);
         APP_LOGD("AgingRequest init aging data size threshold success");
     }
 }
-
 void AgingRequest::InitAgingOneDayTimeMs()
 {
     char szOneDayTimeMs[AgingConstants::THRESHOLD_VAL_LEN] = {0};
@@ -63,6 +63,7 @@ void AgingRequest::InitAgingOneDayTimeMs()
         APP_LOGD("GetParameter failed");
         return;
     }
+
     if (strcmp(szOneDayTimeMs, "") != 0) {
         oneDayTimeMs_ = atoi(szOneDayTimeMs);
         APP_LOGD("AgingRequest init aging one day time ms success");
@@ -94,11 +95,11 @@ void AgingRequest::AddAgingBundle(AgingBundleInfo &bundleInfo)
     agingBundles_.emplace_back(bundleInfo);
 }
 
-void AgingRequest::RequestReset()
+void AgingRequest::ResetRequest()
 {
     agingBundles_.clear();
+    agingCleanType_ = AgingCleanType::CLEAN_CACHE;
     tatalDataBytes_ = 0;
-    InitAgingPolicySystemParameters();
 }
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

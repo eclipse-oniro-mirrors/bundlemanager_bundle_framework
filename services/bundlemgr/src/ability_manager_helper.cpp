@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,10 +16,13 @@
 #include "ability_manager_helper.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_mgr_service.h"
+#include "element.h"
 #include "system_ability_helper.h"
 #include "system_ability_definition.h"
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+#include "ability_manager_client.h"
 #include "app_mgr_interface.h"
 #include "running_process_info.h"
 #endif
@@ -73,6 +76,41 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bund
         }
     }
     APP_LOGI("nothing app running.");
+    return NOT_RUNNING;
+#else
+    APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
+    return FAILED;
+#endif
+}
+
+int AbilityManagerHelper::IsRunning(const std::string bundleName)
+{
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    APP_LOGD("check app is running, app name is %{public}s", bundleName.c_str());
+    sptr<IAppMgr> appMgrProxy =
+        iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        APP_LOGE("fail to find the app mgr service to check app is running");
+        return FAILED;
+    }
+
+    std::vector<RunningProcessInfo> runningList;
+    int result = appMgrProxy->GetAllRunningProcesses(runningList);
+    if (result != ERR_OK) {
+        APP_LOGE("GetAllRunningProcesses failed.");
+        return FAILED;
+    }
+
+    for (const auto &info : runningList) {
+        auto res = std::any_of(info.bundleNames.begin(), info.bundleNames.end(),
+            [bundleName](const auto &bundleNameInRunningProcessInfo) {
+                return bundleNameInRunningProcessInfo == bundleName;
+            });
+        if (res) {
+            return RUNNING;
+        }
+    }
+
     return NOT_RUNNING;
 #else
     APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");

@@ -60,6 +60,7 @@ AppControlManagerRdb::AppControlManagerRdb()
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
         + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER);");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager_->CreateTable();
 }
 
 AppControlManagerRdb::~AppControlManagerRdb()

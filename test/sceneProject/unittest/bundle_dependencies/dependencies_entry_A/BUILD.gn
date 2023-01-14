@@ -24,7 +24,7 @@ ohos_hap("dependencies_entry_A") {
     ":hjs_demo_js_assets",
     ":hjs_demo_resources",
   ]
-  certificate_profile = "${appexecfwk_path}/test/sceneProject/unittest/bundle_dependencies/ohos_provision_release.p7b"
+  certificate_profile = "${appexecfwk_path}/test/sceneProject/signature/com.example.dependenciestest.p7b"
 }
 
 ohos_app_scope("bmsstagedemoone_app_profile") {

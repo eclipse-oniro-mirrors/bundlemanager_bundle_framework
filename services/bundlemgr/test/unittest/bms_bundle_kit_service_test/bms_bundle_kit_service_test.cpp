@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -224,7 +224,9 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
+#endif
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -342,10 +344,12 @@ void BmsBundleKitServiceTest::SetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
 {
     return bundleMgrService_->GetBundleDistributedManager();
 }
+#endif
 
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
@@ -606,21 +610,21 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutInfos.isStatic = true;
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
-    ShortcutIntent intent;
-    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutInfos.intents.push_back(intent);
+    ShortcutIntent shortcutIntent;
+    shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    shortcutInfos.intents.push_back(shortcutIntent);
     return shortcutInfos;
 }
 
 ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
 {
-    ShortcutIntent intent;
-    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    return intent;
+    ShortcutIntent shortcutIntent;
+    shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    return shortcutIntent;
 }
 
 ShortcutWant BmsBundleKitServiceTest::MockShortcutWant() const
@@ -1100,10 +1104,10 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isStatic, true);
         EXPECT_EQ(shortcutInfo.isHomeShortcut, true);
         EXPECT_EQ(shortcutInfo.isEnables, true);
-        for (auto &intent : shortcutInfo.intents) {
-            EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
-            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
-            EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+        for (auto &shortcutIntent : shortcutInfo.intents) {
+            EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+            EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
 }
@@ -1139,10 +1143,10 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isStatic, true);
         EXPECT_EQ(shortcutInfo.isHomeShortcut, true);
         EXPECT_EQ(shortcutInfo.isEnables, true);
-        for (auto &intent : shortcutInfo.intents) {
-            EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
-            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
-            EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+        for (auto &shortcutIntent : shortcutInfo.intents) {
+            EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+            EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
 }
@@ -2832,6 +2836,25 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosByUri_0100, Function | SmallT
 }
 
 /**
+ * @tc.number: QueryAbilityInfosByUri_0100
+ * @tc.name: test QueryAbilityInfosByUri by BundleMgrHostImpl
+ * @tc.desc: 1.system run normally
+ *           2.ability not found
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosByUri_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    std::string uri = "dataability://com.example.hiworld.himusic.UserADataAbility";
+    std::vector<AbilityInfo> abilityInfos;
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.insert(
+        pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
+    EXPECT_FALSE(GetBundleDataMgr()->bundleInfos_.empty());
+    bool ret = dataMgr->QueryAbilityInfosByUri(uri, abilityInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: QueryExtensionAbilityInfoByUri_0100
  * @tc.name: test can get the extensio ability info by uri
  * @tc.desc: 1.system run normally
@@ -3239,6 +3262,18 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0800, Function | Small
     EXPECT_TRUE(isEnable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CheckApplicationEnabled_0900
+ * @tc.name: test can check bundle status is able by empty bundle name
+ * @tc.desc: 1.system run normally
+ *           2.check the bundle status successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0900, Function | SmallTest | Level1)
+{
+    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled("", true, Constants::INVALID_USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -7249,6 +7284,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Lev
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: AgingTest_0001
  * @tc.name: test Aging Start
@@ -7299,6 +7335,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     bundleAgingMgr.InitAgingtTimer();
     bundleAgingMgr.InitAgingRunner();
 }
+#endif
 
 /**
  * @tc.number: GetApplicationInfoV9_0100
@@ -7363,6 +7400,20 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundlePackInfo_0100, Function | SmallTest |
     EXPECT_EQ(ret, ERR_OK);
 
     MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: GetBundlePackInfo_0200
+ * @tc.name: Test GetBundlePackInfo
+ * @tc.desc: 1.Test the GetBundlePackInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundlePackInfo_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    BundlePackInfo bundlePackInfo;
+    auto ret = dataMgr->GetBundlePackInfo(
+        BUNDLE_NAME_DEMO, GET_PACK_INFO_ALL, bundlePackInfo, Constants::UNSPECIFIED_USERID);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -7634,6 +7685,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest 
     EXPECT_FALSE(res);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleDistributedManager_0001
  * @tc.name: test GetBundleDistributedManager
@@ -7721,6 +7773,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0005, Function | S
     bundleMgr->OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "");
 }
+#endif
 
 /**
  * @tc.number: Hidump_0001
@@ -7957,6 +8010,52 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0001, Function | SmallT
 }
 
 /**
+ * @tc.number: LoadInstallInfosFromDb_0002
+ * @tc.name: test LoadInstallInfosFromDb
+ * @tc.desc: LoadInstallInfosFromDb is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    BMSEventHandler handler(runner);
+    InnerBundleInfo info;
+    ClearDataMgr();
+    handler.LoadInstallInfosFromDb();
+
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    ScanResultCode res = handler.ScanAndAnalyzeUserDatas(userMaps);
+    EXPECT_EQ(res, ScanResultCode::SCAN_NO_DATA);
+
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
+    bool ret = handler.CombineBundleInfoAndUserInfo(
+        installInfos, userInfoMaps);
+    EXPECT_EQ(ret, false);
+
+    handler.SaveInstallInfoToCache(info);
+    handler.SetAllInstallFlag();
+    handler.ProcessRebootBundleUninstall();
+    bool bundleLevel = false;
+    handler.DeletePreInfoInDb("", "", bundleLevel);
+
+    std::list<std::string> scanPathList;
+    handler.InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::SYSTEM_APP);
+
+    ret = handler.LoadAllPreInstallBundleInfos();
+    EXPECT_EQ(ret, false);
+
+    ret = handler.FetchInnerBundleInfo("", info);
+    EXPECT_EQ(ret, false);
+
+#ifdef USE_PRE_BUNDLE_PROFILE
+    handler.UpdateRemovable("", bundleLevel);
+    PreBundleConfigInfo preBundleConfigInfo;
+    handler.UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
+#endif
+    SetDataMgr();
+}
+
+/**
  * @tc.number: AnalyzeUserData_0001
  * @tc.name: test AnalyzeUserData
  * @tc.desc: AnalyzeUserData is false
@@ -8040,9 +8139,9 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_001, Function | SmallT
  */
 HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallTest | Level1)
 {
-    ShortcutIntent intent = MockShortcutIntent();
+    ShortcutIntent shortcutIntent = MockShortcutIntent();
     nlohmann::json jsonObj;
-    to_json(jsonObj, intent);
+    to_json(jsonObj, shortcutIntent);
     ShortcutIntent result;
     from_json(jsonObj, result);
     EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
@@ -8818,5 +8917,359 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0900, Function | 
     extensionInfos.clear();
     bool res = hostImpl->QueryExtensionAbilityInfos(want, extensionType, flags, userId, extensionInfos);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfos_0100
+ * @tc.name: test can get the ability infos
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryAbilityInfos_0100, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = 1;
+    int32_t flags = 0;
+    bool testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfos(
+        want, flags, DEFAULT_USERID, abilityInfos, appIndex);
+    EXPECT_EQ(testRet, false);
+    ErrCode testRet1 = GetBundleDataMgr()->ImplicitQueryAbilityInfosV9(
+        want, flags, DEFAULT_USERID, abilityInfos, appIndex);
+    EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfos_0200
+ * @tc.name: test can get the ability infos
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryAbilityInfos_0200, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", "bundleName", "", "moduleName");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = -1;
+    int32_t flags = 0;
+    ErrCode testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfosV9(
+        want, flags, DEFAULT_USERID, abilityInfos, appIndex);
+    EXPECT_EQ(testRet, ERR_OK);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfos_0300
+ * @tc.name: test can get the ability infos
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryAbilityInfos_0300, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = 0;
+    int32_t flags = 0;
+    GetBundleDataMgr()->ImplicitQueryAllAbilityInfos(
+        want, flags, Constants::INVALID_USERID, abilityInfos, appIndex);
+    ErrCode testRet = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(
+        want, flags, DEFAULT_USERID, abilityInfos, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    appIndex = 1;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", MODULE_NAME_TEST);
+    GetBundleDataMgr()->ImplicitQueryAllAbilityInfos(
+        want, flags, DEFAULT_USERID, abilityInfos, appIndex);
+    EXPECT_EQ(abilityInfos.size(), 0);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfos_0400
+ * @tc.name: test can get the ability infos
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryAbilityInfos_0400, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = 1;
+    int32_t flags = 0;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", MODULE_NAME_TEST);
+    GetBundleDataMgr()->ImplicitQueryAllAbilityInfosV9(
+        want, flags, DEFAULT_USERID, abilityInfos, appIndex);
+    EXPECT_EQ(abilityInfos.size(), 0);
+}
+
+/**
+ * @tc.number: ImplicitQueryExtensionInfos_0100
+ * @tc.name: test can get the extension infos
+ * @tc.desc: 1.system run normally
+ *           2.get extension info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryExtensionInfos_0100, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 1;
+    int32_t flags = 0;
+    bool res = GetBundleDataMgr()->ImplicitQueryExtensionInfos(
+        want, flags, DEFAULT_USERID, extensionInfos, appIndex);
+    EXPECT_EQ(res, false);
+    ErrCode res1 = GetBundleDataMgr()->ImplicitQueryExtensionInfosV9(
+        want, flags, DEFAULT_USERID, extensionInfos, appIndex);
+    EXPECT_EQ(res1, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: QueryAbilityInfoWithFlags_0100
+ * @tc.name: test can get the ability infos
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlags_0100, Function | SmallTest | Level1)
+{
+    std::optional<AbilityInfo> option;
+    InnerBundleInfo innerBundleInfo;
+    AbilityInfo info;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
+        option, GET_ABILITY_INFO_SYSTEMAPP_ONLY, DEFAULT_USERID, innerBundleInfo, info);
+    EXPECT_EQ(testRet, false);
+    testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
+        option, GET_ABILITY_INFO_WITH_PERMISSION, DEFAULT_USERID, innerBundleInfo, info);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetAllBundleInfos_0100
+ * @tc.name: test can get the bundle infos
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllBundleInfos_0100, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flags = 0;
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.insert(
+        pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
+    EXPECT_FALSE(GetBundleDataMgr()->bundleInfos_.empty());
+    bool removable = false;
+    GetBundleDataMgr()->UpdateRemovable("bundleName", removable);
+    GetBundleDataMgr()->UpdateRemovable(BUNDLE_NAME_TEST, removable);
+    bool testRet = GetBundleDataMgr()->GetAllBundleInfos(flags, bundleInfos);
+    EXPECT_EQ(testRet, true);
+    ErrCode testRet1 = GetBundleDataMgr()->GetAllBundleInfosV9(flags, bundleInfos);
+    EXPECT_EQ(testRet1, ERR_OK);
+}
+
+/**
+ * @tc.number: SetHideDesktopIcon_0001
+ * @tc.name: test can SetHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.SetHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetHideDesktopIcon_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = false;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    innerBundleInfo.baseApplicationInfo_->appDetailAbilityLibraryPath = "path";
+    innerBundleInfo.SetHideDesktopIcon(true);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().appDetailAbilityLibraryPath.empty());
+}
+
+/**
+ * @tc.number: SetHideDesktopIcon_0002
+ * @tc.name: test can SetHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.SetHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetHideDesktopIcon_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = false;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    innerBundleInfo.baseApplicationInfo_->appDetailAbilityLibraryPath = "path";
+    innerBundleInfo.SetHideDesktopIcon(false);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().appDetailAbilityLibraryPath.empty());
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0001
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = true;
+    std::string keyName = Constants::APP_DETAIL_ABILITY;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0002
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = false;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0003
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0003, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0004
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0004, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0005
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0005, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::DATA;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0006
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0006, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0007
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0007, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0008
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(ABILITY_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.SetIsNewVersion(true);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+
+    innerBundleInfo.baseApplicationInfo_->iconId = 1;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
 }
 }

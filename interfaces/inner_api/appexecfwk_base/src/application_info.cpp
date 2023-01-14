@@ -102,6 +102,8 @@ const std::string APPLICATION_CROWDTEST_DEADLINE = "crowdtestDeadline";
 const std::string APPLICATION_APP_QUICK_FIX = "appQuickFix";
 const std::string RESOURCE_ID = "id";
 const size_t APPLICATION_CAPACITY = 10240; // 10K
+const std::string APPLICATION_NEED_APP_DETAIL = "needAppDetail";
+const std::string APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH = "appDetailAbilityLibraryPath";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -377,6 +379,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     appQuickFix = *appQuickFixPtr;
+    needAppDetail = parcel.ReadBool();
+    appDetailAbilityLibraryPath = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -510,6 +514,8 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, multiProjects);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appQuickFix);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needAppDetail);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appDetailAbilityLibraryPath));
     return true;
 }
 
@@ -653,6 +659,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_MULTI_PROJECTS, applicationInfo.multiProjects},
         {APPLICATION_CROWDTEST_DEADLINE, applicationInfo.crowdtestDeadline},
         {APPLICATION_APP_QUICK_FIX, applicationInfo.appQuickFix},
+        {APPLICATION_NEED_APP_DETAIL, applicationInfo.needAppDetail},
+        {APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH, applicationInfo.appDetailAbilityLibraryPath},
     };
 }
 
@@ -1201,6 +1209,22 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         APPLICATION_APP_QUICK_FIX,
         applicationInfo.appQuickFix,
         JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_NEED_APP_DETAIL,
+        applicationInfo.needAppDetail,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH,
+        applicationInfo.appDetailAbilityLibraryPath,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

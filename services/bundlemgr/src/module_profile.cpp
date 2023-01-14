@@ -33,7 +33,6 @@ thread_local int32_t parseResult;
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "har",
     "shared"
 };
 
@@ -191,6 +190,7 @@ struct Ability {
     uint32_t maxWindowHeight = 0;
     uint32_t minWindowHeight = 0;
     bool excludeFromMissions = false;
+    bool recoverable = false;
 };
 
 struct Extension {
@@ -544,6 +544,15 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_RECOVERABLE,
+        ability.recoverable,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY    
+    );
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -1654,6 +1663,7 @@ bool ToAbilityInfo(
     abilityInfo.labelId = ability.labelId;
     abilityInfo.priority = ability.priority;
     abilityInfo.excludeFromMissions = ability.excludeFromMissions;
+    abilityInfo.recoverable = ability.recoverable;
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
     abilityInfo.continuable = ability.continuable;
@@ -1943,7 +1953,18 @@ bool ToInnerBundleInfo(
         innerBundleInfo.InsertExtensionSkillInfo(key, extension.skills);
         innerBundleInfo.InsertExtensionInfo(key, extensionInfo);
     }
-
+    if (!findEntry && !transformParam.isPreInstallApp &&
+        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+        applicationInfo.needAppDetail = true;
+        if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
+            applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
+        } else {
+            applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH;
+        }
+        if ((applicationInfo.labelId == 0) && (applicationInfo.label.empty())) {
+            applicationInfo.label = applicationInfo.bundleName;
+        }
+    }
     innerBundleInfo.SetCurrentModulePackage(moduleJson.module.name);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);

@@ -36,15 +36,6 @@ namespace OHOS {
         std::vector<LauncherAbilityInfo> launcherAbilityInfos;
         launcherAbilityInfos.push_back(launcherAbilityInfo);
         launcherService.GetAbilityList(bundleName, reinterpret_cast<uintptr_t>(data), launcherAbilityInfos);
-        Want want;
-        want.SetAction(bundleName);
-        launcherService.GetAbilityInfo(want, reinterpret_cast<uintptr_t>(data), launcherAbilityInfo);
-        ApplicationFlag flags = ApplicationFlag::GET_BASIC_APPLICATION_INFO;
-        ApplicationInfo applicationInfo;
-        launcherService.GetApplicationInfo(bundleName, flags, reinterpret_cast<uintptr_t>(data), applicationInfo);
-        launcherService.IsBundleEnabled(bundleName);
-        AbilityInfo abilityInfo;
-        launcherService.IsAbilityEnabled(abilityInfo);
         ShortcutInfo shortcutInfo;
         shortcutInfo.bundleName = bundleName;
         std::vector<ShortcutInfo> shortcutInfos;

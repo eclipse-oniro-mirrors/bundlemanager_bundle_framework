@@ -1045,27 +1045,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2400, Function | MediumTest | Level1)
 }
 
 /**
- * @tc.number: BMS_Search_2500
- * @tc.name: test QueryKeepAliveBundleInfos interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
- *           2.install the app
- *           3.call QueryKeepAliveBundleInfos
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_2500, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Search_2500" << std::endl;
-    SetUpTestCase();
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
-    std::vector<BundleInfo> bundleInfos;
-    bool result = bundleMgrProxy->QueryKeepAliveBundleInfos(bundleInfos);
-    EXPECT_TRUE(result);
-    TearDownTestCase();
-    std::cout << "END BMS_Search_2500" << std::endl;
-}
-
-/**
  * @tc.number: BMS_Search_2600
  * @tc.name: test GetAbilityLabel interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an app

@@ -63,14 +63,12 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bun
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
-constexpr const char* COMPRESS_PROPERTY = "compress";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
-constexpr const char* CHECK_PROFILE_BUNDLE_NAME = "check_profile_bundle_name";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
@@ -295,6 +293,9 @@ constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 // thread pool
 constexpr int32_t MAX_TASK_NUMBER = 10;
 constexpr const char* RELATIVE_PATH = "../";
+
+// app detail ability
+constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

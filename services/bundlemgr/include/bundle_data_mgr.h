@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -696,9 +696,6 @@ public:
 
     bool RemoveInnerBundleUserInfo(const std::string &bundleName, int32_t userId);
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    bool GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids);
-#endif
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
 
@@ -723,18 +720,16 @@ public:
     ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable) const;
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    /**
-     * @brief Get bundle space size (Bytes) by bundleName.
-     * @param bundleName Indicates the application bundle name to be queried.
-     * @return Returns the space size of a bundle by bundleName.
-     */
     int64_t GetBundleSpaceSize(const std::string &bundleName) const;
-    /**
-     * @brief Get all free install bundle space size (Bytes).
-     * @return Returns the space size of all free install bundles.
-     */
+    int64_t GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const;
     int64_t GetAllFreeInstallBundleSpaceSize() const;
+    bool GetFreeInstallModules(
+        std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
+
+    bool GetBundleStats(
+        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
     ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);
@@ -791,6 +786,12 @@ public:
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
+
+    const std::map<std::string, InnerBundleInfo> &GetAllInnerbundleInfos() const
+    {
+        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+        return bundleInfos_;
+    }
 private:
     /**
      * @brief Init transferStates.
@@ -894,6 +895,7 @@ private:
     bool CheckAppInstallControl(const std::string &appId, int32_t userId) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const;
+    void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
@@ -905,6 +907,7 @@ private:
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;
     bool initialUserFlag_ = false;
+    int32_t baseAppUid_ = Constants::BASE_APP_UID;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
     // using for generating bundleId

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,6 +43,14 @@ public:
     virtual bool NeedContinue(const AgingRequest &request) const;
 
 private:
+    bool ProcessBundle(AgingRequest &request) const;
+    bool NeedCheckEndAgingThreshold() const;
+    bool UpdateUsedTotalDataBytes(AgingRequest &request) const;
+    bool AgingClean(
+        const AgingBundleInfo &agingBundle, AgingRequest &request) const;
+    bool CleanCache(const AgingBundleInfo &agingBundle) const;
+    bool GetCachePath(
+        const AgingBundleInfo &agingBundle, std::vector<std::string> &caches) const;
     bool UnInstallBundle(const std::string &bundleName) const;
 };
 
@@ -68,16 +76,6 @@ class BundleDataSizeAgingHandler : public RecentlyUnuseBundleAgingHandler {
 public:
     bool CheckBundle(const AgingBundleInfo &bundle) const override;
     const std::string &GetName() const override;
-};
-
-class AgingUninstallReceiveImpl : public StatusReceiverHost {
-public:
-    AgingUninstallReceiveImpl() = default;
-    virtual ~AgingUninstallReceiveImpl() override = default;
-    virtual void OnStatusNotify(const int progress) override
-    {}
-    virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
-    {}
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

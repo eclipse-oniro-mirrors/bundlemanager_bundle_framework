@@ -271,5 +271,29 @@ bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return !datas.empty();
 }
+
+bool RdbDataManager::CreateTable()
+{
+    std::string createTableSql;
+    if (bmsRdbConfig_.createTableSql.empty()) {
+        createTableSql = std::string(
+            "CREATE TABLE IF NOT EXISTS "
+            + bmsRdbConfig_.tableName
+            + "(KEY TEXT NOT NULL PRIMARY KEY, VALUE TEXT NOT NULL);");
+    } else {
+        createTableSql = bmsRdbConfig_.createTableSql;
+    }
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return false;
+    }
+    int ret = rdbStore->ExecuteSql(createTableSql);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("CreateTable failed, ret: %{public}d", ret);
+        return false;
+    }
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

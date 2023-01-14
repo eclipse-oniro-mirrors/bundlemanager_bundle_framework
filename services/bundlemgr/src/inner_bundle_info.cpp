@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1526,8 +1526,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         hapInfo.moduleType = ModuleType::ENTRY;
     } else if (moduleType == Profile::MODULE_TYPE_FEATURE) {
         hapInfo.moduleType = ModuleType::FEATURE;
-    } else if (moduleType == Profile::MODULE_TYPE_HAR) {
-        hapInfo.moduleType = ModuleType::HAR;
     } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
         hapInfo.moduleType = ModuleType::SHARED;
     } else {
@@ -1543,6 +1541,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.metadata = it->second.metadata;
     bool first = false;
     for (auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         if (ability.first.find(key) != std::string::npos) {
             if (!first) {
                 hapInfo.deviceTypes = ability.second.deviceTypes;
@@ -1568,12 +1569,13 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
 }
 
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
-    const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, int32_t userId) const
+    const std::string &moduleName,
+    const std::string &abilityName,
+    int32_t userId) const
 {
     for (const auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;
-        if ((abilityInfo.bundleName == bundleName) && (abilityInfo.name == abilityName) &&
+        if ((abilityInfo.name == abilityName) &&
             (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
@@ -1581,16 +1583,16 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
             return abilityInfo;
         }
     }
+
     return std::nullopt;
 }
 
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
-    const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName) const
+    const std::string &moduleName, const std::string &abilityName) const
 {
     for (const auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;
-        if ((abilityInfo.bundleName == bundleName) && (abilityInfo.name == abilityName) &&
+        if ((abilityInfo.name == abilityName) &&
             (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
             return abilityInfo;
         }
@@ -1598,13 +1600,13 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
     return std::nullopt;
 }
 
-ErrCode InnerBundleInfo::FindAbilityInfo(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, AbilityInfo &info) const
+ErrCode InnerBundleInfo::FindAbilityInfo(
+    const std::string &moduleName, const std::string &abilityName, AbilityInfo &info) const
 {
     bool isModuleFind = false;
     for (const auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;
-        if ((abilityInfo.bundleName == bundleName) && (abilityInfo.moduleName == moduleName)) {
+        if ((abilityInfo.moduleName == moduleName)) {
             isModuleFind = true;
             if (abilityInfo.name == abilityName) {
                 info = abilityInfo;
@@ -1619,62 +1621,56 @@ ErrCode InnerBundleInfo::FindAbilityInfo(const std::string &bundleName, const st
     }
 }
 
-std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(
-    const std::string &bundleName, int32_t userId) const
+std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_t userId) const
 {
-    std::vector<AbilityInfo> abilitys;
-
-    if (bundleName.empty()) {
+    if (!HasInnerBundleUserInfo(userId)) {
         return std::nullopt;
     }
 
+    std::vector<AbilityInfo> abilitys;
     for (const auto &ability : baseAbilityInfos_) {
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.bundleName == bundleName)) {
-            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
-                abilityInfo.applicationInfo);
-            abilitys.emplace_back(abilityInfo);
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
         }
-    }
-    if (!abilitys.empty()) {
-        return abilitys;
+        auto abilityInfo = ability.second;
+        GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+            abilityInfo.applicationInfo);
+        abilitys.emplace_back(abilityInfo);
     }
 
-    return std::nullopt;
+    if (abilitys.empty()) {
+        return std::nullopt;
+    }
+
+    return abilitys;
 }
 
 std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
-    const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const
+    const std::string &moduleName, const std::string &extensionName) const
 {
     for (const auto &extension : baseExtensionInfos_) {
-        if ((extension.second.bundleName == bundleName) && (extension.second.name == extensionName) &&
+        if ((extension.second.name == extensionName) &&
             (moduleName.empty() || (extension.second.moduleName == moduleName))) {
             return extension.second;
         }
     }
+
     return std::nullopt;
 }
 
-std::optional<std::vector<ExtensionAbilityInfo>> InnerBundleInfo::FindExtensionInfos(
-    const std::string &bundleName) const
+std::optional<std::vector<ExtensionAbilityInfo>> InnerBundleInfo::FindExtensionInfos() const
 {
     std::vector<ExtensionAbilityInfo> extensions;
+    for (const auto &extension : baseExtensionInfos_) {
+        extensions.emplace_back(extension.second);
+    }
 
-    if (bundleName.empty()) {
+    if (extensions.empty()) {
         return std::nullopt;
     }
 
-    for (const auto &extension : baseExtensionInfos_) {
-        if ((extension.second.bundleName == bundleName)) {
-            extensions.emplace_back(extension.second);
-        }
-    }
-    if (!extensions.empty()) {
-        return extensions;
-    }
-
-    return std::nullopt;
+    return extensions;
 }
 
 bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
@@ -1767,9 +1763,50 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->vendor = applicationInfo.vendor;
     baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
-    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
+    baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
+    baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     UpdatePrivilegeCapability(applicationInfo);
+    SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
+}
+
+void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
+{
+    bool isExistLauncherAbility = false;
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    for (const auto& abilityInfoPair : baseAbilityInfos_) {
+        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos_.end()) {
+            continue;
+        }
+        for (const Skill& skill : skillsPair->second) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
+                isExistLauncherAbility = true;
+                break;
+            }
+        }
+    }
+    if (isExistLauncherAbility) {
+        baseApplicationInfo_->needAppDetail = false;
+        baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+    }
+    for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+            if (!baseApplicationInfo_->needAppDetail) {
+                baseAbilityInfos_.erase(iter);
+                return;
+            }
+            if (isNewVersion_) {
+                iter->second.labelId = baseApplicationInfo_->labelId;
+                if (baseApplicationInfo_->iconId != 0) {
+                    iter->second.iconId = baseApplicationInfo_->iconId;
+                }
+            }
+            return;
+        }
+    }
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
@@ -1920,12 +1957,15 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     appInfo.uid = innerBundleUserInfo.uid;
 
     for (const auto &info : innerModuleInfos_) {
+        bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
         moduleInfo.moduleName = info.second.moduleName;
-        moduleInfo.moduleSourceDir = info.second.modulePath;
+        if (deCompress) {
+            moduleInfo.moduleSourceDir = info.second.modulePath;
+            appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
+        }
         appInfo.moduleInfos.emplace_back(moduleInfo);
-        appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
-        if (info.second.isEntry) {
+        if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
         if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_PERMISSION) ==
@@ -1970,12 +2010,15 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     appInfo.uid = innerBundleUserInfo.uid;
 
     for (const auto &info : innerModuleInfos_) {
+        bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
         moduleInfo.moduleName = info.second.moduleName;
-        moduleInfo.moduleSourceDir = info.second.modulePath;
+        if (deCompress) {
+            moduleInfo.moduleSourceDir = info.second.modulePath;
+            appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
+        }
         appInfo.moduleInfos.emplace_back(moduleInfo);
-        appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
-        if (info.second.isEntry) {
+        if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
         if ((static_cast<uint32_t>(flags) &
@@ -2194,7 +2237,9 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
             } else {
                 hapModuleInfo.hashValue = it->second.hashValue;
             }
-            hapModuleInfo.moduleSourceDir = info.second.modulePath;
+            if (hapModuleInfo.hapPath.empty()) {
+                hapModuleInfo.moduleSourceDir = info.second.modulePath;
+            }
             if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
                 != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
                 hapModuleInfo.metadata.clear();
@@ -2216,7 +2261,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
     }
     APP_LOGD("Get bundleInfo with abilities.");
     for (auto &ability : baseAbilityInfos_) {
-        if (ability.second.moduleName != hapModuleInfo.moduleName) {
+        if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
+            (ability.second.name == Constants::APP_DETAIL_ABILITY)) {
             continue;
         }
         bool isEnabled = IsAbilityEnabled(ability.second, userId);
@@ -2265,6 +2311,9 @@ void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleIn
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
         for (auto &ability : baseAbilityInfos_) {
+            if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+                continue;
+            }
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
@@ -2496,7 +2545,7 @@ bool InnerBundleInfo::GetInnerBundleUserInfo(
 
 bool InnerBundleInfo::HasInnerBundleUserInfo(int32_t userId) const
 {
-    if (userId == Constants::ALL_USERID) {
+    if (userId == Constants::ALL_USERID || userId == Constants::ANY_USERID) {
         return !innerBundleUserInfos_.empty();
     }
 
@@ -2595,20 +2644,21 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int3
     return ERR_OK;
 }
 
-ErrCode InnerBundleInfo::SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, bool isEnabled, int32_t userId)
+ErrCode InnerBundleInfo::SetAbilityEnabled(
+    const std::string &moduleName, const std::string &abilityName, bool isEnabled, int32_t userId)
 {
-    APP_LOGD("SetAbilityEnabled :%{public}s, %{public}s, %{public}s, %{public}d",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
+    APP_LOGD("SetAbilityEnabled : %{public}s, %{public}s, %{public}d",
+        moduleName.c_str(), abilityName.c_str(), userId);
     for (const auto &ability : baseAbilityInfos_) {
-        if ((ability.second.bundleName == bundleName) && (ability.second.name == abilityName) &&
+        if ((ability.second.name == abilityName) &&
             (moduleName.empty() || (ability.second.moduleName == moduleName))) {
-            auto &key = NameAndUserIdToKey(bundleName, userId);
+            auto &key = NameAndUserIdToKey(GetBundleName(), userId);
             auto infoItem = innerBundleUserInfos_.find(key);
             if (infoItem == innerBundleUserInfos_.end()) {
                 APP_LOGE("SetAbilityEnabled find innerBundleUserInfo failed");
                 return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
             }
+
             auto iter = std::find(infoItem->second.bundleUserInfo.disabledAbilities.begin(),
                                   infoItem->second.bundleUserInfo.disabledAbilities.end(),
                                   abilityName);
@@ -2704,23 +2754,73 @@ const std::string &InnerBundleInfo::GetCurModuleName() const
     return Constants::EMPTY_STRING;
 }
 
-bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
+bool InnerBundleInfo::IsBundleRemovable() const
 {
-    APP_LOGD("userId is %{public}d", userId);
     if (IsPreInstallApp()) {
         APP_LOGE("PreInstallApp should not be cleaned");
         return false;
     }
+
     for (const auto &innerModuleInfo : innerModuleInfos_) {
-        bool isRemovable = true;
-        if ((IsModuleRemovable(innerModuleInfo.second.moduleName, userId, isRemovable) == ERR_OK) &&
-            !isRemovable) {
-            APP_LOGE("not all haps should be cleaned");
+        if (!innerModuleInfo.second.installationFree) {
             return false;
         }
+
+        for (const auto &stateIter : innerModuleInfo.second.isRemovable) {
+            if (!stateIter.second) {
+                return false;
+            }
+        }
     }
-    APP_LOGD("this bundle should be cleaned");
+
     return true;
+}
+
+int64_t InnerBundleInfo::GetLastInstallationTime() const
+{
+    int64_t installTime = 0;
+    for (const auto &innerBundleUserInfo : innerBundleUserInfos_) {
+        installTime = innerBundleUserInfo.second.updateTime > installTime ?
+            innerBundleUserInfo.second.updateTime : installTime;
+    }
+
+    return installTime;
+}
+
+bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDelete) const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (!innerModuleInfo.second.installationFree) {
+            continue;
+        }
+
+        bool canDelete = true;
+        for (const auto &stateIter : innerModuleInfo.second.isRemovable) {
+            if (!stateIter.second) {
+                canDelete = false;
+                break;
+            }
+        }
+
+        if (canDelete) {
+            moudleToDelete.emplace_back(innerModuleInfo.second.moduleName);
+        }
+    }
+
+    return !moudleToDelete.empty();
+}
+
+bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (!innerModuleInfo.second.installationFree) {
+            continue;
+        }
+
+        freeInstallMoudle.emplace_back(innerModuleInfo.second.moduleName);
+    }
+
+    return !freeInstallMoudle.empty();
 }
 
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const

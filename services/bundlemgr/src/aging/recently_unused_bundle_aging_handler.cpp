@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
  */
 
 #include <cinttypes>
+#include <mutex>
 
 #include "ability_manager_helper.h"
 #include "account_helper.h"
@@ -21,58 +22,194 @@
 #include "app_log_wrapper.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_promise.h"
+#include "event_report.h"
 #include "install_param.h"
+#include "installd_client.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+class AgingUninstallReceiveImpl : public StatusReceiverHost {
+public:
+    AgingUninstallReceiveImpl() = default;
+    virtual ~AgingUninstallReceiveImpl() override = default;
+
+    bool IsRunning()
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        return isRunning_;
+    }
+
+    void MarkRunning()
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        isRunning_ = true;
+    }
+
+    void SetAgingPromise(const std::shared_ptr<BundlePromise>& agingPromise)
+    {
+        agingPromise_ = agingPromise;
+    }
+
+    virtual void OnStatusNotify(const int progress) override
+    {}
+
+    virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        isRunning_ = false;
+        if (agingPromise_) {
+            APP_LOGD("Notify task end.");
+            agingPromise_->NotifyAllTasksExecuteFinished();
+        }
+    }
+
+private:
+    std::mutex stateMutex_;
+    bool isRunning_ = false;
+    std::shared_ptr<BundlePromise> agingPromise_ = nullptr;
+};
+}
+
 bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
 {
-    bool needContinue = true;
-    APP_LOGD("aging handler start: %{public}s, currentTotalDataBytes: %{pubic}" PRId64,
-        GetName().c_str(), request.GetTotalDataBytes());
-    std::vector<AgingBundleInfo> &agingBundles =
-        const_cast<std::vector<AgingBundleInfo> &>(request.GetAgingBundles());
-    APP_LOGD("aging handler start: agingBundles size :%{public}zu / %{public}" PRId64,
-        agingBundles.size(), request.GetTotalDataBytes());
-    auto iter = agingBundles.begin();
-    while (iter != agingBundles.end()) {
-        if (!CheckBundle(*iter)) {
+    return ProcessBundle(request);
+}
+
+bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
+{
+    APP_LOGD("aging handler start: %{public}s, cleanType: %{public}d, totalDataBytes: %{public}" PRId64,
+        GetName().c_str(), static_cast<int32_t>(request.GetAgingCleanType()), request.GetTotalDataBytes());
+    for (const auto &agingBundle : request.GetAgingBundles()) {
+        if (!CheckBundle(agingBundle)) {
             break;
         }
 
-        APP_LOGI("found matching bundle: %{public}s.", iter->GetBundleName().c_str());
-        bool isBundlerunning = AbilityManagerHelper::IsRunning(iter->GetBundleName(), iter->GetBundleUid());
-        if (isBundlerunning == AbilityManagerHelper::NOT_RUNNING) {
-            bool isBundleUnistalled = UnInstallBundle(iter->GetBundleName());
-            if (isBundleUnistalled) {
-                request.UpdateTotalDataBytesAfterUninstalled(iter->GetDataBytes());
-            }
+        bool isBundleRunning = AbilityManagerHelper::IsRunning(agingBundle.GetBundleName());
+        APP_LOGD("found matching bundle: %{public}s, isRunning: %{public}d.",
+            agingBundle.GetBundleName().c_str(), isBundleRunning);
+        if (isBundleRunning != AbilityManagerHelper::NOT_RUNNING) {
+            continue;
         }
 
-        iter = agingBundles.erase(iter);
-        if (GetName() == AgingConstants::UNUSED_FOR_10_DAYS_BUNDLE_AGING_HANDLER
-            || GetName() == AgingConstants::BUNDLE_DATA_SIZE_AGING_HANDLER) {
+        bool result = AgingClean(agingBundle, request);
+        if (!result) {
+            continue;
+        }
+
+        if (NeedCheckEndAgingThreshold()) {
+            UpdateUsedTotalDataBytes(request);
             if (!NeedContinue(request)) {
                 APP_LOGD("there is no need to continue now.");
-                needContinue = false;
-                return needContinue;
+                return false;
             }
         }
     }
 
-    if (!NeedContinue(request)) {
-        APP_LOGD("there is no need to continue now.");
-        needContinue = false;
-    }
-
-    APP_LOGD("aging handle done: %{public}s, currentTotalDataBytes: %{public}" PRId64, GetName().c_str(),
-        request.GetTotalDataBytes());
-    return needContinue;
+    UpdateUsedTotalDataBytes(request);
+    return NeedContinue(request);
 }
 
 bool RecentlyUnuseBundleAgingHandler::NeedContinue(const AgingRequest &request) const
 {
     return !request.IsReachEndAgingThreshold();
+}
+
+bool RecentlyUnuseBundleAgingHandler::NeedCheckEndAgingThreshold() const
+{
+    return GetName() == AgingConstants::UNUSED_FOR_10_DAYS_BUNDLE_AGING_HANDLER ||
+        GetName() == AgingConstants::BUNDLE_DATA_SIZE_AGING_HANDLER;
+}
+
+bool RecentlyUnuseBundleAgingHandler::UpdateUsedTotalDataBytes(AgingRequest &request) const
+{
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    request.SetTotalDataBytes(dataMgr->GetAllFreeInstallBundleSpaceSize());
+    return true;
+}
+
+bool RecentlyUnuseBundleAgingHandler::AgingClean(
+    const AgingBundleInfo &agingBundleInfo, AgingRequest &request) const
+{
+    if (request.GetAgingCleanType() == AgingCleanType::CLEAN_CACHE) {
+        return CleanCache(agingBundleInfo);
+    }
+
+    return UnInstallBundle(agingBundleInfo.GetBundleName());
+}
+
+bool RecentlyUnuseBundleAgingHandler::CleanCache(const AgingBundleInfo &agingBundle) const
+{
+    std::vector<std::string> caches;
+    if (!GetCachePath(agingBundle, caches)) {
+        APP_LOGW("Get cache path failed: %{public}s", agingBundle.GetBundleName().c_str());
+        EventReport::SendCleanCacheSysEvent(
+            agingBundle.GetBundleName(), Constants::ALL_USERID, true, true);
+        return false;
+    }
+
+    bool hasCleanCache = false;
+    for (const auto &cache : caches) {
+        APP_LOGD("cache path: %{public}s", cache.c_str());
+        ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+        if (ret != ERR_OK) {
+            APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
+            continue;
+        }
+
+        hasCleanCache = true;
+    }
+
+    EventReport::SendCleanCacheSysEvent(
+        agingBundle.GetBundleName(), Constants::ALL_USERID, true, !hasCleanCache);
+    return hasCleanCache;
+}
+
+bool RecentlyUnuseBundleAgingHandler::GetCachePath(
+    const AgingBundleInfo &agingBundle, std::vector<std::string> &caches) const
+{
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    if (!dataMgr->GetInnerBundleUserInfos(agingBundle.GetBundleName(), innerBundleUserInfos)) {
+        APP_LOGE("GetInnerBundleUserInfos failed bundle: %{public}s",
+            agingBundle.GetBundleName().c_str());
+        return false;
+    }
+
+    std::vector<std::string> rootDir;
+    for (const auto &innerBundleUserInfo : innerBundleUserInfos) {
+        int32_t userId = innerBundleUserInfo.bundleUserInfo.userId;
+        for (const auto &el : Constants::BUNDLE_EL) {
+            std::string dataDir =
+                Constants::BUNDLE_APP_DATA_BASE_DIR + el +
+                Constants::PATH_SEPARATOR + std::to_string(userId) +
+                Constants::BASE + agingBundle.GetBundleName();
+            rootDir.emplace_back(dataDir);
+        }
+    }
+
+    for (const auto &st : rootDir) {
+        std::vector<std::string> cache;
+        if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
+            APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
+            continue;
+        }
+
+        std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
+    }
+
+    return !caches.empty();
 }
 
 bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleName) const
@@ -88,15 +225,24 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
         return false;
     }
 
-    sptr<AgingUninstallReceiveImpl> userReceiverImpl(new (std::nothrow) AgingUninstallReceiveImpl());
-    if (userReceiverImpl == nullptr) {
+    sptr<AgingUninstallReceiveImpl> unInstallReceiverImpl(new (std::nothrow) AgingUninstallReceiveImpl());
+    if (unInstallReceiverImpl == nullptr) {
         return false;
     }
 
+    std::shared_ptr<BundlePromise> agingPromise = std::make_shared<BundlePromise>();
+    unInstallReceiverImpl->SetAgingPromise(agingPromise);
+    unInstallReceiverImpl->MarkRunning();
     InstallParam installParam;
-    installParam.userId = AccountHelper::GetCurrentActiveUserId();
+    installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::FREE_INSTALL;
-    bundleInstaller->Uninstall(bundleName, installParam, userReceiverImpl);
+    installParam.noSkipsKill = false;
+    bundleInstaller->Uninstall(bundleName, installParam, unInstallReceiverImpl);
+    if (unInstallReceiverImpl->IsRunning()) {
+        APP_LOGD("Wait for UnInstallBundle end %{public}s.", bundleName.c_str());
+        agingPromise->WaitForAllTasksExecute();
+    }
+
     return true;
 }
 }  //  namespace AppExecFwk

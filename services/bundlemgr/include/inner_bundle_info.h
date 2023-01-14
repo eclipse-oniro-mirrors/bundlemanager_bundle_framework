@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -221,33 +221,31 @@ public:
         int32_t flags, const std::string &modulePackage, HapModuleInfo &hapModuleInfo) const;
     /**
      * @brief Find abilityInfo by bundle name and ability name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name
      * @param abilityName Indicates the ability name.
      * @param userId Indicates the user ID.
      * @return Returns the AbilityInfo object if find it; returns null otherwise.
      */
-    std::optional<AbilityInfo> FindAbilityInfo(const std::string &bundleName,
-        const std::string &moduleName, const std::string &abilityName,
+    std::optional<AbilityInfo> FindAbilityInfo(
+        const std::string &moduleName,
+        const std::string &abilityName,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Find abilityInfo by bundle name and ability name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name
      * @param abilityName Indicates the ability name.
      * @return Returns the AbilityInfo object if find it; returns null otherwise.
      */
-    std::optional<AbilityInfo> FindAbilityInfoV9(const std::string &bundleName,
+    std::optional<AbilityInfo> FindAbilityInfoV9(
         const std::string &moduleName, const std::string &abilityName) const;
     /**
      * @brief Find abilityInfo by bundle name module name and ability name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name
      * @param abilityName Indicates the ability name.
      * @return Returns ERR_OK if abilityInfo find successfully obtained; returns other ErrCode otherwise.
      */
-    ErrCode FindAbilityInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, AbilityInfo &info) const;
+    ErrCode FindAbilityInfo(
+        const std::string &moduleName, const std::string &abilityName, AbilityInfo &info) const;
     /**
      * @brief Find abilityInfo of list by bundle name.
      * @param bundleName Indicates the bundle name.
@@ -255,22 +253,21 @@ public:
      * @return Returns the AbilityInfo of list if find it; returns null otherwise.
      */
     std::optional<std::vector<AbilityInfo>> FindAbilityInfos(
-        const std::string &bundleName, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Find extensionInfo by bundle name and extension name.
-     * @param bundleName Indicates the bundle name.
      * @param moduleName Indicates the module name.
      * @param extensionName Indicates the extension name
      * @return Returns the ExtensionAbilityInfo object if find it; returns null otherwise.
      */
     std::optional<ExtensionAbilityInfo> FindExtensionInfo(
-        const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const;
+        const std::string &moduleName, const std::string &extensionName) const;
     /**
      * @brief Find extensionInfos by bundle name.
      * @param bundleName Indicates the bundle name.
      * @return Returns the ExtensionAbilityInfo array if find it; returns null otherwise.
      */
-    std::optional<std::vector<ExtensionAbilityInfo>> FindExtensionInfos(const std::string &bundleName) const;
+    std::optional<std::vector<ExtensionAbilityInfo>> FindExtensionInfos() const;
     /**
      * @brief Transform the InnerBundleInfo object to string.
      * @return Returns the string object
@@ -1119,15 +1116,17 @@ public:
     }
     /**
      * @brief Set ability enabled.
-     * @param bundleName Indicates the bundleName.
      * @param moduleName Indicates the moduleName.
      * @param abilityName Indicates the abilityName.
      * @param isEnabled Indicates the ability enabled.
      * @param userId Indicates the user id.
      * @return Returns ERR_OK if the setAbilityEnabled is successfully; returns error code otherwise.
      */
-    ErrCode SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, bool isEnabled, int32_t userId);
+    ErrCode SetAbilityEnabled(
+        const std::string &moduleName,
+        const std::string &abilityName,
+        bool isEnabled,
+        int32_t userId);
     /**
      * @brief Set the Application Need Recover object
      * @param moduleName Indicates the module name of the application.
@@ -1431,12 +1430,20 @@ public:
     void GetUriPrefixList(std::vector<std::string> &uriPrefixList, const std::string &excludeModule = "") const;
     void GetUriPrefixList(std::vector<std::string> &uriPrefixList, int32_t userId,
         const std::string &excludeModule = "") const;
+
+    bool IsBundleRemovable() const;
     /**
-     * @brief Whether bundle of userId should be removed.
-     * @param userId Indicates the userId.
-     * @return Return get bundle isRemoved result
+     * @brief Which modules can be removed.
+     * @param moudleToDelete Indicates the modules.
+     * @return Return get module isRemoved result
      */
-    bool IsBundleRemovable(int32_t userId) const;
+    bool GetRemovableModules(std::vector<std::string> &moudleToDelete) const;
+    /**
+     * @brief Get freeInstall module.
+     * @param freeInstallMoudle Indicates the modules.
+     * @return Return get freeInstall module result
+     */
+    bool GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const;
     /**
      * @brief Whether module of userId is exist.
      * @param moduleName Indicates the moduleName.
@@ -1486,6 +1493,10 @@ public:
     void SetEntryInstallationFree(bool installationFree)
     {
         baseBundleInfo_->entryInstallationFree = installationFree;
+        if (installationFree) {
+            baseApplicationInfo_->needAppDetail = false;
+            baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+        }
     }
 
     bool GetEntryInstallationFree() const
@@ -1649,6 +1660,10 @@ public:
     void SetHideDesktopIcon(bool hideDesktopIcon)
     {
         baseApplicationInfo_->hideDesktopIcon = hideDesktopIcon;
+        if (hideDesktopIcon) {
+            baseApplicationInfo_->needAppDetail = false;
+            baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+        }
     }
 
     void SetFormVisibleNotify(bool formVisibleNotify)
@@ -1702,6 +1717,8 @@ public:
     void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
+    int64_t GetLastInstallationTime() const;
+    void UpdateAppDetailAbilityAttrs();
 
 private:
     void GetBundleWithAbilities(

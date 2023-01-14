@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,11 +51,12 @@ private:
     void Process(const std::shared_ptr<BundleDataMgr> &dataMgr);
     void ProcessEvent(const InnerEvent::Pointer &event) override;
     bool CheckPrerequisite(AgingTriggertype type) const;
-    bool ReInitAgingRequest(const std::shared_ptr<BundleDataMgr> &dataMgr);
-    int AgingQueryFormStatistics(std::vector<DeviceUsageStats::BundleActiveModuleRecord>& results,
-        const std::shared_ptr<BundleDataMgr> &dataMgr);
     void InitAgingTimerInterval();
     void InitAgingBatteryThresold();
+    bool InitAgingRequest();
+    bool ResetRequest();
+    bool IsReachStartAgingThreshold();
+    bool QueryBundleStatsInfoByInterval(std::vector<DeviceUsageStats::BundleActivePackageStats> &results);
 
 private:
     std::mutex mutex_;

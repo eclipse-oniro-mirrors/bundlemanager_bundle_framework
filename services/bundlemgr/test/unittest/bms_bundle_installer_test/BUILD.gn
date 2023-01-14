@@ -71,6 +71,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest1:rightTest1",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/second_right:second_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/seventh_right:seventh_right",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/signatureTest:signatureTest",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/system_module:system_module",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/third_right:third_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
@@ -622,12 +623,149 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   }
 }
 
+ohos_unittest("BmsBundleInstallDeviceTypeTest") {
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [
+    "//third_party/jsoncpp/include",
+    "../../mock/include/parameter",
+    "//base/startup/init/interfaces/innerkits/include",
+  ]
+  sources = [
+    "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/bms_param.cpp",
+    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
+    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
+    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
+    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
+    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
+    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
+    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
+    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
+    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
+    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
+    "${services_path}/bundlemgr/src/hidump_helper.cpp",
+  ]
+
+  sources += bundle_install_sources
+
+  sources += [
+    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
+    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
+  ]
+
+  sources += [ "bms_bundle_install_device_type_test.cpp" ]
+
+  configs = [
+    "${services_path}/bundlemgr/test:bundlemgr_test_config",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
+  ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = []
+  if (bundle_framework_graphics) {
+    include_dirs += [
+      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    ]
+    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
+  }
+
+  deps += bundle_install_deps
+
+  external_deps = [
+    "ability_base:want",
+    "appverify:libhapverify",
+    "bundle_framework:appexecfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
+    "hitrace_native:hitrace_meter",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = []
+  if (configpolicy_enable) {
+    external_deps += [ "config_policy:configpolicy_util" ]
+    defines += [ "CONFIG_POLOCY_ENABLE" ]
+  }
+
+  if (build_selinux) {
+    external_deps += [ "selinux:libhap_restorecon" ]
+    cflags += [ "-DWITH_SELINUX" ]
+  }
+
+  if (account_enable) {
+    external_deps += [ "os_account:os_account_innerkits" ]
+    defines += [ "ACCOUNT_ENABLE" ]
+  }
+
+  if (bundle_framework_free_install) {
+    sources += aging
+    sources += free_install
+    sources += distributed_manager
+    external_deps += [
+      "ability_runtime:ability_manager",
+      "ability_runtime:app_manager",
+      "battery_manager:batterysrv_client",
+      "device_info_manager:distributed_device_profile_client",
+      "device_usage_statistics:usagestatsinner",
+      "display_manager:displaymgr",
+      "power_manager:powermgr_client",
+      "syscap_codec:syscap_interface_shared",
+    ]
+    defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+
+  if (hicollie_enable) {
+    external_deps += [ "hicollie_native:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (global_resmgr_enable) {
+    defines += [ "GLOBAL_RESMGR_ENABLE" ]
+    external_deps += [ "resource_management:global_resmgr" ]
+  }
+
+  if (hisysevent_enable) {
+    sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
+    external_deps += [ "hisysevent_native:libhisysevent" ]
+    defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (bms_rdb_enable) {
+    configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+    defines += [ "BMS_RDB_ENABLE" ]
+    external_deps += [ "relational_store:native_rdb" ]
+    sources += [
+      "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
+      "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+      "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+      "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    ]
+  } else {
+    external_deps += [ "kv_store:distributeddata_inner" ]
+    sources += [
+      "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
+      "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
+      "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
+    ]
+  }
+}
+
 group("unittest") {
   testonly = true
 
   if (ability_runtime_enable) {
     deps = [
       ":BmsBundleInstallCheckerTest",
+      ":BmsBundleInstallDeviceTypeTest",
       ":BmsBundleInstallIpcTest",
       ":BmsBundleInstallerTest",
       ":BmsMultipleBundleInstallerTest",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,17 +38,19 @@ bool AgingUtil::SortTwoAgingBundleInfos(AgingBundleInfo &bundle1, AgingBundleInf
     int64_t currentTimeMs = GetNowSysTimeMs();
     int64_t time10DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_10_DAYS);
     int64_t time20DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_20_DAYS);
-    /*
-    * bundle1 in [10,20) days and bundle2 in [10,20) order by spaceSize;
-    * other order by lastUsedTime;
-    */
-    if (bundle1.GetRecentlyUsedTime() <= time10DaysAgo && bundle1.GetRecentlyUsedTime() > time20DaysAgo
-        && bundle2.GetRecentlyUsedTime() <= time10DaysAgo && bundle2.GetRecentlyUsedTime() > time20DaysAgo) {
-        return bundle1.GetDataBytes() > bundle2.GetDataBytes();
-    } else {
-        return bundle1.GetRecentlyUsedTime()  < bundle2.GetRecentlyUsedTime();
+    int64_t time30DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_30_DAYS);
+    bool sortByUseTimes =
+        (bundle1.GetRecentlyUsedTime() <= time10DaysAgo && bundle2.GetRecentlyUsedTime() <= time10DaysAgo) ||
+        (bundle1.GetRecentlyUsedTime() > time10DaysAgo && bundle1.GetRecentlyUsedTime() <= time20DaysAgo &&
+        bundle2.GetRecentlyUsedTime() > time10DaysAgo && bundle2.GetRecentlyUsedTime() <= time20DaysAgo) ||
+        (bundle1.GetRecentlyUsedTime() > time20DaysAgo && bundle1.GetRecentlyUsedTime() <= time30DaysAgo &&
+        bundle2.GetRecentlyUsedTime() > time20DaysAgo && bundle2.GetRecentlyUsedTime() <= time30DaysAgo) ||
+        (bundle1.GetRecentlyUsedTime() > time30DaysAgo && bundle2.GetRecentlyUsedTime() > time30DaysAgo);
+    if (sortByUseTimes && (bundle1.GetStartCount() != bundle2.GetStartCount())) {
+        return bundle1.GetStartCount() < bundle2.GetStartCount();
     }
-    return false;
+
+    return bundle1.GetRecentlyUsedTime() <= bundle2.GetRecentlyUsedTime();
 }
 
 int64_t AgingUtil::GetUnusedTimeMsBaseOnCurrentTime(int64_t currentTimeMs, int32_t days)

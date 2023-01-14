@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +24,10 @@
 #include "file_ex.h"
 #include "if_system_ability_manager.h"
 #include "inner_app_quick_fix.h"
+#include "iservice_registry.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_manager_rdb.h"
+#include "system_ability_definition.h"
 
 #define private public
 
@@ -300,5 +302,33 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function |
         EXPECT_TRUE(newInnerAppQuickFixes.empty());
     }
     APP_LOGI("end of BmsBundleQuickFixManager_0800.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_0900
+ * @tc.name: test UpdateQuickFixStatus
+ * @tc.desc: UpdateQuickFixStatus
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0900, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_0900.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        QuickFixStatus nextStatus = QuickFixStatus::DEFAULT_STATUS;
+        InnerAppQuickFix innerAppQuickFix;
+        QuickFixMark mark;
+        mark.status = QuickFixStatus::DEFAULT_STATUS;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        bool ret = dataMgr->UpdateQuickFixStatus(nextStatus, innerAppQuickFix);
+        EXPECT_FALSE(ret);
+
+        mark.status = QuickFixStatus::DELETE_START;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        nextStatus = QuickFixStatus::DEFAULT_STATUS;
+        ret = dataMgr->UpdateQuickFixStatus(nextStatus, innerAppQuickFix);
+        EXPECT_FALSE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_0900.");
 }
 }

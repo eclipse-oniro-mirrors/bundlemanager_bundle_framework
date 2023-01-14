@@ -32,7 +32,7 @@ constexpr const char* ERR_MSG_BUNDLE_NOT_EXIST = "The specified bundle is not fo
 constexpr const char* ERR_MSG_MODULE_NOT_EXIST = "The specified module is not found.";
 constexpr const char* ERR_MSG_ABILITY_NOT_EXIST = "The specified ability is not found.";
 constexpr const char* ERR_MSG_INVALID_USER_ID = "The specified user id is not found.";
-constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is not found.";
+constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is empty string.";
 constexpr const char* ERR_MSG_PERMISSION_NOT_EXIST = "The specified permission is not found.";
 constexpr const char* ERR_MSG_DEVICE_ID_NOT_EXIST = "The specified deviceId is not found.";
 constexpr const char* ERR_MSG_INSTALL_PARSE_FAILED = "Failed to install the hap since the hap fails to be parsed.";
@@ -50,7 +50,7 @@ constexpr const char* ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT =
     "Failed to install the hap since the system disk space is insufficient.";
 constexpr const char* ERR_MSG_INSTALL_VERSION_DOWNGRADE =
     "Failed to install the hap since the version of the newly installed hap is too early.";
-constexpr const char* ERR_MSG_INSTALL_DEPENDENT_MOUULE_NOT_EXIST =
+constexpr const char* ERR_MSG_INSTALL_DEPENDENT_MODULE_NOT_EXIST =
     "Failed to install because the dependent module does not exist.";
 constexpr const char* ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED = "The preinstalled app cannot be uninstalled.";
 constexpr const char* ERR_ZLIB_SRC_FILE_INVALID_MSG = "The Input source file is invalid.";
@@ -88,7 +88,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, ERR_MSG_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
     { ERROR_INSTALL_NO_DISK_SPACE_LEFT, ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT },
     { ERROR_INSTALL_VERSION_DOWNGRADE, ERR_MSG_INSTALL_VERSION_DOWNGRADE },
-    { ERROR_INSTALL_DEPENDENT_MOUULE_NOT_EXIST, ERR_MSG_INSTALL_DEPENDENT_MOUULE_NOT_EXIST },
+    { ERROR_INSTALL_DEPENDENT_MODULE_NOT_EXIST, ERR_MSG_INSTALL_DEPENDENT_MODULE_NOT_EXIST },
     { ERROR_UNINSTALL_PREINSTALL_APP_FAILED, ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED },
     { ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION },
     { ERR_ZLIB_SRC_FILE_INVALID, ERR_ZLIB_SRC_FILE_INVALID_MSG },

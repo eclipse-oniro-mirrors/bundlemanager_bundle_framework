@@ -315,7 +315,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                 isModuleExist = FindModuleInInstalledPackage(dependency.moduleName, bundleName);
                 if (!isModuleExist) {
                     APP_LOGE("The depend module:%{public}s is not exist.", dependency.moduleName.c_str());
-                    return ERR_APPEXECFWK_INSTALL_DEPENDENT_MOUULE_NOT_EXIST;
+                    return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
                 }
             }
         }
@@ -400,13 +400,9 @@ ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundle
 {
     APP_LOGD("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
         provisionBundleName.c_str(), bundleName.c_str());
-    if (!system::GetBoolParameter(Constants::CHECK_PROFILE_BUNDLE_NAME, false)) {
-        APP_LOGD("CheckBundleName check_profile_bundle_name is false");
-        return ERR_OK;
-    }
     if (provisionBundleName.empty() || bundleName.empty()) {
-        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s", provisionBundleName.c_str(),
-            bundleName.c_str());
+        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s failed",
+            provisionBundleName.c_str(), bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
     }
     if (provisionBundleName == bundleName) {
@@ -593,6 +589,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     uint32_t compatible = (infos.begin()->second).GetCompatibleVersion();
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
+    bool isStage = (infos.begin()->second).GetIsNewVersion();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -628,6 +625,11 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
         if (appType != info.second.GetAppType()) {
             return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
+        }
+        // check model type(FA or stage)
+        if (isStage != info.second.GetIsNewVersion()) {
+            APP_LOGE("must be all FA model or all stage model");
+            return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
         }
     }
     // check api sdk version
@@ -773,10 +775,14 @@ bool BundleInstallChecker::IsExistedDistroModule(const InnerBundleInfo &newInfo,
         return false;
     }
     std::string oldModuleName = info.GetModuleNameByPackage(packageName);
-    // check consistency of module name
-    if (moduleName.compare(oldModuleName) != 0) {
-        APP_LOGE("no moduleName in the innerModuleInfo");
-        return false;
+    // if FA update to Stage, allow module name inconsistent
+    bool isFAToStage = !info.GetIsNewVersion() && newInfo.GetIsNewVersion();
+    if (!isFAToStage) {
+        // if not FA update to Stage, check consistency of module name
+        if (moduleName.compare(oldModuleName) != 0) {
+            APP_LOGE("no moduleName in the innerModuleInfo");
+            return false;
+        }
     }
     // check consistency of module type
     std::string newModuleType = newInfo.GetModuleTypeByPackage(packageName);

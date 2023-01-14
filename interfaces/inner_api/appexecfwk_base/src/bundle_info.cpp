@@ -31,7 +31,6 @@ const std::string BUNDLE_INFO_SINGLETON = "singleton";
 const std::string BUNDLE_INFO_IS_NATIVE_APP = "isNativeApp";
 const std::string BUNDLE_INFO_IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string BUNDLE_INFO_IS_DIFFERENT_NAME = "isDifferentName";
-const std::string BUNDLE_INFO_APPLICATION_INFO = "applicationInfo";
 const std::string BUNDLE_INFO_ABILITY_INFOS = "abilityInfos";
 const std::string BUNDLE_INFO_HAP_MODULE_INFOS = "hapModuleInfos";
 const std::string BUNDLE_INFO_EXTENSION_ABILITY_INFOS = "extensionAbilityInfo";
@@ -171,29 +170,6 @@ SignatureInfo *SignatureInfo::Unmarshalling(Parcel &parcel)
 
 bool BundleInfo::ReadFromParcel(Parcel &parcel)
 {
-    name = Str16ToStr8(parcel.ReadString16());
-    versionCode = parcel.ReadUint32();
-    versionName = Str16ToStr8(parcel.ReadString16());
-    minCompatibleVersionCode = parcel.ReadUint32();
-    compatibleVersion = parcel.ReadUint32();
-    targetVersion = parcel.ReadUint32();
-    isKeepAlive = parcel.ReadBool();
-    singleton = parcel.ReadBool();
-    isPreInstallApp = parcel.ReadBool();
-
-    vendor = Str16ToStr8(parcel.ReadString16());
-    releaseType = Str16ToStr8(parcel.ReadString16());
-    isNativeApp = parcel.ReadBool();
-
-    mainEntry = Str16ToStr8(parcel.ReadString16());
-    entryModuleName = Str16ToStr8(parcel.ReadString16());
-    entryInstallationFree = parcel.ReadBool();
-
-    appId = Str16ToStr8(parcel.ReadString16());
-    uid = parcel.ReadInt32();
-    gid = parcel.ReadInt32();
-    installTime = parcel.ReadInt64();
-    updateTime = parcel.ReadInt64();
     std::unique_ptr<ApplicationInfo> appInfo(parcel.ReadParcelable<ApplicationInfo>());
     if (!appInfo) {
         APP_LOGE("ReadParcelable<ApplicationInfo> failed");
@@ -236,6 +212,30 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
         }
         hapModuleInfos.emplace_back(*hapModuleInfo);
     }
+
+    name = Str16ToStr8(parcel.ReadString16());
+    versionCode = parcel.ReadUint32();
+    versionName = Str16ToStr8(parcel.ReadString16());
+    minCompatibleVersionCode = parcel.ReadUint32();
+    compatibleVersion = parcel.ReadUint32();
+    targetVersion = parcel.ReadUint32();
+    isKeepAlive = parcel.ReadBool();
+    singleton = parcel.ReadBool();
+    isPreInstallApp = parcel.ReadBool();
+
+    vendor = Str16ToStr8(parcel.ReadString16());
+    releaseType = Str16ToStr8(parcel.ReadString16());
+    isNativeApp = parcel.ReadBool();
+
+    mainEntry = Str16ToStr8(parcel.ReadString16());
+    entryModuleName = Str16ToStr8(parcel.ReadString16());
+    entryInstallationFree = parcel.ReadBool();
+
+    appId = Str16ToStr8(parcel.ReadString16());
+    uid = parcel.ReadInt32();
+    gid = parcel.ReadInt32();
+    installTime = parcel.ReadInt64();
+    updateTime = parcel.ReadInt64();
 
     int32_t hapModuleNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleNamesSize);
@@ -326,6 +326,23 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
 
 bool BundleInfo::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &applicationInfo);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfos.size());
+    for (auto &abilityInfo : abilityInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfos.size());
+    for (auto &extensionInfo : extensionInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleInfos.size());
+    for (auto &hapModuleInfo : hapModuleInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hapModuleInfo);
+    }
+
     CHECK_PARCEL_CAPACITY(parcel, BUNDLE_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
@@ -353,23 +370,6 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, installTime);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, updateTime);
-
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &applicationInfo);
-
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfos.size());
-    for (auto &abilityInfo : abilityInfos) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo);
-    }
-
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfos.size());
-    for (auto &extensionInfo : extensionInfos) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo);
-    }
-
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleInfos.size());
-    for (auto &hapModuleInfo : hapModuleInfos) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hapModuleInfo);
-    }
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleNames.size());
     for (auto &hapModuleName : hapModuleNames) {
@@ -576,7 +576,6 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_IS_NATIVE_APP, bundleInfo.isNativeApp},
         {BUNDLE_INFO_IS_PREINSTALL_APP, bundleInfo.isPreInstallApp},
         {BUNDLE_INFO_IS_DIFFERENT_NAME, bundleInfo.isDifferentName},
-        {BUNDLE_INFO_APPLICATION_INFO, bundleInfo.applicationInfo},
         {BUNDLE_INFO_ABILITY_INFOS, bundleInfo.abilityInfos},
         {BUNDLE_INFO_HAP_MODULE_INFOS, bundleInfo.hapModuleInfos},
         {BUNDLE_INFO_EXTENSION_ABILITY_INFOS, bundleInfo.extensionInfos},
@@ -679,14 +678,6 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         BUNDLE_INFO_IS_DIFFERENT_NAME,
         bundleInfo.isDifferentName,
         JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<ApplicationInfo>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_APPLICATION_INFO,
-        bundleInfo.applicationInfo,
-        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

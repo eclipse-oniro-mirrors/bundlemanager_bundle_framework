@@ -47,6 +47,12 @@ const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/b
 const std::string HAP_FILE_PATH2 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest2.hap";
 const std::string HAP_FILE_PATH3 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest3.hap";
 const std::string WRONG_HAP_FILE_PATH = "/data/test/resource/bms/accesstoken_bundle/wrong_bundle_name.ha";
+const std::string HAP_NO_ICON = "/data/test/resource/bms/accesstoken_bundle/bmsThirdBundle2.hap";
+const std::string HAP_HAS_ICON = "/data/test/resource/bms/accesstoken_bundle/bmsThirdBundle1.hap";
+const std::string BUNDLE_NAME_ICON = "com.third.hiworld.example1";
+const std::string HAP_NO_ICON_STAGE = "/data/test/resource/bms/accesstoken_bundle/thumbnail2.hap";
+const std::string HAP_HAS_ICON_STAGE = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
+const std::string BUNDLE_NAME_ICON_STAGE = "com.example.thumbnailtest";
 const int32_t USERID = 100;
 const uint32_t ZERO = 0;
 const uint32_t INVALID_ACCESSTOKENID = 0;
@@ -283,7 +289,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0500, Function | Sma
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info2);
     EXPECT_TRUE(result);
     EXPECT_EQ(info.accessTokenId, info2.accessTokenId);
-    EXPECT_NE(info.accessTokenIdEx, info2.accessTokenIdEx);
+    EXPECT_EQ(info.accessTokenIdEx, info2.accessTokenIdEx);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
@@ -748,4 +754,163 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0009, Function | SmallT
     EXPECT_EQ(result.resultMsg, "resultMsg");
 }
 
+/**
+ * @tc.number: BmsBundleHideIconTest_0001
+ * Function: GetApplicationInfo
+ * @tc.name: test can create accessTokenId
+ * @tc.desc: 1. system running normally
+ *           2. install no icon hap
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_NO_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.needAppDetail);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleHideIconTest_0002
+ * Function: GetApplicationInfo
+ * @tc.name: test can create accessTokenId
+ * @tc.desc: 1. system running normally
+ *           2. install no icon hap, update it with has icon hap
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0002, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_NO_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.needAppDetail);
+
+    installResult = UpdateBundle(HAP_HAS_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+    ApplicationInfo applicationInfo2;
+    result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo2);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(applicationInfo2.needAppDetail);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleHideIconTest_0003
+ * Function: GetApplicationInfo
+ * @tc.name: test can create accessTokenId
+ * @tc.desc: 1. system running normally
+ *           2. install has icon hap, update it with no icon hap
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0003, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_HAS_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(applicationInfo.needAppDetail);
+
+    installResult = UpdateBundle(HAP_NO_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+    ApplicationInfo applicationInfo2;
+    result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON, 0, USERID, applicationInfo2);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo2.needAppDetail);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleHideIconTest_0004
+ * Function: GetApplicationInfo
+ * @tc.name: test can create accessTokenId
+ * @tc.desc: 1. system running normally
+ *           2. install no icon hap
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0004, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_NO_ICON_STAGE);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.needAppDetail);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON_STAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleHideIconTest_0005
+ * Function: GetApplicationInfo
+ * @tc.name: test can create accessTokenId
+ * @tc.desc: 1. system running normally
+ *           2. install no icon hap, update it with has icon hap
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0005, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_NO_ICON_STAGE);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.needAppDetail);
+
+    installResult = UpdateBundle(HAP_HAS_ICON_STAGE);
+    EXPECT_EQ(installResult, ERR_OK);
+    ApplicationInfo applicationInfo2;
+    result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo2);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(applicationInfo2.needAppDetail);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON_STAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleHideIconTest_0006
+ * Function: GetApplicationInfo
+ * @tc.name: test can create accessTokenId
+ * @tc.desc: 1. system running normally
+ *           2. install has icon hap, update it with no icon hap
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0006, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_HAS_ICON_STAGE);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(applicationInfo.needAppDetail);
+
+    installResult = UpdateBundle(HAP_NO_ICON_STAGE);
+    EXPECT_EQ(installResult, ERR_OK);
+    ApplicationInfo applicationInfo2;
+    result = dataMgr->GetApplicationInfo(BUNDLE_NAME_ICON_STAGE, 0, USERID, applicationInfo2);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo2.needAppDetail);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON_STAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
 } // OHOS
