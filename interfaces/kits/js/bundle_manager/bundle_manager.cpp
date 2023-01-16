@@ -2397,6 +2397,17 @@ static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static ErrCode InnerGetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetBundleInfoForSelf(flags, bundleInfo);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 static void ProcessBundleInfos(
     napi_env env, napi_value result, const std::vector<BundleInfo> &bundleInfos, int32_t flags)
 {
@@ -2492,6 +2503,19 @@ void GetBundleInfoExec(napi_env env, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
             asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+    }
+}
+
+void GetBundleInfoForSelfExec(napi_env env, void *data)
+{
+    BundleInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<BundleInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->err = InnerGetBundleInfoForSelf(
+            asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
     }
 }
 
@@ -2670,7 +2694,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
         asyncCallbackInfo->err = ERROR_BUNDLE_NOT_EXIST;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoExec, GetBundleInfoComplete);
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetBundleInfoForSelf done.");
     return promise;

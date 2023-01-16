@@ -115,6 +115,16 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetBundleInstaller called");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    if (!iBundleMgr->VerifySystemApi()) {
+        BusinessError::ThrowError(env, ERROR_NOT_SYSTEM_APP);
+        APP_LOGE("non-system app calling system api");
+        return nullptr;
+    }
     NapiArg args(env, info);
     if (!args.Init(FIRST_PARAM, SECOND_PARAM)) {
         APP_LOGE("GetBundleInstaller args init failed");
