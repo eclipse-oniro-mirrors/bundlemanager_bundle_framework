@@ -3915,8 +3915,8 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0200, Function | SmallTest | Level0)
     InnerAppQuickFix innerAppQuickFix;
     nlohmann::json jsonObject = R"(
         {
-            "appQuickFix" : "1111111111",
-            "quickFixMark" : "2222222222"
+            "appQuickFix" : "appQuickFix",
+            "quickFixMark" : "quickFixMark"
         }
     )"_json;
     auto ret = innerAppQuickFix.FromJson(jsonObject);
@@ -3934,7 +3934,7 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0300, Function | SmallTest | Level0)
     InnerAppQuickFix innerAppQuickFix;
     nlohmann::json jsonObject = R"(
         {
-            "appQuickFix" : "1111111111",
+            "appQuickFix" : "appQuickFix",
             "quickFixMark" : {}
         }
     )"_json;
@@ -3968,7 +3968,7 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0500, Function | SmallTest | Level0)
     nlohmann::json jsonObject = R"(
         {
             "appQuickFix" : {},
-            "quickFixMark" : "2222222222"
+            "quickFixMark" : "quickFixMark"
         }
     )"_json;
     auto ret = innerAppQuickFix.FromJson(jsonObject);

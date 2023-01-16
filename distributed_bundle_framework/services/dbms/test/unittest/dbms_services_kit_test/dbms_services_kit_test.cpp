@@ -1365,7 +1365,8 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0072, Function | SmallTest | L
     EXPECT_NE(distributedBms, nullptr);
     if (distributedBms != nullptr) {
         OHOS::AppExecFwk::ElementName elementName;
-       elementName.SetDeviceID("deviceID");
+        std::string deviceId = "deviceId";
+        elementName.SetDeviceID(deviceId);
         std::string localeInfo = "localeInfo";
         RemoteAbilityInfo remoteAbilityInfo;
         auto ret = distributedBms->GetRemoteAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
