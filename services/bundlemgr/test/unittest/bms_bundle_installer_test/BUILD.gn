@@ -92,6 +92,7 @@ ohos_unittest("BmsBundleInstallerTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -263,6 +264,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -405,6 +407,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -540,6 +543,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -628,7 +632,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   module_out_path = module_output_path
   include_dirs = [
     "//third_party/jsoncpp/include",
-    "../mock/include/parameter",
+    "../../mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = [
@@ -682,6 +686,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",

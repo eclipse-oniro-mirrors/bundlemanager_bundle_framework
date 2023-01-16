@@ -53,6 +53,7 @@ ohos_unittest("BmsBundleParserTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

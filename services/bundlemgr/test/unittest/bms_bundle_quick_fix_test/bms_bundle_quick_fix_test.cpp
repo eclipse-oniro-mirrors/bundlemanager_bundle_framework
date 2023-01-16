@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,10 +25,12 @@
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "file_ex.h"
+#include "if_system_ability_manager.h"
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "iservice_registry.h"
 #include "mock_quick_fix_callback.h"
 #include "mock_status_receiver.h"
 #include "quick_fix_data_mgr.h"
@@ -43,6 +45,7 @@
 #include "quick_fix/quick_fix_manager_rdb.h"
 #include "quick_fix/quick_fix_mgr.h"
 #include "quick_fix/quick_fixer.h"
+#include "system_ability_definition.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -3080,6 +3083,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0310, Function | SmallTest
     provisionInfo.appId = "001";
     bundleInfo.appId = "Device_001";
     bundleInfo.applicationInfo.appPrivilegeLevel = provisionInfo.bundleInfo.apl;
+    provisionInfo.bundleInfo.bundleName = bundleInfo.name;
     QuickFixChecker checker;
     auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
     EXPECT_EQ(ret, ERR_OK);
@@ -3154,6 +3158,26 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0340, Function | SmallTest
         ret = deployer->SaveAppQuickFix(innerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED);
     }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0350
+ * @tc.name: test CheckSignatureInfo
+ * @tc.desc: test success scene of CheckSignatureInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0350, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    BundleInfo bundleInfo;
+    bundleInfo.name = "Device";
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.appId = "001";
+    bundleInfo.appId = "Device_001";
+    bundleInfo.applicationInfo.appPrivilegeLevel = provisionInfo.bundleInfo.apl;
+    QuickFixChecker checker;
+    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**

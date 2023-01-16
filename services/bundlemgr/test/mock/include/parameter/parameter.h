@@ -18,5 +18,7 @@
 
 namespace OHOS {
 char *GetDeviceType();
+int GetSdkApiVersion();
+int GetParameter(const char *key, const char *def, char *value, int len);
 } // OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETER_H

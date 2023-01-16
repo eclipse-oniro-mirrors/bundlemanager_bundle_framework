@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -224,7 +224,9 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
+#endif
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -342,10 +344,12 @@ void BmsBundleKitServiceTest::SetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
 {
     return bundleMgrService_->GetBundleDistributedManager();
 }
+#endif
 
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
@@ -7280,6 +7284,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Lev
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: AgingTest_0001
  * @tc.name: test Aging Start
@@ -7330,6 +7335,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     bundleAgingMgr.InitAgingtTimer();
     bundleAgingMgr.InitAgingRunner();
 }
+#endif
 
 /**
  * @tc.number: GetApplicationInfoV9_0100
@@ -7679,6 +7685,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest 
     EXPECT_FALSE(res);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleDistributedManager_0001
  * @tc.name: test GetBundleDistributedManager
@@ -7766,6 +7773,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0005, Function | S
     bundleMgr->OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "");
 }
+#endif
 
 /**
  * @tc.number: Hidump_0001
@@ -9186,6 +9194,80 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0005, Function | S
     AbilityInfo abilityInfo;
     abilityInfo.type = AbilityType::DATA;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0006
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0006, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0007
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0007, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0008
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(ABILITY_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.SetIsNewVersion(true);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+
+    innerBundleInfo.baseApplicationInfo_->iconId = 1;
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
