@@ -22,7 +22,6 @@ namespace OHOS {
 namespace AppExecFwk {
 constexpr ErrCode SUCCESS = 0;
 constexpr ErrCode ERROR_PERMISSION_DENIED_ERROR = 201;
-constexpr ErrCode ERROR_NOT_SYSTEM_APP = 202;
 constexpr ErrCode ERROR_PARAM_CHECK_ERROR = 401;
 constexpr ErrCode ERROR_SYSTEM_ABILITY_NOT_FOUND = 801;
 constexpr ErrCode ERROR_BUNDLE_NOT_EXIST = 17700001;

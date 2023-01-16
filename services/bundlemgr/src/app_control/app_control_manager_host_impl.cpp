@@ -192,10 +192,6 @@ int32_t AppControlManagerHostImpl::GetCallingUserId()
 ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
 {
     APP_LOGD("host begin to SetDisposedStatus");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -210,10 +206,6 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
 ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
 {
     APP_LOGD("host begin to DeleteDisposedStatus");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -228,10 +220,6 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
 ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
 {
     APP_LOGE("host begin to GetDisposedStatus");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
     if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;

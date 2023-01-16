@@ -692,10 +692,6 @@ static ErrCode InnerGetDispatchInfo(std::string &version, std::string &dispatchA
         APP_LOGE("can not get iBundleMgr");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
     if (!iBundleMgr->VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("GetDispatchInfo failed due to permission denied");
         return ERROR_PERMISSION_DENIED_ERROR;

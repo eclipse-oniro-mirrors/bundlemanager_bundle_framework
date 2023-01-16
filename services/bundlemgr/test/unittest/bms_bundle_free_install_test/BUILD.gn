@@ -78,7 +78,6 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -228,7 +227,6 @@ ohos_unittest("BmsBundleFreeInstallTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
