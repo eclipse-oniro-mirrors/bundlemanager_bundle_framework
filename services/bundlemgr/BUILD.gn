@@ -222,6 +222,7 @@ ohos_shared_library("libbms") {
     "//third_party/zlib:shared_libz",
   ]
 
+  version_script = "libbms.map"
   external_deps = [
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
