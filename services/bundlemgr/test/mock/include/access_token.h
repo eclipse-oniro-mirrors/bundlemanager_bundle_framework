@@ -43,7 +43,6 @@ typedef enum TypeATokenTypeEnum {
     TOKEN_INVALID = -1,
     TOKEN_HAP = 0,
     TOKEN_NATIVE,
-    TOKEN_SHELL,
 } ATokenTypeEnum;
 
 typedef enum TypeATokenAplEnum {
