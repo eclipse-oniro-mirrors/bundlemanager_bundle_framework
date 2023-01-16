@@ -56,6 +56,11 @@ struct DefinePermission {
     int32_t descriptionId = 0;
 };
 
+struct Dependency {
+    std::string moduleName;
+    std::string bundleName;
+};
+
 struct InnerModuleInfo {
     std::string name;
     std::string modulePackage;
@@ -101,7 +106,7 @@ struct InnerModuleInfo {
     std::vector<std::string> extensionSkillKeys;
     std::vector<Metadata> metadata;
     int32_t upgradeFlag = 0;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     std::string compileMode;
     bool isLibIsolated = false;
     std::string nativeLibraryPath;
@@ -1757,6 +1762,7 @@ void from_json(const nlohmann::json &jsonObject, Distro &distro);
 void from_json(const nlohmann::json &jsonObject, InstallMark &installMark);
 void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermission);
 void from_json(const nlohmann::json &jsonObject, SandboxAppPersistentInfo &sandboxPersistentInfo);
+void from_json(const nlohmann::json &jsonObject, Dependency &dependency);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H

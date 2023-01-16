@@ -431,6 +431,14 @@ void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermissio
     };
 }
 
+void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
+{
+    jsonObject = nlohmann::json {
+        {Profile::DEPENDENCIES_MODULE_NAME, dependency.moduleName},
+        {Profile::DEPENDENCIES_BUNDLE_NAME, dependency.bundleName}
+    };
+}
+
 void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
 {
     jsonObject = nlohmann::json {
@@ -876,14 +884,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+    GetValueIfFindKey<std::vector<Dependency>>(jsonObject,
         jsonObjectEnd,
         MODULE_DEPENDENCIES,
         info.dependencies,
         JsonType::ARRAY,
         false,
         ProfileReader::parseResult,
-        ArrayType::STRING);
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_COMPILE_MODE,
@@ -1199,6 +1207,27 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
     }
 }
 
+void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::DEPENDENCIES_MODULE_NAME,
+        dependency.moduleName,
+        JsonType::STRING,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::DEPENDENCIES_BUNDLE_NAME,
+        dependency.bundleName,
+        JsonType::STRING,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
@@ -1499,6 +1528,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         hapInfo.moduleType = ModuleType::FEATURE;
     } else if (moduleType == Profile::MODULE_TYPE_HAR) {
         hapInfo.moduleType = ModuleType::HAR;
+    } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
+        hapInfo.moduleType = ModuleType::SHARED;
     } else {
         hapInfo.moduleType = ModuleType::UNKNOWN;
     }
@@ -1526,7 +1557,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
                 abilityInfo.applicationInfo);
         }
     }
-    hapInfo.dependencies = it->second.dependencies;
+    for (const auto &dependency : it->second.dependencies) {
+        hapInfo.dependencies.emplace_back(dependency.moduleName);
+    }
     hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
     for (const auto &hqf : hqfInfos_) {
         if (hqf.moduleName == it->second.moduleName) {
@@ -2933,7 +2966,9 @@ bool InnerBundleInfo::GetDependentModuleNames(const std::string &moduleName,
 {
     for (auto iter = innerModuleInfos_.begin(); iter != innerModuleInfos_.end(); ++iter) {
         if (iter->second.moduleName == moduleName) {
-            dependentModuleNames = iter->second.dependencies;
+            for (const auto &dependency : iter->second.dependencies) {
+                dependentModuleNames.push_back(dependency.moduleName);
+            }
             return true;
         }
     }
