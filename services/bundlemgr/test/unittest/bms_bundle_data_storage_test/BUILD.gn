@@ -56,7 +56,6 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:libtokenid_sdk",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
