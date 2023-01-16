@@ -401,6 +401,7 @@ ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &st
     }
 
     close(inputFd);
+    fsync(outputFd);
     close(outputFd);
 
     APP_LOGD("write file stream to service terminal end");

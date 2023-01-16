@@ -234,6 +234,7 @@ ErrCode QuickFixManagerProxy::CopyFiles(
         }
         destFiles.emplace_back(destPath);
         close(sourceFd);
+        fsync(destFd);
         close(destFd);
     }
     APP_LOGD("copy files success.");
