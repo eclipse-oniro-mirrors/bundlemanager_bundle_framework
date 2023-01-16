@@ -1139,7 +1139,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
     if (result != ERR_OK) {
         APP_LOGE("remove bundle dir failed");
-        dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_FAIL);
+        dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::INSTALL_SUCCESS);
         return result;
     }
 
