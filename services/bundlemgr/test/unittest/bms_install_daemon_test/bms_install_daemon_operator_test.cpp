@@ -697,7 +697,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4100, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4200, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
-    extractParam.srcPath = "/system/etc/init/bootpic.zip";
+    extractParam.srcPath = "/system/etc/graphic/bootpic.zip";
     auto ret = InstalldOperator::ExtractFiles(extractParam);
     EXPECT_TRUE(ret);
 }
