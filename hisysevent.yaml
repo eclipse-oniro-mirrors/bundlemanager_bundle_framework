@@ -84,7 +84,7 @@ BUNDLE_INSTALL:
   CALLING_APP_ID: {type: STRING, desc: calling appId}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   FINGERPRINT: {type: STRING, desc: fingerprint of the bundle}
-  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether support hide desktop icon}
+  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether hide desktop icon}
   APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
@@ -110,7 +110,7 @@ BUNDLE_UPDATE:
   CALLING_APP_ID: {type: STRING, desc: calling appId}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   FINGERPRINT: {type: STRING, desc: fingerprint of the bundle}
-  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether support hide desktop icon}
+  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether hide desktop icon}
   APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
@@ -125,7 +125,7 @@ PRE_BUNDLE_RECOVER:
   CALLING_APP_ID: {type: STRING, desc: calling appId}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   FINGERPRINT: {type: STRING, desc: fingerprint of the bundle}
-  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether support hide desktop icon}
+  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether hide desktop icon}
   APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
