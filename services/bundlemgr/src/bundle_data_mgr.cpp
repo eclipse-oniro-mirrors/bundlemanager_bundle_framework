@@ -56,6 +56,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
+constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 }
 BundleDataMgr::BundleDataMgr()
 {
@@ -232,6 +233,9 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
     }
     if (statusItem->second == InstallState::INSTALL_START) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
+        if (info.GetBaseApplicationInfo().needAppDetail) {
+            AddAppDetailAbilityInfo(info);
+        }
         if (dataStorage_->SaveStorageBundleInfo(info)) {
             APP_LOGI("write storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.emplace(bundleName, info);
@@ -271,6 +275,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.AddModuleInfo(newInfo);
+        oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
@@ -379,6 +384,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         || statusItem->second == InstallState::USER_CHANGE) {
         APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
+        bool needAppDetail = oldInfo.GetBaseApplicationInfo().needAppDetail;
         bool isOldInfoHasEntry = oldInfo.HasEntry();
         oldInfo.UpdateModuleInfo(newInfo);
         // 1.exist entry, update entry.
@@ -392,6 +398,10 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
             oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        }
+        oldInfo.UpdateAppDetailAbilityAttrs();
+        if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
+            AddAppDetailAbilityInfo(oldInfo);
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
@@ -941,6 +951,9 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
         for (const Skill &skill : skillsPair->second) {
             if (skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
+                if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
+                    continue;
+                }
                 if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)) {
                     if (!info.IsAbilityEnabled(abilityinfo, GetUserId(userId))) {
                         APP_LOGW("GetMatchAbilityInfos %{public}s is disabled", abilityinfo.name.c_str());
@@ -986,6 +999,9 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         for (const Skill &skill : skillsPair->second) {
             if (skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
+                if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
+                    continue;
+                }
                 if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(
                     GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
                     if (!info.IsAbilityEnabled(abilityinfo, GetUserId(userId))) {
@@ -1024,8 +1040,8 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     if (requestUserId == Constants::INVALID_USERID) {
         return;
     }
-
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    bool isExist = false;
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
@@ -1033,7 +1049,8 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
             continue;
         }
         for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want)) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
+                isExist = true;
                 AbilityInfo abilityinfo = abilityInfoPair.second;
                 info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
                     responseUserId, abilityinfo.applicationInfo);
@@ -1042,6 +1059,65 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
             }
         }
     }
+    // add app detail ability
+    if (!isExist && info.GetBaseApplicationInfo().needAppDetail) {
+        std::string bundleName = info.GetBundleName();
+        APP_LOGD("bundleName: %{public}s add detail ability info.", bundleName.c_str());
+        std::string moduleName = "";
+        auto ability = info.FindAbilityInfo(bundleName, moduleName, Constants::APP_DETAIL_ABILITY, responseUserId);
+        if (!ability) {
+            APP_LOGE("bundleName: %{public}s can not find app detail ability.", bundleName.c_str());
+            return;
+        }
+        if (!info.GetIsNewVersion()) {
+            ability->applicationInfo.label = bundleName;
+        }
+        abilityInfos.emplace_back(*ability);
+    }
+}
+
+void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
+{
+    AbilityInfo appDetailAbility;
+    appDetailAbility.name = Constants::APP_DETAIL_ABILITY;
+    appDetailAbility.bundleName = info.GetBundleName();
+    std::vector<std::string> moduleNameVec;
+    info.GetModuleNames(moduleNameVec);
+    if (!moduleNameVec.empty()) {
+        appDetailAbility.moduleName = moduleNameVec[0];
+    } else {
+        APP_LOGE("AddAppDetailAbilityInfo error: %{public}s has no module.", appDetailAbility.bundleName.c_str());
+    }
+    appDetailAbility.enabled = true;
+    appDetailAbility.type = AbilityType::PAGE;
+    appDetailAbility.package = info.GetCurrentModulePackage();
+    appDetailAbility.isNativeAbility = true;
+
+    ApplicationInfo applicationInfo = info.GetBaseApplicationInfo();
+    appDetailAbility.applicationName = applicationInfo.name;
+    appDetailAbility.labelId = applicationInfo.labelId;
+    if (!info.GetIsNewVersion()) {
+        appDetailAbility.labelId = 0;
+    }
+    appDetailAbility.iconId = applicationInfo.iconId;
+    if ((appDetailAbility.iconId == 0) || !info.GetIsNewVersion()) {
+        APP_LOGD("AddAppDetailAbilityInfo appDetailAbility.iconId is 0.");
+        // get system resource icon Id
+        auto iter = bundleInfos_.find(GLOBAL_RESOURCE_BUNDLE_NAME);
+        if (iter != bundleInfos_.end()) {
+            APP_LOGD("AddAppDetailAbilityInfo get system resource iconId");
+            appDetailAbility.iconId = iter->second.GetBaseApplicationInfo().iconId;
+        } else {
+            APP_LOGE("AddAppDetailAbilityInfo error: ohos.global.systemres does not exist.");
+        }
+    }
+    // not show in the mission list
+    appDetailAbility.removeMissionAfterTerminate = true;
+
+    std::string keyName;
+    keyName.append(appDetailAbility.bundleName).append(".")
+        .append(appDetailAbility.package).append(".").append(appDetailAbility.name);
+    info.InsertAbilitiesInfo(keyName, appDetailAbility);
 }
 
 bool BundleDataMgr::QueryLauncherAbilityInfos(

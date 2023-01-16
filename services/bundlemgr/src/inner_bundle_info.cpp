@@ -240,13 +240,24 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
     }
 }
 
+bool Skill::StartsWith(const std::string &sourceString, const std::string &targetPrefix) const
+{
+    return sourceString.rfind(targetPrefix, 0) == 0;
+}
+
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
     if (skillUri.scheme.empty()) {
         return uriString.empty();
     }
     if (skillUri.host.empty()) {
-        return uriString == skillUri.scheme;
+        // config uri is : scheme
+        // belows are param uri matched conditions:
+        // 1.scheme
+        // 2.scheme:
+        // 3.scheme:/
+        // 4.scheme://
+        return uriString == skillUri.scheme || StartsWith(uriString, skillUri.scheme + PORT_SEPARATOR);
     }
     std::string skillUriString;
     skillUriString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
@@ -254,7 +265,21 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         skillUriString.append(PORT_SEPARATOR).append(skillUri.port);
     }
     if (skillUri.path.empty() && skillUri.pathStartWith.empty() && skillUri.pathRegex.empty()) {
-        return uriString == skillUriString;
+        // with port, config uri is : scheme://host:port
+        // belows are param uri matched conditions:
+        // 1.scheme://host:port
+        // 2.scheme://host:port/path
+
+        // without port, config uri is : scheme://host
+        // belows are param uri matched conditions:
+        // 1.scheme://host
+        // 2.scheme://host/path
+        // 3.scheme://host:port     scheme://host:port/path
+        bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
+        if (skillUri.port.empty()) {
+            ret |= StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+        }
+        return ret;
     }
     skillUriString.append(PATH_SEPARATOR);
     // if one of path, pathStartWith, pathRegex match, then match
@@ -270,16 +295,16 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // pathStartWith match
         std::string pathStartWithUri(skillUriString);
         pathStartWithUri.append(skillUri.pathStartWith);
-        if (uriString.find(pathStartWithUri) == 0) {
+        if (StartsWith(uriString, pathStartWithUri)) {
             return true;
         }
     }
     if (!skillUri.pathRegex.empty()) {
         // pathRegex match
-        std::string pathRegxUri(skillUriString);
-        pathRegxUri.append(skillUri.pathRegex);
+        std::string pathRegexUri(skillUriString);
+        pathRegexUri.append(skillUri.pathRegex);
         try {
-            std::regex regex(pathRegxUri);
+            std::regex regex(pathRegexUri);
             if (regex_match(uriString, regex)) {
                 return true;
             }
@@ -1518,6 +1543,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.metadata = it->second.metadata;
     bool first = false;
     for (auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         if (ability.first.find(key) != std::string::npos) {
             if (!first) {
                 hapInfo.deviceTypes = ability.second.deviceTypes;
@@ -1604,6 +1632,9 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(
     }
 
     for (const auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         auto abilityInfo = ability.second;
         if ((abilityInfo.bundleName == bundleName)) {
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
@@ -1742,9 +1773,50 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->vendor = applicationInfo.vendor;
     baseApplicationInfo_->appDistributionType = applicationInfo.appDistributionType;
     baseApplicationInfo_->appProvisionType = applicationInfo.appProvisionType;
-    baseApplicationInfo_->hideDesktopIcon = applicationInfo.hideDesktopIcon;
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
+    baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
+    baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     UpdatePrivilegeCapability(applicationInfo);
+    SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
+}
+
+void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
+{
+    bool isExistLauncherAbility = false;
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    for (const auto& abilityInfoPair : baseAbilityInfos_) {
+        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos_.end()) {
+            continue;
+        }
+        for (const Skill& skill : skillsPair->second) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
+                isExistLauncherAbility = true;
+                break;
+            }
+        }
+    }
+    if (isExistLauncherAbility) {
+        baseApplicationInfo_->needAppDetail = false;
+        baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+    }
+    for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+            if (!baseApplicationInfo_->needAppDetail) {
+                baseAbilityInfos_.erase(iter);
+                return;
+            }
+            if (isNewVersion_) {
+                iter->second.labelId = baseApplicationInfo_->labelId;
+                if (baseApplicationInfo_->iconId != 0) {
+                    iter->second.iconId = baseApplicationInfo_->iconId;
+                }
+            }
+            return;
+        }
+    }
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
@@ -2187,7 +2259,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
     }
     APP_LOGD("Get bundleInfo with abilities.");
     for (auto &ability : baseAbilityInfos_) {
-        if (ability.second.moduleName != hapModuleInfo.moduleName) {
+        if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
+            (ability.second.name == Constants::APP_DETAIL_ABILITY)) {
             continue;
         }
         bool isEnabled = IsAbilityEnabled(ability.second, userId);
@@ -2236,6 +2309,9 @@ void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleIn
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
         for (auto &ability : baseAbilityInfos_) {
+            if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+                continue;
+            }
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {

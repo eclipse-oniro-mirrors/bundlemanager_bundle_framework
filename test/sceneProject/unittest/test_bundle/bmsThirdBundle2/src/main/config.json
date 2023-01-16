@@ -1,0 +1,68 @@
+{
+    "app": {
+        "bundleName": "com.third.hiworld.example1",
+        "originalName": "com.third.hiworld.example",
+        "vendor": "example",
+        "version": {
+            "code": 1,
+            "name": "1.0"
+        },
+        "apiVersion": {
+            "compatible": 3,
+            "target": 3
+        }
+    },
+    "deviceConfig": {
+        "default": {
+            "keepAlive": true
+        }
+    },
+    "module": {
+        "package": "com.third.hiworld.example.h1",
+        "name": "bmsThirdBundle1",
+        "deviceType": [
+            "tablet",
+            "default",
+            "tv",
+            "car"
+        ],
+        "distro": {
+            "deliveryWithInstall": true,
+            "moduleName": "testability1",
+            "moduleType": "entry"
+        },
+        "abilities": [
+            {
+                "name": "bmsThirdBundle_A1",
+                "description": "himusic main ability",
+                "icon": "$media:ic_launcher",
+                "label": "bmsThirdBundle_A1 Ability",
+                "launchType": "standard",
+                "orientation": "unspecified",
+                "permissions": [],
+                "visible": true,
+                "directLaunch": false,
+                "configChanges": [
+                    "locale",
+                    "layout",
+                    "fontSize",
+                    "orientation"
+                ],
+                "type": "page",
+                "formsEnabled": false
+            }
+        ],
+        "js": [
+            {
+                "pages": [
+                    "pages/index/index"
+                ],
+                "name": "default",
+                "window": {
+                    "designWidth": 720,
+                    "autoDesignWidth": true
+                }
+            }
+        ]
+    }
+}

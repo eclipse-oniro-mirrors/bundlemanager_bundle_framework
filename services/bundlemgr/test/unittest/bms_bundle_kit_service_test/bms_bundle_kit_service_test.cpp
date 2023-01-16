@@ -606,21 +606,21 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutInfos.isStatic = true;
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
-    ShortcutIntent intent;
-    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutInfos.intents.push_back(intent);
+    ShortcutIntent shortcutIntent;
+    shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    shortcutInfos.intents.push_back(shortcutIntent);
     return shortcutInfos;
 }
 
 ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
 {
-    ShortcutIntent intent;
-    intent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
-    intent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
-    intent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    return intent;
+    ShortcutIntent shortcutIntent;
+    shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
+    shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
+    shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    return shortcutIntent;
 }
 
 ShortcutWant BmsBundleKitServiceTest::MockShortcutWant() const
@@ -1100,10 +1100,10 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isStatic, true);
         EXPECT_EQ(shortcutInfo.isHomeShortcut, true);
         EXPECT_EQ(shortcutInfo.isEnables, true);
-        for (auto &intent : shortcutInfo.intents) {
-            EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
-            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
-            EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+        for (auto &shortcutIntent : shortcutInfo.intents) {
+            EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+            EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
 }
@@ -1139,10 +1139,10 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
         EXPECT_EQ(shortcutInfo.isStatic, true);
         EXPECT_EQ(shortcutInfo.isHomeShortcut, true);
         EXPECT_EQ(shortcutInfo.isEnables, true);
-        for (auto &intent : shortcutInfo.intents) {
-            EXPECT_EQ(intent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
-            EXPECT_EQ(intent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
-            EXPECT_EQ(intent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+        for (auto &shortcutIntent : shortcutInfo.intents) {
+            EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
+            EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
+            EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
         }
     }
 }
@@ -5447,7 +5447,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_004, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_001);
+    want.SetUri(SCHEME_001 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
 }
@@ -5465,7 +5465,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_005, Function | SmallTes
     skillUri.scheme = SCHEME_001;
     skill.uris.emplace_back(skillUri);
     Want want;
-    want.SetUri(SCHEME_002);
+    want.SetUri(SCHEME_002 + SCHEME_SEPARATOR);
     bool ret = skill.Match(want);
     EXPECT_EQ(false, ret);
 }
@@ -5552,6 +5552,135 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriAndType_009, Function | SmallTes
     want.SetUri(URI_PATH_001);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme, param has "scheme://" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(HOST_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_002 + SCHEME_SEPARATOR;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host, param has "scheme://host" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_002, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PATH_SEPARATOR + PATH_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test
+ * @tc.desc: config only has scheme and host and port,
+ * param has "scheme://host:port" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skill.uris.emplace_back(skillUri);
+    // success testCase
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_002;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_002 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
+
+    uri = SCHEME_002 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(false, ret);
 }
 
 /**
@@ -8118,9 +8247,9 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_001, Function | SmallT
  */
 HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallTest | Level1)
 {
-    ShortcutIntent intent = MockShortcutIntent();
+    ShortcutIntent shortcutIntent = MockShortcutIntent();
     nlohmann::json jsonObj;
-    to_json(jsonObj, intent);
+    to_json(jsonObj, shortcutIntent);
     ShortcutIntent result;
     from_json(jsonObj, result);
     EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
@@ -9045,5 +9174,210 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllBundleInfos_0100, Function | SmallTest |
     EXPECT_EQ(testRet, true);
     ErrCode testRet1 = GetBundleDataMgr()->GetAllBundleInfosV9(flags, bundleInfos);
     EXPECT_EQ(testRet1, ERR_OK);
+}
+
+/**
+ * @tc.number: SetHideDesktopIcon_0001
+ * @tc.name: test can SetHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.SetHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetHideDesktopIcon_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = false;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    innerBundleInfo.baseApplicationInfo_->appDetailAbilityLibraryPath = "path";
+    innerBundleInfo.SetHideDesktopIcon(true);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().appDetailAbilityLibraryPath.empty());
+}
+
+/**
+ * @tc.number: SetHideDesktopIcon_0002
+ * @tc.name: test can SetHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.SetHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetHideDesktopIcon_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = false;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    innerBundleInfo.baseApplicationInfo_->appDetailAbilityLibraryPath = "path";
+    innerBundleInfo.SetHideDesktopIcon(false);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().appDetailAbilityLibraryPath.empty());
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0001
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = true;
+    std::string keyName = Constants::APP_DETAIL_ABILITY;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0002
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = false;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0003
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0003, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0004
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0004, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0005
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0005, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::DATA;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0006
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0006, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    Skill skill {{ACTION}, {ENTITY}};
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0007
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0007, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: UpdateAppDetailAbilityAttrs_0008
+ * @tc.name: test can UpdateAppDetailAbilityAttrs
+ * @tc.desc: 1.system run normally
+ *           2.UpdateAppDetailAbilityAttrs
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    AbilityInfo abilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(ABILITY_NAME, abilityInfo);
+
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+
+    innerBundleInfo.SetIsNewVersion(true);
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+
+    innerBundleInfo.baseApplicationInfo_->iconId = 1;
+    innerBundleInfo.UpdateAppDetailAbilityAttrs();
+    EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
+    EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
 }
 }

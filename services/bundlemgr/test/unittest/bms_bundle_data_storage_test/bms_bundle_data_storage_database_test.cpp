@@ -159,7 +159,9 @@ protected:
                         "associatedWakeUp": false,
                         "hideDesktopIcon": false,
                         "formVisibleNotify": false,
-                        "allowCommonEvent": []
+                        "allowCommonEvent": [],
+                        "needAppDetail": false,
+                        "appDetailAbilityLibraryPath": ""
                     },
                     "extensionAbilityType": 9,
                     "priority": 0,
@@ -499,7 +501,9 @@ protected:
                 "associatedWakeUp": false,
                 "hideDesktopIcon": false,
                 "formVisibleNotify": false,
-                "allowCommonEvent": []
+                "allowCommonEvent": [],
+                "needAppDetail": false,
+                "appDetailAbilityLibraryPath": ""
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -610,7 +614,9 @@ protected:
                     "associatedWakeUp": false,
                     "hideDesktopIcon": false,
                     "formVisibleNotify": false,
-                    "allowCommonEvent": []
+                    "allowCommonEvent": [],
+                    "needAppDetail": false,
+                    "appDetailAbilityLibraryPath": ""
                 },
                 "compatibleVersion": 8,
                 "cpuAbi": "",
@@ -1281,7 +1287,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0200, Function | Smal
     EXPECT_EQ(ret, true);
 
     std::string type = "text/xml";
-    std::string uri = "uriString";
+    std::string uri = "uriString://";
     want.SetUri(uri);
     want.SetType(type);
     ret = skill.Match(want);
