@@ -1936,7 +1936,7 @@ bool ToInnerBundleInfo(
 
         if (transformParam.isPreInstallApp && !applicationInfo.isLauncherApp) {
             for (const auto &skill : extension.skills) {
-                bool isEntryAction = std::find(skill.actions.cbegin(), skill.actions.cend(),
+                bool isEntryAction = std::find_if(skill.actions.cbegin(), skill.actions.cend(),
                     entryActionMatcher) != skill.actions.cend();
                 bool isEntryEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
                     Constants::INTENT_ENTITY_HOME) != skill.entities.cend();
