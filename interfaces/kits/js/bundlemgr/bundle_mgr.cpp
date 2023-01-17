@@ -6134,8 +6134,8 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
     }
     auto complete = []
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            task.RejectWithCustomize(engine, CreateJsError(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
-                CreateJsValue(engine, UNSUPPORTED_FEATURE_MESSAGE.c_str())));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
+                CreateJsValue(engine, UNSUPPORTED_FEATURE_MESSAGE.c_str()));
         };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityIcon",
