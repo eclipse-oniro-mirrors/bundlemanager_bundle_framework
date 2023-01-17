@@ -142,8 +142,11 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     configs += [ "../../../../../services/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
     external_deps += [ "relational_store:native_rdb" ]
-    sources -=
-        [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
+    if (bundle_framework_quick_fix) {
+      sources -= [
+        "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp",
+      ]
+    }
     sources += [
       "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
       "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
@@ -285,8 +288,11 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     configs += [ "../../../../../services/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
     external_deps += [ "relational_store:native_rdb" ]
-    sources -=
-        [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
+    if (bundle_framework_quick_fix) {
+      sources -= [
+        "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp",
+      ]
+    }
     sources += [
       "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
       "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
