@@ -15,6 +15,7 @@
 
 #include "inner_bundle_info.h"
 
+#include <algorithm>
 #include <deque>
 #include <regex>
 
@@ -171,8 +172,20 @@ bool Skill::MatchAction(const std::string &action) const
     if (action.empty()) {
         return true;
     }
+    auto actionMatcher = [action] (const std::string &configAction) {
+        if (action == configAction) {
+            return true;
+        }
+        if (action == Constants::INTENT_ACTION_HOME && configAction == Constants::WANT_ACTION_HOME) {
+            return true;
+        }
+        if (action == Constants::WANT_ACTION_HOME && configAction == Constants::INTENT_ACTION_HOME) {
+            return true;
+        }
+        return false;
+    };
     // config actions not empty, param not empty, if config actions contains param action, match
-    return std::find(actions.cbegin(), actions.cend(), action) != actions.cend();
+    return std::find_if(actions.cbegin(), actions.cend(), actionMatcher) != actions.cend();
 }
 
 bool Skill::MatchEntities(const std::vector<std::string> &paramEntities) const

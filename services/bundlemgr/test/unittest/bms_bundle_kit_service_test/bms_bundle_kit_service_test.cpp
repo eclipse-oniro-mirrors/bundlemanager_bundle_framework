@@ -5671,6 +5671,27 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest
 }
 
 /**
+ * @tc.number: skill match rules
+ * @tc.name: action match test
+ * @tc.desc: "action.system.home" is equal to "ohos.want.action.home"
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(Constants::INTENT_ACTION_HOME);
+    Want want;
+    want.SetAction(Constants::WANT_ACTION_HOME);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    skill.actions.clear();
+    skill.actions.emplace_back(Constants::WANT_ACTION_HOME);
+    want.SetAction(Constants::INTENT_ACTION_HOME);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+}
+
+/**
  * @tc.number: GetAlldependentModuleNames
  * @tc.name: no dependencies
  * @tc.desc: expect true

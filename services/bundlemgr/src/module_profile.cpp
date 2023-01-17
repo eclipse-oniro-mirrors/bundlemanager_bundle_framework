@@ -15,6 +15,7 @@
 
 #include "module_profile.h"
 
+#include <algorithm>
 #include <sstream>
 
 #include "app_log_wrapper.h"
@@ -1872,6 +1873,9 @@ bool ToInnerBundleInfo(
     ToBundleInfo(applicationInfo, innerModuleInfo, transformParam, bundleInfo);
 
     // handle abilities
+    auto entryActionMatcher = [] (const std::string &action) {
+        return action == Constants::INTENT_ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+    };
     bool findEntry = false;
     for (const Profile::Ability &ability : moduleJson.module.abilities) {
         AbilityInfo abilityInfo;
@@ -1894,8 +1898,8 @@ bool ToInnerBundleInfo(
         }
         // get entry ability
         for (const auto &skill : ability.skills) {
-            bool isEntryAction = std::find(skill.actions.begin(), skill.actions.end(),
-                Constants::INTENT_ACTION_HOME) != skill.actions.end();
+            bool isEntryAction = std::find_if(skill.actions.begin(), skill.actions.end(),
+                entryActionMatcher) != skill.actions.end();
             bool isEntryEntity = std::find(skill.entities.begin(), skill.entities.end(),
                 Constants::INTENT_ENTITY_HOME) != skill.entities.end();
             if (isEntryAction && isEntryEntity) {
@@ -1933,7 +1937,7 @@ bool ToInnerBundleInfo(
         if (transformParam.isPreInstallApp && !applicationInfo.isLauncherApp) {
             for (const auto &skill : extension.skills) {
                 bool isEntryAction = std::find(skill.actions.cbegin(), skill.actions.cend(),
-                    Constants::INTENT_ACTION_HOME) != skill.actions.cend();
+                    entryActionMatcher) != skill.actions.cend();
                 bool isEntryEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
                     Constants::INTENT_ENTITY_HOME) != skill.entities.cend();
                 bool isLauncherEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),

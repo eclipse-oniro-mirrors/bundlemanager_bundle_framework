@@ -171,6 +171,7 @@ enum class AppType {
 };
 
 constexpr const char* INTENT_ACTION_HOME = "action.system.home";
+constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
 constexpr const char* INTENT_ENTITY_HOME = "entity.system.home";
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 
