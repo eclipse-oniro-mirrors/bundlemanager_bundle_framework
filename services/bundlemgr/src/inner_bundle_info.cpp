@@ -1800,9 +1800,8 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
             }
             if (isNewVersion_) {
                 iter->second.labelId = baseApplicationInfo_->labelId;
-                if (baseApplicationInfo_->iconId != 0) {
-                    iter->second.iconId = baseApplicationInfo_->iconId;
-                }
+                iter->second.iconId =
+                    (baseApplicationInfo_->iconId == 0) ? iter->second.iconId : baseApplicationInfo_->iconId;
             }
             return;
         }
