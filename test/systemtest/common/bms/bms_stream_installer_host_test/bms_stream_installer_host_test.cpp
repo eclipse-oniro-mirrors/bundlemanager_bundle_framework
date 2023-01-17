@@ -254,5 +254,5 @@ HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_004, TestSize.Level1)
     auto result = userMgrHost_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, NO_ERROR);
 }
-}  // namespace AppExecFwk
-}  // namespace OHOS
+} // namespace AppExecFwk
+} // namespace OHOS
