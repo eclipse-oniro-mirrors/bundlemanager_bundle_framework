@@ -1901,7 +1901,7 @@ bool ToInnerBundleInfo(
             bool isEntryAction = std::find_if(skill.actions.begin(), skill.actions.end(),
                 entryActionMatcher) != skill.actions.end();
             bool isEntryEntity = std::find(skill.entities.begin(), skill.entities.end(),
-                Constants::INTENT_ENTITY_HOME) != skill.entities.end();
+                Constants::ENTITY_HOME) != skill.entities.end();
             if (isEntryAction && isEntryEntity) {
                 innerModuleInfo.entryAbilityKey = key;
                 innerModuleInfo.label = ability.label;
@@ -1939,7 +1939,7 @@ bool ToInnerBundleInfo(
                 bool isEntryAction = std::find_if(skill.actions.cbegin(), skill.actions.cend(),
                     entryActionMatcher) != skill.actions.cend();
                 bool isEntryEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
-                    Constants::INTENT_ENTITY_HOME) != skill.entities.cend();
+                    Constants::ENTITY_HOME) != skill.entities.cend();
                 bool isLauncherEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
                     Constants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.cend();
                 if (isEntryAction && isEntryEntity && isLauncherEntity) {

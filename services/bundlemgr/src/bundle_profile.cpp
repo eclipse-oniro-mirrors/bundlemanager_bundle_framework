@@ -2458,7 +2458,7 @@ bool ToInnerBundleInfo(
                 bool isEntryAction = std::find_if(skill.actions.begin(), skill.actions.end(),
                     entryActionMatcher) != skill.actions.end();
                 bool isEntryEntity = std::find(skill.entities.begin(), skill.entities.end(),
-                    Constants::INTENT_ENTITY_HOME) != skill.entities.end();
+                    Constants::ENTITY_HOME) != skill.entities.end();
                 if (isEntryAction && isEntryEntity && (!find)) {
                     innerModuleInfo.entryAbilityKey = keyName;
                     // if there is main ability, it's label will be the application's label

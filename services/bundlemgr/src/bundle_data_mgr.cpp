@@ -2045,7 +2045,7 @@ ErrCode BundleDataMgr::GetLaunchWantForBundle(
 
     want.SetElementName("", bundleName, mainAbility);
     want.SetAction(Constants::ACTION_HOME);
-    want.AddEntity(Constants::INTENT_ENTITY_HOME);
+    want.AddEntity(Constants::ENTITY_HOME);
     return ERR_OK;
 }
 
