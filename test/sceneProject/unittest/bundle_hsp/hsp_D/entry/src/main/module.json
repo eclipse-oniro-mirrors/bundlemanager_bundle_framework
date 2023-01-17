@@ -41,7 +41,7 @@
         "name": "hsp_D",
         "pages": "$profile:main_pages",
         "srcEntrance": "./ets/Application/AbilityStage.ts",
-        "type": "shared",
+        "type": "feature",
         "uiSyntax": "ets",
         "virtualMachine": "ark"
     }
