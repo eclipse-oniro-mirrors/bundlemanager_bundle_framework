@@ -180,12 +180,12 @@ constexpr const char* LIB_FOLDER_NAME = "libs";
 constexpr const char* RES_FOLDER_NAME = "resources";
 
 constexpr uint8_t MAX_LABLE_LEN = 30;
-constexpr uint8_t MAX_BUNDLE_NAME = 255;
+constexpr uint8_t MAX_BUNDLE_NAME = 127;
 constexpr uint8_t MIN_BUNDLE_NAME = 7;
 constexpr uint8_t MAX_VENDOR = 255;
 constexpr uint8_t EQUAL_ZERO = 0;
 constexpr uint8_t MAX_MODULE_PACKAGE = 127;
-constexpr uint8_t MAX_MODULE_NAME = 255;
+constexpr uint8_t MAX_MODULE_NAME = 31;
 constexpr uint8_t MAX_MODULE_ABILITIES_READPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_ABILITIES_WRITEPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
@@ -297,6 +297,12 @@ constexpr const char* RELATIVE_PATH = "../";
 
 // app detail ability
 constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
+
+// overlay installation
+constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
+constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
+constexpr const char* OVERLAY_REMOVED_ACTION = "usual.event.OVERLAY_PACKAGE_REMOVED";
+constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
