@@ -150,6 +150,11 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
         APP_LOGE("extractor init failed");
         return false;
     }
+    if ((extractParam.extractFileType == ExtractFileType::AP) &&
+        !extractor.IsDirExist(Constants::AP)) {
+        APP_LOGD("hap has no ap files and does not need to be extracted.");
+        return true;
+    }
 
     std::vector<std::string> entryNames;
     if (!extractor.GetZipFileNames(entryNames) || entryNames.empty()) {
@@ -187,15 +192,26 @@ bool InstalldOperator::IsNativeFile(
     }
     std::string prefix;
     std::vector<std::string> suffixs;
-    if (extractParam.extractFileType == ExtractFileType::SO) {
-        prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-        suffixs.emplace_back(Constants::SO_SUFFIX);
-    } else if (extractParam.extractFileType == ExtractFileType::AN) {
-        prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-        suffixs.emplace_back(Constants::AN_SUFFIX);
-        suffixs.emplace_back(Constants::AI_SUFFIX);
-    } else {
-        return false;
+    switch (extractParam.extractFileType) {
+        case ExtractFileType::SO: {
+            prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
+            suffixs.emplace_back(Constants::SO_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AN: {
+            prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
+            suffixs.emplace_back(Constants::AN_SUFFIX);
+            suffixs.emplace_back(Constants::AI_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AP: {
+            prefix = Constants::AP;
+            suffixs.emplace_back(Constants::AP_SUFFIX);
+            break;
+        }
+        default: {
+            return false;
+        }
     }
 
     if (entryName.find(prefix) == std::string::npos) {
@@ -275,12 +291,22 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
 
     std::string prefix;
-    if (extractFileType == ExtractFileType::SO) {
-        prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-    } else if (extractFileType == ExtractFileType::AN) {
-        prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
-    } else {
-        return;
+    switch (extractFileType) {
+        case ExtractFileType::SO: {
+            prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AN: {
+            prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AP: {
+            prefix = Constants::AP;
+            break;
+        }
+        default: {
+            return;
+        }
     }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = targetPath;
@@ -294,6 +320,14 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         return;
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (extractFileType == ExtractFileType::AP) {
+        struct stat buf = {};
+        if (stat(targetPath.c_str(), &buf) != 0) {
+            return;
+        }
+        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
+        mode = S_IRUSR | S_IWUSR;
+    }
     if (!OHOS::ChangeModeFile(path, mode)) {
         return;
     }
