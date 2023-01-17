@@ -2413,7 +2413,7 @@ bool ToInnerBundleInfo(
         }
     }
     auto entryActionMatcher = [] (const std::string &action) {
-        return action == Constants::INTENT_ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+        return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
     };
     bool find = false;
     bool isExistPageAbility = false;

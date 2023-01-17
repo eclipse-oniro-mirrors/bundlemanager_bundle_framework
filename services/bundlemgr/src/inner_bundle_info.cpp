@@ -176,10 +176,10 @@ bool Skill::MatchAction(const std::string &action) const
         if (action == configAction) {
             return true;
         }
-        if (action == Constants::INTENT_ACTION_HOME && configAction == Constants::WANT_ACTION_HOME) {
+        if (action == Constants::ACTION_HOME && configAction == Constants::WANT_ACTION_HOME) {
             return true;
         }
-        if (action == Constants::WANT_ACTION_HOME && configAction == Constants::INTENT_ACTION_HOME) {
+        if (action == Constants::WANT_ACTION_HOME && configAction == Constants::ACTION_HOME) {
             return true;
         }
         return false;

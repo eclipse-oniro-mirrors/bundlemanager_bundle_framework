@@ -1874,7 +1874,7 @@ bool ToInnerBundleInfo(
 
     // handle abilities
     auto entryActionMatcher = [] (const std::string &action) {
-        return action == Constants::INTENT_ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+        return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
     };
     bool findEntry = false;
     for (const Profile::Ability &ability : moduleJson.module.abilities) {
