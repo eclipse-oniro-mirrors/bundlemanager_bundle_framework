@@ -372,6 +372,30 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get bundle info for self");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleInfoForSelf due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleInfoForSelf due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetBundleInfoForSelf from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {

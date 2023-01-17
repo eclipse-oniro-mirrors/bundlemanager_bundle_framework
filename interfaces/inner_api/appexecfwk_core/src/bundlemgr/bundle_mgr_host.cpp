@@ -207,6 +207,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
 #endif
     funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
+    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, &BundleMgrHost::HandleGetBundleInfoForSelf);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -378,6 +379,25 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(MessageParcel &data, MessageParcel &r
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInfoForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t flags = data.ReadInt32();
+    APP_LOGD("GetBundleInfoForSelf, flags %{public}d", flags);
+    BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    auto ret = GetBundleInfoForSelf(flags, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
