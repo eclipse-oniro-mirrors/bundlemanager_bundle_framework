@@ -58,12 +58,6 @@ group("unittest") {
       "unittest/bms_bundle_manager_test:unittest",
       "unittest/bms_bundle_parser_test:unittest",
       "unittest/bms_bundle_permission_grant_test:unittest",
-      "unittest/bms_bundle_quick_fix_boot_scanner_test:unittest",
-      "unittest/bms_bundle_quick_fix_deleter_test:unittest",
-      "unittest/bms_bundle_quick_fix_manager_test:unittest",
-      "unittest/bms_bundle_quick_fix_query_test:unittest",
-      "unittest/bms_bundle_quick_fix_switcher_test:unittest",
-      "unittest/bms_bundle_quick_fix_test:unittest",
       "unittest/bms_bundle_resource_manager_test:unittest",
       "unittest/bms_bundle_sandbox_app_test:unittest",
       "unittest/bms_bundle_uninstaller_test:unittest",
@@ -78,6 +72,16 @@ group("unittest") {
     ]
     if (bundle_framework_default_app) {
       deps += [ "unittest/bms_bundle_default_app_test:unittest" ]
+    }
+    if (bundle_framework_quick_fix) {
+      deps += [
+        "unittest/bms_bundle_quick_fix_boot_scanner_test:unittest",
+        "unittest/bms_bundle_quick_fix_deleter_test:unittest",
+        "unittest/bms_bundle_quick_fix_manager_test:unittest",
+        "unittest/bms_bundle_quick_fix_query_test:unittest",
+        "unittest/bms_bundle_quick_fix_switcher_test:unittest",
+        "unittest/bms_bundle_quick_fix_test:unittest",
+      ]
     }
   }
 }
