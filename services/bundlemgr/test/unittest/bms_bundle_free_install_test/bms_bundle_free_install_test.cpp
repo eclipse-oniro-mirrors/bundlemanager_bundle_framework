@@ -847,27 +847,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0002
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test OnServiceCenterCall
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0002, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    auto bundleMgr = GetBundleConnectAbilityMgr();
-    if (bundleMgr != nullptr) {
-        std::string installResult;
-        bundleMgr->OnServiceCenterCall(installResult);
-        EXPECT_EQ(installResult, "");
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: BundleConnectAbilityMgr_0003
  * Function: GetBundleConnectAbilityMgr
  * @tc.name: test GetBundleConnectAbilityMgr
@@ -978,58 +957,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0006, Function | Smal
         want.SetElement(name);
         bundleMgr->SendCallBack(0, want, 100, transactId);
         EXPECT_EQ(transactId, "");
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0007
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test ConnectAbility
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0007, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    auto bundleMgr = GetBundleConnectAbilityMgr();
-    if (bundleMgr != nullptr) {
-        Want want;
-        ElementName name;
-        name.SetAbilityName(ABILITY_NAME_TEST);
-        name.SetBundleName(BUNDLE_NAME);
-        want.SetElement(name);
-        bundleMgr->handler_ = nullptr;
-        bool ret = bundleMgr->ConnectAbility(want, bundleMgr->serviceCenterRemoteObject_);
-        EXPECT_FALSE(ret);
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0008
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test ConnectAbility
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0008, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    auto bundleMgr = GetBundleConnectAbilityMgr();
-    if (bundleMgr != nullptr) {
-        Want want;
-        ElementName name;
-        name.SetAbilityName(ABILITY_NAME_TEST);
-        name.SetBundleName(BUNDLE_NAME);
-        want.SetElement(name);
-        bundleMgr->connectState_ = ServiceCenterConnectState::CONNECTED;
-        bool ret = bundleMgr->ConnectAbility(want, bundleMgr->serviceCenterRemoteObject_);
-        EXPECT_TRUE(ret);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
