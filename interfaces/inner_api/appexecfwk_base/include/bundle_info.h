@@ -82,6 +82,14 @@ struct SignatureInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static SignatureInfo *Unmarshalling(Parcel &parcel);
 };
+
+// overlay installation type definition
+enum OverlayType : int32_t {
+    OVERLAY_INTERNAL_BUNDLE = 1,
+    OVERLAY_EXTERNAL_BUNDLE,
+    NON_OVERLAY_TYPE,
+};
+
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     std::string name;
@@ -138,6 +146,7 @@ struct BundleInfo : public Parcelable {
     int32_t minSdkVersion = -1;
     int32_t maxSdkVersion = -1;
     bool isDifferentName = false;
+    int32_t overlayType = NON_OVERLAY_TYPE;
 
     SignatureInfo signatureInfo;
 
