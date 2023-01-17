@@ -2970,7 +2970,7 @@ int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
     }
 
     if (requestUserId < Constants::START_USERID) {
-        APP_LOGE("requestUserId(%{public}d) less than start userId.", requestUserId);
+        APP_LOGD("requestUserId(%{public}d) less than start userId.", requestUserId);
         return Constants::INVALID_USERID;
     }
 

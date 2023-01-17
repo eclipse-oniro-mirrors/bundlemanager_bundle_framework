@@ -233,7 +233,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &ability
 
 ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const
 {
-    APP_LOGI("GetInnerBundleInfoByUid with uid is %{public}d", uid);
+    APP_LOGD("GetInnerBundleInfoByUid with uid is %{public}d", uid);
     int32_t userId = BundleUtil::GetUserIdByUid(uid);
     APP_LOGD("GetInnerBundleInfoByUid with userId is %{public}d", userId);
     if (userId == Constants::UNSPECIFIED_USERID || userId == Constants::INVALID_USERID) {

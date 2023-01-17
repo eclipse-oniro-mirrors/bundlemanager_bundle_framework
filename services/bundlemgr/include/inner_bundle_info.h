@@ -480,7 +480,7 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find userId %{public}d when GetApplicationEnabled", userId);
+            APP_LOGD("can not find userId %{public}d when GetApplicationEnabled", userId);
             return false;
         }
 
@@ -490,7 +490,7 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
+            APP_LOGD("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
@@ -571,7 +571,7 @@ public:
      */
     std::optional<AbilityInfo> FindAbilityInfoByUri(const std::string &abilityUri) const
     {
-        APP_LOGI("Uri is %{public}s", abilityUri.c_str());
+        APP_LOGD("Uri is %{public}s", abilityUri.c_str());
         for (const auto &ability : baseAbilityInfos_) {
             auto abilityInfo = ability.second;
             if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
@@ -579,7 +579,7 @@ public:
             }
 
             auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-            APP_LOGI("configUri is %{public}s", configUri.c_str());
+            APP_LOGD("configUri is %{public}s", configUri.c_str());
             if (configUri == abilityUri) {
                 return abilityInfo;
             }

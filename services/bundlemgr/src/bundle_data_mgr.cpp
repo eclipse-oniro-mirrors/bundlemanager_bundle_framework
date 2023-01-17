@@ -1196,7 +1196,6 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
     } else {
         uri = noPpefixUri.substr(posFirstSeparator + 1, posSecondSeparator - posFirstSeparator - 1);
     }
-
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
@@ -1707,14 +1706,12 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
 bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) const
 {
     InnerBundleInfo innerBundleInfo;
+    APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s", uid, bundleName.c_str());
     if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-        APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
         if (sandboxAppHelper_ == nullptr) {
-            APP_LOGE("sandboxAppHelper_ is nullptr");
             return false;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            APP_LOGE("get innerBundleInfo by uid failed.");
             return false;
         }
     }
