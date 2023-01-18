@@ -82,6 +82,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "samgr:samgr_proxy",
   ]
 
+  defines = []
   if (account_enable) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
