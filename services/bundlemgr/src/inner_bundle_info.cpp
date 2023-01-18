@@ -290,7 +290,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 3.scheme://host:port     scheme://host:port/path
         bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
         if (skillUri.port.empty()) {
-            ret |= StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+            ret = ret || StartsWith(uriString, skillUriString + PORT_SEPARATOR);
         }
         return ret;
     }
