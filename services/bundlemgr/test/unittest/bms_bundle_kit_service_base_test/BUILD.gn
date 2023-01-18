@@ -20,7 +20,10 @@ module_output_path = "bundle_framework/bundlemgrservice"
 ohos_unittest("BmsBundleKitServiceBaseTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = [
+    "//third_party/jsoncpp/include",
+    "../../../../../../../deviceprofile/device_info_manager/interfaces/innerkits/core/include/distributed_device_profile_client.h",
+  ]
   sources = [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bms_param.cpp",
