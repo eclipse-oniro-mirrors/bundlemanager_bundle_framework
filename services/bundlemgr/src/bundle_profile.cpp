@@ -15,6 +15,7 @@
 
 #include "bundle_profile.h"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -2411,6 +2412,9 @@ bool ToInnerBundleInfo(
             innerBundleInfo.InsertCommonEvents(commonEventKey, commonEvent);
         }
     }
+    auto entryActionMatcher = [] (const std::string &action) {
+        return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+    };
     bool find = false;
     bool isExistPageAbility = false;
     for (const auto &ability : configJson.module.abilities) {
@@ -2451,11 +2455,11 @@ bool ToInnerBundleInfo(
         innerBundleInfo.InsertFormInfos(keyName, formInfos);
         if (!find) {
             for (const auto &skill : ability.skills) {
-                if (std::find(skill.actions.begin(), skill.actions.end(), Constants::INTENT_ACTION_HOME) !=
-                        skill.actions.end() &&
-                        std::find(skill.entities.begin(), skill.entities.end(), Constants::INTENT_ENTITY_HOME) !=
-                        skill.entities.end() &&
-                    (!find)) {
+                bool isEntryAction = std::find_if(skill.actions.begin(), skill.actions.end(),
+                    entryActionMatcher) != skill.actions.end();
+                bool isEntryEntity = std::find(skill.entities.begin(), skill.entities.end(),
+                    Constants::ENTITY_HOME) != skill.entities.end();
+                if (isEntryAction && isEntryEntity && (!find)) {
                     innerModuleInfo.entryAbilityKey = keyName;
                     // if there is main ability, it's label will be the application's label
                     applicationInfo.label = ability.label;
