@@ -308,7 +308,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                 continue;
             }
 
-            std::string bundleName = 
+            std::string bundleName =
                 dependency.bundleName.empty() ? info.second.GetBundleName() : dependency.bundleName;
             isModuleExist = FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos);
             if (!isModuleExist) {
