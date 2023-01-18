@@ -145,7 +145,6 @@ constexpr const char* BUNDLE_MODULE_META_KEY_EXTRA = "extra";
 // sub BUNDLE_MODULE_PROFILE_KEY_DISTRO_TYPE
 constexpr const char* MODULE_DISTRO_MODULE_TYPE_VALUE_ENTRY = "entry";
 constexpr const char* MODULE_DISTRO_MODULE_TYPE_VALUE_FEATURE = "feature";
-constexpr const char* MODULE_DISTRO_MODULE_TYPE_VALUE_HAR = "har";
 // sub BUNDLE_MODULE_PROFILE_KEY_ABILITIES
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ICON = "icon";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ICON_ID = "iconId";
@@ -361,7 +360,6 @@ constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
-constexpr const char* MODULE_TYPE_HAR = "har";
 constexpr const char* MODULE_TYPE_SHARED = "shared";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
