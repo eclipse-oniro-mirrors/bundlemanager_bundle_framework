@@ -3724,7 +3724,7 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDataMgr_0100, Function | SmallTest | Lev
 /**
  * @tc.number: AddHqfInfo_0100
  * @tc.name: test AddHqfInfo
- * @tc.desc: AddHqfInfo
+ * @tc.desc: AddHqfInfo return false
  */
 HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0100, Function | SmallTest | Level0)
 {
@@ -3737,7 +3737,7 @@ HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0100, Function | SmallTest | Level0)
 /**
  * @tc.number: AddHqfInfo_0200
  * @tc.name: test AddHqfInfo
- * @tc.desc: AddHqfInfo
+ * @tc.desc: AddHqfInfo return true
  */
 HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0200, Function | SmallTest | Level0)
 {
@@ -3753,7 +3753,7 @@ HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0200, Function | SmallTest | Level0)
 /**
  * @tc.number: AddHqfInfo_0300
  * @tc.name: test AddHqfInfo
- * @tc.desc: AddHqfInfo
+ * @tc.desc: AddHqfInfo return true
  */
 HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0300, Function | SmallTest | Level0)
 {
@@ -3770,7 +3770,7 @@ HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0300, Function | SmallTest | Level0)
 /**
  * @tc.number:RemoveHqfInfo_0100
  * @tc.name: test RemoveHqfInfo
- * @tc.desc: RemoveHqfInfo
+ * @tc.desc: RemoveHqfInfo return true
  */
 HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0100, Function | SmallTest | Level0)
 {
@@ -3787,7 +3787,7 @@ HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0100, Function | SmallTest | Level
 /**
  * @tc.number:RemoveHqfInfo_0200
  * @tc.name: test RemoveHqfInfo
- * @tc.desc: RemoveHqfInfo
+ * @tc.desc: RemoveHqfInfo return false
  */
 HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0200, Function | SmallTest | Level0)
 {
@@ -3801,7 +3801,7 @@ HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0200, Function | SmallTest | Level
 /**
  * @tc.number:RemoveHqfInfo_0300
  * @tc.name: test RemoveHqfInfo
- * @tc.desc: RemoveHqfInfo
+ * @tc.desc: RemoveHqfInfo return false
  */
 HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0300, Function | SmallTest | Level0)
 {
@@ -3824,7 +3824,7 @@ HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFix_0100, Function | SmallTest | Leve
 /**
  * @tc.number: GetQuickFixMark_0100
  * @tc.name: test GetQuickFixMark
- * @tc.desc: GetQuickFixMark
+ * @tc.desc: GetQuickFixMark return bundleName
  */
 HWTEST_F(BmsBundleQuickFixTest, GetQuickFixMark_0100, Function | SmallTest | Level0)
 {
@@ -3839,7 +3839,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetQuickFixMark_0100, Function | SmallTest | Lev
 /**
  * @tc.number: GetQuickFixMark_0200
  * @tc.name: test GetQuickFixMark
- * @tc.desc: GetQuickFixMark
+ * @tc.desc: GetQuickFixMark return bundleName is null string
  */
 HWTEST_F(BmsBundleQuickFixTest, GetQuickFixMark_0200, Function | SmallTest | Level0)
 {
@@ -3852,7 +3852,7 @@ HWTEST_F(BmsBundleQuickFixTest, GetQuickFixMark_0200, Function | SmallTest | Lev
 /**
  * @tc.number: ToString_0100
  * @tc.name: test ToString
- * @tc.desc: ToString
+ * @tc.desc: ToString return string
  */
 HWTEST_F(BmsBundleQuickFixTest, ToString_0100, Function | SmallTest | Level0)
 {
@@ -3876,17 +3876,16 @@ HWTEST_F(BmsBundleQuickFixTest, ToJson_0100, Function | SmallTest | Level0)
 /**
  * @tc.number: FromJson_0100
  * @tc.name: test FromJson
- * @tc.desc: Parse json to C++
+ * @tc.desc: Parse json to C++ return ERR_OK
  */
 HWTEST_F(BmsBundleQuickFixTest, FromJson_0100, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
-    nlohmann::json jsonObject = R"(
-        {
-            "appQuickFix" : {},
-            "quickFixMark" : {}
-        }
-    )"_json;
+    nlohmann::json jsonObject =  nlohmann::json {
+        {Constants::BUNDLE_NAME, "com.example.MyApplication1"},
+        {"versionCode", 0},
+        {"versionName", "versionName"}
+    };
     auto ret = innerAppQuickFix.FromJson(jsonObject);
     EXPECT_EQ(ret, ERR_OK);
 }
@@ -3894,7 +3893,7 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0100, Function | SmallTest | Level0)
 /**
  * @tc.number: FromJson_0200
  * @tc.name: test FromJson
- * @tc.desc: Parse json to C++
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
  */
 HWTEST_F(BmsBundleQuickFixTest, FromJson_0200, Function | SmallTest | Level0)
 {
@@ -3912,7 +3911,7 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0200, Function | SmallTest | Level0)
 /**
  * @tc.number: FromJson_0300
  * @tc.name: test FromJson
- * @tc.desc: Parse json to C++
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
  */
 HWTEST_F(BmsBundleQuickFixTest, FromJson_0300, Function | SmallTest | Level0)
 {
@@ -3930,7 +3929,7 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0300, Function | SmallTest | Level0)
 /**
  * @tc.number: FromJson_0400
  * @tc.name: test FromJson
- * @tc.desc: Parse json to C++
+ * @tc.desc: Parse json to C++ return ERR_OK
  */
 HWTEST_F(BmsBundleQuickFixTest, FromJson_0400, Function | SmallTest | Level0)
 {
@@ -3943,7 +3942,7 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0400, Function | SmallTest | Level0)
 /**
  * @tc.number: FromJson_0500
  * @tc.name: test FromJson
- * @tc.desc: FromJson
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR 
  */
 HWTEST_F(BmsBundleQuickFixTest, FromJson_0500, Function | SmallTest | Level0)
 {
@@ -3957,10 +3956,47 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0500, Function | SmallTest | Level0)
     auto ret = innerAppQuickFix.FromJson(jsonObject);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
 }
+
+/**
+ * @tc.number: FromJson_0600
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0600, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : "!@#$%^&*",
+            "quickFixMark" : "%^&*&^"
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: FromJson_0700
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0700, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : {},
+            "quickFixMark" : {}
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
 /**
  * @tc.number: to_json_0100
  * @tc.name: test to_json
- * @tc.desc: to_json
+ * @tc.desc: to_json return ERR_OK
  */
 HWTEST_F(BmsBundleQuickFixTest, to_json_0100, Function | SmallTest | Level0)
 {
@@ -3985,7 +4021,7 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0100, Function | SmallTest | Level0)
 /**
  * @tc.number: to_json_0200
  * @tc.name: test to_json
- * @tc.desc: to_json
+ * @tc.desc: to_json return ERR_OK
  */
 HWTEST_F(BmsBundleQuickFixTest, to_json_0200, Function | SmallTest | Level0)
 {
@@ -4008,7 +4044,7 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0200, Function | SmallTest | Level0)
 /**
  * @tc.number: from_json_0100
  * @tc.name: test from_json
- * @tc.desc: parse json to c++
+ * @tc.desc: parse json to c++ return QuickFixMark
  */
 HWTEST_F(BmsBundleQuickFixTest, from_json_0100, Function | SmallTest | Level0)
 {
