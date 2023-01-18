@@ -41,13 +41,10 @@ ohos_unittest("BmsEventHandlerTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/system_bundle_installer.cpp" ]
   sources += [ "bms_event_handler_test.cpp" ]
-  sources += [
-    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
-    "mock_system_bundle_installer.cpp",
-  ]
+  sources += [ "mock_system_bundle_installer.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
+    "../../../../../../../../base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -56,10 +53,8 @@ ohos_unittest("BmsEventHandlerTest") {
   deps = []
 
   if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
+    include_dirs += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits/include" ]
+    deps += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
 
   deps += bundle_install_deps
