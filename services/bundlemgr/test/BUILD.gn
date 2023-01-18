@@ -45,6 +45,7 @@ group("unittest") {
   deps = []
   if (bundle_framework_graphics) {
     deps += [
+      "unittest/bms_ability_manager_helper_test:unittest",
       "unittest/bms_bundle_accesstokenid_test:unittest",
       "unittest/bms_bundle_app_control_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
@@ -62,6 +63,7 @@ group("unittest") {
       "unittest/bms_bundle_uninstaller_test:unittest",
       "unittest/bms_bundle_updater_test:unittest",
       "unittest/bms_data_mgr_test:unittest",
+      "unittest/bms_device_manager_test:unittest",
       "unittest/bms_install_daemon_test:unittest",
       "unittest/bms_patch_parser_test:unittest",
       "unittest/bms_rdb_data_manager_test:unittest",
