@@ -45,6 +45,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
+    "../../../../../../../deviceprofile/device_info_manager/interfaces/innerkits/core/src/distributed_device_profile_client.cpp",
     "bms_bundle_kit_service_base_test.cpp",
     "mock_bundle_manager_callback_stub.cpp",
     "mock_distributed_device_profile_client.cpp",
