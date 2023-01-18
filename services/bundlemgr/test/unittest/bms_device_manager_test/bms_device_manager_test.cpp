@@ -27,7 +27,6 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    // const std::string BUNDLE_NAME = "ohos.appexefwk.appexefwk_standard";
     const std::string DEVICEID = "100";
     const int32_t DEVICEMANAGER_SA_ID = 4802;
     const int32_t SYSTEM_ABILITY_ID = 4801;

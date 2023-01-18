@@ -24,7 +24,6 @@ using namespace OHOS::AppExecFwk;
 namespace AppExecFwk {
 namespace {
     const std::string BUNDLE_NAME = "bundleName";
-    const std::string MODULE_NAME = "moduleName";
 }
 class BmsAbilityManagerHelperTest : public testing::Test {
 public:
@@ -98,7 +97,7 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0100, Function | Small
     std::string bundleName = BUNDLE_NAME;
     int uid = 1;
     int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
-    EXPECT_EQ(ret, abilityManagerHelper_->NOT_RUNNING);
+    EXPECT_EQ(ret, 0);
     #endif
 }
 
@@ -113,7 +112,7 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0200, Function | Small
     std::string bundleName = BUNDLE_NAME;
     int uid = -1;
     int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
-    EXPECT_EQ(ret, abilityManagerHelper_->FAILED);
+    EXPECT_EQ(ret, -1);
     #endif
 }
 
@@ -125,22 +124,7 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0200, Function | Small
 HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_moduleName_0100, Function | SmallTest | Level0)
 {
     std::string bundleName = BUNDLE_NAME;
-    std::string moduleName = MODULE_NAME;
-    int ret = abilityManagerHelper_->IsRunning(bundleName, moduleName);
-    EXPECT_EQ(ret, abilityManagerHelper_->NOT_RUNNING);
-}
-
-/**
- * @tc.number: FetchAbilityInfos_0100
- * @tc.name: FetchAbilityInfos
- * @tc.desc: Return false
- */
-HWTEST_F(BmsAbilityManagerHelperTest, FetchAbilityInfos_0100, Function | SmallTest | Level0)
-{
-    std::string bundleName = BUNDLE_NAME;
-    std::string moduleName = MODULE_NAME;
-    std::vector<std::string> abilities;
-    bool ret = abilityManagerHelper_->FetchAbilityInfos(bundleName, moduleName, abilities);
-    EXPECT_FALSE(ret);
+    int ret = abilityManagerHelper_->IsRunning(bundleName);
+    EXPECT_EQ(ret, 0);
 }
 }
