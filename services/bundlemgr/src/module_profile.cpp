@@ -1750,6 +1750,8 @@ bool ToExtensionInfo(
         extensionInfo.process.append(extensionInfo.name);
     }
 
+    extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
+
     return true;
 }
 
