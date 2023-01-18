@@ -52,7 +52,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
+    "../../../../../../../../base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -65,13 +65,14 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
   ]
 
   if (bundle_framework_graphics) {
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
+    deps += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
 
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",

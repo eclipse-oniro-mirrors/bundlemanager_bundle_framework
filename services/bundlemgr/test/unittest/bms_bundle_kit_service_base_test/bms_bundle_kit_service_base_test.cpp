@@ -850,14 +850,16 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1600, Function | 
     BundleDistributedManager mgr_;
     Want want;
     ElementName element;
-    std::string deviceId = "deviceId";
-    std::string bundleName = BUNDLE_NAME_TEST;
-    std::string moduleName = "com.example.MyModuleName";
-    std::string abilityName = "com.example.MyApplication.MainAbility";
+    std::string deviceId = "";
+    std::string bundleName = BUNDLE_NAME_TEST1;
+    std::string moduleName = "";
+    std::string abilityName = "";
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleName, abilityName, false, false);
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 0;
-    int32_t userId = 0;
+    int32_t userId = 200;
     auto ret = mgr_.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleName, abilityName, false, false);
     EXPECT_FALSE(ret);
     sleep(1);
 }
