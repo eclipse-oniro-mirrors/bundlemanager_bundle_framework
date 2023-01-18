@@ -1874,7 +1874,6 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            APP_LOGE("get innerBundleInfo by uid failed.");
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
     }
