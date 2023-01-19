@@ -1392,7 +1392,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0073, Function | SmallTest | L
         names.push_back(name_1);
         std::vector<RemoteAbilityInfo> info;
         auto ret = distributedBms->GetRemoteAbilityInfos(names, "", info);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
 }
 
@@ -1414,7 +1414,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0074, Function | SmallTest | L
         names.push_back(name_1);
         std::vector<RemoteAbilityInfo> info;
         auto ret = distributedBms->GetRemoteAbilityInfos(names, "", info);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
 }
 } // OHOS
