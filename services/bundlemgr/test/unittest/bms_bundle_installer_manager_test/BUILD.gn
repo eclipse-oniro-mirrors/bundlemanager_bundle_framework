@@ -45,6 +45,8 @@ ohos_unittest("BmsBundleInstallerManagerTest") {
   ]
 
   sources += [
+    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
@@ -54,7 +56,7 @@ ohos_unittest("BmsBundleInstallerManagerTest") {
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "../../../../../../../../base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -66,14 +68,18 @@ ohos_unittest("BmsBundleInstallerManagerTest") {
   ]
 
   if (bundle_framework_graphics) {
-    include_dirs += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits/include" ]
-    deps += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
+    include_dirs += [
+      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    ]
+    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
 
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_manager",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -103,7 +109,6 @@ ohos_unittest("BmsBundleInstallerManagerTest") {
     sources += free_install
     sources += distributed_manager
     external_deps += [
-      "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
       "device_info_manager:distributed_device_profile_client",
