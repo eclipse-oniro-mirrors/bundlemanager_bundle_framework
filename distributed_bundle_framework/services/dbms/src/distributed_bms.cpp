@@ -237,7 +237,7 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
         int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfos", REMOTE_TIME_OUT_SECONDS,
             nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
-        resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos); 
+        resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
     }
 
