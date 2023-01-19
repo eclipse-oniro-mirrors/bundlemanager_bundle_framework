@@ -68,9 +68,7 @@ ohos_unittest("BmsBundleInstallerManagerTest") {
   ]
 
   if (bundle_framework_graphics) {
-    include_dirs += [
-      "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
+    include_dirs += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits/include" ]
     deps += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
 
