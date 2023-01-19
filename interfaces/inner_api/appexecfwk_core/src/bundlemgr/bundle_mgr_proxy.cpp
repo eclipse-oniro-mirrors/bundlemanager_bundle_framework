@@ -646,7 +646,7 @@ bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &b
         return false;
     }
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
+        APP_LOGD("reply result false");
         return false;
     }
     if (!reply.ReadStringVector(&bundleNames)) {

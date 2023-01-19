@@ -1600,7 +1600,7 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
     const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const
 {
     if (userId == Constants::INVALID_USERID) {
-        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGD("userId is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
