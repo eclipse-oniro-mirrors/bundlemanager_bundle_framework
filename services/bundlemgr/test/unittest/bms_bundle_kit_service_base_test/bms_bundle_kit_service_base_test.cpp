@@ -859,7 +859,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1600, Function | 
     int32_t missionId = 0;
     int32_t userId = 200;
     auto ret = mgr_.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
-    MockUninstallBundle(BUNDLE_NAME_TEST, moduleName, abilityName, false, false);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
     EXPECT_FALSE(ret);
     sleep(1);
 }
