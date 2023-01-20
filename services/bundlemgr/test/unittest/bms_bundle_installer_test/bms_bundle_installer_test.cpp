@@ -2572,4 +2572,83 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleSignatureType_0100, Function | SmallTe
     EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
 }
 
+/**
+ * @tc.number: ExtractArkProfileFile_0100
+ * @tc.name: test ExtractArkProfileFile
+ * @tc.desc: 1.Test ExtractArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractArkProfileFile_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string modulePath = "";
+    std::string bundleName = "";
+    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractArkProfileFile_0200
+ * @tc.name: test ExtractArkProfileFile
+ * @tc.desc: 1.Test ExtractArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractArkProfileFile_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string modulePath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    std::string bundleName = BUNDLE_NAME;
+    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0100
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0200
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0200, Function | SmallTest | Level0)
+{
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0300
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0300, Function | SmallTest | Level0)
+{
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    innerModuleInfo.hapPath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.name =  BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
