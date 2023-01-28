@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -109,6 +109,8 @@ static void ConvertRequestPermissionUsedScene(napi_env env,
 static void ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value);
 
 static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo);
+
+static void ConvertDependency(napi_env env, const std::string &moduleName, napi_value value);
 
 static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags);
 

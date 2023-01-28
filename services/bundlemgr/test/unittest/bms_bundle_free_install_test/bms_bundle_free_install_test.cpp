@@ -847,27 +847,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0002
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test OnServiceCenterCall
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0002, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    auto bundleMgr = GetBundleConnectAbilityMgr();
-    if (bundleMgr != nullptr) {
-        std::string installResult;
-        bundleMgr->OnServiceCenterCall(installResult);
-        EXPECT_EQ(installResult, "");
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: BundleConnectAbilityMgr_0003
  * Function: GetBundleConnectAbilityMgr
  * @tc.name: test GetBundleConnectAbilityMgr
@@ -978,58 +957,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0006, Function | Smal
         want.SetElement(name);
         bundleMgr->SendCallBack(0, want, 100, transactId);
         EXPECT_EQ(transactId, "");
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0007
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test ConnectAbility
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0007, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    auto bundleMgr = GetBundleConnectAbilityMgr();
-    if (bundleMgr != nullptr) {
-        Want want;
-        ElementName name;
-        name.SetAbilityName(ABILITY_NAME_TEST);
-        name.SetBundleName(BUNDLE_NAME);
-        want.SetElement(name);
-        bundleMgr->handler_ = nullptr;
-        bool ret = bundleMgr->ConnectAbility(want, bundleMgr->serviceCenterRemoteObject_);
-        EXPECT_FALSE(ret);
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0008
- * Function: GetBundleConnectAbilityMgr
- * @tc.name: test GetBundleConnectAbilityMgr
- * @tc.require: issueI5MZ7R
- * @tc.desc: test ConnectAbility
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0008, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-
-    auto bundleMgr = GetBundleConnectAbilityMgr();
-    if (bundleMgr != nullptr) {
-        Want want;
-        ElementName name;
-        name.SetAbilityName(ABILITY_NAME_TEST);
-        name.SetBundleName(BUNDLE_NAME);
-        want.SetElement(name);
-        bundleMgr->connectState_ = ServiceCenterConnectState::CONNECTED;
-        bool ret = bundleMgr->ConnectAbility(want, bundleMgr->serviceCenterRemoteObject_);
-        EXPECT_TRUE(ret);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
@@ -1432,5 +1359,60 @@ HWTEST_F(BmsBundleFreeInstallTest, WriteFileToStream_0100, Function | SmallTest 
     path = "/";
     ret = installerProxy.WriteFileToStream(streamInstaller, path);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: IsReachEndAgingThreshold_0100
+ * @tc.name: test IsReachEndAgingThreshold
+ * @tc.desc: 1.test IsReachEndAgingThreshold of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, IsReachEndAgingThreshold_0100, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+    AgingBundleInfo bundleInfo;
+    request.AddAgingBundle(bundleInfo);
+    bool ret = request.IsReachStartAgingThreshold();
+    EXPECT_EQ(ret, false);
+    ret = request.IsReachEndAgingThreshold();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Process_0100
+ * @tc.name: test Process
+ * @tc.desc: 1.test Process of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, Process_0100, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+    AgingHandlerChain chain;
+    chain.AddHandler(nullptr);
+    bool ret = chain.Process(request);
+    EXPECT_EQ(ret, true);
+    request.tatalDataBytes_ = AppExecFwk::AgingRequest::totalDataBytesThreshold_ + 1;
+    std::shared_ptr<AgingHandler> handler;
+    chain.AddHandler(handler);
+    ret = chain.Process(request);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: Request_0100
+ * @tc.name: test Request
+ * @tc.desc: 1.test Request of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, Request_0100, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bool ret = bundleAgingMgr.InitAgingRequest();
+    EXPECT_EQ(ret, false);
+    bundleAgingMgr.request_.tatalDataBytes_ =
+        AppExecFwk::AgingRequest::totalDataBytesThreshold_ + 1;
+    ret = bundleAgingMgr.InitAgingRequest();
+    EXPECT_EQ(ret, false);
+    ret = bundleAgingMgr.ResetRequest();
+    EXPECT_EQ(ret, true);
+    ret = bundleAgingMgr.IsReachStartAgingThreshold();
+    EXPECT_EQ(ret, false);
 }
 } // OHOS

@@ -25,6 +25,7 @@ enum ExtractFileType {
     SO,
     AN,
     PATCH,
+    AP,
 };
 
 struct ExtractParam : public Parcelable {

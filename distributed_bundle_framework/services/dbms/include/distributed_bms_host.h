@@ -40,6 +40,7 @@ private:
     bool GetParcelableInfos(Parcel &data, std::vector<T> &parcelableInfos);
     template<typename T>
     bool WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &data);
+    bool VerifySystemApp();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -42,14 +42,13 @@ config("bundlemgr_test_config") {
 
 group("unittest") {
   testonly = true
-
+  deps = []
   if (bundle_framework_graphics) {
-    deps = [
+    deps += [
       "unittest/bms_bundle_accesstokenid_test:unittest",
       "unittest/bms_bundle_app_control_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
       "unittest/bms_bundle_data_storage_test:unittest",
-      "unittest/bms_bundle_default_app_test:unittest",
       "unittest/bms_bundle_dependencies_test:unittest",
       "unittest/bms_bundle_exception_handler_test:unittest",
       "unittest/bms_bundle_free_install_test:unittest",
@@ -60,12 +59,6 @@ group("unittest") {
       "unittest/bms_bundle_manager_test:unittest",
       "unittest/bms_bundle_parser_test:unittest",
       "unittest/bms_bundle_permission_grant_test:unittest",
-      "unittest/bms_bundle_quick_fix_boot_scanner_test:unittest",
-      "unittest/bms_bundle_quick_fix_deleter_test:unittest",
-      "unittest/bms_bundle_quick_fix_manager_test:unittest",
-      "unittest/bms_bundle_quick_fix_query_test:unittest",
-      "unittest/bms_bundle_quick_fix_switcher_test:unittest",
-      "unittest/bms_bundle_quick_fix_test:unittest",
       "unittest/bms_bundle_resource_manager_test:unittest",
       "unittest/bms_bundle_sandbox_app_test:unittest",
       "unittest/bms_bundle_uninstaller_test:unittest",
@@ -79,5 +72,21 @@ group("unittest") {
       "unittest/bms_service_startup_test:unittest",
       "unittest/bms_syscap_tool_test:unittest",
     ]
+    if (bundle_framework_default_app) {
+      deps += [ "unittest/bms_bundle_default_app_test:unittest" ]
+    }
+    if (bundle_framework_quick_fix) {
+      deps += [
+        "unittest/bms_bundle_quick_fix_boot_scanner_test:unittest",
+        "unittest/bms_bundle_quick_fix_deleter_test:unittest",
+        "unittest/bms_bundle_quick_fix_manager_test:unittest",
+        "unittest/bms_bundle_quick_fix_query_test:unittest",
+        "unittest/bms_bundle_quick_fix_switcher_test:unittest",
+        "unittest/bms_bundle_quick_fix_test:unittest",
+      ]
+    }
+  }
+  if (bundle_framework_free_install) {
+    deps += [ "unittest/bms_bundle_free_install_test:unittest" ]
   }
 }

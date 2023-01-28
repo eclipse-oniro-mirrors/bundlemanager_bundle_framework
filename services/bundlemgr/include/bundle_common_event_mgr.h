@@ -34,6 +34,8 @@ enum class NotifyType {
     APPLICATION_ENABLE,
     BUNDLE_DATA_CLEARED,
     BUNDLE_CACHE_CLEARED,
+    OVERLAY_INSTALL,
+    OVERLAY_UPDATE,
 };
 
 enum class SandboxInstallType : uint32_t {

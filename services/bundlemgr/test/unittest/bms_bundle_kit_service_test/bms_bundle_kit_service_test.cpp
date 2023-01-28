@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -224,7 +224,9 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
+#endif
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     std::shared_ptr<LauncherService> GetLauncherService() const;
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -342,10 +344,12 @@ void BmsBundleKitServiceTest::SetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
 {
     return bundleMgrService_->GetBundleDistributedManager();
 }
+#endif
 
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
@@ -5667,6 +5671,27 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest
 }
 
 /**
+ * @tc.number: skill match rules
+ * @tc.name: action match test
+ * @tc.desc: "action.system.home" is equal to "ohos.want.action.home"
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_HOME_ACTION_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back(Constants::ACTION_HOME);
+    Want want;
+    want.SetAction(Constants::WANT_ACTION_HOME);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+
+    skill.actions.clear();
+    skill.actions.emplace_back(Constants::WANT_ACTION_HOME);
+    want.SetAction(Constants::ACTION_HOME);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+}
+
+/**
  * @tc.number: GetAlldependentModuleNames
  * @tc.name: no dependencies
  * @tc.desc: expect true
@@ -7280,6 +7305,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Lev
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: AgingTest_0001
  * @tc.name: test Aging Start
@@ -7330,6 +7356,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     bundleAgingMgr.InitAgingtTimer();
     bundleAgingMgr.InitAgingRunner();
 }
+#endif
 
 /**
  * @tc.number: GetApplicationInfoV9_0100
@@ -7679,6 +7706,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest 
     EXPECT_FALSE(res);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleDistributedManager_0001
  * @tc.name: test GetBundleDistributedManager
@@ -7766,6 +7794,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0005, Function | S
     bundleMgr->OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "");
 }
+#endif
 
 /**
  * @tc.number: Hidump_0001

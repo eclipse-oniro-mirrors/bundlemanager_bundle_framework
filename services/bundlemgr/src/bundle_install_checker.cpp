@@ -236,11 +236,13 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
         }
+#ifndef X86_EMULATOR_MODE
         result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
         if (result != ERR_OK) {
             APP_LOGE("check provision bundleName failed");
             return result;
         }
+#endif
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
                 APP_LOGE("more than one entry hap in the direction!");
@@ -306,7 +308,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                 continue;
             }
 
-            std::string bundleName = 
+            std::string bundleName =
                 dependency.bundleName.empty() ? info.second.GetBundleName() : dependency.bundleName;
             isModuleExist = FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos);
             if (!isModuleExist) {

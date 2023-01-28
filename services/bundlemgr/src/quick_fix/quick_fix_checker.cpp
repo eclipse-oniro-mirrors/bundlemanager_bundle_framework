@@ -234,7 +234,12 @@ ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
             APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
                 bundleInfo.name.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
-        }
+    }
+    if (bundleInfo.name != provisionInfo.bundleInfo.bundleName) {
+        APP_LOGE("CheckSignatureInfo failed provisionBundleName:%{public}s, bundleName:%{public}s",
+            provisionInfo.bundleInfo.bundleName.c_str(), bundleInfo.name.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
+    }
     return ERR_OK;
 }
 

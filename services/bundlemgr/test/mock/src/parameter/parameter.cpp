@@ -22,6 +22,7 @@ namespace {
 const char *DEVICE_TYPE_OF_PHONE = "phone";
 const char *DEVICE_TYPE_OF_DEFAULT = "default";
 const char *EMPTY_STRING = "";
+const int DEFAULT_SDK_API = 9;
 } // namespace
 
 char *g_testDeviceType = const_cast<char *>(EMPTY_STRING);
@@ -36,5 +37,15 @@ char *GetDeviceType()
     }
 
     return const_cast<char *>(EMPTY_STRING);
+}
+
+int GetSdkApiVersion()
+{
+    return DEFAULT_SDK_API;
+}
+
+int GetParameter(const char *key, const char *def, char *value, int len)
+{
+    return 0;
 }
 } // OHOS

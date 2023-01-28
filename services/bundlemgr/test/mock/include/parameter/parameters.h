@@ -21,6 +21,12 @@
 namespace OHOS {
 namespace system {
 bool GetBoolParameter(const std::string& key, bool def);
+
+template<typename T>
+T GetIntParameter(const std::string& key, T def)
+{
+    return def;
+}
 } // namespace system
 } // namespace OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H
