@@ -2186,6 +2186,11 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("verify permission failed");
         return false;
     }
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
+        APP_LOGE("bundleName: %{public}s or userId %{public}d does not exist", bundleName.c_str(), userId);
+        return false;
+    }
     if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
         APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
         return false;
