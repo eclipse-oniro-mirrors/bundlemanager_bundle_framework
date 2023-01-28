@@ -2645,7 +2645,7 @@ bool BundleTestTool::GetBundleStats(const std::string &bundleName, int32_t userI
     bool ret = bundleMgrProxy_->GetBundleStats(bundleName, userId, bundleStats);
     if (ret) {
         for (size_t index = 0; index < bundleStats.size(); ++index) {
-        msg += GET_BUNDLE_STATS_ARRAY[index] + std::to_string(bundleStats[index]) + "\n";
+            msg += GET_BUNDLE_STATS_ARRAY[index] + std::to_string(bundleStats[index]) + "\n";
         }
     }
     return ret;
