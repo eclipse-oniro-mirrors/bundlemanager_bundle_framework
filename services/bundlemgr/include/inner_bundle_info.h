@@ -62,6 +62,15 @@ struct Dependency {
     std::string bundleName;
 };
 
+struct OverlayModuleInfo {
+    std::string bundleName;
+    std::string moduleName;
+    std::string targetModuleName;
+    std::string hapPath;
+    int32_t priority;
+    int32_t state; // 0 is for disable and 1 is for enable
+};
+
 struct InnerModuleInfo {
     std::string name;
     std::string modulePackage;
@@ -112,6 +121,9 @@ struct InnerModuleInfo {
     bool isLibIsolated = false;
     std::string nativeLibraryPath;
     std::string cpuAbi;
+    std::string targetModuleName;
+    int32_t targetPriority;
+    std::vector<OverlayModuleInfo> overlayModuleInfo;
 };
 
 struct SkillUri {
@@ -161,6 +173,13 @@ struct SandboxAppPersistentInfo {
     uint32_t accessTokenId = 0;
     int32_t appIndex = 0;
     int32_t userId = Constants::INVALID_USERID;
+};
+
+struct OverlayBundleInfo {
+    std::string bundleName;
+    std::string bundleDir;
+    int32_t state; // 0 is for disable and 1 is for enable
+    int32_t priority;
 };
 
 class InnerBundleInfo {
@@ -1431,16 +1450,16 @@ public:
     bool IsBundleRemovable() const;
     /**
      * @brief Which modules can be removed.
-     * @param moudleToDelete Indicates the modules.
+     * @param moduleToDelete Indicates the modules.
      * @return Return get module isRemoved result
      */
-    bool GetRemovableModules(std::vector<std::string> &moudleToDelete) const;
+    bool GetRemovableModules(std::vector<std::string> &moduleToDelete) const;
     /**
      * @brief Get freeInstall module.
-     * @param freeInstallMoudle Indicates the modules.
+     * @param freeInstallModule Indicates the modules.
      * @return Return get freeInstall module result
      */
-    bool GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const;
+    bool GetFreeInstallModules(std::vector<std::string> &freeInstallModule) const;
     /**
      * @brief Whether module of userId is exist.
      * @param moduleName Indicates the moduleName.
@@ -1459,7 +1478,7 @@ public:
     /**
      * @brief Add module removable info
      * @param info Indicates the innerModuleInfo of module.
-     * @param stringUserId Indicates the string userId add to isRmovable map.
+     * @param stringUserId Indicates the string userId add to isRemovable map.
      * @param isEnable Indicates the value of enable module is removed.
      * @return Return add module isRemovable info result.
      */
@@ -1482,7 +1501,7 @@ public:
     /**
      * @brief Delete removable info.
      * @param info Indicates the innerModuleInfo of module.
-     * @param stringUserId Indicates the string userId of isRmovable map.
+     * @param stringUserId Indicates the string userId of isRemovable map.
      * @return
      */
     void DeleteModuleRemovableInfo(InnerModuleInfo &info, const std::string &stringUserId);
@@ -1676,6 +1695,133 @@ public:
         }
     }
 
+    std::vector<OverlayBundleInfo> GetOverlayBundleInfo() const
+    {
+        return overlayBundleInfo_;
+    }
+
+    void AddOverlayBundleInfo(const OverlayBundleInfo &overlayBundleInfo)
+    {
+        auto iterator = std::find_if(overlayBundleInfo_.begin(), overlayBundleInfo_.end(),
+            [&overlayBundleInfo](const auto &overlayInfo) {
+                return overlayInfo.bundleName == overlayBundleInfo.bundleName;
+        });
+        if (iterator != overlayBundleInfo_.end()) {
+            overlayBundleInfo_.erase(iterator);
+        }
+        overlayBundleInfo_.emplace_back(overlayBundleInfo);
+    }
+
+    void RemoveOverLayBundleInfo(const std::string &bundleName)
+    {
+        auto iterator = std::find_if(overlayBundleInfo_.begin(), overlayBundleInfo_.end(),
+            [&bundleName](const auto &overlayInfo) {
+                return overlayInfo.bundleName == bundleName;
+        });
+        if (iterator != overlayBundleInfo_.end()) {
+            overlayBundleInfo_.erase(iterator);
+        }
+    }
+
+    std::string GetTargetBundleName() const
+    {
+        return baseApplicationInfo_->targetBundleName;
+    }
+
+    void SetTargetBundleName(const std::string &targetBundleName)
+    {
+        baseApplicationInfo_->targetBundleName = targetBundleName;
+    }
+
+    int32_t GetTargetPriority() const
+    {
+        return baseApplicationInfo_->targetPriority;
+    }
+
+    void SetTargetPriority(int32_t priority)
+    {
+        baseApplicationInfo_->targetPriority = priority;
+    }
+
+    int32_t GetOverlayType() const
+    {
+        return overlayType_;
+    }
+
+    void SetOverlayType(int32_t type)
+    {
+        overlayType_ = type;
+    }
+
+    void AddOverlayModuleInfo(const OverlayModuleInfo &overlayModuleInfo)
+    {
+        auto iterator = innerModuleInfos_.find(overlayModuleInfo.targetModuleName);
+        if (iterator == innerModuleInfos_.end()) {
+            return;
+        }
+        auto innerModuleInfo = iterator->second;
+        auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
+            innerModuleInfo.overlayModuleInfo.end(), [&overlayModuleInfo](const auto &overlayInfo) {
+            return overlayInfo.moduleName == overlayModuleInfo.moduleName;
+        });
+        if (overlayModuleInfoIt != innerModuleInfo.overlayModuleInfo.end()) {
+            innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
+        }
+        innerModuleInfo.overlayModuleInfo.emplace_back(overlayModuleInfo);
+        innerModuleInfos_.erase(iterator);
+        innerModuleInfos_.try_emplace(overlayModuleInfo.targetModuleName, innerModuleInfo);
+    }
+
+    void RemoveOverlayModuleInfo(const std::string &targetModuleName, const std::string &moduleName)
+    {
+        auto iterator = innerModuleInfos_.find(targetModuleName);
+        if (iterator == innerModuleInfos_.end()) {
+            return;
+        }
+        auto innerModuleInfo = iterator->second;
+        auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
+            innerModuleInfo.overlayModuleInfo.end(), [&moduleName](const auto &overlayInfo) {
+            return overlayInfo.moduleName == moduleName;
+        });
+        if (overlayModuleInfoIt == innerModuleInfo.overlayModuleInfo.end()) {
+            return;
+        }
+        innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
+        innerModuleInfos_.erase(iterator);
+        innerModuleInfos_.try_emplace(targetModuleName, innerModuleInfo);
+    }
+
+    bool isOverlayModule(const std::string &moduleName) const
+    {
+        if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+            return true;
+        }
+        return !innerModuleInfos_.at(moduleName).targetModuleName.empty();
+    }
+
+    bool isExistedOverlayModule() const
+    {
+        for (const auto &innerModuleInfo : innerModuleInfos_) {
+            if (!innerModuleInfo.second.targetModuleName.empty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void KeepOldOverlayConnection(InnerBundleInfo &info)
+    {
+        auto &newInnerModuleInfos = info.FetchInnerModuleInfos();
+        for (const auto &innerModuleInfo : innerModuleInfos_) {
+            if ((!innerModuleInfo.second.overlayModuleInfo.empty()) &&
+                (newInnerModuleInfos.find(innerModuleInfo.second.moduleName) != newInnerModuleInfos.end())) {
+                newInnerModuleInfos[innerModuleInfo.second.moduleName].overlayModuleInfo =
+                    innerModuleInfo.second.overlayModuleInfo;
+                return;
+            }
+        }
+    }
+
     void SetDisposedStatus(int32_t status);
 
     int32_t GetDisposedStatus() const;
@@ -1773,6 +1919,10 @@ private:
     std::vector<SandboxAppPersistentInfo> sandboxPersistentInfo_;
     // quick fix hqf info
     std::vector<HqfInfo> hqfInfos_;
+
+    // overlay bundleInfo
+    std::vector<OverlayBundleInfo> overlayBundleInfo_;
+    int32_t overlayType_ = NON_OVERLAY_TYPE;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);
@@ -1783,6 +1933,7 @@ void from_json(const nlohmann::json &jsonObject, InstallMark &installMark);
 void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermission);
 void from_json(const nlohmann::json &jsonObject, SandboxAppPersistentInfo &sandboxPersistentInfo);
 void from_json(const nlohmann::json &jsonObject, Dependency &dependency);
+void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H
