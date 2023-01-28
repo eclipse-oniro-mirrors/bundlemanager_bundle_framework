@@ -22,7 +22,6 @@
 #include "app_control_constants.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd_client.h"
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
@@ -42,6 +41,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
@@ -1750,7 +1750,6 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
@@ -1773,6 +1772,7 @@ bool BundleDataMgr::GetBundleStats(
     return InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) == ERR_OK;
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
     return GetBundleSpaceSize(bundleName, AccountHelper::GetCurrentActiveUserId());
