@@ -43,7 +43,6 @@ group("fuzztest") {
     "compatibleabilityinfo_fuzzer:CompatibleAbilityInfoFuzzTest",
     "compatibleapplicationinfo_fuzzer:CompatibleApplicationInfoFuzzTest",
     "copyfiles_fuzzer:CopyFilesFuzzTest",
-    "deletedisposedstatus_fuzzer:DeleteDisposedStatusFuzzTest",
     "deletequickfix_fuzzer:DeleteQuickFixFuzzTest",
     "deployquickfix_fuzzer:DeployQuickFixFuzzTest",
     "elementname_fuzzer:ElementNameFuzzTest",
