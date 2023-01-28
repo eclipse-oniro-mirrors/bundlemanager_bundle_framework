@@ -218,6 +218,10 @@ struct ApplicationInfo : public Parcelable {
     bool needAppDetail = false;
     std::string appDetailAbilityLibraryPath;
 
+    // overlay installation
+    std::string targetBundleName;
+    int32_t targetPriority;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

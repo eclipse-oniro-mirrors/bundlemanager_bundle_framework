@@ -112,13 +112,16 @@ bool LauncherService::UnRegisterCallback()
 bool LauncherService::GetAbilityList(
     const std::string &bundleName, const int userId, std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
-    APP_LOGI("GetAbilityList called");
+    APP_LOGD("GetAbilityList called");
     auto iBundleMgr = GetBundleMgr();
     if ((iBundleMgr == nullptr) || (bundleName.empty())) {
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-
+    if (!iBundleMgr->VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     std::vector<std::string> entities;
     entities.push_back(Want::ENTITY_HOME);
     Want want;
@@ -180,7 +183,10 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-
+    if (!iBundleMgr->VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     Want want;
     want.SetAction(Want::ACTION_HOME);
     want.AddEntity(Want::ENTITY_HOME);
@@ -239,6 +245,10 @@ bool LauncherService::GetShortcutInfos(
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    if (!iBundleMgr->VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
         return false;
     }
 
@@ -317,7 +327,7 @@ ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundl
         APP_LOGD("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
         return ERR_OK;
     }
-    
+
     if (bundleInfo.entryInstallationFree) {
         APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", bundleName.c_str());
         return ERR_OK;

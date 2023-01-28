@@ -99,6 +99,7 @@ protected:
                     "isLauncherAbility": true,
                     "removeMissionAfterTerminate":false,
                     "excludeFromMissions":false,
+                    "recoverable":false,
                     "isModuleJson": false,
                     "isNativeAbility": false,
                     "isStageBasedModel": true,
@@ -166,6 +167,7 @@ protected:
                     "isLauncherAbility": false,
                     "removeMissionAfterTerminate":false,
                     "excludeFromMissions":false,
+                    "recoverable": false,
                     "isModuleJson": false,
                     "isNativeAbility": false,
                     "isStageBasedModel": true,
@@ -234,6 +236,7 @@ protected:
                     "isLauncherAbility": false,
                     "removeMissionAfterTerminate":false,
                     "excludeFromMissions":false,
+                    "recoverable": false,
                     "isModuleJson": false,
                     "isNativeAbility": false,
                     "isStageBasedModel": true,
@@ -1147,7 +1150,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | Smal
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
     moduleInfo.moduleName = "modulePackage";
-    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_HAR;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
     innerModuleInfos["modulePackage"] = moduleInfo;
     info.AddInnerModuleInfo(innerModuleInfos);
     auto it = info.FindHapModuleInfo("modulePackage", 100);

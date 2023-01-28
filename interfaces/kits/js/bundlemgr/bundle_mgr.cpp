@@ -790,19 +790,16 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "name", nName));
-    APP_LOGI("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "moduleName", nModuleName));
-    APP_LOGI("ConvertHapModuleInfo moduleName=%{public}s.", hapModuleInfo.moduleName.c_str());
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "description", nDescription));
-    APP_LOGI("ConvertHapModuleInfo description=%{public}s.", hapModuleInfo.description.c_str());
 
     napi_value ndescriptionId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.descriptionId, &ndescriptionId));
@@ -815,13 +812,11 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     napi_value nLabel;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.label.c_str(), NAPI_AUTO_LENGTH, &nLabel));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "label", nLabel));
-    APP_LOGI("ConvertHapModuleInfo label=%{public}s.", hapModuleInfo.label.c_str());
 
     napi_value nHashValue;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.hashValue.c_str(), NAPI_AUTO_LENGTH, &nHashValue));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "hashValue", nHashValue));
-    APP_LOGI("ConvertHapModuleInfo hashValue=%{public}s.", hapModuleInfo.hashValue.c_str());
 
     napi_value nLabelId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.labelId, &nLabelId));
@@ -835,7 +830,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.backgroundImg.c_str(), NAPI_AUTO_LENGTH, &nBackgroundImg));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "backgroundImg", nBackgroundImg));
-    APP_LOGI("ConvertHapModuleInfo backgroundImg=%{public}s.", hapModuleInfo.backgroundImg.c_str());
 
     napi_value nSupportedModes;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.supportedModes, &nSupportedModes));
@@ -876,7 +870,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, hapModuleInfo.mainAbility.c_str(), NAPI_AUTO_LENGTH, &nMainAbilityName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "mainAbilityName", nMainAbilityName));
-    APP_LOGI("ConvertHapModuleInfo mainAbilityName=%{public}s.", hapModuleInfo.mainAbility.c_str());
 
     napi_value nInstallationFree;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, hapModuleInfo.installationFree, &nInstallationFree));
@@ -1215,20 +1208,17 @@ static std::string GetStringFromNAPI(napi_env env, napi_value value)
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, value, &valueType);
     if (valueType != napi_string) {
-        APP_LOGE("GetStringFromNAPI type mismatch!");
         return "";
     }
     std::string result;
     size_t size = 0;
 
     if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
-        APP_LOGE("can not get string size");
         return "";
     }
     result.reserve(size + NAPI_RETURN_ONE);
     result.resize(size);
     if (napi_get_value_string_utf8(env, value, result.data(), (size + NAPI_RETURN_ONE), &size) != napi_ok) {
-        APP_LOGE("can not get string value");
         return "";
     }
     return result;
@@ -1811,11 +1801,11 @@ static void ProcessBundleInfos(
         APP_LOGI("-----bundleInfos is not null-----");
         size_t index = 0;
         for (const auto &item : bundleInfos) {
-            APP_LOGI("name{%s} ", item.name.c_str());
-            APP_LOGI("bundleName{%s} ", item.applicationInfo.bundleName.c_str());
+            APP_LOGD("name{%s} ", item.name.c_str());
+            APP_LOGD("bundleName{%s} ", item.applicationInfo.bundleName.c_str());
             for (const auto &moduleInfo : item.applicationInfo.moduleInfos) {
-                APP_LOGI("moduleName{%s} ", moduleInfo.moduleName.c_str());
-                APP_LOGI("moduleSourceDir{%s} ", moduleInfo.moduleSourceDir.c_str());
+                APP_LOGD("moduleName{%s} ", moduleInfo.moduleName.c_str());
+                APP_LOGD("moduleSourceDir{%s} ", moduleInfo.moduleSourceDir.c_str());
             }
             napi_value objBundleInfo = nullptr;
             napi_create_object(env, &objBundleInfo);
@@ -6134,8 +6124,8 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
     }
     auto complete = []
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            task.RejectWithCustomize(engine, CreateJsError(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
-                CreateJsValue(engine, UNSUPPORTED_FEATURE_MESSAGE.c_str())));
+            task.RejectWithCustomize(engine, CreateJsValue(engine, UNSUPPORTED_FEATURE_ERRCODE),
+                CreateJsValue(engine, UNSUPPORTED_FEATURE_MESSAGE.c_str()));
         };
     NativeValue *result = nullptr;
     AsyncTask::Schedule("JsBundleMgr::OnGetAbilityIcon",
@@ -6874,7 +6864,7 @@ NativeValue* JsBundleMgr::OnGetBundlePackInfo(NativeEngine &engine, const Native
     return result;
 }
 
-NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, NativeCallbackInfo &info)
+NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info)
 {
     APP_LOGI("%{public}s is called", __FUNCTION__);
     if (info.argc > ARGS_SIZE_ONE) {
@@ -6918,10 +6908,6 @@ NativeValue* JsBundleMgr::JsBundleInstallInit(NativeEngine &engine)
     }
 
     auto jsCalss = std::make_unique<JsBundleInstall>();
-    if (jsCalss == nullptr) {
-        APP_LOGE("new JsBundleInstall failed");
-        return nullptr;
-    }
     object->SetNativePointer(jsCalss.release(), JsBundleInstall::Finalizer, nullptr);
     const char *moduleName = "JsBundleInstall";
     BindNativeFunction(engine, *object, "install", moduleName, JsBundleInstall::Install);
@@ -7011,6 +6997,10 @@ NativeValue* JsBundleInstall::OnInstall(NativeEngine &engine, NativeCallbackInfo
                 return;
             }
             auto iBundleMgr = GetBundleMgr();
+            if (iBundleMgr == nullptr) {
+                APP_LOGE("iBundleMgr is nullptr");
+                return;
+            }
             auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
             if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
                 APP_LOGE("can not get iBundleInstaller");
@@ -7084,6 +7074,10 @@ NativeValue* JsBundleInstall::OnRecover(NativeEngine &engine, NativeCallbackInfo
                 return;
             }
             auto iBundleMgr = GetBundleMgr();
+            if (iBundleMgr == nullptr) {
+                APP_LOGE("iBundleMgr is nullptr");
+                return;
+            }
             auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
             if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
                 APP_LOGE("can not get iBundleInstaller");
@@ -7147,6 +7141,10 @@ NativeValue* JsBundleInstall::OnUninstall(NativeEngine &engine, NativeCallbackIn
                 return;
             }
             auto iBundleMgr = GetBundleMgr();
+            if (iBundleMgr == nullptr) {
+                APP_LOGE("iBundleMgr is nullptr");
+                return;
+            }
             auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
             if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
                 APP_LOGE("can not get iBundleInstaller");

@@ -15,6 +15,7 @@
 
 #include "inner_bundle_info.h"
 
+#include <algorithm>
 #include <deque>
 #include <regex>
 
@@ -171,8 +172,20 @@ bool Skill::MatchAction(const std::string &action) const
     if (action.empty()) {
         return true;
     }
+    auto actionMatcher = [action] (const std::string &configAction) {
+        if (action == configAction) {
+            return true;
+        }
+        if (action == Constants::ACTION_HOME && configAction == Constants::WANT_ACTION_HOME) {
+            return true;
+        }
+        if (action == Constants::WANT_ACTION_HOME && configAction == Constants::ACTION_HOME) {
+            return true;
+        }
+        return false;
+    };
     // config actions not empty, param not empty, if config actions contains param action, match
-    return std::find(actions.cbegin(), actions.cend(), action) != actions.cend();
+    return std::find_if(actions.cbegin(), actions.cend(), actionMatcher) != actions.cend();
 }
 
 bool Skill::MatchEntities(const std::vector<std::string> &paramEntities) const
@@ -277,7 +290,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 3.scheme://host:port     scheme://host:port/path
         bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
         if (skillUri.port.empty()) {
-            ret |= StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+            ret = ret || StartsWith(uriString, skillUriString + PORT_SEPARATOR);
         }
         return ret;
     }
@@ -1526,8 +1539,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         hapInfo.moduleType = ModuleType::ENTRY;
     } else if (moduleType == Profile::MODULE_TYPE_FEATURE) {
         hapInfo.moduleType = ModuleType::FEATURE;
-    } else if (moduleType == Profile::MODULE_TYPE_HAR) {
-        hapInfo.moduleType = ModuleType::HAR;
     } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
         hapInfo.moduleType = ModuleType::SHARED;
     } else {
@@ -1794,12 +1805,19 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
         baseApplicationInfo_->needAppDetail = false;
         baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
     }
-    if (!baseApplicationInfo_->needAppDetail) {
-        for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
-            if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+    for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+            if (!baseApplicationInfo_->needAppDetail) {
                 baseAbilityInfos_.erase(iter);
-                break;
+                return;
             }
+            if (isNewVersion_) {
+                iter->second.labelId = baseApplicationInfo_->labelId;
+                if (baseApplicationInfo_->iconId != 0) {
+                    iter->second.iconId = baseApplicationInfo_->iconId;
+                }
+            }
+            return;
         }
     }
 }
@@ -2952,7 +2970,7 @@ int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
     }
 
     if (requestUserId < Constants::START_USERID) {
-        APP_LOGE("requestUserId(%{public}d) less than start userId.", requestUserId);
+        APP_LOGD("requestUserId(%{public}d) less than start userId.", requestUserId);
         return Constants::INVALID_USERID;
     }
 

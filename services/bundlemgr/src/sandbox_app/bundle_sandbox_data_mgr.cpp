@@ -233,7 +233,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &ability
 
 ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const
 {
-    APP_LOGI("GetInnerBundleInfoByUid with uid is %{public}d", uid);
+    APP_LOGD("GetInnerBundleInfoByUid with uid is %{public}d", uid);
     int32_t userId = BundleUtil::GetUserIdByUid(uid);
     APP_LOGD("GetInnerBundleInfoByUid with userId is %{public}d", userId);
     if (userId == Constants::UNSPECIFIED_USERID || userId == Constants::INVALID_USERID) {
@@ -243,17 +243,15 @@ ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerB
 
     {
         std::shared_lock<std::shared_mutex> lock(sandboxAppMutex_);
-        if (sandboxAppInfos_.empty()) {
-            APP_LOGE("sandboxAppInfos_ is empty");
-            return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
-        }
-        for (const auto &item : sandboxAppInfos_) {
-            const InnerBundleInfo &info = item.second;
-            auto innerUid = info.GetUid(userId);
-            APP_LOGD("GetInnerBundleInfoByUid with innerUid is %{public}d", innerUid);
-            if (innerUid == uid) {
-                innerBundleInfo = info;
-                return ERR_OK;
+        if (!sandboxAppInfos_.empty()) {
+            for (const auto &item : sandboxAppInfos_) {
+                const InnerBundleInfo &info = item.second;
+                auto innerUid = info.GetUid(userId);
+                APP_LOGD("GetInnerBundleInfoByUid with innerUid is %{public}d", innerUid);
+                if (innerUid == uid) {
+                    innerBundleInfo = info;
+                    return ERR_OK;
+                }
             }
         }
     }

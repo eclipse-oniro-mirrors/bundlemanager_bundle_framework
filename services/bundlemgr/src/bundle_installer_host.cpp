@@ -309,6 +309,11 @@ bool BundleInstallerHost::Install(
         APP_LOGE("statusReceiver invalid");
         return false;
     }
+    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
@@ -324,6 +329,11 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
 {
     if (!CheckBundleInstallerManager(statusReceiver)) {
         APP_LOGE("statusReceiver invalid");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
@@ -343,6 +353,11 @@ bool BundleInstallerHost::Recover(
         APP_LOGE("statusReceiver invalid");
         return false;
     }
+    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
@@ -359,6 +374,11 @@ bool BundleInstallerHost::Uninstall(
         APP_LOGE("statusReceiver invalid");
         return false;
     }
+    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("uninstall permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
@@ -373,6 +393,11 @@ bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::st
 {
     if (!CheckBundleInstallerManager(statusReceiver)) {
         APP_LOGE("statusReceiver invalid");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
@@ -392,7 +417,11 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-
+    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");

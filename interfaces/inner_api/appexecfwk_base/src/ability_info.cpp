@@ -98,6 +98,7 @@ const std::string JOSN_KEY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 const std::string JOSN_KEY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 const std::string JOSN_KEY_UID = "uid";
 const std::string JOSN_KEY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+const std::string JSON_KEY_RECOVERABLE = "recoverable";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
@@ -247,6 +248,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     maxWindowHeight = parcel.ReadUint32();
     minWindowHeight = parcel.ReadUint32();
     uid = parcel.ReadInt32();
+    recoverable = parcel.ReadBool();
     return true;
 }
 
@@ -376,6 +378,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, maxWindowHeight);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, minWindowHeight);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, recoverable);
     return true;
 }
 
@@ -497,7 +500,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JOSN_KEY_MAX_WINDOW_HEIGHT, abilityInfo.maxWindowHeight},
         {JOSN_KEY_MIN_WINDOW_HEIGHT, abilityInfo.minWindowHeight},
         {JOSN_KEY_UID, abilityInfo.uid},
-        {JOSN_KEY_EXCLUDE_FROM_MISSIONS, abilityInfo.excludeFromMissions}
+        {JOSN_KEY_EXCLUDE_FROM_MISSIONS, abilityInfo.excludeFromMissions},
+        {JSON_KEY_RECOVERABLE, abilityInfo.recoverable}
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0
@@ -1111,6 +1115,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         jsonObjectEnd,
         JOSN_KEY_EXCLUDE_FROM_MISSIONS,
         abilityInfo.excludeFromMissions,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_RECOVERABLE,
+        abilityInfo.recoverable,
         JsonType::BOOLEAN,
         false,
         parseResult,
