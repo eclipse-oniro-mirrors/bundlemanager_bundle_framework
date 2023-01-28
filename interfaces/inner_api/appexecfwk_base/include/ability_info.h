@@ -91,11 +91,6 @@ enum class LaunchMode {
     SPECIFIED,
 };
 
-enum class CompileMode {
-    JS_BUNDLE = 0,
-    ES_MODULE,
-};
-
 enum class SupportWindowMode {
     FULLSCREEN = 0,
     SPLIT,
@@ -248,6 +243,7 @@ struct AbilityInfo : public Parcelable {
     uint32_t minWindowHeight = 0;
     // for NAPI, save self query cache
     int32_t uid = -1;
+    CompileMode compileMode = CompileMode::JS_BUNDLE;
 
     // unused
     std::string originalBundleName;
@@ -267,7 +263,6 @@ struct AbilityInfo : public Parcelable {
     AbilitySubType subType = AbilitySubType::UNSPECIFIED;
     std::string libPath;
     std::string deviceId;
-    CompileMode compileMode = CompileMode::JS_BUNDLE;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
