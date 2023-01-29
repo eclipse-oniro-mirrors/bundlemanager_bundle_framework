@@ -2447,7 +2447,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0400, Function | SmallTest | Lev
     std::unordered_map<std::string, InnerBundleInfo> infos;
     BundleInstallChecker installChecker;
     auto ret = installChecker.CheckDependency(infos);
-    EXPECT_EQ(ret, ERR_OK);//0
+    EXPECT_EQ(ret, ERR_OK);
 
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
