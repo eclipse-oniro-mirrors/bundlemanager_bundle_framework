@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "json_serializer.h"
+#include "json_util.h"
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"
 #include "string_ex.h"
@@ -46,6 +47,7 @@ const std::string JSON_KEY_CUSTOMIZE_DATA = "customizeData";
 const std::string JSON_KEY_DESCRIPTION = "description";
 const std::string JSON_KEY_DESCRIPTION_ID = "descriptionId";
 const std::string JSON_KEY_TYPE = "type";
+const std::string JSON_KEY_UI_SYNTAX = "uiSyntax";
 const std::string JSON_KEY_LANDSCAPE_LAYOUTS = "landscapeLayouts";
 const std::string JSON_KEY_FORMCONFIG_ABILITY = "formConfigAbility";
 const std::string JSON_KEY_FORM_VISIBLE_NOTIFY = "formVisibleNotify";
@@ -86,6 +88,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     formVisibleNotify = formInfo.formVisibleNotify;
     updateEnabled = formInfo.updateEnabled;
     type = formInfo.type;
+    uiSyntax = formInfo.uiSyntax;
     colorMode = formInfo.colorMode;
     for (const auto &dimension : formInfo.supportDimensions) {
         supportDimensions.push_back(dimension);
@@ -137,6 +140,10 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     int32_t typeData;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, typeData);
     type = static_cast<FormType>(typeData);
+
+    int32_t uiSyntaxData;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uiSyntaxData);
+    uiSyntax = static_cast<FormType>(uiSyntaxData);
 
     int32_t colorModeData;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, colorModeData);
@@ -205,6 +212,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, updateDuration);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(uiSyntax));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(colorMode));
 
     const auto supportDimensionSize = static_cast<int32_t>(supportDimensions.size());
@@ -284,6 +292,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_UPDATE_ENABLED, formInfo.updateEnabled},
         {JSON_KEY_IS_STATIC, formInfo.isStatic},
         {JSON_KEY_TYPE, formInfo.type},
+        {JSON_KEY_UI_SYNTAX, formInfo.uiSyntax},
         {JSON_KEY_COLOR_MODE, formInfo.colorMode},
         {JSON_KEY_SUPPORT_DIMENSIONS, formInfo.supportDimensions},
         {JSON_KEY_CUSTOMIZE_DATA, formInfo.customizeDatas},
@@ -334,6 +343,17 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
     formInfo.landscapeLayouts = jsonObject.at(JSON_KEY_LANDSCAPE_LAYOUTS).get<std::vector<std::string>>();
     formInfo.portraitLayouts = jsonObject.at(JSON_KEY_PORTRAIT_LAYOUTS).get<std::vector<std::string>>();
     formInfo.window = jsonObject.at(JSON_KEY_WINDOW).get<FormWindow>();
+
+    int32_t parseResult = ERR_OK;
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<FormType>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_UI_SYNTAX,
+        formInfo.uiSyntax,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
