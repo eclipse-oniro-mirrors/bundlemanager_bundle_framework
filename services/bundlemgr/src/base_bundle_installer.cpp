@@ -2785,11 +2785,6 @@ void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
 void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
 {
     APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
-    if (dataMgr_ == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return;
-    }
-
     InnerBundleInfo info;
     bool isExist = false;
     if (!GetInnerBundleInfo(info, isExist) || !isExist) {
