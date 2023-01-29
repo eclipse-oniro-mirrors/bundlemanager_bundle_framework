@@ -307,7 +307,6 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                 APP_LOGD("deliveryWithInstall is false, do not check whether the dependency exists.");
                 continue;
             }
-
             std::string bundleName =
                 dependency.bundleName.empty() ? info.second.GetBundleName() : dependency.bundleName;
             isModuleExist = FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos);
