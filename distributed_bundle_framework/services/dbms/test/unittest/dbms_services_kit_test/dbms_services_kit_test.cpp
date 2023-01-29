@@ -69,6 +69,7 @@ private:
     std::shared_ptr<DistributedBmsProxy> distributedBmsProxy_ = nullptr;
     std::shared_ptr<DistributedDataStorage> distributedDataStorage_ = nullptr;
     std::shared_ptr<EventReport> eventReport_ = nullptr;
+    sptr<DistributedBms> sptrDistributedBms_ = nullptr;
 };
 
 DbmsServicesKitTest::DbmsServicesKitTest()
@@ -103,6 +104,14 @@ std::shared_ptr<DistributedBms> DbmsServicesKitTest::GetDistributedBms()
         distributedBms_ = std::make_unique<DistributedBms>();
     }
     return distributedBms_;
+}
+
+sptr<DistributedBms> DbmsServicesKitTest::GetSptrDistributedBms()
+{
+    if (sptrDistributedBms_ == nullptr) {
+        sptrDistributedBms_ = new DistributedBms();
+    }
+    return sptrDistributedBms_;
 }
 
 std::shared_ptr<DistributedBmsProxy> DbmsServicesKitTest::GetDistributedBmsProxy()
@@ -941,7 +950,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0048, Function | SmallTest | L
  */
 HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0049, Function | SmallTest | Level0)
 {
-    auto distributedBms = GetDistributedBms();
+    auto distributedBms = GetSptrDistributedBms();
     EXPECT_NE(distributedBms, nullptr);
     if (distributedBms != nullptr) {
         distributedBms->OnStart();
@@ -955,7 +964,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0049, Function | SmallTest | L
  */
 HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0050, Function | SmallTest | Level0)
 {
-    auto distributedBms = GetDistributedBms();
+    auto distributedBms = GetSptrDistributedBms();
     EXPECT_NE(distributedBms, nullptr);
     if (distributedBms != nullptr) {
         distributedBms->OnStop();
@@ -969,7 +978,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0050, Function | SmallTest | L
  */
 HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0051, Function | SmallTest | Level0)
 {
-    auto distributedBms = GetDistributedBms();
+    auto distributedBms = GetSptrDistributedBms();
     EXPECT_NE(distributedBms, nullptr);
     if (distributedBms != nullptr) {
         distributedBms->distributedSub_ = nullptr;
