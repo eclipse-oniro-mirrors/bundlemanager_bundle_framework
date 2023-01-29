@@ -404,7 +404,9 @@ protected:
                 "formVisibleNotify": false,
                 "allowCommonEvent": [],
                 "needAppDetail": false,
-                "appDetailAbilityLibraryPath": ""
+                "appDetailAbilityLibraryPath": "",
+                "targetBundleName": "",
+                "targetPriority": 0
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -444,6 +446,7 @@ protected:
                 "moduleResPaths": [
                 ],
                 "name": "com.ohos.launcher",
+                "overlayType": 3,
                 "releaseType": "Beta1",
                 "reqPermissionDetails": [
                 ],
