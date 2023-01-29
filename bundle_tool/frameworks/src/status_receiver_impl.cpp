@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t MINIMUM_WAITTING_TIME = 5;
+const int32_t MINIMUM_WAITTING_TIME = 180; // 3 mins
 } // namespace
 
 StatusReceiverImpl::StatusReceiverImpl(int32_t waittingTime) : waittingTime_(waittingTime)
