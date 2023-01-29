@@ -306,6 +306,9 @@ bool BundleDataMgr::RemoveModuleInfo(
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         oldInfo.RemoveModuleInfo(modulePackage);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        if (!oldInfo.isExistedOverlayModule()) {
+            oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
+        }
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;

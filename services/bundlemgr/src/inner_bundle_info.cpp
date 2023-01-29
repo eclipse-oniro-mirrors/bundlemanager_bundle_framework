@@ -111,6 +111,11 @@ const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
 const std::string MODULE_COMPILE_MODE = "compileMode";
 const std::string BUNDLE_HQF_INFOS = "hqfInfos";
+const std::string MODULE_TARGET_MODULE_NAME = "targetModuleName";
+const std::string MODULE_TARGET_PRIORITY = "targetPriority";
+const std::string MODULE_OVERLAY_MODULE_INFO = "overlayModuleInfo";
+const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfo";
+const std::string OVERLAY_TYPE = "overlayType";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -411,6 +416,8 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
         *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
     }
     this->hqfInfos_ = info.hqfInfos_;
+    this->overlayBundleInfo_ = info.overlayBundleInfo_;
+    this->overlayType_ = info.overlayType_;
     return *this;
 }
 
@@ -449,6 +456,18 @@ void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
     jsonObject = nlohmann::json {
         {Profile::DEPENDENCIES_MODULE_NAME, dependency.moduleName},
         {Profile::DEPENDENCIES_BUNDLE_NAME, dependency.bundleName}
+    };
+}
+
+void to_json(nlohmann::json &jsonObject, const OverlayModuleInfo &overlayModuleInfo)
+{
+    jsonObject = nlohmann::json {
+        {Profile::MODULE_OVERLAY_BUNDLE_NAME, overlayModuleInfo.bundleName},
+        {Profile::MODULE_OVERLAY_MODULE_NAME, overlayModuleInfo.moduleName},
+        {Profile::MODULE_TARGET_MODULE_NAME, overlayModuleInfo.targetModuleName},
+        {Profile::MODULE_OVERLAY_HAP_PATH, overlayModuleInfo.hapPath},
+        {Profile::MODULE_OVERLAY_PRIORITY, overlayModuleInfo.priority},
+        {Profile::MODULE_OVERLAY_STATE, overlayModuleInfo.state}
     };
 }
 
@@ -499,7 +518,10 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_NATIVE_LIBRARY_PATH, info.nativeLibraryPath},
         {MODULE_CPU_ABI, info.cpuAbi},
         {MODULE_HAP_PATH, info.hapPath},
-        {MODULE_COMPILE_MODE, info.compileMode}
+        {MODULE_COMPILE_MODE, info.compileMode},
+        {MODULE_TARGET_MODULE_NAME, info.targetModuleName},
+        {MODULE_TARGET_PRIORITY, info.targetPriority},
+        {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo}
     };
 }
 
@@ -543,6 +565,16 @@ void to_json(nlohmann::json &jsonObject, const SandboxAppPersistentInfo &sandbox
     };
 }
 
+void to_json(nlohmann::json &jsonObject, const OverlayBundleInfo &overlayBundleInfo)
+{
+    jsonObject = nlohmann::json {
+        {Profile::BUNDLE_OVERLAY_BUNDLE_NAME, overlayBundleInfo.bundleName},
+        {Profile::BUNDLE_OVERLAY_BUNDLE_DIR, overlayBundleInfo.bundleDir},
+        {Profile::BUNDLE_OVERLAY_BUNDLE_STATE, overlayBundleInfo.state},
+        {Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY, overlayBundleInfo.priority}
+    };
+}
+
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
@@ -570,6 +602,8 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
     jsonObject[DISPOSED_STATUS] = disposedStatus_;
     jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
+    jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
+    jsonObject[OVERLAY_TYPE] = overlayType_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -937,6 +971,30 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_MODULE_NAME,
+        info.targetModuleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_PRIORITY,
+        info.targetPriority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<OverlayModuleInfo>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_OVERLAY_MODULE_INFO,
+        info.overlayModuleInfo,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1241,6 +1299,96 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         ArrayType::NOT_ARRAY);
 }
 
+void from_json(const nlohmann::json &jsonObject, OverlayModuleInfo &overlayModuleInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_BUNDLE_NAME,
+        overlayModuleInfo.bundleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_MODULE_NAME,
+        overlayModuleInfo.moduleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_TARGET_MODULE_NAME,
+        overlayModuleInfo.targetModuleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_HAP_PATH,
+        overlayModuleInfo.hapPath,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_PRIORITY,
+        overlayModuleInfo.priority,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_STATE,
+        overlayModuleInfo.state,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
+void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_NAME,
+        overlayBundleInfo.bundleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_DIR,
+        overlayBundleInfo.bundleDir,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_STATE,
+        overlayBundleInfo.state,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY,
+        overlayBundleInfo.priority,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
@@ -1471,6 +1619,22 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<OverlayBundleInfo>>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_BUNDLE_INFO,
+        overlayBundleInfo_,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_TYPE,
+        overlayType_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -1781,6 +1945,11 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
+    baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
+#endif
+
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
@@ -2074,6 +2243,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     bundleInfo.installTime = innerBundleUserInfo.installTime;
     bundleInfo.updateTime = innerBundleUserInfo.updateTime;
     bundleInfo.appIndex = appIndex_;
+    bundleInfo.overlayType = overlayType_;
 
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo);
@@ -2797,7 +2967,7 @@ int64_t InnerBundleInfo::GetLastInstallationTime() const
     return installTime;
 }
 
-bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDelete) const
+bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moduleToDelete) const
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!innerModuleInfo.second.installationFree) {
@@ -2813,24 +2983,24 @@ bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDele
         }
 
         if (canDelete) {
-            moudleToDelete.emplace_back(innerModuleInfo.second.moduleName);
+            moduleToDelete.emplace_back(innerModuleInfo.second.moduleName);
         }
     }
 
-    return !moudleToDelete.empty();
+    return !moduleToDelete.empty();
 }
 
-bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const
+bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallModule) const
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!innerModuleInfo.second.installationFree) {
             continue;
         }
 
-        freeInstallMoudle.emplace_back(innerModuleInfo.second.moduleName);
+        freeInstallModule.emplace_back(innerModuleInfo.second.moduleName);
     }
 
-    return !freeInstallMoudle.empty();
+    return !freeInstallModule.empty();
 }
 
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const
