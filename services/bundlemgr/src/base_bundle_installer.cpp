@@ -46,6 +46,7 @@
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
+#include "ipc_skeleton.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -680,6 +681,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
+    // report hapPath and hashValue
+    for (const auto &info : newInfos) {
+        for (const auto &innerModuleInfo : info.second.GetInnerModuleInfos()) {
+            sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
+            sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
+        }
+    }
+    GetInstallEventInfo(sysEventInfo_);
     sync();
     return result;
 }
@@ -2749,7 +2758,50 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.userId = userId_;
     sysEventInfo_.versionCode = versionCode_;
     sysEventInfo_.preBundleScene = preBundleScene;
+    sysEventInfo_.callingUid = IPCSkeleton::GetCallingUid();
+    GetCallingEventInfo(sysEventInfo_);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
+}
+
+void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
+{
+    APP_LOGD("GetCallingEventInfo start, bundleName:%{public}s", eventInfo.callingBundleName.c_str());
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    if (!dataMgr_->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
+        APP_LOGW("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        eventInfo.callingBundleName = Constants::EMPTY_STRING;
+        return;
+    }
+    BundleInfo bundleInfo;
+    if (!dataMgr_->GetBundleInfo(eventInfo.callingBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo,
+        eventInfo.callingUid / Constants::BASE_USER_RANGE)) {
+        APP_LOGE("GetBundleInfo failed, bundleName: %{public}s", eventInfo.callingBundleName.c_str());
+        return;
+    }
+    eventInfo.callingAppId = bundleInfo.appId;
+}
+
+void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
+{
+    APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    eventInfo.fingerprint = info.GetCertificateFingerprint();
+    eventInfo.appDistributionType = info.GetAppDistributionType();
+    eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
+    eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
 }
 
 ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)

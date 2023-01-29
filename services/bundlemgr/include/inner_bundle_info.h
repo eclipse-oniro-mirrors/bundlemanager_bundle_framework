@@ -1862,8 +1862,10 @@ public:
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
     int64_t GetLastInstallationTime() const;
     void UpdateAppDetailAbilityAttrs();
+    bool IsHideDesktopIcon() const;
 
 private:
+    bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void GetBundleWithExtension(

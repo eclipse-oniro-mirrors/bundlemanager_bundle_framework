@@ -51,6 +51,15 @@ const std::string EVENT_PARAM_SCENE = "SCENE";
 const std::string EVENT_PARAM_CLEAN_TYPE = "CLEAN_TYPE";
 const std::string EVENT_PARAM_INSTALL_TYPE = "INSTALL_TYPE";
 const std::string EVENT_PARAM_STATE = "STATE";
+const std::string EVENT_PARAM_CALLING_BUNDLE_NAME = "CALLING_BUNDLE_NAME";
+const std::string EVENT_PARAM_CALLING_UID = "CALLING_UID";
+const std::string EVENT_PARAM_CALLING_APPID = "CALLING_APPID";
+const std::string EVENT_PARAM_FINGERPRINT = "FINGERPRINT";
+const std::string EVENT_PARAM_HIDE_DESKTOP_ICON = "HIDE_DESKTOP_ICON";
+const std::string EVENT_PARAM_APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
+const std::string EVENT_PARAM_FILE_PATH = "FILE_PATH";
+const std::string EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
+const std::string EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
 
 const std::string FREE_INSTALL_TYPE = "FreeInstall";
 const std::string PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -59,7 +68,7 @@ const std::string NORMAL_SCENE = "Normal";
 const std::string BOOT_SCENE = "Boot";
 const std::string REBOOT_SCENE = "Reboot";
 const std::string CREATE_USER_SCENE = "CreateUser";
-const std::string REMOVE_USER_SCENE = "CreateUser";
+const std::string REMOVE_USER_SCENE = "RemoveUser";
 const std::string CLEAN_CACHE = "cleanCache";
 const std::string CLEAN_DATA = "cleanData";
 const std::string ENABLE = "enable";
@@ -293,6 +302,15 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
+        EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_FILE_PATH, eventInfo.filePath,
+        EVENT_PARAM_HASH_VALUE, eventInfo.hashValue,
+        EVENT_PARAM_FINGERPRINT, eventInfo.fingerprint,
+        EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_SCENE, GetInstallScene(eventInfo));
 }
@@ -305,6 +323,9 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo));
 }
 
@@ -316,6 +337,15 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
+        EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_FILE_PATH, eventInfo.filePath,
+        EVENT_PARAM_HASH_VALUE, eventInfo.hashValue,
+        EVENT_PARAM_FINGERPRINT, eventInfo.fingerprint,
+        EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo));
 }
 
@@ -327,6 +357,13 @@ void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
+        EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_FINGERPRINT, eventInfo.fingerprint,
+        EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, PRE_BUNDLE_INSTALL_TYPE);
 }
 

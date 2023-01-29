@@ -540,6 +540,8 @@ private:
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
     ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
     NotifyType GetNotifyType();
+    void GetCallingEventInfo(EventInfo &eventInfo);
+    void GetInstallEventInfo(EventInfo &eventInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

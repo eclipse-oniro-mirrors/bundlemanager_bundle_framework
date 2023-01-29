@@ -1954,23 +1954,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
 {
-    bool isExistLauncherAbility = false;
-    OHOS::AAFwk::Want want;
-    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
-    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
-    for (const auto& abilityInfoPair : baseAbilityInfos_) {
-        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos_.end()) {
-            continue;
-        }
-        for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
-                isExistLauncherAbility = true;
-                break;
-            }
-        }
-    }
-    if (isExistLauncherAbility) {
+    if (IsExistLauncherAbility()) {
         baseApplicationInfo_->needAppDetail = false;
         baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
     }
@@ -1988,6 +1972,32 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
             return;
         }
     }
+}
+
+bool InnerBundleInfo::IsHideDesktopIcon() const
+{
+    return baseApplicationInfo_->hideDesktopIcon ? true : !IsExistLauncherAbility();
+}
+
+bool InnerBundleInfo::IsExistLauncherAbility() const
+{
+    bool isExistLauncherAbility = false;
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    for (const auto& abilityInfoPair : baseAbilityInfos_) {
+        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos_.end()) {
+            continue;
+        }
+        for (const Skill& skill : skillsPair->second) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
+                isExistLauncherAbility = true;
+                break;
+            }
+        }
+    }
+    return isExistLauncherAbility;
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
