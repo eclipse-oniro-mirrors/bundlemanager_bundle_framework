@@ -64,6 +64,7 @@ public:
     std::shared_ptr<DistributedBmsProxy> GetDistributedBmsProxy();
     std::shared_ptr<DistributedDataStorage> GetDistributedDataStorage();
     std::shared_ptr<EventReport> GetEventReport();
+    sptr<DistributedBms> GetSptrDistributedBms();
 private:
     std::shared_ptr<DistributedBms> distributedBms_ = nullptr;
     std::shared_ptr<DistributedBmsProxy> distributedBmsProxy_ = nullptr;
