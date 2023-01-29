@@ -44,9 +44,9 @@ protected:
         INSTALL_SIGNATURE_CHECKED = 15,
         INSTALL_PARSED = 20,
         INSTALL_HAP_HASH_PARAM_CHECKED = 25,
-        INSTALL_VERSION_AND_BUNDLENAME_CHECKED = 30,
-        INSTALL_NATIVE_SO_CHECKED = 35,
-        INSTALL_CREATDIR = 40,
+        INSTALL_OVERLAY_CHECKED = 30,
+        INSTALL_VERSION_AND_BUNDLENAME_CHECKED = 35,
+        INSTALL_NATIVE_SO_CHECKED = 40,
         INSTALL_REMOVE_SANDBOX_APP = 50,
         INSTALL_EXTRACTED = 60,
         INSTALL_INFO_SAVED = 80,
@@ -534,6 +534,12 @@ private:
     ErrCode CreateArkProfile(
         const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const;
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
+    ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
+        int32_t userId) const;
+    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const;
+    ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
+    ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
+    NotifyType GetNotifyType();
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -562,6 +568,7 @@ private:
     // used to record system event infos
     EventInfo sysEventInfo_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    int32_t overlayType_ = NON_OVERLAY_TYPE;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

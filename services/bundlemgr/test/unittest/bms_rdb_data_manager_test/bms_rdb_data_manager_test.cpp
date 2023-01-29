@@ -255,6 +255,7 @@ HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0200, Function | SmallT
     EXPECT_TRUE(ret);
 }
 
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 /**
  * @tc.number: DefaultAppRdb_0100
  * @tc.name: save get and delete
@@ -265,7 +266,6 @@ HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0200, Function | SmallT
  */
 HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0100, Function | SmallTest | Level1)
 {
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     std::unique_ptr<IDefaultAppDb> defaultAppDb = std::make_unique<DefaultAppRdb>();
     Element element1;
     element1.bundleName = TEST_BUNDLE_NAME;
@@ -278,7 +278,6 @@ HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0100, Function | SmallTest | Level
 
     ret = defaultAppDb->DeleteDefaultApplicationInfos(TEST_USERID);
     EXPECT_TRUE(ret);
-#endif
 }
 
 /**
@@ -316,4 +315,5 @@ HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0300, Function | SmallTest | Level
     bool ret = defaultAppRdb.SetDefaultApplicationInfo(Constants::INVALID_UID, "", element);
     EXPECT_FALSE(ret);
 }
+#endif
 }  // namespace

@@ -22,7 +22,6 @@
 #include "app_control_constants.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd_client.h"
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
@@ -42,6 +41,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
@@ -306,6 +306,9 @@ bool BundleDataMgr::RemoveModuleInfo(
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         oldInfo.RemoveModuleInfo(modulePackage);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        if (!oldInfo.isExistedOverlayModule()) {
+            oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
+        }
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
@@ -559,7 +562,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
         }
     }
@@ -604,7 +607,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
     }
@@ -807,7 +810,7 @@ bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
         }
     }
@@ -837,7 +840,7 @@ ErrCode BundleDataMgr::ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t 
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
     }
@@ -1073,6 +1076,9 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
             APP_LOGE("bundleName: %{public}s can not find app detail ability.", info.GetBundleName().c_str());
             return;
         }
+        if (!info.GetIsNewVersion()) {
+            ability->applicationInfo.label = info.GetBundleName();
+        }
         abilityInfos.emplace_back(*ability);
     }
 }
@@ -1097,8 +1103,11 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     ApplicationInfo applicationInfo = info.GetBaseApplicationInfo();
     appDetailAbility.applicationName = applicationInfo.name;
     appDetailAbility.labelId = applicationInfo.labelId;
+    if (!info.GetIsNewVersion()) {
+        appDetailAbility.labelId = 0;
+    }
     appDetailAbility.iconId = applicationInfo.iconId;
-    if (appDetailAbility.iconId == 0) {
+    if ((appDetailAbility.iconId == 0) || !info.GetIsNewVersion()) {
         APP_LOGD("AddAppDetailAbilityInfo appDetailAbility.iconId is 0.");
         // get system resource icon Id
         auto iter = bundleInfos_.find(GLOBAL_RESOURCE_BUNDLE_NAME);
@@ -1190,7 +1199,6 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
     } else {
         uri = noPpefixUri.substr(posFirstSeparator + 1, posSecondSeparator - posFirstSeparator - 1);
     }
-
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
@@ -1595,7 +1603,7 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
     const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const
 {
     if (userId == Constants::INVALID_USERID) {
-        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGD("userId is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
@@ -1701,14 +1709,12 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
 bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) const
 {
     InnerBundleInfo innerBundleInfo;
+    APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s", uid, bundleName.c_str());
     if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-        APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
         if (sandboxAppHelper_ == nullptr) {
-            APP_LOGE("sandboxAppHelper_ is nullptr");
             return false;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            APP_LOGE("get innerBundleInfo by uid failed.");
             return false;
         }
     }
@@ -1871,7 +1877,6 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            APP_LOGE("get innerBundleInfo by uid failed.");
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
     }
@@ -2038,8 +2043,8 @@ ErrCode BundleDataMgr::GetLaunchWantForBundle(
     }
 
     want.SetElementName("", bundleName, mainAbility);
-    want.SetAction(Constants::INTENT_ACTION_HOME);
-    want.AddEntity(Constants::INTENT_ENTITY_HOME);
+    want.SetAction(Constants::ACTION_HOME);
+    want.AddEntity(Constants::ENTITY_HOME);
     return ERR_OK;
 }
 
@@ -3302,7 +3307,7 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
         }
     }
@@ -3358,7 +3363,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
     }
@@ -3494,7 +3499,7 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return false;
         }
     }
@@ -3525,7 +3530,7 @@ ErrCode BundleDataMgr::ImplicitQueryCurExtensionInfosV9(const Want &want, int32_
         }
         auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, userId, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
+            APP_LOGW("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d", ret);
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
     }

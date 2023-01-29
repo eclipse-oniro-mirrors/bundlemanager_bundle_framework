@@ -145,7 +145,6 @@ constexpr const char* BUNDLE_MODULE_META_KEY_EXTRA = "extra";
 // sub BUNDLE_MODULE_PROFILE_KEY_DISTRO_TYPE
 constexpr const char* MODULE_DISTRO_MODULE_TYPE_VALUE_ENTRY = "entry";
 constexpr const char* MODULE_DISTRO_MODULE_TYPE_VALUE_FEATURE = "feature";
-constexpr const char* MODULE_DISTRO_MODULE_TYPE_VALUE_HAR = "har";
 // sub BUNDLE_MODULE_PROFILE_KEY_ABILITIES
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ICON = "icon";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ICON_ID = "iconId";
@@ -361,7 +360,6 @@ constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
-constexpr const char* MODULE_TYPE_HAR = "har";
 constexpr const char* MODULE_TYPE_SHARED = "shared";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
@@ -399,6 +397,7 @@ constexpr const char* ABILITY_MIN_WINDOW_WIDTH = "minWindowWidth";
 constexpr const char* ABILITY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 constexpr const char* ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 constexpr const char* ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+constexpr const char* ABILITY_RECOVERABLE = "recoverable";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";
@@ -434,6 +433,24 @@ constexpr const char* DEPENDENCIES_BUNDLE_NAME = "bundleName";
 // app detail ability library path
 constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH = "/system/lib/appdetailability";
 constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH_64 = "/system/lib64/appdetailability";
+
+// overlay installation
+constexpr const char* APP_TARGET_BUNDLE_NAME = "targetBundleName";
+constexpr const char* APP_TARGET_PRIORITY = "targetPriority";
+
+constexpr const char* MODULE_TARGET_MODULE_NAME = "targetModuleName";
+constexpr const char* MODULE_TARGET_PRIORITY = "targetPriority";
+
+constexpr const char* MODULE_OVERLAY_BUNDLE_NAME = "bundleName";
+constexpr const char* MODULE_OVERLAY_MODULE_NAME = "moduleName";
+constexpr const char* MODULE_OVERLAY_HAP_PATH = "hapPath";
+constexpr const char* MODULE_OVERLAY_PRIORITY = "priority";
+constexpr const char* MODULE_OVERLAY_STATE = "state";
+
+constexpr const char* BUNDLE_OVERLAY_BUNDLE_NAME = "bundleName";
+constexpr const char* BUNDLE_OVERLAY_BUNDLE_DIR = "bundleDir";
+constexpr const char* BUNDLE_OVERLAY_BUNDLE_STATE = "state";
+constexpr const char* BUNDLE_OVERLAY_BUNDLE_PRIORITY = "priority";
 
 extern thread_local int32_t parseResult;
 }  // namespace Profile

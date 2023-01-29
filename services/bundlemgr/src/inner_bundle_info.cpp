@@ -15,6 +15,7 @@
 
 #include "inner_bundle_info.h"
 
+#include <algorithm>
 #include <deque>
 #include <regex>
 
@@ -110,6 +111,11 @@ const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
 const std::string MODULE_COMPILE_MODE = "compileMode";
 const std::string BUNDLE_HQF_INFOS = "hqfInfos";
+const std::string MODULE_TARGET_MODULE_NAME = "targetModuleName";
+const std::string MODULE_TARGET_PRIORITY = "targetPriority";
+const std::string MODULE_OVERLAY_MODULE_INFO = "overlayModuleInfo";
+const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfo";
+const std::string OVERLAY_TYPE = "overlayType";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -171,8 +177,20 @@ bool Skill::MatchAction(const std::string &action) const
     if (action.empty()) {
         return true;
     }
+    auto actionMatcher = [action] (const std::string &configAction) {
+        if (action == configAction) {
+            return true;
+        }
+        if (action == Constants::ACTION_HOME && configAction == Constants::WANT_ACTION_HOME) {
+            return true;
+        }
+        if (action == Constants::WANT_ACTION_HOME && configAction == Constants::ACTION_HOME) {
+            return true;
+        }
+        return false;
+    };
     // config actions not empty, param not empty, if config actions contains param action, match
-    return std::find(actions.cbegin(), actions.cend(), action) != actions.cend();
+    return std::find_if(actions.cbegin(), actions.cend(), actionMatcher) != actions.cend();
 }
 
 bool Skill::MatchEntities(const std::vector<std::string> &paramEntities) const
@@ -277,7 +295,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 3.scheme://host:port     scheme://host:port/path
         bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
         if (skillUri.port.empty()) {
-            ret |= StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+            ret = ret || StartsWith(uriString, skillUriString + PORT_SEPARATOR);
         }
         return ret;
     }
@@ -398,6 +416,8 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
         *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
     }
     this->hqfInfos_ = info.hqfInfos_;
+    this->overlayBundleInfo_ = info.overlayBundleInfo_;
+    this->overlayType_ = info.overlayType_;
     return *this;
 }
 
@@ -436,6 +456,18 @@ void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
     jsonObject = nlohmann::json {
         {Profile::DEPENDENCIES_MODULE_NAME, dependency.moduleName},
         {Profile::DEPENDENCIES_BUNDLE_NAME, dependency.bundleName}
+    };
+}
+
+void to_json(nlohmann::json &jsonObject, const OverlayModuleInfo &overlayModuleInfo)
+{
+    jsonObject = nlohmann::json {
+        {Profile::MODULE_OVERLAY_BUNDLE_NAME, overlayModuleInfo.bundleName},
+        {Profile::MODULE_OVERLAY_MODULE_NAME, overlayModuleInfo.moduleName},
+        {Profile::MODULE_TARGET_MODULE_NAME, overlayModuleInfo.targetModuleName},
+        {Profile::MODULE_OVERLAY_HAP_PATH, overlayModuleInfo.hapPath},
+        {Profile::MODULE_OVERLAY_PRIORITY, overlayModuleInfo.priority},
+        {Profile::MODULE_OVERLAY_STATE, overlayModuleInfo.state}
     };
 }
 
@@ -486,7 +518,10 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_NATIVE_LIBRARY_PATH, info.nativeLibraryPath},
         {MODULE_CPU_ABI, info.cpuAbi},
         {MODULE_HAP_PATH, info.hapPath},
-        {MODULE_COMPILE_MODE, info.compileMode}
+        {MODULE_COMPILE_MODE, info.compileMode},
+        {MODULE_TARGET_MODULE_NAME, info.targetModuleName},
+        {MODULE_TARGET_PRIORITY, info.targetPriority},
+        {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo}
     };
 }
 
@@ -530,6 +565,16 @@ void to_json(nlohmann::json &jsonObject, const SandboxAppPersistentInfo &sandbox
     };
 }
 
+void to_json(nlohmann::json &jsonObject, const OverlayBundleInfo &overlayBundleInfo)
+{
+    jsonObject = nlohmann::json {
+        {Profile::BUNDLE_OVERLAY_BUNDLE_NAME, overlayBundleInfo.bundleName},
+        {Profile::BUNDLE_OVERLAY_BUNDLE_DIR, overlayBundleInfo.bundleDir},
+        {Profile::BUNDLE_OVERLAY_BUNDLE_STATE, overlayBundleInfo.state},
+        {Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY, overlayBundleInfo.priority}
+    };
+}
+
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
@@ -557,6 +602,8 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
     jsonObject[DISPOSED_STATUS] = disposedStatus_;
     jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
+    jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
+    jsonObject[OVERLAY_TYPE] = overlayType_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -924,6 +971,30 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_MODULE_NAME,
+        info.targetModuleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_PRIORITY,
+        info.targetPriority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<OverlayModuleInfo>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_OVERLAY_MODULE_INFO,
+        info.overlayModuleInfo,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1228,6 +1299,96 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         ArrayType::NOT_ARRAY);
 }
 
+void from_json(const nlohmann::json &jsonObject, OverlayModuleInfo &overlayModuleInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_BUNDLE_NAME,
+        overlayModuleInfo.bundleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_MODULE_NAME,
+        overlayModuleInfo.moduleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_TARGET_MODULE_NAME,
+        overlayModuleInfo.targetModuleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_HAP_PATH,
+        overlayModuleInfo.hapPath,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_PRIORITY,
+        overlayModuleInfo.priority,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::MODULE_OVERLAY_STATE,
+        overlayModuleInfo.state,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
+void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_NAME,
+        overlayBundleInfo.bundleName,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_DIR,
+        overlayBundleInfo.bundleDir,
+        JsonType::STRING,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_STATE,
+        overlayBundleInfo.state,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY,
+        overlayBundleInfo.priority,
+        JsonType::NUMBER,
+        true,
+        Profile::parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
@@ -1458,6 +1619,22 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<OverlayBundleInfo>>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_BUNDLE_INFO,
+        overlayBundleInfo_,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_TYPE,
+        overlayType_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -1526,8 +1703,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         hapInfo.moduleType = ModuleType::ENTRY;
     } else if (moduleType == Profile::MODULE_TYPE_FEATURE) {
         hapInfo.moduleType = ModuleType::FEATURE;
-    } else if (moduleType == Profile::MODULE_TYPE_HAR) {
-        hapInfo.moduleType = ModuleType::HAR;
     } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
         hapInfo.moduleType = ModuleType::SHARED;
     } else {
@@ -1770,6 +1945,11 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
+    baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
+#endif
+
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
@@ -1794,12 +1974,18 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
         baseApplicationInfo_->needAppDetail = false;
         baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
     }
-    if (!baseApplicationInfo_->needAppDetail) {
-        for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
-            if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+    for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+            if (!baseApplicationInfo_->needAppDetail) {
                 baseAbilityInfos_.erase(iter);
-                break;
+                return;
             }
+            if (isNewVersion_) {
+                iter->second.labelId = baseApplicationInfo_->labelId;
+                iter->second.iconId =
+                    (baseApplicationInfo_->iconId == 0) ? iter->second.iconId : baseApplicationInfo_->iconId;
+            }
+            return;
         }
     }
 }
@@ -2057,6 +2243,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     bundleInfo.installTime = innerBundleUserInfo.installTime;
     bundleInfo.updateTime = innerBundleUserInfo.updateTime;
     bundleInfo.appIndex = appIndex_;
+    bundleInfo.overlayType = overlayType_;
 
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo);
@@ -2780,7 +2967,7 @@ int64_t InnerBundleInfo::GetLastInstallationTime() const
     return installTime;
 }
 
-bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDelete) const
+bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moduleToDelete) const
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!innerModuleInfo.second.installationFree) {
@@ -2796,24 +2983,24 @@ bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDele
         }
 
         if (canDelete) {
-            moudleToDelete.emplace_back(innerModuleInfo.second.moduleName);
+            moduleToDelete.emplace_back(innerModuleInfo.second.moduleName);
         }
     }
 
-    return !moudleToDelete.empty();
+    return !moduleToDelete.empty();
 }
 
-bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const
+bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallModule) const
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!innerModuleInfo.second.installationFree) {
             continue;
         }
 
-        freeInstallMoudle.emplace_back(innerModuleInfo.second.moduleName);
+        freeInstallModule.emplace_back(innerModuleInfo.second.moduleName);
     }
 
-    return !freeInstallMoudle.empty();
+    return !freeInstallModule.empty();
 }
 
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const
@@ -2952,7 +3139,7 @@ int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
     }
 
     if (requestUserId < Constants::START_USERID) {
-        APP_LOGE("requestUserId(%{public}d) less than start userId.", requestUserId);
+        APP_LOGD("requestUserId(%{public}d) less than start userId.", requestUserId);
         return Constants::INVALID_USERID;
     }
 

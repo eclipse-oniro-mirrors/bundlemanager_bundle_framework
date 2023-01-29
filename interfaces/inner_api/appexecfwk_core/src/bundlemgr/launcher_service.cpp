@@ -112,7 +112,7 @@ bool LauncherService::UnRegisterCallback()
 bool LauncherService::GetAbilityList(
     const std::string &bundleName, const int userId, std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
-    APP_LOGI("GetAbilityList called");
+    APP_LOGD("GetAbilityList called");
     auto iBundleMgr = GetBundleMgr();
     if ((iBundleMgr == nullptr) || (bundleName.empty())) {
         APP_LOGE("can not get iBundleMgr");

@@ -112,6 +112,7 @@ constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
 const std::string LIBS = "libs/";
 const std::string AN = "an/";
+const std::string AP = "ap/";
 constexpr const char* LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
 constexpr const char* ARM = "arm";
 const std::map<std::string, std::string> ABI_MAP = {
@@ -124,6 +125,7 @@ const std::map<std::string, std::string> ABI_MAP = {
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
 constexpr const char* AI_SUFFIX = ".ai";
+constexpr const char* AP_SUFFIX = ".ap";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";
@@ -172,8 +174,9 @@ enum class AppType {
     THIRD_PARTY_APP,
 };
 
-constexpr const char* INTENT_ACTION_HOME = "action.system.home";
-constexpr const char* INTENT_ENTITY_HOME = "entity.system.home";
+constexpr const char* ACTION_HOME = "action.system.home";
+constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
+constexpr const char* ENTITY_HOME = "entity.system.home";
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 
 // the ability file folder name.
@@ -181,12 +184,12 @@ constexpr const char* LIB_FOLDER_NAME = "libs";
 constexpr const char* RES_FOLDER_NAME = "resources";
 
 constexpr uint8_t MAX_LABLE_LEN = 30;
-constexpr uint8_t MAX_BUNDLE_NAME = 255;
+constexpr uint8_t MAX_BUNDLE_NAME = 127;
 constexpr uint8_t MIN_BUNDLE_NAME = 7;
 constexpr uint8_t MAX_VENDOR = 255;
 constexpr uint8_t EQUAL_ZERO = 0;
 constexpr uint8_t MAX_MODULE_PACKAGE = 127;
-constexpr uint8_t MAX_MODULE_NAME = 255;
+constexpr uint8_t MAX_MODULE_NAME = 31;
 constexpr uint8_t MAX_MODULE_ABILITIES_READPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_ABILITIES_WRITEPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
@@ -298,6 +301,12 @@ constexpr const char* RELATIVE_PATH = "../";
 
 // app detail ability
 constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
+
+// overlay installation
+constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
+constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
+constexpr const char* OVERLAY_REMOVED_ACTION = "usual.event.OVERLAY_PACKAGE_REMOVED";
+constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
