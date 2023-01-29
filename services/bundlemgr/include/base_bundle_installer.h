@@ -35,6 +35,7 @@ class BaseBundleInstaller {
 public:
     BaseBundleInstaller();
     virtual ~BaseBundleInstaller();
+    void SetCallingUid(int32_t callingUid);
 
 protected:
     enum class InstallerState {

@@ -46,7 +46,6 @@
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
-#include "ipc_skeleton.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -2758,7 +2757,6 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.userId = userId_;
     sysEventInfo_.versionCode = versionCode_;
     sysEventInfo_.preBundleScene = preBundleScene;
-    sysEventInfo_.callingUid = IPCSkeleton::GetCallingUid();
     GetCallingEventInfo(sysEventInfo_);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
 }
@@ -2802,6 +2800,11 @@ void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
     eventInfo.appDistributionType = info.GetAppDistributionType();
     eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
+}
+
+void BaseBundleInstaller::SetCallingUid(int32_t callingUid)
+{
+    sysEventInfo_.callingUid = callingUid;
 }
 
 ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
