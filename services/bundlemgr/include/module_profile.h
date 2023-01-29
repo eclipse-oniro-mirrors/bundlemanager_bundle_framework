@@ -23,6 +23,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct OverlayMsg {
+    OverlayType type = NON_OVERLAY_TYPE;
+    bool isAppPriorityExisted = false;
+    bool isModulePriorityExisted = false;
+};
+
 class ModuleProfile {
 public:
     /**
@@ -36,6 +42,9 @@ public:
         const std::ostringstream &source,
         const BundleExtractor &bundleExtractor,
         InnerBundleInfo &innerBundleInfo) const;
+
+private:
+    OverlayMsg ObtainOverlayType(const nlohmann::json &jsonObject) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

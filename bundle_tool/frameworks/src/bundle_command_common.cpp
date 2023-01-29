@@ -542,6 +542,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: target bundle cannot be overlay bundle of external overlay installation.",
     },
     {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE,
+        "error: target module cannot be overlay module of overlay installation",
+    },
+    {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
         "error: overlay type is not same.",
     },

@@ -592,6 +592,8 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
     bool isStage = (infos.begin()->second).GetIsNewVersion();
+    const std::string targetBundleName = (infos.begin()->second).GetTargetBundleName();
+    int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -632,6 +634,12 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (isStage != info.second.GetIsNewVersion()) {
             APP_LOGE("must be all FA model or all stage model");
             return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+        }
+        if (targetBundleName != info.second.GetTargetBundleName()) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
+        }
+        if (targetPriority != info.second.GetTargetPriority()) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
         }
     }
     // check api sdk version
