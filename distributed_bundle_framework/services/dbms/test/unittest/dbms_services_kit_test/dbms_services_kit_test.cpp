@@ -1266,10 +1266,11 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0067, Function | SmallTest | L
     EXPECT_NE(imageCompress, nullptr);
     std::fstream fs;
     fs.open(PATH_LOCATIONS, std::ios_base::app);
+    fs.close();
     std::ofstream ofs;
     ofs.open(PATH_LOCATIONS, std::ios::out|std::ios::app);
     ofs << "test" << " ";
-	ofs.close();
+    ofs.close();
     if (imageCompress != nullptr) {
         int64_t fileLength = 64;
         std::unique_ptr<uint8_t[]> fileContent = std::make_unique<uint8_t[]>(fileLength);
