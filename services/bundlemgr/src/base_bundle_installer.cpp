@@ -49,6 +49,9 @@
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+#include "bundle_overlay_install_checker.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
