@@ -1441,7 +1441,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
-    if (versionCode_ > oldInfo.GetVersionCode()) {
+    if ((versionCode_ > oldInfo.GetVersionCode()) && newInfo.GetIsNewVersion()) {
         result = CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_));
         if (result != ERR_OK) {
             APP_LOGE("fail to create ark profile, error is %{public}d", result);
@@ -1791,7 +1791,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     }
 
     if (!dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo)) {
-        APP_LOGE("fail to gererate uid and gid");
+        APP_LOGE("fail to generate uid and gid");
         return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
     }
 
@@ -1802,11 +1802,13 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         return result;
     }
 
-    result = CreateArkProfile(
-        info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
-    if (result != ERR_OK) {
-        APP_LOGE("fail to create ark profile, error is %{public}d", result);
-        return result;
+    if (info.GetIsNewVersion()) {
+        result = CreateArkProfile(
+            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to create ark profile, error is %{public}d", result);
+            return result;
+        }
     }
 
     std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
@@ -1870,11 +1872,12 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         APP_LOGE("fail to extractArkNativeFile, error is %{public}d", result);
         return result;
     }
-
-    result = ExtractArkProfileFile(modulePath_, info.GetBundleName(), userId_);
-    if (result != ERR_OK) {
-        APP_LOGE("fail to ExtractArkProfileFile, error is %{public}d", result);
-        return result;
+    if (info.GetIsNewVersion()) {
+        result = ExtractArkProfileFile(modulePath_, info.GetBundleName(), userId_);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to ExtractArkProfileFile, error is %{public}d", result);
+            return result;
+        }
     }
 
     if (info.IsPreInstallApp()) {
@@ -1931,6 +1934,9 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
 
 ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const
 {
+    if (!oldInfo.GetIsNewVersion()) {
+        return ERR_OK;
+    }
     std::string bundleName = oldInfo.GetBundleName();
     APP_LOGD("Begin to ExtractAllArkProfileFile, bundleName : %{public}s", bundleName.c_str());
     const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
