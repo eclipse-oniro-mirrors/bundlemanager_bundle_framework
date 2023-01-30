@@ -3792,8 +3792,6 @@ HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0100, Function | SmallTest | Level
 HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0200, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
-    HqfInfo info;
-    info.moduleName = "com.example.bmsaccesstoken.MyApplication1";
     auto ret = innerAppQuickFix.RemoveHqfInfo("com.example.bmsaccesstoken.MyApplication1");
     EXPECT_FALSE(ret);
 }
@@ -3818,7 +3816,15 @@ HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0300, Function | SmallTest | Level
 HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFix_0100, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
+    innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionCode = 1001;
+    innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionCode = 1002;
+    innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionName = "test";
+    innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionName = "test1";
     innerAppQuickFix.SwitchQuickFix();
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionCode, 1002);
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionName, "test1");
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionCode, 1001);
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionName, "test");
 }
 
 /**
@@ -3870,7 +3876,11 @@ HWTEST_F(BmsBundleQuickFixTest, ToJson_0100, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
     nlohmann::json jsonObject;
+    AppQuickFix appQuickFix;
+    QuickFixMark quickFixMark;
     innerAppQuickFix.ToJson(jsonObject);
+    EXPECT_EQ(jsonObject["appQuickFix"], appQuickFix);
+    EXPECT_EQ(jsonObject["quickFixMark"], quickFixMark);
 }
 
 /**
