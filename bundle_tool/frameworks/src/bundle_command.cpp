@@ -42,8 +42,8 @@ const int32_t INDEX_OFFSET = 2;
 const int32_t MAX_WAITING_TIME = 3000;
 const int32_t DEVICE_UDID_LENGTH = 65;
 const int32_t MAX_ARGUEMENTS_NUMBER = 3;
-const int32_t MINIMUM_WAITTING_TIME = 5;
-const int32_t MAXIMUM_WAITTING_TIME = 600;
+const int32_t MINIMUM_WAITTING_TIME = 180; // 3 mins
+const int32_t MAXIMUM_WAITTING_TIME = 600; // 10 mins
 
 const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:w:";
 const struct option LONG_OPTIONS[] = {
