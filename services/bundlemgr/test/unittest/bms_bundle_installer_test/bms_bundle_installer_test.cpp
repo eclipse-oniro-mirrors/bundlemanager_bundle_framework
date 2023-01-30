@@ -2667,4 +2667,66 @@ HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0400, Function | Small
     auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: CheckArkProfileDir_0100
+ * @tc.name: test CheckArkProfileDir
+ * @tc.desc: 1.Test CheckArkProfileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0100, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 100;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.userId_ = USERID;
+    int32_t oldVersionCode = 101;
+    auto ret = installer.CheckArkProfileDir(innerBundleInfo, oldVersionCode);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkProfileDir_0200
+ * @tc.name: test CheckArkProfileDir
+ * @tc.desc: 1.Test CheckArkProfileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0200, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 101;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.userId_ = USERID;
+    int32_t oldVersionCode = 100;
+    auto ret = installer.CheckArkProfileDir(innerBundleInfo, oldVersionCode);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkProfileDir_0300
+ * @tc.name: test CheckArkProfileDir
+ * @tc.desc: 1.Test CheckArkProfileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0300, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 101;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.userId_ = USERID;
+    int32_t oldVersionCode = 100;
+    auto ret = installer.CheckArkProfileDir(innerBundleInfo, oldVersionCode);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = installer.DeleteArkProfile(installer.bundleName_, installer.userId_);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
