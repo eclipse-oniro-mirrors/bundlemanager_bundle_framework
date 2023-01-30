@@ -1105,39 +1105,29 @@ void BMSEventHandler::SaveSystemVersion()
 
 bool BMSEventHandler::IsSystemUpgrade()
 {
-    std::string curSystemVersion;
-    if (!GetCurSystemVersion(curSystemVersion)) {
-        APP_LOGE("get currrnet system version fail!");
-        return false;
-    }
-
-    if (curSystemVersion.empty()) {
-        APP_LOGE("curSystemVersion:%{public}s empty", curSystemVersion.c_str());
-        return false;
-    }
-
     std::string oldSystemVersion;
     if (!GetOldSystemVersion(oldSystemVersion)) {
-        APP_LOGE("get system version from db fail!");
-        return false;
-    }
-
-    if (oldSystemVersion.empty()) {
-        APP_LOGE("oldSystemVersion:%{public}s empty", oldSystemVersion.c_str());
-        return false;
-    }
-
-    if (strcmp(curSystemVersion.c_str(), oldSystemVersion.c_str()) != 0) {
-        APP_LOGI("upgrading from %{public}s to %{public}s", oldSystemVersion.c_str(), curSystemVersion.c_str());
+        APP_LOGI("get system version from db fail, auto upgrade");
         return true;
     }
-    return false;
+    if (oldSystemVersion.empty()) {
+        APP_LOGI("old system version is empty, auto upgrade");
+        return true;
+    }
+
+    std::string curSystemVersion;
+    if (!GetCurSystemVersion(curSystemVersion)) {
+        APP_LOGI("get currrnet system version fail, auto upgrade");
+        return true;
+    }
+
+    return oldSystemVersion != curSystemVersion;
 }
 
 bool BMSEventHandler::GetCurSystemVersion(std::string &curSystemVersion)
 {
     char firmware[VERSION_LEN] = {0};
-    int32_t ret = GetParameter(BASE_VERSION_PARAM_NAME.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
+    int32_t ret = GetParameter(BASE_VERSION_PARAM_NAME.c_str(), Constants::EMPTY_STRING.c_str(), firmware, VERSION_LEN);
     if (ret <= 0) {
         APP_LOGE("GetParameter failed!");
         return false;
