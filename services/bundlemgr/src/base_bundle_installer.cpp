@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -680,14 +680,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
-    // report hapPath and hashValue
-    for (const auto &info : newInfos) {
-        for (const auto &innerModuleInfo : info.second.GetInnerModuleInfos()) {
-            sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
-            sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
-        }
-    }
-    GetInstallEventInfo(sysEventInfo_);
+    GetInstallEventInfo(newInfos, sysEventInfo_);
     sync();
     return result;
 }
@@ -2782,7 +2775,8 @@ void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
     eventInfo.callingAppId = bundleInfo.appId;
 }
 
-void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
+void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    EventInfo &eventInfo)
 {
     APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
     InnerBundleInfo info;
@@ -2795,6 +2789,13 @@ void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
     eventInfo.appDistributionType = info.GetAppDistributionType();
     eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
+    // report hapPath and hashValue
+    for (const auto &info : newInfos) {
+        for (const auto &innerModuleInfo : info.second.GetInnerModuleInfos()) {
+            sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
+            sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
+        }
+    }
 }
 
 void BaseBundleInstaller::SetCallingUid(int32_t callingUid)
