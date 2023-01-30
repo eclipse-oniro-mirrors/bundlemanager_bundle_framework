@@ -2624,6 +2624,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0200, Function | Small
     innerModuleInfo.name = MODULE_NAME;
     innerModuleInfo.modulePackage = MODULE_NAME;
     InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(true);
     innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
     BaseBundleInstaller installer;
     auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
@@ -2645,8 +2646,23 @@ HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0300, Function | Small
     innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = BUNDLE_NAME;
-    applicationInfo.name =  BUNDLE_NAME;
+    applicationInfo.name = BUNDLE_NAME;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0400
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0400, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
     BaseBundleInstaller installer;
     auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
     EXPECT_EQ(ret, ERR_OK);
