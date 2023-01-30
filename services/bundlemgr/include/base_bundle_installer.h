@@ -543,6 +543,7 @@ private:
     NotifyType GetNotifyType();
     void GetCallingEventInfo(EventInfo &eventInfo);
     void GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos, EventInfo &eventInfo);
+    ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, int32_t oldVersionCode) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

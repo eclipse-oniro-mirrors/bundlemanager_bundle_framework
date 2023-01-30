@@ -1459,12 +1459,9 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
-    if ((versionCode_ > oldInfo.GetVersionCode()) && newInfo.GetIsNewVersion()) {
-        result = CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_));
-        if (result != ERR_OK) {
-            APP_LOGE("fail to create ark profile, error is %{public}d", result);
-            return result;
-        }
+    result = CheckArkProfileDir(newInfo, oldInfo.GetVersionCode());
+    if (result != ERR_OK) {
+        return result;
     }
 
     moduleTmpDir_ = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_ + Constants::TMP_SUFFIX;
@@ -2919,6 +2916,21 @@ NotifyType BaseBundleInstaller::GetNotifyType()
         return NotifyType::OVERLAY_INSTALL;
     }
     return NotifyType::INSTALL;
+}
+
+ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, int32_t oldVersionCode) const
+{
+    if (newInfo.GetVersionCode() > oldVersionCode) {
+        ErrCode result = newInfo.GetIsNewVersion() ?
+            CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_)) :
+            DeleteArkProfile(bundleName_, userId_);
+        if (result != ERR_OK) {
+            APP_LOGE("bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",
+                bundleName_.c_str(), result);
+            return result;
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
