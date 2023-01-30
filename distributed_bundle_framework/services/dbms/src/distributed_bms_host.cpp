@@ -235,7 +235,6 @@ bool DistributedBmsHost::VerifyCallingPermission(const std::string &permissionNa
 bool DistributedBmsHost::VerifySystemApp()
 {
     APP_LOGI("verifying systemApp");
-#ifdef SYSTEM_API_VERIFICATION
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
@@ -251,7 +250,6 @@ bool DistributedBmsHost::VerifySystemApp()
         APP_LOGE("non-system app calling system api");
         return false;
     }
-#endif
     return true;
 }
 

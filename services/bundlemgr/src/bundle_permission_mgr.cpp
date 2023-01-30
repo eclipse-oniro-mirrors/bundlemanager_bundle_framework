@@ -709,7 +709,6 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
 {
     APP_LOGD("verifying systemApp");
-#ifdef SYSTEM_API_VERIFICATION
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     int32_t callingUid = IPCSkeleton::GetCallingUid();
@@ -734,7 +733,6 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
         APP_LOGI("hapApiVersion equal to or less than the version this api begins to be system api");
         return true;
     }
-#endif
     return true;
 }
 }  // namespace AppExecFwk
