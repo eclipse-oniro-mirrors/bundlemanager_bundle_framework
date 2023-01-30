@@ -123,7 +123,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .bundleName = bundleName_,
             .abilityName = mainAbility_,
             .resultCode = result,
-            .type = (isAppExist_ && hasInstalledInUser_) ? NotifyType::UPDATE : NotifyType::INSTALL,
+            .type = GetNotifyType(),
             .uid = uid,
             .accessTokenId = accessTokenId_
         };
@@ -604,17 +604,22 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // check hap hash param
     result = CheckHapHashParams(newInfos, installParam.hashParams);
     CHECK_RESULT(result, "check hap hash param failed %{public}d");
-    UpdateInstallerState(InstallerState::INSTALL_HAP_HASH_PARAM_CHECKED);          // ---- 25%
+    UpdateInstallerState(InstallerState::INSTALL_HAP_HASH_PARAM_CHECKED);         // ---- 25%
 
-    // check versioncode and bundleName
+    // check overlay installation
+    result = CheckOverlayInstallation(newInfos, userId_);
+    CHECK_RESULT(result, "overlay hap check failed %{public}d");
+    UpdateInstallerState(InstallerState::INSTALL_OVERLAY_CHECKED);                // ---- 30%
+
+    // check app props in the configuration file
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
-    UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 30%
+    UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
     // check native file
     result = CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
-    UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 35%
+    UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 40%
 
     auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
     std::lock_guard lock {mtx};
@@ -1271,6 +1276,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 #endif
 
+    auto result = CheckOverlayUpdate(oldInfo, newInfo, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("CheckOverlayUpdate failed due to %{public}d", result);
+        return result;
+    }
+
     APP_LOGD("ProcessBundleUpdateStatus with bundleName %{public}s and packageName %{public}s",
         newInfo.GetBundleName().c_str(), modulePackage_.c_str());
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_START)) {
@@ -1288,7 +1299,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     // 2. bundle exist, install new hap
     bool isModuleExist = oldInfo.FindModule(modulePackage_);
     newInfo.RestoreFromOldInfo(oldInfo);
-    auto result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
+    result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
         isReplace, noSkipsKill) : ProcessNewModuleInstall(newInfo, oldInfo);
     if (result != ERR_OK) {
         APP_LOGE("install module failed %{public}d", result);
@@ -1424,7 +1435,13 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             return ERR_OK;
         }
     }
-
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
+        ((result = dataMgr_->RemoveOverlayModuleConnection(newInfo, oldInfo)) != ERR_OK)) {
+        APP_LOGE("remove overlay connection failed due to %{public}d", result);
+        return result;
+    }
+#endif
     APP_LOGE("ProcessModuleUpdate noSkipsKill = %{public}d", noSkipsKill);
     // reboot scan case will not kill the bundle
     if (noSkipsKill) {
@@ -2555,6 +2572,14 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         APP_LOGE("same version update module condition, model type must be the same");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (oldInfo.GetTargetBundleName() != newInfo.GetTargetBundleName()) {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
+    }
+    if (oldInfo.GetTargetPriority() != newInfo.GetTargetPriority()) {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
+    }
+#endif
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
 }
@@ -2814,6 +2839,86 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    int32_t userId)
+{
+    APP_LOGD("Start to check overlay installation");
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    bool isInternalOverlayExisted = false;
+    bool isExternalOverlayExisted = false;
+    for (auto &info : newInfos) {
+        if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
+            APP_LOGW("the hap is not overlay hap");
+            continue;
+        }
+        if (isInternalOverlayExisted && isExternalOverlayExisted) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_EXTERNAL_OVERLAY_EXISTED_SIMULTANEOUSLY;
+        }
+        std::shared_ptr<BundleOverlayInstallChecker> overlayChecker = std::make_shared<BundleOverlayInstallChecker>();
+        ErrCode result = ERR_OK;
+        if (info.second.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
+            isInternalOverlayExisted = true;
+            result = overlayChecker->CheckInternalBundle(info.second);
+        }
+        if (info.second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+            isExternalOverlayExisted = false;
+            result = overlayChecker->CheckExternalBundle(info.second, userId);
+        }
+        if (result != ERR_OK) {
+            APP_LOGE("check overlay installation failed due to errcode %{public}d", result);
+            return result;
+        }
+    }
+    overlayType_ = (newInfos.begin()->second).GetOverlayType();
+    APP_LOGD("check overlay installation successfully and overlay type is %{public}d", overlayType_);
+#endif
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo,
+    int32_t userId) const
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (((newInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
+        (oldInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE)) ||
+        ((oldInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
+        (newInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE))) {
+        APP_LOGE("external overlay cannot update non-external overlay application");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+
+    std::string newModuleName = newInfo.GetCurrentModulePackage();
+    if (!oldInfo.FindModule(newModuleName)) {
+        return ERR_OK;
+    }
+    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!oldInfo.isOverlayModule(newModuleName))) {
+        APP_LOGE("old module is non-overlay hap and new module is overlay hap");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+
+    if ((newInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (oldInfo.isOverlayModule(newModuleName))) {
+        APP_LOGE("old module is overlay hap and new module is non-overlay hap");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+#endif
+    return ERR_OK;
+}
+
+NotifyType BaseBundleInstaller::GetNotifyType()
+{
+    if (isAppExist_ && hasInstalledInUser_) {
+        if (overlayType_ != NON_OVERLAY_TYPE) {
+            return NotifyType::OVERLAY_UPDATE;
+        }
+        return NotifyType::UPDATE;
+    }
+
+    if (overlayType_ != NON_OVERLAY_TYPE) {
+        return NotifyType::OVERLAY_INSTALL;
+    }
+    return NotifyType::INSTALL;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
