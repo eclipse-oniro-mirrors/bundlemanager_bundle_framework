@@ -54,7 +54,7 @@ bool BundleMgrHostImpl::GetApplicationInfo(
         appName.c_str(), flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE, appName)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(appName)) {
         APP_LOGE("verify permission failed");
@@ -103,7 +103,7 @@ bool BundleMgrHostImpl::GetApplicationInfos(
     APP_LOGD("start GetApplicationInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -152,7 +152,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
         bundleName.c_str(), flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE, bundleName)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
@@ -265,7 +265,7 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
     APP_LOGD("start GetBundleInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -401,7 +401,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
 {
     if (!VerifySystemApi(Constants::API_VERSION_NINE, want.GetElement().GetBundleName())) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
@@ -448,7 +448,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     APP_LOGD("start QueryAbilityInfo, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE, want.GetElement().GetBundleName())) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
@@ -475,7 +475,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
     APP_LOGD("start QueryAbilityInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE, want.GetElement().GetBundleName())) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
@@ -516,7 +516,7 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
     APP_LOGD("start QueryAllAbilityInfos, userId : %{public}d", userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -536,7 +536,7 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, Abi
     APP_LOGD("start QueryAbilityInfoByUri, uri : %{private}s", abilityUri.c_str());
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
@@ -556,7 +556,7 @@ bool BundleMgrHostImpl::QueryAbilityInfosByUri(const std::string &abilityUri, st
     APP_LOGD("start QueryAbilityInfosByUri, uri : %{private}s", abilityUri.c_str());
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -576,7 +576,7 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(
     APP_LOGD("start QueryAbilityInfoByUri, uri : %{private}s, userId : %{public}d", abilityUri.c_str(), userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
@@ -1554,7 +1554,7 @@ bool BundleMgrHostImpl::GetShortcutInfos(
     APP_LOGD("start GetShortcutInfos, bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -1630,7 +1630,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32
     APP_LOGD("QueryExtensionAbilityInfos without type begin");
     if (!VerifySystemApi(Constants::API_VERSION_NINE, want.GetElement().GetBundleName())) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
@@ -1690,7 +1690,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const Exten
     APP_LOGD("QueryExtensionAbilityInfos begin");
     if (!VerifySystemApi(Constants::API_VERSION_NINE, want.GetElement().GetBundleName())) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
@@ -1764,7 +1764,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
     APP_LOGD("QueryExtensionAbilityInfos with type begin");
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -1906,7 +1906,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, i
     APP_LOGD("uri : %{private}s, userId : %{public}d", uri.c_str(), userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
@@ -2013,7 +2013,7 @@ bool BundleMgrHostImpl::GetAbilityInfo(
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (!VerifySystemApi(Constants::API_VERSION_NINE, bundleName)) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     ElementName elementName("", bundleName, abilityName, moduleName);
     Want want;
@@ -2027,7 +2027,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfoByPriority(const Want &want, int32_t fl
     APP_LOGD("start ImplicitQueryInfoByPriority, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE, want.GetElement().GetBundleName())) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
@@ -2047,7 +2047,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
     APP_LOGD("begin to ImplicitQueryInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE, want.GetElement().GetBundleName())) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");

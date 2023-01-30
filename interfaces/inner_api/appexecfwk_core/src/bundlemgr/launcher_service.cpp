@@ -120,7 +120,7 @@ bool LauncherService::GetAbilityList(
     }
     if (!iBundleMgr->VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     std::vector<std::string> entities;
     entities.push_back(Want::ENTITY_HOME);
@@ -185,7 +185,7 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
     }
     if (!iBundleMgr->VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
     Want want;
     want.SetAction(Want::ACTION_HOME);
@@ -249,7 +249,7 @@ bool LauncherService::GetShortcutInfos(
     }
     if (!iBundleMgr->VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
-        return false;
+        return true;
     }
 
     std::vector<ShortcutInfo> infos;
