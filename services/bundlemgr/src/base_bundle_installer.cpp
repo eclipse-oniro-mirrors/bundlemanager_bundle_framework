@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -680,6 +680,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
+    GetInstallEventInfo(newInfos, sysEventInfo_);
     sync();
     return result;
 }
@@ -2755,7 +2756,57 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.userId = userId_;
     sysEventInfo_.versionCode = versionCode_;
     sysEventInfo_.preBundleScene = preBundleScene;
+    GetCallingEventInfo(sysEventInfo_);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
+}
+
+void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
+{
+    APP_LOGD("GetCallingEventInfo start, bundleName:%{public}s", eventInfo.callingBundleName.c_str());
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    if (!dataMgr_->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
+        APP_LOGW("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        eventInfo.callingBundleName = Constants::EMPTY_STRING;
+        return;
+    }
+    BundleInfo bundleInfo;
+    if (!dataMgr_->GetBundleInfo(eventInfo.callingBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo,
+        eventInfo.callingUid / Constants::BASE_USER_RANGE)) {
+        APP_LOGE("GetBundleInfo failed, bundleName: %{public}s", eventInfo.callingBundleName.c_str());
+        return;
+    }
+    eventInfo.callingAppId = bundleInfo.appId;
+}
+
+void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    EventInfo &eventInfo)
+{
+    APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    eventInfo.fingerprint = info.GetCertificateFingerprint();
+    eventInfo.appDistributionType = info.GetAppDistributionType();
+    eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
+    eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
+    // report hapPath and hashValue
+    for (const auto &info : newInfos) {
+        for (const auto &innerModuleInfo : info.second.GetInnerModuleInfos()) {
+            sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
+            sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
+        }
+    }
+}
+
+void BaseBundleInstaller::SetCallingUid(int32_t callingUid)
+{
+    sysEventInfo_.callingUid = callingUid;
 }
 
 ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)

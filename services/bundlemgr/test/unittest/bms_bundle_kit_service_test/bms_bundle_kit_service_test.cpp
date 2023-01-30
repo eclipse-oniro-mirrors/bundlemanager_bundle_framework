@@ -9293,4 +9293,32 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | S
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
 }
+
+/**
+ * @tc.number: IsHideDesktopIcon_0001
+ * @tc.name: test can IsHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.IsHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsHideDesktopIcon_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    bool ret = innerBundleInfo.IsHideDesktopIcon();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsHideDesktopIcon_0002
+ * @tc.name: test can IsHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.IsHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsHideDesktopIcon_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    bool ret = innerBundleInfo.IsHideDesktopIcon();
+    EXPECT_TRUE(ret);
+}
 }
