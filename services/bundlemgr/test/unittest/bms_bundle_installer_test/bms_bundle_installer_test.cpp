@@ -2410,7 +2410,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0100, Function | SmallTest | Lev
  * @tc.desc: 1. BundleInstallChecker
 */
 HWTEST_F(BmsBundleInstallerTest, InstallChecker_0200, Function | SmallTest | Level0)
-{    
+{
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST + "rpcid.sc";
     std::vector<std::string> bundlePaths;
     bundlePaths.push_back(bundlePath);
@@ -2447,7 +2447,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0400, Function | SmallTest | Lev
     std::unordered_map<std::string, InnerBundleInfo> infos;
     BundleInstallChecker installChecker;
     auto ret = installChecker.CheckDependency(infos);
-    EXPECT_EQ(ret, ERR_OK);//0
+    EXPECT_EQ(ret, ERR_OK);
 
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
