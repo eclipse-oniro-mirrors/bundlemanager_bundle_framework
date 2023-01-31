@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 #include <fstream>
 
-// #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #define private public
 #include "bundle_mgr_service.h"
@@ -61,7 +60,10 @@ HWTEST_F(BmsEventHandlerTest, BeforeBmsStart_0100, Function | SmallTest | Level0
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
     EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    handler->needNotifyBundleScanStatus_ = true;
     handler->BeforeBmsStart();
+    EXPECT_TRUE(handler->needNotifyBundleScanStatus_ == false);
+    EXPECT_TRUE(BundlePermissionMgr::Init());
 }
 
 /**
@@ -75,6 +77,7 @@ HWTEST_F(BmsEventHandlerTest, OnBmsStarting_0100, Function | SmallTest | Level0)
     EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->OnBmsStarting();
+    EXPECT_TRUE(handler->needRebootOta_ == true);
 }
 
 /**
@@ -170,6 +173,7 @@ HWTEST_F(BmsEventHandlerTest, SaveInstallInfoToCache_0100, Function | SmallTest 
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     InnerBundleInfo info;
     handler->SaveInstallInfoToCache(info);
+    EXPECT_EQ(info.GetAppCodePath(), Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR);
 }
 
 /**
@@ -266,9 +270,10 @@ HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0400, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, BundleBootStartEvent_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->BundleBootStartEvent();
+    EXPECT_NE(handler, nullptr);
+    EXPECT_NE(runner, nullptr);
 }
 
 /**

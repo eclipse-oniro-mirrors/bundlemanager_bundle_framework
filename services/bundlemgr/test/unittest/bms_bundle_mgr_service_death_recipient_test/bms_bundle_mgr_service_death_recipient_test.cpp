@@ -52,6 +52,7 @@ HWTEST_F(BmsBundleMgrServiceDeathRecipientTest, BundleMgrServiceDeathRecipient_0
     const wptr<IRemoteObject> object;
     BundleMgrServiceDeathRecipient bundleMgrServiceDeathRecipient(deathCallback);
     bundleMgrServiceDeathRecipient.OnRemoteDied(object);
+    EXPECT_EQ(bundleMgrServiceDeathRecipient.deathCallback_, nullptr);
 }
 
 /**
@@ -65,8 +66,8 @@ HWTEST_F(BmsBundleMgrServiceDeathRecipientTest, BundleMgrServiceDeathRecipient_0
     const std::function<void(const wptr<IRemoteObject>& object)> deathCallback;
     BundleMgrServiceDeathRecipient bundleMgrServiceDeathRecipient(deathCallback);
     bundleMgrServiceDeathRecipient.deathCallback_ = nullptr;
-    EXPECT_EQ(bundleMgrServiceDeathRecipient.deathCallback_, nullptr);
     bundleMgrServiceDeathRecipient.OnRemoteDied(object);
+    EXPECT_EQ(bundleMgrServiceDeathRecipient.deathCallback_, nullptr);
 }
 } // namespace AppExecFwk
 } // namespace OHOS
