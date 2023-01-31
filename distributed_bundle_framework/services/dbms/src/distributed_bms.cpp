@@ -34,14 +34,18 @@
 #include "image_packer.h"
 #include "image_source.h"
 #include "system_ability_definition.h"
+#ifdef HICOLLIE_ENABLE
 #include "xcollie/xcollie.h"
 #include "xcollie/xcollie_define.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+#ifdef HICOLLIE_ENABLE
     const unsigned int LOCAL_TIME_OUT_SECONDS = 5;
     const unsigned int REMOTE_TIME_OUT_SECONDS = 10;
+#endif
     const uint8_t DECODE_VALUE_ONE = 1;
     const uint8_t DECODE_VALUE_TWO = 2;
     const uint8_t DECODE_VALUE_THREE = 3;
@@ -58,7 +62,8 @@ namespace {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
     };
     const std::string POSTFIX = "_Compress.";
-#ifdef HISYSEVENT_ENABLE
+
+#if defined HISYSEVENT_ENABLE && HICOLLIE_ENABLE
     DBMSEventInfo GetEventInfo(
         const std::vector<ElementName> &elements, const std::string &localeInfo, int32_t resultCode)
     {
@@ -175,6 +180,7 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> DistributedBms::GetBundleMgr()
     return bundleMgr_;
 }
 
+#ifdef HICOLLIE_ENABLE
 static OHOS::sptr<OHOS::AppExecFwk::IDistributedBms> GetDistributedBundleMgr(const std::string &deviceId)
 {
     auto samgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -188,6 +194,7 @@ static OHOS::sptr<OHOS::AppExecFwk::IDistributedBms> GetDistributedBundleMgr(con
     }
     return OHOS::iface_cast<IDistributedBms>(remoteObject);
 }
+#endif
 
 int32_t DistributedBms::GetRemoteAbilityInfo(
     const OHOS::AppExecFwk::ElementName &elementName, RemoteAbilityInfo &remoteAbilityInfo)
@@ -198,6 +205,7 @@ int32_t DistributedBms::GetRemoteAbilityInfo(
 int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName &elementName,
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
+#ifdef HICOLLIE_ENABLE
     auto iDistBundleMgr = GetDistributedBundleMgr(elementName.GetDeviceID());
     int32_t resultCode;
     if (!iDistBundleMgr) {
@@ -210,11 +218,16 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
         resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
     }
+
 #ifdef HISYSEVENT_ENABLE
     EventReport::SendSystemEvent(
         DBMSEventType::GET_REMOTE_ABILITY_INFO, GetEventInfo(elementName, localeInfo, resultCode));
 #endif
     return resultCode;
+#else
+    APP_LOGI("HICOLLIE_ENABLE is false");
+    return NO_ERROR;
+#endif
 }
 
 int32_t DistributedBms::GetRemoteAbilityInfos(
@@ -226,6 +239,7 @@ int32_t DistributedBms::GetRemoteAbilityInfos(
 int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &elementNames,
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
+#ifdef HICOLLIE_ENABLE
     if (elementNames.empty()) {
         APP_LOGE("GetDistributedBundle failed due to elementNames empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -247,6 +261,10 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         DBMSEventType::GET_REMOTE_ABILITY_INFOS, GetEventInfo(elementNames, localeInfo, resultCode));
 #endif
     return resultCode;
+#else
+    APP_LOGI("HICOLLIE_ENABLE is false");
+    return NO_ERROR;
+#endif
 }
 
 int32_t DistributedBms::GetAbilityInfo(
@@ -380,12 +398,17 @@ bool DistributedBms::GetMediaBase64(std::unique_ptr<uint8_t[]> &data, int64_t fi
 bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
     DistributedBundleInfo &distributedBundleInfo)
 {
+#ifdef HICOLLIE_ENABLE
     int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetDistributedBundleInfo", LOCAL_TIME_OUT_SECONDS,
         nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
     bool ret = DistributedDataStorage::GetInstance()->GetStorageDistributeInfo(
         networkId, bundleName, distributedBundleInfo);
     HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
     return ret;
+#else
+    APP_LOGI("HICOLLIE_ENABLE is false");
+    return false;
+#endif
 }
 
 std::unique_ptr<char[]> DistributedBms::EncodeBase64(std::unique_ptr<uint8_t[]> &data, int srcLen)
