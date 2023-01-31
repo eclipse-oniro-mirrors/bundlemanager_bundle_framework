@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -534,8 +534,8 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: external overlay installation only support system bundle.",
     },
     {
-        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_PERMISSION_FOR_TARGET_BUNDLE,
-        "error:target bundle has no query permission for other bundles.",
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_DIFFERENT_SIGNATURE_CERTIFICATE,
+        "error:target bundle has different signature certificate with current bundle.",
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE,

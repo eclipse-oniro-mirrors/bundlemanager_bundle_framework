@@ -51,6 +51,9 @@
 #include "free_install_params.h"
 #include "parameters.h"
 #include "singleton.h"
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+#include "bundle_overlay_data_manager.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -236,6 +239,14 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         if (info.GetBaseApplicationInfo().needAppDetail) {
             AddAppDetailAbilityInfo(info);
         }
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        if (info.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+            OverlayDataMgr::GetInstance()->UpdateExternalOverlayInfo(info);
+        }
+        if (info.GetOverlayType() == NON_OVERLAY_TYPE) {
+            OverlayDataMgr::GetInstance()->BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info);
+        }
+#endif
         if (dataStorage_->SaveStorageBundleInfo(info)) {
             APP_LOGI("write storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.emplace(bundleName, info);
@@ -279,6 +290,15 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.AddModuleInfo(newInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
+            oldInfo.SetOverlayType(newInfo.GetOverlayType());
+        }
+        if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK) {
+            APP_LOGE("update overlay info failed");
+            return false;
+        }
+#endif
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
@@ -306,6 +326,9 @@ bool BundleDataMgr::RemoveModuleInfo(
     }
     if (statusItem->second == InstallState::UNINSTALL_START || statusItem->second == InstallState::ROLL_BACK) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        OverlayDataMgr::GetInstance()->RemoveOverlayModuleInfo(bundleName, modulePackage, oldInfo);
+#endif
         oldInfo.RemoveModuleInfo(modulePackage);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         if (!oldInfo.isExistedOverlayModule()) {
@@ -368,7 +391,7 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
 }
 
 bool BundleDataMgr::UpdateInnerBundleInfo(
-    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+    const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
     APP_LOGD("UpdateInnerBundleInfo:%{public}s", bundleName.c_str());
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -391,6 +414,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
         bool needAppDetail = oldInfo.GetBaseApplicationInfo().needAppDetail;
         bool isOldInfoHasEntry = oldInfo.HasEntry();
+        if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+            oldInfo.KeepOldOverlayConnection(newInfo);
+        }
         oldInfo.UpdateModuleInfo(newInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
@@ -415,6 +441,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
+            (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK)) {
+            APP_LOGE("update overlay info failed");
+            return false;
+        }
+#endif
         if (!dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
@@ -1846,12 +1879,12 @@ bool BundleDataMgr::GetFreeInstallModules(
     }
 
     for (const auto &iter : bundleInfos_) {
-        std::vector<std::string> moudles;
-        if (!iter.second.GetFreeInstallModules(moudles)) {
+        std::vector<std::string> modules;
+        if (!iter.second.GetFreeInstallModules(modules)) {
             continue;
         }
 
-        freeInstallModules.emplace(iter.first, moudles);
+        freeInstallModules.emplace(iter.first, modules);
     }
 
     return !freeInstallModules.empty();
@@ -2120,6 +2153,11 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     }
 
     auto infoItem = bundleInfos_.find(bundleName);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (infoItem->second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+        OverlayDataMgr::GetInstance()->RemoveOverlayBundleInfo(infoItem->second.GetTargetBundleName(), bundleName);
+    }
+#endif
     if (infoItem != bundleInfos_.end()) {
         APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
         const InnerBundleInfo &innerBundleInfo = infoItem->second;
@@ -4360,6 +4398,46 @@ bool BundleDataMgr::CheckAppInstallControl(const std::string &appId, int32_t use
     APP_LOGW("app control is disable");
     return true;
 #endif
+}
+
+bool BundleDataMgr::GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
+{
+    APP_LOGI("start to get overlay innerBundleInfo");
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+        bundleInfos_.at(bundleName).SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+        info = bundleInfos_.at(bundleName);
+        return true;
+    }
+
+    APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+    return false;
+}
+
+void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo)
+{
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
+        return;
+    }
+    bundleInfos_.at(bundleName) = innerBundleInfo;
+}
+
+void BundleDataMgr::EnableOverlayBundle(const std::string &bundleName)
+{
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+        bundleInfos_.at(bundleName).SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        return;
+    }
+    APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+}
+
+const std::map<std::string, InnerBundleInfo> &BundleDataMgr::GetAllOverlayInnerbundleInfos() const
+{
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    return bundleInfos_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

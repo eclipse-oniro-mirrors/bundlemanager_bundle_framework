@@ -50,6 +50,7 @@
 #include "scope_guard.h"
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+#include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_install_checker.h"
 #endif
 
@@ -1453,7 +1454,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
-        ((result = dataMgr_->RemoveOverlayModuleConnection(newInfo, oldInfo)) != ERR_OK)) {
+        ((result = OverlayDataMgr::GetInstance()->RemoveOverlayModuleConnection(newInfo, oldInfo)) != ERR_OK)) {
         APP_LOGE("remove overlay connection failed due to %{public}d", result);
         return result;
     }
