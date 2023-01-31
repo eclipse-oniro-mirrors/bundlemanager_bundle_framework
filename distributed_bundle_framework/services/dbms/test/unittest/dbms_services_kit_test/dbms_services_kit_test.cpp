@@ -691,6 +691,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0034, Function | SmallTest | L
         EXPECT_EQ(res, false);
     }
 }
+
 #ifdef HISYSEVENT_ENABLE
 /**
  * @tc.number: DbmsServicesKitTest_0035
@@ -729,6 +730,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0036, Function | SmallTest | L
     }
 }
 #endif
+
 /**
  * @tc.number: DbmsServicesKitTest_0037
  * @tc.name: GetKvStore
