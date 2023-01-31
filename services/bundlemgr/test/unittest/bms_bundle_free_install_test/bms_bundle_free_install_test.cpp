@@ -1493,6 +1493,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0003, Function | SmallTes
 
     EXPECT_EQ(result, ERR_OK);
 }
+
 /**
  * @tc.number:OnRemoteDied_0001
  * Function: OnRemoteDied
@@ -1505,6 +1506,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnRemoteDied_0001, Function | SmallTest | Lev
     ServiceCenterDeathRecipient recipient(server);
     wptr<IRemoteObject> wptrDeath;
     recipient.OnRemoteDied(wptrDeath);
+    EXPECT_TRUE(recipient.connectAbilityMgr_.lock() == nullptr);
 }
 
 /**
@@ -1519,6 +1521,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnRemoteDied_0002, Function | SmallTest | Lev
     ServiceCenterDeathRecipient recipient(server);
     wptr<IRemoteObject> wptrDeath;
     recipient.OnRemoteDied(wptrDeath);
+    EXPECT_TRUE(recipient.connectAbilityMgr_.lock() != nullptr);
 }
 
 /**
