@@ -242,6 +242,7 @@ struct App {
     bool multiProjects = false;
     std::string targetBundle;
     int32_t targetPriority = 0;
+    bool asanEnabled = false;
 };
 
 struct Module {
@@ -975,6 +976,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_ASAN_ENABLED,
+        app.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (jsonObject.find(APP_PHONE) != jsonObjectEnd) {
         DeviceConfig deviceConfig;
         GetValueIfFindKey<DeviceConfig>(jsonObject,
@@ -1580,6 +1589,7 @@ bool ToApplicationInfo(
         applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     }
     applicationInfo.vendor = app.vendor;
+    applicationInfo.asanEnabled = app.asanEnabled;
 
     // device adapt
     std::string deviceType = GetDeviceType();
@@ -1641,6 +1651,7 @@ bool ToBundleInfo(
     bundleInfo.vendor = applicationInfo.vendor;
     bundleInfo.releaseType = applicationInfo.apiReleaseType;
     bundleInfo.isNativeApp = false;
+    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
 
     if (innerModuleInfo.isEntry) {
         bundleInfo.mainEntry = innerModuleInfo.moduleName;
