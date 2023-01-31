@@ -101,5 +101,13 @@ void AgingRequest::ResetRequest()
     agingCleanType_ = AgingCleanType::CLEAN_CACHE;
     tatalDataBytes_ = 0;
 }
+
+void AgingRequest::Dump()
+{
+    for (const auto &agingBundle : agingBundles_) {
+        APP_LOGD("bundle: %{public}s, lastTimeUsed: %{public}" PRId64 ", startCount: %{public}d",
+            agingBundle.GetBundleName().c_str(), agingBundle.GetRecentlyUsedTime(), agingBundle.GetStartCount());
+    }
+}
 }  //  namespace AppExecFwk
 }  //  namespace OHOS
