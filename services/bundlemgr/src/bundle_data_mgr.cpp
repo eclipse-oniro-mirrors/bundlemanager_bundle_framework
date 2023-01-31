@@ -21,7 +21,7 @@
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
 #endif
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+#if defined BUNDLE_FRAMEWORK_FREE_INSTALL && ACCOUNT_ENABLE
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
