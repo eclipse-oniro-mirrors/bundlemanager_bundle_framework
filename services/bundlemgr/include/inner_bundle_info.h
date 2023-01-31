@@ -1781,7 +1781,8 @@ public:
         innerModuleInfos_.try_emplace(overlayModuleInfo.targetModuleName, innerModuleInfo);
     }
 
-    void RemoveOverlayModuleInfo(const std::string &targetModuleName, const std::string &moduleName)
+    void RemoveOverlayModuleInfo(const std::string &targetModuleName, const std::string &bundleName,
+        const std::string &moduleName)
     {
         auto iterator = innerModuleInfos_.find(targetModuleName);
         if (iterator == innerModuleInfos_.end()) {
@@ -1789,8 +1790,8 @@ public:
         }
         auto innerModuleInfo = iterator->second;
         auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
-            innerModuleInfo.overlayModuleInfo.end(), [&moduleName](const auto &overlayInfo) {
-            return overlayInfo.moduleName == moduleName;
+            innerModuleInfo.overlayModuleInfo.end(), [&moduleName, &bundleName](const auto &overlayInfo) {
+            return (overlayInfo.moduleName == moduleName) && (overlayInfo.bundleName == bundleName);
         });
         if (overlayModuleInfoIt == innerModuleInfo.overlayModuleInfo.end()) {
             return;
@@ -1798,6 +1799,17 @@ public:
         innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
         innerModuleInfos_.erase(iterator);
         innerModuleInfos_.try_emplace(targetModuleName, innerModuleInfo);
+    }
+
+    void RemoveAllOverlayModuleInfo(const std::string &bundleName)
+    {
+        for (auto &innerModuleInfo : innerModuleInfos_) {
+            innerModuleInfo.second.overlayModuleInfo.erase(std::remove_if(
+                innerModuleInfo.second.overlayModuleInfo.begin(), innerModuleInfo.second.overlayModuleInfo.end(),
+                [&bundleName](const auto &overlayInfo) {
+                return overlayInfo.bundleName == bundleName;
+            }), innerModuleInfo.second.overlayModuleInfo.end());
+        }
     }
 
     bool isOverlayModule(const std::string &moduleName) const
