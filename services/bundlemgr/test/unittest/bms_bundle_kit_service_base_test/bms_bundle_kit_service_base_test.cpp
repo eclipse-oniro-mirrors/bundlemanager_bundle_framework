@@ -538,6 +538,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0100, Function | 
 {
     BundleDistributedManager mgr_;
     mgr_.Init();
+    EXPECT_TRUE(mgr_.handler_ != nullptr);
     sleep(1);
 }
 
@@ -974,6 +975,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2200, Function | 
     mgr_.handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>();
     std::string transactId = "transactId";
     mgr_.OutTimeMonitor(transactId);
+    EXPECT_FALSE(mgr_.handler_ == nullptr);
     sleep(1);
 }
 
@@ -988,6 +990,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2300, Function | 
     mgr_.handler_ = nullptr;
     std::string transactId = "transactId";
     mgr_.OutTimeMonitor(transactId);
+    EXPECT_FALSE(mgr_.handler_ != nullptr);
     sleep(1);
 }
 
@@ -1002,6 +1005,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2400, Function | 
     mgr_.handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>();
     std::string transactId = "";
     mgr_.OutTimeMonitor(transactId);
+    EXPECT_FALSE(mgr_.handler_ == nullptr);
     sleep(1);
 }
 
@@ -1016,6 +1020,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2500, Function | 
     mgr_.handler_ = nullptr;
     std::string transactId = "";
     mgr_.OutTimeMonitor(transactId);
+    EXPECT_FALSE(mgr_.handler_ != nullptr);
     sleep(1);
 }
 
@@ -1029,6 +1034,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2600, Function | 
     BundleDistributedManager mgr_;
     std::string queryRpcIdResult = "{\"appQuickFix\":{\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"}}";
     mgr_.OnQueryRpcIdFinished(queryRpcIdResult);
+    EXPECT_TRUE(queryAbilityParamsMap_.size() == 0);
     sleep(1);
 }
 
@@ -1042,6 +1048,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2700, Function | 
     BundleDistributedManager mgr_;
     std::string queryRpcIdResult = "";
     mgr_.OnQueryRpcIdFinished(queryRpcIdResult);
+    EXPECT_TRUE(queryAbilityParamsMap_.size() == 0);
     sleep(1);
 }
 
@@ -1093,6 +1100,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3000, Function | 
     QueryRpcIdParams param;
     int32_t resultCode = 0;
     mgr_.SendCallback(resultCode, param);
+    EXPECT_TRUE(param.callback == nullptr);
     sleep(1);
 }
 }
