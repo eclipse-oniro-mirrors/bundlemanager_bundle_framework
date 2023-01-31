@@ -40,12 +40,12 @@ bool AgingUtil::SortTwoAgingBundleInfos(AgingBundleInfo &bundle1, AgingBundleInf
     int64_t time20DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_20_DAYS);
     int64_t time30DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_30_DAYS);
     bool sortByUseTimes =
-        (bundle1.GetRecentlyUsedTime() <= time10DaysAgo && bundle2.GetRecentlyUsedTime() <= time10DaysAgo) ||
-        (bundle1.GetRecentlyUsedTime() > time10DaysAgo && bundle1.GetRecentlyUsedTime() <= time20DaysAgo &&
-        bundle2.GetRecentlyUsedTime() > time10DaysAgo && bundle2.GetRecentlyUsedTime() <= time20DaysAgo) ||
-        (bundle1.GetRecentlyUsedTime() > time20DaysAgo && bundle1.GetRecentlyUsedTime() <= time30DaysAgo &&
-        bundle2.GetRecentlyUsedTime() > time20DaysAgo && bundle2.GetRecentlyUsedTime() <= time30DaysAgo) ||
-        (bundle1.GetRecentlyUsedTime() > time30DaysAgo && bundle2.GetRecentlyUsedTime() > time30DaysAgo);
+        (bundle1.GetRecentlyUsedTime() >= time10DaysAgo && bundle2.GetRecentlyUsedTime() >= time10DaysAgo) ||
+        (bundle1.GetRecentlyUsedTime() < time10DaysAgo && bundle1.GetRecentlyUsedTime() >= time20DaysAgo &&
+        bundle2.GetRecentlyUsedTime() < time10DaysAgo && bundle2.GetRecentlyUsedTime() >= time20DaysAgo) ||
+        (bundle1.GetRecentlyUsedTime() < time20DaysAgo && bundle1.GetRecentlyUsedTime() >= time30DaysAgo &&
+        bundle2.GetRecentlyUsedTime() < time20DaysAgo && bundle2.GetRecentlyUsedTime() >= time30DaysAgo) ||
+        (bundle1.GetRecentlyUsedTime() < time30DaysAgo && bundle2.GetRecentlyUsedTime() < time30DaysAgo);
     if (sortByUseTimes && (bundle1.GetStartCount() != bundle2.GetStartCount())) {
         return bundle1.GetStartCount() < bundle2.GetStartCount();
     }
