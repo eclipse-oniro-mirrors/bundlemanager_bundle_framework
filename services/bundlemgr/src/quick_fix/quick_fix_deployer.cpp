@@ -619,9 +619,9 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + Constants::QUICK_FIX_FILE_SUFFIX;
-        ErrCode ret = InstalldClient::GetInstance()->MoveFile(info.hqfFilePath, realPath);
+        ErrCode ret = InstalldClient::GetInstance()->CopyFile(info.hqfFilePath, realPath);
         if (ret != ERR_OK) {
-            APP_LOGE("error MoveFile failed, errcode: %{public}d", ret);
+            APP_LOGE("error CopyFile failed, errcode: %{public}d", ret);
             return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
         }
         info.hqfFilePath = realPath;
