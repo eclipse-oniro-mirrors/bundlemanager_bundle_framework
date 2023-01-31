@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +17,10 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_proxy.h"
+#ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
 #include "os_account_manager.h"
+#endif
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "status_receiver_interface.h"
@@ -47,6 +49,7 @@ sptr<IBundleMgr> BundleCommandCommon::GetBundleMgrProxy()
 
 int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
 {
+#ifdef ACCOUNT_ENABLE
     if (userId == Constants::UNSPECIFIED_USERID) {
         std::vector<int> activeIds;
         int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
@@ -61,6 +64,10 @@ int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
         return activeIds[0];
     }
     return userId;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    return 0;
+#endif
 }
 
 std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
