@@ -58,7 +58,7 @@ namespace {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
     };
     const std::string POSTFIX = "_Compress.";
-
+#ifdef HISYSEVENT_ENABLE
     DBMSEventInfo GetEventInfo(
         const std::vector<ElementName> &elements, const std::string &localeInfo, int32_t resultCode)
     {
@@ -98,6 +98,7 @@ namespace {
         eventInfo.resultCode = resultCode;
         return eventInfo;
     }
+#endif
 }
 const bool REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<DistributedBms>::GetInstance().get());
@@ -209,9 +210,10 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
         resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
     }
-
+#ifdef HISYSEVENT_ENABLE
     EventReport::SendSystemEvent(
         DBMSEventType::GET_REMOTE_ABILITY_INFO, GetEventInfo(elementName, localeInfo, resultCode));
+#endif
     return resultCode;
 }
 
@@ -240,9 +242,10 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
     }
-
+#ifdef HISYSEVENT_ENABLE
     EventReport::SendSystemEvent(
         DBMSEventType::GET_REMOTE_ABILITY_INFOS, GetEventInfo(elementNames, localeInfo, resultCode));
+#endif
     return resultCode;
 }
 
