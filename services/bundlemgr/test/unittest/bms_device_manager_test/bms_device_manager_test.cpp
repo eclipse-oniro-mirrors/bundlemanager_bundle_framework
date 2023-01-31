@@ -19,6 +19,7 @@
 #include "bms_device_manager.h"
 #undef private
 #undef protected
+#include "system_ability_definition.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -98,6 +99,7 @@ HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0100, Function | SmallTest | L
     int32_t systemAbilityId = SYSTEM_ABILITY_ID;
     std::string deviceId = DEVICEID;
     deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
+    EXPECT_NE(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
 }
 
 /**
@@ -112,6 +114,7 @@ HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0200, Function | SmallTest | L
     int32_t systemAbilityId = DEVICEMANAGER_SA_ID;
     std::string deviceId = "";
     deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
+    EXPECT_EQ(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
 }
 
 /**
@@ -125,6 +128,7 @@ HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0300, Function | SmallTest | L
     int32_t systemAbilityId = SYSTEM_ABILITY_ID;
     std::string deviceId = "";
     deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
+    EXPECT_NE(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
 }
 
 /**
@@ -138,6 +142,7 @@ HWTEST_F(BmsDeviceManagerTest, OnRemoveSystemAbility_0100, Function | SmallTest 
     int32_t systemAbilityId = SYS_ABILITY_ID;
     std::string deviceId = "";
     deviceManager.OnRemoveSystemAbility(systemAbilityId, deviceId);
+    EXPECT_EQ(systemAbilityId, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
 
 /**
@@ -151,6 +156,7 @@ HWTEST_F(BmsDeviceManagerTest, OnRemoveSystemAbility_0200, Function | SmallTest 
     int32_t systemAbilityId = SYSTEM_ABILITY_ID;
     std::string deviceId = "";
     deviceManager.OnRemoveSystemAbility(systemAbilityId, deviceId);
+    EXPECT_NE(systemAbilityId, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
 
 /**
