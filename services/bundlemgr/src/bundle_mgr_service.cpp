@@ -31,7 +31,9 @@
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "want.h"
+#ifdef HICOLLIE_ENABLE
 #include "xcollie/watchdog.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -176,6 +178,7 @@ bool BundleMgrService::InitBundleUserMgr()
 
 bool BundleMgrService::InitBundleEventHandler()
 {
+#ifdef HICOLLIE_ENABLE
     if (runner_ == nullptr) {
         runner_ = EventRunner::Create(Constants::BMS_SERVICE_NAME);
         if (runner_ == nullptr) {
@@ -194,6 +197,10 @@ bool BundleMgrService::InitBundleEventHandler()
 
     handler_->SendEvent(BMSEventHandler::BMS_START);
     return true;
+#else
+    APP_LOGI("HICOLLIE_ENABLE is false");
+    return false;
+#endif
 }
 
 void BundleMgrService::InitDeviceManager()
