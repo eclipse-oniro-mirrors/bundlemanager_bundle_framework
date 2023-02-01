@@ -1525,6 +1525,21 @@ HWTEST_F(BmsBundleFreeInstallTest, OnRemoteDied_0002, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: OnRemoteRequest_0001
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    std::string installResult = "ok";
+    auto result = callbackStub.OnInstallFinished(installResult);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
  * @tc.number: OnInstallFinished_0002
  * Function: OnInstallFinished
  * @tc.name: test OnInstallFinished
@@ -1552,21 +1567,6 @@ HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0003, Function | SmallTest 
     std::string installResult = "ok";
     auto result = callbackStub.OnInstallFinished(installResult);
     EXPECT_EQ(result, ERR_INVALID_VALUE);
-}
-
-/**
- * @tc.number: OnRemoteRequest_0001
- * Function: OnRemoteRequest
- * @tc.name: test OnRemoteRequest
- * @tc.desc: test OnRemoteRequest success
- */
-HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0001, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
-    ServiceCenterStatusCallback callbackStub(server);
-    std::string installResult = "ok";
-    auto result = callbackStub.OnInstallFinished(installResult);
-    EXPECT_EQ(result, ERR_OK);
 }
 
 /**
