@@ -180,7 +180,6 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> DistributedBms::GetBundleMgr()
     return bundleMgr_;
 }
 
-#ifdef HICOLLIE_ENABLE
 static OHOS::sptr<OHOS::AppExecFwk::IDistributedBms> GetDistributedBundleMgr(const std::string &deviceId)
 {
     auto samgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -194,7 +193,6 @@ static OHOS::sptr<OHOS::AppExecFwk::IDistributedBms> GetDistributedBundleMgr(con
     }
     return OHOS::iface_cast<IDistributedBms>(remoteObject);
 }
-#endif
 
 int32_t DistributedBms::GetRemoteAbilityInfo(
     const OHOS::AppExecFwk::ElementName &elementName, RemoteAbilityInfo &remoteAbilityInfo)
@@ -205,7 +203,6 @@ int32_t DistributedBms::GetRemoteAbilityInfo(
 int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName &elementName,
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
-#ifdef HICOLLIE_ENABLE
     auto iDistBundleMgr = GetDistributedBundleMgr(elementName.GetDeviceID());
     int32_t resultCode;
     if (!iDistBundleMgr) {
@@ -213,10 +210,12 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+#ifdef HICOLLIE_ENABLE
         int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfo", REMOTE_TIME_OUT_SECONDS,
             nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
         resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
+#endif
     }
 
 #ifdef HISYSEVENT_ENABLE
@@ -224,10 +223,6 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
         DBMSEventType::GET_REMOTE_ABILITY_INFO, GetEventInfo(elementName, localeInfo, resultCode));
 #endif
     return resultCode;
-#else
-    APP_LOGI("HICOLLIE_ENABLE is false");
-    return NO_ERROR;
-#endif
 }
 
 int32_t DistributedBms::GetRemoteAbilityInfos(
@@ -239,7 +234,6 @@ int32_t DistributedBms::GetRemoteAbilityInfos(
 int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &elementNames,
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
-#ifdef HICOLLIE_ENABLE
     if (elementNames.empty()) {
         APP_LOGE("GetDistributedBundle failed due to elementNames empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -251,20 +245,18 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+#ifdef HICOLLIE_ENABLE
         int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfos", REMOTE_TIME_OUT_SECONDS,
             nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
         resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
+#endif
     }
 #ifdef HISYSEVENT_ENABLE
     EventReport::SendSystemEvent(
         DBMSEventType::GET_REMOTE_ABILITY_INFOS, GetEventInfo(elementNames, localeInfo, resultCode));
 #endif
     return resultCode;
-#else
-    APP_LOGI("HICOLLIE_ENABLE is false");
-    return NO_ERROR;
-#endif
 }
 
 int32_t DistributedBms::GetAbilityInfo(
