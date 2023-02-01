@@ -21,8 +21,11 @@
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
 #endif
-#if defined BUNDLE_FRAMEWORK_FREE_INSTALL && ACCOUNT_ENABLE
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+#include "installd_client.h"
+#ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
+#endif
 #endif
 #include "account_helper.h"
 #include "app_log_wrapper.h"
@@ -41,7 +44,6 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
-#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
@@ -51,6 +53,9 @@
 #include "free_install_params.h"
 #include "parameters.h"
 #include "singleton.h"
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+#include "bundle_overlay_data_manager.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
