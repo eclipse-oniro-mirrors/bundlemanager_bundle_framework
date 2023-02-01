@@ -23,7 +23,9 @@
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "installd_client.h"
+#ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
+#endif
 #endif
 #include "account_helper.h"
 #include "app_log_wrapper.h"

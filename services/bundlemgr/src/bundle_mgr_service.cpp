@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,9 @@
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "want.h"
+#ifdef HICOLLIE_ENABLE
 #include "xcollie/watchdog.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -186,10 +188,12 @@ bool BundleMgrService::InitBundleEventHandler()
 
     if (handler_ == nullptr) {
         handler_ = std::make_shared<BMSEventHandler>(runner_);
+#ifdef HICOLLIE_ENABLE
         int32_t timeout = 10 * 60 * 1000; // 10min
         if (HiviewDFX::Watchdog::GetInstance().AddThread(Constants::BMS_SERVICE_NAME, handler_, timeout) != 0) {
             APP_LOGE("watchdog addThread failed");
         }
+#endif
     }
 
     handler_->SendEvent(BMSEventHandler::BMS_START);

@@ -694,6 +694,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0034, Function | SmallTest | L
     }
 }
 
+#ifdef HISYSEVENT_ENABLE
 /**
  * @tc.number: DbmsServicesKitTest_0035
  * @tc.name: SendSystemEvent
@@ -730,6 +731,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0036, Function | SmallTest | L
         eventReport->SendSystemEvent(dbmsEventType, eventInfo);
     }
 }
+#endif
 
 /**
  * @tc.number: DbmsServicesKitTest_0037
