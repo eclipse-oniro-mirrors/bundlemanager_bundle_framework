@@ -62,8 +62,7 @@ namespace {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
     };
     const std::string POSTFIX = "_Compress.";
-
-#if defined HISYSEVENT_ENABLE && HICOLLIE_ENABLE
+#ifdef HISYSEVENT_ENABLE
     DBMSEventInfo GetEventInfo(
         const std::vector<ElementName> &elements, const std::string &localeInfo, int32_t resultCode)
     {
@@ -204,7 +203,7 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
     auto iDistBundleMgr = GetDistributedBundleMgr(elementName.GetDeviceID());
-    int32_t resultCode;
+    int32_t resultCode = 0;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
@@ -239,7 +238,7 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     auto iDistBundleMgr = GetDistributedBundleMgr(elementNames[0].GetDeviceID());
-    int32_t resultCode;
+    int32_t resultCode = 0;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
