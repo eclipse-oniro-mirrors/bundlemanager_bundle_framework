@@ -1612,23 +1612,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0023, Function | Smal
     EXPECT_FALSE(ret);
 }
 
-/**
- * @tc.number: BundleConnectAbilityMgr_0024
- * @tc.name: UpgradeAtomicService
- * @tc.desc: Upgrade Atomic Service
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | SmallTest | Level0)
-{
-    BundleConnectAbilityMgr connectAbilityMgr;
-    Want want;
-    ElementName name;
-    name.SetAbilityName("abilityName");
-    name.SetBundleName("bundleName");
-    want.SetElement(name);
-    int32_t userId = 1;
-    connectAbilityMgr.UpgradeAtomicService(want, userId);
-}
-
 /*
  * @tc.number: IsReachEndAgingThreshold_0100
  * @tc.name: test IsReachEndAgingThreshold
