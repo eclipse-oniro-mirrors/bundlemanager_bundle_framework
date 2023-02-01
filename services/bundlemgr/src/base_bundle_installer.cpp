@@ -2608,7 +2608,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         APP_LOGE("asanEnabled is not same");
         return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
     }
-    if (newInfo.GetReleaseType() == RELEASE && newInfo.GetAsanEnabled()) {
+    if ((newInfo.GetReleaseType()).find(RELEASE) != std::string::npos && newInfo.GetAsanEnabled()) {
         APP_LOGE("asanEnabled is not supported in Release");
         return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
     }
