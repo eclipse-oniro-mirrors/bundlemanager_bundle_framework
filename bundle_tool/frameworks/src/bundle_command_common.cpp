@@ -49,14 +49,15 @@ sptr<IBundleMgr> BundleCommandCommon::GetBundleMgrProxy()
 
 int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
 {
-#ifdef ACCOUNT_ENABLE
     if (userId == Constants::UNSPECIFIED_USERID) {
         std::vector<int> activeIds;
+#ifdef ACCOUNT_ENABLE
         int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
         if (ret != 0) {
             APP_LOGW("QueryActiveOsAccountIds failed! ret = %{public}d.", ret);
             return userId;
         }
+#endif
         if (activeIds.empty()) {
             APP_LOGW("QueryActiveOsAccountIds activeIds empty");
             return userId;
@@ -64,10 +65,6 @@ int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
         return activeIds[0];
     }
     return userId;
-#else
-    APP_LOGI("ACCOUNT_ENABLE is false");
-    return 0;
-#endif
 }
 
 std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
