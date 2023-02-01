@@ -178,7 +178,6 @@ bool BundleMgrService::InitBundleUserMgr()
 
 bool BundleMgrService::InitBundleEventHandler()
 {
-#ifdef HICOLLIE_ENABLE
     if (runner_ == nullptr) {
         runner_ = EventRunner::Create(Constants::BMS_SERVICE_NAME);
         if (runner_ == nullptr) {
@@ -190,17 +189,15 @@ bool BundleMgrService::InitBundleEventHandler()
     if (handler_ == nullptr) {
         handler_ = std::make_shared<BMSEventHandler>(runner_);
         int32_t timeout = 10 * 60 * 1000; // 10min
+#ifdef HICOLLIE_ENABLE
         if (HiviewDFX::Watchdog::GetInstance().AddThread(Constants::BMS_SERVICE_NAME, handler_, timeout) != 0) {
             APP_LOGE("watchdog addThread failed");
         }
+#endif
     }
 
     handler_->SendEvent(BMSEventHandler::BMS_START);
     return true;
-#else
-    APP_LOGI("HICOLLIE_ENABLE is false");
-    return false;
-#endif
 }
 
 void BundleMgrService::InitDeviceManager()
