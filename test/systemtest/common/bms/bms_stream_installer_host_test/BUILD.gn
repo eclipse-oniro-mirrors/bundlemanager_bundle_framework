@@ -30,7 +30,7 @@ ohos_systemtest("BundleMgrStreamInstallerHostTest") {
     "//third_party/googletest:gtest_main",
   ]
 
-  defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+  defines = []
 
   external_deps = [
     "ability_base:want",

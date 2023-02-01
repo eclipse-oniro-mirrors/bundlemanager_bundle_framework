@@ -33,7 +33,10 @@ public:
     MOCK_METHOD1(CreateStream, int32_t(const std::string &hapName));
     MOCK_METHOD0(Install, bool());
 
-    uint32_t GetInstallerId() const override { return 0; }
+    uint32_t GetInstallerId() const override
+    {
+        return 0;
+    }
     void SetInstallerId(uint32_t installerId) override {}
     void UnInit() override {}
 };
