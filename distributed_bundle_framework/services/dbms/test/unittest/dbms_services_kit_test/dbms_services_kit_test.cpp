@@ -16,9 +16,11 @@
 #define private public
 
 #include <fstream>
+#include <iostream>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <fcntl.h>
 
 #include "appexecfwk_errors.h"
 #include "distributed_ability_info.h"
@@ -49,7 +51,7 @@ const std::string INVALID_NAME = "invalid";
 const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
 const std::string PATH_LOCATION = "/data/app/el1/bundle/public/com.ohos.launcher";
-const std::string PATH_LOCATIONS = "/data/app/el1/bundle/public/com.ohos.nweb/libs/arm/libnweb_adapter.so";
+const std::string PATH_LOCATIONS = "/data/app/el1/bundle/new_create.txt";
 }  // namespace
 
 class DbmsServicesKitTest : public testing::Test {
@@ -1264,12 +1266,21 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0067, Function | SmallTest | L
 {
     std::unique_ptr<ImageCompress> imageCompress = std::make_unique<ImageCompress>();
     EXPECT_NE(imageCompress, nullptr);
+    std::fstream fs;
+    fs.open(PATH_LOCATIONS, std::ios_base::app);
+    fs.close();
+    std::ofstream ofs;
+    ofs.open(PATH_LOCATIONS, std::ios::out|std::ios::app);
+    ofs << "test" << " ";
+    ofs.close();
     if (imageCompress != nullptr) {
         int64_t fileLength = 64;
         std::unique_ptr<uint8_t[]> fileContent = std::make_unique<uint8_t[]>(fileLength);
         bool res = imageCompress->GetImageFileInfo(PATH_LOCATIONS, fileContent, fileLength);
         EXPECT_EQ(res, true);
     }
+    std::string savePath = PATH_LOCATIONS;
+    EXPECT_EQ(remove(savePath.c_str()), 0);
 }
 
 /**

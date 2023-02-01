@@ -538,12 +538,16 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: external overlay installation only support system bundle.",
     },
     {
-        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_PERMISSION_FOR_TARGET_BUNDLE,
-        "error:target bundle has no query permission for other bundles.",
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_DIFFERENT_SIGNATURE_CERTIFICATE,
+        "error:target bundle has different signature certificate with current bundle.",
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE,
         "error: target bundle cannot be overlay bundle of external overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE,
+        "error: target module cannot be overlay module of overlay installation",
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
@@ -552,6 +556,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR,
         "error: bundle dir is invalid.",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SAME,
+        "error: install asanEnabled not same",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SUPPORT,
+        "error, install asan enabled is not support",
     },
     {
         IStatusReceiver::ERR_UNKNOWN,

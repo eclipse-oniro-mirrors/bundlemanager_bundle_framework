@@ -59,7 +59,6 @@ private:
     ErrCode RunAsSwitchQuickFix();
     ErrCode RunAsDeleteQuickFix();
     ErrCode RunAsSetDebugMode();
-    ErrCode RunAsGetBundleStats();
 
     std::condition_variable cv_;
     std::mutex mutex_;
@@ -106,7 +105,6 @@ private:
     ErrCode DeleteQuickFix(const std::string &bundleName, std::shared_ptr<QuickFixResult> &quickFixRes);
     ErrCode GetQuickFixPath(int32_t index, std::vector<std::string>& quickFixPaths) const;
     ErrCode SetDebugMode(int32_t debugMode);
-    bool GetBundleStats(const std::string &bundleName, int32_t userId, std::string& msg);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

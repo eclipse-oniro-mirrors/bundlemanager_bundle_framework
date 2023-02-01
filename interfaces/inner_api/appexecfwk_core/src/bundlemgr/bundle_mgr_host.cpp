@@ -237,7 +237,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfo(MessageParcel &data, MessageParc
     std::string name = data.ReadString();
     ApplicationFlag flag = static_cast<ApplicationFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
-    APP_LOGI("name %{public}s, flag %{public}d, userId %{public}d", name.c_str(), flag, userId);
+    APP_LOGD("name %{public}s, flag %{public}d, userId %{public}d", name.c_str(), flag, userId);
 
     ApplicationInfo info;
     bool ret = GetApplicationInfo(name, flag, userId, info);

@@ -1411,6 +1411,15 @@ public:
         return isNewVersion_;
     }
 
+    bool GetAsanEnabled() const
+    {
+        return baseApplicationInfo_->asanEnabled;
+    }
+
+    void SetAsanEnabled(bool asanEnabled) {
+        baseApplicationInfo_->asanEnabled = asanEnabled;
+    }
+
     void SetAllowedAcls(const std::vector<std::string> &allowedAcls)
     {
         allowedAcls_.clear();
@@ -1772,7 +1781,8 @@ public:
         innerModuleInfos_.try_emplace(overlayModuleInfo.targetModuleName, innerModuleInfo);
     }
 
-    void RemoveOverlayModuleInfo(const std::string &targetModuleName, const std::string &moduleName)
+    void RemoveOverlayModuleInfo(const std::string &targetModuleName, const std::string &bundleName,
+        const std::string &moduleName)
     {
         auto iterator = innerModuleInfos_.find(targetModuleName);
         if (iterator == innerModuleInfos_.end()) {
@@ -1780,8 +1790,8 @@ public:
         }
         auto innerModuleInfo = iterator->second;
         auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
-            innerModuleInfo.overlayModuleInfo.end(), [&moduleName](const auto &overlayInfo) {
-            return overlayInfo.moduleName == moduleName;
+            innerModuleInfo.overlayModuleInfo.end(), [&moduleName, &bundleName](const auto &overlayInfo) {
+            return (overlayInfo.moduleName == moduleName) && (overlayInfo.bundleName == bundleName);
         });
         if (overlayModuleInfoIt == innerModuleInfo.overlayModuleInfo.end()) {
             return;
@@ -1789,6 +1799,17 @@ public:
         innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
         innerModuleInfos_.erase(iterator);
         innerModuleInfos_.try_emplace(targetModuleName, innerModuleInfo);
+    }
+
+    void RemoveAllOverlayModuleInfo(const std::string &bundleName)
+    {
+        for (auto &innerModuleInfo : innerModuleInfos_) {
+            innerModuleInfo.second.overlayModuleInfo.erase(std::remove_if(
+                innerModuleInfo.second.overlayModuleInfo.begin(), innerModuleInfo.second.overlayModuleInfo.end(),
+                [&bundleName](const auto &overlayInfo) {
+                return overlayInfo.bundleName == bundleName;
+            }), innerModuleInfo.second.overlayModuleInfo.end());
+        }
     }
 
     bool isOverlayModule(const std::string &moduleName) const
@@ -1820,6 +1841,16 @@ public:
                 return;
             }
         }
+    }
+
+    void SetAsanLogPath(const std::string& asanLogPath)
+    {
+        baseApplicationInfo_->asanLogPath = asanLogPath;
+    }
+
+    std::string GetAsanLogPath() const
+    {
+        return baseApplicationInfo_->asanLogPath;
     }
 
     void SetDisposedStatus(int32_t status);
@@ -1862,8 +1893,10 @@ public:
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
     int64_t GetLastInstallationTime() const;
     void UpdateAppDetailAbilityAttrs();
+    bool IsHideDesktopIcon() const;
 
 private:
+    bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void GetBundleWithExtension(

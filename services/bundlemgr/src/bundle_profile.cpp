@@ -114,6 +114,7 @@ struct App {
     int32_t iconId = 0;
     int32_t labelId = 0;
     bool userDataClearable = true;
+    bool asanEnabled = false;
     std::vector<std::string> targetBundleList;
 };
 
@@ -496,6 +497,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED,
+        app.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ReqVersion &reqVersion)
@@ -2099,6 +2108,7 @@ bool ToApplicationInfo(
     applicationInfo.apiCompatibleVersion = configJson.app.apiVersion.compatible;
     applicationInfo.apiTargetVersion = configJson.app.apiVersion.target;
     applicationInfo.apiReleaseType = configJson.app.apiVersion.releaseType;
+    applicationInfo.asanEnabled = configJson.app.asanEnabled;
 
     // if there is main ability, it's icon label description will be set to applicationInfo.
 
@@ -2170,6 +2180,7 @@ bool ToBundleInfo(
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;
+    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
     bundleInfo.isPreInstallApp = transformParam.isPreInstallApp;
 
     bundleInfo.vendor = applicationInfo.vendor;

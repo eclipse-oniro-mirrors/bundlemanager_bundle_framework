@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -640,5 +640,174 @@ HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0001, Fu
     newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
     ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetCallingEventInfo_0001
+ * @tc.name: test the start function of GetCallingEventInfo
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0001, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.GetCallingEventInfo(eventInfo);
+    EXPECT_EQ(eventInfo.callingBundleName, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetCallingEventInfo_0002
+ * @tc.name: test the start function of GetCallingEventInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EventInfo eventInfo;
+    baseBundleInstaller.GetCallingEventInfo(eventInfo);
+    EXPECT_EQ(eventInfo.callingBundleName, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetCallingEventInfo_0003
+ * @tc.name: test the start function of GetCallingEventInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = 20010999;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(baseBundleInstaller.dataMgr_, nullptr);
+    bool ret1 = baseBundleInstaller.dataMgr_ ->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 =  baseBundleInstaller.dataMgr_ ->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+
+    EventInfo eventInfo;
+    eventInfo.callingUid = 20010999;
+    baseBundleInstaller.GetCallingEventInfo(eventInfo);
+    EXPECT_EQ(eventInfo.callingBundleName, BUNDLE_NAME);
+
+    baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GetInstallEventInfo_0001
+ * @tc.name: test the start function of GetInstallEventInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    EventInfo eventInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    EXPECT_EQ(eventInfo.fingerprint, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetInstallEventInfo_0002
+ * @tc.name: test the start function of GetInstallEventInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();;
+    EventInfo eventInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    EXPECT_EQ(eventInfo.fingerprint, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetInstallEventInfo_0003
+ * @tc.name: test the start function of GetInstallEventInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.appDistributionType = Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(baseBundleInstaller.dataMgr_, nullptr);
+    bool ret1 = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 =  baseBundleInstaller.dataMgr_->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+
+    baseBundleInstaller.bundleName_ = BUNDLE_NAME;
+    EventInfo eventInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    EXPECT_EQ(eventInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+
+    baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GetInstallEventInfo_0004
+ * @tc.name: test the start function of GetInstallEventInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0004, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.appDistributionType = Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(baseBundleInstaller.dataMgr_, nullptr);
+    bool ret1 = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 =  baseBundleInstaller.dataMgr_->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+
+    baseBundleInstaller.bundleName_ = BUNDLE_NAME;
+    EventInfo eventInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.hapPath = "xxxx.hap";
+    moduleInfo.hashValue = "111";
+    info.InsertInnerModuleInfo(BUNDLE_NAME, moduleInfo);
+    newInfos.emplace(BUNDLE_NAME, info);
+    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    EXPECT_EQ(eventInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+    if (!eventInfo.filePath.empty()) {
+        EXPECT_EQ(eventInfo.filePath[0], moduleInfo.hapPath);
+        EXPECT_EQ(eventInfo.hashValue[0], moduleInfo.hashValue);
+    }
+    baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 } // OHOS

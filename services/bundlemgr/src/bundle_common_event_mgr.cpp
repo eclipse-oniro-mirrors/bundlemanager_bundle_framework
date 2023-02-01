@@ -42,6 +42,8 @@ void BundleCommonEventMgr::Init()
         { NotifyType::APPLICATION_ENABLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
         { NotifyType::BUNDLE_DATA_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_DATA_CLEARED },
         { NotifyType::BUNDLE_CACHE_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CACHE_CLEARED },
+        { NotifyType::OVERLAY_INSTALL, Constants::OVERLAY_REMOVED_ACTION},
+        { NotifyType::OVERLAY_UPDATE, Constants::OVERLAY_CHANGED_ACTION},
     };
 }
 

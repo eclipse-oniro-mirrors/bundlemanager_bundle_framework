@@ -49,6 +49,7 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_SINGLETON = "singleton";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_REMOVABLE = "removable";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_USER_DATA_CLEARABLE = "userDataClearable";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGETET_BUNDLE_LIST = "targetBundleList";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED = "asanEnabled";
 // sub BUNDLE_APP_PROFILE_KEY_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
@@ -337,6 +338,7 @@ constexpr const char* APP_ROUTER = "router";
 constexpr const char* APP_ACCESSIBLE = "accessible";
 constexpr const char* APP_TARGETBUNDLELIST = "targetBundleList";
 constexpr const char* APP_MULTI_PROJECTS = "multiProjects";
+constexpr const char* APP_ASAN_ENABLED = "asanEnabled";
 // module
 constexpr const char* MODULE_NAME = "name";
 constexpr const char* MODULE_TYPE = "type";

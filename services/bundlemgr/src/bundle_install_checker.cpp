@@ -44,6 +44,7 @@ const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExten
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
+const std::string RELEASE = "Release";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -591,6 +592,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
     bool isStage = (infos.begin()->second).GetIsNewVersion();
+    const std::string targetBundleName = (infos.begin()->second).GetTargetBundleName();
+    int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
+    bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -631,6 +635,21 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (isStage != info.second.GetIsNewVersion()) {
             APP_LOGE("must be all FA model or all stage model");
             return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+        }
+        if (targetBundleName != info.second.GetTargetBundleName()) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
+        }
+        if (targetPriority != info.second.GetTargetPriority()) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
+        }
+        // check asanEnabled
+        if (asanEnabled != info.second.GetAsanEnabled()) {
+            APP_LOGE("asanEnabled is not same");
+            return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
+        }
+        if (asanEnabled && info.second.GetReleaseType().find(RELEASE) != std::string::npos) {
+            APP_LOGE("asanEnabled is not supported in Release");
+            return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
         }
     }
     // check api sdk version

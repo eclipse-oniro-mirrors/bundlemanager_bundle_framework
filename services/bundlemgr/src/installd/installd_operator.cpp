@@ -95,6 +95,7 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
+    APP_LOGD("start to delete dir %{public}s", path.c_str());
     if (IsExistFile(path)) {
         return OHOS::RemoveFile(path);
     }
@@ -706,9 +707,9 @@ bool InstalldOperator::OpenHandle(void **handle)
         APP_LOGE("InstalldOperator::OpenHandle error handle is nullptr.");
         return false;
     }
-    if (IsExistDir(Constants::SYSTEM_LIB64)) {
-        *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    } else {
+    *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    if (*handle == nullptr) {
+        APP_LOGW("ApplyDiffPatch failed to open libdiff_patch_shared.z.so, err:%{public}s", dlerror());
         *handle = dlopen(LIB_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     }
     if (*handle == nullptr) {

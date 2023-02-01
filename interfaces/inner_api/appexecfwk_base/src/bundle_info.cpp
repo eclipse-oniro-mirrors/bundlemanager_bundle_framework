@@ -74,6 +74,7 @@ const std::string SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 const std::string OVERLAY_TYPE = "overlayType";
+const std::string BUNDLE_INFO_ASAN_ENABLED = "asanEnabled";
 const size_t BUNDLE_CAPACITY = 10240; // 10K
 }
 
@@ -323,6 +324,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     }
     signatureInfo = *sigInfo;
     overlayType = parcel.ReadInt32();
+    asanEnabled = parcel.ReadBool();
     return true;
 }
 
@@ -429,6 +431,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &signatureInfo);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayType);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, asanEnabled);
     return true;
 }
 
@@ -614,6 +617,7 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_APP_INDEX, bundleInfo.appIndex},
         {BUNDLE_INFO_SIGNATURE_INFO, bundleInfo.signatureInfo},
         {OVERLAY_TYPE, bundleInfo.overlayType},
+        {BUNDLE_INFO_ASAN_ENABLED, bundleInfo.asanEnabled}
     };
 }
 
@@ -962,6 +966,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         OVERLAY_TYPE,
         bundleInfo.overlayType,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_ASAN_ENABLED,
+        bundleInfo.asanEnabled,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
