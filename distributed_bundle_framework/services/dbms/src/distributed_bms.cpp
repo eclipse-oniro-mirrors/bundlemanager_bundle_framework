@@ -393,14 +393,13 @@ bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, cons
 #ifdef HICOLLIE_ENABLE
     int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetDistributedBundleInfo", LOCAL_TIME_OUT_SECONDS,
         nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
+#endif
     bool ret = DistributedDataStorage::GetInstance()->GetStorageDistributeInfo(
         networkId, bundleName, distributedBundleInfo);
+#ifdef HICOLLIE_ENABLE
     HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
-    return ret;
-#else
-    APP_LOGI("HICOLLIE_ENABLE is false");
-    return false;
 #endif
+    return ret;
 }
 
 std::unique_ptr<char[]> DistributedBms::EncodeBase64(std::unique_ptr<uint8_t[]> &data, int srcLen)
