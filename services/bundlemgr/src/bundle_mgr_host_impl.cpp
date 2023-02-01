@@ -2186,12 +2186,11 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("verify permission failed");
         return false;
     }
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
+        APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
         return false;
     }
-    return dataMgr->GetBundleStats(bundleName, userId, bundleStats);
+    return true;
 }
 
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,
