@@ -100,6 +100,7 @@ constexpr int PERMISSION_NOT_GRANTED = -1;
 constexpr int DUMP_INDENT = 4;
 constexpr unsigned int INSTALLD_UMASK = 0000;
 constexpr int INVALID_API_VERSION = -1;
+constexpr int API_VERSION_EIGHT = 8;
 constexpr int API_VERSION_NINE = 9;
 
 // native so

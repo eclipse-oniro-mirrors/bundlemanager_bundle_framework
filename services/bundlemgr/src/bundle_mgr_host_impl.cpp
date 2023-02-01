@@ -2390,5 +2390,10 @@ bool BundleMgrHostImpl::VerifySystemApi(std::string bundleName)
     }
     return BundlePermissionMgr::VerifySystemApp();
 }
+
+int32_t BundleMgrHostImpl::GetHapApiVersion()
+{
+    return BundlePermissionMgr::GetHapApiVersion();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
