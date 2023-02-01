@@ -935,6 +935,11 @@ public:
         return true;
     }
 
+    virtual int32_t GetHapApiVersion()
+    {
+        return Constants::INVALID_API_VERSION;
+    }
+
     /**
      * @brief Obtains the dependent module names.
      *

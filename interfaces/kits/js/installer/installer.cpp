@@ -97,13 +97,13 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
-        return nullptr;
+        return;
     }
     if (!iBundleMgr->VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
         result[0] = BusinessError::CreateCommonError(
             env, ERROR_NOT_SYSTEM_APP, RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER, INSTALL_PERMISSION);
-        if (callbackPtr->deffer) {
+        if (callbackPtr->deferred) {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
         } else {
             napi_value callback = nullptr;
