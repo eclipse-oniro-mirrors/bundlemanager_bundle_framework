@@ -19,6 +19,7 @@ config("appexecfwk_base_sdk_config") {
     "include",
     "include/free_install",
     "include/distributed_manager",
+    "include/overlay",
     "include/quick_fix",
     "//third_party/json/include",
   ]
@@ -58,6 +59,8 @@ ohos_shared_library("appexecfwk_base") {
     "src/install_param.cpp",
     "src/module_info.cpp",
     "src/module_usage_record.cpp",
+    "src/overlay/overlay_bundle_info.cpp",
+    "src/overlay/overlay_module_info.cpp",
     "src/perf_profile.cpp",
     "src/permission_define.cpp",
     "src/quick_fix/app_quick_fix.cpp",

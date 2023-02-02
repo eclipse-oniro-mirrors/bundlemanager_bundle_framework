@@ -62,15 +62,6 @@ struct Dependency {
     std::string bundleName;
 };
 
-struct OverlayModuleInfo {
-    std::string bundleName;
-    std::string moduleName;
-    std::string targetModuleName;
-    std::string hapPath;
-    int32_t priority;
-    int32_t state; // 0 is for disable and 1 is for enable
-};
-
 struct InnerModuleInfo {
     std::string name;
     std::string modulePackage;
@@ -173,13 +164,6 @@ struct SandboxAppPersistentInfo {
     uint32_t accessTokenId = 0;
     int32_t appIndex = 0;
     int32_t userId = Constants::INVALID_USERID;
-};
-
-struct OverlayBundleInfo {
-    std::string bundleName;
-    std::string bundleDir;
-    int32_t state; // 0 is for disable and 1 is for enable
-    int32_t priority;
 };
 
 class InnerBundleInfo {
