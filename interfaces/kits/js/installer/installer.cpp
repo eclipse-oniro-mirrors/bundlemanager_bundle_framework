@@ -86,6 +86,7 @@ AsyncGetBundleInstallerCallbackInfo::~AsyncGetBundleInstallerCallbackInfo()
 
 void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
 {
+    APP_LOGD("GetBundleInstallerCompleted");
     AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -99,6 +100,9 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
         APP_LOGE("can not get iBundleMgr");
         return;
     }
+    APP_LOGD("complete func verify system api");
+    int32_t hapVersion = iBundleMgr->GetHapApiVersion();
+    APP_LOGD("hap api version is %{public}d", hapVersion);
     if (!iBundleMgr->VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
         result[0] = BusinessError::CreateCommonError(

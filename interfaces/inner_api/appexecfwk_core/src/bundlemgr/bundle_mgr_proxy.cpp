@@ -3247,6 +3247,54 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     return reply.ReadInt32();
 }
 
+bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion, const std::string bundleName)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to VerifySystemApi due to write InterfaceToken fail");
+        return false;
+    }
+
+    if (!data.WriteInt32(beginApiVersion)) {
+        APP_LOGE("fail to VerifySystemApi due to write apiVersion fail");
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to VerifySystemApi due to write bundleName fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::VERIFY_SYSTEM_API, data, reply)) {
+        APP_LOGE("fail to sendRequest");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+bool BundleMgrProxy::VerifySystemApi(const std::string bundleName)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to VerifySystemApi due to write InterfaceToken fail");
+        return false;
+    }
+
+    if (!data.WriteInt32(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("fail to VerifySystemApi due to write apiVersion fail");
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to VerifySystemApi due to write bundleName fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::VERIFY_SYSTEM_API, data, reply)) {
+        APP_LOGE("fail to sendRequest");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

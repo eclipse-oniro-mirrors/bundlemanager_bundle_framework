@@ -208,6 +208,7 @@ void BundleMgrHost::init()
 #endif
     funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, &BundleMgrHost::HandleGetBundleInfoForSelf);
+    funcMap_.emplace(IBundleMgr::Message::VERIFY_SYSTEM_API, &BundleMgrHost::HandleVerifySystemApi);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2223,6 +2224,19 @@ ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, Messag
 
     if (!reply.WriteObject<IRemoteObject>(quickFixManagerProxy->AsObject())) {
         APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+bool BundleMgrHost::HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t beginApiVersion = data.ReadInt32();
+    std::string bundleName = data.ReadString();
+
+    bool ret = VerifySystemApi(beginApiVersion, bundleName);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

@@ -631,6 +631,8 @@ private:
 
     ErrCode HandleSetDebugMode(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

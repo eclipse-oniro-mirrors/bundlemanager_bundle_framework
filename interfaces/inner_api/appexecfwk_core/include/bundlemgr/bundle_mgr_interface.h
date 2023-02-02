@@ -1236,6 +1236,7 @@ public:
         REGISTER_BUNDLE_EVENT_CALLBACK,
         UNREGISTER_BUNDLE_EVENT_CALLBACK,
         GET_BUNDLE_INFO_FOR_SELF,
+        VERIFY_SYSTEM_API,
     };
 };
 }  // namespace AppExecFwk

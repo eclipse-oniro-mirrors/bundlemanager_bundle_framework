@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.ets": "typescript",
+        "compare": "cpp"
+    }
+}
