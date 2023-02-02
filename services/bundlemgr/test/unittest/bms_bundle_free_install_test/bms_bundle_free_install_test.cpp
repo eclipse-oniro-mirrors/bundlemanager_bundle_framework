@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1362,6 +1362,184 @@ HWTEST_F(BmsBundleFreeInstallTest, WriteFileToStream_0100, Function | SmallTest 
 }
 
 /**
+ * @tc.number: OnRemoteRequestTest_0001
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    uint32_t code = 0;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    auto result = callbackStub.OnRemoteRequest(code, data, reply, option);
+
+    EXPECT_EQ(result, -1);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_0002
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = nullptr;
+    ServiceCenterStatusCallback callbackStub(server);
+    uint32_t code = 0;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
+    auto result = callbackStub.OnRemoteRequest(code, data, reply, option);
+
+    EXPECT_EQ(result, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_0003
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequestTest_0003, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    uint32_t code = 0;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(SEEVICE_CENTER_CALLBACK_TOKEN);
+    data.WriteString("OK");
+    auto result = callbackStub.OnRemoteRequest(code, data, reply, option);
+
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number:OnRemoteDied_0001
+ * Function: OnRemoteDied
+ * @tc.name: test OnRemoteDied
+ * @tc.desc: test OnRemoteDied success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteDied_0001, Function | SmallTest | Level0)
+{
+    const std::weak_ptr<BundleConnectAbilityMgr> server;
+    ServiceCenterDeathRecipient recipient(server);
+    wptr<IRemoteObject> wptrDeath;
+    recipient.OnRemoteDied(wptrDeath);
+    EXPECT_TRUE(recipient.connectAbilityMgr_.lock() == nullptr);
+}
+
+/**
+ * @tc.number:OnRemoteDied_0002
+ * Function: OnRemoteDied
+ * @tc.name: test OnRemoteDied
+ * @tc.desc: test OnRemoteDied success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnRemoteDied_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterDeathRecipient recipient(server);
+    wptr<IRemoteObject> wptrDeath;
+    recipient.OnRemoteDied(wptrDeath);
+    EXPECT_TRUE(recipient.connectAbilityMgr_.lock() != nullptr);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0001
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest
+ * @tc.desc: test OnRemoteRequest success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    std::string installResult = "ok";
+    auto result = callbackStub.OnInstallFinished(installResult);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: OnInstallFinished_0002
+ * Function: OnInstallFinished
+ * @tc.name: test OnInstallFinished
+ * @tc.desc: test OnInstallFinished success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0002, Function | SmallTest | Level0)
+{
+    const std::weak_ptr<BundleConnectAbilityMgr> server1;
+    ServiceCenterStatusCallback callbackStub(server1);
+    std::string installResult = "";
+    auto result = callbackStub.OnInstallFinished(installResult);
+    EXPECT_EQ(result, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: OnInstallFinished_0003
+ * Function: OnInstallFinished
+ * @tc.name: test OnInstallFinished
+ * @tc.desc: test OnInstallFinished success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0003, Function | SmallTest | Level0)
+{
+    std::weak_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ServiceCenterStatusCallback callbackStub(server);
+    std::string installResult = "ok";
+    auto result = callbackStub.OnInstallFinished(installResult);
+    EXPECT_EQ(result, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0022
+ * @tc.name: DisconnectAbility
+ * @tc.desc: Disconnect Ability failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    Want want;
+    ElementName name;
+    name.SetAbilityName("abilityName");
+    name.SetBundleName("bundleName");
+    want.SetElement(name);
+    sptr<IRemoteObject> callerToken = nullptr;
+    bool ret = connectAbilityMgr.ConnectAbility(want, callerToken);
+    EXPECT_FALSE(ret);
+    connectAbilityMgr.DisconnectAbility();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0023
+ * @tc.name: CheckIsModuleNeedUpdate
+ * @tc.desc: Check Is Module Need Update
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0023, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    InnerBundleInfo innerBundleInfo;
+    std::string key = "key";
+    AbilityInfo abilityInfo;
+    abilityInfo.name = "abilityName";
+    innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName("abilityName");
+    want.SetElement(name);
+    int32_t userId = 1;
+    sptr<IRemoteObject> callBack = nullptr;
+    bool ret = connectAbilityMgr.CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
+    EXPECT_FALSE(ret);
+}
+
+/*
  * @tc.number: IsReachEndAgingThreshold_0100
  * @tc.name: test IsReachEndAgingThreshold
  * @tc.desc: 1.test IsReachEndAgingThreshold of AgingRequest
@@ -1414,5 +1592,110 @@ HWTEST_F(BmsBundleFreeInstallTest, Request_0100, Function | SmallTest | Level0)
     EXPECT_EQ(ret, true);
     ret = bundleAgingMgr.IsReachStartAgingThreshold();
     EXPECT_EQ(ret, false);
+}
+
+/**
+* @tc.number: OnAbilityDisconnectDone_0100
+* @tc.name: test OnAbilityDisconnectDone
+* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, serviceCenterRemoteObject_& deathRecipient_ instantiation 
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0100, Function | SmallTest | Level0)
+{
+    int32_t connectState = 0;
+    std::condition_variable cv;
+    const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
+    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ElementName element;
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    int32_t resultCode = 1;
+    EXPECT_TRUE(remoteObject != nullptr);
+    connection.serviceCenterRemoteObject_ = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    connection.deathRecipient_ = new (std::nothrow) ServiceCenterDeathRecipient(connection.connectAbilityMgr_);
+    EXPECT_TRUE(connection.deathRecipient_ != nullptr);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ != nullptr);
+    connection.OnAbilityDisconnectDone(element, resultCode);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+    connection.GetRemoteObject();
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+
+}
+
+/**
+* @tc.number: OnAbilityDisconnectDone_0200
+* @tc.name: test OnAbilityDisconnectDone
+* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, serviceCenterRemoteObject_ instantiation  
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0200, Function | SmallTest | Level0)
+{
+    int32_t connectState = 0;
+    std::condition_variable cv;
+    const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
+    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ElementName element;
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    int32_t resultCode = 1;
+    EXPECT_TRUE(remoteObject != nullptr);
+    connection.serviceCenterRemoteObject_ = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    EXPECT_TRUE(connection.deathRecipient_ == nullptr);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ != nullptr);
+    connection.OnAbilityDisconnectDone(element, resultCode);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+        connection.GetRemoteObject();
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+}
+
+/**
+* @tc.number: OnAbilityDisconnectDone_0300
+* @tc.name: test OnAbilityDisconnectDone
+* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, deathRecipient_ instantiation  
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0300, Function | SmallTest | Level0)
+{
+    int32_t connectState = 0;
+    std::condition_variable cv;
+    const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
+    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ElementName element;
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    int32_t resultCode = 1;
+    EXPECT_TRUE(remoteObject != nullptr);
+    connection.deathRecipient_ = new (std::nothrow) ServiceCenterDeathRecipient(connection.connectAbilityMgr_);
+    EXPECT_TRUE(connection.deathRecipient_ != nullptr);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+    connection.OnAbilityDisconnectDone(element, resultCode);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+    connection.GetRemoteObject();
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+}
+
+/**
+* @tc.number: OnAbilityDisconnectDone_0400
+* @tc.name: test OnAbilityDisconnectDone
+* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, serviceCenterRemoteObject_& deathRecipient_ Uninstantiated
+*/
+HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0400, Function | SmallTest | Level0)
+{
+    int32_t connectState = 0;
+    std::condition_variable cv;
+    const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
+    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ElementName element;
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    int32_t resultCode = 1;
+    EXPECT_TRUE(remoteObject != nullptr);
+    EXPECT_TRUE(connection.deathRecipient_ == nullptr);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+    connection.OnAbilityDisconnectDone(element, resultCode);
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
+    connection.GetRemoteObject();
+    EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
 }
 } // OHOS
