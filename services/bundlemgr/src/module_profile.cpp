@@ -1197,7 +1197,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
     if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
         GetValueIfFindKey<std::string>(jsonObject,
             jsonObjectEnd,
-            SRC_ENTRANCE,
+            SRC_ENTRY,
             module.srcEntrance,
             JsonType::STRING,
             false,
@@ -1206,7 +1206,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
     } else {
         GetValueIfFindKey<std::string>(jsonObject,
             jsonObjectEnd,
-            SRC_ENTRY,
+            SRC_ENTRANCE,
             module.srcEntrance,
             JsonType::STRING,
             false,
