@@ -1202,7 +1202,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
             JsonType::STRING,
             false,
             parseResult,
-            ArrayType::NOT_ARRAY);     
+            ArrayType::NOT_ARRAY);
     } else {
         GetValueIfFindKey<std::string>(jsonObject,
             jsonObjectEnd,
@@ -1211,7 +1211,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
             JsonType::STRING,
             false,
             parseResult,
-            ArrayType::NOT_ARRAY);    
+            ArrayType::NOT_ARRAY);
     }
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
