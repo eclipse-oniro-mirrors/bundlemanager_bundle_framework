@@ -120,6 +120,7 @@ const std::set<std::string> AVAILABLE_LEVEL_SET = {
 const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
     {"standard", LaunchMode::STANDARD},
+    {"multiton", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
 const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
@@ -312,14 +313,26 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        SRC_ENTRANCE,
-        ability.srcEntrance,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
+    if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRY,
+            ability.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    } else {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRANCE,
+            ability.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         ABILITY_LAUNCH_TYPE,
@@ -400,9 +413,18 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         parseResult,
         ArrayType::OBJECT);
+    // both exported and visible can be configured, but exported has higher priority
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         VISIBLE,
+        ability.visible,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        EXPORTED,
         ability.visible,
         JsonType::BOOLEAN,
         false,
@@ -558,14 +580,26 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        SRC_ENTRANCE,
-        extension.srcEntrance,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
+    if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRY,
+            extension.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    } else {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRANCE,
+            extension.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         ICON,
@@ -662,9 +696,18 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         parseResult,
         ArrayType::STRING);
+    // both exported and visible can be configured, but exported has higher priority
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         VISIBLE,
+        extension.visible,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        EXPORTED,
         extension.visible,
         JsonType::BOOLEAN,
         false,
@@ -1087,14 +1130,26 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        SRC_ENTRANCE,
-        module.srcEntrance,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
+    if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRANCE,
+            module.srcEntrance,
+            JsonType::STRING,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    } else {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRY,
+            module.srcEntrance,
+            JsonType::STRING,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
@@ -1172,7 +1227,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         MODULE_PAGES,
         module.pages,
         JsonType::STRING,
-        true,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
