@@ -43,7 +43,8 @@ int32_t RPCIDStreamDecodeToBuffer(
     char *contextBufferTail = NULL;
     char *syscapBuf = NULL;
     uint32_t syscapBufLen;
-    uint16_t sysCaptype, sysCapLength;
+    uint16_t sysCaptype;
+    uint16_t sysCapLength;
     RPCIDHead *headPtr = NULL;
     char *sysCapArrayPtr = NULL;
     *syscapSetBuf = NULL;
