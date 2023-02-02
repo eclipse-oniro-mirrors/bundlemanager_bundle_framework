@@ -65,6 +65,9 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
   ]
 
   if (bundle_framework_graphics) {
+    include_dirs += [
+      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    ]
     deps += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
 
