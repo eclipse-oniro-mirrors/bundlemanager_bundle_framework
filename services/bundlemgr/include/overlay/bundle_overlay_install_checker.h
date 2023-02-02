@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_OVERLAY_INSTALL_CHECKER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_OVERLAY_INSTALL_CHECKER_H
 
+#include <map>
 #include <string>
 
 #include "inner_bundle_info.h"
@@ -27,7 +28,8 @@ public:
     BundleOverlayInstallChecker() = default;
     virtual ~BundleOverlayInstallChecker() = default;
 
-    ErrCode CheckInternalBundle(const InnerBundleInfo &innerBundleInfo) const;
+    ErrCode CheckInternalBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &innerBundleInfo) const;
     ErrCode CheckExternalBundle(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
     ErrCode CheckTargetBundle(const std::string &targetBundleName, const std::string &targetModuleName,
         const std::string &fingerprint, int32_t userId) const;
@@ -36,7 +38,8 @@ private:
     ErrCode CheckHapType(const InnerBundleInfo &info) const;
     ErrCode CheckBundleType(const InnerBundleInfo &info) const;
     ErrCode CheckTargetPriority(int32_t priority) const;
-    ErrCode CheckVersionCode(const InnerBundleInfo &info) const;
+    ErrCode CheckVersionCode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &info) const;
     ErrCode CheckTargetModule(const std::string &bundleName, const std::string &targetModuleName) const;
 };
 } // AppExecFwk
