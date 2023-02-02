@@ -759,7 +759,8 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     const std::string &newSoPath)
 {
     APP_LOGI("ApplyDiffPatch start");
-    std::vector<std::string> oldSoFileNames, diffFileNames;
+    std::vector<std::string> oldSoFileNames;
+    std::vector<std::string> diffFileNames;
     if (InstalldOperator::IsDirEmpty(oldSoPath) || InstalldOperator::IsDirEmpty(diffFilePath)) {
         APP_LOGD("oldSoPath or diffFilePath is empty, not require ApplyPatch");
         return true;
@@ -768,7 +769,9 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
         APP_LOGE("ApplyDiffPatch ProcessApplyDiffPatchPath failed");
         return false;
     }
-    std::string realOldSoPath, realDiffFilePath, realNewSoPath;
+    std::string realOldSoPath;
+    std::string realDiffFilePath;
+    std::string realNewSoPath;
     if (!PathToRealPath(oldSoPath, realOldSoPath) || !PathToRealPath(diffFilePath, realDiffFilePath) ||
         !PathToRealPath(newSoPath, realNewSoPath)) {
         APP_LOGE("ApplyDiffPatch Path is not real path");
