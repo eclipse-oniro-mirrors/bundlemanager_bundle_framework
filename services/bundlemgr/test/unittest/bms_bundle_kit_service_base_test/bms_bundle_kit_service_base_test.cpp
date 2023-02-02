@@ -1034,7 +1034,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2600, Function | 
     BundleDistributedManager mgr_;
     std::string queryRpcIdResult = "{\"appQuickFix\":{\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"}}";
     mgr_.OnQueryRpcIdFinished(queryRpcIdResult);
-    EXPECT_TRUE(queryAbilityParamsMap_.size() == 0);
+    EXPECT_TRUE(mgr_.queryAbilityParamsMap_.size() == 0);
     sleep(1);
 }
 
@@ -1048,7 +1048,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2700, Function | 
     BundleDistributedManager mgr_;
     std::string queryRpcIdResult = "";
     mgr_.OnQueryRpcIdFinished(queryRpcIdResult);
-    EXPECT_TRUE(queryAbilityParamsMap_.size() == 0);
+    EXPECT_TRUE(mgr_.queryAbilityParamsMap_.size() == 0);
     sleep(1);
 }
 
