@@ -22,7 +22,6 @@
 #include "app_control_constants.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd_client.h"
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
 #endif
@@ -44,6 +43,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
@@ -1792,7 +1792,6 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
@@ -1807,14 +1806,24 @@ bool BundleDataMgr::HasUserInstallInBundle(
 bool BundleDataMgr::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
-    if (!HasUserInstallInBundle(bundleName, userId)) {
-        APP_LOGE("userId(%{public}d) not in bundle(%{public}s)", userId, bundleName.c_str());
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
         return false;
     }
-
-    return InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) == ERR_OK;
+    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats) != ERR_OK) {
+        APP_LOGE("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
+        return false;
+    }
+    if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+        for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+            bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+        }
+    }
+    return true;
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
     return GetBundleSpaceSize(bundleName, AccountHelper::GetCurrentActiveUserId());
