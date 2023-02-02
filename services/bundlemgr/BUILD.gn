@@ -21,6 +21,7 @@ config("bundlemgr_common_config") {
     "include/default_app",
     "include/free_install",
     "include/distributed_manager",
+    "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",
     "include/quick_fix/state/include",

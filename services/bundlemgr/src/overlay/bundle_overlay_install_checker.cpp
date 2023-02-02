@@ -20,7 +20,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-ErrCode BundleOverlayInstallChecker::CheckInternalBundle(const InnerBundleInfo &innerBundleInfo) const
+ErrCode BundleOverlayInstallChecker::CheckInternalBundle(
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGD("start to check internal overlay installation");
     // 1. check hap type
@@ -56,7 +58,7 @@ ErrCode BundleOverlayInstallChecker::CheckInternalBundle(const InnerBundleInfo &
         return result;
     }
     // 6. check version code, overlay hap has same version code with non-overlay hap
-    if ((result = CheckVersionCode(innerBundleInfo)) != ERR_OK) {
+    if ((result = CheckVersionCode(newInfos, innerBundleInfo)) != ERR_OK) {
         return result;
     }
     APP_LOGD("check internal overlay installation successfully");
@@ -147,9 +149,17 @@ ErrCode BundleOverlayInstallChecker::CheckTargetPriority(int32_t priority) const
     return ERR_OK;
 }
 
-ErrCode BundleOverlayInstallChecker::CheckVersionCode(const InnerBundleInfo &info) const
+ErrCode BundleOverlayInstallChecker::CheckVersionCode(
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &info) const
 {
     APP_LOGD("start to check version code");
+    for (const auto &innerBundleInfo : newInfos) {
+        if (!innerBundleInfo.second.isOverlayModule(innerBundleInfo.second.GetCurrentModulePackage())) {
+            return ERR_OK;
+        }
+    }
+
     std::string bundleName = info.GetBundleName();
     InnerBundleInfo oldInfo;
     ErrCode result = ERR_OK;

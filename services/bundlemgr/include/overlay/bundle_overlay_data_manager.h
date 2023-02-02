@@ -52,6 +52,18 @@ public:
 
     void EnableOverlayBundle(const std::string &bundleName);
 
+    ErrCode GetAllOverlayModuleInfo(const std::string &bundleName, std::vector<OverlayModuleInfo> &overlayModuleInfos,
+        int32_t userId);
+
+    ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
+        OverlayModuleInfo &overlayModuleInfo, int32_t userId);
+
+    ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
+        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId);
+
+    ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName, const std::string &targetModuleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId);
+
 private:
     ErrCode GetBundleDataMgr();
 

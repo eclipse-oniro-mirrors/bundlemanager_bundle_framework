@@ -20,7 +20,7 @@ namespace OHOS {
 namespace AppExecFwk {
 bool BundleOverlayManager::IsExistedNonOverlayHap(const std::string &bundleName)
 {
-    APP_LOGI("overlayManager query if the bundle contain non overlay hap");
+    APP_LOGD("overlayManager query if the bundle contain non overlay hap");
     if (bundleName.empty()) {
         APP_LOGE("invalid bundleName for checking whether non-overlay hap in the bundle");
         return false;
@@ -30,7 +30,7 @@ bool BundleOverlayManager::IsExistedNonOverlayHap(const std::string &bundleName)
 
 bool BundleOverlayManager::GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
 {
-    APP_LOGI("start get inner bundleInfo");
+    APP_LOGD("start to get inner bundleInfo");
     if (bundleName.empty()) {
         APP_LOGE("invalid bundleName for get innerBundleInfo");
         return false;
@@ -42,6 +42,55 @@ bool BundleOverlayManager::GetInnerBundleInfo(const std::string &bundleName, Inn
     }
 
     return result;
+}
+
+ErrCode BundleOverlayManager::GetAllOverlayModuleInfo(const std::string &bundleName,
+    std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
+{
+    APP_LOGD("start to get all overlay ModuleInfo");
+    if (bundleName.empty() || userId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
+
+    return OverlayDataMgr::GetInstance()->GetAllOverlayModuleInfo(bundleName, overlayModuleInfo, userId);
+}
+
+ErrCode BundleOverlayManager::GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
+    OverlayModuleInfo &overlayModuleInfo, int32_t userId)
+{
+    APP_LOGD("start to get overlay moduleInfo");
+    if (bundleName.empty() || moduleName.empty() || userId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
+
+    return OverlayDataMgr::GetInstance()->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, userId);
+}
+
+ErrCode BundleOverlayManager::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
+    std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
+{
+    APP_LOGD("start to get overlay bundleInfo for target bundle");
+    if (targetBundleName.empty() || userId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
+
+    return OverlayDataMgr::GetInstance()->GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfo, userId);
+}
+
+ErrCode BundleOverlayManager::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
+    const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
+{
+    APP_LOGD("start to get overlay moduleInfo for target bundle and targte module");
+    if (targetBundleName.empty() || targetModuleName.empty() || userId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
+
+    return OverlayDataMgr::GetInstance()->GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName,
+        overlayModuleInfo, userId);
 }
 } // AppExecFwk
 } // OHOS

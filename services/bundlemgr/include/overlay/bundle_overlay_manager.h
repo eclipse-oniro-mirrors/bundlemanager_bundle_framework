@@ -26,7 +26,20 @@ namespace AppExecFwk {
 class BundleOverlayManager : public DelayedSingleton<BundleOverlayManager> {
 public:
     bool IsExistedNonOverlayHap(const std::string &bundleName);
+
     bool GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+
+    ErrCode GetAllOverlayModuleInfo(const std::string &bundleName, std::vector<OverlayModuleInfo> &overlayModuleInfo,
+        int32_t userId);
+
+    ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
+        OverlayModuleInfo &overlayModuleInfo, int32_t userId);
+
+    ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
+        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId);
+
+    ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName, const std::string &targetModuleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId);
 };
 } // AppExecFwk
 } // OHOS

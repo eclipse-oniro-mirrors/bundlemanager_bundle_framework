@@ -2897,7 +2897,7 @@ ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::st
         ErrCode result = ERR_OK;
         if (info.second.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
             isInternalOverlayExisted = true;
-            result = overlayChecker->CheckInternalBundle(info.second);
+            result = overlayChecker->CheckInternalBundle(newInfos, info.second);
         }
         if (info.second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
             isExternalOverlayExisted = false;
