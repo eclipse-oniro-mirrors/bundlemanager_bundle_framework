@@ -402,8 +402,8 @@ ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundle
     APP_LOGD("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
         provisionBundleName.c_str(), bundleName.c_str());
     if (provisionBundleName.empty() || bundleName.empty()) {
-        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s failed", provisionBundleName.c_str(),
-            bundleName.c_str());
+        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s failed",
+            provisionBundleName.c_str(), bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
     }
     if (provisionBundleName == bundleName) {
