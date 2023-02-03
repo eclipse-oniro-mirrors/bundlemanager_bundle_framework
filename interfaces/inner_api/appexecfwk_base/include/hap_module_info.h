@@ -20,6 +20,7 @@
 
 #include "ability_info.h"
 #include "extension_ability_info.h"
+#include "overlay/overlay_module_info.h"
 #include "parcel.h"
 #include "quick_fix/hqf_info.h"
 
@@ -61,6 +62,9 @@ struct HapModuleInfo : public Parcelable {
 
     // quick fix hqf info
     HqfInfo hqfInfo;
+
+    // overlay module info
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
 
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceTypes;

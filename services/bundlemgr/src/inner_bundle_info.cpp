@@ -459,18 +459,6 @@ void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
     };
 }
 
-void to_json(nlohmann::json &jsonObject, const OverlayModuleInfo &overlayModuleInfo)
-{
-    jsonObject = nlohmann::json {
-        {Profile::MODULE_OVERLAY_BUNDLE_NAME, overlayModuleInfo.bundleName},
-        {Profile::MODULE_OVERLAY_MODULE_NAME, overlayModuleInfo.moduleName},
-        {Profile::MODULE_TARGET_MODULE_NAME, overlayModuleInfo.targetModuleName},
-        {Profile::MODULE_OVERLAY_HAP_PATH, overlayModuleInfo.hapPath},
-        {Profile::MODULE_OVERLAY_PRIORITY, overlayModuleInfo.priority},
-        {Profile::MODULE_OVERLAY_STATE, overlayModuleInfo.state}
-    };
-}
-
 void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
 {
     jsonObject = nlohmann::json {
@@ -562,16 +550,6 @@ void to_json(nlohmann::json &jsonObject, const SandboxAppPersistentInfo &sandbox
         {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_ACCESS_TOKEN_ID, sandboxPersistentInfo.accessTokenId},
         {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_APP_INDEX, sandboxPersistentInfo.appIndex},
         {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_USER_ID, sandboxPersistentInfo.userId}
-    };
-}
-
-void to_json(nlohmann::json &jsonObject, const OverlayBundleInfo &overlayBundleInfo)
-{
-    jsonObject = nlohmann::json {
-        {Profile::BUNDLE_OVERLAY_BUNDLE_NAME, overlayBundleInfo.bundleName},
-        {Profile::BUNDLE_OVERLAY_BUNDLE_DIR, overlayBundleInfo.bundleDir},
-        {Profile::BUNDLE_OVERLAY_BUNDLE_STATE, overlayBundleInfo.state},
-        {Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY, overlayBundleInfo.priority}
     };
 }
 
@@ -1296,96 +1274,6 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         JsonType::STRING,
         false,
         ProfileReader::parseResult,
-        ArrayType::NOT_ARRAY);
-}
-
-void from_json(const nlohmann::json &jsonObject, OverlayModuleInfo &overlayModuleInfo)
-{
-    const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_BUNDLE_NAME,
-        overlayModuleInfo.bundleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_MODULE_NAME,
-        overlayModuleInfo.moduleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_TARGET_MODULE_NAME,
-        overlayModuleInfo.targetModuleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_HAP_PATH,
-        overlayModuleInfo.hapPath,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_PRIORITY,
-        overlayModuleInfo.priority,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_STATE,
-        overlayModuleInfo.state,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-}
-
-void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo)
-{
-    const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_NAME,
-        overlayBundleInfo.bundleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_DIR,
-        overlayBundleInfo.bundleDir,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_STATE,
-        overlayBundleInfo.state,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY,
-        overlayBundleInfo.priority,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
         ArrayType::NOT_ARRAY);
 }
 
