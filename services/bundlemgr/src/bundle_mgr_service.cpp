@@ -120,6 +120,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitDefaultApp(), "Init defaultApp fail");
     CHECK_INIT_RESULT(InitAppControl(), "Init appControl fail");
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
+    CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
     ready_ = true;
     APP_LOGI("Init success");
     return true;
@@ -282,6 +283,20 @@ bool BundleMgrService::InitQuickFixManager()
     return true;
 }
 
+bool BundleMgrService::InitOverlayManager()
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (overlayManagerHostImpl_ == nullptr) {
+        overlayManagerHostImpl_ = new (std::nothrow) OverlayManagerHostImpl();
+        if (overlayManagerHostImpl_ == nullptr) {
+            APP_LOGE("create OverlayManagerHostImpl failed.");
+            return false;
+        }
+    }
+#endif
+    return true;
+}
+
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
@@ -362,6 +377,13 @@ sptr<IAppControlMgr> BundleMgrService::GetAppControlProxy() const
 sptr<QuickFixManagerHostImpl> BundleMgrService::GetQuickFixManagerProxy() const
 {
     return quickFixManagerHostImpl_;
+}
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+sptr<IOverlayManager> BundleMgrService::GetOverlayManagerProxy() const
+{
+    return overlayManagerHostImpl_;
 }
 #endif
 

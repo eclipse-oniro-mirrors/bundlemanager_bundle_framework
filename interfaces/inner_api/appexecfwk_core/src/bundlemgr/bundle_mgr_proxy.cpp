@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -3232,7 +3232,7 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
     }
     if (!data.WriteBool(isDebug)) {
@@ -3245,6 +3245,32 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     }
 
     return reply.ReadInt32();
+}
+
+sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
+        return nullptr;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IOverlayManager> overlayManagerProxy = iface_cast<IOverlayManager>(object);
+    if (overlayManagerProxy == nullptr) {
+        APP_LOGE("overlayManagerProxy is nullptr.");
+    }
+
+    return overlayManagerProxy;
 }
 
 template<typename T>

@@ -17,8 +17,6 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
-#include "bundle_file_util.h"
-#include "directory_ex.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
 
