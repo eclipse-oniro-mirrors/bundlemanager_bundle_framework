@@ -50,7 +50,7 @@ const std::string HELP_MSG_INSTALL =
     "  -r --bundle-path <bundle-file-path>                        replace an existing bundle\n"
     "  -u, --user-id <user-id>                                    specify a user id\n"
     "  -w, --waitting-time <waitting-time>                        specify waitting time for installation, the minimum\n"
-    "                                                                     waitting time is 5s, the maximum waitting\n"
+    "                                                                     waitting time is 180s, the maximum waitting\n"
     "                                                                     time is 600s\n";
 
 const std::string HELP_MSG_UNINSTALL =
@@ -121,6 +121,21 @@ const std::string HELP_MSG_QUICK_FIX =
     "-f, --file-path <file-path> <file-path> ...  apply some quickfix files of one bundle\n"
     "-f, --file-path <bundle-direction>           apply quickfix files by direction, under which are quickfix files\n";
 
+const std::string HELP_MSG_OVERLAY =
+    "usage: bm dump-overlay <options>\n"
+    "options list:\n"
+    "  -h, --help                                         list available commands\n"
+    "  -b, --bundle-name <bundle-name>                    bundle name of the overlay bundle\n"
+    "  -m, --module-name <module-name>                    module name of the overlay bundle\n"
+    "  -tm, --target-module-name <target-module-name>     target module name of overlay bundle\n";
+
+const std::string HELP_MSG_OVERLAY_TARGET =
+    "usage: bm dump-target-overlay <options>\n"
+    "options list:\n"
+    "  -h, --help                                         list available commands\n"
+    "  -b, --bundle-name <bundle-name>                    bundle name of the target overlay bundle\n"
+    "  -m, --module-name <module-name>                    module name of the target overlay bundle\n";
+
 const std::string STRING_INCORRECT_OPTION = "error: incorrect option";
 const std::string HELP_MSG_NO_BUNDLE_PATH_OPTION =
     "error: you must specify a bundle path with '-p' or '--bundle-path'.";
@@ -157,6 +172,13 @@ const std::string HELP_MSG_NO_REMOVABLE_OPTION =
 
 const std::string HELP_MSG_DUMP_FAILED = "error: failed to get information and the parameters may be wrong.";
 const std::string STRING_REQUIRE_CORRECT_VALUE = "error: option requires a correct value.\n";
+
+const std::string STRING_DUMP_OVERLAY_OK = "overlay info is:";
+const std::string STRING_DUMP_OVERLAY_NG = "error: failed to get overlay info";
+
+const std::string STRING_DUMP_TARGET_OVERLAY_OK = "target overlay info is:";
+const std::string STRING_DUMP_TARGET_OVERLAY_NG = "error: failed to get target overlay info";
+const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED = "feature is not supported.\n";
 } // namespace
 
 class BundleManagerShellCommand : public ShellCommand {
@@ -180,6 +202,8 @@ private:
     ErrCode RunAsDisableCommand();
     ErrCode RunAsGetCommand();
     ErrCode RunAsQuickFixCommand();
+    ErrCode RunAsDumpOverlay();
+    ErrCode RunAsDumpTargetOverlay();
 
     std::string DumpBundleList(int32_t userId) const;
     std::string DumpBundleInfo(const std::string &bundleName, int32_t userId) const;
@@ -199,7 +223,9 @@ private:
     bool CleanBundleDataFilesOperation(const std::string &bundleName, int32_t userId) const;
 
     bool SetApplicationEnabledOperation(const AbilityInfo &abilityInfo, bool isEnable, int32_t userId) const;
-
+    std::string DumpOverlayInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &targetModuleName, int32_t userId);
+    std::string DumpTargetOverlayInfo(const std::string &bundleName, const std::string &moduleName, int32_t userId);
     ErrCode ParseDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;
