@@ -113,6 +113,7 @@ app_control = [
 overlay_installation = [
   "${services_path}/bundlemgr/src/overlay/bundle_overlay_data_manager.cpp",
   "${services_path}/bundlemgr/src/overlay/bundle_overlay_install_checker.cpp",
+  "${services_path}/bundlemgr/src/overlay/bundle_overlay_manager_host_impl.cpp",
   "${services_path}/bundlemgr/src/overlay/bundle_overlay_manager.cpp",
 ]
 

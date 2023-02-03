@@ -443,17 +443,6 @@ constexpr const char* APP_TARGET_PRIORITY = "targetPriority";
 constexpr const char* MODULE_TARGET_MODULE_NAME = "targetModuleName";
 constexpr const char* MODULE_TARGET_PRIORITY = "targetPriority";
 
-constexpr const char* MODULE_OVERLAY_BUNDLE_NAME = "bundleName";
-constexpr const char* MODULE_OVERLAY_MODULE_NAME = "moduleName";
-constexpr const char* MODULE_OVERLAY_HAP_PATH = "hapPath";
-constexpr const char* MODULE_OVERLAY_PRIORITY = "priority";
-constexpr const char* MODULE_OVERLAY_STATE = "state";
-
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_NAME = "bundleName";
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_DIR = "bundleDir";
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_STATE = "state";
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_PRIORITY = "priority";
-
 extern thread_local int32_t parseResult;
 }  // namespace Profile
 }  // namespace AppExecFwk

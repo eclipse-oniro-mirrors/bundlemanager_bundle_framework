@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -208,6 +208,7 @@ void BundleMgrHost::init()
 #endif
     funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, &BundleMgrHost::HandleGetBundleInfoForSelf);
+    funcMap_.emplace(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, &BundleMgrHost::HandleGetOverlayManagerProxy);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2399,6 +2400,22 @@ ErrCode BundleMgrHost::HandleSetDebugMode(MessageParcel &data, MessageParcel &re
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetOverlayManagerProxy(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IOverlayManager> overlayManagerProxy = GetOverlayManagerProxy();
+    if (overlayManagerProxy == nullptr) {
+        APP_LOGE("overlayManagerProxy is nullptr.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(overlayManagerProxy->AsObject())) {
+        APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

@@ -2258,6 +2258,15 @@ sptr<IQuickFixManager> BundleMgrHostImpl::GetQuickFixManagerProxy()
 #endif
 }
 
+sptr<IOverlayManager> BundleMgrHostImpl::GetOverlayManagerProxy()
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetOverlayManagerProxy();
+#else
+    return nullptr;
+#endif
+}
+
 ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
     AbilityInfo &info)
 {
