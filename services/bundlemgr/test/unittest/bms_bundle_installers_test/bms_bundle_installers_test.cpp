@@ -382,6 +382,7 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1700, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1700 start";
     bundleInstaller_->UpdateInstallerState(BaseBundleInstaller::InstallerState::INSTALL_BUNDLE_CHECKED);
+    EXPECT_TRUE(bundleInstaller_->statusReceiver_);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1700 end";
 }
 
