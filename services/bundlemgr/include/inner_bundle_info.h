@@ -1878,6 +1878,9 @@ public:
     int64_t GetLastInstallationTime() const;
     void UpdateAppDetailAbilityAttrs();
     bool IsHideDesktopIcon() const;
+    void AddApplyQuickFixFrequency();
+    int32_t GetApplyQuickFixFrequency() const;
+    void ResetApplyQuickFixFrequency();
 
 private:
     bool IsExistLauncherAbility() const;
@@ -1936,6 +1939,8 @@ private:
     std::vector<SandboxAppPersistentInfo> sandboxPersistentInfo_;
     // quick fix hqf info
     std::vector<HqfInfo> hqfInfos_;
+    // apply quick fix frequency
+    int32_t applyQuickFixFrequency_ = 0;
 
     // overlay bundleInfo
     std::vector<OverlayBundleInfo> overlayBundleInfo_;

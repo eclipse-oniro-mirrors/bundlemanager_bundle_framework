@@ -38,6 +38,7 @@ const std::string PRE_BUNDLE_RECOVER = "PRE_BUNDLE_RECOVER";
 const std::string BUNDLE_STATE_CHANGE = "BUNDLE_STATE_CHANGE";
 const std::string BUNDLE_CLEAN_CACHE = "BUNDLE_CLEAN_CACHE";
 const std::string BMS_USER_EVENT = "BMS_USER_EVENT";
+const std::string BUNDLE_QUICK_FIX = "BUNDLE_QUICK_FIX";
 
 // event params
 const std::string EVENT_PARAM_USERID = "USERID";
@@ -60,6 +61,7 @@ const std::string EVENT_PARAM_APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
 const std::string EVENT_PARAM_FILE_PATH = "FILE_PATH";
 const std::string EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
 const std::string EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
+const std::string EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY = "APPLY_QUICK_FIX_FREQUENCY";
 
 const std::string FREE_INSTALL_TYPE = "FreeInstall";
 const std::string PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -194,6 +196,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendUserEvent(eventInfo);
             } },
+        { BMSEventType::APPLY_QUICK_FIX,
+            [](const EventInfo& eventInfo) {
+                InnerSendQuickFixEvent(eventInfo);
+            } }
     };
 
 void InnerEventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
@@ -400,6 +406,18 @@ void InnerEventReport::InnerSendUserEvent(const EventInfo& eventInfo)
         TYPE, GetUserEventType(eventInfo),
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_TIME, eventInfo.timeStamp);
+}
+
+void InnerEventReport::InnerSendQuickFixEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        BUNDLE_QUICK_FIX,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY, eventInfo.applyQuickFixFrequency,
+        EVENT_PARAM_FILE_PATH, eventInfo.filePath,
+        EVENT_PARAM_HASH_VALUE, eventInfo.hashValue);
 }
 
 template<typename... Types>

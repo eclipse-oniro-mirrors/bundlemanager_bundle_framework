@@ -442,6 +442,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
+        // clear apply quick fix frequency
+        oldInfo.ResetApplyQuickFixFrequency();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&

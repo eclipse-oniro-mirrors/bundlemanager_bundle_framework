@@ -116,6 +116,7 @@ const std::string MODULE_TARGET_PRIORITY = "targetPriority";
 const std::string MODULE_OVERLAY_MODULE_INFO = "overlayModuleInfo";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfo";
 const std::string OVERLAY_TYPE = "overlayType";
+const std::string APPLY_QUICK_FIX_FREQUENCY = "applyQuickFixFrequency";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -418,6 +419,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->hqfInfos_ = info.hqfInfos_;
     this->overlayBundleInfo_ = info.overlayBundleInfo_;
     this->overlayType_ = info.overlayType_;
+    this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
     return *this;
 }
 
@@ -582,6 +584,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
     jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
     jsonObject[OVERLAY_TYPE] = overlayType_;
+    jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1519,6 +1522,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         jsonObjectEnd,
         OVERLAY_TYPE,
         overlayType_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APPLY_QUICK_FIX_FREQUENCY,
+        applyQuickFixFrequency_,
         JsonType::NUMBER,
         false,
         parseResult,
@@ -3301,6 +3312,21 @@ std::vector<std::string> InnerBundleInfo::GetDeviceType(const std::string &packa
         return std::vector<std::string>();
     }
     return innerModuleInfos_.at(packageName).deviceTypes;
+}
+
+void InnerBundleInfo::AddApplyQuickFixFrequency()
+{
+    ++applyQuickFixFrequency_;
+}
+
+int32_t InnerBundleInfo::GetApplyQuickFixFrequency() const
+{
+    return applyQuickFixFrequency_;
+}
+
+void InnerBundleInfo::ResetApplyQuickFixFrequency()
+{
+    applyQuickFixFrequency_ = 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
