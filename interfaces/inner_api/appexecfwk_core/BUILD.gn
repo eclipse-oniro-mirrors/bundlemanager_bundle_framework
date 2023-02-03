@@ -19,6 +19,7 @@ config("bundlemgr_sdk_config") {
     "include/app_control",
     "include/bundlemgr",
     "include/default_app",
+    "include/overlay",
     "include/quick_fix",
   ]
 }
@@ -109,6 +110,14 @@ ohos_shared_library("appexecfwk_core") {
       "src/quick_fix/quick_fix_result_info.cpp",
       "src/quick_fix/quick_fix_status_callback_host.cpp",
       "src/quick_fix/quick_fix_status_callback_proxy.cpp",
+    ]
+  }
+
+  if (bundle_framework_overlay_install) {
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+    sources += [
+      "src/overlay/overlay_manager_host.cpp",
+      "src/overlay/overlay_manager_proxy.cpp",
     ]
   }
 
