@@ -450,6 +450,8 @@ protected:
                 ],
                 "name": "com.ohos.launcher",
                 "overlayType": 3,
+                "overlayBundleInfos": [
+                ],
                 "releaseType": "Beta1",
                 "reqPermissionDetails": [
                 ],
