@@ -2241,7 +2241,9 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.distro = configJson.module.distro;
     innerModuleInfo.reqCapabilities = configJson.module.reqCapabilities;
     innerModuleInfo.requestPermissions = configJson.module.requestPermissions;
-    innerModuleInfo.definePermissions = configJson.module.definePermissions;
+    if (configJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
+        innerModuleInfo.definePermissions = configJson.module.definePermissions;
+    }
     if (configJson.module.mainAbility.substr(0, 1) == ".") {
         innerModuleInfo.mainAbility = configJson.module.package + configJson.module.mainAbility;
     } else {

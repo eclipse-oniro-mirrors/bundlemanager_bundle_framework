@@ -445,6 +445,7 @@ constexpr const char* APP_TARGET_PRIORITY = "targetPriority";
 constexpr const char* MODULE_TARGET_MODULE_NAME = "targetModuleName";
 constexpr const char* MODULE_TARGET_PRIORITY = "targetPriority";
 
+constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 extern thread_local int32_t parseResult;
 }  // namespace Profile
 }  // namespace AppExecFwk
