@@ -26,6 +26,7 @@
 #include "extension_ability_info.h"
 #include "hap_module_info.h"
 #include "message_parcel.h"
+#include "overlay/overlay_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -83,13 +84,6 @@ struct SignatureInfo : public Parcelable {
     static SignatureInfo *Unmarshalling(Parcel &parcel);
 };
 
-// overlay installation type definition
-enum OverlayType : int32_t {
-    OVERLAY_INTERNAL_BUNDLE = 1,
-    OVERLAY_EXTERNAL_BUNDLE,
-    NON_OVERLAY_TYPE,
-};
-
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     std::string name;
@@ -112,6 +106,7 @@ struct BundleInfo : public Parcelable {
     std::string mainEntry; // modulePackage
     std::string entryModuleName; // moduleName
     bool entryInstallationFree = false; // application : false; atomic service : true
+    bool asanEnabled = false;
 
     std::string appId;
 
@@ -136,6 +131,7 @@ struct BundleInfo : public Parcelable {
     std::vector<std::string> defPermissions;
     std::vector<int32_t> reqPermissionStates;
     std::vector<RequestPermission> reqPermissionDetails;
+    std::vector<OverlayBundleInfo> overlayBundleInfos;
 
     // unused
     std::string cpuAbi;

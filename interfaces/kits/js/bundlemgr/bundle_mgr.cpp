@@ -6526,7 +6526,7 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const Native
     NativeValue *result = nullptr;
     NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
     AsyncTask::Schedule("JsBundleMgr::OnSetAbilityEnabled",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
 
@@ -7017,7 +7017,6 @@ NativeValue* JsBundleInstall::OnInstall(NativeEngine &engine, NativeCallbackInfo
             sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
             iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
             ErrCode res = iBundleInstaller->StreamInstall(bundleFilePaths, installParam, callback);
-
             if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
                 APP_LOGE("install param error");
                 resInstall->resCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;

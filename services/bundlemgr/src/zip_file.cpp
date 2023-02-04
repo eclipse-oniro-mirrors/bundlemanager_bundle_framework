@@ -27,7 +27,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr uint32_t MAX_FILE_NAME = 256;
+constexpr uint32_t MAX_FILE_PATH = 4096;
 constexpr uint32_t UNZIP_BUFFER_SIZE = 1024;
 constexpr uint32_t UNZIP_BUF_IN_LEN = 160 * UNZIP_BUFFER_SIZE;   // in  buffer length: 160KB
 constexpr uint32_t UNZIP_BUF_OUT_LEN = 320 * UNZIP_BUFFER_SIZE;  // out buffer length: 320KB
@@ -116,8 +116,8 @@ bool ZipFile::ParseAllEntries()
 
     for (uint16_t i = 0; i < endDir_.totalEntries; i++) {
         std::string fileName;
-        fileName.reserve(MAX_FILE_NAME);
-        fileName.resize(MAX_FILE_NAME - 1);
+        fileName.reserve(MAX_FILE_PATH);
+        fileName.resize(MAX_FILE_PATH - 1);
 
         if (fseek(file_, currentPos, SEEK_SET) != 0) {
             APP_LOGE("parse entry(%{public}d) seek zipEntry failed, error: %{public}d", i, errno);
@@ -140,7 +140,7 @@ bool ZipFile::ParseAllEntries()
             break;
         }
 
-        size_t fileLength = (directoryEntry.nameSize >= MAX_FILE_NAME) ? (MAX_FILE_NAME - 1) : directoryEntry.nameSize;
+        size_t fileLength = (directoryEntry.nameSize >= MAX_FILE_PATH) ? (MAX_FILE_PATH - 1) : directoryEntry.nameSize;
         if (fread(&(fileName[0]), fileLength, FILE_READ_COUNT, file_) != FILE_READ_COUNT) {
             APP_LOGE("parse entry(%{public}d) read file name failed, error: %{public}d", i, errno);
             ret = false;
@@ -368,9 +368,9 @@ bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extr
     }
 
     std::string fileName;
-    fileName.reserve(MAX_FILE_NAME);
-    fileName.resize(MAX_FILE_NAME - 1);
-    size_t fileLength = (localHeader.nameSize >= MAX_FILE_NAME) ? (MAX_FILE_NAME - 1) : localHeader.nameSize;
+    fileName.reserve(MAX_FILE_PATH);
+    fileName.resize(MAX_FILE_PATH - 1);
+    size_t fileLength = (localHeader.nameSize >= MAX_FILE_PATH) ? (MAX_FILE_PATH - 1) : localHeader.nameSize;
     if (fileLength != zipEntry.fileName.length()) {
         APP_LOGE("check local header file name size failed");
         return false;

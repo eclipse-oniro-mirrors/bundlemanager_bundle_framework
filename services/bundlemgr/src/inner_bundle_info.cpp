@@ -459,18 +459,6 @@ void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
     };
 }
 
-void to_json(nlohmann::json &jsonObject, const OverlayModuleInfo &overlayModuleInfo)
-{
-    jsonObject = nlohmann::json {
-        {Profile::MODULE_OVERLAY_BUNDLE_NAME, overlayModuleInfo.bundleName},
-        {Profile::MODULE_OVERLAY_MODULE_NAME, overlayModuleInfo.moduleName},
-        {Profile::MODULE_TARGET_MODULE_NAME, overlayModuleInfo.targetModuleName},
-        {Profile::MODULE_OVERLAY_HAP_PATH, overlayModuleInfo.hapPath},
-        {Profile::MODULE_OVERLAY_PRIORITY, overlayModuleInfo.priority},
-        {Profile::MODULE_OVERLAY_STATE, overlayModuleInfo.state}
-    };
-}
-
 void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
 {
     jsonObject = nlohmann::json {
@@ -562,16 +550,6 @@ void to_json(nlohmann::json &jsonObject, const SandboxAppPersistentInfo &sandbox
         {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_ACCESS_TOKEN_ID, sandboxPersistentInfo.accessTokenId},
         {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_APP_INDEX, sandboxPersistentInfo.appIndex},
         {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_USER_ID, sandboxPersistentInfo.userId}
-    };
-}
-
-void to_json(nlohmann::json &jsonObject, const OverlayBundleInfo &overlayBundleInfo)
-{
-    jsonObject = nlohmann::json {
-        {Profile::BUNDLE_OVERLAY_BUNDLE_NAME, overlayBundleInfo.bundleName},
-        {Profile::BUNDLE_OVERLAY_BUNDLE_DIR, overlayBundleInfo.bundleDir},
-        {Profile::BUNDLE_OVERLAY_BUNDLE_STATE, overlayBundleInfo.state},
-        {Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY, overlayBundleInfo.priority}
     };
 }
 
@@ -1299,96 +1277,6 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         ArrayType::NOT_ARRAY);
 }
 
-void from_json(const nlohmann::json &jsonObject, OverlayModuleInfo &overlayModuleInfo)
-{
-    const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_BUNDLE_NAME,
-        overlayModuleInfo.bundleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_MODULE_NAME,
-        overlayModuleInfo.moduleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_TARGET_MODULE_NAME,
-        overlayModuleInfo.targetModuleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_HAP_PATH,
-        overlayModuleInfo.hapPath,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_PRIORITY,
-        overlayModuleInfo.priority,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::MODULE_OVERLAY_STATE,
-        overlayModuleInfo.state,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-}
-
-void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo)
-{
-    const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_NAME,
-        overlayBundleInfo.bundleName,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_DIR,
-        overlayBundleInfo.bundleDir,
-        JsonType::STRING,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_STATE,
-        overlayBundleInfo.state,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        Profile::BUNDLE_OVERLAY_BUNDLE_PRIORITY,
-        overlayBundleInfo.priority,
-        JsonType::NUMBER,
-        true,
-        Profile::parseResult,
-        ArrayType::NOT_ARRAY);
-}
-
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
@@ -1954,23 +1842,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
 {
-    bool isExistLauncherAbility = false;
-    OHOS::AAFwk::Want want;
-    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
-    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
-    for (const auto& abilityInfoPair : baseAbilityInfos_) {
-        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos_.end()) {
-            continue;
-        }
-        for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
-                isExistLauncherAbility = true;
-                break;
-            }
-        }
-    }
-    if (isExistLauncherAbility) {
+    if (IsExistLauncherAbility()) {
         baseApplicationInfo_->needAppDetail = false;
         baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
     }
@@ -1988,6 +1860,32 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
             return;
         }
     }
+}
+
+bool InnerBundleInfo::IsHideDesktopIcon() const
+{
+    return baseApplicationInfo_->hideDesktopIcon ? true : !IsExistLauncherAbility();
+}
+
+bool InnerBundleInfo::IsExistLauncherAbility() const
+{
+    bool isExistLauncherAbility = false;
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    for (const auto& abilityInfoPair : baseAbilityInfos_) {
+        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos_.end()) {
+            continue;
+        }
+        for (const Skill& skill : skillsPair->second) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
+                isExistLauncherAbility = true;
+                break;
+            }
+        }
+    }
+    return isExistLauncherAbility;
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)

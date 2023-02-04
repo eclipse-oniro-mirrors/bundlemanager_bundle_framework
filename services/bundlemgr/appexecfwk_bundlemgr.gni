@@ -58,10 +58,6 @@ aging = [
   "${services_path}/bundlemgr/src/aging/aging_request.cpp",
   "${services_path}/bundlemgr/src/aging/aging_util.cpp",
   "${services_path}/bundlemgr/src/aging/bundle_aging_mgr.cpp",
-  "${services_path}/bundlemgr/src/aging/bundle_data_size_aging_handler.cpp",
-  "${services_path}/bundlemgr/src/aging/over_10days_unused_bundle_aging_handler.cpp",
-  "${services_path}/bundlemgr/src/aging/over_20days_unused_bundle_aging_handler.cpp",
-  "${services_path}/bundlemgr/src/aging/over_30days_unused_bundle_aging_handler.cpp",
   "${services_path}/bundlemgr/src/aging/recently_unused_bundle_aging_handler.cpp",
 ]
 
@@ -112,6 +108,13 @@ app_control = [
   "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
   "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
   "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+]
+
+overlay_installation = [
+  "${services_path}/bundlemgr/src/overlay/bundle_overlay_data_manager.cpp",
+  "${services_path}/bundlemgr/src/overlay/bundle_overlay_install_checker.cpp",
+  "${services_path}/bundlemgr/src/overlay/bundle_overlay_manager_host_impl.cpp",
+  "${services_path}/bundlemgr/src/overlay/bundle_overlay_manager.cpp",
 ]
 
 if (bms_rdb_enable) {

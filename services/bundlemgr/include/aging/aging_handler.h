@@ -31,7 +31,6 @@ public:
     AgingHandler() = default;
     virtual ~AgingHandler() = default;
     virtual bool Process(AgingRequest &request) const = 0;
-    virtual const std::string &GetName() const = 0;
 };
 
 class RecentlyUnuseBundleAgingHandler : public AgingHandler {
@@ -39,12 +38,10 @@ public:
     RecentlyUnuseBundleAgingHandler() = default;
     virtual ~RecentlyUnuseBundleAgingHandler() = default;
     virtual bool Process(AgingRequest &request) const override;
-    virtual bool CheckBundle(const AgingBundleInfo &bundle) const = 0;
     virtual bool NeedContinue(const AgingRequest &request) const;
 
 private:
     bool ProcessBundle(AgingRequest &request) const;
-    bool NeedCheckEndAgingThreshold() const;
     bool UpdateUsedTotalDataBytes(AgingRequest &request) const;
     bool AgingClean(
         const AgingBundleInfo &agingBundle, AgingRequest &request) const;
@@ -52,30 +49,6 @@ private:
     bool GetCachePath(
         const AgingBundleInfo &agingBundle, std::vector<std::string> &caches) const;
     bool UnInstallBundle(const std::string &bundleName) const;
-};
-
-class Over30DaysUnusedBundleAgingHandler : public RecentlyUnuseBundleAgingHandler {
-public:
-    bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    const std::string &GetName() const override;
-};
-
-class Over20DaysUnusedBundleAgingHandler : public RecentlyUnuseBundleAgingHandler {
-public:
-    bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    const std::string &GetName() const override;
-};
-
-class Over10DaysUnusedBundleAgingHandler : public RecentlyUnuseBundleAgingHandler {
-public:
-    bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    const std::string &GetName() const override;
-};
-
-class BundleDataSizeAgingHandler : public RecentlyUnuseBundleAgingHandler {
-public:
-    bool CheckBundle(const AgingBundleInfo &bundle) const override;
-    const std::string &GetName() const override;
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

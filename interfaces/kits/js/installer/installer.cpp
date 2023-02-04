@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,7 +86,6 @@ AsyncGetBundleInstallerCallbackInfo::~AsyncGetBundleInstallerCallbackInfo()
 
 void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
 {
-    APP_LOGD("GetBundleInstallerCompleted");
     AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -100,9 +99,6 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
         APP_LOGE("can not get iBundleMgr");
         return;
     }
-    APP_LOGD("complete func verify system api");
-    int32_t hapVersion = iBundleMgr->GetHapApiVersion();
-    APP_LOGD("hap api version is %{public}d", hapVersion);
     if (!iBundleMgr->VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
         result[0] = BusinessError::CreateCommonError(
@@ -281,6 +277,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SUPPORT, ERROR_BUNDLE_SERVICE_EXCEPTION},
         { IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT, ERROR_INSTALL_NO_DISK_SPACE_LEFT },
         { IStatusReceiver::ERR_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
         { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE, ERROR_INSTALL_VERSION_DOWNGRADE },
@@ -307,10 +305,12 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
             ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT},
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY,
             ERROR_NO_SYSTEM_BUNDLE_FOR_EXTERNAL_OVERLAY },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_PERMISSION_FOR_TARGET_BUNDLE,
-            ERROR_PERMISSION_DENIED_ERROR },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_DIFFERENT_SIGNATURE_CERTIFICATE,
+            ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE,
-            ERROR_TARGET_BUNDLE_IS_OVERLAY_BUNDLE },
+            ERROR_TARGET_HAP_IS_OVERLAY_HAP },
+        {IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE,
+            ERROR_TARGET_HAP_IS_OVERLAY_HAP },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
             ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR, ERROR_BUNDLE_SERVICE_EXCEPTION },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@
 #include "common_event_info.h"
 #include "../app_control/app_control_interface.h"
 #include "../default_app/default_app_interface.h"
+#include "../overlay/overlay_manager_interface.h"
 #include "../quick_fix/quick_fix_manager_interface.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
@@ -935,11 +936,6 @@ public:
         return true;
     }
 
-    virtual int32_t GetHapApiVersion()
-    {
-        return Constants::INVALID_API_VERSION;
-    }
-
     /**
      * @brief Obtains the dependent module names.
      *
@@ -1129,6 +1125,11 @@ public:
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR;
     }
 
+    virtual sptr<IOverlayManager> GetOverlayManagerProxy()
+    {
+        return nullptr;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1237,6 +1238,7 @@ public:
         UNREGISTER_BUNDLE_EVENT_CALLBACK,
         GET_BUNDLE_INFO_FOR_SELF,
         VERIFY_SYSTEM_API,
+        GET_OVERLAY_MANAGER_PROXY,
     };
 };
 }  // namespace AppExecFwk

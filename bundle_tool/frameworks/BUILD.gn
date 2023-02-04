@@ -64,6 +64,12 @@ ohos_source_set("tools_bm_source_set") {
     "samgr:samgr_proxy",
   ]
 
+  defines = []
+  if (account_enable) {
+    external_deps += [ "os_account:os_account_innerkits" ]
+    defines += [ "ACCOUNT_ENABLE" ]
+  }
+
   part_name = "bundle_tool"
 }
 
@@ -111,9 +117,15 @@ ohos_source_set("tools_test_bm_source_set") {
     "samgr:samgr_proxy",
   ]
 
+  defines = []
   if (bundle_framework_quick_fix) {
-    defines = [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
+    defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
     sources += [ "src/quick_fix_status_callback_host_impl.cpp" ]
+  }
+
+  if (account_enable) {
+    external_deps += [ "os_account:os_account_innerkits" ]
+    defines += [ "ACCOUNT_ENABLE" ]
   }
 
   part_name = "bundle_tool"

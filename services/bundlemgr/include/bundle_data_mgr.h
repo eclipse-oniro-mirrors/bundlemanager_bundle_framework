@@ -112,7 +112,7 @@ public:
      * @param oldInfo Indicates the old InnerBundleInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool UpdateInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
     /**
@@ -792,6 +792,15 @@ public:
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
     }
+
+    bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+
+    const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
+
+    void SaveOverlayInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
+
+    void EnableOverlayBundle(const std::string &bundleName);
+
 private:
     /**
      * @brief Init transferStates.
@@ -906,6 +915,7 @@ private:
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;
+    mutable std::mutex overlayMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
     // using for locking by bundleName
