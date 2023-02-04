@@ -301,8 +301,10 @@ constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* META_DATA = "metadata";
 constexpr const char* SKILLS = "skills";
 constexpr const char* SRC_ENTRANCE = "srcEntrance";
+constexpr const char* SRC_ENTRY = "srcEntry";
 constexpr const char* PERMISSIONS = "permissions";
 constexpr const char* VISIBLE = "visible";
+constexpr const char* EXPORTED = "exported";
 constexpr const char* SRC_LANGUAGE = "srcLanguage";
 constexpr const char* PRIORITY = "priority";
 // module.json
