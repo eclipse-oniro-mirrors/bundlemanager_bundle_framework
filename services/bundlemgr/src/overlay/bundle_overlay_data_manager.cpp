@@ -387,7 +387,7 @@ ErrCode OverlayDataMgr::GetAllOverlayModuleInfo(const std::string &bundleName,
         APP_LOGE("overlay bundle is not existed %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
     }
-
+    dataMgr_->EnableOverlayBundle(bundleName);
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the bundle %{public}s is not installed at user %{public}d", bundleName.c_str(), userId);
@@ -427,7 +427,7 @@ ErrCode OverlayDataMgr::GetOverlayModuleInfo(const std::string &bundleName, cons
         APP_LOGE("overlay bundle is not existed %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
     }
-
+    dataMgr_->EnableOverlayBundle(bundleName);
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the bundle %{public}s is not installed at user %{public}d", bundleName.c_str(), userId);
@@ -478,7 +478,7 @@ ErrCode OverlayDataMgr::GetOverlayBundleInfoForTarget(const std::string &targetB
         APP_LOGE("target bundle is not existed %{public}s", targetBundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED;
     }
-
+    dataMgr_->EnableOverlayBundle(targetBundleName);
     InnerBundleUserInfo userInfo;
     if (!targetInnerBundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the bundle %{public}s is not installed at user %{public}d", targetBundleName.c_str(), userId);
@@ -505,7 +505,7 @@ ErrCode OverlayDataMgr::GetOverlayModuleInfoForTarget(const std::string &targetB
         APP_LOGE("target bundle is not existed %{public}s", targetBundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED;
     }
-
+    dataMgr_->EnableOverlayBundle(targetBundleName);
     InnerBundleUserInfo userInfo;
     if (!targetInnerBundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the bundle %{public}s is not installed at user %{public}d", targetBundleName.c_str(), userId);

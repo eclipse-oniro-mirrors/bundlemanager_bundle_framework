@@ -36,7 +36,9 @@ const std::string HELP_MSG = "usage: bm <command> <options>\n"
                              "  enable       enable the bundle\n"
                              "  disable      disable the bundle\n"
                              "  get          obtain device udid\n"
-                             "  quickfix     quick fix, including query and install\n";
+                             "  quickfix     quick fix, including query and install\n"
+                             "  dump-overlay dump overlay info of the specific overlay bundle\n"
+                             "  dump-target-overlay dump overlay info of the specific target bundle\n";
 
 const std::string HELP_MSG_INSTALL =
     "usage: bm install <options>\n"
@@ -127,14 +129,16 @@ const std::string HELP_MSG_OVERLAY =
     "  -h, --help                                         list available commands\n"
     "  -b, --bundle-name <bundle-name>                    bundle name of the overlay bundle\n"
     "  -m, --module-name <module-name>                    module name of the overlay bundle\n"
-    "  -tm, --target-module-name <target-module-name>     target module name of overlay bundle\n";
+    "  -tm, --target-module-name <target-module-name>     target module name of overlay bundle\n"
+    "  -u, --user-id <user-id>                            specify a user id\n";
 
 const std::string HELP_MSG_OVERLAY_TARGET =
     "usage: bm dump-target-overlay <options>\n"
     "options list:\n"
     "  -h, --help                                         list available commands\n"
     "  -b, --bundle-name <bundle-name>                    bundle name of the target overlay bundle\n"
-    "  -m, --module-name <module-name>                    module name of the target overlay bundle\n";
+    "  -m, --module-name <module-name>                    module name of the target overlay bundle\n"
+    "  -u, --user-id <user-id>                            specify a user id\n";
 
 const std::string STRING_INCORRECT_OPTION = "error: incorrect option";
 const std::string HELP_MSG_NO_BUNDLE_PATH_OPTION =

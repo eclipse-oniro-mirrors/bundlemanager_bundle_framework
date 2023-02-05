@@ -1476,7 +1476,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpTargetOverlay()
     while (true) {
         counter++;
         if (argc_ > MAX_OVERLAY_ARGUEMENTS_NUMBER) {
-            resultReceiver_.append(HELP_MSG_OVERLAY);
+            resultReceiver_.append(HELP_MSG_OVERLAY_TARGET);
             return OHOS::ERR_INVALID_VALUE;
         }
         int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_OVERLAY.c_str(), LONG_OPTIONS_OVERLAY, nullptr);
@@ -1572,7 +1572,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpTargetOverlay()
         }
     }
     if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_OVERLAY);
+        resultReceiver_.append(HELP_MSG_OVERLAY_TARGET);
         return result;
     }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -1822,7 +1822,7 @@ std::string BundleManagerShellCommand::DumpOverlayInfo(const std::string &bundle
     const std::string &targetModuleName, int32_t userId)
 {
     std::string res = "";
-    if ((bundleName.empty()) || (!moduleName.empty() && !targetModuleName.empty()) || (userId < 0)) {
+    if ((bundleName.empty()) || (!moduleName.empty() && !targetModuleName.empty())) {
         APP_LOGE("error value of the dump-overlay command options");
         return res;
     }
@@ -1835,6 +1835,7 @@ std::string BundleManagerShellCommand::DumpOverlayInfo(const std::string &bundle
     std::vector<OverlayModuleInfo> overlayModuleInfos;
     OverlayModuleInfo overlayModuleInfo;
     ErrCode ret = ERR_OK;
+    userId = BundleCommandCommon::GetCurrentUserId(userId);
     if (moduleName.empty() && targetModuleName.empty()) {
         ret = overlayManagerProxy->GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, userId);
     } else if (!moduleName.empty()) {
@@ -1861,7 +1862,7 @@ std::string BundleManagerShellCommand::DumpTargetOverlayInfo(const std::string &
     const std::string &moduleName, int32_t userId)
 {
     std::string res = "";
-    if (bundleName.empty() || userId < 0) {
+    if (bundleName.empty()) {
         APP_LOGE("error value of the dump-target-overlay command options");
         return res;
     }
@@ -1873,6 +1874,7 @@ std::string BundleManagerShellCommand::DumpTargetOverlayInfo(const std::string &
 
     std::vector<OverlayBundleInfo> overlayBundleInfos;
     std::vector<OverlayModuleInfo> overlayModuleInfos;
+    userId = BundleCommandCommon::GetCurrentUserId(userId);
     ErrCode ret = ERR_OK;
     nlohmann::json overlayInfoJson;
     if (moduleName.empty()) {
