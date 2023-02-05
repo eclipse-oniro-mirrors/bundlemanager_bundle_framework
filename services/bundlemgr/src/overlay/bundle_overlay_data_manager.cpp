@@ -184,7 +184,7 @@ void OverlayDataMgr::BuildExternalOverlayConnection(const std::string &moduleNam
             continue;
         }
         // check target bundle is preInstall application
-        if (!oldInfo.IsSystemApp()) {
+        if (!oldInfo.IsPreInstallApp()) {
             APP_LOGW("target bundle is not preInstall application");
             return;
         }

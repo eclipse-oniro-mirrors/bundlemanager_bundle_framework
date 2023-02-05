@@ -1341,7 +1341,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpOverlay()
             resultReceiver_.append(HELP_MSG_OVERLAY);
             return OHOS::ERR_INVALID_VALUE;
         }
-        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_OVERLAY_TARGET.c_str(), LONG_OPTIONS_OVERLAY_TARGET,
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_OVERLAY.c_str(), LONG_OPTIONS_OVERLAY,
             nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
@@ -1461,7 +1461,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpOverlay()
         resultReceiver_.append(res + "\n");
     }
 #else
-    resultReceiver_.append(MSG_ERR_BUNDLEMANAGER_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED);
+    resultReceiver_.append(MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
 #endif
     return result;
 }
@@ -1479,7 +1479,8 @@ ErrCode BundleManagerShellCommand::RunAsDumpTargetOverlay()
             resultReceiver_.append(HELP_MSG_OVERLAY_TARGET);
             return OHOS::ERR_INVALID_VALUE;
         }
-        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_OVERLAY.c_str(), LONG_OPTIONS_OVERLAY, nullptr);
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_OVERLAY_TARGET.c_str(), LONG_OPTIONS_OVERLAY_TARGET,
+            nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -1557,7 +1558,8 @@ ErrCode BundleManagerShellCommand::RunAsDumpTargetOverlay()
                 break;
             }
             case 'u': {
-                APP_LOGD("'bm dump-target-overlay %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+                APP_LOGD("'bm dump-target-overlay %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT],
+                    optarg);
                 if (!OHOS::StrToInt(optarg, userId) || userId < 0) {
                     APP_LOGE("bm dump-target-overlay with error userId %{private}s", optarg);
                     resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
@@ -1584,7 +1586,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpTargetOverlay()
         resultReceiver_.append(res + "\n");
     }
 #else
-    resultReceiver_.append(MSG_ERR_BUNDLEMANAGER_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED);
+    resultReceiver_.append(MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
 #endif
     return result;
 }

@@ -129,7 +129,7 @@ const std::string HELP_MSG_OVERLAY =
     "  -h, --help                                         list available commands\n"
     "  -b, --bundle-name <bundle-name>                    bundle name of the overlay bundle\n"
     "  -m, --module-name <module-name>                    module name of the overlay bundle\n"
-    "  -tm, --target-module-name <target-module-name>     target module name of overlay bundle\n"
+    "  -t, --target-module-name <target-module-name>      target module name of overlay bundle\n"
     "  -u, --user-id <user-id>                            specify a user id\n";
 
 const std::string HELP_MSG_OVERLAY_TARGET =
@@ -182,7 +182,7 @@ const std::string STRING_DUMP_OVERLAY_NG = "error: failed to get overlay info";
 
 const std::string STRING_DUMP_TARGET_OVERLAY_OK = "target overlay info is:";
 const std::string STRING_DUMP_TARGET_OVERLAY_NG = "error: failed to get target overlay info";
-const std::string MSG_ERR_BUNDLEMANAGER_QUICK_FIX_FEATURE_IS_NOT_SUPPORTED = "feature is not supported.\n";
+const std::string MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED = "feature is not supported.\n";
 } // namespace
 
 class BundleManagerShellCommand : public ShellCommand {
