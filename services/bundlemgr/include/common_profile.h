@@ -322,8 +322,6 @@ constexpr const char* APP_MIN_API_VERSION = "minAPIVersion";
 constexpr const char* APP_TARGET_API_VERSION = "targetAPIVersion";
 constexpr const char* APP_API_RELEASETYPE = "apiReleaseType";
 constexpr const char* APP_API_RELEASETYPE_DEFAULT_VALUE = "Release";
-constexpr const char* APP_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificationEnabled";
-constexpr const char* APP_ENTITY_TYPE = "entityType";
 constexpr const char* APP_ENTITY_TYPE_DEFAULT_VALUE = "unspecified";
 constexpr const char* APP_KEEP_ALIVE = "keepAlive";
 constexpr const char* APP_REMOVABLE = "removable";
@@ -367,7 +365,6 @@ constexpr const char* MODULE_TYPE_FEATURE = "feature";
 constexpr const char* MODULE_TYPE_SHARED = "shared";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
-constexpr const char* DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificationEnabled";
 constexpr const char* DEVICE_CONFIG_KEEP_ALIVE = "keepAlive";
 constexpr const char* DEVICE_CONFIG_REMOVABLE = "removable";
 constexpr const char* DEVICE_CONFIG_SINGLETON = "singleton";

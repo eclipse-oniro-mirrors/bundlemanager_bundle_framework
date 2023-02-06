@@ -13,7 +13,6 @@
         "deliveryWithInstall": true,
         "installationFree": false,
         "pages": "$profile:main_pages",
-        "uiSyntax": "ets",
         "abilities": [
             {
             "name": "BROWSER",

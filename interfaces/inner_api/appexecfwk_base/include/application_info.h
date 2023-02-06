@@ -29,6 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
     const std::string AVAILABLELEVEL_NORMAL = "normal";
+    const std::string DEFAULT_ENTITY_TYPE = "unspecified";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,
@@ -170,7 +171,7 @@ struct ApplicationInfo : public Parcelable {
     bool debug = false;
     std::string deviceId;
     bool distributedNotificationEnabled = true;
-    std::string entityType;
+    std::string entityType = DEFAULT_ENTITY_TYPE;
     std::string process;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     std::string vendor;

@@ -15,8 +15,6 @@
         "minAPIVersion": 8,
         "targetAPIVersion":8,
         "apiReleaseType":"Beta2",
-        "distributedNotificationEnabled":true,
-        "entityType":"game",
         "keepAlive":true,
         "removable":false,
         "userDataClearable":false,

@@ -54,11 +54,6 @@ const std::set<std::string> VIRTUAL_MACHINE_SET = {
     "default"
 };
 
-const std::set<std::string> UI_SYNTAX_SET = {
-    "hml",
-    "ets"
-};
-
 const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_DATA_TRANSFER, ProfileReader::VALUE_DATA_TRANSFER},
     {ProfileReader::KEY_AUDIO_PLAYBACK, ProfileReader::VALUE_AUDIO_PLAYBACK},
@@ -89,21 +84,6 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "fileAccess",
     "thumbnail",
     "preview"
-};
-
-const std::set<std::string> ENTITY_TYPE_SET = {
-    "game",
-    "media",
-    "communication",
-    "news",
-    "travel",
-    "utility",
-    "shopping",
-    "education",
-    "kids",
-    "business",
-    "photography",
-    "unspecified"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
@@ -147,7 +127,6 @@ struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
     // pair second : actual value
     std::pair<bool, int32_t> minAPIVersion = std::make_pair<>(false, 0);
-    std::pair<bool, bool> distributedNotificationEnabled = std::make_pair<>(false, false);
     std::pair<bool, bool> keepAlive = std::make_pair<>(false, false);
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::pair<bool, bool> singleton = std::make_pair<>(false, false);
@@ -231,8 +210,6 @@ struct App {
     uint32_t minAPIVersion = 0;
     int32_t targetAPIVersion = 0;
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
-    bool distributedNotificationEnabled = true;
-    std::string entityType = APP_ENTITY_TYPE_DEFAULT_VALUE;
     bool keepAlive = false;
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     bool singleton = false;
@@ -258,7 +235,6 @@ struct Module {
     bool deliveryWithInstall = false;
     bool installationFree = false;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
-    std::string uiSyntax = MODULE_UI_SYNTAX_DEFAULT_VALUE;
     std::string pages;
     std::vector<Metadata> metadata;
     std::vector<Ability> abilities;
@@ -760,17 +736,6 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             parseResult,
             ArrayType::NOT_ARRAY);
     }
-    if (jsonObject.find(DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED) != jsonObjectEnd) {
-        deviceConfig.distributedNotificationEnabled.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
-            jsonObjectEnd,
-            DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED,
-            deviceConfig.distributedNotificationEnabled.second,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-    }
     if (jsonObject.find(DEVICE_CONFIG_KEEP_ALIVE) != jsonObjectEnd) {
         deviceConfig.keepAlive.first = true;
         GetValueIfFindKey<bool>(jsonObject,
@@ -948,22 +913,6 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         jsonObjectEnd,
         APP_API_RELEASETYPE,
         app.apiReleaseType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APP_DISTRIBUTED_NOTIFICATION_ENABLED,
-        app.distributedNotificationEnabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APP_ENTITY_TYPE,
-        app.entityType,
         JsonType::STRING,
         false,
         parseResult,
@@ -1257,14 +1206,6 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         jsonObjectEnd,
         MODULE_VIRTUAL_MACHINE,
         module.virtualMachine,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        MODULE_UI_SYNTAX,
-        module.uiSyntax,
         JsonType::STRING,
         false,
         parseResult,
@@ -1637,12 +1578,8 @@ bool ToApplicationInfo(
     applicationInfo.apiReleaseType = app.apiReleaseType;
     applicationInfo.debug = app.debug;
     applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
-    applicationInfo.distributedNotificationEnabled = app.distributedNotificationEnabled;
-    if (Profile::ENTITY_TYPE_SET.find(app.entityType) != Profile::ENTITY_TYPE_SET.end()) {
-        applicationInfo.entityType = app.entityType;
-    } else {
-        applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
-    }
+    applicationInfo.distributedNotificationEnabled = true;
+    applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.vendor = app.vendor;
     applicationInfo.asanEnabled = app.asanEnabled;
 
@@ -1653,9 +1590,6 @@ bool ToApplicationInfo(
         Profile::DeviceConfig deviceConfig = app.deviceConfigs.at(deviceType);
         if (deviceConfig.minAPIVersion.first) {
             applicationInfo.apiCompatibleVersion = static_cast<uint32_t>(deviceConfig.minAPIVersion.second);
-        }
-        if (deviceConfig.distributedNotificationEnabled.first) {
-            applicationInfo.distributedNotificationEnabled = deviceConfig.distributedNotificationEnabled.second;
         }
         if (applicationInfo.isSystemApp && transformParam.isPreInstallApp) {
             if (deviceConfig.keepAlive.first) {
@@ -1939,10 +1873,7 @@ bool ToInnerModuleInfo(
         innerModuleInfo.virtualMachine = moduleJson.module.virtualMachine;
     }
 
-    if (Profile::UI_SYNTAX_SET.find(moduleJson.module.uiSyntax) != Profile::UI_SYNTAX_SET.end()) {
-        innerModuleInfo.uiSyntax = moduleJson.module.uiSyntax;
-    }
-
+    innerModuleInfo.uiSyntax = Profile::MODULE_UI_SYNTAX_DEFAULT_VALUE;
     innerModuleInfo.pages = moduleJson.module.pages;
     GetPermissions(moduleJson, transformParam, innerModuleInfo);
     innerModuleInfo.dependencies = moduleJson.module.dependencies;
