@@ -70,6 +70,10 @@ ohos_source_set("tools_bm_source_set") {
     defines += [ "ACCOUNT_ENABLE" ]
   }
 
+  if (bundle_framework_overlay_install) {
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+  }
+
   part_name = "bundle_tool"
 }
 

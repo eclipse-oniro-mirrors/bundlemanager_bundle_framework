@@ -104,7 +104,7 @@ ErrCode BundleOverlayInstallChecker::CheckExternalBundle(const InnerBundleInfo &
     }
 
     // 4. overlay hap should be preInstall application
-    if (!innerBundleInfo.IsSystemApp()) {
+    if (!innerBundleInfo.IsPreInstallApp()) {
         APP_LOGE("no preInstall application for external overlay installation");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY;
     }
@@ -193,7 +193,7 @@ ErrCode BundleOverlayInstallChecker::CheckTargetBundle(const std::string &target
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE;
     }
     // 2. check target bundle is system application
-    if (!oldInfo.IsSystemApp()) {
+    if (!oldInfo.IsPreInstallApp()) {
         APP_LOGE("target bundle is not preInstall application");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY;
     }

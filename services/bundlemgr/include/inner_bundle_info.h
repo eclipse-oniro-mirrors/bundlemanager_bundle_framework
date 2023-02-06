@@ -1755,7 +1755,8 @@ public:
         auto innerModuleInfo = iterator->second;
         auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
             innerModuleInfo.overlayModuleInfo.end(), [&overlayModuleInfo](const auto &overlayInfo) {
-            return overlayInfo.moduleName == overlayModuleInfo.moduleName;
+            return (overlayInfo.moduleName == overlayModuleInfo.moduleName) &&
+                (overlayInfo.bundleName == overlayModuleInfo.bundleName);
         });
         if (overlayModuleInfoIt != innerModuleInfo.overlayModuleInfo.end()) {
             innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
