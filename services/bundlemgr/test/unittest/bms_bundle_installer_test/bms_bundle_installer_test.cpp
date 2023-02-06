@@ -72,6 +72,7 @@ const std::string TEST_STRING = "test.string";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
+const std::string LOG = "log";
 
 }  // namespace
 
@@ -2729,4 +2730,43 @@ HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0300, Function | SmallTest |
     ret = installer.DeleteArkProfile(installer.bundleName_, installer.userId_);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: asanEnabled_0100
+ * @tc.name: test checkAsanEnabled when asanEnabled is set to be ture
+ * @tc.desc: 1.Test checkAsanEnabled
+*/
+HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_BACKUP_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(info.asanEnabled);
+    std::string asanLogPath =  Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+        + std::to_string(USERID) + Constants::PATH_SEPARATOR + BUNDLE_BACKUP_NAME + Constants::PATH_SEPARATOR + LOG;
+    EXPECT_EQ(asanLogPath, info.asanLogPath);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ApplicationInfo info;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_PREVIEW_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(info.asanEnabled);
+    std::string asanLogPath = "";
+    EXPECT_EQ(asanLogPath, info.asanLogPath);
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
 } // OHOS
