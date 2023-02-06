@@ -42,7 +42,8 @@ enum class BMSEventType {
     PRE_BUNDLE_RECOVER,
     BUNDLE_STATE_CHANGE,
     BUNDLE_CLEAN_CACHE,
-    BMS_USER_EVENT
+    BMS_USER_EVENT,
+    APPLY_QUICK_FIX
 };
 
 enum class BundleEventType {
@@ -51,6 +52,7 @@ enum class BundleEventType {
     UNINSTALL,
     UPDATE,
     RECOVER,
+    QUICK_FIX
 };
 
 enum class InstallScene {
@@ -114,6 +116,9 @@ struct EventInfo {
     // only used in user event
     UserEventType userEventType = UserEventType::UNKNOW;
 
+    // for quick fix
+    int32_t applyQuickFixFrequency = 0;
+
     void Reset()
     {
         userId = Constants::INVALID_USERID;
@@ -137,6 +142,7 @@ struct EventInfo {
         fingerprint.clear();
         hideDesktopIcon = false;
         appDistributionType.clear();
+        applyQuickFixFrequency = 0;
     }
 };
 

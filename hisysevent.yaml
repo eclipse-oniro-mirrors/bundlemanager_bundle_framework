@@ -167,3 +167,11 @@ BMS_USER_EVENT:
   TYPE: {type: STRING, desc: user event type}
   USERID: {type: INT32, desc: userId of the bundle}
   TIME: {type: INT64, desc: time stamp}
+
+BUNDLE_QUICK_FIX:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle apply quick fix}
+  BUNDLE_NAME: {type: STRING, desc: bundleName}
+  APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
+  APPLY_QUICK_FIX_FREQUENCY: {type: INT32, desc: apply quick fix frequency}
+  FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hqf file}
+  HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hqf file}
