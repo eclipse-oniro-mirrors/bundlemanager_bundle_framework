@@ -26,19 +26,25 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
+        std::string name (reinterpret_cast<const char*>(data), size);
         InstallParam info;
-        if (dataMessageParcel.WriteBuffer(data, size)) {
-            info.Marshalling(dataMessageParcel);
-            auto infoPtr = InstallParam::Unmarshalling(dataMessageParcel);
-            return infoPtr != nullptr;
-        }
-        InstallParam *installParam = new (std::nothrow) InstallParam();
-        if (installParam == nullptr) {
+        info.hashParams.insert(std::pair<std::string, std::string>("1", name));
+        if (!info.Marshalling(dataMessageParcel)) {
             return false;
         }
-        bool ret = installParam->ReadFromParcel(dataMessageParcel);
-        delete installParam;
-        installParam = nullptr;
+        auto infoPtr = InstallParam::Unmarshalling(dataMessageParcel);
+        if (infoPtr == nullptr) {
+            return false;
+        }
+        delete infoPtr;
+        infoPtr = nullptr;
+        InstallParam *realInfo = new (std::nothrow) InstallParam();
+        if (realInfo == nullptr) {
+            return false;
+        }
+        bool ret = realInfo->ReadFromParcel(dataMessageParcel);
+        delete realInfo;
+        realInfo = nullptr;
         return ret;
     }
 }

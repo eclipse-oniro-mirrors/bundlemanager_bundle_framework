@@ -26,9 +26,9 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        std::string targetAbility (reinterpret_cast<const char*>(data), size);
+        std::string name (reinterpret_cast<const char*>(data), size);
         CompatibleAbilityInfo info;
-        info.targetAbility = targetAbility;
+        info.bundleName = name;
         if (!info.Marshalling(dataMessageParcel)) {
             return false;
         }
@@ -36,14 +36,15 @@ namespace OHOS {
         if (infoPtr == nullptr) {
             return false;
         }
-        CompatibleAbilityInfo *readInfo =
-            new (std::nothrow) CompatibleAbilityInfo();
-        if (readInfo == nullptr) {
+        delete infoPtr;
+        infoPtr = nullptr;
+        CompatibleAbilityInfo *realInfo = new (std::nothrow) CompatibleAbilityInfo();
+        if (realInfo == nullptr) {
             return false;
         }
-        bool ret = readInfo->ReadFromParcel(dataMessageParcel);
-        delete readInfo;
-        readInfo = nullptr;
+        bool ret = realInfo->ReadFromParcel(dataMessageParcel);
+        delete realInfo;
+        realInfo = nullptr;
         return ret;
     }
 }

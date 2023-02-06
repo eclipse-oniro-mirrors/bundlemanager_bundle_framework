@@ -26,24 +26,25 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        std::string permissionName (reinterpret_cast<const char*>(data), size);
-        PermissionDef permission;
-        permission.permissionName = permissionName;
-        if (!permission.Marshalling(dataMessageParcel)) {
+        std::string name (reinterpret_cast<const char*>(data), size);
+        PermissionDef info;
+        info.bundleName = name;
+        if (!info.Marshalling(dataMessageParcel)) {
             return false;
         }
-        auto permissionPtr = PermissionDef::Unmarshalling(dataMessageParcel);
-        if (permissionPtr == nullptr) {
+        auto infoPtr = PermissionDef::Unmarshalling(dataMessageParcel);
+        if (infoPtr == nullptr) {
             return false;
         }
-        PermissionDef *permissionDef =
-            new (std::nothrow) PermissionDef();
-        if (permissionDef == nullptr) {
+        delete infoPtr;
+        infoPtr = nullptr;
+        PermissionDef *realInfo = new (std::nothrow) PermissionDef();
+        if (realInfo == nullptr) {
             return false;
         }
-        bool ret = permissionDef->ReadFromParcel(dataMessageParcel);
-        delete permissionDef;
-        permissionDef = nullptr;
+        bool ret = realInfo->ReadFromParcel(dataMessageParcel);
+        delete realInfo;
+        realInfo = nullptr;
         return ret;
     }
 }

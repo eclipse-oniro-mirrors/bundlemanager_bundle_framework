@@ -26,23 +26,25 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        std::string jsonString (reinterpret_cast<const char*>(data), size);
-        ModuleUsageRecord moduleUsageRecord;
-        moduleUsageRecord.bundleName = jsonString;
-        if (!moduleUsageRecord.Marshalling(dataMessageParcel)) {
+        std::string name (reinterpret_cast<const char*>(data), size);
+        ModuleUsageRecord info;
+        info.bundleName = name;
+        if (!info.Marshalling(dataMessageParcel)) {
             return false;
         }
-        auto recordPtr = ModuleUsageRecord::Unmarshalling(dataMessageParcel);
-        if (recordPtr == nullptr) {
+        auto infoPtr = ModuleUsageRecord::Unmarshalling(dataMessageParcel);
+        if (infoPtr == nullptr) {
             return false;
         }
-        ModuleUsageRecord *record = new (std::nothrow) ModuleUsageRecord();
-        if (record == nullptr) {
+        delete infoPtr;
+        infoPtr = nullptr;
+        ModuleUsageRecord *realInfo = new (std::nothrow) ModuleUsageRecord();
+        if (realInfo == nullptr) {
             return false;
         }
-        bool ret = record->ReadFromParcel(dataMessageParcel);
-        delete record;
-        record = nullptr;
+        bool ret = realInfo->ReadFromParcel(dataMessageParcel);
+        delete realInfo;
+        realInfo = nullptr;
         return ret;
     }
 }

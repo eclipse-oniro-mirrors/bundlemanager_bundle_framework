@@ -26,22 +26,25 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        FormInfo info;
         std::string name (reinterpret_cast<const char*>(data), size);
-        info.name = name;
-        info.Marshalling(dataMessageParcel);
-        auto rulePtr = FormInfo::Unmarshalling(dataMessageParcel);
-        if (rulePtr == nullptr) {
+        FormInfo info;
+        info.bundleName = name;
+        if (!info.Marshalling(dataMessageParcel)) {
             return false;
         }
-        FormInfo *formInfo = new (std::nothrow) FormInfo();
-        if (formInfo == nullptr) {
+        auto infoPtr = FormInfo::Unmarshalling(dataMessageParcel);
+        if (infoPtr == nullptr) {
             return false;
         }
-        formInfo->ReadFromParcel(dataMessageParcel);
-        delete formInfo;
-        formInfo = nullptr;
-        bool ret = info.IsValid();
+        delete infoPtr;
+        infoPtr = nullptr;
+        FormInfo *realInfo = new (std::nothrow) FormInfo();
+        if (realInfo == nullptr) {
+            return false;
+        }
+        bool ret = realInfo->ReadFromParcel(dataMessageParcel);
+        delete realInfo;
+        realInfo = nullptr;
         return ret;
     }
 }
