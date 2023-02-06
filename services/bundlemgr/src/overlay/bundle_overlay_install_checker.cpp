@@ -209,6 +209,17 @@ ErrCode BundleOverlayInstallChecker::CheckTargetBundle(const std::string &target
     if (result != ERR_OK) {
         return result;
     }
+
+    // 5. check target bundle is not fa module
+    if (!oldInfo.GetIsNewVersion()) {
+        APP_LOGE("target bundle is not stage model");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_NOT_STAGE_MODULE;
+    }
+    // 6. check target bundle is not service
+    if (CheckBundleType(oldInfo) != ERR_OK) {
+        APP_LOGE("target bundle is service");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_SERVICE;
+    }
     return ERR_OK;
 }
 
