@@ -2385,12 +2385,14 @@ ErrCode BundleMgrHostImpl::SetDebugMode(bool isDebug)
 bool BundleMgrHostImpl::VerifySystemApi(int32_t beginApiVersion, std::string bundleName)
 {
     APP_LOGD("begin to verify system app");
-    std::string callingBundleName;
-    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-    if (ret && (bundleName == callingBundleName)) {
-        APP_LOGD("query own info, verify success");
-        return true;
+    if (bundleName != Constants::EMPTY_STRING) {
+        std::string callingBundleName;
+        bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+        APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
+        if (ret && (bundleName == callingBundleName)) {
+            APP_LOGD("query own info, verify success");
+            return true;
+        }
     }
     return BundlePermissionMgr::VerifySystemApp(beginApiVersion);
 }

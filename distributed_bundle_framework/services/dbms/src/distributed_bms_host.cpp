@@ -75,7 +75,7 @@ int DistributedBmsHost::HandleGetRemoteAbilityInfo(Parcel &data, Parcel &reply)
 {
     APP_LOGI("DistributedBmsHost handle get remote ability info");
     if (!VerifySystemApp()) {
-        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        APP_LOGE("verify system app failed");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
@@ -109,7 +109,7 @@ int DistributedBmsHost::HandleGetRemoteAbilityInfos(Parcel &data, Parcel &reply)
 {
     APP_LOGI("DistributedBmsHost handle get remote ability infos");
     if (!VerifySystemApp()) {
-        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        APP_LOGE("verify system app failed");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {

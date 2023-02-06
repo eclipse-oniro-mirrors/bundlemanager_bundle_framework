@@ -692,7 +692,7 @@ static ErrCode InnerGetDispatchInfo(std::string &version, std::string &dispatchA
         APP_LOGE("can not get iBundleMgr");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
         return ERROR_NOT_SYSTEM_APP;
     }

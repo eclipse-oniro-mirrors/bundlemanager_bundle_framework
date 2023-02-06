@@ -925,13 +925,15 @@ public:
         return true;
     }
 
+    /**
+     * @brief Verify whether the calling app is system app. Only for BMS usage.
+     *
+     * @param beginApiVersion Indicates version since this api became to be system api.
+     * @param bundleName Indicates bundle name of the calling hap.
+     * @return Returns true if the hap passes the verification; returns false otherwise.
+     */
     virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
         const std::string bundleName = Constants::EMPTY_STRING)
-    {
-        return true;
-    }
-
-    virtual bool VerifySystemApi(const std::string bundleName)
     {
         return true;
     }

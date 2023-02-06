@@ -99,7 +99,7 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
         APP_LOGE("can not get iBundleMgr");
         return;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
         result[0] = BusinessError::CreateCommonError(
             env, ERROR_NOT_SYSTEM_APP, RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER, INSTALL_PERMISSION);
