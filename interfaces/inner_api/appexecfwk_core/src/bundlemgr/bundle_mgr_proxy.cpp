@@ -3247,6 +3247,32 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     return reply.ReadInt32();
 }
 
+bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion, const std::string bundleName)
+{
+    APP_LOGD("begin to verify system app");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to VerifySystemApi due to write InterfaceToken fail");
+        return false;
+    }
+
+    if (!data.WriteInt32(beginApiVersion)) {
+        APP_LOGE("fail to VerifySystemApi due to write apiVersion fail");
+        return false;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to VerifySystemApi due to write bundleName fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::VERIFY_SYSTEM_API, data, reply)) {
+        APP_LOGE("fail to sendRequest");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
 sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

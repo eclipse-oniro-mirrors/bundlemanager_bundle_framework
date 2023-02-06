@@ -631,6 +631,8 @@ private:
 
     ErrCode HandleSetDebugMode(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetOverlayManagerProxy(MessageParcel &data, MessageParcel &reply);
 
 private:

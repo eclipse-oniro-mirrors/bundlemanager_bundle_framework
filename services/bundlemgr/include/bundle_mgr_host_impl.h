@@ -677,7 +677,7 @@ public:
     virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
         const std::string bundleName = Constants::EMPTY_STRING) override;
 
-    virtual bool VerifySystemApi(const std::string bundleName) override;
+    virtual bool VerifySystemApi(const std::string bundleName);
 
     virtual std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId) override;
 

@@ -782,6 +782,9 @@ public:
 #endif
     virtual ErrCode SetDebugMode(bool isDebug) override;
 
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
+        const std::string bundleName = Constants::EMPTY_STRING) override;
+
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
 
 private:

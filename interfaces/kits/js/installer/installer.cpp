@@ -94,6 +94,26 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
     NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
         &m_classBundleInstaller));
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return;
+    }
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        result[0] = BusinessError::CreateCommonError(
+            env, ERROR_NOT_SYSTEM_APP, RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER, INSTALL_PERMISSION);
+        if (callbackPtr->deferred) {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            napi_value callback = nullptr;
+            napi_value placeHolder = nullptr;
+            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+            NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+                sizeof(result) / sizeof(result[0]), result, &placeHolder));
+        }
+        return;
+    }
     NAPI_CALL_RETURN_VOID(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result[SECOND_PARAM]));
 
     if (callbackPtr->deferred) {
@@ -115,16 +135,6 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetBundleInstaller called");
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return nullptr;
-    }
-    if (!iBundleMgr->VerifySystemApi()) {
-        BusinessError::ThrowError(env, ERROR_NOT_SYSTEM_APP);
-        APP_LOGE("non-system app calling system api");
-        return nullptr;
-    }
     NapiArg args(env, info);
     if (!args.Init(FIRST_PARAM, SECOND_PARAM)) {
         APP_LOGE("GetBundleInstaller args init failed");
