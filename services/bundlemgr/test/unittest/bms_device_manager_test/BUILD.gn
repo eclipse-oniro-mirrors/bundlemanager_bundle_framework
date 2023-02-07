@@ -159,7 +159,7 @@ ohos_unittest("BmsDeviceManagerTest") {
 group("unittest") {
   testonly = true
 
-  if (ability_runtime_enable) {
+  if (ability_runtime_enable && device_manager_enable) {
     deps = [ ":BmsDeviceManagerTest" ]
   }
 }

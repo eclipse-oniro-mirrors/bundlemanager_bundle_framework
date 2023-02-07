@@ -235,7 +235,7 @@ HWTEST_F(BmsDeviceManagerTest, GetUdidByNetworkId_0100, Function | SmallTest | L
     BmsDeviceManager deviceManager;
     std::string netWorkId = "";
     std::string uid = "";
-    deviceManager.GetUdidByNetworkId(netWorkId, uid);
+    auto ret = deviceManager.GetUdidByNetworkId(netWorkId, uid);
     EXPECT_FALSE(ret == -1);
 }
 
