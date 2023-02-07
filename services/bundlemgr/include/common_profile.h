@@ -435,6 +435,7 @@ constexpr const char* DEPENDENCIES_BUNDLE_NAME = "bundleName";
 constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH = "/system/lib/appdetailability";
 constexpr const char* APP_DETAIL_ABILITY_LIBRARY_PATH_64 = "/system/lib64/appdetailability";
 
+constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 extern thread_local int32_t parseResult;
 }  // namespace Profile
 }  // namespace AppExecFwk
