@@ -1716,6 +1716,11 @@ public:
         }
     }
 
+    void CleanOverLayBundleInfo()
+    {
+        overlayBundleInfo_.clear();
+    }
+
     std::string GetTargetBundleName() const
     {
         return baseApplicationInfo_->targetBundleName;
@@ -1794,6 +1799,13 @@ public:
                 [&bundleName](const auto &overlayInfo) {
                 return overlayInfo.bundleName == bundleName;
             }), innerModuleInfo.second.overlayModuleInfo.end());
+        }
+    }
+
+    void CleanAllOverlayModuleInfo()
+    {
+        for (auto &innerModuleInfo : innerModuleInfos_) {
+            innerModuleInfo.second.overlayModuleInfo.clear();
         }
     }
 

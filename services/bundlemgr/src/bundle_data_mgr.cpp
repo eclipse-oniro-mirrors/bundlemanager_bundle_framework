@@ -292,6 +292,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.AddModuleInfo(newInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
             oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -445,7 +446,15 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         // clear apply quick fix frequency
         oldInfo.ResetApplyQuickFixFrequency();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+            if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK) {
+                APP_LOGE("update overlay info failed");
+                return false;
+            }
+        }
+
         if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
             (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK)) {
             APP_LOGE("update overlay info failed");
@@ -4427,9 +4436,10 @@ bool BundleDataMgr::GetOverlayInnerBundleInfo(const std::string &bundleName, Inn
     return false;
 }
 
-void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo)
+void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
     std::lock_guard<std::mutex> lock(overlayMutex_);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
         return;
