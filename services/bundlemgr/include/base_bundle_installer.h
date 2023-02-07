@@ -543,7 +543,7 @@ private:
     NotifyType GetNotifyType();
     void GetCallingEventInfo(EventInfo &eventInfo);
     void GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos, EventInfo &eventInfo);
-    ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, int32_t oldVersionCode) const;
+    ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
 
