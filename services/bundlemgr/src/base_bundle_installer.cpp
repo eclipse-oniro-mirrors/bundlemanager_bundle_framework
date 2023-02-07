@@ -1476,7 +1476,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
-    result = CheckArkProfileDir(newInfo, oldInfo.GetVersionCode());
+    result = CheckArkProfileDir(newInfo, oldInfo);
     if (result != ERR_OK) {
         return result;
     }
@@ -2958,16 +2958,20 @@ NotifyType BaseBundleInstaller::GetNotifyType()
     return NotifyType::INSTALL;
 }
 
-ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, int32_t oldVersionCode) const
+ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const
 {
-    if (newInfo.GetVersionCode() > oldVersionCode) {
-        ErrCode result = newInfo.GetIsNewVersion() ?
-            CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_)) :
-            DeleteArkProfile(bundleName_, userId_);
-        if (result != ERR_OK) {
-            APP_LOGE("bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",
-                bundleName_.c_str(), result);
-            return result;
+    if (newInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+        const auto userInfos = oldInfo.GetInnerBundleUserInfos();
+        for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
+            int32_t userId = iter->second.bundleUserInfo.userId;
+            ErrCode result = newInfo.GetIsNewVersion() ?
+                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), oldInfo.GetUid(userId)) :
+                DeleteArkProfile(bundleName_, userId);
+            if (result != ERR_OK) {
+                APP_LOGE("bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",
+                    bundleName_.c_str(), result);
+                return result;
+            }
         }
     }
     return ERR_OK;
