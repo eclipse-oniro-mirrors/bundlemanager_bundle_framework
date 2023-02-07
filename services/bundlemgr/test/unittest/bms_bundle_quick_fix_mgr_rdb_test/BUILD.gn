@@ -157,7 +157,7 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
       "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
     ]
   } else {
-    external_deps += [ "distributeddatamgr:distributeddata_inner" ]
+    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
       "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
