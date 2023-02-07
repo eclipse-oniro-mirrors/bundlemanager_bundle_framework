@@ -225,6 +225,7 @@ void BmsBundleQuickFixMgrRdbTest::SetUp()
 
 void BmsBundleQuickFixMgrRdbTest::TearDown()
 {}
+
 #ifdef BMS_RDB_ENABLE
 /**
  * @tc.number: BmsBundleQuickFixMgrRdbTest_0001
@@ -446,6 +447,7 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0012, Function
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
 }
 #endif
+
 /**
  * @tc.number: BmsBundleQuickFixMgrTest_0001
  * @tc.name: DeployQuickFix
