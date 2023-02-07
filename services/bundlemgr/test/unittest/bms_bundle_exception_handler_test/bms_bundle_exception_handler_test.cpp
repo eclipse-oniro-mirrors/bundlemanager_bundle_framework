@@ -16,12 +16,14 @@
 #include <gtest/gtest.h>
 
 #include "installd_client.h"
+#ifdef BMS_RDB_ENABLE
 #include "bundle_data_storage_rdb.h"
+#include "preinstall_data_storage_rdb.h"
+#endif
 #define private public
 #include "bundle_exception_handler.h"
 #include "inner_bundle_info.h"
 #undef public
-#include "preinstall_data_storage_rdb.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -289,6 +291,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0900, TestSize.L
     GTEST_LOG_(INFO) << "HandleInvalidBundleTest_0900 end";
 }
 
+#ifdef BMS_RDB_ENABLE
 /**
  * @tc.number: DeleteBundleInfoFromStorageTest_1000
  * @tc.name: DeleteBundleInfoFromStorage
@@ -311,6 +314,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, DeleteBundleInfoFromStorageTest_1000, Te
     BundleExceptionHandler.DeleteBundleInfoFromStorage(info);
     GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1000 end";
 }
+#endif
 
 /**
  * @tc.number: DeleteBundleInfoFromStorageTest_1100
