@@ -194,6 +194,16 @@ void OverlayDataMgr::BuildExternalOverlayConnection(const std::string &moduleNam
             APP_LOGW("target bundle has different fingerprint with current bundle");
             return;
         }
+        // external overlay does not support FA model
+        if (!oldInfo.GetIsNewVersion()) {
+            APP_LOGW("target bundle is not stage model");
+            return;
+        }
+        // external overlay does not support service
+        if (oldInfo.GetEntryInstallationFree()) {
+            APP_LOGW("target bundle is service");
+            return;
+        }
 
         const auto &innerModuleInfos = info.second.GetInnerModuleInfos();
         for (const auto &moduleInfo : innerModuleInfos) {
