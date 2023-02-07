@@ -7261,6 +7261,25 @@ HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0200, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: GetMediaData_0300
+ * @tc.name: test GetMediaData proxy
+ * @tc.desc: 1.system run normally
+ *           2.return not ERR_OK
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName = "invalid";
+    std::string moduleName = "invalid";
+    std::string abilityName = "invalid";
+    std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
+    size_t len = 0;
+    ErrCode ret = bundleMgrProxy->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetBundleArchiveInfoV9_0100
  * @tc.name: test query archive information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -7649,6 +7668,40 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnableInstall_0100, Function | SmallT
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool testRet = bundleMgrProxy->CheckAbilityEnableInstall(want, missionId, USERID, callback);
     EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetBundleInfoForSelf_0100
+ * @tc.name: get bundle info for self
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info for self success
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+
+    BundleInfo bundleInfo;
+    int32_t flags = 1;
+    bool getInfoResult = bundleMgrProxy->GetBundleInfoForSelf(flags, bundleInfo);
+    EXPECT_TRUE(getInfoResult);
+}
+
+/**
+ * @tc.number: VerifySystemApi_0100
+ * @tc.name: test VerifySystemApi proxy
+ * @tc.desc: 1.system run normally
+ *           2.verify system api
+ */
+HWTEST_F(ActsBmsKitSystemTest, VerifySystemApi_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    int32_t beginApiVersion = 1;
+    auto res = bundleMgrProxy->VerifySystemApi(beginApiVersion, "");
+    EXPECT_EQ(res, true);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
