@@ -357,7 +357,6 @@ const nlohmann::json MODULE_JSON = R"(
         "apiReleaseType": "Beta3",
         "bundleName": "com.example.backuptest",
         "debug": true,
-        "distributedNotificationEnabled": true,
         "icon": "$media:app_icon",
         "iconId": 16777220,
         "label": "$string:app_name",
@@ -367,11 +366,9 @@ const nlohmann::json MODULE_JSON = R"(
         "vendor": "example",
         "versionCode": 1000000,
         "versionName": "1.0.0",
-        "entityType": "unknowname",
         "deviceConfigs": {
             "car": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -380,7 +377,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "liteWearable": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -389,7 +385,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "phone": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -398,7 +393,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "router": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -407,7 +401,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "smartVision": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -416,7 +409,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "tablet": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -425,7 +417,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "tv": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -434,7 +425,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "wearable": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -443,7 +433,6 @@ const nlohmann::json MODULE_JSON = R"(
             },
             "default": {
                 "accessible": false,
-                "distributedNotificationEnabled": false,
                 "keepAlive": false,
                 "minAPIVersion": 9,
                 "removable": false,
@@ -577,7 +566,6 @@ const nlohmann::json MODULE_JSON = R"(
         "pages": "$profile:main_pages",
         "srcEntrance": "./ets/Application/AbilityStage.ts",
         "type": "unknowtype",
-        "uiSyntax": "unknowuiSyntax",
         "virtualMachine": "ark0.0.0.3"
     }
 }
@@ -588,7 +576,6 @@ const nlohmann::json MODULE_JSON_2 = R"(
         "app": {
             "bundleName": "com.example.backuptest",
             "debug": true,
-            "distributedNotificationEnabled": true,
             "icon": "$media:app_icon",
             "iconId": 16777220,
             "label": "$string:app_name",
@@ -627,7 +614,6 @@ const nlohmann::json MODULE_JSON_2 = R"(
             "pages": "$profile:main_pages",
             "srcEntrance": "./ets/Application/AbilityStage.ts",
             "type": "entry",
-            "uiSyntax": "ets",
             "virtualMachine": "ark0.0.0.3"
         }
     }
@@ -638,7 +624,6 @@ const nlohmann::json MODULE_JSON_3 = R"(
     "app": {
             "bundleName": "com.example.backuptest",
             "debug": true,
-            "distributedNotificationEnabled": true,
             "icon": "$media:app_icon",
             "iconId": 16777220,
             "label": "$string:app_name",
@@ -687,7 +672,6 @@ const nlohmann::json MODULE_JSON_3 = R"(
             "pages": "$profile:main_pages",
             "srcEntrance": "./ets/Application/AbilityStage.ts",
             "type": "entry",
-            "uiSyntax": "ets",
             "virtualMachine": "ark0.0.0.3"
         }
     }
@@ -1596,7 +1580,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_3200, Function | SmallTest | Level1)
       "app": {
           "bundleName": "com.example.backuptest",
          "debug": true,
-         "distributedNotificationEnabled": true,
          "icon": "$media:app_icon",
          "iconId": 16777220,
          "label": "$string:app_name",
@@ -1614,7 +1597,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_3200, Function | SmallTest | Level1)
           "pages": "$profile:main_pages",
           "srcEntrance": "./ets/Application/AbilityStage.ts",
           "type": "entry",
-          "uiSyntax": "ets",
           "virtualMachine": "ark0.0.0.3"
       }
   }
@@ -1646,7 +1628,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_3300, Function | SmallTest | Level1)
       "app": {
           "bundleName": "com.example.backuptest",
          "debug": true,
-         "distributedNotificationEnabled": true,
          "icon": "$media:app_icon",
          "iconId": 16777220,
          "label": "$string:app_name",
@@ -1696,7 +1677,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_3300, Function | SmallTest | Level1)
           "pages": "$profile:main_pages",
           "srcEntrance": "./ets/Application/AbilityStage.ts",
           "type": "entry",
-          "uiSyntax": "ets",
           "virtualMachine": "ark0.0.0.3"
       }
   }
