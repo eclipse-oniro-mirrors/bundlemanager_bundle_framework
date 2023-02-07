@@ -37,7 +37,7 @@ tools_path = "${appexecfwk_path}/tools"
 core_path = "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core"
 
 declare_args() {
-  bundle_framework_graphics = false
+  bundle_framework_graphics = true
   bundle_framework_free_install = true
   bundle_framework_default_app = true
   bundle_framework_launcher = true
