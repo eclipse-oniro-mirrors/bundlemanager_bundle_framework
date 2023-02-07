@@ -47,7 +47,7 @@ declare_args() {
   distributed_bundle_framework = true
   bundle_framework_overlay_install = true
 
-  ability_runtime_enable = true
+  ability_runtime_enable = false
   account_enable = true
   configpolicy_enable = true
   device_manager_enable = true
