@@ -20,6 +20,7 @@
 #define private public
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
+#include "bundle_permission_mgr.h"
 #undef private
 
 using namespace testing::ext;
