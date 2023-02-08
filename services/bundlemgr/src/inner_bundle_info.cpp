@@ -2058,10 +2058,9 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         }
         if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_PERMISSION) ==
             GET_APPLICATION_INFO_WITH_PERMISSION) {
-            std::transform(info.second.requestPermissions.begin(),
-                info.second.requestPermissions.end(),
-                std::back_inserter(appInfo.permissions),
-                [](const auto &p) { return p.name; });
+            for (const auto &item : info.second.requestPermissions) {
+                appInfo.permissions.push_back(item.name);
+            }
         }
         if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_METADATA) == GET_APPLICATION_INFO_WITH_METADATA) {
             bool isModuleJson = info.second.isModuleJson;
@@ -2112,10 +2111,9 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         if ((static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
-            std::transform(info.second.requestPermissions.begin(),
-                info.second.requestPermissions.end(),
-                std::back_inserter(appInfo.permissions),
-                [](const auto &p) { return p.name; });
+            for (const auto &item : info.second.requestPermissions) {
+                appInfo.permissions.push_back(item.name);
+            }
         }
         if ((static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
@@ -2159,14 +2157,12 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     for (const auto &info : innerModuleInfos_) {
         if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
             == GET_BUNDLE_WITH_REQUESTED_PERMISSION) {
-            std::transform(info.second.requestPermissions.begin(),
-                info.second.requestPermissions.end(),
-                std::back_inserter(bundleInfo.reqPermissions),
-                [](const auto &p) { return p.name; });
-            std::transform(info.second.definePermissions.begin(),
-                info.second.definePermissions.end(),
-                std::back_inserter(bundleInfo.defPermissions),
-                [](const auto &p) { return p.name; });
+            for (const auto &item : info.second.requestPermissions) {
+                bundleInfo.reqPermissions.push_back(item.name);
+            }
+            for (const auto &item : info.second.definePermissions) {
+                bundleInfo.defPermissions.push_back(item.name);
+            }
         }
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);
         auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId);
@@ -2265,14 +2261,12 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, uint32_t user
         return;
     }
     for (const auto &info : innerModuleInfos_) {
-        std::transform(info.second.requestPermissions.begin(),
-            info.second.requestPermissions.end(),
-            std::back_inserter(bundleInfo.reqPermissions),
-            [](const auto &p) { return p.name; });
-        std::transform(info.second.definePermissions.begin(),
-            info.second.definePermissions.end(),
-            std::back_inserter(bundleInfo.defPermissions),
-            [](const auto &p) { return p.name; });
+        for (const auto &item : info.second.requestPermissions) {
+            bundleInfo.reqPermissions.push_back(item.name);
+        }
+        for (const auto &item : info.second.definePermissions) {
+            bundleInfo.defPermissions.push_back(item.name);
+        }
     }
     if (!bundleInfo.reqPermissions.empty()) {
         RemoveDuplicateName(bundleInfo.reqPermissions);
@@ -2801,10 +2795,9 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
 {
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
-        std::transform(info.second.requestPermissions.begin(),
-            info.second.requestPermissions.end(),
-            std::back_inserter(requestPermissions),
-            [](const auto &p) { return p; });
+        for (const auto &item : info.second.requestPermissions) {
+            requestPermissions.push_back(item);
+        }
     }
     if (!requestPermissions.empty()) {
         std::sort(requestPermissions.begin(), requestPermissions.end(),
@@ -3221,10 +3214,9 @@ int64_t InnerBundleInfo::GetAppCrowdtestDeadline() const
 std::vector<std::string> InnerBundleInfo::GetDistroModuleName() const
 {
     std::vector<std::string> moduleVec;
-    std::transform(innerModuleInfos_.begin(), innerModuleInfos_.end(),
-        std::back_inserter(moduleVec), [](const auto &info) {
-            return info.second.moduleName;
-        });
+    for (const auto &item : innerModuleInfos_) {
+        moduleVec.push_back(item.second.moduleName);
+    }
     return moduleVec;
 }
 

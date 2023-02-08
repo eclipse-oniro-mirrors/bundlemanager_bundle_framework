@@ -3464,50 +3464,6 @@ NativeValue *CreateExtensionAbilityTypeObject(NativeEngine *engine)
     return objValue;
 }
 
-static bool InnerGetProfile(napi_env env, AsyncGetProfileInfo &info)
-{
-    APP_LOGD("InnerGetProfile begin");
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("InnerGetProfile can not get iBundleMgr");
-        return false;
-    }
-    std::string bundleName = "";
-    if (!iBundleMgr->ObtainCallingBundleName(bundleName)) {
-        APP_LOGE("InnerGetProfile failed when obtain calling bundelName");
-        return false;
-    }
-    if (info.abilityName.empty() || info.moduleName.empty()) {
-        APP_LOGE("InnerGetProfile failed due to empty abilityName or moduleName");
-        return false;
-    }
-    Want want;
-    ElementName elementName("", bundleName, info.abilityName, info.moduleName);
-    want.SetElement(elementName);
-    BundleMgrClient client;
-    if (info.type == ProfileType::ABILITY_PROFILE) {
-        AbilityInfo abilityInfo;
-        if (!iBundleMgr->QueryAbilityInfo(want, AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA,
-            Constants::UNSPECIFIED_USERID, abilityInfo)) {
-            APP_LOGE("InnerGetProfile failed due to no ability info");
-            return false;
-        }
-        return client.GetProfileFromAbility(abilityInfo, info.metadataName, info.profileVec);
-    }
-    if (info.type == ProfileType::EXTENSION_PROFILE) {
-        std::vector<ExtensionAbilityInfo> extensionInfos;
-        if (!iBundleMgr->QueryExtensionAbilityInfos(want,
-            ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA, Constants::UNSPECIFIED_USERID,
-            extensionInfos) || extensionInfos.empty()) {
-            APP_LOGE("InnerGetProfile failed due to no extension ability info");
-            return false;
-        }
-        return client.GetProfileFromExtension(extensionInfos[0], info.metadataName, info.profileVec);
-    }
-    APP_LOGE("InnerGetProfile failed due to incorrect profile type");
-    return false;
-}
-
 NativeValue *CreateSupportWindowModesObject(NativeEngine *engine)
 {
     APP_LOGD("enter");
@@ -4065,16 +4021,6 @@ NativeValue* JsBundleMgr::CreateHapModuleInfo(NativeEngine &engine, const HapMod
     object->SetProperty("metadata", CreateInnerMetaDatas(engine, hapModuleInfo.metadata));
 
     return objContext;
-}
-
-NativeValue* JsBundleMgr::CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos)
-{
-    NativeValue *arrayValue = engine.CreateArray(profileInfos.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    for (uint32_t i = 0; i < profileInfos.size(); i++) {
-        array->SetElement(i, CreateJsValue(engine, profileInfos.at(i)));
-    }
-    return arrayValue;
 }
 
 NativeValue* JsBundleMgr::CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want)
@@ -4688,18 +4634,6 @@ NativeValue* JsBundleMgr::GetAbilityIcon(NativeEngine *engine, NativeCallbackInf
     return (me != nullptr) ? me->OnGetAbilityIcon(*engine, *info) : nullptr;
 }
 
-NativeValue* JsBundleMgr::GetProfileByAbility(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetProfile(*engine, *info, ProfileType::ABILITY_PROFILE) : nullptr;
-}
-
-NativeValue* JsBundleMgr::GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetProfile(*engine, *info, ProfileType::EXTENSION_PROFILE) : nullptr;
-}
-
 NativeValue* JsBundleMgr::GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
@@ -5181,68 +5115,6 @@ NativeValue* JsBundleMgr::OnGetAbilityIcon(NativeEngine &engine, NativeCallbackI
     return result;
 }
 #endif
-
-NativeValue* JsBundleMgr::OnGetProfile(
-    NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType)
-{
-    APP_LOGD("%{public}s called.", __FUNCTION__);
-    auto env = reinterpret_cast<napi_env>(&engine);
-    std::shared_ptr<AsyncGetProfileInfo> callbackPtr = std::make_shared<AsyncGetProfileInfo>(env);
-    callbackPtr->type = profileType;
-    if (info.argc < ARGS_SIZE_TWO || info.argc > ARGS_SIZE_FOUR) {
-        APP_LOGE("Input params count error.");
-        callbackPtr->errCode = PARAM_TYPE_ERROR;
-    }
-    for (size_t i = 0; i < info.argc; ++i) {
-        if ((i == PARAM0) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
-            if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->moduleName)) {
-                APP_LOGE("ConvertFromJsValue failed.");
-            }
-        } else if ((i == PARAM1) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
-            if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->abilityName)) {
-                APP_LOGE("ConvertFromJsValue failed.");
-            }
-        } else if ((i == PARAM2) && (info.argv[i]->TypeOf() == NATIVE_STRING)) {
-            if (!ConvertFromJsValue(engine, info.argv[i], callbackPtr->metadataName)) {
-                APP_LOGE("ConvertFromJsValue failed.");
-            }
-        } else if ((i == PARAM3) && (info.argv[i]->TypeOf() == NATIVE_FUNCTION)) {
-            APP_LOGD("Last param is function.");
-        } else {
-            APP_LOGE("Convert param is error.");
-            callbackPtr->errCode = PARAM_TYPE_ERROR;
-        }
-    }
-
-    APP_LOGD("GetProfile finish to parse arguments with errCode %{public}d", callbackPtr->errCode);
-    auto complete = [obj = this, asyncInfo = callbackPtr] (NativeEngine &engine, AsyncTask &task, int32_t status) {
-        auto errCode = asyncInfo->errCode;
-        std::string getProfileErrData;
-        if (errCode != 0) {
-            getProfileErrData = "type mismatch";
-            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, getProfileErrData));
-            return;
-        }
-        napi_env env = nullptr;
-        auto ret = InnerGetProfile(env, *asyncInfo);
-        if (!ret) {
-            getProfileErrData = "GetProfile failed";
-            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), CreateJsValue(engine, getProfileErrData));
-            return;
-        }
-        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateProfiles(engine, asyncInfo->profileVec));
-    };
-    NativeValue* callback = nullptr;
-    if (info.argc > 0) {
-        if (info.argv[info.argc - 1]->TypeOf() == NATIVE_FUNCTION) {
-            callback = info.argv[info.argc - 1];
-        }
-    }
-    NativeValue *result = nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnGetProfile",
-        engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
-    return result;
-}
 
 NativeValue* JsBundleMgr::OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info)
 {
