@@ -2654,7 +2654,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0200, Function | MediumTest |
     bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleName, appName);
-    
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -5286,7 +5286,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0300, Function | MediumTest | Le
     for (auto bundleName : bundleNames) {
         EXPECT_EQ(bundleName, appName);
     }
-    
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -7700,7 +7700,7 @@ HWTEST_F(ActsBmsKitSystemTest, VerifySystemApi_0100, Function | SmallTest | Leve
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     int32_t beginApiVersion = 1;
-    auto res = bundleMgrProxy->VerifySystemApi(beginApiVersion, "");
+    auto res = bundleMgrProxy->VerifySystemApi(beginApiVersion);
     EXPECT_EQ(res, true);
 }
 }  // namespace AppExecFwk

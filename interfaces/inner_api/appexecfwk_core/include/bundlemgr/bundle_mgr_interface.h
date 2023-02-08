@@ -932,8 +932,7 @@ public:
      * @param bundleName Indicates bundle name of the calling hap.
      * @return Returns true if the hap passes the verification; returns false otherwise.
      */
-    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
-        const std::string bundleName = Constants::EMPTY_STRING)
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION)
     {
         return true;
     }
