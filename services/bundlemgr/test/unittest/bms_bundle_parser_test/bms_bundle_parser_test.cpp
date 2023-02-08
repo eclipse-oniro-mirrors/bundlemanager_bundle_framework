@@ -1507,7 +1507,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_2900, Function | SmallTest | Level1)
     CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
 }
 
-
 /**
  * @tc.name: TestParse_3000
  * @tc.desc: 1. system running normally
@@ -1565,7 +1564,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_3100, Function | SmallTest | Level1)
     moduleJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "com.example/.backuptest";
     CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
 }
-
 
 /**
  * @tc.name: TestParse_3200
@@ -2388,5 +2386,148 @@ HWTEST_F(BmsBundleParserTest, TestParse_5200, Function | SmallTest | Level1)
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5300
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5300, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson["module"]["name"] = Constants::RELATIVE_PATH;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5400
+ * @tc.desc: 1. system running normally
+ *           2. test parsing failed when deviceType is empty in the config.json
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ3F
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5400, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson["module"]["deviceType"].clear();
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5500
+ * @tc.desc: 1. system running normally
+ *           2. test parsing failed when version code is -1 in the config.json
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ3F
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5500, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson["app"]["version"]["code "] = -1;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5600
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5600, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["label"] = "";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5700
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5700, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["name"] = "";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_5800
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5800, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["name"] = OVER_MAX_PATH_SIZE;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
 }
 } // OHOS
