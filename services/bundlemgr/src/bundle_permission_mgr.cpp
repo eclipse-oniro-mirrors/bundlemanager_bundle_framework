@@ -37,12 +37,10 @@ bool BundlePermissionMgr::Init()
         APP_LOGE("rootDirList is empty");
         return false;
     }
-    std::transform(rootDirList.begin(),
-        rootDirList.end(),
-        std::back_inserter(permissionFileList),
-        [](const auto &rootDir) {
-            return rootDir + Constants::PRODUCT_SUFFIX + Constants::INSTALL_LIST_PERMISSIONS_CONFIG;
-        });
+    for (const auto &item : rootDirList) {
+        permissionFileList.push_back(item + Constants::PRODUCT_SUFFIX
+            + Constants::INSTALL_LIST_PERMISSIONS_CONFIG);
+    }
 #else
     permissionFileList.emplace_back(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);
 #endif
