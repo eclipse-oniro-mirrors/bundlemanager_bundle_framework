@@ -291,23 +291,6 @@ struct AsyncAbilityInfo : public AsyncWorkData {
     std::string errMssage;
 };
 
-enum ProfileType : uint32_t {
-    ABILITY_PROFILE = 0,
-    EXTENSION_PROFILE,
-    UNKNOWN_PROFILE
-};
-
-struct AsyncGetProfileInfo : public AsyncWorkData {
-    explicit AsyncGetProfileInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string moduleName = "";
-    std::string abilityName = "";
-    std::string metadataName = "";
-    std::vector<std::string> profileVec;
-    ProfileType type = ProfileType::UNKNOWN_PROFILE;
-    bool ret = false;
-    int32_t errCode = 0;
-};
-
 struct Query {
     std::string bundleName_;
     std::string interfaceType_;
@@ -449,8 +432,6 @@ public:
     static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetProfileByAbility(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundlePackInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
@@ -473,7 +454,6 @@ private:
     NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetProfile(NativeEngine &engine, NativeCallbackInfo &info, const ProfileType &profileType);
     NativeValue* OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info);
@@ -521,7 +501,6 @@ private:
         const std::vector<RequestPermission> &requestPermissions);
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
-    NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
     NativeValue* CreatePermissionDef(NativeEngine &engine, const PermissionDef &permissionDef);
     static NativeValue* UnwarpQueryAbilityInfoParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId,
         int32_t &errCode);
