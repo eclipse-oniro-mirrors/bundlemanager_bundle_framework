@@ -797,7 +797,7 @@ public:
 
     const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
 
-    void SaveOverlayInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
+    void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
     void EnableOverlayBundle(const std::string &bundleName);
 

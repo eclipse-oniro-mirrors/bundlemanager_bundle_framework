@@ -1458,6 +1458,11 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("remove overlay connection failed due to %{public}d", result);
         return result;
     }
+    // stage model to FA model
+    if (!newInfo.GetIsNewVersion() && oldInfo.GetIsNewVersion()) {
+        oldInfo.CleanAllOverlayModuleInfo();
+        oldInfo.CleanOverLayBundleInfo();
+    }
 #endif
     APP_LOGE("ProcessModuleUpdate noSkipsKill = %{public}d", noSkipsKill);
     // reboot scan case will not kill the bundle
