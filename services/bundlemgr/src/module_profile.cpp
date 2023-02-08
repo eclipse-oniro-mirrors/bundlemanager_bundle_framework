@@ -1812,7 +1812,7 @@ void GetPermissions(
     const TransformParam &transformParam,
     InnerModuleInfo &innerModuleInfo)
 {
-    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
+    if (moduleJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
         for (const DefinePermission &definePermission : moduleJson.module.definePermissions) {
             if (definePermission.name.empty()) {
                 continue;
