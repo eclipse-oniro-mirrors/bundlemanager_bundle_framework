@@ -46,9 +46,7 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
   if (bundle_framework_graphics) {
-    include_dirs += [
-      "../../../../../../../multimedia/image_framework/interfaces/innerkits/include",
-    ]
+    include_dirs += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits/include" ]
     deps += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits:image_native" ]
   }
   deps += bundle_install_deps
