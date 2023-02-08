@@ -115,25 +115,6 @@ struct AsyncBundleInfosCallbackInfo : public AsyncWorkData {
     int32_t userId = Constants::UNSPECIFIED_USERID;
 };
 
-struct AsyncBundlePackInfoCallbackInfo : public AsyncWorkData {
-    explicit AsyncBundlePackInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    int32_t flags = 0;
-    std::string bundleName;
-    OHOS::AppExecFwk::BundlePackInfo bundlePackInfo;
-    bool ret = false;
-    int32_t err = 0;
-    std::string message;
-};
-
-struct AsyncDispatcherVersionCallbackInfo : public AsyncWorkData {
-    explicit AsyncDispatcherVersionCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    bool ret = false;
-    int32_t err = 0;
-    std::string message;
-    std::string version;
-    std::string dispatchAPI;
-};
-
 struct AsyncApplicationInfosCallbackInfo : public AsyncWorkData {
     explicit AsyncApplicationInfosCallbackInfo(napi_env env) : AsyncWorkData(env) {}
     int32_t flags = 0;
@@ -153,31 +134,6 @@ struct AsyncAbilityLabelCallbackInfo : public AsyncWorkData {
     std::string abilityLabel;
     int32_t err = 0;
     std::string message;
-};
-
-struct AsyncModuleRemovableCallbackInfo {
-    napi_env env;
-    napi_async_work asyncWork;
-    napi_deferred deferred;
-    napi_ref callback = 0;
-    std::string bundleName;
-    std::string moduleName;
-    bool result = false;
-    int32_t err = 0;
-    std::string errMssage;
-};
-
-struct AsyncModuleUpgradeFlagCallbackInfo {
-    napi_env env;
-    napi_async_work asyncWork;
-    napi_deferred deferred;
-    napi_ref callback = 0;
-    std::string bundleName;
-    std::string moduleName;
-    int32_t upgradeFlag = 0;
-    bool result = false;
-    int32_t err = 0;
-    std::string errMssage;
 };
 
 struct InstallResult {
@@ -342,9 +298,7 @@ napi_value WrapVoidToJS(napi_env env);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfos(napi_env env, napi_callback_info info);
-napi_value GetBundlePackInfo(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
-napi_value GetDispatcherVersion(napi_env env, napi_callback_info info);
 napi_value GetAllFormsInfo(napi_env env, napi_callback_info info);
 napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info);
 napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info);
@@ -355,18 +309,12 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info);
 napi_value GetBundleGids(napi_env env, napi_callback_info info);
-napi_value IsModuleRemovable(napi_env env, napi_callback_info info);
-napi_value SetModuleUpgradeFlag(napi_env env, napi_callback_info info);
-napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo);
-napi_value GetDispatcherVersionWrap(
-    napi_env env, napi_value promise, AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo);
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo);
 
 NativeValue *CreateAbilityTypeObject(NativeEngine *engine);
 NativeValue *CreateAbilitySubTypeObject(NativeEngine *engine);
 NativeValue *CreateDisplayOrientationObject(NativeEngine *engine);
 NativeValue *CreateLaunchModeObject(NativeEngine *engine);
-NativeValue *CreateModuleUpdateFlagObject(NativeEngine *engine);
 NativeValue *CreateColorModeObject(NativeEngine *engine);
 NativeValue *CreateGrantStatusObject(NativeEngine *engine);
 NativeValue *CreateModuleRemoveFlagObject(NativeEngine *engine);
@@ -378,7 +326,6 @@ NativeValue *CreateSupportWindowModesObject(NativeEngine *engine);
 NativeValue *CreateExtensionAbilityTypeObject(NativeEngine *engine);
 NativeValue *CreateBundleFlagObject(NativeEngine *engine);
 NativeValue *CreateExtensionFlagObject(NativeEngine *engine);
-NativeValue *CreateUpgradeFlagObject(NativeEngine *engine);
 class JsBundleMgr {
 public:
     JsBundleMgr() = default;
@@ -433,13 +380,6 @@ public:
         bool ret = false;
         bool getCache = false;
     };
-
-    struct JsGetBundlePackInfo {
-        std::string bundleName = "";
-        int32_t bundlePackFlag = 0;
-        BundlePackInfo bundlePackInfo;
-        bool ret = false;
-    };
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
@@ -451,7 +391,6 @@ public:
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetProfileByExtensionAbility(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetProfileByAbility(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetBundlePackInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
@@ -488,7 +427,6 @@ private:
     NativeValue* OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetBundlePackInfo(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
     NativeValue* CreateInnerMetaDatas(
