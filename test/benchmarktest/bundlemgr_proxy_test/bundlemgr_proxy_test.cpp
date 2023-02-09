@@ -746,64 +746,6 @@ static void BenchmarkTestGetPermissionDef(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestHasSystemCapability
- * @tc.desc: Testcase for testing HasSystemCapability.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestHasSystemCapability(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call HasSystemCapability in loop */
-        bundleMgrProxy->HasSystemCapability(ABILITY_NAME);
-    }
-}
-
-/**
- * @tc.name: BenchmarkTestGetSystemAvailableCapabilities
- * @tc.desc: Testcase for testing GetSystemAvailableCapabilities.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestGetSystemAvailableCapabilities(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    std::vector<std::string> systemCaps = {"bmsSystemBundle_A1"};
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call GetSystemAvailableCapabilities in loop */
-        bundleMgrProxy->GetSystemAvailableCapabilities(systemCaps);
-    }
-}
-
-/**
- * @tc.name: BenchmarkTestIsSafeMode
- * @tc.desc: Testcase for testing IsSafeMode.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestIsSafeMode(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call IsSafeMode in loop */
-        bundleMgrProxy->IsSafeMode();
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestCleanBundleDataFiles
  * @tc.desc: Testcase for testing CleanBundleDataFiles.
  * @tc.type: FUNC
@@ -1265,25 +1207,6 @@ static void BenchmarkTestVerifyCallingPermission(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestGetAccessibleAppCodePaths
- * @tc.desc: Testcase for testing GetAccessibleAppCodePaths.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestGetAccessibleAppCodePaths(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call GetAccessibleAppCodePaths in loop */
-        bundleMgrProxy->GetAccessibleAppCodePaths(DEFAULT_USERID);
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestQueryExtensionAbilityInfoByUri
  * @tc.desc: Testcase for testing QueryExtensionAbilityInfoByUri.
  * @tc.type: FUNC
@@ -1501,9 +1424,6 @@ BENCHMARK(BenchmarkTestGetBundleArchiveInfo)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetBundleArchiveInfoByFlag)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetLaunchWantForBundle)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetPermissionDef)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestHasSystemCapability)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetSystemAvailableCapabilities)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestIsSafeMode)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestCleanBundleDataFiles)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestRegisterBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestClearBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
@@ -1526,7 +1446,6 @@ BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByWant)->Iterations(BENCHMARK_T
 BENCHMARK(BenchmarkTestQueryExtensionAbilityInfos)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByType)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestVerifyCallingPermission)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetAccessibleAppCodePaths)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestQueryExtensionAbilityInfoByUri)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestImplicitQueryInfoByPriority)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetSandboxBundleInfo)->Iterations(BENCHMARK_TIMES);
