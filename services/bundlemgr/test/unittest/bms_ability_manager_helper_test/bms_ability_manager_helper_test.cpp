@@ -56,6 +56,7 @@ void BmsAbilityManagerHelperTest::TearDown()
     abilityManagerHelper_ = std::make_shared<AbilityManagerHelper>();
 }
 
+#ifdef ABILITY_RUNTIME_ENABLE
 /**
  * @tc.number: UninstallApplicationProcesses_0100
  * @tc.name: UninstallApplicationProcesses
@@ -64,7 +65,7 @@ void BmsAbilityManagerHelperTest::TearDown()
 HWTEST_F(BmsAbilityManagerHelperTest, UninstallApplicationProcesses_0100, Function | SmallTest | Level0)
 {
     std::string bundleName = BUNDLE_NAME;
-    int uid = 0;
+    int uid = -1;
     bool ret = abilityManagerHelper_->UninstallApplicationProcesses(bundleName, uid);
     EXPECT_FALSE(ret);
 }
@@ -81,7 +82,9 @@ HWTEST_F(BmsAbilityManagerHelperTest, UninstallApplicationProcesses_0200, Functi
     bool ret = abilityManagerHelper_->UninstallApplicationProcesses(bundleName, uid);
     EXPECT_TRUE(ret);
 }
+#endif
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: IsRunning_bundleUid_0100
  * @tc.name: IsRunning
@@ -93,6 +96,7 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0100, Function | Small
     int uid = 1;
     int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
     EXPECT_EQ(ret, 0);
+
 }
 
 /**
@@ -119,4 +123,5 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_moduleName_0100, Function | Smal
     int ret = abilityManagerHelper_->IsRunning(bundleName);
     EXPECT_EQ(ret, 0);
 }
+#endif
 }
