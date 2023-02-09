@@ -101,6 +101,7 @@ public:
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
+    std::shared_ptr<Want> want_ = nullptr;
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
@@ -203,6 +204,7 @@ void BmsBundleManagerTest::SetUp()
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
+    want_ = std::make_shared<Want>();
 }
 
 void BmsBundleManagerTest::TearDown()
@@ -2457,6 +2459,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     std::unique_ptr<uint8_t[]> mediaDataPtr;
     AAFwk::Want want;
     AbilityInfo abilityInfo;
+    BundleInfo bundleInfo;
     ExtensionAbilityInfo extensionInfo;
     HapModuleInfo hapModuleInfo;
 
@@ -2497,6 +2500,9 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
 
     retCode = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, USERID);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    hostImpl->GetBundleInfoForSelf(appIndex, bundleInfo);
+    EXPECT_NE(retCode, ERR_OK);
 
     std::vector<FormInfo> formInfos;
     retBool = hostImpl->GetFormsInfoByModule(
@@ -4133,7 +4139,6 @@ HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0400, Function | SmallTest | L
     EXPECT_EQ(ret, false);
 }
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.name: HasUserInstallInBundle_0100
  * @tc.desc: 1.install the hap
@@ -4222,7 +4227,6 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | 
     int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME);
     EXPECT_EQ(ret, 0);
 }
-#endif
 
 /**
  * @tc.number: FindAbilityInfo_0100
@@ -4279,5 +4283,91 @@ HWTEST_F(BmsBundleManagerTest, FindAbilityInfo_0300, Function | MediumTest | Lev
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::INVALID_USERID);
     EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: WantParamTest_0001
+ * @tc.name: test ImplicitQueryAbilityInfos
+ * @tc.desc: 1.system run normally
+ *           2.want param is empty
+*/
+HWTEST_F(BmsBundleManagerTest, WantParamTest_0001, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want_->ClearWant(&want);
+    want.SetUri("");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = 1;
+    bool testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfos(
+        want, 0, USERID, abilityInfos, appIndex);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: WantParamTest_0002
+ * @tc.name: test ImplicitQueryAbilityInfosV9
+ * @tc.desc: 1.system run normally
+ *           2.want param is empty
+*/
+HWTEST_F(BmsBundleManagerTest, WantParamTest_0002, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want_->ClearWant(&want);
+    want.SetUri("");
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = 1;
+    ErrCode testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfosV9(
+        want, 0, USERID, abilityInfos, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: WantParamTest_0003
+ * @tc.name: test ImplicitQueryExtensionInfos
+ * @tc.desc: 1.system run normally
+ *           2.want param is empty
+*/
+HWTEST_F(BmsBundleManagerTest, WantParamTest_0003, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want_->ClearWant(&want);
+    want.SetUri("");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 1;
+    bool testRet = GetBundleDataMgr()->ImplicitQueryExtensionInfos(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: WantParamTest_0004
+ * @tc.name: test ImplicitQueryExtensionInfosV9
+ * @tc.desc: 1.system run normally
+ *           2.want param is empty
+*/
+HWTEST_F(BmsBundleManagerTest, WantParamTest_0004, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want_->ClearWant(&want);
+    want.SetUri("");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 1;
+    ErrCode testRet = GetBundleDataMgr()->ImplicitQueryExtensionInfosV9(
+        want, 0, USERID, extensionInfos, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleInfoForSelf_0100
+ * @tc.name: test GetBundleInfoForSelf
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    BundleInfo info;
+    ErrCode ret = hostImpl->GetBundleInfoForSelf(flags, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 } // OHOS
