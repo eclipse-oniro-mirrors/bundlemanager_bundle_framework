@@ -59,7 +59,6 @@ constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM2 = 2;
 constexpr int32_t PARAM3 = 3;
-constexpr int32_t PARAM4 = 4;
 constexpr int32_t NAPI_RETURN_FAILED = -1;
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
@@ -613,17 +612,6 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.enabled, &nEnabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "enabled", nEnabled));
 
-    napi_value nSupportWindowMode;
-    size = abilityInfo.windowModes.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSupportWindowMode));
-    for (size_t index = 0; index < size; ++index) {
-        napi_value innerMode;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_int32(env, static_cast<int32_t>(abilityInfo.windowModes[index]), &innerMode));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSupportWindowMode, index, innerMode));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "supportWindowMode", nSupportWindowMode));
-
     napi_value nMaxWindowRatio;
     NAPI_CALL_RETURN_VOID(env, napi_create_double(env, abilityInfo.maxWindowRatio, &nMaxWindowRatio));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "maxWindowRatio", nMaxWindowRatio));
@@ -666,99 +654,6 @@ static void ProcessAbilityInfos(
     } else {
         APP_LOGI("-----abilityInfos is null-----");
     }
-}
-
-static void ConvertExtensionInfos(napi_env env, napi_value result,
-    std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> extensionInfos)
-{
-    APP_LOGD("convert extensionInfos start");
-    if (extensionInfos.empty()) {
-        APP_LOGW("extensionInfos is null");
-        return;
-    }
-
-    for (size_t i = 0; i < extensionInfos.size(); ++i) {
-        napi_value value = nullptr;
-        napi_create_object(env, &value);
-        napi_value nBundleName;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].bundleName.c_str(),
-            NAPI_AUTO_LENGTH, &nBundleName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "bundleName", nBundleName));
-
-        napi_value nModuleName;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].moduleName.c_str(),
-            NAPI_AUTO_LENGTH, &nModuleName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "moduleName", nModuleName));
-
-        napi_value nName;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, extensionInfos[i].name.c_str(), NAPI_AUTO_LENGTH, &nName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "name", nName));
-
-        napi_value nLabelId;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfos[i].labelId, &nLabelId));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", nLabelId));
-
-        napi_value nDescriptionId;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfos[i].descriptionId, &nDescriptionId));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "descriptionId", nDescriptionId));
-
-        napi_value nIconId;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfos[i].iconId, &nIconId));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", nIconId));
-
-        napi_value nIsVisible;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfos[i].visible, &nIsVisible));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isVisible", nIsVisible));
-
-        napi_value nExtensionAbilityType;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_int32(env, static_cast<int32_t>(extensionInfos[i].type), &nExtensionAbilityType));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "extensionAbilityType", nExtensionAbilityType));
-
-        napi_value nPermission;
-        size_t size = extensionInfos[i].permissions.size();
-        NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPermission));
-        for (size_t j = 0; j < size; ++j) {
-            napi_value innerPerm;
-            NAPI_CALL_RETURN_VOID(env,
-                napi_create_string_utf8(env, extensionInfos[i].permissions[j].c_str(), NAPI_AUTO_LENGTH, &innerPerm));
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermission, j, innerPerm));
-        }
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "permissions", nPermission));
-
-        napi_value nApplication;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nApplication));
-        ConvertApplicationInfo(env, nApplication, extensionInfos[i].applicationInfo);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "applicationInfo", nApplication));
-
-        napi_value nMetadata;
-        size = extensionInfos[i].metadata.size();
-        NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
-        for (size_t index = 0; index < size; ++index) {
-            napi_value innerMeta;
-            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &innerMeta));
-            ConvertInnerMetadata(env, innerMeta, extensionInfos[i].metadata[index]);
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadata, index, innerMeta));
-        }
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "metadata", nMetadata));
-
-        napi_value nEnabled;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfos[i].enabled, &nEnabled));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "enabled", nEnabled));
-
-        napi_value nReadPermission;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].readPermission.c_str(),
-            NAPI_AUTO_LENGTH, &nReadPermission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "readPermission", nReadPermission));
-
-        napi_value nWritePermission;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].writePermission.c_str(),
-            NAPI_AUTO_LENGTH, &nWritePermission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "writePermission", nWritePermission));
-        napi_set_element(env, result, i, value);
-    }
-    APP_LOGD("convert extensionInfos finished");
 }
 
 static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, const HapModuleInfo &hapModuleInfo)
@@ -855,12 +750,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.mainElementName.c_str(), NAPI_AUTO_LENGTH,
         &nMainElementName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "mainElementName", nMainElementName));
-
-    napi_value nExtensionAbilityInfos;
-    napi_create_array_with_length(env, hapModuleInfo.extensionInfos.size(), &nExtensionAbilityInfos);
-    ConvertExtensionInfos(env, nExtensionAbilityInfos, hapModuleInfo.extensionInfos);
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objHapModuleInfo, "extensionAbilityInfo", nExtensionAbilityInfos));
 
     napi_value nMetadata;
     size_t size = hapModuleInfo.metadata.size();
@@ -1049,12 +938,6 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, bundleInfo.entryInstallationFree, &nEntryInstallationFree));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, objBundleInfo, "entryInstallationFree", nEntryInstallationFree));
-
-    napi_value nExtensionAbilityInfos;
-    napi_create_array_with_length(env, bundleInfo.extensionInfos.size(), &nExtensionAbilityInfos);
-    ConvertExtensionInfos(env, nExtensionAbilityInfos, bundleInfo.extensionInfos);
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objBundleInfo, "extensionAbilityInfo", nExtensionAbilityInfos));
 }
 
 static void ConvertFormCustomizeData(napi_env env, napi_value objformInfo, const FormCustomizeData &customizeData)
@@ -3153,9 +3036,6 @@ NativeValue *CreateBundleFlagObject(NativeEngine *engine)
         "GET_ABILITY_INFO_WITH_METADATA", CreateJsValue(*engine,
             static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)));
     object->SetProperty(
-        "GET_BUNDLE_WITH_EXTENSION_ABILITY", CreateJsValue(*engine,
-            static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO)));
-    object->SetProperty(
         "GET_BUNDLE_WITH_HASH_VALUE", CreateJsValue(*engine,
             static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_HASH_VALUE)));
     object->SetProperty(
@@ -3176,40 +3056,6 @@ NativeValue *CreateBundleFlagObject(NativeEngine *engine)
 
     return objValue;
 }
-
-NativeValue *CreateExtensionFlagObject(NativeEngine *engine)
-{
-    APP_LOGD("enter");
-
-    if (engine == nullptr) {
-        APP_LOGE("Invalid input parameters");
-        return nullptr;
-    }
-
-    NativeValue *objValue = engine->CreateObject();
-    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
-
-    if (object == nullptr) {
-        APP_LOGE("Failed to get object");
-        return nullptr;
-    }
-
-    object->SetProperty(
-        "GET_EXTENSION_INFO_DEFAULT", CreateJsValue(*engine,
-            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT)));
-    object->SetProperty(
-        "GET_EXTENSION_INFO_WITH_PERMISSION", CreateJsValue(*engine,
-            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_PERMISSION)));
-    object->SetProperty(
-        "GET_EXTENSION_INFO_WITH_APPLICATION", CreateJsValue(*engine,
-            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_APPLICATION)));
-    object->SetProperty(
-        "GET_EXTENSION_INFO_WITH_METADATA", CreateJsValue(*engine,
-            static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA)));
-
-    return objValue;
-}
-
 
 NativeValue *CreateInstallErrorCodeObject(NativeEngine *engine)
 {
@@ -3287,202 +3133,6 @@ NativeValue *CreateInstallErrorCodeObject(NativeEngine *engine)
         "STATUS_RECOVER_FAILURE_INVALID", CreateJsValue(*engine,
             static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID)));
 
-    return objValue;
-}
-
-static bool InnerQueryExtensionInfo(napi_env env, AsyncExtensionInfoCallbackInfo &info)
-{
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
-    }
-    APP_LOGD("action:%{public}s, uri:%{private}s, type:%{public}s, flags:%{public}d",
-        info.want.GetAction().c_str(), info.want.GetUriString().c_str(), info.want.GetType().c_str(), info.flags);
-
-    if (info.extensionAbilityType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
-        APP_LOGD("query extensionAbilityInfo without type");
-        return iBundleMgr->QueryExtensionAbilityInfos(info.want, info.flags, info.userId, info.extensionInfos);
-    } else {
-        auto type = static_cast<ExtensionAbilityType>(info.extensionAbilityType);
-        APP_LOGD("query extensionAbilityInfo with type");
-        return iBundleMgr->QueryExtensionAbilityInfos(info.want, type, info.flags, info.userId, info.extensionInfos);
-    }
-}
-
-/**
- * Promise and async callback
- */
-napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("QueryExtensionInfoByWant start in NAPI");
-    size_t argc = ARGS_SIZE_FIVE;
-    napi_value argv[ARGS_SIZE_FIVE] = { nullptr };
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    APP_LOGD("the count of input arguments is [%{public}zu]", argc);
-
-    AsyncExtensionInfoCallbackInfo *callBackInfo = new (std::nothrow) AsyncExtensionInfoCallbackInfo(env);
-    if (callBackInfo == nullptr) {
-        APP_LOGE("QueryExtensionInfoByWant failed due to null callBackInfo");
-        return nullptr;
-    }
-
-    if (argc < ARGS_SIZE_TWO || argc > ARGS_SIZE_FIVE) {
-        APP_LOGE("the number of input arguments is invalid");
-        delete callBackInfo;
-        callBackInfo = nullptr;
-        return nullptr;
-    }
-    std::unique_ptr<AsyncExtensionInfoCallbackInfo> callbackPtr {callBackInfo};
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
-        if ((i == 0) && (valueType == napi_object)) {
-            if (!ParseWant(env, callBackInfo->want, argv[i])) {
-                callBackInfo->err = PARAM_TYPE_ERROR;
-            }
-        } else if ((i == ARGS_SIZE_ONE) && (valueType == napi_number)) {
-            ParseInt(env, callBackInfo->extensionAbilityType, argv[i]);
-            if ((callBackInfo->extensionAbilityType < 0) ||
-                (callBackInfo->extensionAbilityType > static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED))) {
-                APP_LOGE("invalid extensionType %{public}d", callBackInfo->extensionAbilityType);
-                callBackInfo->err = PARAM_TYPE_ERROR;
-            }
-        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_number)) {
-            ParseInt(env, callBackInfo->flags, argv[i]);
-        } else if (i == ARGS_SIZE_THREE) {
-            if (valueType == napi_number) {
-                ParseInt(env, callBackInfo->userId, argv[i]);
-            } else if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callBackInfo->callback));
-                break;
-            } else {
-                callBackInfo->err = PARAM_TYPE_ERROR;
-            }
-        } else if ((i == ARGS_SIZE_FOUR) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callBackInfo->callback));
-        } else {
-            callBackInfo->err = PARAM_TYPE_ERROR;
-        }
-    }
-
-    APP_LOGD("QueryExtensionInfoByWant finish to parse arguments");
-    napi_value promise = nullptr;
-    if (callBackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &callBackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env, &promise));
-    }
-    napi_value resource = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, "QueryExtensionInfoByWant", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void *data) {
-            AsyncExtensionInfoCallbackInfo *info =
-                reinterpret_cast<AsyncExtensionInfoCallbackInfo *>(data);
-            if (!info->err) {
-                info->ret = InnerQueryExtensionInfo(env, *info);
-            }
-        },
-        [](napi_env env, napi_status status, void *data) {
-            AsyncExtensionInfoCallbackInfo *info =
-                reinterpret_cast<AsyncExtensionInfoCallbackInfo *>(data);
-            std::unique_ptr<AsyncExtensionInfoCallbackInfo> callbackPtr {info};
-            napi_value result[2] = { 0 };
-            if (info->err) {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(info->err), &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "type mismatch", NAPI_AUTO_LENGTH, &result[1]));
-            } else {
-                if (info->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, info->extensionInfos.size(),
-                        &result[1]));
-                    ConvertExtensionInfos(env, result[1], info->extensionInfos);
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "QueryExtensionInfoByWant failed",
-                        NAPI_AUTO_LENGTH, &result[1]));
-                }
-            }
-            if (info->deferred) {
-                if (info->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, info->deferred, result[1]));
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, info->deferred, result[0]));
-                }
-            } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, info->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            }
-        },
-        reinterpret_cast<void*>(callBackInfo), &callBackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, callBackInfo->asyncWork));
-    callbackPtr.release();
-    return promise;
-}
-
-NativeValue *CreateExtensionAbilityTypeObject(NativeEngine *engine)
-{
-    APP_LOGD("enter");
-    if (engine == nullptr) {
-        APP_LOGE("Invalid input parameters");
-        return nullptr;
-    }
-    NativeValue *objValue = engine->CreateObject();
-    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
-    if (object == nullptr) {
-        APP_LOGE("Failed to get object");
-        return nullptr;
-    }
-    object->SetProperty("FORM", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::FORM)));
-    object->SetProperty(
-        "WORK_SCHEDULER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WORK_SCHEDULER)));
-    object->SetProperty("INPUT_METHOD",
-        CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD)));
-    object->SetProperty("SERVICE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::SERVICE)));
-    object->SetProperty(
-        "ACCESSIBILITY", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::ACCESSIBILITY)));
-    object->SetProperty("DATA_SHARE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::DATASHARE)));
-    object->SetProperty("FILE_SHARE", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::FILESHARE)));
-    object->SetProperty(
-        "STATIC_SUBSCRIBER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::STATICSUBSCRIBER)));
-    object->SetProperty("WALLPAPER", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WALLPAPER)));
-    object->SetProperty("BACKUP", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::BACKUP)));
-    object->SetProperty("WINDOW", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::WINDOW)));
-    object->SetProperty(
-        "FILEACCESS_EXTENSION", CreateJsValue(*engine,
-            static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION)));
-    object->SetProperty("THUMBNAIL", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::THUMBNAIL)));
-    object->SetProperty("PREVIEW", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::PREVIEW)));
-    object->SetProperty(
-        "ENTERPRISE_ADMIN", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN)));
-    object->SetProperty("UNSPECIFIED", CreateJsValue(*engine, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)));
-    return objValue;
-}
-
-NativeValue *CreateSupportWindowModesObject(NativeEngine *engine)
-{
-    APP_LOGD("enter");
-
-    if (engine == nullptr) {
-        APP_LOGE("Invalid input parameters");
-        return nullptr;
-    }
-
-    NativeValue *objValue = engine->CreateObject();
-    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
-
-    if (object == nullptr) {
-        APP_LOGE("Failed to get object");
-        return nullptr;
-    }
-    object->SetProperty("FULL_SCREEN", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::FULLSCREEN)));
-    object->SetProperty("SPLIT", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::SPLIT)));
-    object->SetProperty("FLOATING", CreateJsValue(*engine, static_cast<int32_t>(SupportWindowMode::FLOATING)));
     return objValue;
 }
 
@@ -3727,52 +3377,6 @@ NativeValue* JsBundleMgr::CreateAppInfo(NativeEngine &engine, const ApplicationI
     return objContext;
 }
 
-NativeValue* JsBundleMgr::CreateExtensionInfo(
-    NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
-{
-    APP_LOGD("CreateExtensionInfo is called.");
-    NativeValue *arrayValue = engine.CreateArray(extensionInfos.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    for (size_t i = 0; i < extensionInfos.size(); i++) {
-        array->SetElement(i, CreateExtensionInfo(engine, extensionInfos.at(i)));
-    }
-    return arrayValue;
-}
-
-NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo)
-{
-    APP_LOGD("CreateExtensionInfo is called.");
-    auto objContext = engine.CreateObject();
-    if (objContext == nullptr) {
-        APP_LOGE("CreateObject failed");
-        return engine.CreateUndefined();
-    }
-
-    auto object = ConvertNativeValueTo<NativeObject>(objContext);
-    if (object == nullptr) {
-        APP_LOGE("ConvertNativeValueTo object failed");
-        return engine.CreateUndefined();
-    }
-
-    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfo.bundleName));
-    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfo.moduleName));
-    object->SetProperty("name", CreateJsValue(engine, extensionInfo.name));
-    object->SetProperty("labelId", CreateJsValue(engine, extensionInfo.labelId));
-    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfo.descriptionId));
-    object->SetProperty("iconId", CreateJsValue(engine, extensionInfo.iconId));
-    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfo.visible));
-    object->SetProperty("extensionAbilityType",
-        CreateJsValue(engine, static_cast<int32_t>(extensionInfo.type)));
-    object->SetProperty("permissions", CreateNativeArray(engine, extensionInfo.permissions));
-    object->SetProperty("applicationInfo", CreateAppInfo(engine, extensionInfo.applicationInfo));
-    object->SetProperty("metadata", CreateInnerMetaDatas(engine, extensionInfo.metadata));
-    object->SetProperty("enabled", CreateJsValue(engine, extensionInfo.enabled));
-    object->SetProperty("readPermission", CreateJsValue(engine, extensionInfo.readPermission));
-    object->SetProperty("writePermission", CreateJsValue(engine, extensionInfo.writePermission));
-
-    return objContext;
-}
-
 NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityInfo &abilityInfo)
 {
     APP_LOGD("CreateAbilityInfo is called.");
@@ -3822,7 +3426,6 @@ NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityI
     object->SetProperty("metaData", CreateMetaData(engine, abilityInfo.metaData));
     object->SetProperty("metadata", CreateInnerMetaDatas(engine, abilityInfo.metadata));
     object->SetProperty("enabled", CreateJsValue(engine, abilityInfo.enabled));
-    object->SetProperty("supportWindowMode", CreateSupportWindowMode(engine, abilityInfo.windowModes));
     object->SetProperty("maxWindowRatio", CreateJsValue(engine, abilityInfo.maxWindowRatio));
     object->SetProperty("minWindowRatio", CreateJsValue(engine, abilityInfo.minWindowRatio));
     object->SetProperty("maxWindowWidth", CreateJsValue(engine, abilityInfo.maxWindowWidth));
@@ -3840,18 +3443,6 @@ NativeValue* JsBundleMgr::CreateMetaData(NativeEngine &engine, const MetaData &m
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     for (size_t i = 0; i < metaData.customizeData.size(); i++) {
         array->SetElement(i, CreateCustomizeMetaData(engine, metaData.customizeData[i]));
-    }
-    return arrayValue;
-}
-
-NativeValue* JsBundleMgr::CreateSupportWindowMode(
-    NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes)
-{
-    APP_LOGD("CreateSupportWindowMode is called.");
-    NativeValue *arrayValue = engine.CreateArray(windowModes.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    for (size_t i = 0; i < windowModes.size(); i++) {
-        array->SetElement(i, CreateJsValue(engine, windowModes[i]));
     }
     return arrayValue;
 }
@@ -3969,7 +3560,6 @@ NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInf
     object->SetProperty("reqPermissionDetails", CreateRequestPermissions(engine, bundleInfo.reqPermissionDetails));
     object->SetProperty("minCompatibleVersionCode", CreateJsValue(engine, bundleInfo.minCompatibleVersionCode));
     object->SetProperty("entryInstallationFree", CreateJsValue(engine, bundleInfo.entryInstallationFree));
-    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, bundleInfo.extensionInfos));
 
     return objContext;
 }
@@ -4017,7 +3607,6 @@ NativeValue* JsBundleMgr::CreateHapModuleInfo(NativeEngine &engine, const HapMod
     object->SetProperty("mainAbilityName", CreateJsValue(engine, hapModuleInfo.mainAbility));
     object->SetProperty("installationFree", CreateJsValue(engine, hapModuleInfo.installationFree));
     object->SetProperty("mainElementName", CreateJsValue(engine, hapModuleInfo.mainElementName));
-    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, hapModuleInfo.extensionInfos));
     object->SetProperty("metadata", CreateInnerMetaDatas(engine, hapModuleInfo.metadata));
 
     return objContext;
@@ -4223,28 +3812,6 @@ static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS:
     return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
 }
 
-static bool InnerQueryExtensionInfo(const OHOS::AppExecFwk::Want want, const int32_t extensionType,
-    const int32_t flags, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
-    }
-    APP_LOGD("action:%{public}s, uri:%{private}s, type:%{public}s, flags:%{public}d",
-        want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(), flags);
-
-    if (extensionType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
-        APP_LOGD("query extensionAbilityInfo without type");
-        return iBundleMgr->QueryExtensionAbilityInfos(want, flags, userId, extensionInfos);
-    } else {
-        auto type = static_cast<ExtensionAbilityType>(extensionType);
-        APP_LOGD("query extensionAbilityInfo with type");
-        return iBundleMgr->QueryExtensionAbilityInfos(want, type, flags, userId, extensionInfos);
-    }
-}
-
 NativeValue* JsBundleMgr::CreatePermissionDef(NativeEngine &engine, const PermissionDef &permissionDef)
 {
     APP_LOGD("called");
@@ -4426,7 +3993,6 @@ NativeValue* JsBundleMgr::CreateSummaryModule(NativeEngine &engine, const Packag
     object->SetProperty("deviceType", CreateNativeArray(engine, moduleInfo.deviceType));
     object->SetProperty("distro", CreateDistro(engine, moduleInfo));
     object->SetProperty("abilities", CreateAbilities(engine, moduleInfo));
-    object->SetProperty("extensionAbilities", CreateExtensionAbilities(engine, moduleInfo));
 
     return objContext;
 }
@@ -4548,37 +4114,6 @@ NativeValue* JsBundleMgr::CreateFormsInfo(NativeEngine &engine, const AbilityFor
     return objContext;
 }
 
-NativeValue* JsBundleMgr::CreateExtensionAbilities(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module)
-{
-    APP_LOGD("called");
-    auto *arrayValue = engine.CreateArray(module.extensionAbilities.size());
-    auto *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    for (uint32_t i = 0; i < module.extensionAbilities.size(); i++) {
-        array->SetElement(i, CreateExtensionAbility(engine, module.extensionAbilities.at(i)));
-    }
-    return arrayValue;
-}
-
-NativeValue* JsBundleMgr::CreateExtensionAbility(NativeEngine &engine, const ExtensionAbilities &extensionAbility)
-{
-    APP_LOGD("called");
-    auto objContext = engine.CreateObject();
-    if (objContext == nullptr) {
-        APP_LOGE("CreateObject failed");
-        return engine.CreateUndefined();
-    }
-
-    auto object = ConvertNativeValueTo<NativeObject>(objContext);
-    if (object == nullptr) {
-        APP_LOGE("ConvertNativeValueTo object failed");
-        return engine.CreateUndefined();
-    }
-
-    object->SetProperty("name", CreateJsValue(engine, extensionAbility.name));
-    object->SetProperty("forms", CreateFormsInfos(engine, extensionAbility.forms));
-
-    return objContext;
-}
 void JsBundleMgr::Finalizer(NativeEngine *engine, void *data, void *hint)
 {
     APP_LOGD("JsBundleMgr::Finalizer is called");
@@ -4668,11 +4203,6 @@ NativeValue* JsBundleMgr::QueryAbilityInfos(NativeEngine *engine, NativeCallback
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
     return (me != nullptr) ? me->OnQueryAbilityInfos(*engine, *info) : nullptr;
-}
-NativeValue* JsBundleMgr::QueryExtensionAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnQueryExtensionAbilityInfos(*engine, *info) : nullptr;
 }
 
 NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
@@ -5582,82 +5112,6 @@ NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbac
     }
 
     AsyncTask::Schedule("JsBundleMgr::OnGetAllBundleInfo",
-        engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleMgr::OnQueryExtensionAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    Want want;
-    int32_t extensionType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
-    int32_t extensionFlags = 0;
-    std::shared_ptr<std::vector<ExtensionAbilityInfo>> extensionAbilityInfos =
-        std::make_shared<std::vector<ExtensionAbilityInfo>>();
-    if (info.argc < ARGS_SIZE_TWO || info.argc > ARGS_SIZE_FIVE) {
-        APP_LOGE("wrong number of arguments.");
-        return engine.CreateUndefined();
-    } else {
-        if (info.argv[PARAM0]->TypeOf() != NATIVE_OBJECT) {
-            APP_LOGE("input params is error!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-        auto argv1 = reinterpret_cast<napi_value>(info.argv[PARAM0]);
-        auto env = reinterpret_cast<napi_env>(&engine);
-        if (!ParseWant(env, want, argv1)) {
-            APP_LOGE("conversion failed!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-        if (info.argv[PARAM1]->TypeOf() != NATIVE_NUMBER) {
-            APP_LOGE("input params is error!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-        if (!ConvertFromJsValue(engine, info.argv[PARAM1], extensionType)) {
-            APP_LOGE("conversion failed!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-        if (info.argv[PARAM2]->TypeOf() != NATIVE_NUMBER) {
-            APP_LOGE("input params is error!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-        if (!ConvertFromJsValue(engine, info.argv[PARAM2], extensionFlags)) {
-            APP_LOGE("conversion failed!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-    }
-
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdFiveParams(engine, info, userId);
-    auto apiResult = std::make_shared<bool>();
-    auto execute = [want, extensionType, extensionFlags, userId, infos = extensionAbilityInfos, ret = apiResult] () {
-        *ret = InnerQueryExtensionInfo(want, extensionType, extensionFlags, userId, *infos);
-    };
-
-    auto complete = [obj = this, errCode, infos = extensionAbilityInfos, ret = apiResult](
-                        NativeEngine &engine, AsyncTask &task, int32_t status) {
-        std::string errMessage;
-        if (errCode != ERR_OK) {
-            errMessage = "type mismatch";
-            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
-            return;
-        }
-        if (!*ret) {
-            errMessage = "QueryExtensionInfoByWant failed";
-            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), CreateJsValue(engine, errMessage));
-            return;
-        }
-        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateExtensionInfo(engine, *infos));
-    };
-
-    NativeValue *result = nullptr;
-    NativeValue *callback = nullptr;
-    if (flagCall) {
-        if (info.argc == ARGS_SIZE_FOUR || info.argc == ARGS_SIZE_FIVE) {
-            callback = (info.argc == ARGS_SIZE_FIVE) ? info.argv[PARAM4] : info.argv[PARAM3];
-        }
-    }
-    AsyncTask::Schedule("JsBundleMgr::OnQueryExtensionAbilityInfos",
         engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
     return result;
 }

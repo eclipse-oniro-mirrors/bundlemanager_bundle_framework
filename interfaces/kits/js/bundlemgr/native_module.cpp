@@ -56,10 +56,7 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     object->SetProperty("ShortcutExistence", CreateShortcutExistenceObject(engine));
     object->SetProperty("QueryShortCutFlag", CreateQueryShortCutFlagObject(engine));
     object->SetProperty("InstallErrorCode", CreateInstallErrorCodeObject(engine));
-    object->SetProperty("SupportWindowMode", CreateSupportWindowModesObject(engine));
-    object->SetProperty("ExtensionAbilityType", CreateExtensionAbilityTypeObject(engine));
     object->SetProperty("BundleFlag", CreateBundleFlagObject(engine));
-    object->SetProperty("ExtensionFlag", CreateExtensionFlagObject(engine));
 
     const char *moduleName = "JsBundleMgr";
     BindNativeFunction(*engine, *object, "getAllApplicationInfo", moduleName, JsBundleMgr::GetAllApplicationInfo);
@@ -77,8 +74,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "setApplicationEnabled", moduleName, JsBundleMgr::SetApplicationEnabled);
     BindNativeFunction(*engine, *object, "queryAbilityByWant", moduleName, JsBundleMgr::QueryAbilityInfos);
     BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
-    BindNativeFunction(*engine, *object, "queryExtensionAbilityInfos", moduleName,
-        JsBundleMgr::QueryExtensionAbilityInfos);
     BindNativeFunction(*engine, *object, "getPermissionDef", moduleName, JsBundleMgr::GetPermissionDef);
     BindNativeFunction(*engine, *object, "getBundleInstaller", moduleName, JsBundleMgr::GetBundleInstaller);
     return exports;
