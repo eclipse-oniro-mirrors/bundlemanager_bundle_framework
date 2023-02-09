@@ -27,7 +27,7 @@ class MockBundleManagerCallbackStub : public BundleManagerCallbackStub {
 public:
     MockBundleManagerCallbackStub();
     ~MockBundleManagerCallbackStub();
-    int32_t OnQueryRpcIdFinished(const std::string &RpcIdResult) override;
+    int32_t OnQueryRpcIdFinished(const std::string &rpcIdResult) override;
 };
 }
 }

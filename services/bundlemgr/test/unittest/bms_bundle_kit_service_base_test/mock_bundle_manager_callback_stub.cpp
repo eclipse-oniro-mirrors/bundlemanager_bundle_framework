@@ -20,7 +20,7 @@ MockBundleManagerCallbackStub::MockBundleManagerCallbackStub()
 {}
 MockBundleManagerCallbackStub::~MockBundleManagerCallbackStub()
 {}
-int32_t MockBundleManagerCallbackStub::OnQueryRpcIdFinished(const std::string &RpcIdResult)
+int32_t MockBundleManagerCallbackStub::OnQueryRpcIdFinished(const std::string &rpcIdResult)
 {
     return 0;
 }

@@ -378,8 +378,8 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0100, Function | Med
     auto server = std::make_shared<BundleDistributedManager>();
     std::weak_ptr<BundleDistributedManager> server_ = server;
     BundleManagerCallback bmcb(server_);
-    std::string null_string = "";
-    auto result = bmcb.OnQueryRpcIdFinished(null_string);
+    std::string nullString = "";
+    auto result = bmcb.OnQueryRpcIdFinished(nullString);
     EXPECT_EQ(result, NO_ERROR);
     sleep(1);
 }
@@ -407,7 +407,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0200, Function | Med
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0300, Function | MediumTest | Level1)
 {
-    std::weak_ptr<BundleDistributedManager> server_; 
+    std::weak_ptr<BundleDistributedManager> server_;
     BundleManagerCallback bmcb(server_);
     std::string queryRpcIdResult = "queryRpcIdResult";
     auto result = bmcb.OnQueryRpcIdFinished(queryRpcIdResult);
@@ -422,10 +422,10 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0300, Function | Med
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0400, Function | MediumTest | Level1)
 {
-    std::weak_ptr<BundleDistributedManager> server_; 
+    std::weak_ptr<BundleDistributedManager> server_;
     BundleManagerCallback bmcb(server_);
-    std::string null_string = "";
-    auto result = bmcb.OnQueryRpcIdFinished(null_string);
+    std::string nullString = "";
+    auto result = bmcb.OnQueryRpcIdFinished(nullString);
     EXPECT_EQ(result, ERR_INVALID_VALUE);
     sleep(1);
 }
@@ -453,8 +453,8 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0100, Function 
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0200, Function | MediumTest | Level1)
 {
     BundleManagerCallbackProxy proxy_(nullptr);
-    std::string null_string = "";
-    auto result = proxy_.OnQueryRpcIdFinished(null_string);
+    std::string nullString = "";
+    auto result = proxy_.OnQueryRpcIdFinished(nullString);
     EXPECT_EQ(result, 0);
     sleep(1);
 }
@@ -466,12 +466,12 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0200, Function 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0100, Function | MediumTest | Level1)
 {
-    MockBundleManagerCallbackStub stub_;
+    MockBundleManagerCallbackStub stub;
     uint32_t code = IBundleManagerCallback::Message::QUERY_RPC_ID_CALLBACK;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    auto result = stub_.OnRemoteRequest(code, data, reply, option);
+    auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, OBJECT_NULL);
     sleep(1);
 }
@@ -483,12 +483,12 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0100, Function |
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0200, Function | MediumTest | Level1)
 {
-    MockBundleManagerCallbackStub stub_;
+    MockBundleManagerCallbackStub stub;
     uint32_t code = -1;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    auto result = stub_.OnRemoteRequest(code, data, reply, option);
+    auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, OBJECT_NULL);
     sleep(1);
 }
@@ -500,13 +500,13 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0200, Function |
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0300, Function | MediumTest | Level1)
 {
-    MockBundleManagerCallbackStub stub_;
+    MockBundleManagerCallbackStub stub;
     uint32_t code = -1;
     MessageParcel data;
     data.WriteInterfaceToken(BundleManagerCallbackStub::GetDescriptor());
     MessageParcel reply;
     MessageOption option;
-    auto result = stub_.OnRemoteRequest(code, data, reply, option);
+    auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, 305);
     sleep(1);
 }
@@ -1032,7 +1032,9 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2500, Function | 
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2600, Function | MediumTest | Level1)
 {
     BundleDistributedManager mgr_;
-    std::string queryRpcIdResult = "{\"appQuickFix\":{\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"}}";
+    std::string queryRpcIdResult ="{\"appQuickFix\":
+        {\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],
+        \"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"}}";
     mgr_.OnQueryRpcIdFinished(queryRpcIdResult);
     EXPECT_TRUE(mgr_.queryAbilityParamsMap_.size() == 0);
     sleep(1);
