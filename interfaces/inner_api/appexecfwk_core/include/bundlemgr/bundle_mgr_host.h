@@ -333,40 +333,12 @@ private:
      */
     ErrCode HandleGetLaunchWantForBundle(MessageParcel &data, MessageParcel &reply);
     /**
-     * @brief Handles the CheckPublicKeys function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleCheckPublicKeys(MessageParcel &data, MessageParcel &reply);
-    /**
      * @brief Handles the GetPermissionDef function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetPermissionDef(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the HasSystemCapability function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleHasSystemCapability(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the GetSystemAvailableCapabilities function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleGetSystemAvailableCapabilities(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the IsSafeMode function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleIsSafeMode(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CleanBundleCacheFiles function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -543,8 +515,6 @@ private:
     ErrCode HandleQueryExtAbilityInfosByType(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleVerifyCallingPermission(MessageParcel &data, MessageParcel &reply);
-
-    ErrCode HandleGetAccessibleAppCodePaths(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryExtensionAbilityInfoByUri(MessageParcel &data, MessageParcel &reply);
 

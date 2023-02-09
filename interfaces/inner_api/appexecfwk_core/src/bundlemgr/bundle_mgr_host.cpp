@@ -117,12 +117,7 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_HAP_MODULE_INFO, &BundleMgrHost::HandleGetHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, &BundleMgrHost::HandleGetLaunchWantForBundle);
-    funcMap_.emplace(IBundleMgr::Message::CHECK_PUBLICKEYS, &BundleMgrHost::HandleCheckPublicKeys);
     funcMap_.emplace(IBundleMgr::Message::GET_PERMISSION_DEF, &BundleMgrHost::HandleGetPermissionDef);
-    funcMap_.emplace(IBundleMgr::Message::HAS_SYSTEM_CAPABILITY, &BundleMgrHost::HandleHasSystemCapability);
-    funcMap_.emplace(IBundleMgr::Message::GET_SYSTEM_AVAILABLE_CAPABILITIES,
-        &BundleMgrHost::HandleGetSystemAvailableCapabilities);
-    funcMap_.emplace(IBundleMgr::Message::IS_SAFE_MODE, &BundleMgrHost::HandleIsSafeMode);
     funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_CACHE_FILES, &BundleMgrHost::HandleCleanBundleCacheFiles);
     funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_DATA_FILES, &BundleMgrHost::HandleCleanBundleDataFiles);
     funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_STATUS_CALLBACK,
@@ -162,8 +157,6 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_BY_TYPE,
         &BundleMgrHost::HandleQueryExtAbilityInfosByType);
     funcMap_.emplace(IBundleMgr::Message::VERIFY_CALLING_PERMISSION, &BundleMgrHost::HandleVerifyCallingPermission);
-    funcMap_.emplace(IBundleMgr::Message::GET_ACCESSIBLE_APP_CODE_PATH,
-        &BundleMgrHost::HandleGetAccessibleAppCodePaths);
     funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_ABILITY_INFO_BY_URI,
         &BundleMgrHost::HandleQueryExtensionAbilityInfoByUri);
     funcMap_.emplace(IBundleMgr::Message::GET_APPID_BY_BUNDLE_NAME, &BundleMgrHost::HandleGetAppIdByBundleName);
@@ -1090,22 +1083,6 @@ ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, Message
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleCheckPublicKeys(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string firstBundleName = data.ReadString();
-    std::string secondBundleName = data.ReadString();
-
-    APP_LOGI(
-        "firstBundleName %{public}s, secondBundleName %{public}s", firstBundleName.c_str(), secondBundleName.c_str());
-    int ret = CheckPublicKeys(firstBundleName, secondBundleName);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
 ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1123,48 +1100,6 @@ ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleHasSystemCapability(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string capName = data.ReadString();
-
-    bool ret = HasSystemCapability(capName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetSystemAvailableCapabilities(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::vector<std::string> caps;
-    bool ret = GetSystemAvailableCapabilities(caps);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret) {
-        if (!reply.WriteStringVector(caps)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleIsSafeMode(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    bool ret = IsSafeMode();
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
@@ -1737,22 +1672,6 @@ ErrCode BundleMgrHost::HandleVerifyCallingPermission(MessageParcel &data, Messag
     bool ret = VerifyCallingPermission(permission);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write result failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetAccessibleAppCodePaths(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t userId = data.ReadInt32();
-    std::vector<std::string> vec = GetAccessibleAppCodePaths(userId);
-    bool ret = vec.empty() ? false : true;
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write result failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret && !reply.WriteStringVector(vec)) {
-        APP_LOGE("write code paths failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

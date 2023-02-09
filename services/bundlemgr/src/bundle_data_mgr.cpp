@@ -2872,29 +2872,6 @@ void BundleDataMgr::SetInitialUserFlag(bool flag)
     initialUserFlag_ = flag;
 }
 
-int BundleDataMgr::CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName) const
-{
-    APP_LOGD("CheckPublicKeys %{public}s and %{public}s", firstBundleName.c_str(), secondBundleName.c_str());
-    if (firstBundleName.empty() || secondBundleName.empty()) {
-        APP_LOGE("bundleName empty");
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto firstInfoItem = bundleInfos_.find(firstBundleName);
-    if (firstInfoItem == bundleInfos_.end()) {
-        APP_LOGE("can not find bundle %{public}s", firstBundleName.c_str());
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    auto secondInfoItem = bundleInfos_.find(secondBundleName);
-    if (secondInfoItem == bundleInfos_.end()) {
-        APP_LOGE("can not find bundle %{public}s", secondBundleName.c_str());
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    auto firstProvisionId = firstInfoItem->second.GetProvisionId();
-    auto secondProvisionId = secondInfoItem->second.GetProvisionId();
-    return (firstProvisionId == secondProvisionId) ? Constants::SIGNATURE_MATCHED : Constants::SIGNATURE_NOT_MATCHED;
-}
-
 std::shared_ptr<IBundleDataStorage> BundleDataMgr::GetDataStorage() const
 {
     return dataStorage_;
@@ -3793,28 +3770,6 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
         }
     }
     return true;
-}
-
-std::vector<std::string> BundleDataMgr::GetAccessibleAppCodePaths(int32_t userId) const
-{
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    std::vector<std::string> vec;
-    if (bundleInfos_.empty()) {
-        APP_LOGE("bundleInfos_ is empty");
-        return vec;
-    }
-
-    for (const auto &item : bundleInfos_) {
-        const InnerBundleInfo &info = item.second;
-        auto userInfoMap = info.GetInnerBundleUserInfos();
-        for (const auto &userInfo : userInfoMap) {
-            auto innerUserId = userInfo.second.bundleUserInfo.userId;
-            if (((innerUserId == 0) || (innerUserId == userId)) && info.IsAccessible()) {
-                vec.emplace_back(info.GetAppCodePath());
-            }
-        }
-    }
-    return vec;
 }
 
 bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,

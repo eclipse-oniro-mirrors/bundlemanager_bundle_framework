@@ -827,18 +827,6 @@ ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName,
     return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
 }
 
-int BundleMgrHostImpl::CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName)
-{
-    APP_LOGD("start CheckPublicKeys, firstBundleName : %{public}s, secondBundleName : %{public}s",
-        firstBundleName.c_str(), secondBundleName.c_str());
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
-    return dataMgr->CheckPublicKeys(firstBundleName, secondBundleName);
-}
-
 ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     if (!VerifySystemApi()) {
@@ -854,21 +842,6 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
         return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED;
     }
     return BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
-}
-
-bool BundleMgrHostImpl::HasSystemCapability(const std::string &capName)
-{
-    return true;
-}
-
-bool BundleMgrHostImpl::GetSystemAvailableCapabilities(std::vector<std::string> &systemCaps)
-{
-    return true;
-}
-
-bool BundleMgrHostImpl::IsSafeMode()
-{
-    return true;
 }
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
@@ -1906,19 +1879,6 @@ bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 {
     APP_LOGD("VerifyCallingPermission begin");
     return BundlePermissionMgr::VerifyCallingPermission(permission);
-}
-
-std::vector<std::string> BundleMgrHostImpl::GetAccessibleAppCodePaths(int32_t userId)
-{
-    APP_LOGD("GetAccessibleAppCodePaths begin");
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        std::vector<std::string> vec;
-        return vec;
-    }
-
-    return dataMgr->GetAccessibleAppCodePaths(userId);
 }
 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,

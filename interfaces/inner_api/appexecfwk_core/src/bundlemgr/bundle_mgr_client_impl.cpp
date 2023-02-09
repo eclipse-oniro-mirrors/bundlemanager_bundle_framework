@@ -236,19 +236,6 @@ bool BundleMgrClientImpl::ConvertResourcePath(
     return true;
 }
 
-std::vector<std::string> BundleMgrClientImpl::GetAccessibleAppCodePaths(int32_t userId)
-{
-    APP_LOGI("GetAccessibleAppCodePaths begin");
-
-    ErrCode result = Connect();
-    if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
-        std::vector<std::string> vec;
-        return vec;
-    }
-    return bundleMgr_->GetAccessibleAppCodePaths(userId);
-}
-
 bool BundleMgrClientImpl::GetResProfileByMetadata(const std::vector<Metadata> &metadata,
     const std::string &metadataName, const std ::string &resourcePath, bool isCompressed,
     std::vector<std::string> &profileInfos) const

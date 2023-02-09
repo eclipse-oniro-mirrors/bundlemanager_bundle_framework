@@ -471,15 +471,6 @@ public:
      */
     void SetInitialUserFlag(bool flag);
     /**
-     * @brief Checks whether the publickeys of two bundles are the same.
-     * @param firstBundleName Indicates the first bundle name.
-     * @param secondBundleName Indicates the second bundle name.
-     * @return Returns SIGNATURE_UNKNOWN_BUNDLE if at least one of the given bundles is not found;
-     *         returns SIGNATURE_NOT_MATCHED if their publickeys are different;
-     *         returns SIGNATURE_MATCHED if their publickeys are the same.
-     */
-    int CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName) const;
-    /**
      * @brief Get a shared pointer to the IBundleDataStorage object.
      * @return Returns the pointer of IBundleDataStorage object.
      */
@@ -681,8 +672,6 @@ public:
 
     bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
-
-    std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId) const;
 
     bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;

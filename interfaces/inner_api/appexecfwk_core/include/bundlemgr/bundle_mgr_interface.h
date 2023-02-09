@@ -571,18 +571,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
-     * @brief Checks whether the publickeys of two bundles are the same.
-     * @param firstBundleName Indicates the first bundle name.
-     * @param secondBundleName Indicates the second bundle name.
-     * @return Returns SIGNATURE_UNKNOWN_BUNDLE if at least one of the given bundles is not found;
-     *         returns SIGNATURE_NOT_MATCHED if their publickeys are different;
-     *         returns SIGNATURE_MATCHED if their publickeys are the same.
-     */
-    virtual int CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName)
-    {
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    /**
      * @brief Obtains detailed information about a specified permission.
      * @param permissionName Indicates the name of the ohos permission.
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
@@ -591,32 +579,6 @@ public:
     virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
     {
         return ERR_OK;
-    }
-    /**
-     * @brief Checks whether the system has a specified capability.
-     * @param capName Indicates the name of the system feature to check.
-     * @return Returns true if the given feature specified by name is available in the system; returns false otherwise.
-     */
-    virtual bool HasSystemCapability(const std::string &capName)
-    {
-        return false;
-    }
-    /**
-     * @brief Obtains the capabilities that are available in the system.
-     * @param systemCaps Indicates the list of capabilities available in the system.
-     * @return Returns true if capabilities in the system are successfully obtained; returns false otherwise.
-     */
-    virtual bool GetSystemAvailableCapabilities(std::vector<std::string> &systemCaps)
-    {
-        return false;
-    }
-    /**
-     * @brief Checks whether the current device has been started in safe mode.
-     * @return Returns true if the device is in safe mode; returns false otherwise.
-     */
-    virtual bool IsSafeMode()
-    {
-        return false;
     }
     /**
      * @brief Clears cache data of a specified application.
@@ -961,12 +923,6 @@ public:
         return 0;
     }
 
-    virtual std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId)
-    {
-        std::vector<std::string> vec;
-        return vec;
-    }
-
     virtual bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo)
     {
@@ -1157,11 +1113,7 @@ public:
         GET_BUNDLE_ARCHIVE_INFO,
         GET_HAP_MODULE_INFO,
         GET_LAUNCH_WANT_FOR_BUNDLE,
-        CHECK_PUBLICKEYS,
         GET_PERMISSION_DEF,
-        HAS_SYSTEM_CAPABILITY,
-        GET_SYSTEM_AVAILABLE_CAPABILITIES,
-        IS_SAFE_MODE,
         CLEAN_BUNDLE_CACHE_FILES,
         CLEAN_BUNDLE_DATA_FILES,
         REGISTER_BUNDLE_STATUS_CALLBACK,
@@ -1197,7 +1149,6 @@ public:
         QUERY_EXTENSION_INFO,
         QUERY_EXTENSION_INFO_BY_TYPE,
         VERIFY_CALLING_PERMISSION,
-        GET_ACCESSIBLE_APP_CODE_PATH,
         QUERY_EXTENSION_ABILITY_INFO_BY_URI,
         IS_MODULE_REMOVABLE,
         SET_MODULE_REMOVABLE,

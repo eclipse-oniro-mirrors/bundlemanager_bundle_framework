@@ -47,7 +47,6 @@ public:
         std::vector<std::string> &profileInfos) const;
     bool GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
-    std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId);
     ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId, int32_t &appIndex);
     ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId);
     ErrCode GetSandboxBundleInfo(const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info);

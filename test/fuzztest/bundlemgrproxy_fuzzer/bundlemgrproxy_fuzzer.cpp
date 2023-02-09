@@ -103,7 +103,6 @@ namespace OHOS {
 
         std::string permission (reinterpret_cast<const char*>(data), size);
         bundleMgrProxy.VerifyCallingPermission(permission);
-        bundleMgrProxy.GetAccessibleAppCodePaths(reinterpret_cast<uintptr_t>(data));
         std::string uri (reinterpret_cast<const char*>(data), size);
         bundleMgrProxy.QueryExtensionAbilityInfoByUri(uri, reinterpret_cast<uintptr_t>(data), extensionInfo);
         bundleMgrProxy.ImplicitQueryInfoByPriority(want, reinterpret_cast<uintptr_t>(data),
@@ -153,7 +152,6 @@ namespace OHOS {
         HapModuleInfo hapModuleInfo;
         bundleMgrProxy.GetSandboxHapModuleInfo(abilityInfo, reinterpret_cast<uintptr_t>(data),
             reinterpret_cast<uintptr_t>(data), hapModuleInfo);
-        bundleMgrProxy.IsSafeMode();
         bundleMgrProxy.UnregisterBundleStatusCallback();
         bundleMgrProxy.GetBundleInstaller();
         bundleMgrProxy.GetBundleUserMgr();

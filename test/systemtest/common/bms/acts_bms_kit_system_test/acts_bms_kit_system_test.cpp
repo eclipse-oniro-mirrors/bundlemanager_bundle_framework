@@ -5710,67 +5710,6 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAllAbilityInfos_0100, Function | MediumTest 
 }
 
 /**
- * @tc.number: CheckPublicKeys_0100
- * @tc.name: test CheckPublicKeys interface
- * @tc.desc: 1.check pubilic keys
- *           2.the pubilic keys is zero
- */
-HWTEST_F(ActsBmsKitSystemTest, CheckPublicKeys_0100, Function | MediumTest | Level1)
-{
-    std::cout << "START CheckPublicKeys_0100" << std::endl;
-    std::vector<std::string> resvec;
-    std::vector<std::string> resvec2;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    std::string appName2 = BASE_BUNDLE_NAME + "2";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-    Install(bundleFilePath2, InstallFlag::NORMAL, resvec2);
-    std::string installResult2 = commonTool.VectorToStr(resvec2);
-    EXPECT_EQ(installResult2, "Success") << "install fail!";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    int ret = bundleMgrProxy->CheckPublicKeys(appName, appName2);
-    EXPECT_EQ(ret, 0);
-
-    resvec.clear();
-    resvec2.clear();
-    Uninstall(appName, resvec);
-    Uninstall(appName2, resvec2);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::string uninstallResult2 = commonTool.VectorToStr(resvec2);
-    EXPECT_EQ(uninstallResult2, "Success") << "uninstall fail!";
-    std::cout << "END CheckPublicKeys_0100" << std::endl;
-}
-
-/**
- * @tc.number: CheckPublicKeys_0200
- * @tc.name: test CheckPublicKeys interface
- * @tc.desc: 1.check pubilic keys
- *           2.the pubilic keys is zero
- */
-HWTEST_F(ActsBmsKitSystemTest, CheckPublicKeys_0200, Function | MediumTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    int ret = bundleMgrProxy->CheckPublicKeys("", "");
-    EXPECT_NE(ret, 0);
-}
-
-/**
  * @tc.number: GetAppPrivilegeLevel_0100
  * @tc.name: test GetAppPrivilegeLevel interface
  * @tc.desc: 1.get app privilege level
@@ -6623,19 +6562,6 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0400, Function | SmallTest | 
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetUdidByNetworkId_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetAccessibleAppCodePaths_0100
- * @tc.name: test GetAccessibleAppCodePaths proxy
- * @tc.desc: 1.system run normally
- *           2.get accessible app code paths successfully
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAccessibleAppCodePaths_0100, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    auto res = bundleMgrProxy->GetAccessibleAppCodePaths(USERID);
-    EXPECT_EQ(res.size(), 0);
 }
 
 /**

@@ -875,50 +875,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1700, Function | MediumTest | Level1)
 }
 
 /**
- * @tc.number: BMS_Search_1800
- * @tc.name: test CheckPublicKeys interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there are two bundles
- *           2.install these bundles
- *           3.call CheckPublicKeys
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_1800, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Search_1800" << std::endl;
-    CommonTool commonTool;
-    std::vector<std::string> resvec;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    for (int i = INDEX_SEVEN; i < INDEX_NINE; i++) {
-        std::string installResult;
-        std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
-        installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Success") << "install fail!";
-        resvec.clear();
-    }
-    std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
-    std::string firstBundleName = BASE_BUNDLE_NAME + "2";
-
-    bool queryResult = QueryJsonFile(firstBundleName);
-    EXPECT_TRUE(queryResult);
-
-    std::string hapFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle8.hap";
-    std::string secondBundleName = BASE_BUNDLE_NAME + "3";
-
-    queryResult = QueryJsonFile(secondBundleName);
-    EXPECT_TRUE(queryResult);
-
-    bundleMgrProxy->CheckPublicKeys(firstBundleName, secondBundleName);
-    for (int32_t i = INDEX_TWO; i <= INDEX_THREE; i++) {
-        std::string bundleName = BASE_BUNDLE_NAME + std::to_string(i);
-        std::vector<std::string> resvec;
-        Uninstall(bundleName, resvec);
-        std::string installResult = commonTool.VectorToStr(resvec);
-        APP_LOGI("uninstall result is %{public}s", installResult.c_str());
-    }
-    std::cout << "END BMS_Search_1800" << std::endl;
-}
-
-/**
  * @tc.number: BMS_Search_1900
  * @tc.name: test GetBundleGids interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
@@ -940,42 +896,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1900, Function | MediumTest | Level1)
 }
 
 /**
- * @tc.number: BMS_Search_2000
- * @tc.name: test HasSystemCapability interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
- *           2.install the app
- *           3.call HasSystemCapability
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_2000, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Search_2000" << std::endl;
-    SetUpTestCase();
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    std::string abilityName = "bmsThirdBundle1_A1";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
-    bool result = bundleMgrProxy->HasSystemCapability(abilityName);
-    EXPECT_TRUE(result);
-    TearDownTestCase();
-    std::cout << "END BMS_Search_2000" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Search_2100
- * @tc.name: test IsSafeMode interface
- * @tc.desc: 1.call IsSafeMode
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_2100, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Search_2100" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool result = bundleMgrProxy->IsSafeMode();
-    EXPECT_TRUE(result);
-    std::cout << "END BMS_Search_2100" << std::endl;
-}
-
-/**
  * @tc.number: BMS_Search_2200
  * @tc.name: test GetAppType interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
@@ -994,21 +914,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2200, Function | MediumTest | Level1)
     EXPECT_EQ(result, "");
     TearDownTestCase();
     std::cout << "END BMS_Search_2200" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Search_2300
- * @tc.name: test GetSystemAvailableCapabilities interface
- * @tc.desc: 1.call GetSystemAvailableCapabilities
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_2300, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Search_2300" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    std::vector<std::string> systemCaps = {"bmsSystemBundle_A1"};
-    bool result = bundleMgrProxy->GetSystemAvailableCapabilities(systemCaps);
-    EXPECT_TRUE(result);
-    std::cout << "END BMS_Search_2300" << std::endl;
 }
 
 /**
@@ -1276,21 +1181,6 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3200, Function | MediumTest | Level1)
         APP_LOGI("BmsInstallSystemTest TearDown--uninstall result is %{public}s", installResult.c_str());
     }
     std::cout << "END BMS_Search_3200" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Search_3300
- * @tc.name: test HasSystemCapability interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is an app
- *           2.install the app
- *           3.call HasSystemCapability failed by empty name
- */
-HWTEST_F(BmsSearchSystemTest, BMS_Search_3300, Function | MediumTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
-    bool result = bundleMgrProxy->HasSystemCapability("");
-    EXPECT_FALSE(result);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
