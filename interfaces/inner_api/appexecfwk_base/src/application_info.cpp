@@ -104,6 +104,10 @@ const std::string RESOURCE_ID = "id";
 const size_t APPLICATION_CAPACITY = 10240; // 10K
 const std::string APPLICATION_NEED_APP_DETAIL = "needAppDetail";
 const std::string APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH = "appDetailAbilityLibraryPath";
+const std::string APPLICATION_APP_TARGET_BUNDLE_NAME = "targetBundleName";
+const std::string APPLICATION_APP_TARGET_PRIORITY = "targetPriority";
+const std::string APPLICATION_ASAN_ENABLED = "asanEnabled";
+const std::string APPLICATION_ASAN_LOG_PATH = "asanLogPath";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -381,6 +385,10 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appQuickFix = *appQuickFixPtr;
     needAppDetail = parcel.ReadBool();
     appDetailAbilityLibraryPath = Str16ToStr8(parcel.ReadString16());
+    targetBundleName = Str16ToStr8(parcel.ReadString16());
+    targetPriority = parcel.ReadInt32();
+    asanEnabled = parcel.ReadBool();
+    asanLogPath = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -516,6 +524,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appQuickFix);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needAppDetail);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appDetailAbilityLibraryPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetBundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetPriority);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, asanEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(asanLogPath));
     return true;
 }
 
@@ -661,6 +673,10 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APP_QUICK_FIX, applicationInfo.appQuickFix},
         {APPLICATION_NEED_APP_DETAIL, applicationInfo.needAppDetail},
         {APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH, applicationInfo.appDetailAbilityLibraryPath},
+        {APPLICATION_APP_TARGET_BUNDLE_NAME, applicationInfo.targetBundleName},
+        {APPLICATION_APP_TARGET_PRIORITY, applicationInfo.targetPriority},
+        {APPLICATION_ASAN_ENABLED, applicationInfo.asanEnabled},
+        {APPLICATION_ASAN_LOG_PATH, applicationInfo.asanLogPath}
     };
 }
 
@@ -1224,6 +1240,38 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH,
         applicationInfo.appDetailAbilityLibraryPath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_TARGET_BUNDLE_NAME,
+        applicationInfo.targetBundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_TARGET_PRIORITY,
+        applicationInfo.targetPriority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ASAN_ENABLED,
+        applicationInfo.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ASAN_LOG_PATH,
+        applicationInfo.asanLogPath,
         JsonType::STRING,
         false,
         parseResult,

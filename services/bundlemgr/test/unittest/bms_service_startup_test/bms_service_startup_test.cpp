@@ -770,6 +770,38 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0600, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_0700
+ * @tc.name: test MatchSignature
+ * @tc.desc: 1.test MatchSignature of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0700, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    DefaultPermission defaultPermission;
+    PermissionInfo info;
+    info.name = "default";
+    defaultPermission.grantPermission.emplace_back(info);
+    std::string signature = "";
+    ret = BundlePermissionMgr::MatchSignature(
+        defaultPermission, signature);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0800
+ * @tc.name: test GetHapApiVersion
+ * @tc.desc: 1.test Get BundlePermissionMgr of HapApiVersion
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0800, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::GetHapApiVersion();
+    EXPECT_EQ(ret, Constants::INVALID_API_VERSION);
+}
+
+/**
  * @tc.number: AbilityManagerHelper_0100
  * @tc.name: test IsRunning
  * @tc.desc: 1.test IsRunning of AbilityManagerHelper

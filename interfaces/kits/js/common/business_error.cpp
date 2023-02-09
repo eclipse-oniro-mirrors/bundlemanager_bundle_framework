@@ -25,6 +25,8 @@ namespace {
 constexpr const char* ERR_MSG_BUSINESS_ERROR = "BusinessError $: ";
 constexpr const char* ERR_MSG_PERMISSION_DENIED_ERROR =
     "Permission denied. An attempt was made to $ forbidden by permission: $.";
+constexpr const char* ERR_MSG_NOT_SYSTEM_APP =
+    "Permission denied. Non-system APP calling system API";
 constexpr const char* ERR_MSG_PARAM_TYPE_ERROR = "Parameter error. The type of $ must be $.";
 constexpr const char* ERR_MSG_ABILITY_NOT_SUPPORTED =
     "Capability not supported. Function $ can not work correctly due to limited device capabilities.";
@@ -69,8 +71,11 @@ constexpr const char* ERROR_MSG_DISTRIBUTED_SERVICE_NOT_RUNNING = "The distribut
 constexpr const char* ERROR_ABILITY_AND_TYPE_MISMATCH_MSG = "The specified ability and type do not match.";
 constexpr const char* ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED =
     "The specified bundle does not support clearing cache files.";
+constexpr const char* ERROR_MSG_INSTALL_HAP_OVERLAY_CHECK_FAILED =
+    "Failed to install the HAP because the overlay check of the HAP is failed";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
+    { ERROR_NOT_SYSTEM_APP, ERR_MSG_NOT_SYSTEM_APP},
     { ERROR_PARAM_CHECK_ERROR, ERR_MSG_PARAM_TYPE_ERROR },
     { ERROR_SYSTEM_ABILITY_NOT_FOUND, ERR_MSG_ABILITY_NOT_SUPPORTED },
     { ERROR_BUNDLE_NOT_EXIST, ERR_MSG_BUNDLE_NOT_EXIST },
@@ -102,7 +107,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INVALID_TYPE, ERROR_INVALID_TYPE_MSG },
     { ERROR_DISTRIBUTED_SERVICE_NOT_RUNNING, ERROR_MSG_DISTRIBUTED_SERVICE_NOT_RUNNING },
     { ERROR_ABILITY_AND_TYPE_MISMATCH, ERROR_ABILITY_AND_TYPE_MISMATCH_MSG },
-    { ERROR_CLEAR_CACHE_FILES_UNSUPPORTED, ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED }
+    { ERROR_CLEAR_CACHE_FILES_UNSUPPORTED, ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED },
+    { ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED, ERROR_MSG_INSTALL_HAP_OVERLAY_CHECK_FAILED }
 };
 } // namespace
 

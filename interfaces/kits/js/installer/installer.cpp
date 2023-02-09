@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -94,6 +94,26 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
     NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
         &m_classBundleInstaller));
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return;
+    }
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        result[0] = BusinessError::CreateCommonError(
+            env, ERROR_NOT_SYSTEM_APP, RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER, INSTALL_PERMISSION);
+        if (callbackPtr->deferred) {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            napi_value callback = nullptr;
+            napi_value placeHolder = nullptr;
+            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+            NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+                sizeof(result) / sizeof(result[0]), result, &placeHolder));
+        }
+        return;
+    }
     NAPI_CALL_RETURN_VOID(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result[SECOND_PARAM]));
 
     if (callbackPtr->deferred) {
@@ -257,12 +277,44 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SUPPORT, ERROR_INSTALL_PARSE_FAILED},
         { IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT, ERROR_INSTALL_NO_DISK_SPACE_LEFT },
         { IStatusReceiver::ERR_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
         { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE, ERROR_INSTALL_VERSION_DOWNGRADE },
         { IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED, ERROR_INSTALL_PARSE_FAILED },
         { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR, ERROR_INSTALL_PARSE_FAILED },
         { IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST, ERROR_INSTALL_DEPENDENT_MODULE_NOT_EXIST },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_MODULE_NAME, ERROR_MODULE_NOT_EXIST},
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE, ERROR_INVALID_TYPE },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_ERROR_BUNDLE_TYPE, ERROR_INVALID_TYPE },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_MISSED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_NAME_MISSED, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME,
+            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_EXTERNAL_OVERLAY_EXISTED_SIMULTANEOUSLY,
+            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME,
+            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY, ERROR_INSTALL_PARSE_FAILED },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INCONSISTENT_VERSION_CODE,
+            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_SERVICE_EXCEPTION, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_BUNDLE_NAME_SAME_WITH_TARGET_BUNDLE_NAME,
+            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT},
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY,
+            ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_DIFFERENT_SIGNATURE_CERTIFICATE,
+            ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE,
+            ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED },
+        {IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE,
+            ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
+            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR, ERROR_BUNDLE_SERVICE_EXCEPTION },
     };
 }
 

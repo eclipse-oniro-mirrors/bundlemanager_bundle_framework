@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
+#include "ipc_skeleton.h"
 #include "xcollie_helper.h"
 
 namespace OHOS {
@@ -168,6 +169,9 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
         APP_LOGE("fail to add bundle installer");
         installer.reset();
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, ADD_INSTALLER_FAIL);
+    }
+    if (installer != nullptr) {
+        installer->SetCallingUid(IPCSkeleton::GetCallingUid());
     }
     return installer;
 }

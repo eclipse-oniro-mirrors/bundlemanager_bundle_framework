@@ -260,7 +260,7 @@ bool BundleUtil::KeyToDeviceAndName(
 int32_t BundleUtil::GetUserIdByCallingUid()
 {
     int32_t uid = IPCSkeleton::GetCallingUid();
-    APP_LOGI("get calling uid(%{public}d)", uid);
+    APP_LOGD("get calling uid(%{public}d)", uid);
     return GetUserIdByUid(uid);
 }
 
@@ -558,6 +558,16 @@ bool BundleUtil::EndWith(const std::string &source, const std::string &suffix)
 
     std::string suffixStr = source.substr(position);
     return suffixStr == suffix;
+}
+
+int64_t BundleUtil::GetFileSize(const std::string &filePath)
+{
+    struct stat fileInfo = { 0 };
+    if (stat(filePath.c_str(), &fileInfo) != 0) {
+        APP_LOGE("call stat error");
+        return 0;
+    }
+    return fileInfo.st_size;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

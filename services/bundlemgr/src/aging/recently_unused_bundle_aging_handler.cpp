@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_promise.h"
+#include "event_report.h"
 #include "install_param.h"
 #include "installd_client.h"
 
@@ -69,95 +70,34 @@ private:
     bool isRunning_ = false;
     std::shared_ptr<BundlePromise> agingPromise_ = nullptr;
 };
-
-bool HasSubStr(const std::string &sourceStr, const std::string &subStr)
-{
-    if (sourceStr.empty() || subStr.empty()) {
-        APP_LOGE("sourceStr or subStr is empty.");
-        return false;
-    }
-
-    return sourceStr.find(subStr) != std::string::npos;
-}
 }
 
 bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
 {
-    return ProcessModule(request);
+    return ProcessBundle(request);
 }
 
 bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
 {
-    bool needContinue = true;
-    APP_LOGD("aging handler start: %{public}s, currentTotalDataBytes: %{pubic}" PRId64,
-        GetName().c_str(), request.GetTotalDataBytes());
-    std::vector<AgingBundleInfo> &agingBundles =
-        const_cast<std::vector<AgingBundleInfo> &>(request.GetAgingBundles());
-    APP_LOGD("aging handler start: agingBundles size :%{public}zu / %{public}" PRId64,
-        agingBundles.size(), request.GetTotalDataBytes());
-    auto iter = agingBundles.begin();
-    while (iter != agingBundles.end()) {
-        if (!CheckBundle(*iter)) {
-            break;
-        }
-
-        APP_LOGI("found matching bundle: %{public}s.", iter->GetBundleName().c_str());
-        bool isBundlerunning = AbilityManagerHelper::IsRunning(iter->GetBundleName(), iter->GetBundleUid());
-        if (isBundlerunning == AbilityManagerHelper::NOT_RUNNING) {
-            bool isBundleUnistalled = UnInstallBundle(iter->GetBundleName(), "");
-            if (isBundleUnistalled) {
-                request.UpdateTotalDataBytesAfterUninstalled(iter->GetDataBytes());
-            }
-        }
-
-        iter = agingBundles.erase(iter);
-        if (NeedCheckEndAgingThreshold()) {
-            if (!NeedContinue(request)) {
-                APP_LOGD("there is no need to continue now.");
-                needContinue = false;
-                return needContinue;
-            }
-        }
-    }
-
-    if (!NeedContinue(request)) {
-        APP_LOGD("there is no need to continue now.");
-        needContinue = false;
-    }
-
-    APP_LOGD("aging handle done: %{public}s, currentTotalDataBytes: %{public}" PRId64, GetName().c_str(),
-        request.GetTotalDataBytes());
-    return needContinue;
-}
-
-bool RecentlyUnuseBundleAgingHandler::ProcessModule(AgingRequest &request) const
-{
-    APP_LOGD("aging handler start: %{public}s, cleanType: %{public}d, totalDataBytes: %{public}" PRId64,
-        GetName().c_str(), static_cast<int32_t>(request.GetAgingCleanType()), request.GetTotalDataBytes());
-    for (const auto &agingModule : request.GetAgingModules()) {
-        if (!CheckModule(agingModule)) {
-            break;
-        }
-
-        bool isModuleRunning = AbilityManagerHelper::IsRunning(
-            agingModule.GetBundleName(), agingModule.GetModuleName());
-        APP_LOGD("found matching bundle: %{public}s , module: %{public}s, isRunning: %{public}d.",
-            agingModule.GetBundleName().c_str(), agingModule.GetModuleName().c_str(), isModuleRunning);
-        if (isModuleRunning != AbilityManagerHelper::NOT_RUNNING) {
+    APP_LOGD("aging handler start: cleanType: %{public}d, totalDataBytes: %{public}" PRId64,
+        static_cast<int32_t>(request.GetAgingCleanType()), request.GetTotalDataBytes());
+    for (const auto &agingBundle : request.GetAgingBundles()) {
+        bool isBundleRunning = AbilityManagerHelper::IsRunning(agingBundle.GetBundleName());
+        APP_LOGD("found matching bundle: %{public}s, isRunning: %{public}d.",
+            agingBundle.GetBundleName().c_str(), isBundleRunning);
+        if (isBundleRunning != AbilityManagerHelper::NOT_RUNNING) {
             continue;
         }
 
-        bool result = AgingClean(agingModule, request);
+        bool result = AgingClean(agingBundle, request);
         if (!result) {
             continue;
         }
 
-        if (NeedCheckEndAgingThreshold()) {
-            UpdateUsedTotalDataBytes(request);
-            if (!NeedContinue(request)) {
-                APP_LOGD("there is no need to continue now.");
-                return false;
-            }
+        UpdateUsedTotalDataBytes(request);
+        if (!NeedContinue(request)) {
+            APP_LOGD("there is no need to continue now.");
+            return false;
         }
     }
 
@@ -168,12 +108,6 @@ bool RecentlyUnuseBundleAgingHandler::ProcessModule(AgingRequest &request) const
 bool RecentlyUnuseBundleAgingHandler::NeedContinue(const AgingRequest &request) const
 {
     return !request.IsReachEndAgingThreshold();
-}
-
-bool RecentlyUnuseBundleAgingHandler::NeedCheckEndAgingThreshold() const
-{
-    return GetName() == AgingConstants::UNUSED_FOR_10_DAYS_BUNDLE_AGING_HANDLER ||
-        GetName() == AgingConstants::BUNDLE_DATA_SIZE_AGING_HANDLER;
 }
 
 bool RecentlyUnuseBundleAgingHandler::UpdateUsedTotalDataBytes(AgingRequest &request) const
@@ -189,59 +123,44 @@ bool RecentlyUnuseBundleAgingHandler::UpdateUsedTotalDataBytes(AgingRequest &req
 }
 
 bool RecentlyUnuseBundleAgingHandler::AgingClean(
-    const AgingModuleInfo &agingModule,
-    AgingRequest &request) const
+    const AgingBundleInfo &agingBundleInfo, AgingRequest &request) const
 {
     if (request.GetAgingCleanType() == AgingCleanType::CLEAN_CACHE) {
-        return CleanCache(agingModule, request);
+        return CleanCache(agingBundleInfo);
     }
 
-    return UnInstallBundle(agingModule.GetBundleName(), agingModule.GetModuleName());
+    return UnInstallBundle(agingBundleInfo.GetBundleName());
 }
 
-bool RecentlyUnuseBundleAgingHandler::CleanCache(
-    const AgingModuleInfo &agingModule, AgingRequest &request) const
+bool RecentlyUnuseBundleAgingHandler::CleanCache(const AgingBundleInfo &agingBundle) const
 {
-    bool hasCleanCache = false;
-    if (!request.HasCleanCache(agingModule.GetBundleName(), agingModule.GetModuleName(), hasCleanCache) || hasCleanCache) {
-        APP_LOGD("Has clean cache bundle: %{public}s , module: %{public}s",
-            agingModule.GetBundleName().c_str(), agingModule.GetModuleName().c_str());
-        return false;
-    }
-
     std::vector<std::string> caches;
-    if (!GetCachePath(agingModule, caches)) {
-        APP_LOGD("Get cache path failed: %{public}s , module: %{public}s",
-            agingModule.GetBundleName().c_str(), agingModule.GetModuleName().c_str());
+    if (!GetCachePath(agingBundle, caches)) {
+        APP_LOGW("Get cache path failed: %{public}s", agingBundle.GetBundleName().c_str());
+        EventReport::SendCleanCacheSysEvent(
+            agingBundle.GetBundleName(), Constants::ALL_USERID, true, true);
         return false;
     }
 
-    request.SetAgingCleanState(agingModule.GetBundleName(), agingModule.GetModuleName(), false);
-    hasCleanCache = false;
-    bool needCleanBundleCache = request.CanClearBundleCache(agingModule.GetBundleName());
-    std::string subStr =
-        Constants::PATH_SEPARATOR + agingModule.GetModuleName() +
-        Constants::PATH_SEPARATOR + Constants::CACHE_DIR;
+    bool hasCleanCache = false;
     for (const auto &cache : caches) {
-        bool canClean = needCleanBundleCache || HasSubStr(cache, subStr);
-        APP_LOGD("cache path: %{public}s, canClean: %{public}d",
-            cache.c_str(), canClean);
-        if (canClean) {
-            ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
-            if (ret != ERR_OK) {
-                APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
-                continue;
-            }
-
-            hasCleanCache = true;
+        APP_LOGD("cache path: %{public}s", cache.c_str());
+        ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+        if (ret != ERR_OK) {
+            APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
+            continue;
         }
+
+        hasCleanCache = true;
     }
 
+    EventReport::SendCleanCacheSysEvent(
+        agingBundle.GetBundleName(), Constants::ALL_USERID, true, !hasCleanCache);
     return hasCleanCache;
 }
 
 bool RecentlyUnuseBundleAgingHandler::GetCachePath(
-    const AgingModuleInfo &agingModule, std::vector<std::string> &caches) const
+    const AgingBundleInfo &agingBundle, std::vector<std::string> &caches) const
 {
     auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -250,9 +169,9 @@ bool RecentlyUnuseBundleAgingHandler::GetCachePath(
     }
 
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (!dataMgr->GetInnerBundleUserInfos(agingModule.GetBundleName(), innerBundleUserInfos)) {
+    if (!dataMgr->GetInnerBundleUserInfos(agingBundle.GetBundleName(), innerBundleUserInfos)) {
         APP_LOGE("GetInnerBundleUserInfos failed bundle: %{public}s",
-            agingModule.GetBundleName().c_str());
+            agingBundle.GetBundleName().c_str());
         return false;
     }
 
@@ -263,7 +182,7 @@ bool RecentlyUnuseBundleAgingHandler::GetCachePath(
             std::string dataDir =
                 Constants::BUNDLE_APP_DATA_BASE_DIR + el +
                 Constants::PATH_SEPARATOR + std::to_string(userId) +
-                Constants::BASE + agingModule.GetBundleName();
+                Constants::BASE + agingBundle.GetBundleName();
             rootDir.emplace_back(dataDir);
         }
     }
@@ -281,8 +200,7 @@ bool RecentlyUnuseBundleAgingHandler::GetCachePath(
     return !caches.empty();
 }
 
-bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(
-    const std::string &bundleName, const std::string &moduleName) const
+bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleName) const
 {
     auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bms == nullptr) {
@@ -307,12 +225,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::FREE_INSTALL;
     installParam.noSkipsKill = false;
-    if (moduleName.empty()) {
-        bundleInstaller->Uninstall(bundleName, installParam, unInstallReceiverImpl);
-    } else {
-        bundleInstaller->Uninstall(bundleName, moduleName, installParam, unInstallReceiverImpl);
-    }
-
+    bundleInstaller->Uninstall(bundleName, installParam, unInstallReceiverImpl);
     if (unInstallReceiverImpl->IsRunning()) {
         APP_LOGD("Wait for UnInstallBundle end %{public}s.", bundleName.c_str());
         agingPromise->WaitForAllTasksExecute();

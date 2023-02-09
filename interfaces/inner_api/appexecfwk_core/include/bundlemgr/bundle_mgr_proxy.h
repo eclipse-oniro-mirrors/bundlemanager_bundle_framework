@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -125,6 +125,15 @@ public:
      */
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
         BundleInfo &bundleInfo, int32_t userId) override;
+    /**
+     * @brief Obtains the BundleInfo based on calling uid.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo) override;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -773,6 +782,10 @@ public:
 #endif
     virtual ErrCode SetDebugMode(bool isDebug) override;
 
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;
+
+    virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
@@ -819,8 +832,6 @@ private:
     template<typename T>
     ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
 
-    template <typename T>
-    bool GetParcelableInfosFromAshmem(MessageParcel &reply, std::vector<T> &parcelableInfos);
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
 };

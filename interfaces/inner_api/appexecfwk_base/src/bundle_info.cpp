@@ -31,7 +31,6 @@ const std::string BUNDLE_INFO_SINGLETON = "singleton";
 const std::string BUNDLE_INFO_IS_NATIVE_APP = "isNativeApp";
 const std::string BUNDLE_INFO_IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string BUNDLE_INFO_IS_DIFFERENT_NAME = "isDifferentName";
-const std::string BUNDLE_INFO_APPLICATION_INFO = "applicationInfo";
 const std::string BUNDLE_INFO_ABILITY_INFOS = "abilityInfos";
 const std::string BUNDLE_INFO_HAP_MODULE_INFOS = "hapModuleInfos";
 const std::string BUNDLE_INFO_EXTENSION_ABILITY_INFOS = "extensionAbilityInfo";
@@ -74,6 +73,9 @@ const std::string SIGNATUREINFO_APPID = "appId";
 const std::string SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
+const std::string OVERLAY_TYPE = "overlayType";
+const std::string BUNDLE_INFO_ASAN_ENABLED = "asanEnabled";
+const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
 const size_t BUNDLE_CAPACITY = 10240; // 10K
 }
 
@@ -322,6 +324,20 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     signatureInfo = *sigInfo;
+    overlayType = parcel.ReadInt32();
+    asanEnabled = parcel.ReadBool();
+
+    int32_t overlayBundleInfoSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayBundleInfoSize);
+    CONTAINER_SECURITY_VERIFY(parcel, overlayBundleInfoSize, &overlayBundleInfos);
+    for (auto i = 0; i < overlayBundleInfoSize; i++) {
+        std::unique_ptr<OverlayBundleInfo> overlayBundleInfo(parcel.ReadParcelable<OverlayBundleInfo>());
+        if (!overlayBundleInfo) {
+            APP_LOGE("ReadParcelable<OverlayBundleInfo> failed");
+            return false;
+        }
+        overlayBundleInfos.emplace_back(*overlayBundleInfo);
+    }
     return true;
 }
 
@@ -427,6 +443,12 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDifferentName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &signatureInfo);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayType);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, asanEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayBundleInfos.size());
+    for (auto &overlayBundleInfo : overlayBundleInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &overlayBundleInfo);
+    }
     return true;
 }
 
@@ -577,7 +599,6 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_IS_NATIVE_APP, bundleInfo.isNativeApp},
         {BUNDLE_INFO_IS_PREINSTALL_APP, bundleInfo.isPreInstallApp},
         {BUNDLE_INFO_IS_DIFFERENT_NAME, bundleInfo.isDifferentName},
-        {BUNDLE_INFO_APPLICATION_INFO, bundleInfo.applicationInfo},
         {BUNDLE_INFO_ABILITY_INFOS, bundleInfo.abilityInfos},
         {BUNDLE_INFO_HAP_MODULE_INFOS, bundleInfo.hapModuleInfos},
         {BUNDLE_INFO_EXTENSION_ABILITY_INFOS, bundleInfo.extensionInfos},
@@ -612,6 +633,9 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_SINGLETON, bundleInfo.singleton},
         {BUNDLE_INFO_APP_INDEX, bundleInfo.appIndex},
         {BUNDLE_INFO_SIGNATURE_INFO, bundleInfo.signatureInfo},
+        {OVERLAY_TYPE, bundleInfo.overlayType},
+        {BUNDLE_INFO_ASAN_ENABLED, bundleInfo.asanEnabled},
+        {OVERLAY_BUNDLE_INFO, bundleInfo.overlayBundleInfos}
     };
 }
 
@@ -680,14 +704,6 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         BUNDLE_INFO_IS_DIFFERENT_NAME,
         bundleInfo.isDifferentName,
         JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<ApplicationInfo>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_APPLICATION_INFO,
-        bundleInfo.applicationInfo,
-        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -963,6 +979,30 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_TYPE,
+        bundleInfo.overlayType,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_ASAN_ENABLED,
+        bundleInfo.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<OverlayBundleInfo>>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_BUNDLE_INFO,
+        bundleInfo.overlayBundleInfos,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("BundleInfo from_json error, error code : %{public}d", parseResult);
     }

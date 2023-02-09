@@ -71,6 +71,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest1:rightTest1",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/second_right:second_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/seventh_right:seventh_right",
+    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/signatureTest:signatureTest",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/system_module:system_module",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/third_right:third_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
@@ -91,6 +92,7 @@ ohos_unittest("BmsBundleInstallerTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -157,6 +159,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
 
+  external_deps += [ "kv_store:distributeddata_inner" ]
   if (bms_rdb_enable) {
     configs += [ "../../../../../services/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
@@ -168,7 +171,6 @@ ohos_unittest("BmsBundleInstallerTest") {
       "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     ]
   } else {
-    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
       "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
@@ -262,6 +264,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -325,6 +328,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
+  external_deps += [ "kv_store:distributeddata_inner" ]
   if (bms_rdb_enable) {
     configs += [ "../../../../../services/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
@@ -336,7 +340,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
       "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     ]
   } else {
-    external_deps += [ "kv_store:distributeddata_inner" ]
     sources += [
       "${services_path}/bundlemgr/src/bundle_data_storage_database.cpp",
       "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
@@ -404,6 +407,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -539,6 +543,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
@@ -627,7 +632,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   module_out_path = module_output_path
   include_dirs = [
     "//third_party/jsoncpp/include",
-    "../mock/include/parameter",
+    "../../mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = [
@@ -681,6 +686,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",

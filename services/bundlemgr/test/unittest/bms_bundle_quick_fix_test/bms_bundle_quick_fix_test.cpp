@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,10 +25,12 @@
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "file_ex.h"
+#include "if_system_ability_manager.h"
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "iservice_registry.h"
 #include "mock_quick_fix_callback.h"
 #include "mock_status_receiver.h"
 #include "quick_fix_data_mgr.h"
@@ -43,6 +45,7 @@
 #include "quick_fix/quick_fix_manager_rdb.h"
 #include "quick_fix/quick_fix_mgr.h"
 #include "quick_fix/quick_fixer.h"
+#include "system_ability_definition.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -3080,6 +3083,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0310, Function | SmallTest
     provisionInfo.appId = "001";
     bundleInfo.appId = "Device_001";
     bundleInfo.applicationInfo.appPrivilegeLevel = provisionInfo.bundleInfo.apl;
+    provisionInfo.bundleInfo.bundleName = bundleInfo.name;
     QuickFixChecker checker;
     auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
     EXPECT_EQ(ret, ERR_OK);
@@ -3154,6 +3158,26 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0340, Function | SmallTest
         ret = deployer->SaveAppQuickFix(innerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED);
     }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0350
+ * @tc.name: test CheckSignatureInfo
+ * @tc.desc: test success scene of CheckSignatureInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0350, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    BundleInfo bundleInfo;
+    bundleInfo.name = "Device";
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.appId = "001";
+    bundleInfo.appId = "Device_001";
+    bundleInfo.applicationInfo.appPrivilegeLevel = provisionInfo.bundleInfo.apl;
+    QuickFixChecker checker;
+    auto ret = checker.CheckSignatureInfo(bundleInfo, provisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -3721,4 +3745,347 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDataMgr_0100, Function | SmallTest | Lev
     EXPECT_EQ(ret, false);
 }
 
+/**
+ * @tc.number: AddHqfInfo_0100
+ * @tc.name: test AddHqfInfo
+ * @tc.desc: AddHqfInfo return false
+ */
+HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix;
+    auto ret = innerAppQuickFix.AddHqfInfo(appQuickFix);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AddHqfInfo_0200
+ * @tc.name: test AddHqfInfo
+ * @tc.desc: AddHqfInfo return true
+ */
+HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0200, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix;
+    HqfInfo info;
+    info.hapSha256 = "hapSha256";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(info);
+    auto ret = innerAppQuickFix.AddHqfInfo(appQuickFix);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AddHqfInfo_0300
+ * @tc.name: test AddHqfInfo
+ * @tc.desc: AddHqfInfo return true
+ */
+HWTEST_F(BmsBundleQuickFixTest, AddHqfInfo_0300, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix;
+    HqfInfo info;
+    info.moduleName = "com.example.bmsaccesstoken.MyApplication1";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(info);
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    auto ret = innerAppQuickFix.AddHqfInfo(appQuickFix);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number:RemoveHqfInfo_0100
+ * @tc.name: test RemoveHqfInfo
+ * @tc.desc: RemoveHqfInfo return true
+ */
+HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix;
+    HqfInfo info;
+    info.moduleName = "com.example.bmsaccesstoken.MyApplication1";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(info);
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    auto ret = innerAppQuickFix.RemoveHqfInfo("com.example.bmsaccesstoken.MyApplication1");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number:RemoveHqfInfo_0200
+ * @tc.name: test RemoveHqfInfo
+ * @tc.desc: RemoveHqfInfo return false
+ */
+HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0200, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    auto ret = innerAppQuickFix.RemoveHqfInfo("com.example.bmsaccesstoken.MyApplication1");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number:RemoveHqfInfo_0300
+ * @tc.name: test RemoveHqfInfo
+ * @tc.desc: RemoveHqfInfo return false
+ */
+HWTEST_F(BmsBundleQuickFixTest, RemoveHqfInfo_0300, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    auto ret = innerAppQuickFix.RemoveHqfInfo("");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number:SwitchQuickFix_0100
+ * @tc.name: test SwitchQuickFix
+ * @tc.desc: SwitchQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFix_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionCode = 1001;
+    innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionCode = 1002;
+    innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionName = "test";
+    innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionName = "test1";
+    innerAppQuickFix.SwitchQuickFix();
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionCode, 1002);
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployedAppqfInfo.versionName, "test1");
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionCode, 1001);
+    EXPECT_EQ(innerAppQuickFix.appQuickFix_.deployingAppqfInfo.versionName, "test");
+}
+
+/**
+ * @tc.number: GetQuickFixMark_0100
+ * @tc.name: test GetQuickFixMark
+ * @tc.desc: GetQuickFixMark return bundleName
+ */
+HWTEST_F(BmsBundleQuickFixTest, GetQuickFixMark_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    QuickFixMark quickFixMark;
+    quickFixMark.bundleName = "bundle";
+    innerAppQuickFix.SetQuickFixMark(quickFixMark);
+    auto ret = innerAppQuickFix.GetQuickFixMark();
+    EXPECT_EQ(ret.bundleName, "bundle");
+}
+
+/**
+ * @tc.number: GetQuickFixMark_0200
+ * @tc.name: test GetQuickFixMark
+ * @tc.desc: GetQuickFixMark return bundleName is null string
+ */
+HWTEST_F(BmsBundleQuickFixTest, GetQuickFixMark_0200, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    QuickFixMark quickFixMark;
+    auto ret = innerAppQuickFix.GetQuickFixMark();
+    EXPECT_EQ(ret.bundleName, "");
+}
+
+/**
+ * @tc.number: ToString_0100
+ * @tc.name: test ToString
+ * @tc.desc: ToString return string
+ */
+HWTEST_F(BmsBundleQuickFixTest, ToString_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    auto ret = innerAppQuickFix.ToString();
+    EXPECT_EQ(ret, "{\"appQuickFix\":{\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"},\"deployingAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"},\"versionCode\":0,\"versionName\":\"\"},\"quickFixMark\":{\"bundleName\":\"\",\"status\":0}}");
+}
+
+/**
+ * @tc.number: ToJson_0100
+ * @tc.name: test ToJson
+ * @tc.desc: ToJson
+ */
+HWTEST_F(BmsBundleQuickFixTest, ToJson_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject;
+    AppQuickFix appQuickFix;
+    QuickFixMark quickFixMark;
+    innerAppQuickFix.ToJson(jsonObject);
+    EXPECT_EQ(jsonObject["appQuickFix"], appQuickFix);
+    EXPECT_EQ(jsonObject["quickFixMark"], quickFixMark);
+}
+
+/**
+ * @tc.number: FromJson_0100
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject =  nlohmann::json {
+        {Constants::BUNDLE_NAME, "com.example.MyApplication1"},
+        {"versionCode", 0},
+        {"versionName", "versionName"}
+    };
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: FromJson_0200
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0200, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : "appQuickFix",
+            "quickFixMark" : "quickFixMark"
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: FromJson_0300
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0300, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : "appQuickFix",
+            "quickFixMark" : {}
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: FromJson_0400
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0400, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: FromJson_0500
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR 
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0500, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : {},
+            "quickFixMark" : "quickFixMark"
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: FromJson_0600
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0600, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : "!@#$%^&*",
+            "quickFixMark" : "%^&*&^"
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: FromJson_0700
+ * @tc.name: test FromJson
+ * @tc.desc: Parse json to C++ return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, FromJson_0700, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json jsonObject = R"(
+        {
+            "appQuickFix" : {},
+            "quickFixMark" : {}
+        }
+    )"_json;
+    auto ret = innerAppQuickFix.FromJson(jsonObject);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: to_json_0100
+ * @tc.name: test to_json
+ * @tc.desc: to_json return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, to_json_0100, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    QuickFixMark quickFixMark;
+    quickFixMark.bundleName = "bundleName";
+    quickFixMark.status = QuickFixStatus::DEPLOY_START;
+    to_json(jsonObject, quickFixMark);
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::BUNDLE_NAME,
+        quickFixMark.bundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    EXPECT_EQ(parseResult, ERR_OK);
+}
+
+/**
+ * @tc.number: to_json_0200
+ * @tc.name: test to_json
+ * @tc.desc: to_json return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, to_json_0200, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    QuickFixMark quickFixMark;
+    to_json(jsonObject, quickFixMark);
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::BUNDLE_NAME,
+        quickFixMark.bundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    EXPECT_EQ(parseResult, ERR_OK);
+}
+
+/**
+ * @tc.number: from_json_0100
+ * @tc.name: test from_json
+ * @tc.desc: parse json to c++ return QuickFixMark
+ */
+HWTEST_F(BmsBundleQuickFixTest, from_json_0100, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    QuickFixMark quickFixMark;
+    from_json(jsonObject, quickFixMark);
+    EXPECT_EQ(quickFixMark.bundleName, "");
+    EXPECT_EQ(quickFixMark.status, QuickFixStatus::DEFAULT_STATUS);
+}
 } // OHOS

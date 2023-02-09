@@ -44,10 +44,10 @@ const std::string WRITE_PERMISSION = "writePermission";
 const std::string URI = "uri";
 const std::string VISIBLE = "visible";
 const std::string META_DATA = "metadata";
-const std::string APPLICATION_INFO = "applicationInfo";
 const std::string RESOURCE_PATH = "resourcePath";
 const std::string ENABLED = "enabled";
 const std::string PROCESS = "process";
+const std::string COMPILE_MODE = "compileMode";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }; // namespace
 
@@ -99,6 +99,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     hapPath = Str16ToStr8(parcel.ReadString16());
     enabled = parcel.ReadBool();
     process = Str16ToStr8(parcel.ReadString16());
+    compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     return true;
 }
 
@@ -145,6 +146,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
     return true;
 }
 
@@ -170,11 +172,11 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {PERMISSIONS, extensionInfo.permissions},
         {VISIBLE, extensionInfo.visible},
         {META_DATA, extensionInfo.metadata},
-        {APPLICATION_INFO, extensionInfo.applicationInfo},
         {RESOURCE_PATH, extensionInfo.resourcePath},
         {Constants::HAP_PATH, extensionInfo.hapPath},
         {ENABLED, extensionInfo.enabled},
-        {PROCESS, extensionInfo.process}
+        {PROCESS, extensionInfo.process},
+        {COMPILE_MODE, extensionInfo.compileMode}
     };
 }
 
@@ -327,14 +329,6 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<ApplicationInfo>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_INFO,
-        extensionInfo.applicationInfo,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         RESOURCE_PATH,
@@ -364,6 +358,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         PROCESS,
         extensionInfo.process,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<CompileMode>(jsonObject,
+        jsonObjectEnd,
+        COMPILE_MODE,
+        extensionInfo.compileMode,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

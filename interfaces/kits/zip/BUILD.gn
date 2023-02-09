@@ -55,7 +55,7 @@ ohos_shared_library("zlib") {
   deps = [
     "${common_path}:libappexecfwk_common",
     "${kits_path}/js/common:bundle_napi_common",
-    "//third_party/zlib:libz",
+    "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
@@ -74,23 +74,8 @@ ohos_shared_library("zlib") {
   relative_install_dir = "module"
 }
 
-ohos_shared_library("z") {
-  configs = [ "//third_party/zlib:zlib_config" ]
-  public_configs = [ "//third_party/zlib:zlib_public_config" ]
-  deps = [ "//third_party/zlib:libz" ]
-  output_extension = "so"
-  install_images = [
-    "system",
-    "updater",
-  ]
-  subsystem_name = "bundlemanager"
-  part_name = "bundle_framework"
-}
-
 group("tools_zip") {
-  deps = [ ":z" ]
-
   if (support_jsapi) {
-    deps += [ ":zlib" ]
+    deps = [ ":zlib" ]
   }
 }

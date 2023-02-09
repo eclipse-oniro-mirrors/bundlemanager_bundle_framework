@@ -94,6 +94,10 @@ public:
     static bool GetAllReqPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
         std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState);
 
+    static bool VerifySystemApp(int32_t beginApiVersion = Constants::INVALID_API_VERSION);
+
+    static int32_t GetHapApiVersion();
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);

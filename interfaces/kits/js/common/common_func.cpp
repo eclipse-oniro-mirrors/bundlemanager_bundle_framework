@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -77,7 +77,8 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_ABILITY_DISABLED, ERROR_ABILITY_IS_DISABLED },
     { ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA, ERROR_CLEAR_CACHE_FILES_UNSUPPORTED },
     { ERR_ZLIB_SRC_FILE_DISABLED, ERR_ZLIB_SRC_FILE_INVALID },
-    { ERR_ZLIB_DEST_FILE_DISABLED, ERR_ZLIB_DEST_FILE_INVALID }
+    { ERR_ZLIB_DEST_FILE_DISABLED, ERR_ZLIB_DEST_FILE_INVALID },
+    { ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, ERROR_NOT_SYSTEM_APP}
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -98,7 +99,7 @@ napi_value CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
     APP_LOGD("valuetype=%{public}d.", valuetype);
     if (valuetype != napi_number) {
-        APP_LOGE("Wrong argument type. int32 expected.");
+        APP_LOGD("Wrong argument type. int32 expected.");
         return nullptr;
     }
     int32_t value = 0;
@@ -108,7 +109,6 @@ napi_value CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
     napi_value result = nullptr;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
     if (status != napi_ok) {
-        APP_LOGE("napi_create_int32 error!");
         return nullptr;
     }
     return result;
@@ -120,7 +120,6 @@ bool CommonFunc::ParsePropertyArray(napi_env env, napi_value args, const std::st
     napi_valuetype type = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &type), false);
     if (type != napi_object) {
-        APP_LOGE("args is not an object!");
         return false;
     }
 
@@ -133,13 +132,11 @@ bool CommonFunc::ParsePropertyArray(napi_env env, napi_value args, const std::st
     napi_value property = nullptr;
     napi_status status = napi_get_named_property(env, args, propertyName.c_str(), &property);
     if (status != napi_ok) {
-        APP_LOGE("napi get named hashParams property error!");
         return false;
     }
     bool isArray = false;
     NAPI_CALL_BASE(env, napi_is_array(env, property, &isArray), false);
     if (!isArray) {
-        APP_LOGE("hashParams is not array!");
         return false;
     }
     uint32_t arrayLength = 0;
@@ -160,7 +157,6 @@ bool CommonFunc::ParseStringPropertyFromObject(napi_env env, napi_value args, co
     napi_valuetype type = napi_undefined;
         NAPI_CALL_BASE(env, napi_typeof(env, args, &type), false);
         if (type != napi_object) {
-            APP_LOGE("args is not an object!");
             return false;
         }
         bool hasKey = false;
@@ -175,16 +171,13 @@ bool CommonFunc::ParseStringPropertyFromObject(napi_env env, napi_value args, co
         napi_value property = nullptr;
         napi_status status = napi_get_named_property(env, args, propertyName.c_str(), &property);
         if (status != napi_ok) {
-            APP_LOGE("napi get named %{public}s property error!", propertyName.c_str());
             return false;
         }
         napi_typeof(env, property, &type);
         if (type != napi_string) {
-            APP_LOGE("property type incorrect!");
             return false;
         }
         if (property == nullptr) {
-            APP_LOGE("property is nullptr!");
             return false;
         }
         if (!CommonFunc::ParseString(env, property, value)) {
@@ -200,7 +193,6 @@ bool CommonFunc::ParsePropertyFromObject(napi_env env, napi_value args, const Pr
     napi_valuetype type = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &type), false);
     if (type != napi_object) {
-        APP_LOGE("args is not an object!");
         return false;
     }
     bool hasKey = false;
@@ -215,16 +207,13 @@ bool CommonFunc::ParsePropertyFromObject(napi_env env, napi_value args, const Pr
 
     napi_status status = napi_get_named_property(env, args, propertyInfo.propertyName.c_str(), &property);
     if (status != napi_ok) {
-        APP_LOGE("napi get named %{public}s property error!", propertyInfo.propertyName.c_str());
         return false;
     }
     napi_typeof(env, property, &type);
     if (type != propertyInfo.propertyType) {
-        APP_LOGE("property type incorrect!");
         return false;
     }
     if (property == nullptr) {
-        APP_LOGE("property is nullptr");
         return false;
     }
     return true;
@@ -235,11 +224,9 @@ bool CommonFunc::ParseBool(napi_env env, napi_value value, bool& result)
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, value, &valueType);
     if (valueType != napi_boolean) {
-        APP_LOGE("ParseBool type mismatch!");
         return false;
     }
     if (napi_get_value_bool(env, value, &result) != napi_ok) {
-        APP_LOGE("napi_get_value_bool error");
         return false;
     }
     return true;
@@ -250,18 +237,15 @@ bool CommonFunc::ParseString(napi_env env, napi_value value, std::string& result
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, value, &valueType);
     if (valueType != napi_string) {
-        APP_LOGE("ParseString type mismatch!");
         return false;
     }
     size_t size = 0;
     if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
-        APP_LOGE("napi_get_value_string_utf8 error.");
         return false;
     }
     result.reserve(size + 1);
     result.resize(size);
     if (napi_get_value_string_utf8(env, value, result.data(), (size + 1), &size) != napi_ok) {
-        APP_LOGE("napi_get_value_string_utf8 error");
         return false;
     }
     return true;
@@ -272,7 +256,6 @@ bool CommonFunc::ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& a
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
     if (valueType != napi_object) {
-        APP_LOGE("ParseAbilityInfo type mismatch!");
         return false;
     }
 
@@ -343,20 +326,17 @@ std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, value, &valueType);
     if (valueType != napi_string) {
-        APP_LOGE("GetStringFromNAPI type mismatch!");
         return "";
     }
     std::string result;
     size_t size = 0;
 
     if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
-        APP_LOGE("can not get string size");
         return "";
     }
     result.reserve(size + NAPI_RETURN_ONE);
     result.resize(size);
     if (napi_get_value_string_utf8(env, value, result.data(), (size + NAPI_RETURN_ONE), &size) != napi_ok) {
-        APP_LOGE("can not get string value");
         return "";
     }
     return result;
@@ -368,7 +348,6 @@ napi_value CommonFunc::ParseStringArray(napi_env env, std::vector<std::string> &
     bool isArray = false;
     NAPI_CALL(env, napi_is_array(env, args, &isArray));
     if (!isArray) {
-        APP_LOGE("args not array");
         return nullptr;
     }
     uint32_t arrayLength = 0;
@@ -380,7 +359,6 @@ napi_value CommonFunc::ParseStringArray(napi_env env, std::vector<std::string> &
         napi_valuetype valueType = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, value, &valueType));
         if (valueType != napi_string) {
-            APP_LOGE("array inside not string type");
             stringArray.clear();
             return nullptr;
         }
@@ -390,7 +368,6 @@ napi_value CommonFunc::ParseStringArray(napi_env env, std::vector<std::string> &
     napi_value result;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
     if (status != napi_ok) {
-        APP_LOGE("napi_create_int32 error!");
         return nullptr;
     }
     return result;
@@ -439,7 +416,7 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, args, &valueType);
     if (valueType != napi_object) {
-        APP_LOGE("args not object type.");
+        APP_LOGW("args not object type.");
         return false;
     }
     napi_value prop = nullptr;
@@ -518,7 +495,7 @@ bool CommonFunc::ParseWant(napi_env env, napi_value args, Want &want)
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
-        APP_LOGE("args not object type");
+        APP_LOGW("args not object type");
         return false;
     }
     napi_value prop = nullptr;
@@ -590,7 +567,7 @@ bool CommonFunc::ParseWantPerformance(napi_env env, napi_value args, Want &want)
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
-        APP_LOGE("args not object type");
+        APP_LOGW("args not object type");
         return false;
     }
     napi_value prop = nullptr;
@@ -983,7 +960,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
-    APP_LOGI("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
+    APP_LOGD("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
@@ -1175,7 +1152,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, NAME, nName));
-    APP_LOGI("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
+    APP_LOGD("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
 
     napi_value nIcon;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIcon));
@@ -1257,6 +1234,28 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.moduleSourceDir.c_str(), NAPI_AUTO_LENGTH,
         &nModuleSourceDir));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "moduleSourceDir", nModuleSourceDir));
+
+    napi_value nType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(hapModuleInfo.moduleType), &nType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "type", nType));
+
+    napi_value nDependencies;
+    size = hapModuleInfo.dependencies.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nDependencies));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value nDependency;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nDependency));
+        ConvertDependency(env, hapModuleInfo.dependencies[index], nDependency);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDependencies, index, nDependency));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "dependencies", nDependencies));
+}
+
+void CommonFunc::ConvertDependency(napi_env env, const std::string &moduleName, napi_value value)
+{
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
 }
 
 void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags)

@@ -19,6 +19,8 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "ipc_skeleton.h"
+#include "parameter.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -35,12 +37,10 @@ bool BundlePermissionMgr::Init()
         APP_LOGE("rootDirList is empty");
         return false;
     }
-    std::transform(rootDirList.begin(),
-        rootDirList.end(),
-        std::back_inserter(permissionFileList),
-        [](const auto &rootDir) {
-            return rootDir + Constants::PRODUCT_SUFFIX + Constants::INSTALL_LIST_PERMISSIONS_CONFIG;
-        });
+    for (const auto &item : rootDirList) {
+        permissionFileList.push_back(item + Constants::PRODUCT_SUFFIX
+            + Constants::INSTALL_LIST_PERMISSIONS_CONFIG);
+    }
 #else
     permissionFileList.emplace_back(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);
 #endif
@@ -670,6 +670,68 @@ bool BundlePermissionMgr::MatchSignature(
 
     return std::find(permission.appSignature.begin(),
         permission.appSignature.end(), signature) != permission.appSignature.end();
+}
+
+int32_t BundlePermissionMgr::GetHapApiVersion()
+{
+    // get appApiVersion from applicationInfo
+    std::string bundleName;
+    auto uid = IPCSkeleton::GetCallingUid();
+    auto userId = uid / Constants::BASE_USER_RANGE;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::INVALID_API_VERSION;
+    }
+    auto ret = dataMgr->GetBundleNameForUid(uid, bundleName);
+    if (!ret) {
+        APP_LOGE("getBundleName failed");
+        return Constants::INVALID_API_VERSION;
+    }
+    ApplicationInfo applicationInfo;
+    auto res = dataMgr->GetApplicationInfoV9(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("getApplicationInfo failed");
+        return Constants::INVALID_API_VERSION;
+    }
+    auto appApiVersion = applicationInfo.apiTargetVersion;
+    APP_LOGD("appApiVersion is %{public}d", appApiVersion);
+    auto systemApiVersion = GetSdkApiVersion();
+    // api version is the minimum value of {appApiVersion, systemApiVersion}
+    return systemApiVersion < appApiVersion ? systemApiVersion :appApiVersion;
+}
+
+
+// if the api has been system api since it is published, then beginSystemApiVersion can be omitted
+bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
+{
+    APP_LOGD("verifying systemApp");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
+        || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL
+        || callingUid == Constants::ROOT_UID) {
+        APP_LOGD("caller tokenType is native, verify success");
+        return true;
+    }
+    auto apiVersion = GetHapApiVersion();
+    if (apiVersion == Constants::INVALID_API_VERSION) {
+        APP_LOGE("get api version failed, system app verification failed");
+        return false;
+    }
+    if (apiVersion >= beginSystemApiVersion) {
+        uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
+        if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
+            APP_LOGE("non-system app calling system api");
+            return false;
+        }
+    } else {
+        APP_LOGI("hapApiVersion equal to or less than the version this api begins to be system api");
+        return true;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

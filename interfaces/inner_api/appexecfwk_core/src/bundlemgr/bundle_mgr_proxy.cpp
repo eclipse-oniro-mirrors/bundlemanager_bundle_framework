@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,33 +38,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t ASHMEM_LEN = 16;
-
 inline void ClearAshmem(sptr<Ashmem> &optMem)
 {
     if (optMem != nullptr) {
         optMem->UnmapAshmem();
         optMem->CloseAshmem();
     }
-}
-
-bool ParseStr(const char *buf, const int itemLen, int index, std::string &result)
-{
-    APP_LOGD("ParseStr itemLen:%{public}d index:%{public}d.", itemLen, index);
-    if (buf == nullptr || itemLen <= 0 || index < 0) {
-        APP_LOGE("param invalid.");
-        return false;
-    }
-
-    char item[itemLen + 1];
-    if (strncpy_s(item, sizeof(item), buf + index, itemLen) != 0) {
-        APP_LOGE("ParseStr failed due to strncpy_s error.");
-        return false;
-    }
-
-    std::string str(item, 0, itemLen);
-    result = str;
-    return true;
 }
 
 bool SendData(void *&buffer, size_t size, const void *data)
@@ -94,6 +73,7 @@ bool SendData(void *&buffer, size_t size, const void *data)
     return true;
 }
 }
+
 BundleMgrProxy::BundleMgrProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IBundleMgr>(impl)
 {
     APP_LOGD("create bundle mgr proxy instance");
@@ -392,6 +372,30 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get bundle info for self");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleInfoForSelf due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleInfoForSelf due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetBundleInfoForSelf from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
@@ -642,7 +646,7 @@ bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &b
         return false;
     }
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
+        APP_LOGD("reply result false");
         return false;
     }
     if (!reply.ReadStringVector(&bundleNames)) {
@@ -3228,7 +3232,7 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
     }
     if (!data.WriteBool(isDebug)) {
@@ -3241,6 +3245,54 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     }
 
     return reply.ReadInt32();
+}
+
+bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
+{
+    APP_LOGD("begin to verify system app");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to VerifySystemApi due to write InterfaceToken fail");
+        return false;
+    }
+
+    if (!data.WriteInt32(beginApiVersion)) {
+        APP_LOGE("fail to VerifySystemApi due to write apiVersion fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::VERIFY_SYSTEM_API, data, reply)) {
+        APP_LOGE("fail to sendRequest");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
+        return nullptr;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IOverlayManager> overlayManagerProxy = iface_cast<IOverlayManager>(object);
+    if (overlayManagerProxy == nullptr) {
+        APP_LOGE("overlayManagerProxy is nullptr.");
+    }
+
+    return overlayManagerProxy;
 }
 
 template<typename T>
@@ -3417,67 +3469,6 @@ ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
     }
 
     return ERR_OK;
-}
-
-template <typename T>
-bool BundleMgrProxy::GetParcelableInfosFromAshmem(MessageParcel &reply, std::vector<T> &parcelableInfos)
-{
-    APP_LOGD("Get parcelable vector from ashmem");
-    int32_t infoSize = reply.ReadInt32();
-    sptr<Ashmem> ashmem = reply.ReadAshmem();
-    if (ashmem == nullptr) {
-        APP_LOGE("Ashmem is nullptr");
-        return false;
-    }
-
-    bool ret = ashmem->MapReadOnlyAshmem();
-    if (!ret) {
-        APP_LOGE("Map read only ashmem fail");
-        ClearAshmem(ashmem);
-        return false;
-    }
-
-    int32_t offset = 0;
-    const char* dataStr = static_cast<const char*>(
-        ashmem->ReadFromAshmem(ashmem->GetAshmemSize(), offset));
-    if (dataStr == nullptr) {
-        APP_LOGE("Data is nullptr when read from ashmem");
-        ClearAshmem(ashmem);
-        return false;
-    }
-
-    while (infoSize > 0) {
-        std::string lenStr;
-        if (!ParseStr(dataStr, ASHMEM_LEN, offset, lenStr)) {
-            APP_LOGE("Parse lenStr fail");
-            ClearAshmem(ashmem);
-            return false;
-        }
-
-        int strLen = atoi(lenStr.c_str());
-        offset += ASHMEM_LEN;
-        std::string infoStr;
-        if (!ParseStr(dataStr, strLen, offset, infoStr)) {
-            APP_LOGE("Parse infoStr fail");
-            ClearAshmem(ashmem);
-            return false;
-        }
-
-        T info;
-        if (!ParseInfoFromJsonStr(infoStr.c_str(), info)) {
-            APP_LOGE("Parse info from json fail");
-            ClearAshmem(ashmem);
-            return false;
-        }
-
-        parcelableInfos.emplace_back(info);
-        infoSize--;
-        offset += strLen;
-    }
-
-    ClearAshmem(ashmem);
-    APP_LOGD("Get parcelable vector from ashmem success");
-    return true;
 }
 
 bool BundleMgrProxy::SendTransactCmd(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply)

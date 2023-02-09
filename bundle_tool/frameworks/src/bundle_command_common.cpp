@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +17,10 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_proxy.h"
+#ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
 #include "os_account_manager.h"
+#endif
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "status_receiver_interface.h"
@@ -49,11 +51,13 @@ int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
 {
     if (userId == Constants::UNSPECIFIED_USERID) {
         std::vector<int> activeIds;
+#ifdef ACCOUNT_ENABLE
         int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
         if (ret != 0) {
             APP_LOGW("QueryActiveOsAccountIds failed! ret = %{public}d.", ret);
             return userId;
         }
+#endif
         if (activeIds.empty()) {
             APP_LOGW("QueryActiveOsAccountIds activeIds empty");
             return userId;
@@ -211,75 +215,75 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     },
     {
         IStatusReceiver::ERR_INSTALL_BUNDLENAME_NOT_SAME,
-        "error: install bundle name not same",
+        "error: install bundle name not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_VERSIONCODE_NOT_SAME,
-        "error: install version code not same",
+        "error: install version code not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_VERSIONNAME_NOT_SAME,
-        "error: install version name not same",
+        "error: install version name not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME,
-        "error: install min compatible version code not same",
+        "error: install min compatible version code not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_VENDOR_NOT_SAME,
-        "error: install vendor not same",
+        "error: install vendor not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_RELEASETYPE_TARGET_NOT_SAME,
-        "error: install releaseType target not same",
+        "error: install releaseType target not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_RELEASETYPE_NOT_SAME,
-        "error: install releaseType not same",
+        "error: install releaseType not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME,
-        "error: install releaseType compatible not same",
+        "error: install releaseType compatible not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_VERSION_NOT_COMPATIBLE,
-        "error: install version not compatible",
+        "error: install version not compatible.",
     },
     {
         IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME,
-        "error: install distribution type not same",
+        "error: install distribution type not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME,
-        "error: install provision type not same",
+        "error: install provision type not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP,
-        "error: install invalid number of entry hap",
+        "error: install invalid number of entry hap.",
     },
     {
         IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT,
-        "error: install failed due to insufficient disk memory",
+        "error: install failed due to insufficient disk memory.",
     },
     {
         IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED,
-        "error: install failed due to grant request permissions failed",
+        "error: install failed due to grant request permissions failed.",
     },
     {
         IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED,
-        "error: install failed due to update hap token failed",
+        "error: install failed due to update hap token failed.",
     },
     {
         IStatusReceiver::ERR_INSTALL_SINGLETON_NOT_SAME,
-        "error: install failed due to singleton not same",
+        "error: install failed due to singleton not same.",
     },
     {
         IStatusReceiver::ERR_INSTALL_ZERO_USER_WITH_NO_SINGLETON,
-        "error: install failed due to zero user can only install singleton app",
+        "error: install failed due to zero user can only install singleton app.",
     },
     {
         IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED,
-        "error: install failed due to check syscap filed",
+        "error: install failed due to check syscap filed.",
     },
     {
         IStatusReceiver::ERR_INSTALL_APPTYPE_NOT_SAME,
@@ -423,11 +427,11 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     },
     {
         IStatusReceiver::ERR_FAILED_SERVICE_DIED,
-        "error: bundle manager service is died",
+        "error: bundle manager service is died.",
     },
     {
         IStatusReceiver::ERR_FAILED_GET_INSTALLER_PROXY,
-        "error: failed to get installer proxy",
+        "error: failed to get installer proxy.",
     },
     {
         IStatusReceiver::ERR_USER_NOT_EXIST,
@@ -463,15 +467,103 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     },
     {
         IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED,
-        "error: device type is not supported"
+        "error: device type is not supported.",
     },
     {
         IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR,
-        "error: too large size of string or array type element in the profile"
+        "error: too large size of string or array type element in the profile.",
     },
     {
         IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST,
         "error: dependent module does not exist.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR,
+        "error: internal error of overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME,
+        "error: invalid bundle name of overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_MODULE_NAME,
+        "error: invalid module name of overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE,
+        "error: invalid hap type of overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_ERROR_BUNDLE_TYPE,
+        "error: service bundle is not supported of overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_MISSED,
+        "error: target bundleName is missed of overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_NAME_MISSED,
+        "error: target module name is missed of overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME,
+        "error: target bundle name is not same when replace external overlay.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_EXTERNAL_OVERLAY_EXISTED_SIMULTANEOUSLY,
+        "error: internal and external overlay installation cannot be supported.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME,
+        "error: target priority is not same when replace external overlay.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY,
+        "error: invalid priority of overlay hap.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INCONSISTENT_VERSION_CODE,
+        "error: inconsistent version code of internal overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_SERVICE_EXCEPTION,
+        "error: service is exception.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_BUNDLE_NAME_SAME_WITH_TARGET_BUNDLE_NAME,
+        "error: target bundle name cannot be same with bundle name.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY,
+        "error: external overlay installation only support preInstall bundle.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_DIFFERENT_SIGNATURE_CERTIFICATE,
+        "error:target bundle has different signature certificate with current bundle.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE,
+        "error: target bundle cannot be overlay bundle of external overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE,
+        "error: target module cannot be overlay module of overlay installation",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
+        "error: overlay type is not same.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR,
+        "error: bundle dir is invalid.",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SAME,
+        "error: install asanEnabled not same",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SUPPORT,
+        "error, install asan enabled is not support",
     },
     {
         IStatusReceiver::ERR_UNKNOWN,

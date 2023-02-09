@@ -539,7 +539,8 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
 napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
 {
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
-    size_t argcAsync = 4, argcPromise = 3;
+    size_t argcAsync = 4;
+    size_t argcPromise = 3;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
     if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
         APP_LOGE("%{public}s, Wrong argument count.", __func__);

@@ -15,6 +15,7 @@
 
 #include "bundle_profile.h"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -34,7 +35,6 @@ thread_local int32_t parseResult;
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "har",
     "shared"
 };
 const std::map<std::string, AbilityType> ABILITY_TYPE_MAP = {
@@ -114,6 +114,7 @@ struct App {
     int32_t iconId = 0;
     int32_t labelId = 0;
     bool userDataClearable = true;
+    bool asanEnabled = false;
     std::vector<std::string> targetBundleList;
 };
 
@@ -496,6 +497,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED,
+        app.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ReqVersion &reqVersion)
@@ -2099,6 +2108,7 @@ bool ToApplicationInfo(
     applicationInfo.apiCompatibleVersion = configJson.app.apiVersion.compatible;
     applicationInfo.apiTargetVersion = configJson.app.apiVersion.target;
     applicationInfo.apiReleaseType = configJson.app.apiVersion.releaseType;
+    applicationInfo.asanEnabled = configJson.app.asanEnabled;
 
     // if there is main ability, it's icon label description will be set to applicationInfo.
 
@@ -2170,6 +2180,7 @@ bool ToBundleInfo(
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;
+    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
     bundleInfo.isPreInstallApp = transformParam.isPreInstallApp;
 
     bundleInfo.vendor = applicationInfo.vendor;
@@ -2230,7 +2241,9 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.distro = configJson.module.distro;
     innerModuleInfo.reqCapabilities = configJson.module.reqCapabilities;
     innerModuleInfo.requestPermissions = configJson.module.requestPermissions;
-    innerModuleInfo.definePermissions = configJson.module.definePermissions;
+    if (configJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
+        innerModuleInfo.definePermissions = configJson.module.definePermissions;
+    }
     if (configJson.module.mainAbility.substr(0, 1) == ".") {
         innerModuleInfo.mainAbility = configJson.module.package + configJson.module.mainAbility;
     } else {
@@ -2412,7 +2425,11 @@ bool ToInnerBundleInfo(
             innerBundleInfo.InsertCommonEvents(commonEventKey, commonEvent);
         }
     }
+    auto entryActionMatcher = [] (const std::string &action) {
+        return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+    };
     bool find = false;
+    bool isExistPageAbility = false;
     for (const auto &ability : configJson.module.abilities) {
         AbilityInfo abilityInfo;
         if (!ToAbilityInfo(configJson, ability, transformParam, abilityInfo)) {
@@ -2424,6 +2441,9 @@ bool ToInnerBundleInfo(
             innerModuleInfo.iconId = abilityInfo.iconId;
             innerModuleInfo.label = abilityInfo.label;
             innerModuleInfo.labelId = abilityInfo.labelId;
+        }
+        if (abilityInfo.type == AbilityType::PAGE) {
+            isExistPageAbility = true;
         }
         std::string keyName;
         keyName.append(configJson.app.bundleName).append(".")
@@ -2448,11 +2468,11 @@ bool ToInnerBundleInfo(
         innerBundleInfo.InsertFormInfos(keyName, formInfos);
         if (!find) {
             for (const auto &skill : ability.skills) {
-                if (std::find(skill.actions.begin(), skill.actions.end(), Constants::INTENT_ACTION_HOME) !=
-                        skill.actions.end() &&
-                        std::find(skill.entities.begin(), skill.entities.end(), Constants::INTENT_ENTITY_HOME) !=
-                        skill.entities.end() &&
-                    (!find)) {
+                bool isEntryAction = std::find_if(skill.actions.begin(), skill.actions.end(),
+                    entryActionMatcher) != skill.actions.end();
+                bool isEntryEntity = std::find(skill.entities.begin(), skill.entities.end(),
+                    Constants::ENTITY_HOME) != skill.entities.end();
+                if (isEntryAction && isEntryEntity && (!find)) {
                     innerModuleInfo.entryAbilityKey = keyName;
                     // if there is main ability, it's label will be the application's label
                     applicationInfo.label = ability.label;
@@ -2466,7 +2486,8 @@ bool ToInnerBundleInfo(
                     find = true;
                 }
                 if (std::find(skill.entities.begin(), skill.entities.end(), Constants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
-                    skill.entities.end() && transformParam.isPreInstallApp) {
+                    skill.entities.end() && transformParam.isPreInstallApp &&
+                    (abilityInfo.type == AbilityType::PAGE)) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
                 }
@@ -2474,7 +2495,7 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-    if (!find && !transformParam.isPreInstallApp &&
+    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp &&
         innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {

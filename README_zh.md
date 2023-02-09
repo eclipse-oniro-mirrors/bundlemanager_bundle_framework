@@ -69,11 +69,11 @@ bm help
 | 命令                                | 描述                       |
 | ----------------------------------- | -------------------------- |
 | bm install -h | 显示install支持的命令信息 |
-| bm install -p <hap-file-path>    | 安装hap包，支持指定路径和多个hap同时安装 |
-| bm install -p <hap-file-path> -u <user-id>   |给指定用户安装一个hap包 |
-| bm install -r -p <hap-file-path> | 覆盖安装一个hap包 |
-| bm install -r -p <hap-file-path> -u <user-id> | 给指定用户覆盖安装一个hap包 |
-| bm install -r -p <hap-file-path> -u <user-id> -w <waitting-time> | 安装hap包时指定bm工具等待时间，最小的等待时长为5s，最大的等待时长为600s, 默认缺省为5s |
+| bm install -p <file-path>    | 安装应用，支持指定路径和多个hap、hsp同时安装 |
+| bm install -p <file-path> -u <user-id>   |给指定用户安装一个应用 |
+| bm install -r -p <file-path> | 覆盖安装一个应用 |
+| bm install -r -p <file-path> -u <user-id> | 给指定用户覆盖安装一个应用 |
+| bm install -r -p <file-path> -u <user-id> -w <waitting-time> | 安装时指定bm工具等待时间，最小的等待时长为180s，最大的等待时长为600s, 默认缺省为5s |
 
 * 示例
 ```Bash
@@ -185,6 +185,46 @@ bm get -u
 # 根据包名查询补丁包信息
 bm quickfix -q -b <bundle-name>
 ```
+
+#### 获取overlay应用的Overlay信息命令
+| 命令       | 描述                       |
+| ---------- | -------------------------- |
+| bm dump-overlay -h | 显示dump-overlay支持的命令信息 |
+| bm dump-overlay -b <bundle-name> | 获取指定应用的所有OverlayModuleInfo信息 |
+| bm dump-overlay -b <bundle-name> -m <module-name> | 根据指定的包名和module名查询OverlayModuleInfo信息 |
+| bm dump-overlay -b <bundle-name> -t <target-module-name> | 根据指定的包名和目标module名查询OverlayModuleInfo信息 |
+
+* 示例
+```Bash
+* 示例
+# 根据包名来获取overlay应用com.ohos.app中的所有OverlayModuleInfo信息
+bm dump-overlay -b com.ohos.app
+
+# 根据包名和module来获取overlay应用com.ohos.app中overlay module为entry的所有OverlayModuleInfo信息
+bm dump-overlay -b com.ohos.app -m entry
+
+# 根据包名和module来获取overlay应用com.ohos.app中目标module为feature的所有OverlayModuleInfo信息
+bm dump-overlay -b com.ohos.app -m feature
+```
+
+#### 获取目标应用的Overlay信息命令
+| 命令       | 描述                       |
+| ---------- | -------------------------- |
+| bm dump-target-overlay -h | 显示dump-target-overlay支持的命令信息 |
+| bm dump-target-overlay -b <bundle-name> | 获取指定目标应用的所有OverlayBundleInfo信息 |
+| bm dump-target-overlay -b <bundle-name> -m <module-name> | 根据指定的目标应用的包名和module名查询OverlayModuleInfo信息 |
+
+* 示例
+```Bash
+* 示例
+# 根据包名来获取目标应用com.ohos.app中的所有关联的OverlayBundleInfo信息
+bm dump-target-overlay-b com.ohos.app
+
+# 根据包名和module来获取目标应用com.ohos.app中目标module为entry的所有关联的OverlayModuleInfo信息
+bm dump-target-overlay -b com.ohos.app -m entry
+
+```
+
 ## 相关仓
 
 [包管理子系统](https://gitee.com/openharmony/docs/blob/master/zh-cn/readme/%E5%8C%85%E7%AE%A1%E7%90%86%E5%AD%90%E7%B3%BB%E7%BB%9F.md)

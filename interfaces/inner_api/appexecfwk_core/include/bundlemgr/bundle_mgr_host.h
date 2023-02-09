@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -84,6 +84,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetBundleInfo(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the GetBundleInfo function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetBundleInfoForSelf(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetBundlePackInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -624,6 +631,10 @@ private:
 
     ErrCode HandleSetDebugMode(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetOverlayManagerProxy(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
@@ -636,16 +647,6 @@ private:
 
     template<typename T>
     bool WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply);
-    /**
-     * @brief Write a parcelabe vector objects to ashmem.
-     * @param parcelableVector Indicates the objects to be write.
-     * @param ashmemName Indicates the ashmem name;
-     * @param reply Indicates the reply to be sent;
-     * @return Returns true if objects send successfully; returns false otherwise.
-     */
-    template<typename T>
-    bool WriteParcelableVectorIntoAshmem(
-        std::vector<T> &parcelableVector, const char *ashmemName, MessageParcel &reply);
     /**
      * @brief Allocat ashmem num.
      * @return Returns ashmem num.

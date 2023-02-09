@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "module_profile.h"
 
+#include <algorithm>
 #include <sstream>
 
 #include "app_log_wrapper.h"
@@ -33,7 +34,6 @@ thread_local int32_t parseResult;
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "har",
     "shared"
 };
 
@@ -52,11 +52,6 @@ const std::set<std::string> DEVICE_TYPE_SET = {
 const std::set<std::string> VIRTUAL_MACHINE_SET = {
     "ark",
     "default"
-};
-
-const std::set<std::string> UI_SYNTAX_SET = {
-    "hml",
-    "ets"
 };
 
 const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
@@ -92,21 +87,6 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "print"
 };
 
-const std::set<std::string> ENTITY_TYPE_SET = {
-    "game",
-    "media",
-    "communication",
-    "news",
-    "travel",
-    "utility",
-    "shopping",
-    "education",
-    "kids",
-    "business",
-    "photography",
-    "unspecified"
-};
-
 const std::set<std::string> GRANT_MODE_SET = {
     "system_grant",
     "user_grant"
@@ -121,6 +101,7 @@ const std::set<std::string> AVAILABLE_LEVEL_SET = {
 const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
     {"standard", LaunchMode::STANDARD},
+    {"multiton", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
 const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
@@ -147,7 +128,6 @@ struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
     // pair second : actual value
     std::pair<bool, int32_t> minAPIVersion = std::make_pair<>(false, 0);
-    std::pair<bool, bool> distributedNotificationEnabled = std::make_pair<>(false, false);
     std::pair<bool, bool> keepAlive = std::make_pair<>(false, false);
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::pair<bool, bool> singleton = std::make_pair<>(false, false);
@@ -192,6 +172,7 @@ struct Ability {
     uint32_t maxWindowHeight = 0;
     uint32_t minWindowHeight = 0;
     bool excludeFromMissions = false;
+    bool recoverable = false;
 };
 
 struct Extension {
@@ -230,8 +211,6 @@ struct App {
     uint32_t minAPIVersion = 0;
     int32_t targetAPIVersion = 0;
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
-    bool distributedNotificationEnabled = true;
-    std::string entityType = APP_ENTITY_TYPE_DEFAULT_VALUE;
     bool keepAlive = false;
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     bool singleton = false;
@@ -240,6 +219,9 @@ struct App {
     std::vector<std::string> targetBundleList;
     std::map<std::string, DeviceConfig> deviceConfigs;
     bool multiProjects = false;
+    std::string targetBundle;
+    int32_t targetPriority = 0;
+    bool asanEnabled = false;
 };
 
 struct Module {
@@ -254,7 +236,6 @@ struct Module {
     bool deliveryWithInstall = false;
     bool installationFree = false;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
-    std::string uiSyntax = MODULE_UI_SYNTAX_DEFAULT_VALUE;
     std::string pages;
     std::vector<Metadata> metadata;
     std::vector<Ability> abilities;
@@ -264,6 +245,8 @@ struct Module {
     std::vector<Dependency> dependencies;
     std::string compileMode;
     bool isLibIsolated = false;
+    std::string targetModule;
+    int32_t targetPriority = 0;
 };
 
 struct ModuleJson {
@@ -313,14 +296,26 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        SRC_ENTRANCE,
-        ability.srcEntrance,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
+    if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRY,
+            ability.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    } else {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRANCE,
+            ability.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         ABILITY_LAUNCH_TYPE,
@@ -401,9 +396,18 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         parseResult,
         ArrayType::OBJECT);
+    // both exported and visible can be configured, but exported has higher priority
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         VISIBLE,
+        ability.visible,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        EXPORTED,
         ability.visible,
         JsonType::BOOLEAN,
         false,
@@ -545,6 +549,15 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_RECOVERABLE,
+        ability.recoverable,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY 
+    );
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -559,14 +572,26 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        SRC_ENTRANCE,
-        extension.srcEntrance,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
+    if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRY,
+            extension.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    } else {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRANCE,
+            extension.srcEntrance,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         ICON,
@@ -663,9 +688,18 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         parseResult,
         ArrayType::STRING);
+    // both exported and visible can be configured, but exported has higher priority
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         VISIBLE,
+        extension.visible,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        EXPORTED,
         extension.visible,
         JsonType::BOOLEAN,
         false,
@@ -699,17 +733,6 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             MIN_API_VERSION,
             deviceConfig.minAPIVersion.second,
             JsonType::NUMBER,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-    }
-    if (jsonObject.find(DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED) != jsonObjectEnd) {
-        deviceConfig.distributedNotificationEnabled.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
-            jsonObjectEnd,
-            DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED,
-            deviceConfig.distributedNotificationEnabled.second,
-            JsonType::BOOLEAN,
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
@@ -783,14 +806,6 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APP_DEBUG,
-        app.debug,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         ICON,
@@ -799,20 +814,60 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        ICON_ID,
-        app.iconId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         LABEL,
         app.label,
         JsonType::STRING,
         true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_VERSION_CODE,
+        app.versionCode,
+        JsonType::NUMBER,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_VERSION_NAME,
+        app.versionName,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_MIN_API_VERSION,
+        app.minAPIVersion,
+        JsonType::NUMBER,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_TARGET_API_VERSION,
+        app.targetAPIVersion,
+        JsonType::NUMBER,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_DEBUG,
+        app.debug,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        ICON_ID,
+        app.iconId,
+        JsonType::NUMBER,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
@@ -849,64 +904,16 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
-        APP_VERSION_CODE,
-        app.versionCode,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APP_VERSION_NAME,
-        app.versionName,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
         APP_MIN_COMPATIBLE_VERSION_CODE,
         app.minCompatibleVersionCode,
         JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint32_t>(jsonObject,
-        jsonObjectEnd,
-        APP_MIN_API_VERSION,
-        app.minAPIVersion,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APP_TARGET_API_VERSION,
-        app.targetAPIVersion,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         APP_API_RELEASETYPE,
         app.apiReleaseType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APP_DISTRIBUTED_NOTIFICATION_ENABLED,
-        app.distributedNotificationEnabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APP_ENTITY_TYPE,
-        app.entityType,
         JsonType::STRING,
         false,
         parseResult,
@@ -958,6 +965,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         jsonObjectEnd,
         APP_ACCESSIBLE,
         app.accessible,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_ASAN_ENABLED,
+        app.asanEnabled,
         JsonType::BOOLEAN,
         false,
         parseResult,
@@ -1066,6 +1081,22 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_TARGET_BUNDLE_NAME,
+        app.targetBundle,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_TARGET_PRIORITY,
+        app.targetPriority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1088,14 +1119,50 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_DEVICE_TYPES,
+        module.deviceTypes,
+        JsonType::ARRAY,
+        true,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_DELIVERY_WITH_INSTALL,
+        module.deliveryWithInstall,
+        JsonType::BOOLEAN,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        SRC_ENTRANCE,
-        module.srcEntrance,
+        MODULE_PAGES,
+        module.pages,
         JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
+    if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRY,
+            module.srcEntrance,
+            JsonType::STRING,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    } else {
+        GetValueIfFindKey<std::string>(jsonObject,
+            jsonObjectEnd,
+            SRC_ENTRANCE,
+            module.srcEntrance,
+            JsonType::STRING,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
@@ -1128,22 +1195,6 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        MODULE_DEVICE_TYPES,
-        module.deviceTypes,
-        JsonType::ARRAY,
-        true,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        MODULE_DELIVERY_WITH_INSTALL,
-        module.deliveryWithInstall,
-        JsonType::BOOLEAN,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         MODULE_INSTALLATION_FREE,
@@ -1158,22 +1209,6 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.virtualMachine,
         JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        MODULE_UI_SYNTAX,
-        module.uiSyntax,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        MODULE_PAGES,
-        module.pages,
-        JsonType::STRING,
-        true,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
@@ -1240,6 +1275,22 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_MODULE_NAME,
+        module.targetModule,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_PRIORITY,
+        module.targetPriority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1262,7 +1313,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
         parseResult,
         ArrayType::NOT_ARRAY);
 }
-}  // namespace Profile
+} // namespace Profile
 
 namespace {
 struct TransformParam {
@@ -1304,6 +1355,9 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
 bool CheckModuleNameIsValid(const std::string &moduleName)
 {
     if (moduleName.empty()) {
+        return false;
+    }
+    if (moduleName.size() <= 0 || moduleName.size() > Constants::MAX_MODULE_NAME) {
         return false;
     }
     if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
@@ -1525,13 +1579,10 @@ bool ToApplicationInfo(
     applicationInfo.apiReleaseType = app.apiReleaseType;
     applicationInfo.debug = app.debug;
     applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
-    applicationInfo.distributedNotificationEnabled = app.distributedNotificationEnabled;
-    if (Profile::ENTITY_TYPE_SET.find(app.entityType) != Profile::ENTITY_TYPE_SET.end()) {
-        applicationInfo.entityType = app.entityType;
-    } else {
-        applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
-    }
+    applicationInfo.distributedNotificationEnabled = true;
+    applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.vendor = app.vendor;
+    applicationInfo.asanEnabled = app.asanEnabled;
 
     // device adapt
     std::string deviceType = GetDeviceType();
@@ -1540,9 +1591,6 @@ bool ToApplicationInfo(
         Profile::DeviceConfig deviceConfig = app.deviceConfigs.at(deviceType);
         if (deviceConfig.minAPIVersion.first) {
             applicationInfo.apiCompatibleVersion = static_cast<uint32_t>(deviceConfig.minAPIVersion.second);
-        }
-        if (deviceConfig.distributedNotificationEnabled.first) {
-            applicationInfo.distributedNotificationEnabled = deviceConfig.distributedNotificationEnabled.second;
         }
         if (applicationInfo.isSystemApp && transformParam.isPreInstallApp) {
             if (deviceConfig.keepAlive.first) {
@@ -1566,6 +1614,8 @@ bool ToApplicationInfo(
     applicationInfo.enabled = true;
     applicationInfo.multiProjects = app.multiProjects;
     applicationInfo.process = app.bundleName;
+    applicationInfo.targetBundleName = app.targetBundle;
+    applicationInfo.targetPriority = app.targetPriority;
     return true;
 }
 
@@ -1591,6 +1641,7 @@ bool ToBundleInfo(
     bundleInfo.vendor = applicationInfo.vendor;
     bundleInfo.releaseType = applicationInfo.apiReleaseType;
     bundleInfo.isNativeApp = false;
+    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
 
     if (innerModuleInfo.isEntry) {
         bundleInfo.mainEntry = innerModuleInfo.moduleName;
@@ -1655,6 +1706,7 @@ bool ToAbilityInfo(
     abilityInfo.labelId = ability.labelId;
     abilityInfo.priority = ability.priority;
     abilityInfo.excludeFromMissions = ability.excludeFromMissions;
+    abilityInfo.recoverable = ability.recoverable;
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
     abilityInfo.continuable = ability.continuable;
@@ -1751,6 +1803,8 @@ bool ToExtensionInfo(
         extensionInfo.process.append(extensionInfo.name);
     }
 
+    extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
+
     return true;
 }
 
@@ -1759,7 +1813,7 @@ void GetPermissions(
     const TransformParam &transformParam,
     InnerModuleInfo &innerModuleInfo)
 {
-    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
+    if (moduleJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
         for (const DefinePermission &definePermission : moduleJson.module.definePermissions) {
             if (definePermission.name.empty()) {
                 continue;
@@ -1785,6 +1839,7 @@ void GetPermissions(
 bool ToInnerModuleInfo(
     const Profile::ModuleJson &moduleJson,
     const TransformParam &transformParam,
+    const OverlayMsg &overlayMsg,
     InnerModuleInfo &innerModuleInfo)
 {
     APP_LOGD("transform ModuleJson to InnerModuleInfo");
@@ -1819,10 +1874,7 @@ bool ToInnerModuleInfo(
         innerModuleInfo.virtualMachine = moduleJson.module.virtualMachine;
     }
 
-    if (Profile::UI_SYNTAX_SET.find(moduleJson.module.uiSyntax) != Profile::UI_SYNTAX_SET.end()) {
-        innerModuleInfo.uiSyntax = moduleJson.module.uiSyntax;
-    }
-
+    innerModuleInfo.uiSyntax = Profile::MODULE_UI_SYNTAX_DEFAULT_VALUE;
     innerModuleInfo.pages = moduleJson.module.pages;
     GetPermissions(moduleJson, transformParam, innerModuleInfo);
     innerModuleInfo.dependencies = moduleJson.module.dependencies;
@@ -1830,6 +1882,12 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isModuleJson = true;
     innerModuleInfo.isStageBasedModel = true;
     innerModuleInfo.isLibIsolated = moduleJson.module.isLibIsolated;
+    innerModuleInfo.targetModuleName = moduleJson.module.targetModule;
+    if (overlayMsg.type != NON_OVERLAY_TYPE && !overlayMsg.isModulePriorityExisted) {
+        innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY;
+    } else {
+        innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
+    }
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;
 }
@@ -1837,11 +1895,21 @@ bool ToInnerModuleInfo(
 bool ToInnerBundleInfo(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
+    const OverlayMsg &overlayMsg,
     InnerBundleInfo &innerBundleInfo)
 {
     APP_LOGD("transform ModuleJson to InnerBundleInfo");
     if (!CheckBundleNameIsValid(moduleJson.app.bundleName) || !CheckModuleNameIsValid(moduleJson.module.name)) {
         APP_LOGE("bundle name or module name is invalid");
+        return false;
+    }
+
+    if (overlayMsg.type != NON_OVERLAY_TYPE && !CheckModuleNameIsValid(moduleJson.module.targetModule)) {
+        APP_LOGE("target moduleName is invalid");
+    }
+
+    if ((overlayMsg.type == OVERLAY_EXTERNAL_BUNDLE) && !CheckBundleNameIsValid(moduleJson.app.targetBundle)) {
+        APP_LOGE("targetBundleName of the overlay hap is invalid");
         return false;
     }
 
@@ -1857,12 +1925,15 @@ bool ToInnerBundleInfo(
     }
 
     InnerModuleInfo innerModuleInfo;
-    ToInnerModuleInfo(moduleJson, transformParam, innerModuleInfo);
+    ToInnerModuleInfo(moduleJson, transformParam, overlayMsg, innerModuleInfo);
 
     BundleInfo bundleInfo;
     ToBundleInfo(applicationInfo, innerModuleInfo, transformParam, bundleInfo);
 
     // handle abilities
+    auto entryActionMatcher = [] (const std::string &action) {
+        return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+    };
     bool findEntry = false;
     for (const Profile::Ability &ability : moduleJson.module.abilities) {
         AbilityInfo abilityInfo;
@@ -1885,10 +1956,10 @@ bool ToInnerBundleInfo(
         }
         // get entry ability
         for (const auto &skill : ability.skills) {
-            bool isEntryAction = std::find(skill.actions.begin(), skill.actions.end(),
-                Constants::INTENT_ACTION_HOME) != skill.actions.end();
+            bool isEntryAction = std::find_if(skill.actions.begin(), skill.actions.end(),
+                entryActionMatcher) != skill.actions.end();
             bool isEntryEntity = std::find(skill.entities.begin(), skill.entities.end(),
-                Constants::INTENT_ENTITY_HOME) != skill.entities.end();
+                Constants::ENTITY_HOME) != skill.entities.end();
             if (isEntryAction && isEntryEntity) {
                 innerModuleInfo.entryAbilityKey = key;
                 innerModuleInfo.label = ability.label;
@@ -1923,10 +1994,10 @@ bool ToInnerBundleInfo(
 
         if (transformParam.isPreInstallApp && !applicationInfo.isLauncherApp) {
             for (const auto &skill : extension.skills) {
-                bool isEntryAction = std::find(skill.actions.cbegin(), skill.actions.cend(),
-                    Constants::INTENT_ACTION_HOME) != skill.actions.cend();
+                bool isEntryAction = std::find_if(skill.actions.cbegin(), skill.actions.cend(),
+                    entryActionMatcher) != skill.actions.cend();
                 bool isEntryEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
-                    Constants::INTENT_ENTITY_HOME) != skill.entities.cend();
+                    Constants::ENTITY_HOME) != skill.entities.cend();
                 bool isLauncherEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
                     Constants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.cend();
                 if (isEntryAction && isEntryEntity && isLauncherEntity) {
@@ -1960,9 +2031,64 @@ bool ToInnerBundleInfo(
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleJson.module.name, innerModuleInfo);
+    innerBundleInfo.SetOverlayType(overlayMsg.type);
+
+    if (overlayMsg.type == OVERLAY_EXTERNAL_BUNDLE && !overlayMsg.isAppPriorityExisted) {
+        innerBundleInfo.SetTargetPriority(Constants::OVERLAY_MINIMUM_PRIORITY);
+    } else {
+        innerBundleInfo.SetTargetPriority(moduleJson.app.targetPriority);
+    }
     return true;
 }
 }  // namespace
+
+OverlayMsg ModuleProfile::ObtainOverlayType(const nlohmann::json &jsonObject) const
+{
+    APP_LOGD("check if overlay installation");
+    OverlayMsg overlayMsg;
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (!jsonObject.contains(Profile::MODULE) || !jsonObject.contains(Profile::APP)) {
+        APP_LOGE("ObtainOverlayType failed due to bad module.json");
+        Profile::parseResult = ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
+        return overlayMsg;
+    }
+    nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
+    nlohmann::json appJson = jsonObject.at(Profile::APP);
+    if (!moduleJson.is_object() || !appJson.is_object()) {
+        APP_LOGE("module.json file lacks of invalid module or app properties");
+        Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        return overlayMsg;
+    }
+
+    auto isTargetBundleExisted = appJson.contains(Profile::APP_TARGET_BUNDLE_NAME);
+    auto isAppPriorityExisted = appJson.contains(Profile::APP_TARGET_PRIORITY);
+    auto isTargetModuleNameExisted = moduleJson.contains(Profile::MODULE_TARGET_MODULE_NAME);
+    auto isModulePriorityExisted = moduleJson.contains(Profile::MODULE_TARGET_PRIORITY);
+    if (!isTargetBundleExisted && !isAppPriorityExisted && !isTargetModuleNameExisted &&
+        !isModulePriorityExisted) {
+        APP_LOGW("current hap is not overlayed hap");
+        return overlayMsg;
+    }
+    if (!isTargetModuleNameExisted) {
+        Profile::parseResult = ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_NAME_MISSED;
+        APP_LOGE("overlay hap with invalid configuration file");
+        return overlayMsg;
+    }
+    if (!isTargetBundleExisted && isAppPriorityExisted) {
+        Profile::parseResult = ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_MISSED;
+        APP_LOGE("overlay hap with invalid configuration file");
+        return overlayMsg;
+    }
+
+    APP_LOGI("overlay configuration file is about to parse");
+    overlayMsg.type = isTargetBundleExisted ? OVERLAY_EXTERNAL_BUNDLE : OVERLAY_INTERNAL_BUNDLE;
+    overlayMsg.isAppPriorityExisted = isAppPriorityExisted;
+    overlayMsg.isModulePriorityExisted = isModulePriorityExisted;
+    return overlayMsg;
+#else
+    return overlayMsg;
+#endif
+}
 
 ErrCode ModuleProfile::TransformTo(
     const std::ostringstream &source,
@@ -1970,13 +2096,21 @@ ErrCode ModuleProfile::TransformTo(
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGD("transform module.json stream to InnerBundleInfo");
-    Profile::ModuleJson moduleJson;
     nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
-    moduleJson = jsonObject.get<Profile::ModuleJson>();
+
+    OverlayMsg overlayMsg = ObtainOverlayType(jsonObject);
+    if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::parseResult != ERR_OK)) {
+        int32_t ret = Profile::parseResult;
+        Profile::parseResult = ERR_OK;
+        APP_LOGE("ObtainOverlayType parseResult is %{public}d", ret);
+        return ret;
+    }
+    APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
+    Profile::ModuleJson moduleJson = jsonObject.get<Profile::ModuleJson>();
     if (Profile::parseResult != ERR_OK) {
         APP_LOGE("parseResult is %{public}d", Profile::parseResult);
         int32_t ret = Profile::parseResult;
@@ -1985,7 +2119,7 @@ ErrCode ModuleProfile::TransformTo(
         return ret;
     }
     if (!ToInnerBundleInfo(
-        moduleJson, bundleExtractor, innerBundleInfo)) {
+        moduleJson, bundleExtractor, overlayMsg, innerBundleInfo)) {
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {

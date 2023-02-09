@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,8 @@
 
 #include <sys/stat.h>
 #include "nlohmann/json.hpp"
+
+#include <unistd.h>
 
 #include "account_helper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -47,6 +49,10 @@
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+#include "bundle_overlay_data_manager.h"
+#include "bundle_overlay_install_checker.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -54,6 +60,8 @@ using namespace OHOS::Security;
 namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const std::string LOG = "log";
+const std::string RELEASE = "Release";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -118,7 +126,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .bundleName = bundleName_,
             .abilityName = mainAbility_,
             .resultCode = result,
-            .type = (isAppExist_ && hasInstalledInUser_) ? NotifyType::UPDATE : NotifyType::INSTALL,
+            .type = GetNotifyType(),
             .uid = uid,
             .accessTokenId = accessTokenId_
         };
@@ -456,6 +464,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             result = CreateBundleUserData(oldInfo);
             CHECK_RESULT(result, "CreateBundleUserData failed %{public}d");
 
+            // extract ap file
+            result = ExtractAllArkProfileFile(oldInfo);
+            CHECK_RESULT(result, "ExtractAllArkProfileFile failed %{public}d");
+
             userGuard.Dismiss();
         }
 
@@ -595,17 +607,22 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // check hap hash param
     result = CheckHapHashParams(newInfos, installParam.hashParams);
     CHECK_RESULT(result, "check hap hash param failed %{public}d");
-    UpdateInstallerState(InstallerState::INSTALL_HAP_HASH_PARAM_CHECKED);          // ---- 25%
+    UpdateInstallerState(InstallerState::INSTALL_HAP_HASH_PARAM_CHECKED);         // ---- 25%
 
-    // check versioncode and bundleName
+    // check overlay installation
+    result = CheckOverlayInstallation(newInfos, userId_);
+    CHECK_RESULT(result, "overlay hap check failed %{public}d");
+    UpdateInstallerState(InstallerState::INSTALL_OVERLAY_CHECKED);                // ---- 30%
+
+    // check app props in the configuration file
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
-    UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 30%
+    UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
     // check native file
     result = CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
-    UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 35%
+    UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 40%
 
     auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
     std::lock_guard lock {mtx};
@@ -671,6 +688,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
+    GetInstallEventInfo(newInfos, sysEventInfo_);
+    sync();
     return result;
 }
 
@@ -890,6 +909,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return result;
     }
 
+    if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
+        APP_LOGE("fail to remove asan log path, error is %{public}d", result);
+        return result;
+    }
+
     enableGuard.Dismiss();
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
@@ -1009,6 +1033,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
                 return result;
             }
+            if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
+                APP_LOGE("fail to remove asan log path, error is %{public}d", result);
+                return result;
+            }
 
             return ERR_OK;
         }
@@ -1120,6 +1148,12 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 return result;
             }
 
+            // extract ap file
+            result = ExtractAllArkProfileFile(oldInfo);
+            if (result != ERR_OK) {
+                return result;
+            }
+
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             return ERR_OK;
@@ -1155,7 +1189,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
     if (result != ERR_OK) {
         APP_LOGE("remove bundle dir failed");
-        dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_FAIL);
+        dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::INSTALL_SUCCESS);
         return result;
     }
 
@@ -1254,6 +1288,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 #endif
 
+    auto result = CheckOverlayUpdate(oldInfo, newInfo, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("CheckOverlayUpdate failed due to %{public}d", result);
+        return result;
+    }
+
     APP_LOGD("ProcessBundleUpdateStatus with bundleName %{public}s and packageName %{public}s",
         newInfo.GetBundleName().c_str(), modulePackage_.c_str());
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_START)) {
@@ -1271,7 +1311,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     // 2. bundle exist, install new hap
     bool isModuleExist = oldInfo.FindModule(modulePackage_);
     newInfo.RestoreFromOldInfo(oldInfo);
-    auto result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
+    result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
         isReplace, noSkipsKill) : ProcessNewModuleInstall(newInfo, oldInfo);
     if (result != ERR_OK) {
         APP_LOGE("install module failed %{public}d", result);
@@ -1350,6 +1390,10 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     }
 
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
+    if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
+        APP_LOGE("process asan log directory failed!");
+        return result;
+    }
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE(
             "add module %{public}s to innerBundleInfo %{public}s failed", modulePackage_.c_str(), bundleName_.c_str());
@@ -1372,6 +1416,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("VerifyUriPrefix failed");
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
+    // update module type is forbiden
     if (newInfo.HasEntry() && oldInfo.HasEntry()) {
         if (!oldInfo.IsEntryModule(modulePackage_)) {
             APP_LOGE("install more than one entry module");
@@ -1407,7 +1452,18 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             return ERR_OK;
         }
     }
-
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
+        ((result = OverlayDataMgr::GetInstance()->RemoveOverlayModuleConnection(newInfo, oldInfo)) != ERR_OK)) {
+        APP_LOGE("remove overlay connection failed due to %{public}d", result);
+        return result;
+    }
+    // stage model to FA model
+    if (!newInfo.GetIsNewVersion() && oldInfo.GetIsNewVersion()) {
+        oldInfo.CleanAllOverlayModuleInfo();
+        oldInfo.CleanOverLayBundleInfo();
+    }
+#endif
     APP_LOGE("ProcessModuleUpdate noSkipsKill = %{public}d", noSkipsKill);
     // reboot scan case will not kill the bundle
     if (noSkipsKill) {
@@ -1425,19 +1481,20 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
+    result = CheckArkProfileDir(newInfo, oldInfo);
+    if (result != ERR_OK) {
+        return result;
+    }
+    if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
+        APP_LOGE("process asan log directory failed!");
+        return result;
+    }
+
     moduleTmpDir_ = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_ + Constants::TMP_SUFFIX;
     result = ExtractModule(newInfo, moduleTmpDir_);
     if (result != ERR_OK) {
         APP_LOGE("extract module and rename failed");
         return result;
-    }
-
-    if (versionCode_ > oldInfo.GetVersionCode()) {
-        result = CreateArkProfile(bundleName_, userId_, newInfo.GetUid(userId_), newInfo.GetUid(userId_));
-        if (result != ERR_OK) {
-            APP_LOGE("fail to create ark profile, error is %{public}d", result);
-            return result;
-        }
     }
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
@@ -1775,7 +1832,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     }
 
     if (!dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo)) {
-        APP_LOGE("fail to gererate uid and gid");
+        APP_LOGE("fail to generate uid and gid");
         return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
     }
 
@@ -1786,10 +1843,18 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         return result;
     }
 
-    result = CreateArkProfile(
-        info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
-    if (result != ERR_OK) {
-        APP_LOGE("fail to create ark profile, error is %{public}d", result);
+    if (info.GetIsNewVersion()) {
+        result = CreateArkProfile(
+            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to create ark profile, error is %{public}d", result);
+            return result;
+        }
+    }
+    // create asan log directory when asanEnabled is true
+    // In update condition, delete asan log directory when asanEnabled is false if directory is exist
+    if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
+        APP_LOGE("process asan log directory failed!");
         return result;
     }
 
@@ -1854,6 +1919,13 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         APP_LOGE("fail to extractArkNativeFile, error is %{public}d", result);
         return result;
     }
+    if (info.GetIsNewVersion()) {
+        result = ExtractArkProfileFile(modulePath_, info.GetBundleName(), userId_);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to ExtractArkProfileFile, error is %{public}d", result);
+            return result;
+        }
+    }
 
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
@@ -1904,6 +1976,47 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
     }
 
     info.SetArkNativeFilePath(arkNativeFilePath);
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const
+{
+    if (!oldInfo.GetIsNewVersion()) {
+        return ERR_OK;
+    }
+    std::string bundleName = oldInfo.GetBundleName();
+    APP_LOGD("Begin to ExtractAllArkProfileFile, bundleName : %{public}s", bundleName.c_str());
+    const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
+    for (auto iter = innerModuleInfos.cbegin(); iter != innerModuleInfos.cend(); ++iter) {
+        ErrCode ret = ExtractArkProfileFile(iter->second.hapPath, bundleName, userId_);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+    }
+    APP_LOGD("ExtractAllArkProfileFile succeed, bundleName : %{public}s", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ExtractArkProfileFile(
+    const std::string &modulePath,
+    const std::string &bundleName,
+    int32_t userId) const
+{
+    std::string targetPath;
+    targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleName);
+    APP_LOGD("Begin to extract ap file, modulePath : %{private}s, targetPath : %{private}s",
+        modulePath.c_str(), targetPath.c_str());
+    ExtractParam extractParam;
+    extractParam.srcPath = modulePath;
+    extractParam.targetPath = targetPath;
+    extractParam.cpuAbi = Constants::EMPTY_STRING;
+    extractParam.extractFileType = ExtractFileType::AP;
+    auto result = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    if (result != ERR_OK) {
+        APP_LOGE("extract ap files failed, error is %{public}d", result);
+        return result;
+    }
     return ERR_OK;
 }
 
@@ -2488,6 +2601,22 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         APP_LOGE("same version update module condition, model type must be the same");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (oldInfo.GetTargetBundleName() != newInfo.GetTargetBundleName()) {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
+    }
+    if (oldInfo.GetTargetPriority() != newInfo.GetTargetPriority()) {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
+    }
+#endif
+    if (oldInfo.GetAsanEnabled() != newInfo.GetAsanEnabled()) {
+        APP_LOGE("asanEnabled is not same");
+        return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
+    }
+    if ((newInfo.GetReleaseType()).find(RELEASE) != std::string::npos && newInfo.GetAsanEnabled()) {
+        APP_LOGE("asanEnabled is not supported in Release");
+        return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
+    }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
 }
@@ -2512,6 +2641,11 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     result = DeleteArkProfile(bundleName, userId_);
     if (result != ERR_OK) {
         APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
+        return result;
+    }
+
+    if ((result = CleanAsanDirectory(innerBundleInfo)) != ERR_OK) {
+        APP_LOGE("fail to remove asan log path, error is %{public}d", result);
         return result;
     }
 
@@ -2689,7 +2823,57 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.userId = userId_;
     sysEventInfo_.versionCode = versionCode_;
     sysEventInfo_.preBundleScene = preBundleScene;
+    GetCallingEventInfo(sysEventInfo_);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
+}
+
+void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
+{
+    APP_LOGD("GetCallingEventInfo start, bundleName:%{public}s", eventInfo.callingBundleName.c_str());
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    if (!dataMgr_->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
+        APP_LOGW("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        eventInfo.callingBundleName = Constants::EMPTY_STRING;
+        return;
+    }
+    BundleInfo bundleInfo;
+    if (!dataMgr_->GetBundleInfo(eventInfo.callingBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo,
+        eventInfo.callingUid / Constants::BASE_USER_RANGE)) {
+        APP_LOGE("GetBundleInfo failed, bundleName: %{public}s", eventInfo.callingBundleName.c_str());
+        return;
+    }
+    eventInfo.callingAppId = bundleInfo.appId;
+}
+
+void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    EventInfo &eventInfo)
+{
+    APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    eventInfo.fingerprint = info.GetCertificateFingerprint();
+    eventInfo.appDistributionType = info.GetAppDistributionType();
+    eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
+    eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
+    // report hapPath and hashValue
+    for (const auto &info : newInfos) {
+        for (const auto &innerModuleInfo : info.second.GetInnerModuleInfos()) {
+            sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
+            sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
+        }
+    }
+}
+
+void BaseBundleInstaller::SetCallingUid(int32_t callingUid)
+{
+    sysEventInfo_.callingUid = callingUid;
 }
 
 ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
@@ -2697,6 +2881,164 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    int32_t userId)
+{
+    APP_LOGD("Start to check overlay installation");
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    bool isInternalOverlayExisted = false;
+    bool isExternalOverlayExisted = false;
+    for (auto &info : newInfos) {
+        if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
+            APP_LOGW("the hap is not overlay hap");
+            continue;
+        }
+        if (isInternalOverlayExisted && isExternalOverlayExisted) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_EXTERNAL_OVERLAY_EXISTED_SIMULTANEOUSLY;
+        }
+        std::shared_ptr<BundleOverlayInstallChecker> overlayChecker = std::make_shared<BundleOverlayInstallChecker>();
+        ErrCode result = ERR_OK;
+        if (info.second.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
+            isInternalOverlayExisted = true;
+            result = overlayChecker->CheckInternalBundle(newInfos, info.second);
+        }
+        if (info.second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+            isExternalOverlayExisted = false;
+            result = overlayChecker->CheckExternalBundle(info.second, userId);
+        }
+        if (result != ERR_OK) {
+            APP_LOGE("check overlay installation failed due to errcode %{public}d", result);
+            return result;
+        }
+    }
+    overlayType_ = (newInfos.begin()->second).GetOverlayType();
+    APP_LOGD("check overlay installation successfully and overlay type is %{public}d", overlayType_);
+#endif
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo,
+    int32_t userId) const
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (((newInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
+        (oldInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE)) ||
+        ((oldInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
+        (newInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE))) {
+        APP_LOGE("external overlay cannot update non-external overlay application");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+
+    std::string newModuleName = newInfo.GetCurrentModulePackage();
+    if (!oldInfo.FindModule(newModuleName)) {
+        return ERR_OK;
+    }
+    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!oldInfo.isOverlayModule(newModuleName))) {
+        APP_LOGE("old module is non-overlay hap and new module is overlay hap");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+
+    if ((newInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (oldInfo.isOverlayModule(newModuleName))) {
+        APP_LOGE("old module is overlay hap and new module is non-overlay hap");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+#endif
+    return ERR_OK;
+}
+
+NotifyType BaseBundleInstaller::GetNotifyType()
+{
+    if (isAppExist_ && hasInstalledInUser_) {
+        if (overlayType_ != NON_OVERLAY_TYPE) {
+            return NotifyType::OVERLAY_UPDATE;
+        }
+        return NotifyType::UPDATE;
+    }
+
+    if (overlayType_ != NON_OVERLAY_TYPE) {
+        return NotifyType::OVERLAY_INSTALL;
+    }
+    return NotifyType::INSTALL;
+}
+
+ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const
+{
+    if (newInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+        const auto userInfos = oldInfo.GetInnerBundleUserInfos();
+        for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
+            int32_t userId = iter->second.bundleUserInfo.userId;
+            ErrCode result = newInfo.GetIsNewVersion() ?
+                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), oldInfo.GetUid(userId)) :
+                DeleteArkProfile(bundleName_, userId);
+            if (result != ERR_OK) {
+                APP_LOGE("bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",
+                    bundleName_.c_str(), result);
+                return result;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
+{
+    const std::string bundleName = info.GetBundleName();
+    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+        + std::to_string(userId_) + Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR + LOG;
+    bool dirExist = false;
+    ErrCode errCode = InstalldClient::GetInstance()->IsExistDir(asanLogDir, dirExist);
+    if (errCode != ERR_OK) {
+        APP_LOGE("check asan log directory failed!");
+        return errCode;
+    }
+    bool asanEnabled = info.GetAsanEnabled();
+    // create asan log directory if asanEnabled is true
+    if (!dirExist && asanEnabled) {
+        InnerBundleUserInfo newInnerBundleUserInfo;
+        if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
+            APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
+                info.GetBundleName().c_str(), userId_);
+            return ERR_APPEXECFWK_USER_NOT_EXIST;
+        }
+
+        if (!dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo)) {
+            APP_LOGE("fail to gererate uid and gid");
+            return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
+        }
+        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        if ((errCode = InstalldClient::GetInstance()->Mkdir(asanLogDir, mode,
+            newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid)) != ERR_OK) {
+            APP_LOGE("create asan log directory failed!");
+            return errCode;
+        }
+    }
+    if (asanEnabled) {
+        info.SetAsanLogPath(asanLogDir);
+    }
+    // clean asan directory
+    if (dirExist && !asanEnabled) {
+        if ((errCode = CleanAsanDirectory(info)) != ERR_OK) {
+            APP_LOGE("clean asan log directory failed!");
+            return errCode;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
+{
+    const std::string bundleName = info.GetBundleName();
+    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+        + std::to_string(userId_) + Constants::PATH_SEPARATOR + bundleName;
+    ErrCode errCode =  InstalldClient::GetInstance()->RemoveDir(asanLogDir);
+    if (errCode != ERR_OK) {
+        APP_LOGE("clean asan log path failed!");
+        return errCode;
+    }
+    info.SetAsanLogPath("");
+    return errCode;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

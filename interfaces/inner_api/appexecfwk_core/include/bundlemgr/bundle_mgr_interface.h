@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@
 #include "common_event_info.h"
 #include "../app_control/app_control_interface.h"
 #include "../default_app/default_app_interface.h"
+#include "../overlay/overlay_manager_interface.h"
 #include "../quick_fix/quick_fix_manager_interface.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
@@ -169,6 +170,18 @@ public:
      */
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
         BundleInfo &bundleInfo, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Obtains the BundleInfo for the calling app.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -913,6 +926,18 @@ public:
     }
 
     /**
+     * @brief Verify whether the calling app is system app. Only for BMS usage.
+     *
+     * @param beginApiVersion Indicates version since this api became to be system api.
+     * @param bundleName Indicates bundle name of the calling hap.
+     * @return Returns true if the hap passes the verification; returns false otherwise.
+     */
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION)
+    {
+        return true;
+    }
+
+    /**
      * @brief Obtains the dependent module names.
      *
      * @param bundleName Indicates the bundle name to be queried.
@@ -1101,6 +1126,11 @@ public:
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR;
     }
 
+    virtual sptr<IOverlayManager> GetOverlayManagerProxy()
+    {
+        return nullptr;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1207,6 +1237,9 @@ public:
         GET_SHORTCUT_INFO_V9,
         REGISTER_BUNDLE_EVENT_CALLBACK,
         UNREGISTER_BUNDLE_EVENT_CALLBACK,
+        GET_BUNDLE_INFO_FOR_SELF,
+        VERIFY_SYSTEM_API,
+        GET_OVERLAY_MANAGER_PROXY,
     };
 };
 }  // namespace AppExecFwk

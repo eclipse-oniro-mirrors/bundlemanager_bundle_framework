@@ -13,26 +13,12 @@
  * limitations under the License.
  */
 
-#include "aging/aging_constants.h"
-#include "aging/aging_handler.h"
+import AbilityStage from "@ohos.app.ability.AbilityStage"
 
-namespace OHOS {
-namespace AppExecFwk {
-bool BundleDataSizeAgingHandler::CheckBundle(const AgingBundleInfo &bundle) const
-{
-    // the size of all app is bigger than 0
-    return true;
+export default class MyAbilityStage extends AbilityStage {
+    onCreate() {
+        console.log("[Demo] MyAbilityStage onCreate")
+	globalThis.stageOnCreateRun = 1;
+	globalThis.stageContext = this.context;
+    }
 }
-
-bool BundleDataSizeAgingHandler::CheckModule(const AgingModuleInfo &bundle) const
-{
-    // the size of all app is bigger than 0
-    return true;
-}
-
-const std::string &BundleDataSizeAgingHandler::GetName() const
-{
-    return AgingConstants::BUNDLE_DATA_SIZE_AGING_HANDLER;
-}
-}  //  namespace AppExecFwk
-}  //  namespace OHOS

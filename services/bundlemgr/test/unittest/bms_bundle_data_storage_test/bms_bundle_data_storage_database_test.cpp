@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,111 +60,6 @@ protected:
             "appType": 0,
             "baseAbilityInfos": {
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {
-                    "applicationInfo": {
-                        "accessTokenId": 0,
-                        "accessTokenIdEx": 0,
-                        "accessible": false,
-                        "apiCompatibleVersion": 0,
-                        "apiReleaseType": "",
-                        "apiTargetVersion": 0,
-                        "appPrivilegeLevel": "normal",
-                        "arkNativeFileAbi": "",
-                        "arkNativeFilePath": "",
-                        "bundleName": "",
-                        "cacheDir": "",
-                        "codePath": "",
-                        "cpuAbi": "",
-                        "dataBaseDir": "",
-                        "dataDir": "",
-                        "debug": false,
-                        "description": "",
-                        "descriptionId": 0,
-                        "descriptionResource": {
-                            "bundleName": "",
-                            "id": 0,
-                            "moduleName": ""
-                        },
-                        "deviceId": "",
-                        "distributedNotificationEnabled": true,
-                        "enabled": false,
-                        "entityType": "",
-                        "entryDir": "",
-                        "entryModuleName": "",
-                        "flags": 0,
-                        "icon": "",
-                        "iconId": 0,
-                        "iconPath": "",
-                        "iconResource": {
-                            "bundleName": "",
-                            "id": 0,
-                            "moduleName": ""
-                        },
-                        "fingerprint": "",
-                        "isCompressNativeLibs": true,
-                        "isLauncherApp": false,
-                        "isSystemApp": false,
-                        "keepAlive": false,
-                        "label": "",
-                        "labelId": 0,
-                        "labelResource": {
-                            "bundleName": "",
-                            "id": 0,
-                            "moduleName": ""
-                        },
-                        "metaData": {},
-                        "metadata": {},
-                        "minCompatibleVersionCode": 0,
-                        "moduleInfos": [],
-                        "moduleSourceDirs": [],
-                        "name": "",
-                        "nativeLibraryPath": "",
-                        "permissions": [],
-                        "targetBundleList": [
-                        ],
-                        "isFreeInstallApp": false,
-                        "process": "",
-                        "removable": true,
-                        "signatureKey": "",
-                        "multiProjects":false,
-                        "singleton": false,
-                        "supportedModes": 0,
-                        "uid": -1,
-                        "userDataClearable": true,
-                        "vendor": "",
-                        "versionCode": 0,
-                        "versionName": "",
-                        "appDistributionType": "none",
-                        "appProvisionType": "release",
-                        "appQuickFix": {
-                            "bundleName": "",
-                            "deployedAppqfInfo": {
-                                "cpuAbi": "",
-                                "hqfInfos": [],
-                                "nativeLibraryPath": "",
-                                "type": 0,
-                                "versionCode": 0,
-                                "versionName": ""
-                            },
-                            "deployingAppqfInfo": {
-                                "cpuAbi": "",
-                                "hqfInfos": [],
-                                "nativeLibraryPath": "",
-                                "type": 0,
-                                "versionCode": 0,
-                                "versionName": ""
-                            },
-                            "versionCode": 0,
-                            "versionName": ""
-                        },
-                        "crowdtestDeadline": -1,
-                        "runningResourcesApply": false,
-                        "associatedWakeUp": false,
-                        "hideDesktopIcon": false,
-                        "formVisibleNotify": false,
-                        "allowCommonEvent": [],
-                        "needAppDetail": false,
-                        "appDetailAbilityLibraryPath": ""
-                    },
                     "extensionAbilityType": 9,
                     "priority": 0,
                     "startWindowIcon":"",
@@ -204,6 +99,7 @@ protected:
                     "isLauncherAbility": true,
                     "removeMissionAfterTerminate":false,
                     "excludeFromMissions":false,
+                    "recoverable":false,
                     "isModuleJson": false,
                     "isNativeAbility": false,
                     "isStageBasedModel": true,
@@ -271,6 +167,7 @@ protected:
                     "isLauncherAbility": false,
                     "removeMissionAfterTerminate":false,
                     "excludeFromMissions":false,
+                    "recoverable": false,
                     "isModuleJson": false,
                     "isNativeAbility": false,
                     "isStageBasedModel": true,
@@ -339,6 +236,7 @@ protected:
                     "isLauncherAbility": false,
                     "removeMissionAfterTerminate":false,
                     "excludeFromMissions":false,
+                    "recoverable": false,
                     "isModuleJson": false,
                     "isNativeAbility": false,
                     "isStageBasedModel": true,
@@ -408,6 +306,8 @@ protected:
                 },
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
+                "asanEnabled": false,
+                "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
@@ -506,122 +406,15 @@ protected:
                 "formVisibleNotify": false,
                 "allowCommonEvent": [],
                 "needAppDetail": false,
-                "appDetailAbilityLibraryPath": ""
+                "appDetailAbilityLibraryPath": "",
+                "targetBundleName": "",
+                "targetPriority": 0
             },
             "baseBundleInfo": {
+                "asanEnabled": false,
                 "abilityInfos": [
                 ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
-                "applicationInfo": {
-                    "accessTokenIdEx": 0,
-                    "accessTokenId": 0,
-                    "accessible": false,
-                    "apiCompatibleVersion": 0,
-                    "apiReleaseType": "",
-                    "apiTargetVersion": 0,
-                    "appPrivilegeLevel": "normal",
-                    "arkNativeFileAbi": "",
-                    "arkNativeFilePath": "",
-                    "bundleName": "",
-                    "cacheDir": "",
-                    "codePath": "",
-                    "cpuAbi": "",
-                    "dataBaseDir": "",
-                    "dataDir": "",
-                    "debug": false,
-                    "description": "",
-                    "descriptionId": 0,
-                    "descriptionResource": {
-                        "bundleName": "",
-                        "id": 0,
-                        "moduleName": ""
-                    },
-                    "deviceId": "",
-                    "distributedNotificationEnabled": true,
-                    "enabled": false,
-                    "entityType": "",
-                    "entryDir": "",
-                    "entryModuleName": "",
-                    "flags": 0,
-                    "icon": "",
-                    "iconId": 0,
-                    "iconPath": "",
-                    "iconResource": {
-                        "bundleName": "",
-                        "id": 0,
-                        "moduleName": ""
-                    },
-                    "fingerprint":"",
-                    "isCompressNativeLibs": true,
-                    "isLauncherApp": false,
-                    "isSystemApp": false,
-                    "keepAlive": false,
-                    "label": "",
-                    "labelId": 0,
-                    "labelResource": {
-                        "bundleName": "",
-                        "id": 0,
-                        "moduleName": ""
-                    },
-                    "metaData": {
-                    },
-                    "metadata": {
-                    },
-                    "minCompatibleVersionCode": 0,
-                    "moduleInfos": [
-                    ],
-                    "moduleSourceDirs": [
-                    ],
-                    "name": "",
-                    "nativeLibraryPath": "",
-                    "permissions": [
-                    ],
-                    "targetBundleList": [
-                    ],
-                    "isFreeInstallApp": false,
-                    "process": "",
-                    "removable": true,
-                    "signatureKey": "",
-                    "multiProjects":false,
-                    "singleton": false,
-                    "supportedModes": 0,
-                    "uid": -1,
-                    "userDataClearable": true,
-                    "vendor": "",
-                    "versionCode": 0,
-                    "versionName": "",
-                    "appDistributionType": "none",
-                    "appProvisionType": "release",
-                    "appQuickFix": {
-                        "bundleName": "",
-                        "deployedAppqfInfo": {
-                            "cpuAbi": "",
-                            "hqfInfos": [],
-                            "nativeLibraryPath": "",
-                            "type": 0,
-                            "versionCode": 0,
-                            "versionName": ""
-                        },
-                        "deployingAppqfInfo": {
-                            "cpuAbi": "",
-                            "hqfInfos": [],
-                            "nativeLibraryPath": "",
-                            "type": 0,
-                            "versionCode": 0,
-                            "versionName": ""
-                        },
-                        "versionCode": 0,
-                        "versionName": ""
-                    },
-                    "crowdtestDeadline": -1,
-                    "runningResourcesApply": false,
-                    "associatedWakeUp": false,
-                    "hideDesktopIcon": false,
-                    "formVisibleNotify": false,
-                    "allowCommonEvent": [],
-                    "needAppDetail": false,
-                    "appDetailAbilityLibraryPath": ""
-                },
                 "compatibleVersion": 8,
                 "cpuAbi": "",
                 "defPermissions": [
@@ -656,6 +449,9 @@ protected:
                 "moduleResPaths": [
                 ],
                 "name": "com.ohos.launcher",
+                "overlayType": 3,
+                "overlayBundleInfos": [
+                ],
                 "releaseType": "Beta1",
                 "reqPermissionDetails": [
                 ],
@@ -1362,7 +1158,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | Smal
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
     moduleInfo.moduleName = "modulePackage";
-    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_HAR;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
     innerModuleInfos["modulePackage"] = moduleInfo;
     info.AddInnerModuleInfo(innerModuleInfos);
     auto it = info.FindHapModuleInfo("modulePackage", 100);
@@ -1629,12 +1425,9 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2000, Function | Smal
     info.SetBaseBundleInfo(bundleInfo);
     info.SetIsPreInstallApp(false);
     InnerModuleInfo innerModuleInfo;
-    bool ret = info.IsBundleRemovable(Constants::START_USERID);
-    EXPECT_EQ(ret, true);
-
     innerModuleInfo.moduleName = "entry";
     info.InsertInnerModuleInfo("entry", innerModuleInfo);
-    ret = info.IsBundleRemovable(Constants::START_USERID);
+    bool ret = info.IsBundleRemovable();
     EXPECT_EQ(ret, false);
 }
 

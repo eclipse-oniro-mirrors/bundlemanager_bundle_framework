@@ -60,6 +60,7 @@ AppControlManagerRdb::AppControlManagerRdb()
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
         + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER);");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager_->CreateTable();
 }
 
 AppControlManagerRdb::~AppControlManagerRdb()
@@ -153,7 +154,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        APP_LOGI("GetAppInstallControlRule size 0");
+        APP_LOGD("GetAppInstallControlRule size 0");
         return ERR_OK;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,35 +83,28 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bund
 #endif
 }
 
-int AbilityManagerHelper::IsRunning(const std::string bundleName, const std::string moduleName)
+int AbilityManagerHelper::IsRunning(const std::string bundleName)
 {
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    std::vector<AbilityRunningInfo> abilityRunningInfos;
-    auto result = AbilityManagerClient::GetInstance()->GetAbilityRunningInfos(abilityRunningInfos);
+    APP_LOGD("check app is running, app name is %{public}s", bundleName.c_str());
+    sptr<IAppMgr> appMgrProxy =
+        iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        APP_LOGE("fail to find the app mgr service to check app is running");
+        return FAILED;
+    }
+
+    std::vector<RunningProcessInfo> runningList;
+    int result = appMgrProxy->GetAllRunningProcesses(runningList);
     if (result != ERR_OK) {
-        APP_LOGE("GetAbilityRunningInfos failed.");
+        APP_LOGE("GetAllRunningProcesses failed.");
         return FAILED;
     }
 
-    if (abilityRunningInfos.empty()) {
-        APP_LOGE("No ability running.");
-        return NOT_RUNNING;
-    }
-
-    std::vector<std::string> abilities;
-    if (!FetchAbilityInfos(bundleName, moduleName, abilities)) {
-        APP_LOGE("Fetch abilitys failed by bundleName(%{public}s) and moduleName(%{public}s).",
-            bundleName.c_str(), moduleName.c_str());
-        return FAILED;
-    }
-
-    for (auto &abilitiyName : abilities) {
-        ElementName elementName("", bundleName, abilitiyName, moduleName);
-        APP_LOGI("bundleName(%{public}s) moduleName(%{public}s) abilitiyName(%{public}s)",
-            bundleName.c_str(), moduleName.c_str(), abilitiyName.c_str());
-        auto res = std::any_of(abilityRunningInfos.begin(), abilityRunningInfos.end(),
-            [&elementName](const auto &abilityRunningInfo) {
-                return abilityRunningInfo.ability == elementName;
+    for (const auto &info : runningList) {
+        auto res = std::any_of(info.bundleNames.begin(), info.bundleNames.end(),
+            [bundleName](const auto &bundleNameInRunningProcessInfo) {
+                return bundleNameInRunningProcessInfo == bundleName;
             });
         if (res) {
             return RUNNING;
@@ -123,36 +116,6 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const std::str
     APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
     return FAILED;
 #endif
-}
-
-bool AbilityManagerHelper::FetchAbilityInfos(
-    const std::string bundleName, const std::string moduleName, std::vector<std::string> &abilities)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
-
-    InnerBundleInfo innerBundleInfo;
-    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGW("App(%{public}s) is not installed.", bundleName.c_str());
-        return false;
-    }
-
-    auto abilityInfos =
-        innerBundleInfo.FindAbilityInfosByModule(moduleName, Constants::ANY_USERID);
-    for (const auto &abilityInfo : abilityInfos) {
-        abilities.emplace_back(abilityInfo.name);
-    }
-
-    auto extensionAbilityInfos =
-        innerBundleInfo.FindExtensionInfosByModule(moduleName, Constants::ANY_USERID);
-    for (const auto &extensionAbilityInfo : extensionAbilityInfos) {
-        abilities.emplace_back(extensionAbilityInfo.name);
-    }
-
-    return !abilities.empty();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

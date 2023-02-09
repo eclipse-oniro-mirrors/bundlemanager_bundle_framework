@@ -172,6 +172,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
         APP_LOGE("get all bundle info failed when userId is %{public}d.", userId);
         RemoveArkProfile(userId);
+        RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);
         return;
     }
@@ -196,6 +197,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     }
 
     RemoveArkProfile(userId);
+    RemoveAsanLogDirectory(userId);
     dataMgr->RemoveUserId(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
@@ -210,6 +212,14 @@ void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId));
     APP_LOGI("DeleteArkProfile %{public}s when remove user", arkProfilePath.c_str());
     InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
+}
+
+void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)
+{
+    std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+        + std::to_string(userId);
+    APP_LOGI("remove asan log directory %{public}s when remove user", asanLogDir.c_str());
+    InstalldClient::GetInstance()->RemoveDir(asanLogDir);
 }
 
 void BundleUserMgrHostImpl::CheckInitialUser()

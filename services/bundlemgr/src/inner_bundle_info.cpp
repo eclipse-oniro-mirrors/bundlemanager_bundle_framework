@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "inner_bundle_info.h"
 
+#include <algorithm>
 #include <deque>
 #include <regex>
 
@@ -110,6 +111,12 @@ const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
 const std::string DISPOSED_STATUS = "disposedStatus";
 const std::string MODULE_COMPILE_MODE = "compileMode";
 const std::string BUNDLE_HQF_INFOS = "hqfInfos";
+const std::string MODULE_TARGET_MODULE_NAME = "targetModuleName";
+const std::string MODULE_TARGET_PRIORITY = "targetPriority";
+const std::string MODULE_OVERLAY_MODULE_INFO = "overlayModuleInfo";
+const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfo";
+const std::string OVERLAY_TYPE = "overlayType";
+const std::string APPLY_QUICK_FIX_FREQUENCY = "applyQuickFixFrequency";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -171,8 +178,20 @@ bool Skill::MatchAction(const std::string &action) const
     if (action.empty()) {
         return true;
     }
+    auto actionMatcher = [action] (const std::string &configAction) {
+        if (action == configAction) {
+            return true;
+        }
+        if (action == Constants::ACTION_HOME && configAction == Constants::WANT_ACTION_HOME) {
+            return true;
+        }
+        if (action == Constants::WANT_ACTION_HOME && configAction == Constants::ACTION_HOME) {
+            return true;
+        }
+        return false;
+    };
     // config actions not empty, param not empty, if config actions contains param action, match
-    return std::find(actions.cbegin(), actions.cend(), action) != actions.cend();
+    return std::find_if(actions.cbegin(), actions.cend(), actionMatcher) != actions.cend();
 }
 
 bool Skill::MatchEntities(const std::vector<std::string> &paramEntities) const
@@ -277,7 +296,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 3.scheme://host:port     scheme://host:port/path
         bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
         if (skillUri.port.empty()) {
-            ret |= StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+            ret = ret || StartsWith(uriString, skillUriString + PORT_SEPARATOR);
         }
         return ret;
     }
@@ -398,6 +417,9 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
         *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
     }
     this->hqfInfos_ = info.hqfInfos_;
+    this->overlayBundleInfo_ = info.overlayBundleInfo_;
+    this->overlayType_ = info.overlayType_;
+    this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
     return *this;
 }
 
@@ -486,7 +508,10 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_NATIVE_LIBRARY_PATH, info.nativeLibraryPath},
         {MODULE_CPU_ABI, info.cpuAbi},
         {MODULE_HAP_PATH, info.hapPath},
-        {MODULE_COMPILE_MODE, info.compileMode}
+        {MODULE_COMPILE_MODE, info.compileMode},
+        {MODULE_TARGET_MODULE_NAME, info.targetModuleName},
+        {MODULE_TARGET_PRIORITY, info.targetPriority},
+        {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo}
     };
 }
 
@@ -557,6 +582,9 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
     jsonObject[DISPOSED_STATUS] = disposedStatus_;
     jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
+    jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
+    jsonObject[OVERLAY_TYPE] = overlayType_;
+    jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -924,6 +952,30 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_MODULE_NAME,
+        info.targetModuleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TARGET_PRIORITY,
+        info.targetPriority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<OverlayModuleInfo>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_OVERLAY_MODULE_INFO,
+        info.overlayModuleInfo,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1458,6 +1510,30 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<OverlayBundleInfo>>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_BUNDLE_INFO,
+        overlayBundleInfo_,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        OVERLAY_TYPE,
+        overlayType_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APPLY_QUICK_FIX_FREQUENCY,
+        applyQuickFixFrequency_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -1526,8 +1602,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         hapInfo.moduleType = ModuleType::ENTRY;
     } else if (moduleType == Profile::MODULE_TYPE_FEATURE) {
         hapInfo.moduleType = ModuleType::FEATURE;
-    } else if (moduleType == Profile::MODULE_TYPE_HAR) {
-        hapInfo.moduleType = ModuleType::HAR;
     } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
         hapInfo.moduleType = ModuleType::SHARED;
     } else {
@@ -1543,6 +1617,9 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.metadata = it->second.metadata;
     bool first = false;
     for (auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         if (ability.first.find(key) != std::string::npos) {
             if (!first) {
                 hapInfo.deviceTypes = ability.second.deviceTypes;
@@ -1628,6 +1705,9 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
 
     std::vector<AbilityInfo> abilitys;
     for (const auto &ability : baseAbilityInfos_) {
+        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            continue;
+        }
         auto abilityInfo = ability.second;
         GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
@@ -1640,40 +1720,6 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     }
 
     return abilitys;
-}
-
-std::vector<AbilityInfo> InnerBundleInfo::FindAbilityInfosByModule(
-        const std::string &moduleName, int32_t userId) const
-{
-    std::vector<AbilityInfo> abilitys;
-    if (!HasInnerBundleUserInfo(userId)) {
-        return abilitys;
-    }
-
-    for (const auto &ability : baseAbilityInfos_) {
-        if ((ability.second.moduleName == moduleName)) {
-            abilitys.emplace_back(ability.second);
-        }
-    }
-
-    return abilitys;
-}
-
-std::vector<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfosByModule(
-    const std::string &moduleName, int32_t userId) const
-{
-    std::vector<ExtensionAbilityInfo> extensions;
-    if (!HasInnerBundleUserInfo(userId)) {
-        return extensions;
-    }
-
-    for (const auto &extension : baseExtensionInfos_) {
-        if ((extension.second.moduleName == moduleName)) {
-            extensions.emplace_back(extension.second);
-        }
-    }
-
-    return extensions;
 }
 
 std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
@@ -1798,9 +1844,41 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
+    baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
+#endif
+
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
+{
+    if (IsExistLauncherAbility()) {
+        baseApplicationInfo_->needAppDetail = false;
+        baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+    }
+    for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
+        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+            if (!baseApplicationInfo_->needAppDetail) {
+                baseAbilityInfos_.erase(iter);
+                return;
+            }
+            if (isNewVersion_) {
+                iter->second.labelId = baseApplicationInfo_->labelId;
+                iter->second.iconId =
+                    (baseApplicationInfo_->iconId == 0) ? iter->second.iconId : baseApplicationInfo_->iconId;
+            }
+            return;
+        }
+    }
+}
+
+bool InnerBundleInfo::IsHideDesktopIcon() const
+{
+    return baseApplicationInfo_->hideDesktopIcon ? true : !IsExistLauncherAbility();
+}
+
+bool InnerBundleInfo::IsExistLauncherAbility() const
 {
     bool isExistLauncherAbility = false;
     OHOS::AAFwk::Want want;
@@ -1812,24 +1890,13 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
             continue;
         }
         for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want)) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
                 isExistLauncherAbility = true;
                 break;
             }
         }
     }
-    if (isExistLauncherAbility) {
-        baseApplicationInfo_->needAppDetail = false;
-        baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
-    }
-    if (!baseApplicationInfo_->needAppDetail) {
-        for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
-            if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
-                baseAbilityInfos_.erase(iter);
-                break;
-            }
-        }
-    }
+    return isExistLauncherAbility;
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
@@ -1991,10 +2058,9 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         }
         if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_PERMISSION) ==
             GET_APPLICATION_INFO_WITH_PERMISSION) {
-            std::transform(info.second.requestPermissions.begin(),
-                info.second.requestPermissions.end(),
-                std::back_inserter(appInfo.permissions),
-                [](const auto &p) { return p.name; });
+            for (const auto &item : info.second.requestPermissions) {
+                appInfo.permissions.push_back(item.name);
+            }
         }
         if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_METADATA) == GET_APPLICATION_INFO_WITH_METADATA) {
             bool isModuleJson = info.second.isModuleJson;
@@ -2045,10 +2111,9 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         if ((static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
-            std::transform(info.second.requestPermissions.begin(),
-                info.second.requestPermissions.end(),
-                std::back_inserter(appInfo.permissions),
-                [](const auto &p) { return p.name; });
+            for (const auto &item : info.second.requestPermissions) {
+                appInfo.permissions.push_back(item.name);
+            }
         }
         if ((static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
@@ -2085,20 +2150,19 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     bundleInfo.installTime = innerBundleUserInfo.installTime;
     bundleInfo.updateTime = innerBundleUserInfo.updateTime;
     bundleInfo.appIndex = appIndex_;
+    bundleInfo.overlayType = overlayType_;
 
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo);
     for (const auto &info : innerModuleInfos_) {
         if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
             == GET_BUNDLE_WITH_REQUESTED_PERMISSION) {
-            std::transform(info.second.requestPermissions.begin(),
-                info.second.requestPermissions.end(),
-                std::back_inserter(bundleInfo.reqPermissions),
-                [](const auto &p) { return p.name; });
-            std::transform(info.second.definePermissions.begin(),
-                info.second.definePermissions.end(),
-                std::back_inserter(bundleInfo.defPermissions),
-                [](const auto &p) { return p.name; });
+            for (const auto &item : info.second.requestPermissions) {
+                bundleInfo.reqPermissions.push_back(item.name);
+            }
+            for (const auto &item : info.second.definePermissions) {
+                bundleInfo.defPermissions.push_back(item.name);
+            }
         }
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);
         auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId);
@@ -2197,14 +2261,12 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, uint32_t user
         return;
     }
     for (const auto &info : innerModuleInfos_) {
-        std::transform(info.second.requestPermissions.begin(),
-            info.second.requestPermissions.end(),
-            std::back_inserter(bundleInfo.reqPermissions),
-            [](const auto &p) { return p.name; });
-        std::transform(info.second.definePermissions.begin(),
-            info.second.definePermissions.end(),
-            std::back_inserter(bundleInfo.defPermissions),
-            [](const auto &p) { return p.name; });
+        for (const auto &item : info.second.requestPermissions) {
+            bundleInfo.reqPermissions.push_back(item.name);
+        }
+        for (const auto &item : info.second.definePermissions) {
+            bundleInfo.defPermissions.push_back(item.name);
+        }
     }
     if (!bundleInfo.reqPermissions.empty()) {
         RemoveDuplicateName(bundleInfo.reqPermissions);
@@ -2282,7 +2344,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
     }
     APP_LOGD("Get bundleInfo with abilities.");
     for (auto &ability : baseAbilityInfos_) {
-        if (ability.second.moduleName != hapModuleInfo.moduleName) {
+        if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
+            (ability.second.name == Constants::APP_DETAIL_ABILITY)) {
             continue;
         }
         bool isEnabled = IsAbilityEnabled(ability.second, userId);
@@ -2331,6 +2394,9 @@ void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleIn
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
         for (auto &ability : baseAbilityInfos_) {
+            if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+                continue;
+            }
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
@@ -2729,10 +2795,9 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
 {
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
-        std::transform(info.second.requestPermissions.begin(),
-            info.second.requestPermissions.end(),
-            std::back_inserter(requestPermissions),
-            [](const auto &p) { return p; });
+        for (const auto &item : info.second.requestPermissions) {
+            requestPermissions.push_back(item);
+        }
     }
     if (!requestPermissions.empty()) {
         std::sort(requestPermissions.begin(), requestPermissions.end(),
@@ -2771,22 +2836,25 @@ const std::string &InnerBundleInfo::GetCurModuleName() const
     return Constants::EMPTY_STRING;
 }
 
-bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
+bool InnerBundleInfo::IsBundleRemovable() const
 {
-    APP_LOGD("userId is %{public}d", userId);
     if (IsPreInstallApp()) {
         APP_LOGE("PreInstallApp should not be cleaned");
         return false;
     }
+
     for (const auto &innerModuleInfo : innerModuleInfos_) {
-        bool isRemovable = true;
-        if ((IsModuleRemovable(innerModuleInfo.second.moduleName, userId, isRemovable) == ERR_OK) &&
-            !isRemovable) {
-            APP_LOGE("not all haps should be cleaned");
+        if (!innerModuleInfo.second.installationFree) {
             return false;
         }
+
+        for (const auto &stateIter : innerModuleInfo.second.isRemovable) {
+            if (!stateIter.second) {
+                return false;
+            }
+        }
     }
-    APP_LOGD("this bundle should be cleaned");
+
     return true;
 }
 
@@ -2801,7 +2869,7 @@ int64_t InnerBundleInfo::GetLastInstallationTime() const
     return installTime;
 }
 
-bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDelete) const
+bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moduleToDelete) const
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!innerModuleInfo.second.installationFree) {
@@ -2817,24 +2885,24 @@ bool InnerBundleInfo::GetRemovableModules(std::vector<std::string> &moudleToDele
         }
 
         if (canDelete) {
-            moudleToDelete.emplace_back(innerModuleInfo.second.moduleName);
+            moduleToDelete.emplace_back(innerModuleInfo.second.moduleName);
         }
     }
 
-    return !moudleToDelete.empty();
+    return !moduleToDelete.empty();
 }
 
-bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallMoudle) const
+bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstallModule) const
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!innerModuleInfo.second.installationFree) {
             continue;
         }
 
-        freeInstallMoudle.emplace_back(innerModuleInfo.second.moduleName);
+        freeInstallModule.emplace_back(innerModuleInfo.second.moduleName);
     }
 
-    return !freeInstallMoudle.empty();
+    return !freeInstallModule.empty();
 }
 
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const
@@ -2973,7 +3041,7 @@ int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
     }
 
     if (requestUserId < Constants::START_USERID) {
-        APP_LOGE("requestUserId(%{public}d) less than start userId.", requestUserId);
+        APP_LOGD("requestUserId(%{public}d) less than start userId.", requestUserId);
         return Constants::INVALID_USERID;
     }
 
@@ -3146,10 +3214,9 @@ int64_t InnerBundleInfo::GetAppCrowdtestDeadline() const
 std::vector<std::string> InnerBundleInfo::GetDistroModuleName() const
 {
     std::vector<std::string> moduleVec;
-    std::transform(innerModuleInfos_.begin(), innerModuleInfos_.end(),
-        std::back_inserter(moduleVec), [](const auto &info) {
-            return info.second.moduleName;
-        });
+    for (const auto &item : innerModuleInfos_) {
+        moduleVec.push_back(item.second.moduleName);
+    }
     return moduleVec;
 }
 
@@ -3237,6 +3304,21 @@ std::vector<std::string> InnerBundleInfo::GetDeviceType(const std::string &packa
         return std::vector<std::string>();
     }
     return innerModuleInfos_.at(packageName).deviceTypes;
+}
+
+void InnerBundleInfo::AddApplyQuickFixFrequency()
+{
+    ++applyQuickFixFrequency_;
+}
+
+int32_t InnerBundleInfo::GetApplyQuickFixFrequency() const
+{
+    return applyQuickFixFrequency_;
+}
+
+void InnerBundleInfo::ResetApplyQuickFixFrequency()
+{
+    applyQuickFixFrequency_ = 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

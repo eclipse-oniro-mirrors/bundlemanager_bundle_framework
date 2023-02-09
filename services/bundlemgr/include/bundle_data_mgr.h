@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -112,7 +112,7 @@ public:
      * @param oldInfo Indicates the old InnerBundleInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool UpdateInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
     /**
@@ -696,10 +696,6 @@ public:
 
     bool RemoveInnerBundleUserInfo(const std::string &bundleName, int32_t userId);
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    bool GetRemovableBundleNameVec(std::map<std::string, int>& bundlenameAndUids);
-    bool GetFreeInstallModules(std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
-#endif
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
 
@@ -727,6 +723,8 @@ public:
     int64_t GetBundleSpaceSize(const std::string &bundleName) const;
     int64_t GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const;
     int64_t GetAllFreeInstallBundleSpaceSize() const;
+    bool GetFreeInstallModules(
+        std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
 
     bool GetBundleStats(
@@ -794,6 +792,15 @@ public:
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
     }
+
+    bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+
+    const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
+
+    void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+
+    void EnableOverlayBundle(const std::string &bundleName);
+
 private:
     /**
      * @brief Init transferStates.
@@ -908,6 +915,7 @@ private:
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;
+    mutable std::mutex overlayMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
     // using for locking by bundleName

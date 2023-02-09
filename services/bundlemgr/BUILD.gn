@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,6 +21,7 @@ config("bundlemgr_common_config") {
     "include/default_app",
     "include/free_install",
     "include/distributed_manager",
+    "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",
     "include/quick_fix/state/include",
@@ -47,6 +48,10 @@ config("rdb_config") {
 
 config("app_control_config") {
   include_dirs = [ "include/app_control" ]
+}
+
+config("overlay_installation_config") {
+  include_dirs = [ "include/overlay" ]
 }
 
 config("bundlemgr_parse_config") {
@@ -149,6 +154,9 @@ ohos_source_set("bundle_parser") {
     defines += [ "USE_PRE_BUNDLE_PROFILE" ]
   }
 
+  if (bundle_framework_overlay_install) {
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+  }
   part_name = "bundle_framework"
 }
 
@@ -222,9 +230,11 @@ ohos_shared_library("libbms") {
     "//third_party/zlib:shared_libz",
   ]
 
+  version_script = "libbms.map"
   external_deps = [
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -318,6 +328,12 @@ ohos_shared_library("libbms") {
 
   if (use_pre_bundle_profile) {
     defines += [ "USE_PRE_BUNDLE_PROFILE" ]
+  }
+
+  if (bundle_framework_overlay_install) {
+    configs += [ ":overlay_installation_config" ]
+    sources += overlay_installation
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
   }
 
   if (bms_rdb_enable) {
