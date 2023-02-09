@@ -150,16 +150,8 @@ bool BundleMgrHostImpl::GetBundleInfo(
 {
     APP_LOGD("start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
-    if (bundleName != Constants::EMPTY_STRING) {
-        std::string callingBundleName;
-        bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-        APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-        if (ret && (bundleName == callingBundleName)) {
-            APP_LOGD("query own info, verify success");
-        } else if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
-            APP_LOGD("non-system app calling system api");
-            return true;
-        }
+    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+        APP_LOGD("non-system app calling system api");
     }
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
