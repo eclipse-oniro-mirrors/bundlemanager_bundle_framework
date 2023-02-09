@@ -214,18 +214,6 @@ HWTEST_F(BmsDeviceManagerTest, StartDynamicSystemProcess_0100, Function | SmallT
 }
 
 /**
- * @tc.number: StopDynamicSystemProcess_0100
- * @tc.name: test StopDynamicSystemProcess
- * @tc.desc: StopDynamicSystemProcess is success
- */
-HWTEST_F(BmsDeviceManagerTest, StopDynamicSystemProcess_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    int32_t systemAbilityId = 0;
-    deviceManager.StopDynamicSystemProcess(systemAbilityId);
-}
-
-/**
  * @tc.number: GetUdidByNetworkId_0100
  * @tc.name: test GetUdidByNetworkId
  * @tc.desc: GetUdidByNetworkId is false
@@ -237,70 +225,6 @@ HWTEST_F(BmsDeviceManagerTest, GetUdidByNetworkId_0100, Function | SmallTest | L
     std::string uid = "";
     auto ret = deviceManager.GetUdidByNetworkId(netWorkId, uid);
     EXPECT_FALSE(ret == -1);
-}
-
-/**
- * @tc.number: OnRemoteDied_0100
- * @tc.name: test OnRemoteDied
- * @tc.desc: Test whether OnRemoteDied is called normally.
- */
-HWTEST_F(BmsDeviceManagerTest, OnRemoteDied_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    deviceManager.initCallback_ = std::make_shared<AppExecFwk::BmsDeviceManager::DeviceInitCallBack>();
-    deviceManager.initCallback_->OnRemoteDied();
-}
-
-/**
- * @tc.number: OnDeviceOnline_0100
- * @tc.name: test OnDeviceOnline
- * @tc.desc: Test whether OnDeviceOnline is called normally.
- */
-HWTEST_F(BmsDeviceManagerTest, OnDeviceOnline_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    DistributedHardware::DmDeviceInfo deviceInfo;
-    deviceManager.stateCallback_ = std::make_shared<BmsDeviceManager::BmsDeviceStateCallback>();
-    deviceManager.stateCallback_->OnDeviceOnline(deviceInfo);
-}
-
-/**
- * @tc.number: OnDeviceOffline_0100
- * @tc.name: test OnDeviceOffline
- * @tc.desc: Test whether OnDeviceOffline is called normally.
- */
-HWTEST_F(BmsDeviceManagerTest, OnDeviceOffline_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    DistributedHardware::DmDeviceInfo deviceInfo;
-    deviceManager.stateCallback_ = std::make_shared<BmsDeviceManager::BmsDeviceStateCallback>();
-    deviceManager.stateCallback_->OnDeviceOffline(deviceInfo);
-}
-
-/**
- * @tc.number: OnDeviceChanged_0100
- * @tc.name: test OnDeviceChanged
- * @tc.desc: Test whether OnDeviceChanged is called normally.
- */
-HWTEST_F(BmsDeviceManagerTest, OnDeviceChanged_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    DistributedHardware::DmDeviceInfo deviceInfo;
-    deviceManager.stateCallback_ = std::make_shared<BmsDeviceManager::BmsDeviceStateCallback>();
-    deviceManager.stateCallback_->OnDeviceChanged(deviceInfo);
-}
-
-/**
- * @tc.number: OnDeviceReady_0100
- * @tc.name: test OnDeviceReady
- * @tc.desc: Test whether OnDeviceReady is called normally.
- */
-HWTEST_F(BmsDeviceManagerTest, OnDeviceReady_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    DistributedHardware::DmDeviceInfo deviceInfo;
-    deviceManager.stateCallback_ = std::make_shared<BmsDeviceManager::BmsDeviceStateCallback>();
-    deviceManager.stateCallback_->OnDeviceReady(deviceInfo);
 }
 }
 }

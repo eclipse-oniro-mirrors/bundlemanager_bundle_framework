@@ -63,12 +63,10 @@ void BmsAbilityManagerHelperTest::TearDown()
  */
 HWTEST_F(BmsAbilityManagerHelperTest, UninstallApplicationProcesses_0100, Function | SmallTest | Level0)
 {
-    #ifdef ABILITY_RUNTIME_ENABLE
     std::string bundleName = BUNDLE_NAME;
     int uid = 0;
     bool ret = abilityManagerHelper_->UninstallApplicationProcesses(bundleName, uid);
     EXPECT_FALSE(ret);
-    #endif
 }
 
 /**
@@ -78,12 +76,10 @@ HWTEST_F(BmsAbilityManagerHelperTest, UninstallApplicationProcesses_0100, Functi
  */
 HWTEST_F(BmsAbilityManagerHelperTest, UninstallApplicationProcesses_0200, Function | SmallTest | Level0)
 {
-    #ifdef ABILITY_RUNTIME_ENABLE
     std::string bundleName = BUNDLE_NAME;
     int uid = 1;
     bool ret = abilityManagerHelper_->UninstallApplicationProcesses(bundleName, uid);
     EXPECT_TRUE(ret);
-    #endif
 }
 
 /**
@@ -93,12 +89,10 @@ HWTEST_F(BmsAbilityManagerHelperTest, UninstallApplicationProcesses_0200, Functi
  */
 HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0100, Function | SmallTest | Level0)
 {
-    #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     std::string bundleName = BUNDLE_NAME;
     int uid = 1;
     int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
     EXPECT_EQ(ret, 0);
-    #endif
 }
 
 /**
@@ -108,12 +102,10 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0100, Function | Small
  */
 HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0200, Function | SmallTest | Level0)
 {
-    #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     std::string bundleName = BUNDLE_NAME;
     int uid = -1;
     int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
     EXPECT_EQ(ret, -1);
-    #endif
 }
 
 /**
