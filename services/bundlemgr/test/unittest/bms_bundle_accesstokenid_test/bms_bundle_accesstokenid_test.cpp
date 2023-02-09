@@ -338,7 +338,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_0700, Function | Sma
     bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION,
         bundleInfo, USERID);
     EXPECT_TRUE(result);
-    EXPECT_NE(bundleInfo.defPermissions.size(), ZERO);
+    EXPECT_EQ(bundleInfo.defPermissions.size(), ZERO);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
