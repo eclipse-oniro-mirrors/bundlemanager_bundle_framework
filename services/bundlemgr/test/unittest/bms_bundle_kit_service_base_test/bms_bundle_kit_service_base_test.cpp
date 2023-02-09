@@ -1032,9 +1032,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2500, Function | 
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2600, Function | MediumTest | Level1)
 {
     BundleDistributedManager mgr_;
-    std::string queryRpcIdResult ="{\"appQuickFix\":
-        {\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],
-        \"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"}}";
+    std::string queryRpcIdResult = "{\"appQuickFix\":{\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"}}";
     mgr_.OnQueryRpcIdFinished(queryRpcIdResult);
     EXPECT_TRUE(mgr_.queryAbilityParamsMap_.size() == 0);
     sleep(1);
