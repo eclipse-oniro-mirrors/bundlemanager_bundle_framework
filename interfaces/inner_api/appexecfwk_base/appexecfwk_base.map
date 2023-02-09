@@ -35,6 +35,9 @@
       "OHOS::AppExecFwk::AppqfInfo::ReadFromParcel(OHOS::Parcel&)";
       "OHOS::AppExecFwk::AppqfInfo::Unmarshalling(OHOS::Parcel&)";
       "OHOS::AppExecFwk::AppQuickFix::Unmarshalling(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::AppProvisionInfo::Marshalling(OHOS::Parcel&) const";
+      "OHOS::AppExecFwk::AppProvisionInfo::ReadFromParcel(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::AppProvisionInfo::Unmarshalling(OHOS::Parcel&)";
       "OHOS::AppExecFwk::AppRunningControlRule::Marshalling(OHOS::Parcel&) const";
       "OHOS::AppExecFwk::AppRunningControlRule::ReadFromParcel(OHOS::Parcel&)";
       "OHOS::AppExecFwk::AppRunningControlRule::Unmarshalling(OHOS::Parcel&)";
@@ -343,6 +346,7 @@
       "OHOS::AppExecFwk::to_json(nlohmann::basic_json<std::__h::map, std::__h::vector, std::__h::basic_string<char, std::__h::char_traits<char>, std::__h::allocator<char> >, bool, long, unsigned long, double, std::__h::allocator, nlohmann::adl_serializer, std::__h::vector<unsigned char, std::__h::allocator<unsigned char> > >&, OHOS::AppExecFwk::TargetAbilityInfo const&)";
       "OHOS::AppExecFwk::to_json(nlohmann::basic_json<std::__h::map, std::__h::vector, std::__h::basic_string<char, std::__h::char_traits<char>, std::__h::allocator<char> >, bool, unsigned long, double, std::__h::allocator, nlohmann::adl_serializer, std::__h::vector<unsigned char, std::__h::allocator<unsigned char> > >&, OHOS::AppExecFwk::ApplicationInfo const&)";
       "OHOS::AppExecFwk::to_json(nlohmann::basic_json<std::__h::map, std::__h::vector, std::__h::basic_string<char, std::__h::char_traits<char>, std::__h::allocator<char> >, bool, unsigned long, double, std::__h::allocator, nlohmann::adl_serializer, std::__h::vector<unsigned char, std::__h::allocator<unsigned char> > >&, OHOS::AppExecFwk::BundleInfo const&)";
+      "vtable for OHOS::AppExecFwk::AppProvisionInfo";
       "vtable for OHOS::AppExecFwk::AppqfInfo";
       "vtable for OHOS::AppExecFwk::AppQuickFix";
       "vtable for OHOS::AppExecFwk::BundleInfo";
@@ -365,6 +369,7 @@
       "vtable for OHOS::AppExecFwk::Resource";
       "vtable for OHOS::AppExecFwk::ShortcutInfo";
       "vtable for OHOS::AppExecFwk::SignatureInfo";
+      "VTT for OHOS::AppExecFwk::AppProvisionInfo";
       "VTT for OHOS::AppExecFwk::AppqfInfo";
       "VTT for OHOS::AppExecFwk::AppQuickFix";
       "VTT for OHOS::AppExecFwk::BundleInfo";
