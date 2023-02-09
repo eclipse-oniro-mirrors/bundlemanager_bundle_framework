@@ -31,7 +31,6 @@ group("fuzztest") {
     "bundlemgrproxy_fuzzer:BundleMgrProxyFuzzTest",
     "bundlestatuscallbackproxy_fuzzer:BundleStatusCallbackProxyFuzzTest",
     "bundlestreaminstallerproxy_fuzzer:BundleStreamInstallerProxyFuzzTest",
-    "bundlesyscap_fuzzer:BundleSysCapFuzzTest",
     "bundleuserinfo_fuzzer:BundleUserInfoFuzzTest",
     "bundleusermgrproxy_fuzzer:BundleUserMgrProxyFuzzTest",
     "checkissystemappbyuid_fuzzer:CheckIsSystemAppByUidFuzzTest",
