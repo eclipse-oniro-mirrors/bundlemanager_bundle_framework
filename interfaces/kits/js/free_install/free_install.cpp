@@ -442,6 +442,9 @@ static void ConvertAbilities(napi_env env, napi_value &modulesObject, const Pack
         napi_value visible;
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, ability.visible, &visible));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "visible", visible));
+        napi_value nExported;
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, ability.visible, &nExported));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "exported", nExported));
         ConvertFormsInfo(env, abilityObject, ability.forms);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, abilities, index, abilityObject));
         index++;
