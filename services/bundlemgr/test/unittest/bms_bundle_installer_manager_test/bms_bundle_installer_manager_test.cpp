@@ -114,7 +114,7 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_003, TestSize.Le
     std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<EventHandler> handler = std::make_shared<EventHandler>();
     sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
-    std::shared_ptr<BundleInstaller> bundleInstaller = std::make_shared<BundleInstaller>(installerId, handler, 
+    std::shared_ptr<BundleInstaller> bundleInstaller = std::make_shared<BundleInstaller>(installerId, handler,
         statusReceiver);
     auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
     bundleInstallerManager_->installers_.emplace(installerId, bundleInstaller);
@@ -134,9 +134,9 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_004, TestSize.Le
     std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<EventHandler> handler = std::make_shared<EventHandler>();
     sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
-    std::shared_ptr<BundleInstaller> bundleInstaller1 = std::make_shared<BundleInstaller>(installerId1, handler, 
+    std::shared_ptr<BundleInstaller> bundleInstaller1 = std::make_shared<BundleInstaller>(installerId1, handler,
         statusReceiver);
-    std::shared_ptr<BundleInstaller> bundleInstaller2 = std::make_shared<BundleInstaller>(installerId2, handler, 
+    std::shared_ptr<BundleInstaller> bundleInstaller2 = std::make_shared<BundleInstaller>(installerId2, handler,
         statusReceiver);
     auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
     bundleInstallerManager_->installers_.emplace(installerId1, bundleInstaller1);

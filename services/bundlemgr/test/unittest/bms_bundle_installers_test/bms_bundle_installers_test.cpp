@@ -107,7 +107,7 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0200, TestSize.Level1)
 /**
  * @tc.number: BmsBundleInstallersTest_0300
  * @tc.name: GetInstallerId
- * @tc.desc: test GetInstallerId 
+ * @tc.desc: test GetInstallerId
  */
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0300, TestSize.Level1)
 {
