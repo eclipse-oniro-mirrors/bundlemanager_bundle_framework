@@ -59,7 +59,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string 
         userId = BundleUtil::GetUserIdByCallingUid();
     }
     APP_LOGD("calling userId is %{public}d", userId);
-    return BundleOverlayManager::GetInstance()->GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfo, userId);
+    return BundleOverlayManager::GetInstance()->
+        GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfo, userId);
 }
 
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,

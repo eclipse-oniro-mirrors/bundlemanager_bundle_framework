@@ -35,8 +35,10 @@ OverlayManagerHost::~OverlayManagerHost()
 
 void OverlayManagerHost::init()
 {
-    funcMap_.emplace(IOverlayManager::Message::GET_ALL_OVERLAY_MODULE_INFO, &OverlayManagerHost::HandleGetAllOverlayModuleInfo);
-    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO, &OverlayManagerHost::HandleGetOverlayModuleInfo);
+    funcMap_.emplace(IOverlayManager::Message::GET_ALL_OVERLAY_MODULE_INFO,
+        &OverlayManagerHost::HandleGetAllOverlayModuleInfo);
+    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO,
+        &OverlayManagerHost::HandleGetOverlayModuleInfo);
     funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET,
         &OverlayManagerHost::HandleGetOverlayBundleInfoForTarget);
     funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_FOR_TARGET,

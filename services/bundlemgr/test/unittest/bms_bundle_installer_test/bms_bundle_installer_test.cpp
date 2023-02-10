@@ -2785,7 +2785,8 @@ HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0100, Function | SmallTest | L
     ApplicationInfo info;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    bool result = dataMgr->GetApplicationInfo(BUNDLE_BACKUP_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_BACKUP_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
     EXPECT_TRUE(info.asanEnabled);
     std::string asanLogPath =  Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
@@ -2802,7 +2803,8 @@ HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0200, Function | SmallTest | L
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     ApplicationInfo info;
-    bool result = dataMgr->GetApplicationInfo(BUNDLE_PREVIEW_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_PREVIEW_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
     EXPECT_FALSE(info.asanEnabled);
     std::string asanLogPath = "";

@@ -1848,7 +1848,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
-
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
