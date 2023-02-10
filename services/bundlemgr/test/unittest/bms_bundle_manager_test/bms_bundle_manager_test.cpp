@@ -4222,8 +4222,9 @@ HWTEST_F(BmsBundleManagerTest, GetBundleStats_0200, Function | SmallTest | Level
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
+    int64_t size = 0;
     int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, size);
 }
 
 /**
