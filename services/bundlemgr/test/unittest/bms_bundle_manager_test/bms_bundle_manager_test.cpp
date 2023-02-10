@@ -4214,6 +4214,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleStats_0200, Function | SmallTest | Level
     EXPECT_EQ(result, false);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleSpaceSize_0100
  * @tc.name: test CheckAbilityEnableInstall
@@ -4226,6 +4227,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | 
     int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME);
     EXPECT_EQ(ret, size);
 }
+#endif
 
 /**
  * @tc.number: FindAbilityInfo_0100
