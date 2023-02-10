@@ -131,11 +131,9 @@ static napi_value Init(napi_env env, napi_value exports)
      */
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
-        DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
         DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfo", GetBundleInfo),
-        DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
         DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_FUNCTION("getDispatcherVersion", GetDispatcherVersion),
@@ -151,8 +149,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfo),
         DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
         DECLARE_NAPI_FUNCTION("getAbilityIcon", GetAbilityIcon),
-        DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
-        DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
         DECLARE_NAPI_FUNCTION("getProfileByAbility", GetProfileByAbility),
         DECLARE_NAPI_FUNCTION("getProfileByExtensionAbility", GetProfileByExAbility),
         DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),
