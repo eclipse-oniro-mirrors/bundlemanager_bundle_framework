@@ -2499,8 +2499,8 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     retCode = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, USERID);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
 
-    hostImpl->GetBundleInfoForSelf(appIndex, bundleInfo);
-    EXPECT_NE(retCode, ERR_OK);
+    retCode = hostImpl->GetBundleInfoForSelf(appIndex, bundleInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     std::vector<FormInfo> formInfos;
     retBool = hostImpl->GetFormsInfoByModule(
