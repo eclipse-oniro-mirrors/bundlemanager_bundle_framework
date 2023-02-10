@@ -44,6 +44,7 @@ constexpr const char* FLAGS = "flags";
 constexpr const char* DEVICE_ID = "deviceId";
 constexpr const char* NAME = "name";
 constexpr const char* IS_VISIBLE = "isVisible";
+constexpr const char* EXPORTED = "exported";
 constexpr const char* PERMISSIONS = "permissions";
 constexpr const char* META_DATA = "metadata";
 constexpr const char* ENABLED = "enabled";
@@ -766,6 +767,10 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.visible, &nVisible));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, IS_VISIBLE, nVisible));
 
+    napi_value nExported;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.visible, &nExported));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, EXPORTED, nExported));
+
     napi_value nType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(abilityInfo.type), &nType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "type", nType));
@@ -907,6 +912,10 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
     napi_value nVisible;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfo.visible, &nVisible));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, IS_VISIBLE, nVisible));
+
+    napi_value nExported;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfo.visible, &nExported));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, EXPORTED, nExported));
 
     napi_value nExtensionAbilityType;
     NAPI_CALL_RETURN_VOID(
