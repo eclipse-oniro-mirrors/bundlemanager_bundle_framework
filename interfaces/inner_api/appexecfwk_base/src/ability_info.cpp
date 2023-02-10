@@ -55,7 +55,6 @@ const std::string JSON_KEY_IS_NATIVE_ABILITY = "isNativeAbility";
 const std::string JSON_KEY_ENABLED = "enabled";
 const std::string JSON_KEY_SUPPORT_PIP_MODE = "supportPipMode";
 const std::string JSON_KEY_TARGET_ABILITY = "targetAbility";
-const std::string APPLICATION_INFO = "applicationInfo";
 const std::string JSON_KEY_READ_PERMISSION = "readPermission";
 const std::string JSON_KEY_WRITE_PERMISSION = "writePermission";
 const std::string JSON_KEY_CONFIG_CHANGES = "configChanges";
@@ -449,7 +448,6 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_DEVICE_CAPABILITIES, abilityInfo.deviceCapabilities},
         {JSON_KEY_URI, abilityInfo.uri},
         {JSON_KEY_TARGET_ABILITY, abilityInfo.targetAbility},
-        {APPLICATION_INFO, abilityInfo.applicationInfo},
         {JSON_KEY_IS_LAUNCHER_ABILITY, abilityInfo.isLauncherAbility},
         {JSON_KEY_IS_NATIVE_ABILITY, abilityInfo.isNativeAbility},
         {JSON_KEY_ENABLED, abilityInfo.enabled},
@@ -761,14 +759,6 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         JSON_KEY_TARGET_ABILITY,
         abilityInfo.targetAbility,
         JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<ApplicationInfo>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_INFO,
-        abilityInfo.applicationInfo,
-        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
